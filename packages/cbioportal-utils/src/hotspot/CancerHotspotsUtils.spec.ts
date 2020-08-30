@@ -1,15 +1,17 @@
 import { assert } from 'chai';
 
 import { IHotspotIndex } from '../model/CancerHotspot';
-// import {Mutation} from "../model/Mutation";
+import { Mutation } from '../model/Mutation';
 import {
     indexHotspots,
     isHotspot,
-    filterRecurrentHotspotsByMutations,
+    is3dHotspot,
     filter3dHotspotsByMutations,
     filterHotspotsByMutations,
     groupHotspotsByMutations,
     defaultHotspotFilter,
+    isLinearClusterHotspot,
+    filterLinearClusterHotspotsByMutations,
 } from './CancerHotspotsUtils';
 
 describe('CancerHotspotsUtils', () => {
@@ -29,7 +31,7 @@ describe('CancerHotspotsUtils', () => {
                 end: 0,
                 mutationType: '',
             },
-            variant: '10:g.66A>T',
+            variant: '17:g.66A>T',
             hotspots: [
                 {
                     type: 'single residue',
@@ -64,7 +66,7 @@ describe('CancerHotspotsUtils', () => {
                 end: 0,
                 mutationType: '',
             },
-            variant: '4:g.666G>CAT',
+            variant: '3:g.666G>CAT',
             hotspots: [
                 {
                     type: 'in-frame indel',
@@ -99,7 +101,7 @@ describe('CancerHotspotsUtils', () => {
                 end: 0,
                 mutationType: '',
             },
-            variant: '6:g.111T>C',
+            variant: '4:g.111T>C',
             hotspots: [
                 {
                     type: '3d',
@@ -139,10 +141,173 @@ describe('CancerHotspotsUtils', () => {
         },
     ];
 
-    let hotspotIndex: IHotspotIndex;
+    const hotspots3d = [
+        {
+            genomicLocation: {
+                chromosome: '4',
+                start: 111,
+                end: 111,
+                referenceAllele: 'T',
+                variantAllele: 'C',
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: '',
+            },
+            variant: '4:g.111T>C',
+            hotspots: [
+                {
+                    type: '3d',
+                    tumorCount: 1,
+                    tumorTypeCount: 1,
+                    inframeCount: 0,
+                    missenseCount: 1,
+                    spliceCount: 0,
+                    truncatingCount: 0,
+                    transcriptId: 'ENST00005',
+                    hugoSymbol: 'SMURF1',
+                    residue: 'R101',
+                    aminoAcidPosition: {
+                        start: 101,
+                        end: 101,
+                    },
+                },
+            ],
+        },
+    ];
 
+    const hotspotSplice = [
+        {
+            genomicLocation: {
+                chromosome: '7',
+                start: 111,
+                end: 111,
+                referenceAllele: 'T',
+                variantAllele: 'C',
+            },
+            transcriptId: '',
+            proteinLocation: {
+                transcriptId: '',
+                start: 0,
+                end: 0,
+                mutationType: '',
+            },
+            variant: '7:g.111T>C',
+            hotspots: [
+                {
+                    hugoSymbol: 'MET',
+                    transcriptId: 'ENST00000397752',
+                    residue: 'X1010',
+                    tumorCount: 19,
+                    type: 'splice site',
+                    missenseCount: 0,
+                    truncatingCount: 0,
+                    inframeCount: 0,
+                    spliceCount: 19,
+                },
+            ],
+        },
+    ];
+
+    const hotspotMutation1 = {
+        chr: '17',
+        gene: {
+            hugoGeneSymbol: 'TP53',
+        },
+        startPosition: 66,
+        endPosition: 66,
+        referenceAllele: 'A',
+        variantAllele: 'T',
+        proteinPosStart: 273,
+        proteinPosEnd: 273,
+        proteinChange: 'R273C',
+        mutationType: 'missense',
+    } as Mutation;
+
+    const hotspotMutation2 = {
+        chr: '17',
+        gene: {
+            hugoGeneSymbol: 'TP53',
+        },
+        startPosition: 66,
+        endPosition: 66,
+        referenceAllele: 'A',
+        variantAllele: 'T',
+        proteinPosStart: 273,
+        proteinChange: 'R273A',
+        mutationType: 'missense',
+    } as Mutation;
+
+    const hotspotMutation3 = {
+        chr: '3',
+        gene: {
+            hugoGeneSymbol: 'PIK3CA',
+        },
+        startPosition: 666,
+        endPosition: 668,
+        referenceAllele: 'G',
+        variantAllele: 'CAT',
+        proteinPosStart: 38,
+        proteinPosEnd: 40,
+        proteinChange: 'R38H',
+        mutationType: 'in_frame_del',
+    } as Mutation;
+
+    const hotspot3dMutation = {
+        chr: '4',
+        gene: {
+            hugoGeneSymbol: 'SMURF1',
+        },
+        startPosition: 111,
+        endPosition: 111,
+        referenceAllele: 'T',
+        variantAllele: 'C',
+        proteinPosStart: 101,
+        proteinPosEnd: 101,
+        proteinChange: 'R101N',
+        mutationType: 'missense',
+    } as Mutation;
+
+    const hotspotSpliceMutation = {
+        chr: '7',
+        gene: {
+            hugoGeneSymbol: 'MET',
+        },
+        startPosition: 111,
+        endPosition: 111,
+        referenceAllele: 'T',
+        variantAllele: 'C',
+        proteinPosStart: 1010,
+        proteinPosEnd: 1010,
+        proteinChange: 'X1010',
+        mutationType: 'splice site',
+    } as Mutation;
+
+    const notHotspotMutation = {
+        chr: '4',
+        gene: {
+            hugoGeneSymbol: 'SMURF1',
+        },
+        startPosition: 222,
+        endPosition: 222,
+        referenceAllele: 'T',
+        variantAllele: 'C',
+        proteinPosStart: 202,
+        proteinPosEnd: 202,
+        proteinChange: 'R101F',
+        mutationType: 'non_sense',
+    } as Mutation;
+
+    let hotspotIndex: IHotspotIndex;
+    let hotspot3dIndex: IHotspotIndex;
+    let spliceHotspotIndex: IHotspotIndex;
     beforeAll(() => {
         hotspotIndex = indexHotspots(hotspots);
+        hotspot3dIndex = indexHotspots(hotspots3d);
+        spliceHotspotIndex = indexHotspots(hotspotSplice);
     });
 
     describe('indexHotspots', () => {
@@ -209,6 +374,64 @@ describe('CancerHotspotsUtils', () => {
         });
     });
 
+    describe('isLinearClusterHotspot', () => {
+        it('checks if a mutation is a single or indel hotspot mutation by isLinearClusterHotspot()', () => {
+            assert.isTrue(
+                isLinearClusterHotspot(hotspotMutation1, hotspotIndex),
+                'TP53 R273C should be a recurrent hotspot mutation.'
+            );
+
+            assert.isTrue(
+                isLinearClusterHotspot(hotspotMutation2, hotspotIndex),
+                'TP53 R273A should be a recurrent hotspot mutation.'
+            );
+
+            assert.isTrue(
+                isLinearClusterHotspot(hotspotMutation3, hotspotIndex),
+                'PIK3CA R38H should be a recurrent hotspot mutation.'
+            );
+
+            assert.isFalse(
+                isLinearClusterHotspot(notHotspotMutation, hotspotIndex),
+                'SMURF1 R101F should not be a recurrent hotspot mutation.'
+            );
+
+            assert.isFalse(
+                isLinearClusterHotspot(hotspot3dMutation, hotspotIndex),
+                'SMURF1 R101N should not be a recurrent hotspot mutation.'
+            );
+        });
+
+        it('checks if a mutation is a splice hotspot mutation by isLinearClusterHotspot()', () => {
+            assert.isFalse(
+                isLinearClusterHotspot(notHotspotMutation, spliceHotspotIndex),
+                'SMURF1 R101F should not be a splice hotspot mutation.'
+            );
+
+            assert.isTrue(
+                isLinearClusterHotspot(
+                    hotspotSpliceMutation,
+                    spliceHotspotIndex
+                ),
+                'MET X1010 should be a splice hotspot mutation.'
+            );
+        });
+    });
+
+    describe('is3dHotspot', () => {
+        it('checks if a mutation is a 3d hotspot mutation by is3dHotspot()', () => {
+            assert.isFalse(
+                is3dHotspot(notHotspotMutation, hotspot3dIndex),
+                'SMURF1 R101F should not be a 3d hotspot mutation.'
+            );
+
+            assert.isTrue(
+                is3dHotspot(hotspot3dMutation, hotspot3dIndex),
+                'SMURF1 R101N should be a 3d hotspot mutation.'
+            );
+        });
+    });
+
     // TODO remove as any[] after fixing the Mutation model...
     describe('filterHotspots', () => {
         const mutations = [
@@ -263,7 +486,7 @@ describe('CancerHotspotsUtils', () => {
         });
 
         it('filters recurrent hotspots correctly', () => {
-            const filtered = filterRecurrentHotspotsByMutations(
+            const filtered = filterLinearClusterHotspotsByMutations(
                 mutations,
                 hotspotIndex
             );

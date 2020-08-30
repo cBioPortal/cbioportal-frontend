@@ -110,6 +110,8 @@ export type ChartType =
     | 'GENOMIC_PROFILES_TABLE'
     | 'CASE_LIST_TABLE'
     | 'CNA_GENES_TABLE'
+    | 'SAMPLE_TREATMENTS_TABLE'
+    | 'PATIENT_TREATMENTS_TABLE'
     | 'NONE';
 
 export enum SpecialChartsUniqueKeyEnum {
@@ -121,6 +123,8 @@ export enum SpecialChartsUniqueKeyEnum {
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
     GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
     CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
+    PATIENT_TREATMENTS = 'PATIENT_TREATMENTS',
+    SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
 }
 
 export type AnalysisGroup = {
@@ -822,7 +826,11 @@ export function isFiltered(
             _.isEmpty(filter.geneFilters) &&
             _.isEmpty(filter.genomicProfiles) &&
             _.isEmpty(filter.genomicDataFilters) &&
-            _.isEmpty(filter.caseLists))
+            _.isEmpty(filter.caseLists) &&
+            (!filter.patientTreatmentFilters ||
+                _.isEmpty(filter.patientTreatmentFilters.filters)) &&
+            (!filter.sampleTreatmentFilters ||
+                _.isEmpty(filter.sampleTreatmentFilters.filters)))
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -1053,11 +1061,11 @@ export function isLogScaleByValues(values: number[]) {
 }
 
 export function shouldShowChart(
-    filer: Partial<StudyViewFilterWithSampleIdentifierFilters>,
+    filter: Partial<StudyViewFilterWithSampleIdentifierFilters>,
     uniqueDataSize: number,
     sizeOfAllSamples: number
 ) {
-    return isFiltered(filer) || uniqueDataSize >= 2 || sizeOfAllSamples === 1;
+    return isFiltered(filter) || uniqueDataSize >= 2 || sizeOfAllSamples === 1;
 }
 
 export function isEveryBinDistinct(data?: ClinicalDataBin[]) {
@@ -1614,7 +1622,9 @@ export function calculateLayout(
                 y: position.y,
                 w: dimension.w,
                 h: dimension.h,
-                isResizable: false,
+                minH: dimension.minH,
+                minW: dimension.minW,
+                isResizable: true,
             });
             const xMax = position.x + dimension.w;
             const yMax = position.y + dimension.h;
@@ -1660,7 +1670,7 @@ export function calculateNewLayoutForFocusedChart(
         y,
         w: currentFocusedChartByUserDimension.w,
         h: currentFocusedChartByUserDimension.h,
-        isResizable: false,
+        isResizable: true,
     };
 }
 

@@ -19,6 +19,14 @@ export type AlleleSpecificCopyNumber = {
         'totalCopyNumber': number
 
 };
+export type AndedPatientTreatmentFilters = {
+    'filters': Array < OredPatientTreatmentFilters >
+
+};
+export type AndedSampleTreatmentFilters = {
+    'filters': Array < OredSampleTreatmentFilters >
+
+};
 export type CancerStudy = {
     'allSampleCount': number
 
@@ -119,6 +127,12 @@ export type ClinicalData = {
         'value': string
 
 };
+export type ClinicalDataFilter = {
+    'attributeId': string
+
+        'values': Array < DataFilterValue >
+
+};
 export type ClinicalDataIdentifier = {
     'entityId': string
 
@@ -161,6 +175,16 @@ export type ClinicalEventData = {
         'value': string
 
 };
+export type ClinicalEventSample = {
+    'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'timeTaken': number
+
+};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -201,6 +225,14 @@ export type CopyNumberSeg = {
         'uniqueSampleKey': string
 
 };
+export type DataFilterValue = {
+    'end': number
+
+        'start': number
+
+        'value': string
+
+};
 export type DiscreteCopyNumberData = {
     'alteration': number
 
@@ -237,6 +269,13 @@ export type Gene = {
         'hugoGeneSymbol': string
 
         'type': string
+
+};
+export type GeneFilter = {
+    'geneQueries': Array < Array < string >
+        >
+
+        'molecularProfileIds': Array < string >
 
 };
 export type GenePanel = {
@@ -298,11 +337,11 @@ export type GenericAssayData = {
 
 };
 export type GenericAssayDataFilter = {
-    'genericAssayStableIds': Array < string >
+    'profileType': string
 
-        'sampleIds': Array < string >
+        'stableId': string
 
-        'sampleListId': string
+        'values': Array < DataFilterValue >
 
 };
 export type GenericAssayDataMultipleStudyFilter = {
@@ -311,6 +350,14 @@ export type GenericAssayDataMultipleStudyFilter = {
         'molecularProfileIds': Array < string >
 
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
+export type GenericAssayFilter = {
+    'genericAssayStableIds': Array < string >
+
+        'sampleIds': Array < string >
+
+        'sampleListId': string
 
 };
 export type GenericAssayMeta = {
@@ -325,6 +372,14 @@ export type GenericAssayMetaFilter = {
     'genericAssayStableIds': Array < string >
 
         'molecularProfileIds': Array < string >
+
+};
+export type GenomicDataFilter = {
+    'hugoGeneSymbol': string
+
+        'profileType': string
+
+        'values': Array < DataFilterValue >
 
 };
 export type MolecularDataFilter = {
@@ -507,6 +562,14 @@ export type NumericGeneMolecularData = {
         'value': number
 
 };
+export type OredPatientTreatmentFilters = {
+    'filters': Array < PatientTreatmentFilter >
+
+};
+export type OredSampleTreatmentFilters = {
+    'filters': Array < SampleTreatmentFilter >
+
+};
 export type Patient = {
     'cancerStudy': CancerStudy
 
@@ -529,6 +592,18 @@ export type PatientIdentifier = {
     'patientId': string
 
         'studyId': string
+
+};
+export type PatientTreatmentFilter = {
+    'treatment': string
+
+};
+export type PatientTreatmentRow = {
+    'count': number
+
+        'samples': Array < ClinicalEventSample >
+
+        'treatment': string
 
 };
 export type ReferenceGenomeGene = {
@@ -639,6 +714,22 @@ export type SampleMolecularIdentifier = {
         'sampleId': string
 
 };
+export type SampleTreatmentFilter = {
+    'time': "Pre" | "Post" | "Unknown"
+
+        'treatment': string
+
+};
+export type SampleTreatmentRow = {
+    'count': number
+
+        'samples': Array < ClinicalEventSample >
+
+        'time': "Pre" | "Post" | "Unknown"
+
+        'treatment': string
+
+};
 export type StructuralVariant = {
     'annotation': string
 
@@ -741,6 +832,30 @@ export type StructuralVariantFilter = {
         'molecularProfileIds': Array < string >
 
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
+export type StudyViewFilter = {
+    'caseLists': Array < Array < string >
+        >
+
+        'clinicalDataFilters': Array < ClinicalDataFilter >
+
+        'geneFilters': Array < GeneFilter >
+
+        'genericAssayDataFilters': Array < GenericAssayDataFilter >
+
+        'genomicDataFilters': Array < GenomicDataFilter >
+
+        'genomicProfiles': Array < Array < string >
+        >
+
+        'patientTreatmentFilters': AndedPatientTreatmentFilters
+
+        'sampleIdentifiers': Array < SampleIdentifier >
+
+        'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'studyIds': Array < string >
 
 };
 export type TypeOfCancer = {
@@ -1969,7 +2084,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchGenericAssayDataInMolecularProfileUsingPOSTURL(parameters: {
-        'genericAssayDataFilter': GenericAssayDataFilter,
+        'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
@@ -2001,7 +2116,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchGenericAssayDataInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
-        'genericAssayDataFilter': GenericAssayDataFilter,
+        'genericAssayDataFilter': GenericAssayFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any,
@@ -2060,7 +2175,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchGenericAssayDataInMolecularProfileUsingPOST(parameters: {
-            'genericAssayDataFilter': GenericAssayDataFilter,
+            'genericAssayDataFilter': GenericAssayFilter,
             'molecularProfileId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
@@ -8687,4 +8802,234 @@ export default class CBioPortalAPI {
             return response.body;
         });
     };
+    getContainsTreatmentDataUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/treatments/display';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Should sample level treatments be displayed
+     * @method
+     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/treatments/display';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Should sample level treatments be displayed
+     * @method
+     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getContainsTreatmentDataUsingPOST(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < boolean > {
+        return this.getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    getAllPatientTreatmentsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/treatments/patient';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all patient level treatments
+     * @method
+     * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getAllPatientTreatmentsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/treatments/patient';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all patient level treatments
+     * @method
+     * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getAllPatientTreatmentsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < PatientTreatmentRow >
+        > {
+            return this.getAllPatientTreatmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllSampleTreatmentsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/treatments/sample';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all sample level treatments
+     * @method
+     * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/treatments/sample';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all sample level treatments
+     * @method
+     * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getAllSampleTreatmentsUsingPOST(parameters: {
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < SampleTreatmentRow >
+        > {
+            return this.getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 }

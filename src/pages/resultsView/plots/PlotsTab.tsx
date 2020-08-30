@@ -106,6 +106,7 @@ import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 enum EventKey {
     horz_logScale,
@@ -205,6 +206,7 @@ export type PlotsTabDataSource = {
 export type PlotsTabOption = {
     value: string;
     label: string;
+    plotAxisLabel?: string;
     isGenericAssayType?: boolean;
 };
 
@@ -1828,13 +1830,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 return acc;
                             }
                         }, {} as { [stableId: string]: GenericAssayMeta })
-                        .map(meta => ({
-                            value: meta.stableId,
-                            label:
-                                'NAME' in meta.genericEntityMetaProperties
-                                    ? meta.genericEntityMetaProperties['NAME']
-                                    : '',
-                        }))
+                        .map(entity => makeGenericAssayOption(entity, true))
                         .value()
                 );
             }
@@ -1888,13 +1884,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 return acc;
                             }
                         }, {} as { [stableId: string]: GenericAssayMeta })
-                        .map(meta => ({
-                            value: meta.stableId,
-                            label:
-                                'NAME' in meta.genericEntityMetaProperties
-                                    ? meta.genericEntityMetaProperties['NAME']
-                                    : '',
-                        }))
+                        .map(entity => makeGenericAssayOption(entity, true))
                         .value();
                 }
                 // if horzSelection has the same dataType selected, add a SAME_SELECTED_OPTION option
@@ -1928,6 +1918,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 this.horzSelection.selectedGenericAssayOption
                                     .label
                             })`,
+                            plotAxisLabel: `Same ${deriveDisplayTextFromGenericAssayType(
+                                firstProfile.genericAssayType
+                            )} (${
+                                this.horzSelection.selectedGenericAssayOption
+                                    .plotAxisLabel
+                            })`,
                         },
                     ];
                 }
@@ -1937,6 +1933,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     (verticalOptions || []) as {
                         value: string;
                         label: string;
+                        plotAxisLabel: string;
                     }[]
                 )
             );
@@ -3406,6 +3403,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 </div>
                                             );
                                         }}
+                                        blurInputOnSelect={true}
                                         clearable={false}
                                         searchable={true}
                                         disabled={
@@ -3460,19 +3458,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
         const result = _.reduce(
-            this.props.store.selectedGenericAssayEntities,
-            (acc, value, key) => {
+            this.props.store
+                .selectedGenericAssayEntitiesGroupByMolecularProfileId,
+            (acc, entityId, profileId) => {
                 if (
-                    this.props.store.molecularProfileIdSuffixToMolecularProfiles
-                        .result[key]
+                    this.props.store.molecularProfileIdToMolecularProfile
+                        .result[profileId]
                 ) {
                     const type = this.props.store
-                        .molecularProfileIdSuffixToMolecularProfiles.result[
-                        key
-                    ][0].genericAssayType;
-                    acc[type] = acc[type] ? _.union(value, acc[type]) : value;
-                    return acc;
+                        .molecularProfileIdToMolecularProfile.result[profileId]
+                        .genericAssayType;
+                    acc[type] = acc[type]
+                        ? _.union(entityId, acc[type])
+                        : entityId;
                 }
+                return acc;
             },
             {} as { [genericAssayType: string]: string[] }
         );

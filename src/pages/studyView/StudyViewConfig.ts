@@ -32,6 +32,8 @@ export type StudyViewThreshold = {
 export type ChartDimension = {
     w: number;
     h: number;
+    minW?: number;
+    minH?: number;
 };
 
 export type Position = {
@@ -69,6 +71,8 @@ export enum ChartTypeEnum {
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     GENOMIC_PROFILES_TABLE = 'GENOMIC_PROFILES_TABLE',
     CASE_LIST_TABLE = 'CASE_LIST_TABLE',
+    SAMPLE_TREATMENTS_TABLE = 'SAMPLE_TREATMENTS_TABLE',
+    PATIENT_TREATMENTS_TABLE = 'PATIENT_TREATMENTS_TABLE',
     NONE = 'NONE',
 }
 
@@ -83,6 +87,8 @@ export enum ChartTypeNameEnum {
     CNA_GENES_TABLE = 'table',
     GENOMIC_PROFILES_TABLE = 'table',
     CASE_LIST_TABLE = 'table',
+    SAMPLE_TREATMENTS_TABLE = 'table',
+    PATIENT_TREATMENTS_TABLE = 'table',
     NONE = 'none',
 }
 
@@ -160,6 +166,7 @@ const studyViewFrontEnd = {
             [ChartTypeEnum.TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.SURVIVAL]: {
                 w: 1,
@@ -168,22 +175,37 @@ const studyViewFrontEnd = {
             [ChartTypeEnum.MUTATED_GENES_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.FUSION_GENES_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.CNA_GENES_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.GENOMIC_PROFILES_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.CASE_LIST_TABLE]: {
                 w: 2,
                 h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.SAMPLE_TREATMENTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
+            },
+            [ChartTypeEnum.PATIENT_TREATMENTS_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.NONE]: {
                 w: 0,

@@ -25,7 +25,7 @@ import {
 } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from './clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from './clinicalInformation/ClinicalInformationSamplesTable';
-import { inject, observer } from 'mobx-react';
+import { inject, Observer, observer } from 'mobx-react';
 import { getSpanElementsFromCleanData } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from './copyNumberAlterations/CopyNumberTableWrapper';
 import { action, computed, observable, reaction } from 'mobx';
@@ -78,6 +78,7 @@ import PatientViewPathwayMapper from './pathwayMapper/PatientViewPathwayMapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
+import TimelineWrapper from './timeline2/TimelineWrapper';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -210,6 +211,25 @@ export default class PatientViewPage extends React.Component<
             );
             getBrowserWindow().clientPostedData = null;
         }
+    }
+
+    public get showNewTimeline() {
+        const forcedOn =
+            getBrowserWindow().localStorage.getItem('force_timeline') ===
+            'true';
+        return (
+            forcedOn ||
+            ['triage-portal', 'genie-portal'].includes(
+                AppConfig.serverConfig.app_name!
+            )
+        );
+    }
+
+    public get showOldTimeline() {
+        const forcedOn =
+            getBrowserWindow().localStorage.getItem('force_timeline') ===
+            'true';
+        return !this.showNewTimeline || forcedOn;
     }
 
     public handleSampleClick(
@@ -872,19 +892,62 @@ export default class PatientViewPage extends React.Component<
                                         this.patientViewPageStore.clinicalEvents
                                             .result.length > 0 && (
                                             <div>
-                                                <Timeline
-                                                    store={
-                                                        this
-                                                            .patientViewPageStore
-                                                    }
-                                                    width={
-                                                        WindowStore.size.width -
-                                                        60
-                                                    }
-                                                    sampleManager={
-                                                        sampleManager
-                                                    }
-                                                />
+                                                <div
+                                                    style={{
+                                                        marginTop: 20,
+                                                        marginBottom: 20,
+                                                    }}
+                                                >
+                                                    {' '}
+                                                    {this.showNewTimeline && (
+                                                        <TimelineWrapper
+                                                            caseMetaData={{
+                                                                color:
+                                                                    sampleManager.sampleColors,
+                                                                label:
+                                                                    sampleManager.sampleLabels,
+                                                                index:
+                                                                    sampleManager.sampleIndex,
+                                                            }}
+                                                            data={
+                                                                this
+                                                                    .patientViewPageStore
+                                                                    .clinicalEvents
+                                                                    .result
+                                                            }
+                                                            sampleManager={
+                                                                sampleManager
+                                                            }
+                                                            width={
+                                                                WindowStore.size
+                                                                    .width
+                                                            }
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {this.showOldTimeline && (
+                                                    <div
+                                                        style={{
+                                                            marginTop: 20,
+                                                        }}
+                                                    >
+                                                        <Timeline
+                                                            store={
+                                                                this
+                                                                    .patientViewPageStore
+                                                            }
+                                                            width={
+                                                                WindowStore.size
+                                                                    .width - 60
+                                                            }
+                                                            sampleManager={
+                                                                sampleManager
+                                                            }
+                                                        />
+                                                    </div>
+                                                )}
+
                                                 <hr />
                                             </div>
                                         )}

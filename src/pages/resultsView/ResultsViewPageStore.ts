@@ -41,6 +41,7 @@ import {
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
+    isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
     VariantAnnotation,
@@ -151,7 +152,6 @@ import {
     getGenesetProfiles,
     sortRnaSeqProfilesToTop,
 } from './coExpression/CoExpressionTabUtils';
-import { isRecurrentHotspot } from '../../shared/lib/AnnotationUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import {
     convertComparisonGroupClinicalAttribute,
@@ -465,10 +465,10 @@ export class ResultsViewPageStore {
             cosmicCountThreshold: 0,
             driverTiers: observable.map<boolean>(),
 
-            _customBinary: undefined,
             _hotspots: false,
             _oncoKb: false,
             _excludeVUS: false,
+            _customBinary: undefined,
 
             set hotspots(val: boolean) {
                 this._hotspots = val;
@@ -518,13 +518,15 @@ export class ResultsViewPageStore {
                 return anySelected;
             },
 
+            set customBinary(val: boolean) {
+                this._customBinary = val;
+            },
             get customBinary() {
                 return this._customBinary === undefined
                     ? AppConfig.serverConfig
                           .oncoprint_custom_driver_annotation_binary_default
                     : this._customBinary;
             },
-
             get customTiersDefault() {
                 return AppConfig.serverConfig
                     .oncoprint_custom_driver_annotation_tiers_default;
@@ -563,7 +565,7 @@ export class ResultsViewPageStore {
             : [];
     }
 
-    @computed get selectedGenericAssayEntities() {
+    @computed get selectedGenericAssayEntitiesGroupByMolecularProfileId() {
         return parseGenericAssayGroups(
             this.urlWrapper.query.generic_assay_groups
         );
@@ -3767,9 +3769,11 @@ export class ResultsViewPageStore {
             return Promise.resolve(
                 _.mapValues(
                     this.genericAssayEntitiesGroupByGenericAssayType.result,
-                    (value, key) => {
+                    (value, profileId) => {
                         const selectedEntityIds = this
-                            .selectedGenericAssayEntities[key];
+                            .selectedGenericAssayEntitiesGroupByMolecularProfileId[
+                            profileId
+                        ];
                         return value.filter(entity =>
                             selectedEntityIds.includes(entity.stableId)
                         );
@@ -4280,7 +4284,10 @@ export class ResultsViewPageStore {
                 const indexedHotspotData = this.indexedHotspotData.result;
                 if (indexedHotspotData) {
                     return Promise.resolve((mutation: Mutation) => {
-                        return isRecurrentHotspot(mutation, indexedHotspotData);
+                        return isLinearClusterHotspot(
+                            mutation,
+                            indexedHotspotData
+                        );
                     });
                 } else {
                     return Promise.resolve(

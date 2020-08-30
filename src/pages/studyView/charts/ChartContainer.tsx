@@ -55,6 +55,16 @@ import {
     MultiSelectionTable,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
+import { Dimensions } from 'react-virtualized';
+import {
+    SampleTreatmentsTable,
+    SampleTreatmentsTableColumnKey,
+} from '../table/treatments/SampleTreatmentsTable';
+import { TreatmentTableType } from '../table/treatments/treatmentsTableUtil';
+import {
+    PatientTreatmentsTableColumnKey,
+    PatientTreatmentsTable,
+} from '../table/treatments/PatientTreatmentsTable';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -143,7 +153,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             resetFilters: action(() => {
                 this.props.onResetSelection(this.props.chartMeta, []);
             }),
-            onValueSelection: action((values: string[]) => {
+            onValueSelection: action((values: any) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
             }),
             onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
@@ -339,9 +349,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     // Scatter plot has a weird height setting.
-    getScatterPlotHeight() {
+    getScatterPlotHeight(height: number) {
         return (
-            STUDY_VIEW_CONFIG.layout.grid.h * 2 - this.chartHeaderHeight + 33
+            STUDY_VIEW_CONFIG.layout.grid.h * height -
+            this.chartHeaderHeight +
+            33
         );
     }
 
@@ -351,7 +363,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed
-    get chart() {
+    get chart(): (() => JSX.Element) | null {
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return () => (
@@ -689,6 +701,64 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
+                return () => (
+                    <SampleTreatmentsTable
+                        tableType={TreatmentTableType.SAMPLE}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        columns={[
+                            {
+                                columnKey:
+                                    SampleTreatmentsTableColumnKey.TREATMENT,
+                            },
+                            { columnKey: SampleTreatmentsTableColumnKey.TIME },
+                            { columnKey: SampleTreatmentsTableColumnKey.COUNT },
+                        ]}
+                        defaultSortBy={SampleTreatmentsTableColumnKey.COUNT}
+                        selectedTreatments={[]}
+                    />
+                );
+            }
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
+                return () => (
+                    <PatientTreatmentsTable
+                        tableType={TreatmentTableType.PATIENT}
+                        promise={this.props.promise}
+                        width={getWidthByDimension(
+                            this.props.dimension,
+                            this.borderWidth
+                        )}
+                        height={getHeightByDimension(
+                            this.props.dimension,
+                            this.chartHeaderHeight
+                        )}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onValueSelection}
+                        columns={[
+                            {
+                                columnKey:
+                                    PatientTreatmentsTableColumnKey.TREATMENT,
+                            },
+                            {
+                                columnKey:
+                                    PatientTreatmentsTableColumnKey.COUNT,
+                            },
+                        ]}
+                        defaultSortBy={PatientTreatmentsTableColumnKey.COUNT}
+                        selectedTreatments={[]}
+                    />
+                );
+            }
             case ChartTypeEnum.SCATTER: {
                 return () => (
                     <div
@@ -710,7 +780,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     this.props.dimension,
                                     this.borderWidth
                                 )}
-                                height={this.getScatterPlotHeight()}
+                                height={this.getScatterPlotHeight(
+                                    this.props.dimension.h
+                                )}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
                                 selectionBounds={

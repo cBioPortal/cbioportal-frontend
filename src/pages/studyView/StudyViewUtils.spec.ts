@@ -208,6 +208,8 @@ describe('StudyViewUtils', () => {
                         ],
                     },
                 ],
+                sampleTreatmentFilters: { filters: [] },
+                patientTreatmentFilters: { filters: [] },
                 genomicDataFilters: [],
                 geneFilters: [
                     {
@@ -246,6 +248,7 @@ describe('StudyViewUtils', () => {
                 numberOfSamplesPerPatient: [],
                 genomicProfiles: [],
                 caseLists: [],
+                genericAssayDataFilters: [],
             } as StudyViewFilterWithSampleIdentifierFilters;
 
             assert.isTrue(
@@ -2928,7 +2931,7 @@ describe('StudyViewUtils', () => {
             assert.equal(newLayout.y, 1);
             assert.equal(newLayout.w, 2);
             assert.equal(newLayout.h, 2);
-            assert.equal(newLayout.isResizable, false);
+            assert.equal(newLayout.isResizable, true);
         });
 
         it('should return the fixed x, previous y, and new chartMeta dimension for the overflow positions', () => {
@@ -2970,7 +2973,7 @@ describe('StudyViewUtils', () => {
             assert.equal(newLayout.y, 1);
             assert.equal(newLayout.w, 2);
             assert.equal(newLayout.h, 2);
-            assert.equal(newLayout.isResizable, false);
+            assert.equal(newLayout.isResizable, true);
         });
 
         it('should return the fixed x, previous y, and new chartMeta dimension for the shrunk chart', () => {
@@ -3012,7 +3015,7 @@ describe('StudyViewUtils', () => {
             assert.equal(newLayout.y, 1);
             assert.equal(newLayout.w, 1);
             assert.equal(newLayout.h, 1);
-            assert.equal(newLayout.isResizable, false);
+            assert.equal(newLayout.isResizable, true);
         });
     });
 
@@ -3024,7 +3027,7 @@ describe('StudyViewUtils', () => {
                 y: 1,
                 w: 1,
                 h: 1,
-                isResizable: false,
+                isResizable: true,
             };
             const cols = 5;
             const matrix = generateMatrixByLayout(layout, cols);

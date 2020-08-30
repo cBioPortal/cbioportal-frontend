@@ -36,7 +36,7 @@
       "description": " "
     },
     {
-      "name": "Expression Enrichments",
+      "name": "Enrichments",
       "description": " "
     },
     {
@@ -1073,10 +1073,10 @@
     "/expression-enrichments/fetch": {
       "post": {
         "tags": [
-          "Expression Enrichments"
+          "Enrichments"
         ],
-        "summary": "Fetch expression enrichments in a molecular profile",
-        "operationId": "fetchExpressionEnrichmentsUsingPOST",
+        "summary": "Fetch genomic enrichments in a molecular profile",
+        "operationId": "fetchGenomicEnrichmentsUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1116,7 +1116,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ExpressionEnrichment"
+                "$ref": "#/definitions/GenomicEnrichment"
               }
             }
           }
@@ -1203,6 +1203,111 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByGene"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-data-bin-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch generic assay data bin counts by study view filter",
+        "operationId": "fetchGenericAssayDataBinCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "dataBinMethod",
+            "in": "query",
+            "description": "Method for data binning",
+            "required": false,
+            "type": "string",
+            "default": "DYNAMIC",
+            "allowEmptyValue": false,
+            "enum": [
+              "STATIC",
+              "DYNAMIC"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "genericAssayDataBinCountFilter",
+            "description": "Generic assay data bin count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataBinCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayDataBin"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/generic-assay-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Enrichments"
+        ],
+        "summary": "Fetch generic assay enrichments in a molecular profile",
+        "operationId": "fetchGenericAssayEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayEnrichment"
               }
             }
           }
@@ -2328,6 +2433,30 @@
       },
       "title": "AlterationEnrichment"
     },
+    "AndedPatientTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OredPatientTreatmentFilters"
+          }
+        }
+      },
+      "title": "AndedPatientTreatmentFilters"
+    },
+    "AndedSampleTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OredSampleTreatmentFilters"
+          }
+        }
+      },
+      "title": "AndedSampleTreatmentFilters"
+    },
     "CaseListDataCount": {
       "type": "object",
       "properties": {
@@ -2722,37 +2851,6 @@
       },
       "title": "DensityPlotBin"
     },
-    "ExpressionEnrichment": {
-      "type": "object",
-      "required": [
-        "entrezGeneId",
-        "groupsStatistics",
-        "hugoGeneSymbol",
-        "pValue"
-      ],
-      "properties": {
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "groupsStatistics": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GroupStatistics"
-          }
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "pValue": {
-          "type": "number"
-        }
-      },
-      "title": "ExpressionEnrichment"
-    },
     "GeneFilter": {
       "type": "object",
       "properties": {
@@ -2773,6 +2871,125 @@
         }
       },
       "title": "GeneFilter"
+    },
+    "GenericAssayDataBin": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "end": {
+          "type": "number"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "specialValue": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenericAssayDataBin"
+    },
+    "GenericAssayDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayDataBinFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenericAssayDataBinCountFilter"
+    },
+    "GenericAssayDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "customBins": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number"
+        },
+        "profileType": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number"
+        }
+      },
+      "title": "GenericAssayDataBinFilter"
+    },
+    "GenericAssayDataFilter": {
+      "type": "object",
+      "properties": {
+        "profileType": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataFilterValue"
+          }
+        }
+      },
+      "title": "GenericAssayDataFilter"
+    },
+    "GenericAssayEnrichment": {
+      "type": "object",
+      "required": [
+        "genericEntityMetaProperties",
+        "groupsStatistics",
+        "name",
+        "pValue",
+        "stableId"
+      ],
+      "properties": {
+        "genericEntityMetaProperties": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayEnrichment"
     },
     "Geneset": {
       "type": "object",
@@ -3013,6 +3230,37 @@
         }
       },
       "title": "GenomicDataFilter"
+    },
+    "GenomicEnrichment": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "groupsStatistics",
+        "hugoGeneSymbol",
+        "pValue"
+      ],
+      "properties": {
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        }
+      },
+      "title": "GenomicEnrichment"
     },
     "Gistic": {
       "type": "object",
@@ -3401,6 +3649,39 @@
       },
       "title": "MutationSpectrumFilter"
     },
+    "OredPatientTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatientTreatmentFilter"
+          }
+        }
+      },
+      "title": "OredPatientTreatmentFilters"
+    },
+    "OredSampleTreatmentFilters": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleTreatmentFilter"
+          }
+        }
+      },
+      "title": "OredSampleTreatmentFilters"
+    },
+    "PatientTreatmentFilter": {
+      "type": "object",
+      "properties": {
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "title": "PatientTreatmentFilter"
+    },
     "Sample": {
       "type": "object",
       "required": [
@@ -3460,6 +3741,23 @@
       },
       "title": "SampleIdentifier"
     },
+    "SampleTreatmentFilter": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "enum": [
+            "Pre",
+            "Post",
+            "Unknown"
+          ]
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "title": "SampleTreatmentFilter"
+    },
     "ServerStatusMessage": {
       "type": "object",
       "properties": {
@@ -3493,6 +3791,12 @@
             "$ref": "#/definitions/GeneFilter"
           }
         },
+        "genericAssayDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataFilter"
+          }
+        },
         "genomicDataFilters": {
           "type": "array",
           "items": {
@@ -3508,11 +3812,17 @@
             }
           }
         },
+        "patientTreatmentFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/SampleIdentifier"
           }
+        },
+        "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {
           "type": "array",
