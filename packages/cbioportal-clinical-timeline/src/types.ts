@@ -16,7 +16,7 @@ export interface TimelineTrackSpecification {
     uid: string;
     label?: string;
     tracks?: TimelineTrackSpecification[];
-    renderEvent?: (e: TimelineEvent) => JSX.Element | string;
+    renderEvents?: (e: TimelineEvent[]) => JSX.Element | string;
     renderTooltip?: (e: TimelineEvent) => JSX.Element | string;
     trackType?: TimelineTrackType;
     getLineChartValue?: (e: TimelineEvent) => number | null;
