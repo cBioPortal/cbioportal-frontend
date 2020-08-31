@@ -84,7 +84,7 @@ function getLineChartYCoordinate(
 
 function renderSuperscript(number: number) {
     return (
-        <g transform={'translate(1 -8)'}>
+        <g transform={'translate(3 -8)'}>
             <text
                 x={1}
                 y={0}
@@ -170,9 +170,11 @@ export function renderPoint(
     } else {
         return (
             <g>
-                {events.length > 1 && renderSuperscript(events.length)}
                 {events.length > 1 ? (
-                    renderStack(10, TIMELINE_TRACK_HEIGHT / 2, '#222222')
+                    <>
+                        {renderSuperscript(events.length)}
+                        {renderStack(9, TIMELINE_TRACK_HEIGHT / 2, '#222222')}
+                    </>
                 ) : (
                     <circle
                         cx="0"
