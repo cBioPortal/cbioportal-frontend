@@ -17,7 +17,7 @@ import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { fetchGenes } from 'shared/lib/StoreUtils';
+import { fetchGenes, mergeDiscreteCNAData } from 'shared/lib/StoreUtils';
 import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
 import {
     getAlterationData,
@@ -32,7 +32,17 @@ import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './pathwayMapper.module.scss';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
-
+import {
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_TRUNC,
+    CNA_COLOR_AMP,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
+    CNA_COLOR_HOMDEL,
+} from 'shared/lib/Colors';
 interface IPatientViewPathwayMapperProps {
     store: PatientViewPageStore;
     appStore: AppStore;
@@ -59,13 +69,15 @@ export default class PatientViewPathwayMapper extends React.Component<
     private readonly validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.newGenesFromPathway);
-            console.log('valid Non Query Genes');
-            console.log(genes);
+
+            console.log('valid Non Query Genes', genes);
+
             return genes.map(gene => gene.hugoGeneSymbol);
         },
         onResult: (genes: string[]) => {
             // show loading text only if there are actually new genes to load
-            if (genes.length > 0) {
+            if (genes.length < 0) {
+                console.log('valo', genes);
                 const tId = toast('Loading alteration data...', {
                     autoClose: false,
                     draggable: false,
@@ -121,31 +133,26 @@ export default class PatientViewPathwayMapper extends React.Component<
         const alterationFrequencyData: ICBioData[] = [];
 
         console.log('Inside alteration data for query genes');
-        const sequencedData = Object.keys(
-            this.props.store.sequencedSampleIdsInStudy.result
-        ).length;
 
         const mutationData = this.props.store.mergedMutationDataIncludingUncalledFilteredByGene
             // .filter(data => data[0].mutationType !== "Fusion")
             .map(data => ({
                 gene: data[0].gene.hugoGeneSymbol,
                 altered: 1,
-                percentAltered: 'Missense',
+                percentAltered: data[0].mutationType,
                 sequenced: 1,
             }));
 
         this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.forEach(
             altData => {
-                if (altData[0].mutationType !== 'Fusion') {
-                    const maybeT = {
-                        gene: altData[0].gene.hugoGeneSymbol,
-                        altered: 1,
-                        sequenced: 1,
-                        percentAltered: '5%',
-                    };
-                    if (maybeT) {
-                        alterationFrequencyData.push(maybeT);
-                    }
+                const maybeT = {
+                    gene: altData[0].gene.hugoGeneSymbol,
+                    altered: 1,
+                    sequenced: 1,
+                    percentAltered: altData[0].mutationType,
+                };
+                if (maybeT) {
+                    alterationFrequencyData.push(maybeT);
                 }
             }
         );
@@ -156,18 +163,37 @@ export default class PatientViewPathwayMapper extends React.Component<
                     gene: altData[0].gene.hugoGeneSymbol,
                     altered: 1,
                     sequenced: 1,
-                    percentAltered: '5%',
+                    percentAltered: this.getCNAtypes(altData[0].alteration),
                 };
                 if (maybeT) {
                     alterationFrequencyData.push(maybeT);
                 }
             }
         );
-        //get the alteration data
         console.log('in alteration data');
         console.log(alterationFrequencyData);
 
         return alterationFrequencyData;
+    }
+    private getCNAtypes(CNAtype: number) {
+        if (CNAtype == 1) return 'GAIN';
+        else if (CNAtype == 0) return 'DIPLOID';
+        else if (CNAtype == -1) return 'SHALLOWDEL';
+        else if (CNAtype == 2) return 'DeepDel';
+        else return 'AMP';
+    }
+
+    private getQueryGenes(data: ICBioData[]) {
+        const allTypes = data.map(x => x.gene);
+
+        const allGenes = allTypes.filter((x, i, a) => a.indexOf(x) == i);
+        //This parameter needs the hugoGeneSymbol in PathwayMapper
+        console.log('all genes');
+
+        const keyed_genes = allGenes.map(gene => {
+            return { hugoGeneSymbol: gene };
+        });
+        return keyed_genes;
     }
     @computed get isNewStoreReady() {
         return (
@@ -182,16 +208,19 @@ export default class PatientViewPathwayMapper extends React.Component<
         //control the data
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            console.log('out of genomic data method');
+            console.log(
+                'this.alterationFrequencyData',
+                this.alterationFrequencyData
+            );
 
+            this.addPatientViewData(this.alterationFrequencyData);
+            this.getQueryGenes(this.alterationFrequencyData);
             this.dismissActiveToasts();
-            console.log('IN RENDER');
         }
         if (!this.PathwayMapperComponent) {
             console.log('PATHWAY COMPONENT CANNOT BE CREATED');
             return null;
         }
-
         return (
             <div className="pathwayMapper">
                 <div
@@ -206,10 +235,9 @@ export default class PatientViewPathwayMapper extends React.Component<
                             <this.PathwayMapperComponent
                                 isCBioPortal={true}
                                 isCollaborative={false}
-                                genes={
-                                    this.props.store
-                                        .mergedDiscreteCNADataFilteredByGene as any
-                                }
+                                genes={this.getQueryGenes(
+                                    this.alterationFrequencyData
+                                )}
                                 cBioAlterationData={
                                     this.alterationFrequencyData
                                 }
@@ -219,8 +247,10 @@ export default class PatientViewPathwayMapper extends React.Component<
                                     this.addGenomicDataHandler
                                 }
                                 tableComponent={this.renderTable}
-                                validGenes={this.validGenes}
+                                // validGenes={this.validGenes}
                                 toast={toast}
+                                view={'patient'}
+                                //alterationColor = {this.getOncoprintColors()}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -275,22 +305,6 @@ export default class PatientViewPathwayMapper extends React.Component<
     }
 
     /**
-     * Valid non-query genes accumulated from currently selected pathway
-     * and previously selected pathways in a single query session.
-     */
-    @computed get validGenes() {
-        console.log('validgenes');
-        if (this.validNonQueryGenes.isComplete) {
-            // Valid genes are accumulated.
-            this.validNonQueryGenes.result.forEach(gene => {
-                this.accumulatedValidGenes[gene] = true;
-            });
-        }
-        console.log(this.accumulatedValidGenes);
-        return this.accumulatedValidGenes;
-    }
-
-    /**
      * addGenomicData function is implemented in PathwayMapper component and overlays
      * alteration data onto genes. Through this function callback, the function implemented
      * in PathwayMapper is copied here.
@@ -311,6 +325,7 @@ export default class PatientViewPathwayMapper extends React.Component<
         // Pathway genes does NOT always include all of the non-query genes
         // Some of the pathway genes may be invalid/unknown gene symbols
         console.log('handlePathwayChange');
+        console.log('pathwayGenes', pathwayGenes);
         this.newGenesFromPathway = pathwayGenes;
     }
 
@@ -320,7 +335,13 @@ export default class PatientViewPathwayMapper extends React.Component<
         console.log('handleAddGenes');
         //addGenesToQuery(this.props.urlWrapper, selectedGenes);
     }
+    @autobind
+    @action
+    private addPatientViewData(cBioAlterationData: ICBioData[]) {
+        console.log('addpatientViewData');
 
+        //addGenesToQuery(this.props.urlWrapper, selectedGenes);
+    }
     @autobind
     private dismissActiveToasts() {
         // Toasts are removed with delay
