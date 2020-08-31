@@ -1,0 +1,80 @@
+import { TimelineEvent } from 'cbioportal-clinical-timeline';
+import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
+import _ from 'lodash';
+
+const DEFAULT_LABEL = '-';
+
+export function getSampleInfo(
+    event: TimelineEvent,
+    caseMetaData: ISampleMetaDeta
+) {
+    const sampleId = event.event.attributes.find(
+        (att: any) => att.key === 'SAMPLE_ID'
+    );
+    if (sampleId) {
+        const color = caseMetaData.color[sampleId.value] || '#333333';
+        const label = caseMetaData.label[sampleId.value] || DEFAULT_LABEL;
+
+        return { color, label };
+    }
+
+    return null;
+}
+
+export function getNumberRangeLabel(sortedNumbers: number[]) {
+    if (!sortedNumbers.length) {
+        return DEFAULT_LABEL;
+    }
+
+    // aggregate into ranges
+    const ranges: { start: number; end: number }[] = [];
+    let currentRange = {
+        start: sortedNumbers[0],
+        end: sortedNumbers[0],
+    };
+    for (let i = 1; i < sortedNumbers.length; i++) {
+        const num = sortedNumbers[i];
+        if (num === currentRange.end + 1) {
+            // if this number is at the end of the current running range,
+            //  then extend the range
+            currentRange.end += 1;
+        } else {
+            // otherwise, flush the current running range, and start a new range
+            ranges.push(currentRange);
+            currentRange = {
+                start: num,
+                end: num,
+            };
+        }
+    }
+    // finally, flush the last trailing range
+    ranges.push(currentRange);
+
+    // print
+    return ranges
+        .map(r => {
+            if (r.start !== r.end) {
+                return `${r.start}-${r.end}`;
+            } else {
+                return r.start.toString();
+            }
+        })
+        .join(', ');
+}
+
+export function getSortedSampleInfo(colors: string[], labels: string[]) {
+    const pairs = [];
+    // filter out NaN and pair with colors
+    for (let i = 0; i < labels.length; i++) {
+        const num = parseInt(labels[i]);
+        if (!isNaN(num)) {
+            pairs.push({
+                label: num,
+                color: colors[i],
+            });
+        }
+    }
+
+    // sort by label
+    return _.sortBy(pairs, p => p.label);
+}

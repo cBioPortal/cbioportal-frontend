@@ -18,7 +18,10 @@ import {
 
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
-import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
+import SampleMarker, {
+    MultipleSampleMarker,
+} from 'pages/patientView/timeline2/SampleMarker';
+import { getSampleInfo } from 'pages/patientView/timeline2/TimelineWrapperUtils';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
@@ -285,27 +288,44 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             };
 
                             cat.items.forEach((event, i) => {
-                                const sampleId = event.event.attributes.find(
-                                    (att: any) => att.key === 'SAMPLE_ID'
+                                const sampleInfo = getSampleInfo(
+                                    event,
+                                    caseMetaData
                                 );
-                                if (sampleId) {
-                                    const color =
-                                        caseMetaData.color[sampleId.value] ||
-                                        '#333333';
-                                    const label =
-                                        caseMetaData.label[sampleId.value] ||
-                                        '-';
+                                if (sampleInfo) {
                                     event.render = event => {
                                         return (
                                             <SampleMarker
-                                                color={color}
-                                                label={label}
+                                                color={sampleInfo.color}
+                                                label={sampleInfo.label}
                                                 y={TIMELINE_TRACK_HEIGHT / 2}
                                             />
                                         );
                                     };
                                 }
                             });
+
+                            cat.renderEvents = (events: TimelineEvent[]) => {
+                                const colors: string[] = [];
+                                const labels: string[] = [];
+                                for (const event of events) {
+                                    const sampleInfo = getSampleInfo(
+                                        event,
+                                        caseMetaData
+                                    );
+                                    if (sampleInfo) {
+                                        colors.push(sampleInfo.color);
+                                        labels.push(sampleInfo.label);
+                                    }
+                                }
+                                return (
+                                    <MultipleSampleMarker
+                                        colors={colors}
+                                        labels={labels}
+                                        y={TIMELINE_TRACK_HEIGHT / 2}
+                                    />
+                                );
+                            };
                         },
                     },
                 ],

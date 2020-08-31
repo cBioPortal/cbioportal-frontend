@@ -165,8 +165,8 @@ export function renderPoint(
     //  we'll show that render in the tooltip.
     if (events.length === 1 && events[0].render) {
         return events[0].render(events[0]);
-    } else if (events.length === 1 && trackData.renderEvent) {
-        return trackData.renderEvent(events[0]);
+    } else if (trackData.renderEvents) {
+        return trackData.renderEvents(events);
     } else {
         return (
             <g>
