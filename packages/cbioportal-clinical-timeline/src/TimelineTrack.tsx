@@ -82,7 +82,7 @@ function getLineChartYCoordinate(
     return padding + (1 - plottingProportion) * plottingHeight; // 1-p because SVG y axis points down
 }
 
-function renderSuperscript(number: number) {
+export function renderSuperscript(number: number) {
     return (
         <g transform={'translate(3 -8)'}>
             <text
@@ -155,6 +155,7 @@ function getPointY(
 }
 
 const POINT_RADIUS = 4;
+const POINT_COLOR = 'rgb(31, 119, 180)';
 
 export function renderPoint(
     events: TimelineEvent[],
@@ -173,15 +174,10 @@ export function renderPoint(
                 {events.length > 1 ? (
                     <>
                         {renderSuperscript(events.length)}
-                        {renderStack(9, TIMELINE_TRACK_HEIGHT / 2, '#222222')}
+                        {renderStack(events.map(e => POINT_COLOR))}
                     </>
                 ) : (
-                    <circle
-                        cx="0"
-                        cy={y}
-                        r={POINT_RADIUS}
-                        fill="rgb(31, 119, 180)"
-                    />
+                    <circle cx="0" cy={y} r={POINT_RADIUS} fill={POINT_COLOR} />
                 )}
             </g>
         );
