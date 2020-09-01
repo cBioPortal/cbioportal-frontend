@@ -114,4 +114,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         // return true if transcript dropdown is disabled
         return true;
     }
+
+    public getMutationData(): Mutation[] {
+        return this.getMutations();
+    }
 }

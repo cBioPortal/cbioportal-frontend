@@ -3,6 +3,7 @@ import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
+import ResultsViewMutationMapperStore from './ResultsViewMutationMapperStore';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action } from 'mobx';
@@ -20,7 +21,7 @@ import {
     getOncoKbApiUrl,
 } from 'shared/api/urls';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
-import { Mutation } from 'cbioportal-ts-api-client';
+import { Mutation, CancerStudy } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -245,38 +246,27 @@ export default class Mutations extends React.Component<
     @action
     protected getDownloadData(dataType?: DataType): string {
         var flatdata: any = '';
-        var mutations;
-        /*if (
+        if (
             this.selectedGene &&
             this.props.store.getMutationMapperStore(this.selectedGene)
         ) {
-             mutationMapperStore = this.props.store.getMutationMapperStore(
+            var mutationMapperStore: ResultsViewMutationMapperStore;
+            mutationMapperStore = this.props.store.getMutationMapperStore(
                 this.selectedGene
             )!;
-        }*/
-        mutations = this.props.store.mutations.result || [];
-        flatdata = tsvFormat(this.convertDataToDownloadMMSData(mutations));
-        /*
-        if (mutationMapperStore == undefined) flatdata = 'undefined';
-        else
-            flatdata = tsvFormat(
-                this.convertDataToDownloadMMSData(
-                    mutations
-                )
-            );
-        */
-        return flatdata;
-    }
+            let mutations = mutationMapperStore.getMutationData();
+            let downloadData: any[] = [];
+            let sidToStudy = mutationMapperStore.studyIdToStudy.result!;
+            mutations.forEach(m => {
+                let study: any;
+                study = sidToStudy[m.studyId];
+                Object.assign(m, { StudyName: study.name });
+                downloadData.push(m);
+            });
 
-    protected convertDataToDownloadMMSData(mutations: Mutation[]) {
-        // if (mms && mms.mutationData) {
-        let data = mutations || [];
-        let downloadData: any[] = [];
-        data.forEach(m => {
-            downloadData.push(m);
-        });
-        return downloadData;
-        //} else return ' ';
+            flatdata = tsvFormat(downloadData);
+        }
+        return flatdata;
     }
 
     @autobind
