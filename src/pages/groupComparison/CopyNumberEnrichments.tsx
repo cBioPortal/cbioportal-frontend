@@ -45,6 +45,7 @@ export default class CopyNumberEnrichments extends React.Component<
             this.props.store.copyNumberEnrichmentAnalysisGroups,
             this.props.store.selectedStudyCopyNumberEnrichmentProfileMap,
             this.props.store.studies,
+            this.props.store.copyNumberEnrichmentProfiles,
         ],
         render: () => {
             let headerName = 'Copy number';
@@ -61,7 +62,10 @@ export default class CopyNumberEnrichments extends React.Component<
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
                     <EnrichmentsDataSetDropdown
-                        dataSets={this.props.store.copyNumberEnrichmentProfiles}
+                        dataSets={
+                            this.props.store.copyNumberEnrichmentProfiles
+                                .result!
+                        }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
                             this.props.store

@@ -44,6 +44,7 @@ export default class MethylationEnrichments extends React.Component<
             this.props.store.selectedMethylationEnrichmentProfileMap,
             this.props.store.methylationEnrichmentAnalysisGroups,
             this.props.store.studies,
+            this.props.store.methylationEnrichmentProfiles,
         ],
         render: () => {
             // since methylation enrichments tab is enabled only for one study, selectedMethylationEnrichmentProfileMap
@@ -58,6 +59,7 @@ export default class MethylationEnrichments extends React.Component<
                     <EnrichmentsDataSetDropdown
                         dataSets={
                             this.props.store.methylationEnrichmentProfiles
+                                .result!
                         }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={

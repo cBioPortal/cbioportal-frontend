@@ -14,6 +14,7 @@ declare const styles: {
   readonly "GeneName": string;
   readonly "ScatterTooltip": string;
   readonly "Significant": string;
+  readonly "StableId": string;
   readonly "TableContainer": string;
   readonly "Tendency": string;
 };

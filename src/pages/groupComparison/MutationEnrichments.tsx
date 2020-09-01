@@ -45,6 +45,7 @@ export default class MutationEnrichments extends React.Component<
             this.props.store.selectedStudyMutationEnrichmentProfileMap,
             this.props.store.mutationEnrichmentAnalysisGroups,
             this.props.store.studies,
+            this.props.store.mutationEnrichmentProfiles,
         ],
         render: () => {
             let headerName = 'Mutation';
@@ -61,7 +62,9 @@ export default class MutationEnrichments extends React.Component<
             return (
                 <div data-test="GroupComparisonMutationEnrichments">
                     <EnrichmentsDataSetDropdown
-                        dataSets={this.props.store.mutationEnrichmentProfiles}
+                        dataSets={
+                            this.props.store.mutationEnrichmentProfiles.result!
+                        }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
                             this.props.store
