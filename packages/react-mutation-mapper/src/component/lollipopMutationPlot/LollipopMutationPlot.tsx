@@ -630,7 +630,6 @@ export default class LollipopMutationPlot extends React.Component<
                         showYMaxSlider={this.props.showYMaxSlider}
                         showLegendToggle={this.props.showLegendToggle}
                         showDownloadControls={this.props.showDownloadControls}
-                        mutationmapperStore={this.props.store}
                         hugoGeneSymbol={this.hugoGeneSymbol}
                         countRange={this.countRange}
                         bottomCountRange={this.bottomCountRange}

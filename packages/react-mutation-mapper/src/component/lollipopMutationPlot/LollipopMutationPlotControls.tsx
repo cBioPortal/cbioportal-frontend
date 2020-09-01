@@ -10,7 +10,6 @@ import * as React from 'react';
 import Slider from 'react-rangeslider';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
-import { MutationMapperStore } from '../../model/MutationMapperStore';
 
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
 import TrackSelector, {
@@ -21,7 +20,6 @@ import TrackSelector, {
 
 import 'react-rangeslider/lib/index.css';
 import styles from './lollipopMutationPlot.module.scss';
-import autobind from 'autobind-decorator';
 
 type LollipopMutationPlotControlsProps = {
     showControls: boolean;
@@ -52,7 +50,6 @@ type LollipopMutationPlotControlsProps = {
     showYMaxSlider?: boolean;
     showLegendToggle?: boolean;
     showDownloadControls?: boolean;
-    mutationmapperStore: MutationMapperStore;
     onTrackVisibilityChange?: (selectedTrackIds: string[]) => void;
     getSVG: () => SVGElement;
     getDownloadData?: () => string;
