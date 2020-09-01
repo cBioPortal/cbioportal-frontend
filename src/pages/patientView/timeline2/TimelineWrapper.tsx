@@ -22,6 +22,8 @@ import SampleMarker, {
     MultipleSampleMarker,
 } from 'pages/patientView/timeline2/SampleMarker';
 import { getSampleInfo } from 'pages/patientView/timeline2/TimelineWrapperUtils';
+import { renderStack } from 'cbioportal-clinical-timeline/src/svg/renderStack';
+import { renderSuperscript } from 'cbioportal-clinical-timeline/src/TimelineTrack';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
@@ -364,7 +366,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             { re: /improving/i, color: 'rgb(44, 160, 44)' },
                             { re: /worsening/i, color: 'rgb(214, 39, 40)' },
                         ];
-                        cat.items.forEach((event, i) => {
+                        function getEventColor(event: TimelineEvent) {
                             const status = event.event.attributes.find(
                                 (att: any) =>
                                     att.key === 'CURATED_CANCER_STATUS'
@@ -378,6 +380,10 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                     color = colorConfig.color;
                                 }
                             }
+                            return color;
+                        }
+                        for (const event of cat.items) {
+                            const color = getEventColor(event);
                             event.render = event => {
                                 return (
                                     <circle
@@ -389,7 +395,15 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                     />
                                 );
                             };
-                        });
+                        }
+                        cat.renderEvents = events => {
+                            return (
+                                <>
+                                    {renderSuperscript(events.length)}
+                                    {renderStack(events.map(getEventColor))}
+                                </>
+                            );
+                        };
                     },
                 });
 
@@ -410,7 +424,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             { re: /worsening/i, color: 'rgb(214, 39, 40)' },
                         ];
                         if (cat.items && cat.items.length) {
-                            cat.items.forEach((event, i) => {
+                            function getEventColor(event: TimelineEvent) {
                                 const status = event.event.attributes.find(
                                     (att: any) =>
                                         att.key === 'IMAGE_OVERALL' ||
@@ -425,6 +439,11 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                         color = colorConfig.color;
                                     }
                                 }
+                                return color;
+                            }
+
+                            for (const event of cat.items) {
+                                const color = getEventColor(event);
                                 event.render = event => {
                                     return (
                                         <circle
@@ -436,7 +455,16 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                         />
                                     );
                                 };
-                            });
+                            }
+
+                            cat.renderEvents = events => {
+                                return (
+                                    <>
+                                        {renderSuperscript(events.length)}
+                                        {renderStack(events.map(getEventColor))}
+                                    </>
+                                );
+                            };
                         }
                     },
                 });
