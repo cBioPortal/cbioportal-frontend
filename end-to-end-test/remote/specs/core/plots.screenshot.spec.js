@@ -449,6 +449,12 @@ describe('plots tab screenshot tests', function() {
         browser.click('.coloringLogScale');
         waitForAndCheckPlotsTab();
     });
+    it('plots tab with structural variant coloring', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=prad_mich&case_set_id=prad_mich_cna_seq&data_priority=0&gene_list=ERG&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_mich_cna&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_mich_mutations&genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT=prad_mich_fusion&plots_coloring_selection=%7B"colorByCopyNumber"%3A"true"%2C"colorBySv"%3A"true"%7D&plots_horz_selection=%7B"dataType"%3A"clinical_attribute"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A2078%2C"dataType"%3A"COPY_NUMBER_ALTERATION"%7D&profileFilter=0&tab_index=tab_visualize`
+        );
+        waitForAndCheckPlotsTab();
+    });
 });
 
 describe('plots tab multiple studies screenshot tests', function() {

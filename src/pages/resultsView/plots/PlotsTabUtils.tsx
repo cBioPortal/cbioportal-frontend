@@ -9,6 +9,7 @@ import {
     PlotType,
     StructuralVariantCountBy,
     PlotsTabOption,
+    SelectedColoringTypes,
 } from './PlotsTab';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -81,6 +82,7 @@ import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { observable, ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
+import joinJsx from 'shared/lib/joinJsx';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -210,7 +212,22 @@ export interface INumberAxisData {
 }
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ['Not profiled', 'for mutations'];
-const NOT_PROFILED_CNA_LEGEND_LABEL = ['Not profiled', 'for CNA'];
+const NOT_PROFILED_CNA_SV_LEGEND_LABEL = (
+    coloringTypes: SelectedColoringTypes
+) => {
+    const cna = ColoringType.CopyNumber in coloringTypes;
+    const sv = ColoringType.StructuralVariant in coloringTypes;
+    let secondLine;
+    if (cna && sv) {
+        secondLine = 'for CNA and Structural Variants';
+    } else if (cna) {
+        secondLine = 'for CNA';
+    } else {
+        //sv
+        secondLine = 'for Structural Variants';
+    }
+    return ['Not profiled', secondLine];
+};
 const NO_DATA_CLINICAL_LEGEND_LABEL = 'No data';
 const MUTATION_TYPE_NOT_PROFILED = 'not_profiled_mutation';
 const MUTATION_TYPE_NOT_MUTATED = 'not_mutated';
@@ -226,10 +243,13 @@ export interface IPlotSampleData {
     dispCna?: AnnotatedNumericGeneMolecularData;
     dispMutationType?: OncoprintMutationType;
     dispClinicalValue?: string | number;
-    profiledCna?: boolean;
-    profiledMutations?: boolean;
+    dispStructuralVariant?: string;
+    isProfiledCna?: boolean;
+    isProfiledMutations?: boolean;
+    isProfiledStructuralVariants?: boolean;
     mutations: AnnotatedMutation[];
     copyNumberAlterations: AnnotatedNumericGeneMolecularData[];
+    structuralVariants: StructuralVariant[];
 }
 
 export interface IThreshold1D {
@@ -306,30 +326,38 @@ function doesPointHaveMutationData(d: IPlotSampleData) {
 function doesPointHaveCnaData(d: IPlotSampleData) {
     return !!d.dispCna;
 }
+function doesPointHaveSvData(d: IPlotSampleData) {
+    return !!d.dispStructuralVariant;
+}
 function isPointProfiledForMutations(d: IPlotSampleData) {
-    return !!d.profiledMutations;
+    return !!d.isProfiledMutations;
 }
 function isPointProfiledForCna(d: IPlotSampleData) {
-    return !!d.profiledCna;
+    return !!d.isProfiledCna;
+}
+function isPointProfiledForSv(d: IPlotSampleData) {
+    return !!d.isProfiledStructuralVariants;
 }
 
 export function scatterPlotZIndexSortBy<
     D extends Pick<
         IPlotSampleData,
         | 'dispMutationType'
-        | 'profiledMutations'
+        | 'isProfiledMutations'
         | 'dispCna'
         | 'dispClinicalValue'
-        | 'profiledCna'
+        | 'isProfiledCna'
+        | 'isProfiledStructuralVariants'
+        | 'dispStructuralVariant'
     >
->(viewType: ColoringType, highlight?: (d: D) => boolean) {
+>(viewType: SelectedColoringTypes, highlight?: (d: D) => boolean) {
     // sort by render priority
     const sortByHighlight = highlight
         ? (d: D) => (highlight(d) ? 1 : 0)
         : (d: D) => 0;
 
     const sortByMutation = (d: D) => {
-        if (!d.profiledMutations) {
+        if (!d.isProfiledMutations) {
             return -mutationRenderPriority[MUTATION_TYPE_NOT_PROFILED];
         } else if (!d.dispMutationType) {
             return -mutationRenderPriority[MUTATION_TYPE_NOT_MUTATED];
@@ -341,7 +369,7 @@ export function scatterPlotZIndexSortBy<
     };
 
     const sortByCna = (d: D) => {
-        if (!d.profiledCna) {
+        if (!d.isProfiledCna) {
             return -cnaRenderPriority[CNA_TYPE_NOT_PROFILED];
         } else if (!d.dispCna) {
             return -cnaRenderPriority[CNA_TYPE_NO_DATA];
@@ -352,39 +380,43 @@ export function scatterPlotZIndexSortBy<
         }
     };
 
-    let sortBy;
-    switch (viewType) {
-        case ColoringType.ClinicalData:
-            sortBy = [
-                sortByHighlight,
-                (d: D) => {
-                    if (d.dispClinicalValue === undefined) {
-                        return Number.NEGATIVE_INFINITY;
-                    } else {
-                        return 1;
-                    }
-                },
-            ];
-            break;
-        case ColoringType.MutationTypeAndCopyNumber:
-            sortBy = [sortByHighlight, sortByMutation, sortByCna];
-            break;
-        case ColoringType.MutationType:
-            sortBy = [sortByHighlight, sortByMutation];
-            break;
-        case ColoringType.CopyNumber:
-            sortBy = [sortByHighlight, sortByCna];
-            break;
+    const sortByStructuralVariant = (d: D) => {
+        if (!d.isProfiledStructuralVariants) {
+            return 0;
+        } else if (!d.dispStructuralVariant) {
+            return 1;
+        } else {
+            return 2;
+        }
+    };
+
+    let sortBy = [sortByHighlight];
+    if (ColoringType.ClinicalData in viewType) {
+        sortBy.push((d: D) => {
+            if (d.dispClinicalValue === undefined) {
+                return Number.NEGATIVE_INFINITY;
+            } else {
+                return 1;
+            }
+        });
+    } else {
+        if (ColoringType.MutationType in viewType) {
+            sortBy.push(sortByMutation);
+        }
+        if (ColoringType.StructuralVariant in viewType) {
+            sortBy.push(sortByStructuralVariant);
+        }
+        if (ColoringType.CopyNumber in viewType) {
+            sortBy.push(sortByCna);
+        }
     }
     return sortBy;
 }
 
 export function scatterPlotLegendData(
     data: IPlotSampleData[],
-    viewType: ColoringType,
+    viewType: SelectedColoringTypes,
     plotType: PlotType,
-    mutationDataExists: MobxPromise<boolean>,
-    cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean,
     limitValueTypes: string[],
     highlightedLegendItems?: ObservableMap<LegendDataWithId>,
@@ -393,129 +425,61 @@ export function scatterPlotLegendData(
     coloringClinicalDataLogScale?: boolean,
     onClickLegendItem?: (ld: LegendDataWithId) => void
 ): LegendDataWithId[] {
-    const _mutationDataExists =
-        mutationDataExists.isComplete && mutationDataExists.result;
-    const _cnaDataExists = cnaDataExists.isComplete && cnaDataExists.result;
     let legend: any[] = [];
-    switch (viewType) {
-        case ColoringType.ClinicalData:
-            if (
-                coloringClinicalDataCacheEntry &&
-                coloringClinicalDataCacheEntry.categoryToColor
-            ) {
-                legend = scatterPlotStringClinicalLegendData(
-                    coloringClinicalDataCacheEntry,
-                    plotType,
-                    onClickLegendItem
-                );
-            } else if (
-                coloringClinicalDataCacheEntry &&
-                coloringClinicalDataCacheEntry.numericalValueToColor
-            ) {
-                legend = scatterPlotNumericalClinicalLegendData(
-                    coloringClinicalDataCacheEntry,
-                    plotType,
-                    coloringClinicalDataLogScale
-                );
-            }
-            break;
-        case ColoringType.CopyNumber:
-            if (_cnaDataExists) {
-                legend = scatterPlotCnaLegendData(
-                    data,
-                    plotType,
-                    onClickLegendItem
-                );
-            }
-            break;
-        case ColoringType.LimitValCopyNumber:
-            if (_cnaDataExists) {
-                legend = scatterPlotCnaLegendData(
-                    data,
-                    plotType,
-                    onClickLegendItem
-                ).concat(
-                    scatterPlotLimitValLegendData(
-                        plotType,
-                        limitValueTypes,
-                        onClickLegendItem
-                    )
-                );
-            }
-            break;
-        case ColoringType.LimitValMutationType:
-            if (_mutationDataExists) {
-                legend = scatterPlotMutationLegendData(
-                    data,
-                    driversAnnotated,
-                    true,
-                    plotType,
-                    onClickLegendItem
-                ).concat(
-                    scatterPlotLimitValLegendData(
-                        plotType,
-                        limitValueTypes,
-                        onClickLegendItem
-                    )
-                );
-            }
-            break;
-        case ColoringType.MutationType:
-            if (_mutationDataExists) {
-                legend = scatterPlotMutationLegendData(
-                    data,
-                    driversAnnotated,
-                    true,
-                    plotType,
-                    onClickLegendItem
-                );
-            }
-            break;
-        case ColoringType.MutationTypeAndCopyNumber:
-            if (_mutationDataExists && _cnaDataExists) {
-                legend = scatterPlotMutationLegendData(
-                    data,
-                    driversAnnotated,
-                    false,
-                    plotType,
-                    onClickLegendItem
-                ).concat(
-                    scatterPlotCnaLegendData(data, plotType, onClickLegendItem)
-                );
-            }
-            break;
-        case ColoringType.LimitValMutationTypeAndCopyNumber:
-            if (_mutationDataExists && cnaDataExists) {
-                legend = scatterPlotMutationLegendData(
+    if (ColoringType.ClinicalData in viewType) {
+        if (
+            coloringClinicalDataCacheEntry &&
+            coloringClinicalDataCacheEntry.categoryToColor
+        ) {
+            legend = scatterPlotStringClinicalLegendData(
+                coloringClinicalDataCacheEntry,
+                plotType,
+                onClickLegendItem
+            );
+        } else if (
+            coloringClinicalDataCacheEntry &&
+            coloringClinicalDataCacheEntry.numericalValueToColor
+        ) {
+            legend = scatterPlotNumericalClinicalLegendData(
+                coloringClinicalDataCacheEntry,
+                plotType,
+                coloringClinicalDataLogScale
+            );
+        }
+    } else {
+        if (ColoringType.MutationType in viewType) {
+            legend.push(
+                ...scatterPlotMutationLegendData(
                     data,
                     driversAnnotated,
                     false,
                     plotType,
                     onClickLegendItem
                 )
-                    .concat(
-                        scatterPlotCnaLegendData(
-                            data,
-                            plotType,
-                            onClickLegendItem
-                        )
-                    )
-                    .concat(
-                        scatterPlotLimitValLegendData(
-                            plotType,
-                            limitValueTypes,
-                            onClickLegendItem
-                        )
-                    );
-            }
-            break;
-        case ColoringType.LimitVal:
-            legend = scatterPlotLimitValLegendData(
-                plotType,
-                limitValueTypes,
-                onClickLegendItem
             );
-            break;
+        }
+        if (
+            ColoringType.CopyNumber in viewType ||
+            ColoringType.StructuralVariant in viewType
+        ) {
+            legend.push(
+                ...scatterPlotCnaAndSvLegendData(
+                    data,
+                    plotType,
+                    viewType,
+                    onClickLegendItem
+                )
+            );
+        }
+        if (ColoringType.LimitVal in viewType) {
+            legend.push(
+                ...scatterPlotLimitValLegendData(
+                    plotType,
+                    limitValueTypes,
+                    onClickLegendItem
+                )
+            );
+        }
     }
     const searchIndicatorLegendData = scatterPlotSearchIndicatorLegendData(
         data,
@@ -839,9 +803,10 @@ function scatterPlotNumericalClinicalLegendData(
     return legendData;
 }
 
-function scatterPlotCnaLegendData(
+function scatterPlotCnaAndSvLegendData(
     data: IPlotSampleData[],
     plotType: PlotType,
+    coloringTypes: SelectedColoringTypes,
     onClick?: (ld: LegendDataWithId) => void
 ): LegendDataWithId[] {
     let showNotProfiledElement = false;
@@ -851,60 +816,104 @@ function scatterPlotCnaLegendData(
         plotType === PlotType.WaterfallPlot ? 'square' : 'circle';
     const fillOpacity = plotType === PlotType.WaterfallPlot ? 1 : 0;
 
+    let showSvElement = false;
+
     const uniqueDispCna = _.chain(data)
         .map(d => {
+            if (
+                ColoringType.StructuralVariant in coloringTypes &&
+                doesPointHaveSvData(d)
+            ) {
+                showSvElement = true;
+                // skip the rest, because we prioritize showing structural variant
+                return null;
+            }
+
             const ret = d.dispCna ? d.dispCna.value : null;
-            if (!isPointProfiledForCna(d)) {
+            const isUnprofiledCna =
+                ColoringType.CopyNumber in coloringTypes &&
+                !isPointProfiledForCna(d);
+            const isUnprofiledSv =
+                ColoringType.StructuralVariant in coloringTypes &&
+                !isPointProfiledForSv(d);
+            if (isUnprofiledCna || isUnprofiledSv) {
                 showNotProfiledElement = true;
             }
             return ret;
         })
         .uniq()
         .filter(x => {
-            if (x === null) {
-                showNotProfiledElement = true;
-            }
             return x !== null;
         })
         .sortBy((v: number) => -v) // sorted descending
         .value();
 
-    const legendData: LegendDataWithId[] = uniqueDispCna.map(v => {
-        const appearance = cnaToAppearance[v as -2 | -1 | 0 | 1 | 2];
-        return {
-            name: appearance.legendLabel,
+    const legendData: LegendDataWithId[] = [];
+    if (ColoringType.CopyNumber in coloringTypes) {
+        legendData.push(
+            ...uniqueDispCna.map(v => {
+                const appearance = cnaToAppearance[v as -2 | -1 | 0 | 1 | 2];
+                return {
+                    name: appearance.legendLabel,
+                    symbol: {
+                        stroke: appearance.stroke,
+                        fillOpacity: fillOpacity,
+                        fill: appearance.stroke, // for waterfall plot
+                        type: legendSymbol,
+                        strokeWidth: CNA_STROKE_WIDTH,
+                    },
+                    highlighting: onClick && {
+                        uid: appearance.legendLabel,
+                        isDatumHighlighted: (d: IPlotSampleData) => {
+                            return !!(d.dispCna && d.dispCna.value === v);
+                        },
+                        onClick,
+                    },
+                };
+            })
+        );
+    }
+
+    if (showSvElement) {
+        legendData.push({
+            name: svAppearance.legendLabel,
             symbol: {
-                stroke: appearance.stroke,
-                fillOpacity: fillOpacity,
-                fill: appearance.stroke, // for waterfall plot
+                stroke: svAppearance.stroke,
+                fillOpacity,
+                fill: svAppearance.stroke, // for waterfall plot
                 type: legendSymbol,
                 strokeWidth: CNA_STROKE_WIDTH,
             },
             highlighting: onClick && {
-                uid: appearance.legendLabel,
+                uid: svAppearance.legendLabel,
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return !!(d.dispCna && d.dispCna.value === v);
+                    return !!d.dispStructuralVariant;
                 },
                 onClick,
             },
-        };
-    });
+        });
+    }
+
     if (showNotProfiledElement) {
         legendData.push({
-            name: NOT_PROFILED_CNA_LEGEND_LABEL,
+            name: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes),
             symbol: {
-                stroke: notProfiledCnaAppearance.stroke,
+                stroke: notProfiledCnaAndSvAppearance.stroke,
                 fillOpacity: fillOpacity,
-                fill: notProfiledCnaAppearance.stroke, // for waterfall plot
+                fill: notProfiledCnaAndSvAppearance.stroke, // for waterfall plot
                 type: legendSymbol,
                 strokeWidth: CNA_STROKE_WIDTH,
             },
             highlighting: onClick && {
-                uid: NO_DATA_CLINICAL_LEGEND_LABEL,
+                uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    return (
-                        !isPointProfiledForCna(d) || !doesPointHaveCnaData(d)
-                    );
+                    const highlightForCna =
+                        ColoringType.CopyNumber in coloringTypes &&
+                        !isPointProfiledForCna(d);
+                    const highlightForSv =
+                        ColoringType.StructuralVariant in coloringTypes &&
+                        !isPointProfiledForSv(d);
+                    return highlightForCna || highlightForSv;
                 },
                 onClick,
             },
@@ -1741,7 +1750,7 @@ export const oncoprintMutationTypeToAppearanceDefault: {
     },
 };
 
-export const notProfiledCnaAppearance = {
+export const notProfiledCnaAndSvAppearance = {
     symbol: 'circle',
     stroke: '#000000',
     strokeOpacity: 0.3,
@@ -1749,7 +1758,7 @@ export const notProfiledCnaAppearance = {
 export const notProfiledMutationsAppearance = Object.assign(
     {},
     { fill: '#ffffff' },
-    notProfiledCnaAppearance
+    notProfiledCnaAndSvAppearance
 );
 export const noDataClinicalAppearance = Object.assign(
     {},
@@ -1818,6 +1827,12 @@ const cnaToAppearance = {
         stroke: CNA_COLOR_AMP,
         strokeOpacity: 1,
     },
+};
+
+const svAppearance = {
+    legendLabel: `Structural Variant \u00B9`,
+    stroke: STRUCTURAL_VARIANT_COLOR,
+    strokeOpacity: 1,
 };
 
 export const limitValueAppearance = {
@@ -1897,11 +1912,37 @@ function getMutationTypeAppearance(
         return oncoprintMutationTypeToAppearance[d.dispMutationType!];
     }
 }
-function getCopyNumberAppearance(d: IPlotSampleData) {
-    if (!doesPointHaveCnaData(d) || !isPointProfiledForCna(d)) {
-        return notProfiledCnaAppearance;
+function getCnaAndSvAppearance(
+    d: IPlotSampleData,
+    coloringTypes: SelectedColoringTypes
+) {
+    const hasSvData =
+        ColoringType.StructuralVariant in coloringTypes &&
+        doesPointHaveSvData(d);
+    const hasCnaData =
+        ColoringType.CopyNumber in coloringTypes && doesPointHaveCnaData(d);
+
+    const isUnprofiledCna =
+        ColoringType.CopyNumber in coloringTypes && !isPointProfiledForCna(d);
+    const isUnprofiledSv =
+        ColoringType.StructuralVariant in coloringTypes &&
+        !isPointProfiledForSv(d);
+
+    if (isUnprofiledCna || isUnprofiledSv) {
+        return notProfiledCnaAndSvAppearance;
+    } else if (hasSvData) {
+        // prioritize sv over cna
+        return svAppearance;
+    } else if (hasCnaData) {
+        const cnaValue = (d.dispCna ? d.dispCna.value : 0) as
+            | -2
+            | -1
+            | 0
+            | 1
+            | 2;
+        return cnaToAppearance[cnaValue];
     } else {
-        return cnaToAppearance[d.dispCna!.value as -2 | -1 | 0 | 1 | 2];
+        return cnaToAppearance['0'];
     }
 }
 
@@ -1914,9 +1955,10 @@ function getLimitValueAppearance(d: IPlotSampleData) {
 }
 
 export function makeScatterPlotPointAppearance(
-    coloringType: ColoringType,
-    mutationDataExists: MobxPromise<boolean>,
-    cnaDataExists: MobxPromise<boolean>,
+    coloringType: SelectedColoringTypes,
+    mutationDataExists: boolean,
+    cnaDataExists: boolean,
+    svDataExists: boolean,
     driversAnnotated: boolean,
     coloringMenuSelectedOption?: ColoringMenuOmnibarOption | undefined,
     clinicalDataCache?: ClinicalDataCache,
@@ -1934,158 +1976,112 @@ export function makeScatterPlotPointAppearance(
         ? oncoprintMutationTypeToAppearanceDrivers
         : oncoprintMutationTypeToAppearanceDefault;
 
-    switch (coloringType) {
-        case ColoringType.ClinicalData:
-            if (!coloringMenuSelectedOption || !clinicalDataCache) {
-                break;
-            }
+    let ret = null;
 
-            const data = clinicalDataCache.get(
-                coloringMenuSelectedOption.info.clinicalAttribute!
+    if (ColoringType.ClinicalData in coloringType) {
+        // clinical data precludes all others
+        ret = makeScatterPlotPointAppearance_Clinical(
+            coloringMenuSelectedOption,
+            clinicalDataCache,
+            coloringLogScale
+        );
+    } else {
+        let getMutApp: any = () => ({});
+        let getCnaApp: any = () => ({});
+        let getLimitValueApp: any = () => ({});
+        if (ColoringType.MutationType in coloringType && mutationDataExists) {
+            getMutApp = (d: IPlotSampleData) =>
+                getMutationTypeAppearance(d, oncoprintMutationTypeToAppearance);
+        }
+        if (
+            (cnaDataExists && ColoringType.CopyNumber in coloringType) ||
+            (svDataExists && ColoringType.StructuralVariant in coloringType)
+        ) {
+            getCnaApp = getCnaAndSvAppearance;
+        }
+        if (ColoringType.LimitVal in coloringType) {
+            getLimitValueApp = getLimitValueAppearance;
+        }
+        return (d: IPlotSampleData) => {
+            return Object.assign(
+                {},
+                basicAppearance,
+                getMutApp(d),
+                getCnaApp(d, coloringType),
+                getLimitValueApp(d)
             );
-            if (data.isComplete) {
-                if (
-                    coloringMenuSelectedOption.info.clinicalAttribute!
-                        .datatype === 'STRING'
-                ) {
-                    const categoryToColor = data.result!.categoryToColor!;
-                    return (d: IPlotSampleData) => {
-                        if (doesPointHaveClinicalData(d)) {
-                            return {
-                                stroke: '#000000',
-                                strokeOpacity: NON_CNA_STROKE_OPACITY,
-                                fill:
-                                    categoryToColor[
-                                        d.dispClinicalValue! as string
-                                    ],
-                                fillOpacity: 1,
-                                symbol: 'circle',
-                            };
-                        } else {
-                            return noDataClinicalAppearance;
-                        }
-                    };
-                } else if (
-                    coloringMenuSelectedOption.info.clinicalAttribute!
-                        .datatype === 'NUMBER'
-                ) {
-                    let numericalValueToColor: (x: number) => string;
-                    if (
-                        coloringLogScale &&
-                        data.result!.logScaleNumericalValueToColor
-                    ) {
-                        // if log scale coloring is selected and its available, use it
-                        numericalValueToColor = data.result!
-                            .logScaleNumericalValueToColor;
-                    } else {
-                        // otherwise use linear scale
-                        numericalValueToColor = data.result!
-                            .numericalValueToColor!;
-                    }
-
-                    return (d: IPlotSampleData) => {
-                        if (doesPointHaveClinicalData(d)) {
-                            return {
-                                stroke: '#000000',
-                                strokeOpacity: NON_CNA_STROKE_OPACITY,
-                                fill: numericalValueToColor(
-                                    d.dispClinicalValue! as number
-                                ),
-                                fillOpacity: 1,
-                                symbol: 'circle',
-                            };
-                        } else {
-                            return noDataClinicalAppearance;
-                        }
-                    };
-                }
-            }
-            break;
-        case ColoringType.MutationTypeAndCopyNumber:
-            if (
-                cnaDataExists.isComplete &&
-                cnaDataExists.result &&
-                mutationDataExists.isComplete &&
-                mutationDataExists.result
-            ) {
-                return (d: IPlotSampleData) => {
-                    const cnaAppearance = getCopyNumberAppearance(d);
-                    const mutAppearance = getMutationTypeAppearance(
-                        d,
-                        oncoprintMutationTypeToAppearance
-                    );
-                    return Object.assign({}, mutAppearance, cnaAppearance); // overwrite with cna stroke
-                };
-            }
-            break;
-        case ColoringType.CopyNumber:
-            if (cnaDataExists.isComplete && cnaDataExists.result) {
-                return getCopyNumberAppearance;
-            }
-            break;
-        case ColoringType.MutationType:
-            if (mutationDataExists.isComplete && mutationDataExists.result) {
-                return (d: IPlotSampleData) => {
-                    return getMutationTypeAppearance(
-                        d,
-                        oncoprintMutationTypeToAppearance
-                    );
-                };
-            }
-            break;
-        case ColoringType.LimitValMutationTypeAndCopyNumber:
-            if (
-                cnaDataExists.isComplete &&
-                cnaDataExists.result &&
-                mutationDataExists.isComplete &&
-                mutationDataExists.result
-            ) {
-                return (d: IPlotSampleData) => {
-                    const limitValAppearance = getLimitValueAppearance(d);
-                    const cnaAppearance = getCopyNumberAppearance(d);
-                    const mutAppearance = getMutationTypeAppearance(
-                        d,
-                        oncoprintMutationTypeToAppearance
-                    );
-                    return Object.assign(
-                        {},
-                        mutAppearance,
-                        cnaAppearance,
-                        limitValAppearance
-                    ); // overwrite with cna stroke
-                };
-            }
-            break;
-        case ColoringType.LimitValCopyNumber:
-            if (cnaDataExists.isComplete && cnaDataExists.result) {
-                return (d: IPlotSampleData) => {
-                    const limitValAppearance = getLimitValueAppearance(d);
-                    const cnaAppearance = getCopyNumberAppearance(d);
-                    return Object.assign({}, cnaAppearance, limitValAppearance);
-                };
-            }
-            break;
-        case ColoringType.LimitValMutationType:
-            if (mutationDataExists.isComplete && mutationDataExists.result) {
-                return (d: IPlotSampleData) => {
-                    const limitValAppearance = getLimitValueAppearance(d);
-                    const mutAppearance = getMutationTypeAppearance(
-                        d,
-                        oncoprintMutationTypeToAppearance
-                    );
-                    return Object.assign({}, mutAppearance, limitValAppearance); // overwrite with appearance for limit values
-                };
-            }
-            break;
-        case ColoringType.LimitVal:
-            return (d: IPlotSampleData) => {
-                const limitValAppearance = getLimitValueAppearance(d);
-                const defaultAppearance = basicAppearance;
-                return Object.assign({}, defaultAppearance, limitValAppearance);
-            };
+        };
     }
     // By default, return basic appearance
-    return () => basicAppearance;
+    return ret || (() => basicAppearance);
+}
+
+function makeScatterPlotPointAppearance_Clinical(
+    coloringMenuSelectedOption: ColoringMenuOmnibarOption | undefined,
+    clinicalDataCache: ClinicalDataCache | undefined,
+    coloringLogScale?: boolean
+) {
+    let ret = null;
+    if (coloringMenuSelectedOption && clinicalDataCache) {
+        const data = clinicalDataCache.get(
+            coloringMenuSelectedOption.info.clinicalAttribute!
+        );
+        if (data.isComplete) {
+            if (
+                coloringMenuSelectedOption.info.clinicalAttribute!.datatype ===
+                'STRING'
+            ) {
+                const categoryToColor = data.result!.categoryToColor!;
+                ret = (d: IPlotSampleData) => {
+                    if (doesPointHaveClinicalData(d)) {
+                        return {
+                            stroke: '#000000',
+                            strokeOpacity: NON_CNA_STROKE_OPACITY,
+                            fill:
+                                categoryToColor[d.dispClinicalValue! as string],
+                            fillOpacity: 1,
+                            symbol: 'circle',
+                        };
+                    } else {
+                        return noDataClinicalAppearance;
+                    }
+                };
+            } else if (
+                coloringMenuSelectedOption.info.clinicalAttribute!.datatype ===
+                'NUMBER'
+            ) {
+                let numericalValueToColor: (x: number) => string;
+                if (
+                    coloringLogScale &&
+                    data.result!.logScaleNumericalValueToColor
+                ) {
+                    // if log scale coloring is selected and its available, use it
+                    numericalValueToColor = data.result!
+                        .logScaleNumericalValueToColor;
+                } else {
+                    // otherwise use linear scale
+                    numericalValueToColor = data.result!.numericalValueToColor!;
+                }
+
+                ret = (d: IPlotSampleData) => {
+                    if (doesPointHaveClinicalData(d)) {
+                        return {
+                            stroke: '#000000',
+                            strokeOpacity: NON_CNA_STROKE_OPACITY,
+                            fill: numericalValueToColor(
+                                d.dispClinicalValue! as number
+                            ),
+                            fillOpacity: 1,
+                            symbol: 'circle',
+                        };
+                    } else {
+                        return noDataClinicalAppearance;
+                    }
+                };
+            }
+        }
+    }
+    return ret;
 }
 
 function mutationsProteinChanges(
@@ -2207,6 +2203,20 @@ export function tooltipCnaSection(data: AnnotatedNumericGeneMolecularData[]) {
     );
 }
 
+function tooltipSvSection(structuralVariants: StructuralVariant[]) {
+    return (
+        <span>
+            {`Structural Variant: `}
+            {joinJsx(
+                structuralVariants.map(v => (
+                    <span style={{ fontWeight: 'bold' }}>{v.variantClass}</span>
+                )),
+                <span>{`, `}</span>
+            )}
+        </span>
+    );
+}
+
 function tooltipClinicalDataSection(
     clinicalValue: string | number | undefined,
     clinicalAttribute?: ClinicalAttribute
@@ -2274,6 +2284,10 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
     if (d.copyNumberAlterations.length > 0) {
         cnaSection = tooltipCnaSection(d.copyNumberAlterations);
     }
+    let svSection: any = null;
+    if (d.structuralVariants.length > 0) {
+        svSection = tooltipSvSection(d.structuralVariants);
+    }
     let clinicalDataSection: any = null;
     if (coloringClinicalAttribute) {
         clinicalDataSection = tooltipClinicalDataSection(
@@ -2313,6 +2327,8 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
             {!!mutationsSection && <br />}
             {cnaSection}
             {!!cnaSection && <br />}
+            {svSection}
+            {!!svSection && <br />}
             {clinicalDataSection}
         </div>
     );
@@ -2347,6 +2363,10 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
     if (d.copyNumberAlterations.length > 0) {
         cnaSection = tooltipCnaSection(d.copyNumberAlterations);
     }
+    let svSection: any = null;
+    if (d.structuralVariants.length > 0) {
+        svSection = tooltipSvSection(d.structuralVariants);
+    }
     let clinicalDataSection: any = null;
     if (coloringClinicalAttribute) {
         clinicalDataSection = tooltipClinicalDataSection(
@@ -2375,6 +2395,8 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
             {!!mutationsSection && <br />}
             {cnaSection}
             {!!cnaSection && <br />}
+            {svSection}
+            {!!svSection && <br />}
             {clinicalDataSection}
         </div>
     );
@@ -2464,6 +2486,10 @@ export function makeBoxScatterPlotData(
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
     },
+    structuralVariants?: {
+        molecularProfileIds: string[];
+        data: StructuralVariant[];
+    },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
         clinicalAttribute: ClinicalAttribute;
@@ -2477,6 +2503,7 @@ export function makeBoxScatterPlotData(
         coverageInformation,
         mutations,
         copyNumberAlterations,
+        structuralVariants,
         selectedGeneForStyling,
         clinicalData
     );
@@ -2505,6 +2532,10 @@ export function makeScatterPlotData(
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
     },
+    structuralVariants?: {
+        molecularProfileIds: string[];
+        data: StructuralVariant[];
+    },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
         clinicalAttribute: ClinicalAttribute;
@@ -2524,6 +2555,10 @@ export function makeScatterPlotData(
     copyNumberAlterations?: {
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
+    },
+    structuralVariants?: {
+        molecularProfileIds: string[];
+        data: StructuralVariant[];
     },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
@@ -2545,6 +2580,10 @@ export function makeScatterPlotData(
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
     },
+    structuralVariants?: {
+        molecularProfileIds: string[];
+        data: StructuralVariant[];
+    },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
         clinicalAttribute: ClinicalAttribute;
@@ -2554,10 +2593,17 @@ export function makeScatterPlotData(
     const mutationsMap: {
         [uniqueSampleKey: string]: AnnotatedMutation[];
     } = mutations ? _.groupBy(mutations.data, m => m.uniqueSampleKey) : {};
+
     const cnaMap: {
         [uniqueSampleKey: string]: AnnotatedNumericGeneMolecularData[];
     } = copyNumberAlterations
         ? _.groupBy(copyNumberAlterations.data, d => d.uniqueSampleKey)
+        : {};
+
+    const structuralVariantMap: {
+        [uniqueSampleKey: string]: StructuralVariant[];
+    } = structuralVariants
+        ? _.groupBy(structuralVariants.data, d => d.uniqueSampleKey)
         : {};
 
     let clinicalDataMap: {
@@ -2623,10 +2669,20 @@ export function makeScatterPlotData(
                 mutationRenderPriority
             ) as OncoprintMutationType;
         }
+        let dispStructuralVariant: string | undefined = undefined;
+        const sampleSv: StructuralVariant[] | undefined =
+            structuralVariantMap[d.uniqueSampleKey];
+        if (sampleSv && sampleSv.length) {
+            dispStructuralVariant = sampleSv
+                .map(sv => sv.variantClass)
+                .join(', ');
+        }
+
         const sampleCoverageInfo = coverageInformation[d.uniqueSampleKey];
-        let profiledMutations = undefined;
-        let profiledCna = undefined;
-        if (mutations || copyNumberAlterations) {
+        let isProfiledMutations = undefined;
+        let isProfiledCna = undefined;
+        let isProfiledStructuralVariants = undefined;
+        if (mutations || copyNumberAlterations || structuralVariants) {
             const profiledReport = makeScatterPlotData_profiledReport(
                 selectedGeneForStyling
                     ? selectedGeneForStyling.hugoGeneSymbol
@@ -2637,19 +2693,22 @@ export function makeScatterPlotData(
                 sampleCoverageInfo
             );
             if (mutations) {
-                profiledMutations = false;
-                for (const molecularProfileId of mutations.molecularProfileIds) {
-                    profiledMutations =
-                        profiledMutations ||
-                        !!profiledReport[molecularProfileId];
-                }
+                isProfiledMutations = _.some(
+                    mutations.molecularProfileIds,
+                    id => !!profiledReport[id]
+                );
             }
             if (copyNumberAlterations) {
-                profiledCna = false;
-                for (const molecularProfileId of copyNumberAlterations.molecularProfileIds) {
-                    profiledCna =
-                        profiledCna || !!profiledReport[molecularProfileId];
-                }
+                isProfiledCna = _.some(
+                    copyNumberAlterations.molecularProfileIds,
+                    id => !!profiledReport[id]
+                );
+            }
+            if (structuralVariants) {
+                isProfiledStructuralVariants = _.some(
+                    structuralVariants.molecularProfileIds,
+                    id => !!profiledReport[id]
+                );
             }
         }
         let dispClinicalValue: string | number | undefined = undefined;
@@ -2673,11 +2732,14 @@ export function makeScatterPlotData(
             horzThresholdTypes: ([] as string[]).concat(d.thresholdType || ''),
             mutations: sampleMutations || [],
             copyNumberAlterations: sampleCopyNumberAlterations || [],
+            structuralVariants: sampleSv || [],
             dispCna,
             dispMutationType,
+            dispStructuralVariant,
             dispClinicalValue,
-            profiledCna,
-            profiledMutations,
+            isProfiledCna,
+            isProfiledMutations,
+            isProfiledStructuralVariants,
         };
     }
     const data: any[] = [];
@@ -2738,6 +2800,10 @@ export function makeWaterfallPlotData(
         molecularProfileIds: string[];
         data: AnnotatedNumericGeneMolecularData[];
     },
+    structuralVariants?: {
+        molecularProfileIds: string[];
+        data: StructuralVariant[];
+    },
     clinicalData?: {
         clinicalAttribute: ClinicalAttribute;
         data: ClinicalData[];
@@ -2751,6 +2817,12 @@ export function makeWaterfallPlotData(
         [uniqueSampleKey: string]: AnnotatedNumericGeneMolecularData[];
     } = copyNumberAlterations
         ? _.groupBy(copyNumberAlterations.data, d => d.uniqueSampleKey)
+        : {};
+
+    const structuralVariantMap: {
+        [uniqueSampleKey: string]: StructuralVariant[];
+    } = structuralVariants
+        ? _.groupBy(structuralVariants.data, d => d.uniqueSampleKey)
         : {};
 
     let clinicalDataMap: {
@@ -2824,30 +2896,49 @@ export function makeWaterfallPlotData(
             ) as OncoprintMutationType;
         }
 
+        let dispStructuralVariant: string | undefined = undefined;
+        const sampleSv: StructuralVariant[] | undefined =
+            structuralVariantMap[d.uniqueSampleKey];
+        if (sampleSv && sampleSv.length && selectedGene) {
+            dispStructuralVariant = sampleSv
+                .map(sv => sv.variantClass)
+                .join(', ');
+        }
+
         const sampleCoverageInfo = coverageInformation[d.uniqueSampleKey];
 
-        let profiledMutations: boolean | undefined = undefined;
-        let profiledCna: boolean | undefined = undefined;
+        let isProfiledMutations: boolean | undefined = undefined;
+        let isProfiledCna: boolean | undefined = undefined;
+        let isProfiledStructuralVariants: boolean | undefined = undefined;
 
-        if ((mutations || copyNumberAlterations) && selectedGene) {
+        if (
+            (mutations || copyNumberAlterations || structuralVariants) &&
+            selectedGene
+        ) {
             const profiledReport = makeWaterfallPlotData_profiledReport(
                 selectedGene.hugoGeneSymbol,
                 sampleCoverageInfo
             );
             if (mutations) {
-                profiledMutations = false;
+                isProfiledMutations = false;
                 for (const molecularProfileId of mutations.molecularProfileIds) {
-                    profiledMutations =
-                        profiledMutations ||
+                    isProfiledMutations =
+                        isProfiledMutations ||
                         !!profiledReport[molecularProfileId];
                 }
             }
             if (copyNumberAlterations) {
-                profiledCna = false;
+                isProfiledCna = false;
                 for (const molecularProfileId of copyNumberAlterations.molecularProfileIds) {
-                    profiledCna =
-                        profiledCna || !!profiledReport[molecularProfileId];
+                    isProfiledCna =
+                        isProfiledCna || !!profiledReport[molecularProfileId];
                 }
+            }
+            if (structuralVariants) {
+                isProfiledStructuralVariants = _.some(
+                    structuralVariants.molecularProfileIds,
+                    id => !!profiledReport[id]
+                );
             }
         }
 
@@ -2873,12 +2964,15 @@ export function makeWaterfallPlotData(
             thresholdTypes: ([] as any[]).concat(d.thresholdType || undefined),
             mutations: sampleMutations || [],
             copyNumberAlterations: sampleCopyNumberAlterations || [],
+            structuralVariants: sampleSv || [],
             jitter: getJitterForCase(d.uniqueSampleKey),
             dispCna,
             dispMutationType,
             dispClinicalValue,
-            profiledCna,
-            profiledMutations,
+            dispStructuralVariant,
+            isProfiledCna,
+            isProfiledMutations,
+            isProfiledStructuralVariants,
         });
     }
 
@@ -2946,22 +3040,7 @@ function makeWaterfallPlotData_profiledReport(
     return ret;
 }
 
-export function getCnaQueries(utilitiesSelection: ColoringMenuSelection) {
-    const queries: { entrezGeneId: number }[] = [];
-    if (
-        utilitiesSelection.selectedOption !== undefined &&
-        utilitiesSelection.selectedOption.info.entrezGeneId !==
-            NONE_SELECTED_OPTION_NUMERICAL_VALUE &&
-        utilitiesSelection.selectedOption.info.entrezGeneId !== undefined
-    ) {
-        queries.push({
-            entrezGeneId: utilitiesSelection.selectedOption.info.entrezGeneId,
-        });
-    }
-    return _.uniqBy(queries, 'entrezGeneId');
-}
-
-export function getMutationQueries(utilitiesSelection: ColoringMenuSelection) {
+export function getCacheQueries(utilitiesSelection: ColoringMenuSelection) {
     const queries: { entrezGeneId: number }[] = [];
     if (
         utilitiesSelection.selectedOption !== undefined &&
@@ -3032,7 +3111,7 @@ export function getScatterPlotDownloadData(
                         entrezGeneIdToGene
                     ).join('; ')
                 );
-            } else if (datum.profiledMutations === false) {
+            } else if (datum.isProfiledMutations === false) {
                 row.push('Not Profiled');
             } else {
                 row.push('-');
@@ -3042,7 +3121,7 @@ export function getScatterPlotDownloadData(
             if (datum.dispCna) {
                 const cna = (cnaToAppearance as any)[datum.dispCna.value];
                 row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
-            } else if (datum.profiledCna === false) {
+            } else if (datum.isProfiledCna === false) {
                 row.push(`Not Profiled`);
             } else {
                 row.push('-');
@@ -3098,7 +3177,7 @@ export function getWaterfallPlotDownloadData(
                         entrezGeneIdToGene
                     ).join('; ')
                 ); // 4 concatenated mutations
-            } else if (datum.profiledMutations === false) {
+            } else if (datum.isProfiledMutations === false) {
                 row.push('Not Profiled');
             } else {
                 row.push('-');
@@ -3108,7 +3187,7 @@ export function getWaterfallPlotDownloadData(
             if (datum.dispCna) {
                 const cna = (cnaToAppearance as any)[datum.dispCna.value];
                 row.push(`${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`);
-            } else if (datum.profiledCna === false) {
+            } else if (datum.isProfiledCna === false) {
                 row.push(`Not Profiled`);
             } else {
                 row.push('-');
@@ -3162,7 +3241,7 @@ export function getBoxPlotDownloadData(
                             entrezGeneIdToGene
                         ).join('; ')
                     );
-                } else if (datum.profiledMutations === false) {
+                } else if (datum.isProfiledMutations === false) {
                     row.push('Not Profiled');
                 } else {
                     row.push('-');
@@ -3174,7 +3253,7 @@ export function getBoxPlotDownloadData(
                     row.push(
                         `${datum.dispCna.hugoGeneSymbol}: ${cna.legendLabel}`
                     );
-                } else if (datum.profiledCna === false) {
+                } else if (datum.isProfiledCna === false) {
                     row.push(`Not Profiled`);
                 } else {
                     row.push('-');
