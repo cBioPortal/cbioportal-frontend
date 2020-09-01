@@ -4,14 +4,11 @@ import {
     GenomicEnrichment,
 } from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
-import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
-import { tsvFormat } from 'd3-dsv';
-import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
 import {
-    MolecularProfile,
-    NumericGeneMolecularData,
-} from 'cbioportal-ts-api-client';
-import seedrandom from 'seedrandom';
+    ExpressionEnrichmentRow,
+    GenericAssayEnrichmentRow,
+} from 'shared/model/EnrichmentRow';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { roundLogRatio, formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import * as _ from 'lodash';
 import { AlterationTypeConstants } from '../ResultsViewPageStore';
@@ -31,6 +28,11 @@ import {
     ExpressionEnrichmentTableColumnType,
 } from './ExpressionEnrichmentsTable';
 import { Datalabel } from 'shared/lib/DataUtils';
+import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import {
+    GenericAssayEnrichmentTableColumn,
+    GenericAssayEnrichmentTableColumnType,
+} from './GenericAssayEnrichmentsTable';
 
 export type AlterationEnrichmentWithQ = AlterationEnrichment & {
     logRatio?: number;
@@ -38,6 +40,10 @@ export type AlterationEnrichmentWithQ = AlterationEnrichment & {
     value?: number /* used for copy number in group comparison */;
 };
 export type ExpressionEnrichmentWithQ = GenomicEnrichment & {
+    qValue: number;
+};
+
+export type GenericAssayEnrichmentWithQ = GenericAssayEnrichment & {
     qValue: number;
 };
 
@@ -184,6 +190,23 @@ export function getExpressionScatterData(
         });
 }
 
+export function getGenericAssayScatterData(
+    genericAssayEnrichments: GenericAssayEnrichmentRow[]
+): any[] {
+    return genericAssayEnrichments.map(genericAssayEnrichment => {
+        return {
+            x: genericAssayEnrichment.logRatio,
+            y: volcanoPlotYCoord(genericAssayEnrichment.pValue),
+            stableId: genericAssayEnrichment.stableId,
+            entityName: genericAssayEnrichment.entityName,
+            pValue: genericAssayEnrichment.pValue,
+            qValue: genericAssayEnrichment.qValue,
+            logRatio: genericAssayEnrichment.logRatio,
+            hovered: false,
+        };
+    });
+}
+
 export function getAlterationRowData(
     alterationEnrichments: AlterationEnrichmentWithQ[],
     queryGenes: string[],
@@ -287,11 +310,61 @@ export function getExpressionRowData(
     });
 }
 
+export function getGenericAssayEnrichmentRowData(
+    genericAssayEnrichments: GenericAssayEnrichmentWithQ[],
+    groups: { name: string; nameOfEnrichmentDirection?: string }[]
+): GenericAssayEnrichmentRow[] {
+    return genericAssayEnrichments.map(genericAssayEnrichment => {
+        let enrichedGroup = '';
+        // fallback to stable id if name is not specified
+        let entityName =
+            'NAME' in genericAssayEnrichment.genericEntityMetaProperties
+                ? genericAssayEnrichment.genericEntityMetaProperties['NAME']
+                : genericAssayEnrichment.stableId;
+        let logRatio: number | undefined = undefined;
+        let groupsSet = _.keyBy(
+            genericAssayEnrichment.groupsStatistics,
+            group => group.name
+        );
+        if (groups.length === 2) {
+            let group1Data = groupsSet[groups[0].name];
+            let group2Data = groupsSet[groups[1].name];
+            logRatio = group1Data.meanExpression - group2Data.meanExpression;
+            let group1Name =
+                groups[0].nameOfEnrichmentDirection || groups[0].name;
+            let group2Name =
+                groups[1].nameOfEnrichmentDirection || groups[1].name;
+            enrichedGroup = logRatio > 0 ? group1Name : group2Name;
+        } else {
+            enrichedGroup = genericAssayEnrichment.groupsStatistics.sort(
+                (a, b) => b.meanExpression - a.meanExpression
+            )[0].name;
+        }
+
+        return {
+            checked: false,
+            disabled: false,
+            stableId: genericAssayEnrichment.stableId,
+            entityName,
+            pValue: genericAssayEnrichment.pValue,
+            qValue: genericAssayEnrichment.qValue,
+            enrichedGroup,
+            groupsSet,
+            logRatio,
+        };
+    });
+}
+
 export function getFilteredData(
-    data: (ExpressionEnrichmentRow | AlterationEnrichmentRow)[],
+    data: (
+        | ExpressionEnrichmentRow
+        | AlterationEnrichmentRow
+        | GenericAssayEnrichmentRow
+    )[],
     expressedGroups: string[],
     qValueFilter: boolean,
-    selectedGenes: string[] | null
+    filterFunction: (value: string) => boolean,
+    isGenericAssayData: boolean = false
 ): any[] {
     return data.filter(enrichmentDatum => {
         let result = false;
@@ -328,11 +401,22 @@ export function getFilteredData(
         if (qValueFilter && enrichmentDatum.qValue) {
             result = result && enrichmentDatum.qValue < 0.05;
         }
-        if (selectedGenes) {
+        if (isGenericAssayData) {
             result =
                 result &&
-                selectedGenes.includes(enrichmentDatum.hugoGeneSymbol);
+                filterFunction(
+                    (enrichmentDatum as GenericAssayEnrichmentRow).stableId
+                );
+        } else {
+            result =
+                result &&
+                filterFunction(
+                    (enrichmentDatum as
+                        | ExpressionEnrichmentRow
+                        | AlterationEnrichmentRow).hugoGeneSymbol
+                );
         }
+
         return result;
     });
 }
@@ -435,6 +519,16 @@ export function pickMethylationEnrichmentProfiles(
     return profiles.filter(p => {
         return (
             p.molecularAlterationType === AlterationTypeConstants.METHYLATION
+        );
+    });
+}
+
+export function pickGenericAssayEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return profiles.filter(p => {
+        return (
+            p.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
         );
     });
 }
@@ -695,6 +789,144 @@ export function getEnrichmentColumns(
             uniqueName:
                 group.name +
                 ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
+        });
+    });
+    return columns;
+}
+
+export function getGenericAssayEnrichmentColumns(
+    groups: { name: string; description: string; color?: string }[],
+    alteredVsUnalteredMode?: boolean
+): GenericAssayEnrichmentTableColumn[] {
+    // minimum 2 group are required for enrichment analysis
+    if (groups.length < 2) {
+        return [];
+    }
+    let columns: GenericAssayEnrichmentTableColumn[] = [];
+    const nameToGroup = _.keyBy(groups, g => g.name);
+
+    let enrichedGroupColum: GenericAssayEnrichmentTableColumn = {
+        name: alteredVsUnalteredMode
+            ? GenericAssayEnrichmentTableColumnType.TENDENCY
+            : GenericAssayEnrichmentTableColumnType.EXPRESSED,
+        render: (d: GenericAssayEnrichmentRow) => {
+            if (d.pValue === undefined) {
+                return <span>-</span>;
+            }
+            let groupColor = undefined;
+            const significant = d.qValue < 0.05;
+            if (!alteredVsUnalteredMode && significant) {
+                groupColor = nameToGroup[d.enrichedGroup].color;
+            }
+            return (
+                <div
+                    className={classNames(styles.Tendency, {
+                        [styles.Significant]: significant,
+                        [styles.ColoredBackground]: !!groupColor,
+                    })}
+                    style={{
+                        backgroundColor: groupColor,
+                        color: groupColor && getTextColor(groupColor),
+                    }}
+                >
+                    {alteredVsUnalteredMode
+                        ? d.enrichedGroup
+                        : formatAlterationTendency(d.enrichedGroup)}
+                </div>
+            );
+        },
+        filter: (
+            d: GenericAssayEnrichmentRow,
+            filterString: string,
+            filterStringUpper: string
+        ) => d.enrichedGroup.toUpperCase().includes(filterStringUpper),
+        sortBy: (d: GenericAssayEnrichmentRow) => d.enrichedGroup,
+        download: (d: GenericAssayEnrichmentRow) => d.enrichedGroup,
+        tooltip: <span>The group with the highest frequency</span>,
+    };
+
+    if (groups.length === 2) {
+        let group1 = groups[0];
+        let group2 = groups[1];
+        columns.push({
+            name: GenericAssayEnrichmentTableColumnType.LOG_RATIO,
+            render: (d: GenericAssayEnrichmentRow) => (
+                <span>{formatLogOddsRatio(d.logRatio!)}</span>
+            ),
+            tooltip: (
+                <span>
+                    Log2 of ratio of mean in {group1.name} to mean in{' '}
+                    {group2.name}
+                </span>
+            ),
+            sortBy: (d: GenericAssayEnrichmentRow) => Number(d.logRatio),
+            download: (d: GenericAssayEnrichmentRow) =>
+                formatLogOddsRatio(d.logRatio!),
+        });
+
+        enrichedGroupColum.tooltip = (
+            <table>
+                <tr>
+                    <td>Log ratio > 0</td>
+                    <td>: Enriched in {group1.name}</td>
+                </tr>
+                <tr>
+                    <td>Log ratio &lt;= 0</td>
+                    <td>: Enriched in {group2.name}</td>
+                </tr>
+                <tr>
+                    <td>q-Value &lt; 0.05</td>
+                    <td>: Significant association</td>
+                </tr>
+            </table>
+        );
+    }
+    columns.push(enrichedGroupColum);
+    groups.forEach(group => {
+        columns.push({
+            name: group.name,
+            headerRender: (name: string) => STAT_IN_headerRender('μ', name),
+            render: (d: GenericAssayEnrichmentRow) => (
+                <span>
+                    {d.groupsSet[group.name]
+                        ? d.groupsSet[group.name].meanExpression.toFixed(2)
+                        : Datalabel.NA}
+                </span>
+            ),
+            tooltip: (
+                <span>Mean of the listed entity in {group.description}</span>
+            ),
+            sortBy: (d: GenericAssayEnrichmentRow) =>
+                d.groupsSet[group.name].meanExpression,
+            download: (d: GenericAssayEnrichmentRow) =>
+                d.groupsSet[group.name].meanExpression.toFixed(2),
+            uniqueName:
+                group.name + GenericAssayEnrichmentTableColumnType.MEAN_SUFFIX,
+        });
+
+        columns.push({
+            name: group.name,
+            headerRender: (name: string) => STAT_IN_headerRender('σ', name),
+            render: (d: GenericAssayEnrichmentRow) => (
+                <span>
+                    {d.groupsSet[group.name]
+                        ? d.groupsSet[group.name].standardDeviation.toFixed(2)
+                        : 'NA'}
+                </span>
+            ),
+            tooltip: (
+                <span>
+                    Standard deviation of the listed entity in{' '}
+                    {group.description}
+                </span>
+            ),
+            sortBy: (d: GenericAssayEnrichmentRow) =>
+                d.groupsSet[group.name].standardDeviation,
+            download: (d: GenericAssayEnrichmentRow) =>
+                d.groupsSet[group.name].standardDeviation.toFixed(2),
+            uniqueName:
+                group.name +
+                GenericAssayEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
         });
     });
     return columns;

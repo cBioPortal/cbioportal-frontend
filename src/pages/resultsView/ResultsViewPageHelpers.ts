@@ -31,6 +31,7 @@ export enum ResultsViewComparisonSubTab {
     MRNA = 'mrna',
     PROTEIN = 'protein',
     DNAMETHYLATION = 'dna_methylation',
+    GENERIC_ASSAY_PREFIX = 'generic_assay',
 }
 
 export function getTabId(pathname: string) {
