@@ -216,7 +216,11 @@ export default class LollipopMutationPlotControls extends React.Component<
                 filename={`${this.props.hugoGeneSymbol}_lollipop`}
                 dontFade={true}
                 type="button"
-                buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                buttons={
+                    this.props.getDownloadData != undefined
+                        ? ['SVG', 'PNG', 'PDF', 'Data']
+                        : ['SVG', 'PNG', 'PDF']
+                }
             />
         );
     }
