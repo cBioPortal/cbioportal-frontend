@@ -3849,8 +3849,7 @@ export class StudyViewPageStore {
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalClinicalAttributesPrefix.isPending ||
-            this.sampleTreatments.isPending ||
-            this.patientTreatments.isPending;
+            this.displayTreatments.isPending;
 
         if (
             this.clinicalAttributes.isComplete &&
@@ -4147,19 +4146,15 @@ export class StudyViewPageStore {
                 true
             );
 
-            if (!_.isEmpty(this.patientTreatments.result)) {
-                this.chartsType.set(
-                    SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
-                    ChartTypeEnum.PATIENT_TREATMENTS_TABLE
-                );
-            }
+            this.chartsType.set(
+                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
+                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+            );
 
-            if (!_.isEmpty(this.sampleTreatments.result)) {
-                this.chartsType.set(
-                    SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
-                    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
-                );
-            }
+            this.chartsType.set(
+                SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
+                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+            );
         }
 
         if (!_.isEmpty(this.mutationProfiles.result)) {
@@ -6702,13 +6697,10 @@ export class StudyViewPageStore {
 
     @computed
     public get displayTreatments() {
-        const filters = this.initialFilters;
-
         return remoteData({
-            await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
             invoke: () => {
                 return defaultClient.getContainsTreatmentDataUsingPOST({
-                    studyViewFilter: filters,
+                    studyViewFilter: this.initialFilters,
                 });
             },
         });
