@@ -117,14 +117,12 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
     }
 
     public getDownloadData(): string {
-        let flatdata: string = '';
-        let mutations = this.getMutations();
-        let sidToStudy = this.studyIdToStudy.result!;
+        const mutations = this.getMutations();
+        const sidToStudy = this.studyIdToStudy.result!;
         const downloadData = mutations.map(m => {
             const study = sidToStudy[m.studyId];
             return Object.assign({}, m, { studyName: study.name });
         });
-        flatdata = tsvFormat(downloadData);
-        return flatdata;
+        return tsvFormat(downloadData);
     }
 }

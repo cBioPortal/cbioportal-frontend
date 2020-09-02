@@ -243,7 +243,6 @@ export default class Mutations extends React.Component<
 
     @autobind
     protected getDownloadData(dataType?: DataType): string {
-        var flatdata: string = '';
         if (
             this.selectedGene &&
             this.props.store.getMutationMapperStore(this.selectedGene)
@@ -251,9 +250,9 @@ export default class Mutations extends React.Component<
             const mutationMapperStore = this.props.store.getMutationMapperStore(
                 this.selectedGene
             )!;
-            flatdata = mutationMapperStore.getDownloadData();
+            return mutationMapperStore.getDownloadData();
         }
-        return flatdata;
+        return '';
     }
 
     @autobind
