@@ -12,7 +12,6 @@ import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner'
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
 import { DataType } from 'cbioportal-frontend-commons';
-import { tsvFormat } from 'd3-dsv';
 
 import './mutations.scss';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
@@ -243,28 +242,16 @@ export default class Mutations extends React.Component<
     }
 
     @autobind
-    @action
     protected getDownloadData(dataType?: DataType): string {
-        var flatdata: any = '';
+        var flatdata: string = '';
         if (
             this.selectedGene &&
             this.props.store.getMutationMapperStore(this.selectedGene)
         ) {
-            var mutationMapperStore: ResultsViewMutationMapperStore;
-            mutationMapperStore = this.props.store.getMutationMapperStore(
+            const mutationMapperStore = this.props.store.getMutationMapperStore(
                 this.selectedGene
             )!;
-            let mutations = mutationMapperStore.getMutationData();
-            let downloadData: any[] = [];
-            let sidToStudy = mutationMapperStore.studyIdToStudy.result!;
-            mutations.forEach(m => {
-                let study: any;
-                study = sidToStudy[m.studyId];
-                Object.assign(m, { StudyName: study.name });
-                downloadData.push(m);
-            });
-
-            flatdata = tsvFormat(downloadData);
+            flatdata = mutationMapperStore.getDownloadData();
         }
         return flatdata;
     }

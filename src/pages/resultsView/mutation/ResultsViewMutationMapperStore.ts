@@ -26,6 +26,7 @@ import MutationMapperStore, {
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
 import { computed } from 'mobx';
+import { tsvFormat } from 'd3-dsv';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -115,7 +116,15 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         return true;
     }
 
-    public getMutationData(): Mutation[] {
-        return this.getMutations();
+    public getDownloadData(): string {
+        let flatdata: string = '';
+        let mutations = this.getMutations();
+        let sidToStudy = this.studyIdToStudy.result!;
+        const downloadData = mutations.map(m => {
+            const study = sidToStudy[m.studyId];
+            return Object.assign({}, m, { studyName: study.name });
+        });
+        flatdata = tsvFormat(downloadData);
+        return flatdata;
     }
 }

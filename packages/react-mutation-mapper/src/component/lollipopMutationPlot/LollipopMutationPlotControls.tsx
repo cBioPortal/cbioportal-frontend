@@ -214,7 +214,7 @@ export default class LollipopMutationPlotControls extends React.Component<
                 dontFade={true}
                 type="button"
                 buttons={
-                    this.props.getDownloadData != undefined
+                    this.props.getDownloadData !== undefined
                         ? ['SVG', 'PNG', 'PDF', 'Data']
                         : ['SVG', 'PNG', 'PDF']
                 }
