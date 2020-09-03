@@ -4,7 +4,7 @@ import {
     MolecularProfile,
     Mutation,
 } from 'cbioportal-ts-api-client';
-import TruncatedText from '../../TruncatedText';
+import { TruncatedText } from 'cbioportal-frontend-commons';
 import { getStudySummaryUrl } from '../../../api/urls';
 
 export default class StudyColumnFormatter {
