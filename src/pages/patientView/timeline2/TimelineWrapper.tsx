@@ -25,8 +25,7 @@ import {
     getEventColor,
     getSampleInfo,
 } from 'pages/patientView/timeline2/TimelineWrapperUtils';
-import { renderStack } from 'cbioportal-clinical-timeline/src/svg/renderStack';
-import { renderSuperscript } from 'cbioportal-clinical-timeline/src/TimelineTrack';
+import { renderStack, renderSuperscript } from 'cbioportal-clinical-timeline';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
