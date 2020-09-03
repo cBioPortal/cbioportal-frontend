@@ -18,6 +18,7 @@ export interface TimelineTrackSpecification {
     tracks?: TimelineTrackSpecification[];
     renderEvents?: (e: TimelineEvent[]) => JSX.Element | string;
     renderTooltip?: (e: TimelineEvent) => JSX.Element | string;
+    sortSimultaneousEvents?: (e: TimelineEvent[]) => TimelineEvent[];
     trackType?: TimelineTrackType;
     getLineChartValue?: (e: TimelineEvent) => number | null;
 }
