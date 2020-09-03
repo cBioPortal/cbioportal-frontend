@@ -336,6 +336,7 @@ export class StudyViewPageStore {
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
+    @observable groupColorChanged = false;
 
     @action
     updateNAValue = (uniqueKey: string): void => {
@@ -540,6 +541,10 @@ export class StudyViewPageStore {
         ComparisonGroupId,
         boolean
     >({}, { deep: false });
+    private _selectedComparisonGroupsWarningSigns = observable.map<
+        string,
+        boolean
+    >({}, { deep: false });
     private _comparisonGroupsMarkedForDeletion = observable.map<
         ComparisonGroupId,
         boolean
@@ -558,6 +563,8 @@ export class StudyViewPageStore {
     }
 
     @action public toggleComparisonGroupSelected(groupId: string): void {
+        if (this.isComparisonGroupSelected(groupId))
+            this.toggleComparisonGroupWarningSign(groupId, false);
         this.setComparisonGroupSelected(
             groupId,
             !this.isComparisonGroupSelected(groupId)
@@ -578,6 +585,13 @@ export class StudyViewPageStore {
             chartId,
             !this.isCustomChartGroupMarkedForDeletion(chartId)
         );
+    }
+
+    @action public toggleComparisonGroupWarningSign(
+        groupId: string,
+        markedValue: boolean
+    ) {
+        this._selectedComparisonGroupsWarningSigns.set(groupId, markedValue);
     }
 
     public isComparisonGroupSelected(groupId: string): boolean {
@@ -613,6 +627,15 @@ export class StudyViewPageStore {
             }
         });
         return customChartGroupMarkedForDeletion;
+    }
+
+    public isComparisonGroupMarkedWithWarningSign(groupId: string): boolean {
+        if (!this._selectedComparisonGroups.has(groupId)) {
+            return false; // default to no
+        } else {
+            // otherwise, return value held in map
+            return this._selectedComparisonGroupsWarningSigns.get(groupId)!;
+        }
     }
 
     @action public async deleteMarkedComparisonGroups(): Promise<void> {
@@ -657,6 +680,45 @@ export class StudyViewPageStore {
             await Promise.all(deletionPromises);
             this._customChartsMarkedForDeletion.clear();
         }
+    }
+
+    public checkSelectedGroupsColors(groupUid: string, color: string): void {
+        let colors: { [color: string]: number } = {};
+
+        // check colors only for selected groups
+        let selectedGroups = getSelectedGroups(
+            this.comparisonGroups.result,
+            this
+        );
+
+        selectedGroups.sort((a, b) => a.name.localeCompare(b.name));
+        selectedGroups.forEach(
+            (selectedGroup: StudyViewComparisonGroup, i: number) => {
+                let groupColor =
+                    selectedGroup.uid === groupUid
+                        ? color
+                        : selectedGroup.color;
+                if (groupColor != undefined)
+                    groupColor = groupColor.toLowerCase();
+
+                if (
+                    groupColor == undefined ||
+                    colors[groupColor] == undefined
+                ) {
+                    if (groupColor != undefined) colors[groupColor] = 1;
+                    this.toggleComparisonGroupWarningSign(
+                        selectedGroup.uid,
+                        false
+                    );
+                } else {
+                    colors[groupColor] = colors[groupColor] + 1;
+                    this.toggleComparisonGroupWarningSign(
+                        selectedGroup.uid,
+                        true
+                    );
+                }
+            }
+        );
     }
 
     // edge case: user deletes/add a group, then opens the panel again,

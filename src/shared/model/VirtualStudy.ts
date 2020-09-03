@@ -6,6 +6,7 @@ export interface VirtualStudyData {
     studies: { id: string; samples: string[] }[];
     origin: string[];
     studyViewFilter: StudyViewFilter;
+    color: string | undefined;
 }
 
 export interface VirtualStudy {
