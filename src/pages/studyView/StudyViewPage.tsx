@@ -386,7 +386,10 @@ export default class StudyViewPage extends React.Component<
                         arrowEl.style.right = '10px';
                     }}
                     onVisibleChange={visible => {
-                        if (!this.shareLinkModal) {
+                        if (
+                            !this.store.groupColorChanged &&
+                            !this.shareLinkModal
+                        ) {
                             this.store.showComparisonGroupUI = !!visible;
                         }
                     }}

@@ -27,6 +27,7 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
+import { COLORS } from '../studyView/StudyViewUtils';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -176,10 +177,27 @@ export default class GroupComparisonStore extends ComparisonStore {
             let ret: ComparisonGroup[] = [];
             const sampleSet = this.sampleMap.result!;
 
+            // filter colors (remove those that were already selected by user for some groups)
+            // and get the list of groups with no color
+            let colors: string[] = COLORS;
+            let filteredColors = colors;
+            let groupsWithoutColor: SessionGroupData[] = [];
+            this._session.result!.groups.forEach((group, i) => {
+                if (group.color != undefined) {
+                    filteredColors = filteredColors.filter(
+                        color => color != group.color!.toUpperCase()
+                    );
+                } else {
+                    groupsWithoutColor.push(group);
+                }
+            });
+
+            // pick a color for groups without color
             let defaultGroupColors = pickClinicalDataColors(
-                _.map(this._session.result!.groups, group => ({
+                _.map(groupsWithoutColor, group => ({
                     value: group.name,
-                })) as any
+                })) as any,
+                filteredColors
             );
 
             const finalizeGroup = (
