@@ -213,6 +213,12 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
 
         if (trackData.items) {
             eventsGroupedByPosition = groupEventsByPosition(trackData.items);
+            if (trackData.sortSimultaneousEvents) {
+                eventsGroupedByPosition = _.mapValues(
+                    eventsGroupedByPosition,
+                    trackData.sortSimultaneousEvents
+                );
+            }
         }
 
         let trackValueRange: { min: number; max: number };

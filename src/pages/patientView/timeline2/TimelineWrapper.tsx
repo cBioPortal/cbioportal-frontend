@@ -21,7 +21,10 @@ import SampleManager from 'pages/patientView/SampleManager';
 import SampleMarker, {
     MultipleSampleMarker,
 } from 'pages/patientView/timeline2/SampleMarker';
-import { getSampleInfo } from 'pages/patientView/timeline2/TimelineWrapperUtils';
+import {
+    getEventColor,
+    getSampleInfo,
+} from 'pages/patientView/timeline2/TimelineWrapperUtils';
 import { renderStack } from 'cbioportal-clinical-timeline/src/svg/renderStack';
 import { renderSuperscript } from 'cbioportal-clinical-timeline/src/TimelineTrack';
 
@@ -307,6 +310,27 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 }
                             });
 
+                            cat.sortSimultaneousEvents = (
+                                events: TimelineEvent[]
+                            ) => {
+                                return _.sortBy(events, event => {
+                                    let ret = Number.POSITIVE_INFINITY;
+                                    const sampleInfo = getSampleInfo(
+                                        event,
+                                        caseMetaData
+                                    );
+                                    if (sampleInfo) {
+                                        const label = parseInt(
+                                            sampleInfo.label
+                                        );
+                                        if (!isNaN(label)) {
+                                            ret = label;
+                                        }
+                                    }
+                                    return ret;
+                                });
+                            };
+
                             cat.renderEvents = (events: TimelineEvent[]) => {
                                 const colors: string[] = [];
                                 const labels: string[] = [];
@@ -359,31 +383,27 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     trackTypeMatch: /Med Onc Assessment|MedOnc/i,
                     configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Med Onc Assessment';
-                        const colorMappings = [
-                            { re: /indeter/i, color: '#ffffff' },
-                            { re: /stable/i, color: 'gainsboro' },
-                            { re: /mixed/i, color: 'goldenrod' },
-                            { re: /improving/i, color: 'rgb(44, 160, 44)' },
-                            { re: /worsening/i, color: 'rgb(214, 39, 40)' },
-                        ];
-                        function getEventColor(event: TimelineEvent) {
-                            const status = event.event.attributes.find(
-                                (att: any) =>
-                                    att.key === 'CURATED_CANCER_STATUS'
+                        const _getEventColor = (event: TimelineEvent) => {
+                            return getEventColor(
+                                event,
+                                ['CURATED_CANCER_STATUS'],
+                                [
+                                    { re: /indeter/i, color: '#ffffff' },
+                                    { re: /stable/i, color: 'gainsboro' },
+                                    { re: /mixed/i, color: 'goldenrod' },
+                                    {
+                                        re: /improving/i,
+                                        color: 'rgb(44, 160, 44)',
+                                    },
+                                    {
+                                        re: /worsening/i,
+                                        color: 'rgb(214, 39, 40)',
+                                    },
+                                ]
                             );
-                            let color = '#ffffff';
-                            if (status) {
-                                const colorConfig = colorMappings.find(m =>
-                                    m.re.test(status.value)
-                                );
-                                if (colorConfig) {
-                                    color = colorConfig.color;
-                                }
-                            }
-                            return color;
-                        }
+                        };
                         for (const event of cat.items) {
-                            const color = getEventColor(event);
+                            const color = _getEventColor(event);
                             event.render = event => {
                                 return (
                                     <circle
@@ -400,7 +420,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             return (
                                 <>
                                     {renderSuperscript(events.length)}
-                                    {renderStack(events.map(getEventColor))}
+                                    {renderStack(events.map(_getEventColor))}
                                 </>
                             );
                         };
@@ -412,39 +432,32 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     trackTypeMatch: /IMAGING/i,
                     configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Imaging Assessment';
-
-                        const colorMappings = [
-                            {
-                                re: /indeter|does not mention/i,
-                                color: '#ffffff',
-                            },
-                            { re: /stable/i, color: 'gainsboro' },
-                            { re: /mixed/i, color: 'goldenrod' },
-                            { re: /improving/i, color: 'rgb(44, 160, 44)' },
-                            { re: /worsening/i, color: 'rgb(214, 39, 40)' },
-                        ];
                         if (cat.items && cat.items.length) {
-                            function getEventColor(event: TimelineEvent) {
-                                const status = event.event.attributes.find(
-                                    (att: any) =>
-                                        att.key === 'IMAGE_OVERALL' ||
-                                        att.key == 'CURATED_CANCER_STATUS'
+                            const _getEventColor = (event: TimelineEvent) => {
+                                return getEventColor(
+                                    event,
+                                    ['IMAGE_OVERALL', 'CURATED_CANCER_STATUS'],
+                                    [
+                                        {
+                                            re: /indeter|does not mention/i,
+                                            color: '#ffffff',
+                                        },
+                                        { re: /stable/i, color: 'gainsboro' },
+                                        { re: /mixed/i, color: 'goldenrod' },
+                                        {
+                                            re: /improving/i,
+                                            color: 'rgb(44, 160, 44)',
+                                        },
+                                        {
+                                            re: /worsening/i,
+                                            color: 'rgb(214, 39, 40)',
+                                        },
+                                    ]
                                 );
-                                let color = '#ffffff';
-                                if (status) {
-                                    const colorConfig = colorMappings.find(m =>
-                                        m.re.test(status.value)
-                                    );
-                                    if (colorConfig) {
-                                        color = colorConfig.color;
-                                    }
-                                }
-                                return color;
-                            }
-
+                            };
                             for (const event of cat.items) {
-                                const color = getEventColor(event);
-                                event.render = event => {
+                                const color = _getEventColor(event);
+                                event.render = () => {
                                     return (
                                         <circle
                                             cx="0"
@@ -461,7 +474,9 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                 return (
                                     <>
                                         {renderSuperscript(events.length)}
-                                        {renderStack(events.map(getEventColor))}
+                                        {renderStack(
+                                            events.map(_getEventColor)
+                                        )}
                                     </>
                                 );
                             };

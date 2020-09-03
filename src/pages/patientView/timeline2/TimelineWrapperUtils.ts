@@ -32,8 +32,11 @@ export function getNumberRangeLabel(sortedNumbers: number[]) {
         start: sortedNumbers[0],
         end: sortedNumbers[0],
     };
-    for (let i = 1; i < sortedNumbers.length; i++) {
-        const num = sortedNumbers[i];
+    sortedNumbers.forEach((num, index) => {
+        if (index === 0) {
+            // skip first element - we already used it in currentRange init
+            return;
+        }
         if (num === currentRange.end + 1) {
             // if this number is at the end of the current running range,
             //  then extend the range
@@ -46,7 +49,7 @@ export function getNumberRangeLabel(sortedNumbers: number[]) {
                 end: num,
             };
         }
-    }
+    });
     // finally, flush the last trailing range
     ranges.push(currentRange);
 
@@ -77,4 +80,22 @@ export function getSortedSampleInfo(colors: string[], labels: string[]) {
 
     // sort by label
     return _.sortBy(pairs, p => p.label);
+}
+
+export function getEventColor(
+    event: TimelineEvent,
+    statusAttributes: string[],
+    colorMappings: { re: RegExp; color: string }[]
+) {
+    const status = event.event.attributes.find((att: any) =>
+        statusAttributes.includes(att.key)
+    );
+    let color = '#ffffff';
+    if (status) {
+        const colorConfig = colorMappings.find(m => m.re.test(status.value));
+        if (colorConfig) {
+            color = colorConfig.color;
+        }
+    }
+    return color;
 }
