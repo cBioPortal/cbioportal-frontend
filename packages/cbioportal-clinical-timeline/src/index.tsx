@@ -10,6 +10,9 @@ export * from './types';
 
 export * from './configureTracks';
 
+export { renderStack } from './svg/renderStack';
+export { renderSuperscript } from './TimelineTrack';
+
 //
 
 // export {
