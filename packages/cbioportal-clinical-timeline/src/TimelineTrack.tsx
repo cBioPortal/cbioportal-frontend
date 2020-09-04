@@ -82,9 +82,9 @@ function getLineChartYCoordinate(
     return padding + (1 - plottingProportion) * plottingHeight; // 1-p because SVG y axis points down
 }
 
-function renderSuperscript(number: number) {
+export function renderSuperscript(number: number) {
     return (
-        <g transform={'translate(1 -8)'}>
+        <g transform={'translate(3 -8)'}>
             <text
                 x={1}
                 y={0}
@@ -155,6 +155,7 @@ function getPointY(
 }
 
 const POINT_RADIUS = 4;
+const POINT_COLOR = 'rgb(31, 119, 180)';
 
 export function renderPoint(
     events: TimelineEvent[],
@@ -165,21 +166,18 @@ export function renderPoint(
     //  we'll show that render in the tooltip.
     if (events.length === 1 && events[0].render) {
         return events[0].render(events[0]);
-    } else if (events.length === 1 && trackData.renderEvent) {
-        return trackData.renderEvent(events[0]);
+    } else if (trackData.renderEvents) {
+        return trackData.renderEvents(events);
     } else {
         return (
             <g>
-                {events.length > 1 && renderSuperscript(events.length)}
                 {events.length > 1 ? (
-                    renderStack(10, TIMELINE_TRACK_HEIGHT / 2, '#222222')
+                    <>
+                        {renderSuperscript(events.length)}
+                        {renderStack(events.map(e => POINT_COLOR))}
+                    </>
                 ) : (
-                    <circle
-                        cx="0"
-                        cy={y}
-                        r={POINT_RADIUS}
-                        fill="rgb(31, 119, 180)"
-                    />
+                    <circle cx="0" cy={y} r={POINT_RADIUS} fill={POINT_COLOR} />
                 )}
             </g>
         );
@@ -215,6 +213,12 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
 
         if (trackData.items) {
             eventsGroupedByPosition = groupEventsByPosition(trackData.items);
+            if (trackData.sortSimultaneousEvents) {
+                eventsGroupedByPosition = _.mapValues(
+                    eventsGroupedByPosition,
+                    trackData.sortSimultaneousEvents
+                );
+            }
         }
 
         let trackValueRange: { min: number; max: number };
