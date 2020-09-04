@@ -2405,7 +2405,6 @@ export default class CBioPortalAPIInternal {
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
-        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any
     }): string {
@@ -2425,10 +2424,6 @@ export default class CBioPortalAPIInternal {
 
         if (parameters['details'] !== undefined) {
             queryParameters['details'] = parameters['details'];
-        }
-
-        if (parameters['myAllowRevocationOfOtherTokens'] !== undefined) {
-            queryParameters['myAllowRevocationOfOtherTokens'] = parameters['myAllowRevocationOfOtherTokens'];
         }
 
         if (parameters['principal'] !== undefined) {
@@ -2453,7 +2448,6 @@ export default class CBioPortalAPIInternal {
      * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {boolean} myAllowRevocationOfOtherTokens - myAllowRevocationOfOtherTokens
      * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
@@ -2461,7 +2455,6 @@ export default class CBioPortalAPIInternal {
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
-        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any,
             $domain ? : string
@@ -2494,10 +2487,6 @@ export default class CBioPortalAPIInternal {
                 queryParameters['details'] = parameters['details'];
             }
 
-            if (parameters['myAllowRevocationOfOtherTokens'] !== undefined) {
-                queryParameters['myAllowRevocationOfOtherTokens'] = parameters['myAllowRevocationOfOtherTokens'];
-            }
-
             if (parameters['principal'] !== undefined) {
                 queryParameters['principal'] = parameters['principal'];
             }
@@ -2522,7 +2511,6 @@ export default class CBioPortalAPIInternal {
      * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {boolean} myAllowRevocationOfOtherTokens - myAllowRevocationOfOtherTokens
      * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOST(parameters: {
@@ -2530,7 +2518,6 @@ export default class CBioPortalAPIInternal {
         'authorities0Authority' ? : string,
         'credentials' ? : {},
         'details' ? : {},
-        'myAllowRevocationOfOtherTokens' ? : boolean,
         'principal' ? : {},
         $queryParameters ? : any,
             $domain ? : string
