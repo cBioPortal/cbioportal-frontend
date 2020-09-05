@@ -18,7 +18,14 @@ import {
 
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
-import SampleMarker from 'pages/patientView/timeline2/SampleMarker';
+import SampleMarker, {
+    MultipleSampleMarker,
+} from 'pages/patientView/timeline2/SampleMarker';
+import {
+    getEventColor,
+    getSampleInfo,
+} from 'pages/patientView/timeline2/TimelineWrapperUtils';
+import { renderStack, renderSuperscript } from 'cbioportal-clinical-timeline';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
@@ -285,27 +292,65 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             };
 
                             cat.items.forEach((event, i) => {
-                                const sampleId = event.event.attributes.find(
-                                    (att: any) => att.key === 'SAMPLE_ID'
+                                const sampleInfo = getSampleInfo(
+                                    event,
+                                    caseMetaData
                                 );
-                                if (sampleId) {
-                                    const color =
-                                        caseMetaData.color[sampleId.value] ||
-                                        '#333333';
-                                    const label =
-                                        caseMetaData.label[sampleId.value] ||
-                                        '-';
+                                if (sampleInfo) {
                                     event.render = event => {
                                         return (
                                             <SampleMarker
-                                                color={color}
-                                                label={label}
+                                                color={sampleInfo.color}
+                                                label={sampleInfo.label}
                                                 y={TIMELINE_TRACK_HEIGHT / 2}
                                             />
                                         );
                                     };
                                 }
                             });
+
+                            cat.sortSimultaneousEvents = (
+                                events: TimelineEvent[]
+                            ) => {
+                                return _.sortBy(events, event => {
+                                    let ret = Number.POSITIVE_INFINITY;
+                                    const sampleInfo = getSampleInfo(
+                                        event,
+                                        caseMetaData
+                                    );
+                                    if (sampleInfo) {
+                                        const label = parseInt(
+                                            sampleInfo.label
+                                        );
+                                        if (!isNaN(label)) {
+                                            ret = label;
+                                        }
+                                    }
+                                    return ret;
+                                });
+                            };
+
+                            cat.renderEvents = (events: TimelineEvent[]) => {
+                                const colors: string[] = [];
+                                const labels: string[] = [];
+                                for (const event of events) {
+                                    const sampleInfo = getSampleInfo(
+                                        event,
+                                        caseMetaData
+                                    );
+                                    if (sampleInfo) {
+                                        colors.push(sampleInfo.color);
+                                        labels.push(sampleInfo.label);
+                                    }
+                                }
+                                return (
+                                    <MultipleSampleMarker
+                                        colors={colors}
+                                        labels={labels}
+                                        y={TIMELINE_TRACK_HEIGHT / 2}
+                                    />
+                                );
+                            };
                         },
                     },
                 ],
@@ -337,27 +382,27 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     trackTypeMatch: /Med Onc Assessment|MedOnc/i,
                     configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Med Onc Assessment';
-                        const colorMappings = [
-                            { re: /indeter/i, color: '#ffffff' },
-                            { re: /stable/i, color: 'gainsboro' },
-                            { re: /mixed/i, color: 'goldenrod' },
-                            { re: /improving/i, color: 'rgb(44, 160, 44)' },
-                            { re: /worsening/i, color: 'rgb(214, 39, 40)' },
-                        ];
-                        cat.items.forEach((event, i) => {
-                            const status = event.event.attributes.find(
-                                (att: any) =>
-                                    att.key === 'CURATED_CANCER_STATUS'
+                        const _getEventColor = (event: TimelineEvent) => {
+                            return getEventColor(
+                                event,
+                                ['CURATED_CANCER_STATUS'],
+                                [
+                                    { re: /indeter/i, color: '#ffffff' },
+                                    { re: /stable/i, color: 'gainsboro' },
+                                    { re: /mixed/i, color: 'goldenrod' },
+                                    {
+                                        re: /improving/i,
+                                        color: 'rgb(44, 160, 44)',
+                                    },
+                                    {
+                                        re: /worsening/i,
+                                        color: 'rgb(214, 39, 40)',
+                                    },
+                                ]
                             );
-                            let color = '#ffffff';
-                            if (status) {
-                                const colorConfig = colorMappings.find(m =>
-                                    m.re.test(status.value)
-                                );
-                                if (colorConfig) {
-                                    color = colorConfig.color;
-                                }
-                            }
+                        };
+                        for (const event of cat.items) {
+                            const color = _getEventColor(event);
                             event.render = event => {
                                 return (
                                     <circle
@@ -369,7 +414,15 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                     />
                                 );
                             };
-                        });
+                        }
+                        cat.renderEvents = events => {
+                            return (
+                                <>
+                                    {renderSuperscript(events.length)}
+                                    {renderStack(events.map(_getEventColor))}
+                                </>
+                            );
+                        };
                     },
                 });
 
@@ -378,34 +431,32 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                     trackTypeMatch: /IMAGING/i,
                     configureTrack: (cat: TimelineTrackSpecification) => {
                         cat.label = 'Imaging Assessment';
-
-                        const colorMappings = [
-                            {
-                                re: /indeter|does not mention/i,
-                                color: '#ffffff',
-                            },
-                            { re: /stable/i, color: 'gainsboro' },
-                            { re: /mixed/i, color: 'goldenrod' },
-                            { re: /improving/i, color: 'rgb(44, 160, 44)' },
-                            { re: /worsening/i, color: 'rgb(214, 39, 40)' },
-                        ];
                         if (cat.items && cat.items.length) {
-                            cat.items.forEach((event, i) => {
-                                const status = event.event.attributes.find(
-                                    (att: any) =>
-                                        att.key === 'IMAGE_OVERALL' ||
-                                        att.key == 'CURATED_CANCER_STATUS'
+                            const _getEventColor = (event: TimelineEvent) => {
+                                return getEventColor(
+                                    event,
+                                    ['IMAGE_OVERALL', 'CURATED_CANCER_STATUS'],
+                                    [
+                                        {
+                                            re: /indeter|does not mention/i,
+                                            color: '#ffffff',
+                                        },
+                                        { re: /stable/i, color: 'gainsboro' },
+                                        { re: /mixed/i, color: 'goldenrod' },
+                                        {
+                                            re: /improving/i,
+                                            color: 'rgb(44, 160, 44)',
+                                        },
+                                        {
+                                            re: /worsening/i,
+                                            color: 'rgb(214, 39, 40)',
+                                        },
+                                    ]
                                 );
-                                let color = '#ffffff';
-                                if (status) {
-                                    const colorConfig = colorMappings.find(m =>
-                                        m.re.test(status.value)
-                                    );
-                                    if (colorConfig) {
-                                        color = colorConfig.color;
-                                    }
-                                }
-                                event.render = event => {
+                            };
+                            for (const event of cat.items) {
+                                const color = _getEventColor(event);
+                                event.render = () => {
                                     return (
                                         <circle
                                             cx="0"
@@ -416,7 +467,18 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                         />
                                     );
                                 };
-                            });
+                            }
+
+                            cat.renderEvents = events => {
+                                return (
+                                    <>
+                                        {renderSuperscript(events.length)}
+                                        {renderStack(
+                                            events.map(_getEventColor)
+                                        )}
+                                    </>
+                                );
+                            };
                         }
                     },
                 });
