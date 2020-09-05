@@ -99,7 +99,9 @@ const studyViewFrontEnd = {
     defaultPriority: 1,
     tableAttrs: ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'],
     initialBins: {
-        MSI_SCORE: [1, 2, 5, 10, 30],
+        MSI_SCORE: [4, 10],
+        MSI_SENSOR_SCORE: [4, 10],
+        MSI_SCORE_MANTIS: [0.4, 0.6],
     },
     priority: {
         CANCER_TYPE: 3000,
