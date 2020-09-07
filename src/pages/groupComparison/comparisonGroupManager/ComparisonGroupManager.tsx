@@ -14,7 +14,7 @@ import {
     getComparisonLoadingUrl,
     redirectToComparisonPage,
 } from '../../../shared/api/urls';
-import styles from '../styles.module.scss';
+import styles, { sharedGroup } from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
     getGroupParameters,
@@ -32,6 +32,7 @@ import { serializeEvent } from 'shared/lib/tracking';
 import AppConfig from 'appConfig';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import classnames from 'classnames';
+import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 
 export interface IComparisonGroupManagerProps {
     store: StudyViewPageStore;
@@ -108,6 +109,7 @@ export default class ComparisonGroupManager extends React.Component<
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, true);
         }
+        this.props.store.checkSelectedGroupsColors(undefined!, undefined!);
     }
 
     @autobind
@@ -115,6 +117,7 @@ export default class ComparisonGroupManager extends React.Component<
     private deselectAllFiltered() {
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, false);
+            this.props.store.toggleComparisonGroupWarningSign(group.uid, false);
         }
     }
 
@@ -201,10 +204,14 @@ export default class ComparisonGroupManager extends React.Component<
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(
                                         group.uid
                                     )}
+                                    markedWithWarningSign={this.props.store.isComparisonGroupMarkedWithWarningSign(
+                                        group.uid
+                                    )}
                                     restore={this.restoreGroup}
                                     delete={this.deleteGroup}
                                     studyIds={this.props.store.studyIds}
                                     shareGroup={this.shareSingleGroup}
+                                    changeColor={this.groupColorChange}
                                 />
                             ))
                         ) : (
@@ -315,16 +322,33 @@ export default class ComparisonGroupManager extends React.Component<
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
             : undefined;
+        const color = RESERVED_CLINICAL_VALUE_COLORS[this.inputGroupName];
         const { id } = await comparisonClient.addGroup(
             getGroupParameters(
                 this.inputGroupName,
                 selectedSamples!,
-                this.props.store.studyIds
+                this.props.store.studyIds,
+                color
             )
         );
         this.props.store.notifyComparisonGroupsChange();
         this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.cancelAddGroup();
+    }
+
+    @autobind
+    @action
+    private async groupColorChange(
+        group: StudyViewComparisonGroup,
+        newColor: string
+    ) {
+        const { color, ...rest } = group;
+        await comparisonClient.updateGroup(group.uid, {
+            color: newColor,
+            ...rest,
+        });
+
+        this.props.store.notifyComparisonGroupsChange();
     }
 
     private get compareButton() {
