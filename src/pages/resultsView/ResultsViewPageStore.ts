@@ -3716,13 +3716,22 @@ export class ResultsViewPageStore {
         invoke: () => {
             const res: GeneticEntity[] = [];
             for (const gene of this.genes.result!) {
+                // handle case where a gene doesn't appear in reference genome data
+                const refGene = this.hugoGeneSymbolToReferenceGene.result![
+                    gene.hugoGeneSymbol
+                ];
+
+                let cytoband = '';
+
+                if (refGene && refGene.cytoband) {
+                    cytoband = refGene.cytoband;
+                }
+
                 res.push({
                     geneticEntityName: gene.hugoGeneSymbol,
                     geneticEntityType: GeneticEntityType.GENE,
                     geneticEntityId: gene.entrezGeneId,
-                    cytoband: this.hugoGeneSymbolToReferenceGene.result![
-                        gene.hugoGeneSymbol
-                    ].cytoband,
+                    cytoband: cytoband,
                     geneticEntityData: gene,
                 });
             }
