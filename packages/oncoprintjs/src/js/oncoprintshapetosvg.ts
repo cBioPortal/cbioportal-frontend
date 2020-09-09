@@ -81,7 +81,7 @@ function lineToSVG(params:ComputedLineParams, offset_x:number, offset_y:number) 
     });
 }
 
-export default function(oncoprint_shape_computed_params:ComputedShapeParams, offset_x:number, offset_y:number) {
+export default function shapeToSVG(oncoprint_shape_computed_params:ComputedShapeParams, offset_x:number, offset_y:number) {
     var type = oncoprint_shape_computed_params.type;
     if (type === 'rectangle') {
         return rectangleToSVG(oncoprint_shape_computed_params as ComputedRectangleParams, offset_x, offset_y);

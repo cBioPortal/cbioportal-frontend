@@ -403,14 +403,14 @@ export class RuleSet {
         throw "Not implemented on base class";
     }
 
-    public apply(data:Datum[], cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
+    public apply(data:Datum[], cell_width:number, cell_height:number, out_active_rules?:ActiveRules|undefined, data_id_key?:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
         // Returns a list of lists of concrete shapes, in the same order as data
         // optional parameter important_ids determines which ids count towards active rules (optional parameter data_id_key
         //		is used for this too)
         var ret = [];
         for (var i = 0; i < data.length; i++) {
             var datum = data[i];
-            var should_mark_active = !important_ids || !!important_ids[datum[data_id_key]];
+            var should_mark_active = !important_ids || !!important_ids[datum[data_id_key!]];
             var rules = this.getRulesWithId(datum);
             if (typeof out_active_rules !== 'undefined' && should_mark_active) {
                 for (let j = 0; j < rules.length; j++) {
@@ -968,7 +968,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
     }
 }
 
-class GeneticAlterationRuleSet extends LookupRuleSet {
+export class GeneticAlterationRuleSet extends LookupRuleSet {
     constructor(params:IGeneticAlterationRuleSetParams) {
         super(params);
         this.addRulesFromParams(params);
