@@ -55,7 +55,8 @@ export default class ClinicalInformationPatientTable extends React.Component<
         const genePanelsArray = genePanels.split(',');
         genePanelsArray.forEach((panelName, index) => {
             panelName = panelName.trim();
-            if (panelName.includes('N/A')) {
+            if (panelName.includes('N/A') || panelName === 'WXS') {
+                // No hyperlink/popup for N/A or WXS, since they are not real gene panel ids
                 links.push(panelName);
             } else {
                 // split gene panel name from "TESTPANEL2 (mut)" to ["TESTPANEL2", "(mut)"]
