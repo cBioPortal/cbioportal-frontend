@@ -267,7 +267,7 @@ jobs:
               $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
       - restore_cache:
           keys:
-          - v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Create MySQL data directory when no cache found
           command: |
@@ -290,7 +290,7 @@ jobs:
       - save_cache:
           paths:
             - /tmp/mysql
-          key: v4-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          key: v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
