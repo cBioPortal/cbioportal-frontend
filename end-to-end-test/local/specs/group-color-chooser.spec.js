@@ -58,7 +58,7 @@ describe('color chooser for comparison groups', function() {
                 assert($('svg[data-test=color-picker-icon] line').isExisting());
             });
 
-            it.only('resets color to `no color when clicking color twice', () => {
+            it('resets color to `no color when clicking color twice', () => {
                 createGroup('group1');
                 selectColorForChooser(
                     $('svg[data-test=color-picker-icon] rect'),
@@ -98,7 +98,7 @@ describe('color chooser for comparison groups', function() {
             goToUrlAndSetLocalStorage(studyViewUrl);
         });
 
-        it.only('uses user-defined colors', () => {
+        it('uses user-defined colors', () => {
             createGroup('Group1');
             createGroup('Group2');
             selectColorForChooser(
