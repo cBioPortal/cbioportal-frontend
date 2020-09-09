@@ -221,9 +221,9 @@ docker-compose run --rm  -v <e2e_study_dir>:/studies cbioportal sh -c '
     # add other studies if present
 ```
 
-:info: The `<e2e_study_dir>` entry refer to absolute paths on the host system.
+:info: The `<e2e_study_dir>` entry refer to the absolute path to [end-to-end-test/local/studies](end-to-end-test/local/studies) on the host system.
 
-4. Add `export CBIOPORTAL_URL="http://localhost:8080"` (or other backend branch) to `/env/custom.sh`.
+4. Add `export CBIOPORTAL_URL="http://localhost:8080"` to `/env/custom.sh`.
 
 5. In a terminal, install webdriver-manager:
 
@@ -231,7 +231,7 @@ docker-compose run --rm  -v <e2e_study_dir>:/studies cbioportal sh -c '
 yarn global add webdriver-manager
 ```
 
-:warning: Add update path to webdriver-manager installation (needed on Ubuntu Linux):
+:warning: Add path to webdriver-manager installation (needed on Ubuntu Linux):
 ```
 export PATH=$PATH:$(yarn global dir)/node_modules/webdriver-manager/bin
 ```
@@ -246,15 +246,18 @@ webdriver-manager start
 
 ```
 export BRANCH_ENV=custom
+yarn install --frozen-lockfile
+yarn buildDLL:dev
 yarn start
 ```
 
 7. In a third terminal, run the tests:
 
 ```
+export BRANCH_ENV=custom
 eval "$(./scripts/env_vars.sh)"
 export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
-export SCREENSHOT_DIRECTORY=./remote/screenshots
+export SCREENSHOT_DIRECTORY=./local/screenshots
 cd end-to-end-test
 yarn install
 yarn run test-webdriver-manager-debug
