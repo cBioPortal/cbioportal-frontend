@@ -848,6 +848,8 @@ export type StudyViewFilter = {
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
 
+        'customDataFilters': Array < ClinicalDataFilter >
+
         'geneFilters': Array < GeneFilter >
 
         'genericAssayDataFilters': Array < GenericAssayDataFilter >

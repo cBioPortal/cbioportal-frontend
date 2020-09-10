@@ -1,7 +1,25 @@
 import * as request from 'superagent';
 import { getSessionUrl } from './urls';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
-import { StudyPageSettings } from 'pages/studyView/StudyViewPageStore';
+import {
+    StudyPageSettings,
+    CustomChartIdentifierWithValue,
+} from 'pages/studyView/StudyViewPageStore';
+
+export type CustomChart = {
+    origin: string[];
+    displayName: string;
+    description: string;
+    datatype: string;
+    patientAttribute: boolean;
+    priority: number;
+    data: CustomChartIdentifierWithValue[];
+};
+
+export type CustomChartSession = {
+    id: string;
+    data: CustomChart;
+};
 
 export default class sessionServiceAPI {
     getVirtualStudyServiceUrl() {
@@ -14,6 +32,10 @@ export default class sessionServiceAPI {
 
     getUserSettingUrl() {
         return `${getSessionUrl()}/settings`;
+    }
+
+    getCustomDataUrl() {
+        return `${getSessionUrl()}/custom_data`;
     }
 
     /**
@@ -113,7 +135,7 @@ export default class sessionServiceAPI {
     updateUserSettings(data: StudyPageSettings) {
         return (
             request
-                .post(`${this.getUserSettingUrl()}`)
+                .post(this.getUserSettingUrl())
                 .send({ page: 'study_view', ...data })
                 // @ts-ignore: this method comes from caching plugin and isn't in typing
                 .forceUpdate(true)
@@ -121,5 +143,44 @@ export default class sessionServiceAPI {
                     return res.body;
                 })
         );
+    }
+
+    saveCustomData(data: any) {
+        return request
+            .post(this.getCustomDataUrl())
+            .send(data)
+            .then((res: any) => {
+                let result = res.body;
+                return {
+                    id: result.id,
+                };
+            });
+    }
+
+    getCustomData(id: string): Promise<CustomChartSession> {
+        return request
+            .get(`${this.getCustomDataUrl()}/${id}`)
+            .then((res: any) => res.body);
+    }
+
+    getCustomDataForStudies(studyIds: string[]): Promise<CustomChartSession[]> {
+        return request
+            .post(`${this.getCustomDataUrl()}/fetch`)
+            .send(studyIds)
+            .then((res: any) => {
+                return res.body;
+            });
+    }
+
+    public deleteCustomData(id: string) {
+        return request
+            .get(`${this.getCustomDataUrl()}/delete/${id}`)
+            .then(() => {});
+    }
+
+    public addCustomDataToUser(id: string) {
+        return request
+            .get(`${this.getCustomDataUrl()}/add/${id}`)
+            .then(() => {});
     }
 }
