@@ -610,6 +610,8 @@ export type StudyViewFilter = {
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
 
+        'customDataFilters': Array < ClinicalDataFilter >
+
         'geneFilters': Array < GeneFilter >
 
         'genericAssayDataFilters': Array < GenericAssayDataFilter >
@@ -1391,6 +1393,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CosmicMutation >
         > {
             return this.fetchCosmicCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchCustomDataCountsUsingPOSTURL(parameters: {
+        'clinicalDataCountFilter': ClinicalDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-data-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch custom data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataCountsUsingPOST
+     * @param {} clinicalDataCountFilter - Custom data count filter
+     */
+    fetchCustomDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalDataCountFilter': ClinicalDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalDataCountFilter'] !== undefined) {
+                body = parameters['clinicalDataCountFilter'];
+            }
+
+            if (parameters['clinicalDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch custom data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCustomDataCountsUsingPOST
+     * @param {} clinicalDataCountFilter - Custom data count filter
+     */
+    fetchCustomDataCountsUsingPOST(parameters: {
+            'clinicalDataCountFilter': ClinicalDataCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalDataCountItem >
+        > {
+            return this.fetchCustomDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

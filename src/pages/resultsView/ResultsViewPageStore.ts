@@ -141,12 +141,12 @@ import {
     fetchQueriedStudies,
     FilteredAndAnnotatedMutationsReport,
     filterSubQueryData,
+    getExtendsClinicalAttributesFromCustomData,
     getMolecularProfiles,
     getSampleAlteredMap,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    makeCustomChartData,
     OncoprintAnalysisCaseType,
     parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
@@ -2386,35 +2386,18 @@ export class ResultsViewPageStore {
     readonly clinicalAttributes_customCharts = remoteData({
         await: () => [this.studies, this.sampleMap],
         invoke: async () => {
-            const studyIds = this.studies.result!.map(s => s.studyId);
             let ret: ExtendedClinicalAttribute[] = [];
             try {
-                const userSettings = await sessionServiceClient.fetchUserSettings(
+                const studyIds = this.studies.result!.map(s => s.studyId);
+                //Add custom data from user profile
+                const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
                     studyIds
                 );
-                if (userSettings) {
-                    // Find custom charts.
-                    // TODO: Replace with specific API for custom charts. Current filter method is to just find charts with `groups` specification.
-                    ret = userSettings.chartSettings
-                        .filter(s => !!s.groups)
-                        .map(s => {
-                            const attr: ExtendedClinicalAttribute = {
-                                datatype: 'STRING',
-                                description: s.description || '',
-                                displayName: s.name || '',
-                                patientAttribute: s.patientAttribute,
-                                clinicalAttributeId: s.id,
-                                studyId: '',
-                                priority: '',
-                            };
-                            attr.data = makeCustomChartData(
-                                attr,
-                                s.groups!,
-                                this.sampleMap.result!
-                            );
-                            return attr;
-                        });
-                }
+
+                ret = getExtendsClinicalAttributesFromCustomData(
+                    customChartSessions,
+                    this.sampleMap.result!
+                );
             } catch (e) {}
             return ret;
         },
