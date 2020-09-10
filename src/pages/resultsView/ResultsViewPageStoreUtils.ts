@@ -46,11 +46,11 @@ import { SpecialAttribute } from '../../shared/cache/ClinicalDataCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import { Group } from '../../shared/api/ComparisonGroupClient';
-import { CustomGroup } from 'pages/studyView/StudyViewPageStore';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
+import { CustomChartSession } from 'shared/api/sessionServiceAPI';
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean;
@@ -822,29 +822,40 @@ export function evaluateMutationPutativeDriverInfo(
     };
 }
 
-export function makeCustomChartData(
-    attribute: ExtendedClinicalAttribute,
-    chartGroups: CustomGroup[],
+export function getExtendsClinicalAttributesFromCustomData(
+    customChartSessions: CustomChartSession[],
     sampleMap: ComplexKeyMap<Sample>
-): ClinicalData[] {
-    const ret = [];
-    for (const group of chartGroups) {
-        const value = group.name;
-        for (const sampleId of group.sampleIdentifiers) {
-            const sample = sampleMap.get(sampleId, ['sampleId', 'studyId']);
-            if (sample) {
-                ret.push({
-                    clinicalAttribute: attribute as ClinicalAttribute,
-                    clinicalAttributeId: attribute.clinicalAttributeId,
-                    value,
-                    patientId: sampleId.patientId,
-                    sampleId: sampleId.sampleId,
-                    studyId: sampleId.studyId,
-                    uniquePatientKey: sample.uniquePatientKey,
-                    uniqueSampleKey: sample.uniqueSampleKey,
-                });
-            }
-        }
-    }
-    return ret;
+): ExtendedClinicalAttribute[] {
+    return customChartSessions.map(customChartSession => {
+        const attr: ExtendedClinicalAttribute = {
+            datatype: customChartSession.data.datatype,
+            description: customChartSession.data.description || '',
+            displayName: customChartSession.data.displayName || '',
+            patientAttribute: customChartSession.data.patientAttribute,
+            clinicalAttributeId: customChartSession.id,
+            studyId: '',
+            priority: customChartSession.data.priority.toString(),
+        };
+
+        attr.data = _.reduce(
+            customChartSession.data.data,
+            (acc: ClinicalData[], datum) => {
+                const sample = sampleMap.get(datum, ['sampleId', 'studyId']);
+                if (sample) {
+                    acc.push({
+                        ...datum,
+                        clinicalAttribute: attr as ClinicalAttribute,
+                        clinicalAttributeId: attr.clinicalAttributeId,
+                        uniquePatientKey: sample.uniquePatientKey,
+                        uniqueSampleKey: sample.uniqueSampleKey,
+                    });
+                }
+
+                return acc;
+            },
+            []
+        );
+
+        return attr;
+    });
 }

@@ -476,6 +476,44 @@
         "deprecated": false
       }
     },
+    "/custom-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch custom data counts by study view filter",
+        "operationId": "fetchCustomDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalDataCountFilter",
+            "description": "Custom data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCountItem"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/data-access-token": {
       "get": {
         "tags": [
@@ -3772,6 +3810,12 @@
           }
         },
         "clinicalDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
+        "customDataFilters": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ClinicalDataFilter"

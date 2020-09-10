@@ -1,4 +1,4 @@
-import { CustomChartIdentifier, CustomGroup } from '../../StudyViewPageStore';
+import { CustomChartIdentifierWithValue } from '../../StudyViewPageStore';
 import * as _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
@@ -16,7 +16,7 @@ type Code =
     | 'INPUT_ERROR'
     | 'NO_CHART_NAME';
 
-export const DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT = 'Selected';
+export const DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT = 'custom_value';
 export const DEFAULT_GROUP_NAME_WITH_USER_INPUT = 'Unselected';
 
 export enum CodeEnum {
@@ -36,7 +36,7 @@ export type ValidationMessage = {
 };
 
 export type ParseResult = {
-    groups: CustomGroup[];
+    data: CustomChartIdentifierWithValue[];
     validationResult: ValidationResult;
 };
 
@@ -50,7 +50,7 @@ export type InputLine = {
     line: string;
     studyId?: string;
     caseId: string;
-    groupName?: string;
+    value?: string;
 };
 
 export type ValidationResult = {
@@ -72,7 +72,7 @@ export function getLine(line: string): InputLine {
         parsedResult.studyId = content[0];
         const groupInfo = content[1].split(/\s|\t/g);
         if (groupInfo.length > 1) {
-            parsedResult.groupName = groupInfo[1];
+            parsedResult.value = groupInfo[1];
         }
         parsedResult.caseId = groupInfo[0];
     }
@@ -98,7 +98,7 @@ function getUniqueCaseId(studyId: string, caseId: string) {
 }
 
 function getInputLineKey(line: InputLine) {
-    return [line.studyId || '', line.caseId, line.groupName || ''].join('&');
+    return [line.studyId || '', line.caseId, line.value || ''].join('&');
 }
 
 export function validateLines(
@@ -208,9 +208,7 @@ export function validateLines(
         const groupDistribution = _.reduce(
             lines,
             (acc, line) => {
-                let groupName = line.groupName
-                    ? line.groupName
-                    : groupNameDefault;
+                let groupName = line.value ? line.value : groupNameDefault;
                 if (acc[groupName] === undefined) {
                     acc[groupName] = [];
                 }
@@ -270,13 +268,13 @@ export function validateLines(
 }
 
 // the lines should already be validated
-export function getGroups(
+export function getData(
     lines: InputLine[],
     singleStudyId: string,
     caseType: ClinicalDataType,
     allSamples: Sample[],
     hasGroupName: boolean
-): CustomGroup[] {
+): CustomChartIdentifierWithValue[] {
     const sampleMap: { [id: string]: Sample } = {};
     const patientMap: { [id: string]: Sample[] } = {};
     const isPatientId = caseType === ClinicalDataTypeEnum.PATIENT;
@@ -291,44 +289,27 @@ export function getGroups(
         patientMap[patientKey].push(sample);
     });
 
-    let groups = _.values(
-        _.reduce(
-            lines,
-            (acc, line) => {
-                const groupName =
-                    line.groupName ||
-                    (hasGroupName
-                        ? DEFAULT_GROUP_NAME_WITH_USER_INPUT
-                        : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
-                if (acc[groupName] == undefined) {
-                    acc[groupName] = {
-                        name: groupName,
-                        sampleIdentifiers: [],
-                    };
-                }
+    return _.flatMap(lines, line => {
+        const groupName =
+            line.value ||
+            (hasGroupName
+                ? DEFAULT_GROUP_NAME_WITH_USER_INPUT
+                : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
 
-                const caseId =
-                    line.studyId === undefined
-                        ? `${singleStudyId}:${line.caseId}`
-                        : `${line.studyId}:${line.caseId}`;
-                const caseMap = isPatientId
-                    ? patientMap[caseId]
-                    : [sampleMap[caseId]];
-                const caseIdentifiers =
-                    caseMap === undefined ? [] : parseCase(caseMap);
-                acc[groupName].sampleIdentifiers.push(...caseIdentifiers);
-                return acc;
-            },
-            {} as { [key: string]: CustomGroup }
-        )
-    );
+        const caseId =
+            line.studyId === undefined
+                ? `${singleStudyId}:${line.caseId}`
+                : `${line.studyId}:${line.caseId}`;
+        const caseMap = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
 
-    return groups.map(group => {
-        group.sampleIdentifiers = _.uniqBy(
-            group.sampleIdentifiers,
-            item => `${item.studyId}:${item.sampleId}`
-        );
-        return group;
+        return caseMap.map(sample => {
+            return {
+                studyId: line.studyId || singleStudyId,
+                sampleId: sample.sampleId,
+                patientId: sample.patientId,
+                value: groupName,
+            };
+        });
     });
 }
 
@@ -363,18 +344,16 @@ export function parseContent(
     }
 
     const hasGroupName =
-        _.find(
-            lines,
-            line => line.groupName !== undefined && line.groupName !== ''
-        ) !== undefined;
+        _.find(lines, line => line.value !== undefined && line.value !== '') !==
+        undefined;
     if (validationResult.error.length > 0) {
         return {
-            groups: [],
+            data: [],
             validationResult: validationResult,
         };
     } else {
         return {
-            groups: getGroups(
+            data: getData(
                 lines,
                 selectedStudies[0],
                 caseType,
@@ -384,14 +363,4 @@ export function parseContent(
             validationResult: validationResult,
         };
     }
-}
-
-export function parseCase(mappedSamples: Sample[]): CustomChartIdentifier[] {
-    return mappedSamples.map(sample => {
-        return {
-            studyId: sample.studyId,
-            sampleId: sample.sampleId,
-            patientId: sample.patientId,
-        };
-    });
 }

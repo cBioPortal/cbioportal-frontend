@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import {
     ClinicalDataCount,
     SampleIdentifier,
@@ -30,7 +29,6 @@ import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
     ChartUserSetting,
-    CustomChart,
     GenomicChart,
     GenericAssayChart,
 } from './StudyViewPageStore';
@@ -50,7 +48,6 @@ import MobxPromise from 'mobxpromise';
 import {
     getTextWidth,
     stringListToIndexSet,
-    stringListToSet,
 } from 'cbioportal-frontend-commons';
 import {
     CNA_COLOR_AMP,
@@ -60,25 +57,18 @@ import {
 } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
-import {
-    getGroupParameters,
-    getStudiesAttr,
-} from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
-import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
     GenericAssayDataBin,
     ClinicalDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { ChartOption } from './addChartButton/AddChartButton';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -883,6 +873,7 @@ export function isFiltered(
             _.isEmpty(filter.genomicDataFilters) &&
             _.isEmpty(filter.genericAssayDataFilters) &&
             _.isEmpty(filter.caseLists) &&
+            _.isEmpty(filter.customDataFilters) &&
             (!filter.patientTreatmentFilters ||
                 _.isEmpty(filter.patientTreatmentFilters.filters)) &&
             (!filter.sampleTreatmentFilters ||
@@ -1957,10 +1948,11 @@ export function calculateClinicalDataCountFrequency(
 export function getOptionsByChartMetaDataType(
     chartsMeta: ChartMeta[],
     selectedAttrs: string[],
-    allChartTypes: { [id: string]: ChartType }
-) {
+    allChartTypes: { [id: string]: ChartType },
+    isSharedCustomData?: (chartId: string) => boolean
+): ChartOption[] {
     return _.map(chartsMeta, chartMeta => {
-        return {
+        const chartOption: ChartOption = {
             label: chartMeta.displayName,
             key: chartMeta.uniqueKey,
             chartType: allChartTypes[chartMeta.uniqueKey],
@@ -1968,6 +1960,10 @@ export function getOptionsByChartMetaDataType(
             selected: selectedAttrs.includes(chartMeta.uniqueKey),
             freq: 100,
         };
+        if (isSharedCustomData) {
+            chartOption.isSharedChart = isSharedCustomData(chartMeta.uniqueKey);
+        }
+        return chartOption;
     });
 }
 
@@ -2336,7 +2332,6 @@ export function getChartSettingsMap(
     columns: number,
     chartDimensionSet: { [uniqueId: string]: ChartDimension },
     chartTypeSet: { [uniqueId: string]: ChartType },
-    customChartSet: { [uniqueId: string]: CustomChart },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
     clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
@@ -2369,12 +2364,6 @@ export function getChartSettingsMap(
             chartSetting.filterByCancerGenes = filterFusionGenesTableByCancerGenes;
         } else if (chartType === ChartTypeEnum.CNA_GENES_TABLE) {
             chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
-        }
-        const customChart = customChartSet[id];
-        if (customChart) {
-            // if its custom chart add groups and name
-            chartSetting.groups = customChart.groups;
-            chartSetting.name = attribute.displayName;
         }
         const genomicChart = genomicChartSet[id];
         if (genomicChart) {

@@ -38,12 +38,6 @@ export default class ComparisonGroupClient {
             });
     }
 
-    public updateGroup(id: string, group: GroupData) {
-        return request
-            .post(`${getComparisonGroupServiceUrl()}/${id}`)
-            .send(group);
-    }
-
     public getGroup(id: string) {
         return request
             .get(`${getComparisonGroupServiceUrl()}/${id}`)
