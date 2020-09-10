@@ -192,6 +192,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     get hideGeneSpecificTab() {
         return (
             this.props.disableGeneSpecificTab ||
+            !this.props.store.molecularProfileOptions.isComplete ||
             (this.props.store.molecularProfileOptions.isComplete &&
                 this.props.store.molecularProfileOptions.result.length === 0)
         );
