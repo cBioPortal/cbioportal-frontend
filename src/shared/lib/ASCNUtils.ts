@@ -25,7 +25,7 @@ export function getASCNCopyNumberColor(
         case '-2':
             return ASCN_HOMDEL;
         case 'INDETERMINATE':
-            return 'darkgrey';
+            return ASCN_LIGHTGREY;
         default:
             return ASCN_BLACK;
     }
@@ -47,7 +47,7 @@ export function getASCNCopyNumberStrokeColor(
         case '-2':
             return ASCN_HOMDEL;
         case 'INDETERMINATE':
-            return 'ASCN_DARKGRAY';
+            return 'ASCN_LIGHTGREY';
         default:
             return ASCN_BLACK;
     }

@@ -6,6 +6,7 @@ export enum ExpectedAltCopiesColor {
     WHITE = 'white',
     LIGHTGREY = 'lightgrey',
     BLACK = 'black',
+    DARKGREY = 'darkgrey',
 }
 
 export const ExpectedAltCopiesElementTooltip: React.FunctionComponent<{
@@ -52,6 +53,12 @@ function getFillColor(expectedAltCopiesValue: string): string {
         : ExpectedAltCopiesColor.LIGHTGREY;
 }
 
+function getStrokeColor(expectedAltCopiesValue: string): string {
+    return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
+        ? ExpectedAltCopiesColor.DARKGREY
+        : ExpectedAltCopiesColor.LIGHTGREY;
+}
+
 function getTextSize(expectedAltCopiesValue: string): number {
     return expectedAltCopiesValue && expectedAltCopiesValue !== 'INDETERMINATE'
         ? 9
@@ -69,7 +76,7 @@ const MutantIntegerCopyNumberIcon: React.FunctionComponent<{
                     height="11"
                     rx="15%"
                     ry="15%"
-                    stroke="darkgrey"
+                    stroke={getStrokeColor(props.expectedAltCopiesValue)}
                     stroke-width="1"
                     fill={getFillColor(props.expectedAltCopiesValue)}
                     opacity={getOpacity(props.expectedAltCopiesValue)}

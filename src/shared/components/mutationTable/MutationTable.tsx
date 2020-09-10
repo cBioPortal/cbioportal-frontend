@@ -131,6 +131,7 @@ export interface IMutationTableProps {
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
 }
+import MobxPromise from 'mobxpromise';
 
 export enum MutationTableColumnType {
     STUDY,
@@ -371,8 +372,10 @@ export default class MutationTable<
             name: 'mRNA Expr.',
             render: (d: Mutation[]) =>
                 this.props.mrnaExprRankCache ? (
-                    MrnaExprColumnFormatter.renderFunction(d, this.props
-                        .mrnaExprRankCache as MrnaExprRankCache)
+                    MrnaExprColumnFormatter.renderFunction(
+                        d,
+                        this.props.mrnaExprRankCache as MrnaExprRankCache
+                    )
                 ) : (
                     <span></span>
                 ),
@@ -472,8 +475,9 @@ export default class MutationTable<
                     return false;
                 }
             },
-            visible: DiscreteCNAColumnFormatter.isVisible(this.props
-                .discreteCNACache as DiscreteCNACache),
+            visible: DiscreteCNAColumnFormatter.isVisible(
+                this.props.discreteCNACache as DiscreteCNACache
+            ),
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
@@ -957,11 +961,15 @@ export default class MutationTable<
                     <span></span>
                 ),
             download: (d: Mutation[]) =>
-                ExonColumnFormatter.download(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                ExonColumnFormatter.download(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache
+                ),
             sortBy: (d: Mutation[]) =>
-                ExonColumnFormatter.getSortValue(d, this.props
-                    .genomeNexusCache as GenomeNexusCache),
+                ExonColumnFormatter.getSortValue(
+                    d,
+                    this.props.genomeNexusCache as GenomeNexusCache
+                ),
             visible: false,
             align: 'right',
         };
