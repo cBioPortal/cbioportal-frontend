@@ -628,6 +628,25 @@ h3.hr {
     text-overflow: ellipsis;
 }
 
+.errorAlert {
+    background: red;
+    color: #fff;
+    padding: 10px $gutterWidth;
+    position: relative;
+
+    a {
+        margin-left: 10px;
+        color: lightblue;
+    }
+
+    i.dismissAlert {
+        position: absolute;
+        right: 5px;
+        padding: 3px;
+        cursor: pointer;
+    }
+}
+
 .cbioportal-frontend h1.blackHeader,
 h2.blackHeader,
 h3.blackHeader,

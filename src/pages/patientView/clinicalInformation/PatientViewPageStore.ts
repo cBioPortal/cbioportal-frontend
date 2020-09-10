@@ -19,6 +19,9 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
+
+import { ExtendedGenomeNexusAPIInternal } from '../../../shared/api/genomeNexusInternalClientInstance';
+
 import { computed, observable, action, runInAction } from 'mobx';
 import {
     getBrowserWindow,
@@ -1990,6 +1993,6 @@ export class PatientViewPageStore {
     }
 
     @computed get genomeNexusInternalClient() {
-        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+        return new ExtendedGenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
 }

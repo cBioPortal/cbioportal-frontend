@@ -22,7 +22,7 @@ import genome2StructureClient from '../shared/api/g2sClientInstance';
 import client from '../shared/api/cbioportalClientInstance';
 import internalClient from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
-import { AppStore } from '../AppStore';
+import { AppStore, SiteError } from '../AppStore';
 import { CBioPortalAPI, CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import {

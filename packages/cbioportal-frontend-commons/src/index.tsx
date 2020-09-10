@@ -52,3 +52,5 @@ export * from './lib/webdriverUtils';
 export { default as CBIOPORTAL_VICTORY_THEME } from './theme/cBioPortalTheme';
 export * from './theme/cBioPortalTheme';
 export { default as TruncatedText } from './components/truncatedText/TruncatedText';
+
+export { default as SuperAgentClient } from './lib/SuperAgentWrapped';

@@ -1,35 +1,20 @@
 import { action, computed, observable } from 'mobx';
-import {
-    addServiceErrorHandler,
-    getBrowserWindow,
-    remoteData,
-} from 'cbioportal-frontend-commons';
-import { initializeAPIClients } from './config/config';
+import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { sendSentryMessage } from './shared/lib/tracking';
+import autobind from 'autobind-decorator';
+
+export type SiteErrorMode = 'dialog' | 'screen' | 'alert';
 
 export type SiteError = {
     errorObj: any;
     dismissed: boolean;
     title?: string;
+    mode?: SiteErrorMode;
+    customMessage?: string;
 };
 
 export class AppStore {
-    constructor() {
-        getBrowserWindow().me = this;
-        addServiceErrorHandler((error: any) => {
-            try {
-                sendSentryMessage('ERRORHANDLER:' + error);
-            } catch (ex) {}
-
-            if (error.status && /400|500|403/.test(error.status)) {
-                sendSentryMessage('ERROR DIALOG SHOWN:' + error);
-                this.siteErrors.push({ errorObj: error, dismissed: false });
-            }
-        });
-    }
-
     @observable private _appReady = false;
 
     @observable siteErrors: SiteError[] = [];
@@ -50,25 +35,57 @@ export class AppStore {
         }
     }
 
-    @computed get undismissedSiteErrors() {
+    @computed get undismissedSiteErrors(): SiteError[] {
         return _.filter(this.siteErrors.slice(), err => !err.dismissed);
     }
 
-    @computed get isErrorCondition() {
-        return this.undismissedSiteErrors.length > 0;
+    @computed get undismissedScreenErrors(): SiteError[] {
+        return _.filter(
+            this.siteErrors.slice(),
+            err => (!err.mode || err.mode === 'screen') && !err.dismissed
+        );
     }
 
+    @computed get undismissedDialogErrors(): SiteError[] {
+        return _.filter(
+            this.siteErrors.slice(),
+            err => err.mode === 'dialog' && !err.dismissed
+        );
+    }
+
+    @computed get undismissedAlertErrors(): SiteError[] {
+        return _.filter(
+            this.siteErrors.slice(),
+            err => err.mode === 'alert' && !err.dismissed
+        );
+    }
+
+    // @computed get isErrorScreenCondition() {
+    //     // does it have at least one error of type screen (total failure as opposed to recoverable
+    //     // which we will represent as dialog
+    //     return
+    // }
+
     @action
-    public dismissErrors() {
-        this.siteErrors = this.siteErrors.map(err => {
-            err.dismissed = true;
-            return err;
-        });
+    public dismissError(e: SiteError) {
+        e.dismissed = true;
     }
 
     @action
     public setAppReady() {
         this._appReady = true;
+    }
+
+    @autobind
+    handleServiceError(error: SiteError): void {
+        if (
+            error.errorObj.status &&
+            parseInt(error.errorObj.status) &&
+            parseInt(error.errorObj.status) >= 400
+        ) {
+            error.dismissed = false;
+            this.siteErrors.push(error);
+        }
     }
 
     public get appReady() {

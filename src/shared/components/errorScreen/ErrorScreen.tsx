@@ -4,15 +4,59 @@ import { observer } from 'mobx-react';
 import './errorScreen.scss';
 import AppConfig from 'appConfig';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { computed } from 'mobx';
-var Clipboard = require('clipboard');
+import { If, Then, Else } from 'react-if';
+import { Modal } from 'react-bootstrap';
+import { SiteError, SiteErrorMode } from 'AppStore';
+import { computed, observable } from 'mobx';
+import {
+    formatErrorLog,
+    formatErrorMessages,
+    formatErrorTitle,
+} from 'shared/lib/errorFormatter';
+import _ from 'lodash';
+const Clipboard = require('clipboard');
 
 interface IErrorScreenProps {
-    errorLog?: string;
     title?: string;
     body?: string | JSX.Element;
-    errorMessages?: string[];
+    errors?: SiteError[];
+    mode?: SiteErrorMode;
+    errorLog?: string;
 }
+
+const Screen: React.FunctionComponent<{}> = ({ children }) => {
+    return (
+        <div className={'errorScreen'}>
+            <a className={'errorLogo'} href={buildCBioPortalPageUrl('/')}>
+                <img
+                    src={require('../../../globalStyles/images/cbioportal_logo.png')}
+                    alt="cBioPortal Logo"
+                />
+            </a>
+
+            <div style={{ padding: 20 }}>
+                <a href={buildCBioPortalPageUrl('/')}>Return to homepage</a>
+            </div>
+
+            {children}
+        </div>
+    );
+};
+
+const ErrorDialog: React.FunctionComponent<any> = ({
+    children,
+    dismissDialog,
+    title,
+}) => {
+    return (
+        <Modal show={true} onHide={dismissDialog}>
+            <Modal.Header closeButton>
+                <h4 className={'modal-title'}>{title}</h4>
+            </Modal.Header>
+            <Modal.Body>{children}</Modal.Body>
+        </Modal>
+    );
+};
 
 @observer
 export default class ErrorScreen extends React.Component<
@@ -24,7 +68,9 @@ export default class ErrorScreen extends React.Component<
     componentDidMount(): void {
         new Clipboard(this.copyToClip, {
             text: function() {
-                return JSON.stringify(this.errorLog);
+                return typeof this.errorLog === 'string'
+                    ? this.errorLog
+                    : JSON.stringify(this.errorLog);
             }.bind(this),
             container: this.copyToClip,
         });
@@ -41,34 +87,118 @@ export default class ErrorScreen extends React.Component<
         return errorLog;
     }
 
+    @observable currentErrorIndex = 0;
+
+    @computed get currentError() {
+        if (this.errors.length === 0) {
+            return undefined;
+        } else {
+            if (this.currentErrorIndex >= this.errors.length) {
+                return this.errors[this.currentErrorIndex];
+            } else {
+                return this.errors[0];
+            }
+        }
+    }
+
+    @computed get errors() {
+        return this.props.errors || [];
+    }
+
+    @computed get errorMessage() {
+        return this.currentError
+            ? formatErrorMessages([this.currentError])
+            : undefined;
+    }
+
+    @computed get errorUrl() {
+        try {
+            return this.currentError!.errorObj.response.req.url;
+        } catch (e) {
+            return undefined;
+        }
+    }
+
+    @computed get errorTitle() {
+        let title: string | undefined;
+
+        if (this.props.title) {
+            title = this.props.title;
+        }
+
+        if (this.currentError) {
+            title = formatErrorTitle([this.currentError]);
+        }
+
+        return title || "Oops, there's been a system error!";
+    }
+
+    @computed get mode() {
+        // if any of the errors are screen errors, we treat all as screen
+        if (this.props.mode) {
+            return this.props.mode;
+        } else if (!this.errors) {
+            return 'screen';
+        } else if (
+            _.some(this.errors, err => !err.mode || err.mode === 'screen')
+        ) {
+            return 'screen';
+        } else {
+            return this.currentError!.mode || 'screen';
+        }
+    }
+
     public render() {
+        switch (this.mode) {
+            case 'dialog':
+                return (
+                    <ErrorDialog
+                        title={
+                            this.errorTitle ||
+                            'Oops. There was an error retrieving data.'
+                        }
+                        dismissDialog={() => {
+                            if (this.currentError)
+                                this.currentError.dismissed = true;
+                        }}
+                    >
+                        {this.content()}
+                    </ErrorDialog>
+                );
+                break;
+            case 'alert':
+                console.log('alert');
+                return null;
+                break;
+
+            default:
+                return <Screen>{this.content()}</Screen>;
+        }
+    }
+
+    content() {
         const location = getBrowserWindow().location.href;
         const subject = 'cBioPortal user reported error';
 
         return (
-            <div className={'errorScreen'}>
-                <a className={'errorLogo'} href={buildCBioPortalPageUrl('/')}>
-                    <img
-                        src={require('../../../globalStyles/images/cbioportal_logo.png')}
-                        alt="cBioPortal Logo"
-                    />
-                </a>
+            <>
+                {this.errorTitle && this.mode === 'screen' && (
+                    <h4>{this.errorTitle}</h4>
+                )}
 
-                {this.props.title && <h4>{this.props.title}</h4>}
+                {this.errorUrl && (
+                    <div style={{ wordBreak: 'break-word' }}>
+                        <strong>Endpoint:</strong> {this.errorUrl}
+                    </div>
+                )}
 
-                {this.props.errorMessages && (
+                {this.errorMessage && (
                     <div
                         style={{ marginTop: 20 }}
                         className={'alert alert-danger'}
                         role="alert"
                     >
-                        <ul style={{ listStyleType: 'none' }}>
-                            {this.props.errorMessages.map(
-                                (errorMessage: string, index) => (
-                                    <li>{`${index + 1}: ${errorMessage}`}</li>
-                                )
-                            )}
-                        </ul>
+                        {this.errorMessage}
                     </div>
                 )}
 
@@ -76,6 +206,16 @@ export default class ErrorScreen extends React.Component<
 
                 {AppConfig.serverConfig.skin_email_contact && (
                     <div style={{ marginTop: 20 }}>
+                        If this error persists, please contact us at{' '}
+                        <a
+                            href={`mailto:${
+                                AppConfig.serverConfig.skin_email_contact
+                            }?subject=${encodeURIComponent(
+                                subject
+                            )}&body=${encodeURIComponent(this.errorLog || '')}`}
+                        >
+                            {AppConfig.serverConfig.skin_email_contact}
+                        </a>
                         <p style={{ marginBottom: 20 }}>
                             Please contact us at{' '}
                             <a
@@ -116,7 +256,7 @@ export default class ErrorScreen extends React.Component<
                         ></textarea>
                     </div>
                 )}
-            </div>
+            </>
         );
     }
 }

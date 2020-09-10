@@ -217,7 +217,7 @@ export function getGeneSymbols(
 export async function fetchOncoKbDataForMutations(
     annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
     data: OncoprinterGeneticTrackDatum_Data[],
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ) {
     if (annotatedGenes instanceof Error) {
         return new Error();
@@ -253,7 +253,7 @@ export async function fetchOncoKbDataForMutations(
 export async function fetchOncoKbDataForCna(
     annotatedGenes: { [entrezGeneId: number]: boolean } | Error,
     data: OncoprinterGeneticTrackDatum_Data[],
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ) {
     if (annotatedGenes instanceof Error) {
         return new Error();

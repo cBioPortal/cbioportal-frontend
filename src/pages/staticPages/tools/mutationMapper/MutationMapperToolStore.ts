@@ -9,6 +9,7 @@ import {
     IMyVariantInfoIndex,
     resolveDefaultsForMissingValues,
 } from 'cbioportal-utils';
+import { ExtendedGenomeNexusAPIInternal } from 'shared/api/genomeNexusInternalClientInstance';
 
 import AppConfig from 'appConfig';
 
@@ -100,7 +101,7 @@ export default class MutationMapperToolStore {
 
     @computed get genomeNexusInternalClient() {
         return this.grch38GenomeNexusUrl
-            ? new GenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
+            ? new ExtendedGenomeNexusAPIInternal(this.grch38GenomeNexusUrl)
             : defaultGenomeNexusInternalClient;
     }
 

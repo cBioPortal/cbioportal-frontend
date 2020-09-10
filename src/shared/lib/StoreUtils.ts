@@ -709,7 +709,7 @@ export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[] {
 }
 
 export async function fetchOncoKbCancerGenes(
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ): Promise<CancerGene[]> {
     return await client.utilsCancerGeneListGetUsingGET_1({});
 }
@@ -726,7 +726,7 @@ export async function fetchOncoKbData(
     mutationData: MobxPromise<Mutation[]>,
     evidenceTypes?: string,
     uncalledMutationData?: MobxPromise<Mutation[]>,
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ) {
     const mutationDataResult = concatMutationData(
         mutationData,
@@ -766,7 +766,7 @@ export async function fetchCnaOncoKbData(
     uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
     annotatedGenes: { [entrezGeneId: number]: boolean },
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>,
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ) {
     if (!discreteCNAData.result || discreteCNAData.result.length === 0) {
         return ONCOKB_DEFAULT;
@@ -803,7 +803,7 @@ export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
         [molecularProfileId: string]: MolecularProfile;
     },
     evidenceTypes?: string,
-    client: OncoKbAPI = oncokbClient
+    client = oncokbClient
 ) {
     if (!geneMolecularData.result || geneMolecularData.result.length === 0) {
         return ONCOKB_DEFAULT;
@@ -858,7 +858,7 @@ export type OncoKbAnnotationQuery = {
 const fusionMutationType = 'Fusion';
 export async function queryOncoKbData(
     annotationQueries: OncoKbAnnotationQuery[],
-    client: OncoKbAPI = oncokbClient,
+    client = oncokbClient,
     evidenceTypes?: EvidenceType[]
 ) {
     const mutationQueryVariants = _.uniqBy(

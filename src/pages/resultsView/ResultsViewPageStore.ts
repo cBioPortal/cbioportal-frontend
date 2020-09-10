@@ -33,6 +33,7 @@ import {
     GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
+import { ExtendedGenomeNexusAPIInternal } from '../../shared/api/genomeNexusInternalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import { action, computed, observable, ObservableMap, reaction } from 'mobx';
 import {
@@ -3363,7 +3364,7 @@ export class ResultsViewPageStore {
     }
 
     @computed get genomeNexusInternalClient() {
-        return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
+        return new ExtendedGenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
 
     //this is only required to show study name and description on the results page

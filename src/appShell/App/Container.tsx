@@ -11,16 +11,18 @@ import AppConfig from 'appConfig';
 import Helmet from 'react-helmet';
 import { If, Else, Then } from 'react-if';
 import UserMessager from 'shared/components/userMessager/UserMessage';
-import {
-    formatErrorLog,
-    formatErrorTitle,
-    formatErrorMessages,
-} from 'shared/lib/errorFormatter';
-import { buildCBioPortalPageUrl } from 'shared/api/urls';
+
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
+import { AppStore, SiteError } from 'AppStore';
+import { Modal } from 'react-bootstrap';
+import { observable } from 'mobx';
+import StudyViewWarning, {
 import {
     shouldShowStudyViewWarning,
+} from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
+import { formatErrorLog, formatErrorMessages } from 'shared/lib/errorFormatter';
+import { ErrorAlert } from 'shared/components/errorAlert/ErrorAlert';
     StudyAgreement,
 } from 'appShell/App/usageAgreements/StudyAgreement';
 import {
@@ -71,6 +73,9 @@ export default class Container extends React.Component<IContainerProps, {}> {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen
+                        // errorMessages={formatErrorMessages(
+                        //     this.appStore.undismissedSiteErrors
+                        // )}
                         title={'No session service configured'}
                         body={
                             <p>
@@ -109,37 +114,56 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         <PortalHeader appStore={this.appStore} />
                     </div>
                 </div>
-                <If condition={this.appStore.isErrorCondition}>
-                    <Then>
-                        <div className="contentWrapper">
+                <div className="contentWrapper">
+                    {this.appStore.undismissedAlertErrors.map(
+                        (e: SiteError) => {
+                            return (
+                                <ErrorAlert
+                                    errorLog={formatErrorLog(
+                                        this.appStore.undismissedAlertErrors
+                                    )}
+                                    err={e}
+                                    onDismiss={() =>
+                                        this.appStore.dismissError(e)
+                                    }
+                                />
+                            );
+                        }
+                    )}
+
+                    <If
+                        condition={this.appStore.undismissedScreenErrors.length}
+                    >
+                        <Then>
                             <ErrorScreen
+                                errorLog={formatErrorLog(
+                                    this.appStore.undismissedScreenErrors
+                                )}
                                 title={
-                                    formatErrorTitle(
-                                        this.appStore.undismissedSiteErrors
-                                    ) ||
                                     'Oops. There was an error retrieving data.'
                                 }
-                                body={
-                                    <a href={buildCBioPortalPageUrl('/')}>
-                                        Return to homepage
-                                    </a>
-                                }
-                                errorLog={formatErrorLog(
-                                    this.appStore.undismissedSiteErrors
-                                )}
-                                errorMessages={formatErrorMessages(
-                                    this.appStore.undismissedSiteErrors
-                                )}
+                                errors={this.appStore.undismissedScreenErrors}
                             />
-                        </div>
-                    </Then>
-                    <Else>
-                        <div className="contentWrapper">
-                            {this.props.children}
-                        </div>
-                    </Else>
-                </If>
+                        </Then>
+                        <Else>
+                            <>
+                                {this.appStore.isDialogErrorCondition &&
+                                    showSiteErrors(this.appStore)}
+                                {this.props.children}
+                            </>
+                        </Else>
+                    </If>
+                </div>
             </div>
         );
     }
+}
+
+function showSiteErrors(appStore: AppStore) {
+    return (
+        <ErrorScreen
+            title={'Oops. There was an error retrieving data.'}
+            errors={appStore.undismissedSiteErrors}
+        />
+    );
 }

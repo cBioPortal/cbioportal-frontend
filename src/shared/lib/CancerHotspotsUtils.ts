@@ -1,9 +1,6 @@
 import MobxPromise from 'mobxpromise';
 import { Mutation } from 'cbioportal-ts-api-client';
-import {
-    GenomeNexusAPIInternal,
-    GenomicLocation,
-} from 'genome-nexus-ts-api-client';
+import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import genomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
 import { concatMutationData } from './StoreUtils';
 import { uniqueGenomicLocations } from './MutationUtils';
@@ -11,7 +8,7 @@ import { uniqueGenomicLocations } from './MutationUtils';
 export async function fetchHotspotsData(
     mutationData: MobxPromise<Mutation[]>,
     uncalledMutationData?: MobxPromise<Mutation[]>,
-    client: GenomeNexusAPIInternal = genomeNexusInternalClient
+    client = genomeNexusInternalClient
 ) {
     const mutationDataResult = filterMutationsOnNonHotspotGenes(
         concatMutationData(mutationData, uncalledMutationData)

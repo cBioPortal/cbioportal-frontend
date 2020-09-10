@@ -1,4 +1,5 @@
 import { GenomeNexusAPI } from 'genome-nexus-ts-api-client';
+import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
 
 async function checkVersion(client: GenomeNexusAPI) {
     const versionResp = await client.fetchVersionGET({});
@@ -10,7 +11,16 @@ async function checkVersion(client: GenomeNexusAPI) {
     }
 }
 
-const client = new GenomeNexusAPI();
-//checkVersion(client);
+const ExtendedGenomeNexusAPI = extendCBioPortalAPI(GenomeNexusAPI);
+
+const client = new ExtendedGenomeNexusAPI();
+
+client.defaultError = function(error: any) {
+    // try to derive url
+    return {
+        mode: 'screen',
+        title: `There has been an error retrieving data from the GenomeNexus api`,
+    };
+};
 
 export default client;

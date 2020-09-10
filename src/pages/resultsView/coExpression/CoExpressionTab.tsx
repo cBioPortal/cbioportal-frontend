@@ -319,15 +319,15 @@ export default class CoExpressionTab extends React.Component<
                     //         ? 'https://master.cbioportal.org/api'
                     //         : undefined;
 
-                    const data = await internalClient.fetchCoExpressionsUsingPOST(
-                        {
+                    const data = await internalClient
+                        .handleErrorsGlobally()
+                        .fetchCoExpressionsUsingPOST({
                             molecularProfileIdA: q.profileX.molecularProfileId,
                             molecularProfileIdB: q.profileY.molecularProfileId,
                             coExpressionFilter: dataQueryFilter as CoExpressionFilter,
                             threshold,
                             $domain,
-                        }
-                    );
+                        });
 
                     let genesetMap: { [id: string]: Geneset } = {};
                     if (
