@@ -26,6 +26,7 @@ import {
     getSampleInfo,
 } from 'pages/patientView/timeline2/TimelineWrapperUtils';
 import { renderStack, renderSuperscript } from 'cbioportal-clinical-timeline';
+import { downloadZippedTracks } from 'pages/patientView/timeline/timelineTSV';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
@@ -546,6 +547,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 <Timeline
                     store={store}
                     width={width}
+                    onClickDownload={() => downloadZippedTracks(data)}
                     // customTracks={[
                     //     {
                     //         renderHeader: () => 'VAF',

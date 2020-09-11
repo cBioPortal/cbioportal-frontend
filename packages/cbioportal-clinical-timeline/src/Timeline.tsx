@@ -29,6 +29,7 @@ import CustomTrackHeader from './CustomTrackHeader';
 
 interface ITimelineProps {
     store: TimelineStore;
+    onClickDownload: () => void;
     customTracks?: CustomTrackSpecification[];
     width: number;
 }
@@ -247,6 +248,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customTracks,
     width,
+    onClickDownload,
 }: ITimelineProps) {
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
@@ -429,6 +431,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     style={{ height: height - SCROLLBAR_PADDING }}
                 />
                 <DownloadControls
+                    buttons={['PDF', 'PNG', 'SVG']}
                     filename="timeline"
                     getSvg={() =>
                         getSvg(
@@ -437,6 +440,13 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             customTracks
                         )
                     }
+                    additionalRightButtons={[
+                        {
+                            key: 'Data (ZIP)',
+                            content: <span>Data (ZIP)</span>,
+                            onClick: onClickDownload,
+                        },
+                    ]}
                     dontFade={true}
                     type={'button'}
                     style={{ marginLeft: 7 }}
