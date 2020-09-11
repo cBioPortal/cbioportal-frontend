@@ -55,7 +55,7 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                     track.tracks.length > 0 && (
                         <button
                             onClick={collapseCallback}
-                            className={'btn btn-xs btn-default'}
+                            className={'btn btn-xs btn-link'}
                             style={{
                                 fontSize: 10,
                                 lineHeight: 0.5,

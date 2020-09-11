@@ -37,7 +37,7 @@ export class TimelineStore {
         this._data = tracks;
     }
 
-    @observable enableCollapseTrack = false;
+    @observable enableCollapseTrack = true;
 
     @computed get data(): {
         track: TimelineTrackSpecification;
