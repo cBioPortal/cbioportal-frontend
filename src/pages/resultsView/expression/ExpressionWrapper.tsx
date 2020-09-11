@@ -22,11 +22,8 @@ import { If, Then, Else } from 'react-if';
 import jStat from 'jStat';
 import classNames from 'classnames';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
-import {
-    CoverageInformation,
-    isPanCanStudy,
-    isTCGAProvStudy,
-} from '../ResultsViewPageStoreUtils';
+import { isPanCanStudy, isTCGAProvStudy } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import {
     CNA_STROKE_WIDTH,
     IBoxScatterPlotPoint,

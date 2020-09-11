@@ -1,4 +1,5 @@
 import {
+    annotateMolecularDatum,
     fetchCosmicData,
     fetchOncoKbData,
     makeStudyToCancerTypeMap,
@@ -20,7 +21,11 @@ import {
     Mutation,
     ClinicalData,
     Sample,
+    NumericGeneMolecularData,
+    MolecularProfile,
+    Gene,
 } from 'cbioportal-ts-api-client';
+import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 
 describe('StoreUtils', () => {
@@ -625,5 +630,334 @@ describe('StoreUtils', () => {
         it('returns false for any other gene panel id', () => {
             assert.isFalse(noGenePanelUsed('dummy_gene_panel_id'));
         });
+    });
+});
+
+describe('annotateMolecularDatum', () => {
+    it('annotates single element correctly in case of Likely Oncogenic', () => {
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({
+                        oncogenic: 'Likely Oncogenic',
+                    } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: 'Likely Oncogenic',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+    });
+    it('annotates single element correctly in case of Predicted Oncogenic', () => {
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({
+                        oncogenic: 'Predicted Oncogenic',
+                    } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: 'Predicted Oncogenic',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+    });
+    it('annotates single element correctly in case of Oncogenic', () => {
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: 'Oncogenic',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+    });
+    it('annotates single element correctly in case of Likely Neutral, Inconclusive, Unknown, asdfasd, undefined, empty', () => {
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Likely Neutral' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Inconclusive' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Unknown' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'asdfasdf' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: undefined } as any),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: '' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+    });
+    it('annotates non-copy number data with empty string', () => {
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'MUTATION_EXTENDED',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'MRNA_EXPRESSION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'PROTEIN_LEVEL',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
+        assert.deepEqual(
+            annotateMolecularDatum(
+                {
+                    value: 0,
+                    molecularProfileId: 'profile',
+                    entrezGeneId: 9,
+                } as NumericGeneMolecularData,
+                (d: NumericGeneMolecularData) =>
+                    ({ oncogenic: 'Oncogenic' } as IndicatorQueryResp),
+                {
+                    profile: {
+                        molecularAlterationType: 'FUSION',
+                    } as MolecularProfile,
+                },
+                { 9: { hugoGeneSymbol: 'genesymbol' } as Gene }
+            ),
+            {
+                value: 0,
+                molecularProfileId: 'profile',
+                oncoKbOncogenic: '',
+                hugoGeneSymbol: 'genesymbol',
+                entrezGeneId: 9,
+            } as any
+        );
     });
 });
