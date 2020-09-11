@@ -4,7 +4,7 @@ import {
     prioritizeMutations,
     getPossibleRNASeqVersions,
 } from './expressionHelpers';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import {
     studyData as sampleStudyData,
     mutationsKeyedBySampleId,

@@ -1,11 +1,8 @@
 import {
     Gene,
     NumericGeneMolecularData,
-    GenePanel,
-    GenePanelData,
     MolecularProfile,
     Mutation,
-    Patient,
     Sample,
     CancerStudy,
     ClinicalAttribute,
@@ -48,6 +45,7 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import { Group } from '../../shared/api/ComparisonGroupClient';
 import { isNotGermlineMutation } from '../../shared/lib/MutationUtils';
+import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 
@@ -65,18 +63,6 @@ export type ExtendedClinicalAttribute = Pick<
     clinicalAttributeId: string | SpecialAttribute;
     molecularProfileIds?: string[];
     comparisonGroup?: Group;
-};
-
-export type CoverageInformationForCase = {
-    byGene: { [hugoGeneSymbol: string]: GenePanelData[] };
-    allGenes: Omit<GenePanelData, 'genePanelId'>[];
-    notProfiledByGene: { [hugoGeneSymbol: string]: GenePanelData[] };
-    notProfiledAllGenes: Omit<GenePanelData, 'genePanelId'>[];
-};
-
-export type CoverageInformation = {
-    samples: { [uniqueSampleKey: string]: CoverageInformationForCase };
-    patients: { [uniquePatientKey: string]: CoverageInformationForCase };
 };
 
 export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
@@ -181,7 +167,12 @@ export function filterAndAnnotateMutations(
         customDriverBinary: boolean;
         customDriverTier?: string;
     },
-    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
+    entrezGeneIdToGene: {
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }
 ): FilteredAndAnnotatedMutationsReport<AnnotatedMutation> {
     const vus: AnnotatedMutation[] = [];
     const germline: AnnotatedMutation[] = [];
@@ -250,152 +241,6 @@ export function getOncoKbOncogenic(response: IndicatorQueryResp): string {
     } else {
         return '';
     }
-}
-
-export function computeGenePanelInformation(
-    genePanelData: GenePanelData[],
-    genePanels: GenePanel[],
-    samples: Pick<Sample, 'uniqueSampleKey' | 'uniquePatientKey'>[],
-    patients: Pick<Patient, 'uniquePatientKey'>[],
-    genes: Pick<Gene, 'entrezGeneId' | 'hugoGeneSymbol'>[]
-): CoverageInformation {
-    const entrezToGene = _.keyBy(genes, gene => gene.entrezGeneId);
-    const genePanelToGenes = _.mapValues(
-        _.keyBy(genePanels, panel => panel.genePanelId),
-        (panel: GenePanel) => {
-            return panel.genes.filter(
-                gene => !!entrezToGene[gene.entrezGeneId]
-            ); // only list genes that we're curious in
-        }
-    );
-    const sampleInfo: CoverageInformation['samples'] = _.reduce(
-        samples,
-        (map: CoverageInformation['samples'], sample) => {
-            map[sample.uniqueSampleKey] = {
-                byGene: {},
-                allGenes: [],
-                notProfiledByGene: {},
-                notProfiledAllGenes: [],
-            };
-            return map;
-        },
-        {}
-    );
-
-    const patientInfo: CoverageInformation['patients'] = _.reduce(
-        patients,
-        (map: CoverageInformation['patients'], patient) => {
-            map[patient.uniquePatientKey] = {
-                byGene: {},
-                allGenes: [],
-                notProfiledByGene: {},
-                notProfiledAllGenes: [],
-            };
-            return map;
-        },
-        {}
-    );
-
-    const genePanelDataWithGenePanelId: GenePanelData[] = [];
-    for (const gpData of genePanelData) {
-        const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
-        const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
-        const genePanelId = gpData.genePanelId;
-
-        if (gpData.profiled) {
-            if (genePanelId) {
-                if (genePanelToGenes[genePanelId]) {
-                    // add gene panel data to record particular genes sequenced
-                    for (const gene of genePanelToGenes[genePanelId]) {
-                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol] =
-                            sampleSequencingInfo.byGene[gene.hugoGeneSymbol] ||
-                            [];
-                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol].push(
-                            gpData
-                        );
-
-                        patientSequencingInfo.byGene[gene.hugoGeneSymbol] =
-                            patientSequencingInfo.byGene[gene.hugoGeneSymbol] ||
-                            [];
-                        patientSequencingInfo.byGene[gene.hugoGeneSymbol].push(
-                            gpData
-                        );
-                    }
-                    // Add to list for more processing later
-                    genePanelDataWithGenePanelId.push(gpData);
-                }
-            } else {
-                // otherwise, all genes are profiled
-                sampleSequencingInfo.allGenes.push(gpData);
-                patientSequencingInfo.allGenes.push(gpData);
-            }
-        } else {
-            sampleSequencingInfo.notProfiledAllGenes.push(gpData);
-            patientSequencingInfo.notProfiledAllGenes.push(gpData);
-        }
-    }
-    // Record which of the queried genes are not profiled by gene panels
-    for (const gpData of genePanelDataWithGenePanelId) {
-        const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
-        const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
-
-        for (const queryGene of genes) {
-            if (!sampleSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
-                sampleSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ] =
-                    sampleSequencingInfo.notProfiledByGene[
-                        queryGene.hugoGeneSymbol
-                    ] || [];
-                sampleSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ].push(gpData);
-            }
-            if (!patientSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
-                patientSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ] =
-                    patientSequencingInfo.notProfiledByGene[
-                        queryGene.hugoGeneSymbol
-                    ] || [];
-                patientSequencingInfo.notProfiledByGene[
-                    queryGene.hugoGeneSymbol
-                ].push(gpData);
-            }
-        }
-    }
-    return {
-        samples: sampleInfo,
-        patients: patientInfo,
-    };
-}
-
-export function annotateMolecularDatum(
-    molecularDatum: NumericGeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint: (
-        datum: NumericGeneMolecularData
-    ) => IndicatorQueryResp | undefined,
-    molecularProfileIdToMolecularProfile: {
-        [molecularProfileId: string]: MolecularProfile;
-    },
-    entrezGeneIdToGene: { [entrezGeneId: number]: Gene }
-): AnnotatedNumericGeneMolecularData {
-    const hugoGeneSymbol =
-        entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
-    let oncogenic = '';
-    if (
-        molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId]
-            .molecularAlterationType === 'COPY_NUMBER_ALTERATION'
-    ) {
-        const oncoKbDatum = getOncoKbCnaAnnotationForOncoprint(molecularDatum);
-        if (oncoKbDatum) {
-            oncogenic = getOncoKbOncogenic(oncoKbDatum);
-        }
-    }
-    return Object.assign(
-        { oncoKbOncogenic: oncogenic, hugoGeneSymbol },
-        molecularDatum
-    );
 }
 
 export async function fetchQueriedStudies(
