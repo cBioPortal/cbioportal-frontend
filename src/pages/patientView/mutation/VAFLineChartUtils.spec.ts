@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { MutationStatus } from './PatientViewMutationsTabUtils';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../shared/lib/StoreUtils';
-import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { makeMutationHeatmapData } from './oncoprint/MutationOncoprintUtils';
 import { MutationOncoprintMode } from './oncoprint/MutationOncoprint';
 import { assertDeepEqualInAnyOrder } from '../../../shared/lib/SpecUtils';

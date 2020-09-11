@@ -29,7 +29,7 @@ import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
     CoverageInformation,
     CoverageInformationForCase,
-} from '../ResultsViewPageStoreUtils';
+} from 'shared/lib/GenePanelUtils';
 import {
     makeAxisLogScaleFunction,
     IAxisData,

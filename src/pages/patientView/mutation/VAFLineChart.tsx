@@ -22,7 +22,7 @@ import survivalStyles from '../../resultsView/survival/styles.module.scss';
 import styles from './styles.module.scss';
 import autobind from 'autobind-decorator';
 import { Portal } from 'react-portal';
-import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import SampleLabelSVG from '../../../shared/components/sampleLabel/SampleLabel';
 import SampleManager from '../SampleManager';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
