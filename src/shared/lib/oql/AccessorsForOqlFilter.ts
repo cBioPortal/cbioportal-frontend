@@ -32,6 +32,22 @@ export type SimplifiedMutationType =
     | 'inframe'
     | 'other';
 
+export function getMutationSubType(d: {
+    mutationType: string;
+    proteinChange: string;
+}) {
+    if (d.mutationType && d.mutationType.toLowerCase() === 'fusion') {
+        return null;
+    } else if (
+        d.proteinChange &&
+        d.proteinChange.toLowerCase() === 'promoter'
+    ) {
+        return 'promoter';
+    } else {
+        return getSimplifiedMutationType(d.mutationType);
+    }
+}
+
 export function getSimplifiedMutationType(
     type: string
 ): SimplifiedMutationType {
@@ -148,16 +164,7 @@ export default class AccessorsForOqlFilter
 
     public mut_type(d: Datum) {
         if (this.isMutation(d)) {
-            if (d.mutationType && d.mutationType.toLowerCase() === 'fusion') {
-                return null;
-            } else if (
-                d.proteinChange &&
-                d.proteinChange.toLowerCase() === 'promoter'
-            ) {
-                return 'promoter';
-            } else {
-                return getSimplifiedMutationType(d.mutationType);
-            }
+            return getMutationSubType(d);
         } else {
             return null;
         }

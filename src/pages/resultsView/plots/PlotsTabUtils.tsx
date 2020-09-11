@@ -49,7 +49,7 @@ import {
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'shared/lib/Colors';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
     AlterationTypeConstants,
