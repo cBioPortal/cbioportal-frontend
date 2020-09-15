@@ -49,3 +49,4 @@ declare module '3dmol';
 declare module 'reactour';
 declare module 'react-reveal';
 declare module 'react-column-resizer';
+declare module 'linear-algebra';
