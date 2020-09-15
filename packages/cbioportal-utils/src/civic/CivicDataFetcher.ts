@@ -3,6 +3,8 @@ import * as request from 'superagent';
 import { ICivicGeneData, ICivicVariantData } from '../model/Civic';
 import { default as SuperAgentClient } from '../client/SuperAgentWrapped';
 
+const ERROR_MESSAGE = 'Error calling the CivicDB api.';
+
 type CivicAPIGene = {
     id: number;
     name: string;
@@ -65,7 +67,7 @@ export class CivicAPI {
     getCivicGenesBatch(ids: string): Promise<Array<ICivicGeneData>> {
         return SuperAgentClient.handleErrorsGlobally({
             mode: 'alert',
-            customMessage: 'moooo',
+            customMessage: ERROR_MESSAGE,
         })
             .get('https://civicdb.org/api/genes/' + ids)
             .query({ identifier_type: 'entrez_id' })
@@ -100,7 +102,7 @@ export class CivicAPI {
     ): Promise<ICivicVariantData> {
         return SuperAgentClient.handleErrorsGlobally({
             mode: 'alert',
-            customMessage: "there's aproblem",
+            customMessage: ERROR_MESSAGE,
         })
             .get('https://civicdb.org/api/variants/' + id)
             .then(res => {
