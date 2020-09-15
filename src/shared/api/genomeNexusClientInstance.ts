@@ -1,5 +1,5 @@
 import { GenomeNexusAPI } from 'genome-nexus-ts-api-client';
-import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
+import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
 
 async function checkVersion(client: GenomeNexusAPI) {
     const versionResp = await client.fetchVersionGET({});
@@ -11,7 +11,7 @@ async function checkVersion(client: GenomeNexusAPI) {
     }
 }
 
-const ExtendedGenomeNexusAPI = extendCBioPortalAPI(GenomeNexusAPI);
+const ExtendedGenomeNexusAPI = addErrorHandlingtoAPIClient(GenomeNexusAPI);
 
 const client = new ExtendedGenomeNexusAPI();
 

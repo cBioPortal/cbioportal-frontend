@@ -3,16 +3,7 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
-
-export type SiteErrorMode = 'dialog' | 'screen' | 'alert';
-
-export type SiteError = {
-    errorObj: any;
-    dismissed: boolean;
-    title?: string;
-    mode?: SiteErrorMode;
-    customMessage?: string;
-};
+import { SiteError } from 'cbioportal-utils';
 
 export class AppStore {
     @observable private _appReady = false;

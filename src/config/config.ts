@@ -13,7 +13,6 @@ import {
     getG2SApiUrl,
     getGenomeNexusApiUrl,
     getOncoKbApiUrl,
-    trimTrailingSlash,
 } from '../shared/api/urls';
 import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
@@ -22,7 +21,7 @@ import genome2StructureClient from '../shared/api/g2sClientInstance';
 import client from '../shared/api/cbioportalClientInstance';
 import internalClient from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
-import { AppStore, SiteError } from '../AppStore';
+import { AppStore } from '../AppStore';
 import { CBioPortalAPI, CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
 import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
 import {

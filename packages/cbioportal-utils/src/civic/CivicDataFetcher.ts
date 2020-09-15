@@ -1,6 +1,7 @@
 import * as request from 'superagent';
 
 import { ICivicGeneData, ICivicVariantData } from '../model/Civic';
+import { default as SuperAgentClient } from '../client/SuperAgentWrapped';
 
 type CivicAPIGene = {
     id: number;
@@ -62,7 +63,10 @@ export class CivicAPI {
      * Retrieves the gene entries for the ids given, if they are in the Civic API.
      */
     getCivicGenesBatch(ids: string): Promise<Array<ICivicGeneData>> {
-        return request
+        return SuperAgentClient.handleErrorsGlobally({
+            mode: 'alert',
+            customMessage: 'moooo',
+        })
             .get('https://civicdb.org/api/genes/' + ids)
             .query({ identifier_type: 'entrez_id' })
             .then(res => {
@@ -94,7 +98,10 @@ export class CivicAPI {
         name: string,
         geneId: number
     ): Promise<ICivicVariantData> {
-        return request
+        return SuperAgentClient.handleErrorsGlobally({
+            mode: 'alert',
+            customMessage: "there's aproblem",
+        })
             .get('https://civicdb.org/api/variants/' + id)
             .then(res => {
                 let result = res.body;

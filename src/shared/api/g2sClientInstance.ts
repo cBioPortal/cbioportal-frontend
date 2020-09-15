@@ -2,9 +2,11 @@ import {
     Genome2StructureAPI,
     GenomeNexusAPI,
 } from 'genome-nexus-ts-api-client';
-import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
+import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
 
-const ExtendedGenome2StructureAPI = extendCBioPortalAPI(Genome2StructureAPI);
+const ExtendedGenome2StructureAPI = addErrorHandlingtoAPIClient(
+    Genome2StructureAPI
+);
 
 const client = new ExtendedGenome2StructureAPI();
 

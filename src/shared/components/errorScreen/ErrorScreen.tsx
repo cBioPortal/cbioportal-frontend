@@ -6,7 +6,6 @@ import AppConfig from 'appConfig';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { If, Then, Else } from 'react-if';
 import { Modal } from 'react-bootstrap';
-import { SiteError, SiteErrorMode } from 'AppStore';
 import { computed, observable } from 'mobx';
 import {
     formatErrorLog,
@@ -14,6 +13,7 @@ import {
     formatErrorTitle,
 } from 'shared/lib/errorFormatter';
 import _ from 'lodash';
+import { SiteError, SiteErrorMode } from 'cbioportal-utils';
 const Clipboard = require('clipboard');
 
 interface IErrorScreenProps {
@@ -87,6 +87,8 @@ export default class ErrorScreen extends React.Component<
         return errorLog;
     }
 
+    // multiple simultaneous errors may be passed to the screen
+    // this allows us to keep a "focused" error (currentError)
     @observable currentErrorIndex = 0;
 
     @computed get currentError() {

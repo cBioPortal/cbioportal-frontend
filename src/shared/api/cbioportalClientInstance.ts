@@ -1,9 +1,7 @@
 import { CBioPortalAPI } from 'cbioportal-ts-api-client';
-import { AppStore, SiteError } from 'AppStore';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
+import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
 
-const ExtendedCBioPortalAPI = extendCBioPortalAPI(CBioPortalAPI);
+const ExtendedCBioPortalAPI = addErrorHandlingtoAPIClient(CBioPortalAPI);
 
 const client = new ExtendedCBioPortalAPI();
 

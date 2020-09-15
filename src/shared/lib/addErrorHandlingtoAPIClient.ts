@@ -1,4 +1,4 @@
-import { SiteError } from 'AppStore';
+import { SiteError } from 'cbioportal-utils';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { Simulate } from 'react-dom/test-utils';
 import error = Simulate.error;
@@ -7,12 +7,17 @@ import request from 'superagent';
 
 type Constructor<T> = new (...args: any[]) => T;
 
-export function extendCBioPortalAPI<T extends Constructor<{}>>(Base: T) {
+export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
+    Base: T
+) {
     return class extends Base {
         defaultError: (error: any) => Partial<SiteError>;
 
         handleErrorsGlobally(errorConfig: Partial<SiteError> = {}) {
             const self = this;
+
+            // we will know override the client's request method
+            // so that we can shim in our global error handler
 
             // global error handling is default
             // only do this if they pass special configuration
@@ -32,6 +37,10 @@ export function extendCBioPortalAPI<T extends Constructor<{}>>(Base: T) {
                 // @ts-ignore (it's private, but we CAN access it)
                 self.request = function() {
                     const args = Array.from(arguments);
+                    // eighth arg here is a error handling callback
+                    // since developer is choosing to handle things globally
+                    // it's safe to assume whatever might have been passed at invocation is
+                    // dispensable
                     if (args.length >= 9) {
                         args[8] = [
                             function(error: any) {

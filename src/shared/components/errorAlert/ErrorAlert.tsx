@@ -1,10 +1,10 @@
-import { SiteError } from 'AppStore';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { observable } from 'mobx';
 import { Modal } from 'react-bootstrap';
 import { useEffect, useRef } from 'react';
 import autobind from 'autobind-decorator';
+import { SiteError } from 'cbioportal-utils';
 var Clipboard = require('clipboard');
 
 interface IErrAlertProps {
@@ -16,8 +16,6 @@ interface IErrAlertProps {
 @observer
 export class ErrorAlert extends React.Component<IErrAlertProps, {}> {
     @observable showDetailDialog = false;
-
-    copyToClip: HTMLButtonElement | null;
 
     render() {
         return (
@@ -76,7 +74,6 @@ class ErrorModal extends React.Component<IErrorModalProps> {
                         <button
                             style={{ marginBottom: 5 }}
                             ref={el => {
-                                console.log(el);
                                 this.copyToClip = el;
                             }}
                             className={'btn btn-xs'}

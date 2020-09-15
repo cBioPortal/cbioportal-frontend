@@ -14,8 +14,6 @@ import UserMessager from 'shared/components/userMessager/UserMessage';
 
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { ServerConfigHelpers } from 'config/config';
-import { AppStore, SiteError } from 'AppStore';
-import { Modal } from 'react-bootstrap';
 import { observable } from 'mobx';
 import StudyViewWarning, {
 import {
@@ -23,6 +21,7 @@ import {
 } from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
 import { formatErrorLog, formatErrorMessages } from 'shared/lib/errorFormatter';
 import { ErrorAlert } from 'shared/components/errorAlert/ErrorAlert';
+import { SiteError } from 'cbioportal-utils';
     StudyAgreement,
 } from 'appShell/App/usageAgreements/StudyAgreement';
 import {
@@ -73,9 +72,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
             return (
                 <div className="contentWrapper">
                     <ErrorScreen
-                        // errorMessages={formatErrorMessages(
-                        //     this.appStore.undismissedSiteErrors
-                        // )}
                         title={'No session service configured'}
                         body={
                             <p>
@@ -147,8 +143,16 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         </Then>
                         <Else>
                             <>
-                                {this.appStore.isDialogErrorCondition &&
-                                    showSiteErrors(this.appStore)}
+                                {this.appStore.isDialogErrorCondition && (
+                                    <ErrorScreen
+                                        title={
+                                            'Oops. There was an error retrieving data.'
+                                        }
+                                        errors={
+                                            this.appStore.undismissedSiteErrors
+                                        }
+                                    />
+                                )}
                                 {this.props.children}
                             </>
                         </Else>
@@ -157,13 +161,4 @@ export default class Container extends React.Component<IContainerProps, {}> {
             </div>
         );
     }
-}
-
-function showSiteErrors(appStore: AppStore) {
-    return (
-        <ErrorScreen
-            title={'Oops. There was an error retrieving data.'}
-            errors={appStore.undismissedSiteErrors}
-        />
-    );
 }

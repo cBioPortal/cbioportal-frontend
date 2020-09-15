@@ -133,6 +133,8 @@ import {
     filterAndAnnotateMutations,
     getOncoKbOncogenic,
 } from '../../resultsView/ResultsViewPageStoreUtils';
+import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
+import { AppStore } from 'AppStore';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
@@ -149,6 +151,7 @@ import {
     getMyCancerGenomeData,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     IOncoKbData,
+    SiteError,
 } from 'cbioportal-utils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
 import { GeneticTrackDatum } from 'shared/components/oncoprint/Oncoprint';

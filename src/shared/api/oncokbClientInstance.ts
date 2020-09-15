@@ -1,7 +1,7 @@
-import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
+import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
 
-const ExtendedOncoKbAPI = extendCBioPortalAPI(OncoKbAPI);
+const ExtendedOncoKbAPI = addErrorHandlingtoAPIClient(OncoKbAPI);
 
 const client = new ExtendedOncoKbAPI();
 

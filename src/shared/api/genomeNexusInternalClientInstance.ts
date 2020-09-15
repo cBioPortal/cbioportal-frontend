@@ -2,9 +2,9 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { extendCBioPortalAPI } from 'shared/lib/extendCBioPortalAPI';
+import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
 
-export const ExtendedGenomeNexusAPIInternal = extendCBioPortalAPI(
+export const ExtendedGenomeNexusAPIInternal = addErrorHandlingtoAPIClient(
     GenomeNexusAPIInternal
 );
 

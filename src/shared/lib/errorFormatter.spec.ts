@@ -1,10 +1,10 @@
 import { assert } from 'chai';
-import { SiteError } from '../../AppStore';
 import {
     formatErrorLog,
     formatErrorTitle,
     formatErrorMessages,
 } from './errorFormatter';
+import { SiteError } from 'cbioportal-utils';
 
 const RESPONSE_BODY_MESSAGE = 'RESPONSE_BODY_MESSAGE';
 const REQUEST_ERROR_MESSAGE = 'REQUEST_ERROR_MESSAGE';

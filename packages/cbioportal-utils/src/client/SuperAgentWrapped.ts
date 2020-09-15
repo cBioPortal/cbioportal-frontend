@@ -1,8 +1,5 @@
-import { Request } from 'superagent';
 import request from 'superagent';
-import getBrowserWindow from './getBrowserWindow';
-
-type SiteError = any;
+import { SiteError } from '../types/types';
 
 /*
  * This wrapped superagent class is to be used for all custom http (requests not made via a ts client)
@@ -16,8 +13,8 @@ class SuperAgentClient {
         const agent = request.agent();
         agent.on('error', err => {
             errorConfig.errorObj = err;
-            getBrowserWindow().globalStores.appStore.handleServiceError(
-                errorConfig as SiteError
+            (window as any).globalStores.appStore.handleServiceError(
+                errorConfig as any
             );
         });
 
