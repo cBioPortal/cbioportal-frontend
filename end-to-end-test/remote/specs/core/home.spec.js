@@ -737,6 +737,8 @@ describe('results page quick oql edit', () => {
         );
 
         // enter oql
+        browser.waitForExist('a[data-test="oqlQuickEditButton"]', 10000);
+        browser.click('a[data-test="oqlQuickEditButton"]');
         browser.waitForExist(
             '.quick_oql_edit textarea[data-test="geneSet"]',
             2000
@@ -746,6 +748,7 @@ describe('results page quick oql edit', () => {
             'PTEN: EXP>1'
         );
 
+        browser.pause(1000); // give it a second
         browser.waitForEnabled(
             'button[data-test="oqlQuickEditSubmitButton"]',
             5000
