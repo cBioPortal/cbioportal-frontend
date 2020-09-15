@@ -23,7 +23,6 @@ import {
     getScatterData,
     getScatterDataWithOpacity,
     getStats,
-    calculateLogRank,
     getDownloadContent,
     GroupedScatterData,
     filterScatterData,
@@ -45,6 +44,7 @@ import {
     EditableSpan,
     pluralize,
 } from 'cbioportal-frontend-commons';
+import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -298,15 +298,11 @@ export default class SurvivalChart
     }
 
     @computed get logRankTestPVal(): number | null {
-        if (this.analysisGroupsWithData.length === 2) {
-            // log rank test only makes sense with two groups
-            return calculateLogRank(
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[0].value
-                ],
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[1].value
-                ]
+        if (this.analysisGroupsWithData.length > 1) {
+            return logRankTest(
+                ...this.analysisGroupsWithData.map(group => {
+                    return this.sortedGroupedSurvivals[group.value];
+                })
             );
         } else {
             return null;
