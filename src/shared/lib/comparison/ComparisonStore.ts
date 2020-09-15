@@ -38,6 +38,7 @@ import {
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
     pickMethylationEnrichmentProfiles,
+    pickStructuralVariantEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import { makeEnrichmentDataPromise } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
@@ -416,6 +417,16 @@ export default class ComparisonStore {
             ),
     });
 
+    public readonly structuralVariantEnrichmentProfiles = remoteData({
+        await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () =>
+            Promise.resolve(
+                pickStructuralVariantEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                )
+            ),
+    });
+
     public readonly copyNumberEnrichmentProfiles = remoteData({
         await: () => [this.molecularProfilesInActiveStudies],
         invoke: () =>
@@ -459,6 +470,9 @@ export default class ComparisonStore {
     @observable.ref private _mutationEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
+    @observable.ref private _structuralVariantEnrichmentProfileMap: {
+        [studyId: string]: MolecularProfile;
+    } = {};
     @observable.ref private _copyNumberEnrichmentProfileMap: {
         [studyId: string]: MolecularProfile;
     } = {};
@@ -490,6 +504,30 @@ export default class ComparisonStore {
                 );
             } else {
                 return Promise.resolve(this._mutationEnrichmentProfileMap);
+            }
+        },
+    });
+
+    readonly selectedStudyStructuralVariantEnrichmentProfileMap = remoteData({
+        await: () => [this.structuralVariantEnrichmentProfiles],
+        invoke: () => {
+            // set default enrichmentProfileMap if not selected yet
+            if (_.isEmpty(this._structuralVariantEnrichmentProfileMap)) {
+                const molecularProfilesbyStudyId = _.groupBy(
+                    this.structuralVariantEnrichmentProfiles.result!,
+                    profile => profile.studyId
+                );
+                // Select only one molecular profile for each study
+                return Promise.resolve(
+                    _.mapValues(
+                        molecularProfilesbyStudyId,
+                        molecularProfiles => molecularProfiles[0]
+                    )
+                );
+            } else {
+                return Promise.resolve(
+                    this._structuralVariantEnrichmentProfileMap
+                );
             }
         },
     });
@@ -587,6 +625,13 @@ export default class ComparisonStore {
         [studyId: string]: MolecularProfile;
     }) {
         this._mutationEnrichmentProfileMap = profileMap;
+    }
+
+    @action
+    public setStructuralVariantEnrichmentProfileMap(profileMap: {
+        [studyId: string]: MolecularProfile;
+    }) {
+        this._structuralVariantEnrichmentProfileMap = profileMap;
     }
 
     @action
@@ -703,6 +748,103 @@ export default class ComparisonStore {
             }
         },
     });
+
+    readonly structuralVariantEnrichmentAnalysisGroups = remoteData({
+        await: () => [
+            this.enrichmentAnalysisGroups,
+            this.selectedStudyStructuralVariantEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.enrichmentAnalysisGroups.result!.reduce(
+                    (acc: EnrichmentAnalysisComparisonGroup[], group) => {
+                        // filter samples having mutation profile
+                        const filteredSamples = group.samples.filter(
+                            sample =>
+                                this
+                                    .selectedStudyStructuralVariantEnrichmentProfileMap
+                                    .result![sample.studyId] !== undefined
+                        );
+                        if (filteredSamples.length > 0) {
+                            acc.push({
+                                ...group,
+                                count: filteredSamples.length,
+                                samples: filteredSamples,
+                                description: `Number (percentage) of ${
+                                    this.usePatientLevelEnrichments
+                                        ? 'patients'
+                                        : 'samples'
+                                } in ${
+                                    group.name
+                                } that have a structural variant in the listed gene.`,
+                            });
+                        }
+                        return acc;
+                    },
+                    []
+                )
+            );
+        },
+    });
+
+    readonly structuralVariantEnrichmentDataRequestGroups = remoteData({
+        await: () => [
+            this.structuralVariantEnrichmentAnalysisGroups,
+            this.selectedStudyStructuralVariantEnrichmentProfileMap,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                this.structuralVariantEnrichmentAnalysisGroups.result!.map(
+                    group => {
+                        const molecularProfileCaseIdentifiers = group.samples.map(
+                            sample => ({
+                                caseId: this.usePatientLevelEnrichments
+                                    ? sample.patientId
+                                    : sample.sampleId,
+                                molecularProfileId: this
+                                    .selectedStudyStructuralVariantEnrichmentProfileMap
+                                    .result![sample.studyId].molecularProfileId,
+                            })
+                        );
+                        return {
+                            name: group.name,
+                            molecularProfileCaseIdentifiers,
+                        };
+                    }
+                )
+            );
+        },
+    });
+
+    public readonly structuralVariantEnrichmentData = makeEnrichmentDataPromise(
+        {
+            storeForExcludingQueryGenes: this.resultsViewStore,
+            await: () => [this.structuralVariantEnrichmentDataRequestGroups],
+            referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
+            getSelectedProfileMap: () =>
+                this.selectedStudyStructuralVariantEnrichmentProfileMap.result!,
+            fetchData: () => {
+                if (
+                    this.structuralVariantEnrichmentDataRequestGroups.result &&
+                    this.structuralVariantEnrichmentDataRequestGroups.result
+                        .length > 1
+                ) {
+                    return internalClient.fetchStructuralVariantEnrichmentsUsingPOST(
+                        {
+                            enrichmentType: this.usePatientLevelEnrichments
+                                ? 'PATIENT'
+                                : 'SAMPLE',
+                            groups: this
+                                .structuralVariantEnrichmentDataRequestGroups
+                                .result!,
+                        }
+                    );
+                } else {
+                    return Promise.resolve([]);
+                }
+            },
+        }
+    );
 
     readonly copyNumberEnrichmentAnalysisGroups = remoteData({
         await: () => [
@@ -1144,6 +1286,32 @@ export default class ComparisonStore {
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length < 2) || //less than two active groups
             !this.mutationsTabShowable
+        );
+    }
+
+    @computed get structuralVariantTabShowable() {
+        return (
+            this.structuralVariantEnrichmentProfiles.isComplete &&
+            this.structuralVariantEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get showStructuralVariantsTab() {
+        return (
+            this.structuralVariantTabShowable ||
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result!.length === 0 &&
+                this.tabHasBeenShown.get(
+                    GroupComparisonTab.STRUCTURAL_VARIANTS
+                ))
+        );
+    }
+
+    @computed get structuralVariantsTabUnavailable() {
+        return (
+            (this.activeGroups.isComplete &&
+                this.activeGroups.result.length < 2) || //less than two active groups
+            !this.structuralVariantTabShowable
         );
     }
 

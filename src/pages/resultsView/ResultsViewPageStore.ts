@@ -149,7 +149,6 @@ import { getDefaultMolecularProfiles } from '../../shared/lib/getDefaultMolecula
 import {
     parseSamplesSpecifications,
     populateSampleSpecificationsFromVirtualStudies,
-    ResultsViewComparisonSubTab,
     ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies,
 } from './ResultsViewPageHelpers';

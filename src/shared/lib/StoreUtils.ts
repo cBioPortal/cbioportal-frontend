@@ -101,7 +101,6 @@ export const MolecularAlterationType_filenameSuffix: {
     METHYLATION: 'methylation',
     METHYLATION_BINARY: 'methylation',
     PROTEIN_LEVEL: 'rppa',
-    FUSION: 'fusions',
     STRUCTURAL_VARIANT: 'structural_variants',
 };
 

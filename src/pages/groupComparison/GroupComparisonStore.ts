@@ -5,7 +5,6 @@ import {
     getOrdinals,
     getStudyIds,
 } from './GroupComparisonUtils';
-import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
@@ -29,9 +28,6 @@ import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 
 export default class GroupComparisonStore extends ComparisonStore {
-    @observable private _currentTabId:
-        | GroupComparisonTab
-        | undefined = undefined;
     @observable private sessionId: string;
 
     constructor(

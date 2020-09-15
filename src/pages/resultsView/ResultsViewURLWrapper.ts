@@ -4,10 +4,10 @@ import { computed } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     oldTabToNewTabRoute,
-    ResultsViewComparisonSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import AppConfig from 'appConfig';
+import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -209,9 +209,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
     }
 
     @computed public get comparisonSubTabId() {
-        return (
-            this.query.comparison_subtab || ResultsViewComparisonSubTab.OVERLAP
-        );
+        return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
     }
 
     @autobind
@@ -220,7 +218,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
     }
 
     @autobind
-    public setComparisonSubTabId(tabId: ResultsViewComparisonSubTab) {
+    public setComparisonSubTabId(tabId: GroupComparisonTab) {
         this.updateURL({ comparison_subtab: tabId });
     }
 }
