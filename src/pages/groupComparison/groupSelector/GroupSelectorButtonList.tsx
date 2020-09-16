@@ -14,7 +14,10 @@ class GroupSelectorButtonList extends React.Component<
 > {
     render() {
         return (
-            <div className={styles.groupButtons}>
+            <div
+                className={styles.groupButtons}
+                data-test="groupSelectorButtons"
+            >
                 <div>{this.props.buttons}</div>
             </div>
         );

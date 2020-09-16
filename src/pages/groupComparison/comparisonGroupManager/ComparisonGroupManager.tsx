@@ -379,6 +379,7 @@ export default class ComparisonGroupManager extends React.Component<
                 <DefaultTooltip overlay={tooltipText}>
                     <button
                         className="btn btn-sm btn-primary"
+                        data-test="startGroupComparisonButton"
                         disabled={wrongNumberOfGroups}
                         data-event={serializeEvent({
                             action: 'createCustomComparisonSession',
@@ -510,6 +511,7 @@ export default class ComparisonGroupManager extends React.Component<
                         >
                             <input
                                 className="form-control"
+                                data-test="createCustomGroupInput"
                                 style={{ marginRight: 5 }}
                                 type="text"
                                 placeholder="Enter a name for your new group"
@@ -527,6 +529,7 @@ export default class ComparisonGroupManager extends React.Component<
                         </DefaultTooltip>
                         <button
                             className="btn btn-sm btn-primary"
+                            data-test="createCustomGroupButton2"
                             style={{ width: createOrAddButtonWidth }}
                             onClick={this.submitNewGroup}
                             disabled={this.submitNewGroupDisabled}
@@ -540,6 +543,7 @@ export default class ComparisonGroupManager extends React.Component<
             contents = (
                 <button
                     className="btn btn-sm btn-primary"
+                    data-test="createCustomGroupButton1"
                     data-event={serializeEvent({
                         action: 'createCustomGroup',
                         label: '',

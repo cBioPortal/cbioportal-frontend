@@ -24,14 +24,17 @@ $borderColor: #ccc;
 }
 
 .tl-timelineviewport {
-    border-left: 1px solid $borderColor;
-    border-right: 1px solid $borderColor;
     border-top: none;
     overflow-x: auto;
     overflow-y: hidden;
     display: inline-block;
     width: $width;
     flex-grow: 1;
+}
+
+.tl-viewport-pseudo-border {
+    width: 1px;
+    background: $borderColor;
 }
 
 .tl-timeline {

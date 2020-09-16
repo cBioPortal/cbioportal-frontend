@@ -121,7 +121,6 @@ export interface IServerConfig {
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
     query_product_limit: number;
-    dat_uuid_revoke_other_tokens: boolean;
     dat_method: string;
     skin_show_gsva: boolean;
     oncoKbTokenDefined: boolean;
