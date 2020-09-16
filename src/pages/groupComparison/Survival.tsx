@@ -321,6 +321,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             <p>{attributeDescriptions[key]}</p>
                             <div style={{ width: '920px' }}>
                                 <SurvivalChart
+                                    key={key}
                                     className="borderedChart"
                                     patientSurvivals={value}
                                     analysisGroups={analysisGroups}

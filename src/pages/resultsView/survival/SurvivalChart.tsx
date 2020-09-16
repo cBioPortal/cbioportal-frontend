@@ -1,36 +1,30 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import Slider from 'react-rangeslider';
-import { Popover, Table } from 'react-bootstrap';
+import { Popover } from 'react-bootstrap';
 import styles from './styles.module.scss';
 import './styles.scss';
 import { sleep } from '../../../shared/lib/TimeUtils';
 import * as _ from 'lodash';
 import {
     VictoryChart,
-    VictoryContainer,
     VictoryLine,
-    VictoryTooltip,
     VictoryAxis,
     VictoryLegend,
     VictoryLabel,
     VictoryScatter,
-    VictoryTheme,
     VictoryZoomContainer,
 } from 'victory';
 import {
     getEstimates,
-    getMedian,
     getLineData,
     getScatterData,
     getScatterDataWithOpacity,
     getStats,
     calculateLogRank,
     getDownloadContent,
-    convertScatterDataToDownloadData,
-    downSampling,
     GroupedScatterData,
     filterScatterData,
     SurvivalPlotFilters,
