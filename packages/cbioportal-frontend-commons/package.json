@@ -52,7 +52,7 @@
     "react-select": "^3.0.4",
     "save-svg-as-png": "^1.4.6",
     "seamless-immutable": "^7.0.1",
-    "superagent": "^3.8.3",
+    "superagent": "5.2.2",
     "svg2pdf.js": "^1.3.3",
     "typescript": "3.8.3",
     "url": "^0.11.0",

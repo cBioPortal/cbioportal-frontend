@@ -29,7 +29,7 @@
     "test:watch": "yarn run test -- --watch"
   },
   "dependencies": {
-    "superagent": "^3.8.3",
+    "superagent": "5.2.2",
     "typescript": "3.8.3"
   }
 }
