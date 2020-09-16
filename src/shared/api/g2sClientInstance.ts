@@ -2,7 +2,7 @@ import {
     Genome2StructureAPI,
     GenomeNexusAPI,
 } from 'genome-nexus-ts-api-client';
-import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
+import { addErrorHandlingtoAPIClient } from 'cbioportal-utils';
 
 const ExtendedGenome2StructureAPI = addErrorHandlingtoAPIClient(
     Genome2StructureAPI

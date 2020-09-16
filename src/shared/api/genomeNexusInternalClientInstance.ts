@@ -2,7 +2,7 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
+import { addErrorHandlingtoAPIClient } from 'cbioportal-utils';
 
 export const ExtendedGenomeNexusAPIInternal = addErrorHandlingtoAPIClient(
     GenomeNexusAPIInternal

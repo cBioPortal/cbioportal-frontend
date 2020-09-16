@@ -1,5 +1,5 @@
 import { CBioPortalAPI } from 'cbioportal-ts-api-client';
-import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
+import { addErrorHandlingtoAPIClient } from 'cbioportal-utils';
 
 const ExtendedCBioPortalAPI = addErrorHandlingtoAPIClient(CBioPortalAPI);
 

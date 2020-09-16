@@ -21,6 +21,9 @@ export * from './model/OncoKB';
 export * from './model/RemoteData';
 
 export { default as SuperAgentClient } from './client/SuperAgentWrapped';
+
+export * from './client/addErrorHandlingtoAPIClient';
+
 export * from './types/types';
 
 export * from './mutation/MutationAnnotator';

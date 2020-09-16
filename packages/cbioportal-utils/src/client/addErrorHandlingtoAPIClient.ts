@@ -1,8 +1,5 @@
-import { SiteError } from 'cbioportal-utils';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { SiteError } from '../types/types';
 import { Simulate } from 'react-dom/test-utils';
-import error = Simulate.error;
-import autobind from 'autobind-decorator';
 import request from 'superagent';
 
 type Constructor<T> = new (...args: any[]) => T;
@@ -27,13 +24,6 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
                 // @ts-ignore (it's private, but we CAN access it)
                 const origErrorHandlers = this.errorHandlers;
 
-                function restoreRequest() {
-                    // @ts-ignore (it's private, but we CAN access it)
-                    self.request = proxiedRequest;
-                    // @ts-ignore
-                    self.errorHandlers = origErrorHandlers;
-                }
-
                 // @ts-ignore (it's private, but we CAN access it)
                 self.request = function() {
                     const args = Array.from(arguments);
@@ -45,7 +35,7 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
                         args[8] = [
                             function(error: any) {
                                 //errorConfig.errorObj = error;
-                                getBrowserWindow().globalStores.appStore.handleServiceError(
+                                (window as any).globalStores.appStore.handleServiceError(
                                     errorConfig as SiteError
                                 );
                             },
@@ -53,7 +43,11 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
                     }
                     // @ts-ignore
                     proxiedRequest(...args);
-                    restoreRequest();
+
+                    // @ts-ignore (it's private, but we CAN access it)
+                    self.request = proxiedRequest;
+                    // @ts-ignore
+                    self.errorHandlers = origErrorHandlers;
                 };
             }
 
@@ -67,13 +61,6 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
             const proxiedRequest = this.request;
             // @ts-ignore (it's private, but we CAN access it)
             const origErrorHandlers = this.errorHandlers;
-
-            function restoreRequest() {
-                // @ts-ignore (it's private, but we CAN access it)
-                self.request = proxiedRequest;
-                // @ts-ignore
-                self.errorHandlers = origErrorHandlers;
-            }
 
             // @ts-ignore (it's private, but we CAN access it)
             self.request = function() {
@@ -95,7 +82,11 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
 
                 // @ts-ignore
                 proxiedRequest(...args);
-                restoreRequest();
+
+                // @ts-ignore (it's private, but we CAN access it)
+                self.request = proxiedRequest;
+                // @ts-ignore
+                self.errorHandlers = origErrorHandlers;
             };
             return self;
         }
@@ -105,10 +96,11 @@ export function addErrorHandlingtoAPIClient<T extends Constructor<{}>>(
             errorConfig: SiteError
         ) {
             if (!errorConfig) {
+                // @ts-ignore
                 errorConfig = this.defaultError ? this.defaultError(error) : {};
             }
             errorConfig.errorObj = error;
-            getBrowserWindow().globalStores.appStore.handleServiceError(
+            (window as any).globalStores.appStore.handleServiceError(
                 errorConfig as SiteError
             );
         };

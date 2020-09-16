@@ -1,5 +1,5 @@
 import { GenomeNexusAPI } from 'genome-nexus-ts-api-client';
-import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
+import { addErrorHandlingtoAPIClient } from 'cbioportal-utils';
 
 async function checkVersion(client: GenomeNexusAPI) {
     const versionResp = await client.fetchVersionGET({});

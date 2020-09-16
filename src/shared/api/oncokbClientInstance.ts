@@ -1,4 +1,4 @@
-import { addErrorHandlingtoAPIClient } from 'shared/lib/addErrorHandlingtoAPIClient';
+import { addErrorHandlingtoAPIClient } from 'cbioportal-utils';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
 
 const ExtendedOncoKbAPI = addErrorHandlingtoAPIClient(OncoKbAPI);
