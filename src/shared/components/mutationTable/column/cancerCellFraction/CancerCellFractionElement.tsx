@@ -79,13 +79,10 @@ const CancerCellFractionBarGraph: React.FunctionComponent<{
     const sampleOrder = props.sampleManager
         ? props.sampleManager.getSampleIdsInOrder()
         : [];
-    const barX = sampleOrder.reduce(
-        (map, sampleId: string, i: number) => {
-            map[sampleId] = indexToBarLeft(i);
-            return map;
-        },
-        {} as { [s: string]: number }
-    );
+    const barX = sampleOrder.reduce((map, sampleId: string, i: number) => {
+        map[sampleId] = indexToBarLeft(i);
+        return map;
+    }, {} as { [s: string]: number });
 
     return (
         <svg width={getSVGWidth(sampleOrder.length)} height={maxBarHeight}>

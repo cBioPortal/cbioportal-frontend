@@ -365,11 +365,33 @@ describe('patient view page', function() {
             before(() => {
                 goToUrlAndSetLocalStorage(ascnPatientViewUrl);
                 waitForPatientView();
+                const ascnMutationsTable =
+                    '[data-test=patientview-mutation-table]';
+                $(`${ascnMutationsTable} button#dropdown-custom-1`).click();
+                browser.pause(2000);
+                console.log(
+                    'IUFBLIAUBFLAIUFBALIUFBLIAUSBFLIAUSB***********************'
+                );
+                console.log($(`${ascnMutationsTable} ul.dropdown-menu`).text);
+                $(`${ascnMutationsTable} ul.dropdown-menu`)
+                    .$$('li')[19]
+                    .click();
+                $(`${ascnMutationsTable} ul.dropdown-menu`)
+                    .$$('li')[20]
+                    .click();
+                $(`${ascnMutationsTable} ul.dropdown-menu`)
+                    .$$('li')[21]
+                    .click();
+                $(`${ascnMutationsTable} button#dropdown-custom-1`).click();
             });
 
             const c = 'clonal-icon';
             const s = 'subclonal-icon';
             const n = 'na-icon';
+
+            it('displays always fails this test tooltip on mouseover element', () => {
+                browser.moveToObject('span[data-test=ccf-cell]');
+            });
 
             it('shows correct clonal icons, subclonal icons, NA/indeterminate icons, and invisible icons', () => {
                 const clonalIcon = {
@@ -393,21 +415,27 @@ describe('patient view page', function() {
             it('displays clonal column tooltip on mouseover element', () => {
                 browser.moveToObject(
                     'span[data-test=clonal-cell] span span svg circle'
-                ); // moves pointer to plot thumbnail
+                );
                 $(
                     'div[role=tooltip] div[data-test=clonal-tooltip]'
                 ).waitForExist();
             });
 
-            it('displays ccf column tooltip on mouseover element', () => {
-                browser.moveToObject('span[data-test=ccf-cell] span'); // moves pointer to plot thumbnail
-                $(
-                    'div[role=tooltip] span[data-test=ccf-tooltip]'
-                ).waitForExist();
-            });
-
             it('displays expected alt copies column tooltip on mouseover element', () => {
-                browser.moveToObject('span[data-test=eac-cell] span span'); // moves pointer to plot thumbnail
+                const geneCell = $('span=PIK3R1');
+                const eacCell = geneCell
+                    .$('..')
+                    .$('..')
+                    .$('span[data-test=eac-cell]');
+                console.log(geneCell);
+                console.log(
+                    '*********EAC CELL*********************************'
+                );
+                console.log(eacCell);
+
+                browser.moveToObject(
+                    'span[data-test=eac-cell] span span svg g rect'
+                );
                 $(
                     'div[role=tooltip] span[data-test=eac-tooltip]'
                 ).waitForExist();
@@ -416,7 +444,27 @@ describe('patient view page', function() {
             it('displays integer copy number column tooltip on mouseover element', () => {
                 browser.moveToObject(
                     'span[data-test=ascn-copy-number-cell] span span svg g rect'
-                ); // moves pointer to plot thumbnail
+                );
+                $(
+                    'div[role=tooltip] span[data-test=ascn-copy-number-tooltip]'
+                ).waitForExist();
+            });
+
+            it('displays ccf column tooltip on mouseover element', () => {
+                const geneCell = $('span=PIK3R1');
+                const firstCell = geneCell.$('..').$('..');
+                const ccfCell = geneCell
+                    .$('..')
+                    .$('..')
+                    .$('span[data-test=ccf-cell]');
+                console.log(geneCell);
+                console.log(
+                    '*********CCF CELL*********************************'
+                );
+                console.log(firstCell.text);
+                console.log(ccfCell.text);
+
+                browser.moveToObject('span[data-test=ccf-cell] span');
                 $(
                     'div[role=tooltip] span[data-test=ascn-copy-number-tooltip]'
                 ).waitForExist();
