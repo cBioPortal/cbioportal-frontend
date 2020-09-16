@@ -32,6 +32,7 @@ import OncoprintHeaderView from "./oncoprintheaderview";
 
 export * from "./oncoprintruleset";
 export * from "./oncoprintmodel";
+export {default as shapeToSvg} from "./oncoprintshapetosvg";
 
 export type InitParams = {
     init_cell_width?:number;
