@@ -126,4 +126,5 @@ export interface IServerConfig {
     oncoKbTokenDefined: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
+    patient_view_use_legacy_timeline: boolean;
 }
