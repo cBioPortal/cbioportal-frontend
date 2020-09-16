@@ -10,6 +10,7 @@ var {
     waitForNumberOfStudyCheckboxes,
     clickModifyStudySelectionButton,
     waitForOncoprint,
+    setDropdownOpen,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -610,9 +611,9 @@ describe('auto-selecting needed profiles for oql in query form', () => {
     before(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
-    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
-        browser.waitForExist('.studyItem_acc_tcga_pan_can_atlas_2018', 20000);
-        browser.click('.studyItem_acc_tcga_pan_can_atlas_2018');
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+        browser.waitForExist('.studyItem_prad_tcga_pub', 20000);
+        browser.click('.studyItem_prad_tcga_pub');
         clickQueryByGeneButton();
 
         // enter oql
@@ -631,7 +632,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         // submit is disabled
         assert(!browser.isEnabled('button[data-test="queryButton"]'));
     });
-    it.skip('auto-selects an mrna profile when mrna oql is entered', () => {
+    it('auto-selects an mrna profile when mrna oql is entered', () => {
         // make sure profiles selector is loaded
         browser.waitForExist(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
@@ -673,15 +674,15 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         // mutation, cna, mrna profiles are there
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            'acc_tcga_pan_can_atlas_2018_mutations'
+            'prad_tcga_pub_mutations'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            'acc_tcga_pan_can_atlas_2018_gistic'
+            'prad_tcga_pub_gistic'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-            'acc_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'
+            'prad_tcga_pub_rna_seq_v2_mrna_median_Zscores'
         );
     });
 });
@@ -689,11 +690,11 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 describe('results page quick oql edit', () => {
     before(() => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_pan_can_atlas_2018_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_pan_can_atlas_2018_gistic&cancer_study_list=acc_tcga_pan_can_atlas_2018&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=acc_tcga_pan_can_atlas_2018_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
     });
 
-    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
         browser.click('[data-test="oqlQuickEditButton"]');
 
@@ -725,11 +726,11 @@ describe('results page quick oql edit', () => {
         // mutation and cna profile are there
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            'acc_tcga_pan_can_atlas_2018_mutations'
+            'prad_tcga_pub_mutations'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            'acc_tcga_pan_can_atlas_2018_gistic'
+            'prad_tcga_pub_gistic'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
@@ -737,15 +738,17 @@ describe('results page quick oql edit', () => {
         );
 
         // enter oql
-        browser.waitForExist(
-            '.quick_oql_edit textarea[data-test="geneSet"]',
-            2000
+        setDropdownOpen(
+            true,
+            'a[data-test="oqlQuickEditButton"]',
+            '.quick_oql_edit textarea[data-test="geneSet"]'
         );
         setInputText(
             '.quick_oql_edit textarea[data-test="geneSet"]',
             'PTEN: EXP>1'
         );
 
+        browser.pause(1000); // give it a second
         browser.waitForEnabled(
             'button[data-test="oqlQuickEditSubmitButton"]',
             5000
@@ -761,15 +764,15 @@ describe('results page quick oql edit', () => {
         }).value;
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            'acc_tcga_pan_can_atlas_2018_mutations'
+            'prad_tcga_pub_mutations'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            'acc_tcga_pan_can_atlas_2018_gistic'
+            'prad_tcga_pub_gistic'
         );
         assert.equal(
             query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-            'acc_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'
+            'prad_tcga_pub_rna_seq_v2_mrna_median_Zscores'
         );
     });
 });
