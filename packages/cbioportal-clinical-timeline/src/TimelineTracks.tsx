@@ -22,13 +22,30 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
         const tracks = store.data;
 
         let nextY = 0;
+        let nextNonCollapsed: number | undefined = undefined;
 
         return (
             <>
                 <g transform={`translate(0 ${TICK_AXIS_HEIGHT})`}>
                     {tracks.map(track => {
-                        const y = nextY;
-                        nextY += track.height;
+                        // set the y to bottom of last row
+                        let y = nextY;
+                        const collapsed = store.isTrackCollapsed(
+                            track.track.uid
+                        );
+
+                        if (collapsed && !nextNonCollapsed) {
+                            nextNonCollapsed = nextY + track.height;
+                        }
+
+                        if (!collapsed) {
+                            if (nextNonCollapsed) {
+                                y = nextNonCollapsed;
+                                nextNonCollapsed = undefined;
+                            }
+                            nextY += track.height;
+                        }
+
                         return (
                             <TimelineTrack
                                 limit={store.trimmedLimit}
@@ -38,6 +55,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                                 store={store}
                                 y={y}
                                 height={track.height}
+                                collapsed={collapsed}
                                 width={width}
                             />
                         );
