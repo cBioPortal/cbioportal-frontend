@@ -365,33 +365,29 @@ describe('patient view page', function() {
             before(() => {
                 goToUrlAndSetLocalStorage(ascnPatientViewUrl);
                 waitForPatientView();
-                const ascnMutationsTable =
-                    '[data-test=patientview-mutation-table]';
-                $(`${ascnMutationsTable} button#dropdown-custom-1`).click();
-                browser.pause(2000);
-                console.log(
-                    'IUFBLIAUBFLAIUFBALIUFBLIAUSBFLIAUSB***********************'
-                );
-                console.log($(`${ascnMutationsTable} ul.dropdown-menu`).text);
-                $(`${ascnMutationsTable} ul.dropdown-menu`)
-                    .$$('li')[19]
+                const mutationsTable = '[data-test=patientview-mutation-table]';
+                $(`${mutationsTable} button#dropdown-custom-1`).click();
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[19]
                     .click();
-                $(`${ascnMutationsTable} ul.dropdown-menu`)
-                    .$$('li')[20]
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[20]
                     .click();
-                $(`${ascnMutationsTable} ul.dropdown-menu`)
-                    .$$('li')[21]
+                $(`${mutationsTable} ul.dropdown-menu`)
+                    .$$('li label input')[21]
                     .click();
-                $(`${ascnMutationsTable} button#dropdown-custom-1`).click();
+                $(`${mutationsTable} button#dropdown-custom-1`).click();
+            });
+
+            afterEach(() => {
+                // move somewhere safe so that all tooltips close or open tooltips block others from opening
+                browser.moveToObject('body', 0, 0); // offset 0, 0 relative to the top-left corner of the element
+                browser.pause(200); // it takes a bit of time to close the tooltip after moving
             });
 
             const c = 'clonal-icon';
             const s = 'subclonal-icon';
             const n = 'na-icon';
-
-            it('displays always fails this test tooltip on mouseover element', () => {
-                browser.moveToObject('span[data-test=ccf-cell]');
-            });
 
             it('shows correct clonal icons, subclonal icons, NA/indeterminate icons, and invisible icons', () => {
                 const clonalIcon = {
@@ -422,17 +418,6 @@ describe('patient view page', function() {
             });
 
             it('displays expected alt copies column tooltip on mouseover element', () => {
-                const geneCell = $('span=PIK3R1');
-                const eacCell = geneCell
-                    .$('..')
-                    .$('..')
-                    .$('span[data-test=eac-cell]');
-                console.log(geneCell);
-                console.log(
-                    '*********EAC CELL*********************************'
-                );
-                console.log(eacCell);
-
                 browser.moveToObject(
                     'span[data-test=eac-cell] span span svg g rect'
                 );
@@ -451,22 +436,9 @@ describe('patient view page', function() {
             });
 
             it('displays ccf column tooltip on mouseover element', () => {
-                const geneCell = $('span=PIK3R1');
-                const firstCell = geneCell.$('..').$('..');
-                const ccfCell = geneCell
-                    .$('..')
-                    .$('..')
-                    .$('span[data-test=ccf-cell]');
-                console.log(geneCell);
-                console.log(
-                    '*********CCF CELL*********************************'
-                );
-                console.log(firstCell.text);
-                console.log(ccfCell.text);
-
                 browser.moveToObject('span[data-test=ccf-cell] span');
                 $(
-                    'div[role=tooltip] span[data-test=ascn-copy-number-tooltip]'
+                    'div[role=tooltip] span[data-test=ccf-tooltip]'
                 ).waitForExist();
             });
         });
