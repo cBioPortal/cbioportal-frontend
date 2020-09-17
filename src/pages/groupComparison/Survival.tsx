@@ -13,7 +13,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import { blendColors } from './OverlapUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
-import _ from 'lodash';
+import _, { Dictionary } from 'lodash';
 import SurvivalDescriptionTable from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
     GroupLegendLabelComponent,
@@ -29,6 +29,11 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
+import SurvivalPrefixTable from 'pages/resultsView/survival/SurvivalPrefixTable';
+import autobind from 'autobind-decorator';
+import { PatientSurvival } from 'shared/model/PatientSurvival';
+import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
+import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 
 export interface ISurvivalProps {
     store: ComparisonStore;
@@ -46,6 +51,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     @observable
     private selectedSurvivalPlotPrefix: string | undefined = undefined;
 
+    @autobind
     @action
     private setSurvivalPlotPrefix(prefix: string) {
         this.selectedSurvivalPlotPrefix = prefix;
@@ -156,6 +162,109 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         },
     });
 
+    readonly sortedGroupedSurvivals = remoteData<{
+        [prefix: string]: { [analysisGroup: string]: PatientSurvival[] };
+    }>({
+        await: () => [
+            this.analysisGroupsComputations,
+            this.props.store.patientSurvivals,
+        ],
+        invoke: () => {
+            const patientToAnalysisGroups = this.analysisGroupsComputations
+                .result!.patientToAnalysisGroups;
+            const survivalsByPrefixByAnalysisGroup = _.mapValues(
+                this.props.store.patientSurvivals.result!,
+                survivals =>
+                    _.reduce(
+                        survivals,
+                        (map, nextSurv) => {
+                            if (
+                                nextSurv.uniquePatientKey in
+                                patientToAnalysisGroups
+                            ) {
+                                // only include this data if theres an analysis group (curve) to put it in
+                                const groups =
+                                    patientToAnalysisGroups[
+                                        nextSurv.uniquePatientKey
+                                    ];
+                                groups.forEach(group => {
+                                    map[group] = map[group] || [];
+                                    map[group].push(nextSurv);
+                                });
+                            }
+                            return map;
+                        },
+                        {} as { [groupValue: string]: PatientSurvival[] }
+                    )
+            );
+
+            return Promise.resolve(
+                _.mapValues(
+                    survivalsByPrefixByAnalysisGroup,
+                    survivalsByAnalysisGroup =>
+                        _.mapValues(survivalsByAnalysisGroup, survivals =>
+                            survivals.sort((a, b) => a.months - b.months)
+                        )
+                )
+            );
+        },
+    });
+
+    readonly pValuesByPrefix = remoteData<{ [prefix: string]: number | null }>({
+        await: () => [
+            this.sortedGroupedSurvivals,
+            this.analysisGroupsComputations,
+        ],
+        invoke: () => {
+            const analysisGroups = this.analysisGroupsComputations.result!
+                .analysisGroups;
+
+            return Promise.resolve(
+                _.mapValues(
+                    this.sortedGroupedSurvivals.result!,
+                    groupToSurvivals => {
+                        let pVal = null;
+                        if (analysisGroups.length > 1) {
+                            pVal = logRankTest(
+                                ...analysisGroups.map(
+                                    group => groupToSurvivals[group.value] || []
+                                )
+                            );
+                        }
+                        return pVal;
+                    }
+                )
+            );
+        },
+    });
+
+    readonly qValuesByPrefix = remoteData<{ [prefix: string]: number | null }>({
+        await: () => [this.pValuesByPrefix],
+        invoke: () => {
+            // Pair pValues with prefixes
+            const zipped = _.map(
+                this.pValuesByPrefix.result!,
+                (pVal, prefix) => ({ pVal, prefix })
+            );
+
+            // Filter out null pvalues and sort in ascending order
+            const sorted = _.sortBy(
+                zipped.filter(x => x.pVal !== null),
+                x => x.pVal
+            );
+
+            // Calculate q values, in same order as `sorted`
+            const qValues = calculateQValues(sorted.map(x => x.pVal!));
+
+            // make a copy - null pValues become null qValues
+            const ret = _.clone(this.pValuesByPrefix.result!);
+            sorted.forEach((x, index) => {
+                ret[x.prefix] = qValues[index];
+            });
+            return Promise.resolve(ret);
+        },
+    });
+
     readonly tabUI = MakeMobxView({
         await: () => {
             if (
@@ -170,6 +279,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     this.props.store._activeGroupsNotOverlapRemoved,
                     this.survivalUI,
                     this.props.store.overlapComputations,
+                    this.survivalPrefixTable,
                 ];
             }
         },
@@ -193,7 +303,27 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         survivalTabMode={true}
                     />
                 );
-                content.push(this.survivalUI.component);
+                content.push(
+                    <div
+                        style={{
+                            display: 'flex',
+                        }}
+                    >
+                        {this.survivalPrefixTable.component && (
+                            <div
+                                style={{
+                                    marginRight: 15,
+                                    marginTop: 15,
+                                    minWidth: 400,
+                                    maxWidth: 400,
+                                }}
+                            >
+                                {this.survivalPrefixTable.component}
+                            </div>
+                        )}
+                        {this.survivalUI.component}
+                    </div>
+                );
             }
             return (
                 <div data-test="ComparisonPageSurvivalTabDiv">{content}</div>
@@ -206,6 +336,73 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
         showLastRenderWhenPending: true,
     });
 
+    readonly survivalPrefixTable = MakeMobxView({
+        await: () => [
+            this.survivalTitleText,
+            this.props.store.patientSurvivals,
+            this.pValuesByPrefix,
+            this.qValuesByPrefix,
+        ],
+        render: () => {
+            const patientSurvivals = this.props.store.patientSurvivals.result!;
+            const pValues = this.pValuesByPrefix.result!;
+            const qValues = this.qValuesByPrefix.result!;
+            const survivalTitleText = this.survivalTitleText.result!;
+
+            if (Object.keys(survivalTitleText).length > 1) {
+                // only show table if theres more than one prefix option
+                return (
+                    <SurvivalPrefixTable
+                        survivalPrefixes={_.map(
+                            this.survivalTitleText.result! as Dictionary<
+                                string
+                            >,
+                            (displayText, prefix) => {
+                                return {
+                                    prefix,
+                                    displayText,
+                                    numPatients:
+                                        patientSurvivals[prefix].length,
+                                    pValue: pValues[prefix],
+                                    qValue: qValues[prefix],
+                                };
+                            }
+                        )}
+                        getSelectedPrefix={() =>
+                            this.selectedSurvivalPlotPrefix
+                        }
+                        setSelectedPrefix={this.setSurvivalPlotPrefix}
+                    />
+                );
+            } else {
+                return null;
+            }
+        },
+    });
+
+    readonly survivalTitleText = remoteData({
+        await: () => [
+            this.props.store.survivalClinicalAttributesPrefix,
+            this.props.store.survivalDescriptions,
+        ],
+        invoke: () =>
+            Promise.resolve(
+                this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
+                    (map, prefix) => {
+                        // get survival plot titles
+                        // use first display name as title
+                        map[prefix] = generateSurvivalPlotTitleFromDisplayName(
+                            this.props.store.survivalDescriptions.result![
+                                prefix
+                            ][0].displayName
+                        );
+                        return map;
+                    },
+                    {} as { [prefix: string]: string }
+                )
+            ),
+    });
+
     readonly survivalUI = MakeMobxView({
         await: () => [
             this.props.store.survivalDescriptions,
@@ -216,6 +413,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
             this.props.store.patientSurvivalUniqueStatusText,
+            this.survivalTitleText,
+            this.sortedGroupedSurvivals,
+            this.pValuesByPrefix,
         ],
         render: () => {
             let content: any = [];
@@ -225,7 +425,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
             const attributeDescriptions: { [prefix: string]: string } = {};
-            const survivalTitleText: { [prefix: string]: string } = {};
+            const survivalTitleText = this.survivalTitleText.result!;
             this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
                 prefix => {
                     // get attribute description
@@ -238,14 +438,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                   prefix
                               ][0].description
                             : '';
-                    // get survival plot titles
-                    // use first display name as title
-                    survivalTitleText[
-                        prefix
-                    ] = generateSurvivalPlotTitleFromDisplayName(
-                        this.props.store.survivalDescriptions.result![prefix][0]
-                            .displayName
-                    );
                 }
             );
             // set default plot if available
@@ -319,11 +511,17 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 {survivalTitleText[key]}
                             </h4>
                             <p>{attributeDescriptions[key]}</p>
-                            <div style={{ width: '920px' }}>
+                            <div
+                                className="borderedChart"
+                                style={{ width: '920px' }}
+                            >
                                 <SurvivalChart
                                     key={key}
-                                    className="borderedChart"
-                                    patientSurvivals={value}
+                                    sortedGroupedSurvivals={
+                                        this.sortedGroupedSurvivals.result![
+                                            this.selectedSurvivalPlotPrefix
+                                        ]
+                                    }
                                     analysisGroups={analysisGroups}
                                     patientToAnalysisGroups={
                                         patientToAnalysisGroups
@@ -378,6 +576,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     styleOpts={{
                                         tooltipYOffset: -28,
                                     }}
+                                    pValue={
+                                        this.pValuesByPrefix.result![
+                                            this.selectedSurvivalPlotPrefix
+                                        ]
+                                    }
                                 />
                             </div>
                         </div>
@@ -390,26 +593,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     );
                 }
             }
-            plotHeader.push(
-                <strong className={survivalPlotStyle['survivalTypeOptions']}>
-                    Survival types:{' '}
-                </strong>
-            );
-            _.forEach(survivalTitleText, (value, key) => {
-                plotHeader.push(
-                    <li
-                        onClick={() => this.setSurvivalPlotPrefix(key)}
-                        className={
-                            'plots-tab-pills ' +
-                            (key === this.selectedSurvivalPlotPrefix
-                                ? 'active'
-                                : '')
-                        }
-                    >
-                        <a>{value}</a>
-                    </li>
-                );
-            });
             return (
                 <div>
                     <div
