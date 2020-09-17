@@ -943,13 +943,6 @@
             "type": "object"
           },
           {
-            "name": "myAllowRevocationOfOtherTokens",
-            "in": "query",
-            "description": "myAllowRevocationOfOtherTokens",
-            "required": false,
-            "type": "boolean"
-          },
-          {
             "name": "principal",
             "in": "query",
             "required": false,
