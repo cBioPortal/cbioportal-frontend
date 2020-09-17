@@ -7,9 +7,9 @@ type OncoKbCardDefaultTitleProps = {
     tumorType: string;
 };
 
-export const OncoKbCardTitle: React.FunctionComponent<
-    OncoKbCardDefaultTitleProps
-> = (props: OncoKbCardDefaultTitleProps) => {
+export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProps> = (
+    props: OncoKbCardDefaultTitleProps
+) => {
     const titleContent = [];
     if (props.hugoSymbol) {
         titleContent.push(props.hugoSymbol);
