@@ -28,6 +28,16 @@ type TooltipModel = {
     position?: { x: number; y: number };
 };
 
+function collapseTrack(track: TimelineTrackSpecification): string[] {
+    let arr = [track.uid];
+    if (track.tracks) {
+        track.tracks.forEach(t => {
+            arr = arr.concat(...collapseTrack(t));
+        });
+    }
+    return arr;
+}
+
 export class TimelineStore {
     @observable private _expandedTrims = false;
     @observable.ref _data: TimelineTrackSpecification[];
@@ -37,7 +47,7 @@ export class TimelineStore {
         this._data = tracks;
     }
 
-    @observable enableCollapseTrack = false;
+    @observable enableCollapseTrack = true;
 
     @computed get data(): {
         track: TimelineTrackSpecification;
@@ -48,11 +58,12 @@ export class TimelineStore {
         return flattenTracks(this._data, this.isTrackCollapsed);
     }
 
-    @action toggleTrackCollapse(trackUid: string) {
-        if (this.collapsedTracks.has(trackUid)) {
-            this.collapsedTracks.delete(trackUid);
+    @action toggleTrackCollapse(track: TimelineTrackSpecification) {
+        const collapsedTracks = collapseTrack(track);
+        if (this.collapsedTracks.has(track.uid)) {
+            collapsedTracks.forEach(uid => this.collapsedTracks.delete(uid));
         } else {
-            this.collapsedTracks.set(trackUid, true);
+            collapsedTracks.forEach(uid => this.collapsedTracks.set(uid, true));
         }
     }
 

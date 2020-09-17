@@ -73,6 +73,13 @@ $borderColor: #ccc;
         // This allows sensing the pointer for the purpose of the hover effect
         pointer-events: all;
 
+        &.tl-collapsed {
+            rect.tl-track-highlight {
+                opacity: 0 !important;
+                display: none;
+            }
+        }
+
         rect.tl-track-highlight {
             // On mouse hover, another handler will turn this opacity to 1
             fill: #f2f2f2;

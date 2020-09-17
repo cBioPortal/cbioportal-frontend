@@ -348,8 +348,17 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             minWidth: store.headersWidth,
                         }}
                     >
-                        {tracks.map(track => {
-                            return (
+                        {tracks.map((track, i) => {
+                            const isCollapsed = store.isTrackCollapsed(
+                                track.track.uid
+                            );
+                            const isCollapsedParent =
+                                isCollapsed &&
+                                (i === 0 ||
+                                    !store.isTrackCollapsed(
+                                        tracks[i - 1].track.uid
+                                    ));
+                            return isCollapsed && !isCollapsedParent ? null : (
                                 <TrackHeader
                                     store={store}
                                     track={track.track}

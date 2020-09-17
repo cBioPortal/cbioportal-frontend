@@ -16,6 +16,7 @@ import {
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
 import { observer } from 'mobx-react';
+import classNames from 'classnames';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -29,6 +30,7 @@ export interface ITimelineTrackProps {
     y: number;
     height: number;
     width: number;
+    collapsed: boolean;
 }
 
 /*
@@ -208,6 +210,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
         y,
         height,
         width,
+        collapsed,
     }: ITimelineTrackProps) {
         let eventsGroupedByPosition;
 
@@ -268,7 +271,9 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
 
         return (
             <g
-                className={'tl-track'}
+                className={classNames('tl-track', {
+                    'tl-collapsed': collapsed,
+                })}
                 transform={`translate(0 ${y})`}
                 onMouseEnter={handleTrackHover}
                 onMouseLeave={handleTrackHover}
