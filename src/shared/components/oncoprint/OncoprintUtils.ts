@@ -1110,13 +1110,25 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     );
                     return _.keys(entry.entities).map(entityId => {
                         const entity = genericAssayEntitiesByEntityId[entityId];
+                        const entityName =
+                            'NAME' in entity.genericEntityMetaProperties
+                                ? entity.genericEntityMetaProperties['NAME']
+                                : entityId;
+                        const description =
+                            ('DESCRIPTION' in entity.genericEntityMetaProperties
+                                ? `${entityName} (${entity.genericEntityMetaProperties['DESCRIPTION']})`
+                                : entityName) +
+                            ` data from ${
+                                molecularProfileIdToMolecularProfile[
+                                    entry.molecularProfileId
+                                ].name
+                            }`;
+
                         return {
                             molecularProfileId: entry.molecularProfileId,
                             stableId: entityId,
-                            entityName:
-                                'NAME' in entity.genericEntityMetaProperties
-                                    ? entity.genericEntityMetaProperties['NAME']
-                                    : NOT_APPLICABLE_VALUE,
+                            entityName,
+                            description,
                         };
                     });
                 })
@@ -1154,6 +1166,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 return {
                     key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,
                     label: query.entityName,
+                    description: query.description,
                     molecularProfileId: query.molecularProfileId,
                     molecularProfileName:
                         molecularProfileIdToMolecularProfile[molecularProfileId]

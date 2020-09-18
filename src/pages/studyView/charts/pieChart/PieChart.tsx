@@ -13,13 +13,16 @@ import {
     getFrequencyStr,
     toSvgDomNodeWithLegend,
 } from 'pages/studyView/StudyViewUtils';
-import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
 import { ClinicalDataCountSummary } from 'pages/studyView/StudyViewUtils';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
-import { DefaultTooltip, getTextWidth } from 'cbioportal-frontend-commons';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    DefaultTooltip,
+    getTextWidth,
+} from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 
@@ -200,10 +203,12 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
             : d.count.toLocaleString();
     }
 
-    // We don't want to show a bigger pie chart when the height is way smaller than width
+    // Pie charts should be circular, and thus should have a square container.
+    // In instances where the pie chart is not in a square container, just
+    // make the largest square you can in the container.
     @computed
     get chartSize() {
-        return (this.props.width + this.props.height) / 2;
+        return Math.min(this.props.width, this.props.height);
     }
 
     @computed

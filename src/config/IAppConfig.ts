@@ -121,10 +121,10 @@ export interface IServerConfig {
     session_url_length_threshold: string;
     mskWholeSlideViewerToken: string;
     query_product_limit: number;
-    dat_uuid_revoke_other_tokens: boolean;
     dat_method: string;
     skin_show_gsva: boolean;
     oncoKbTokenDefined: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
+    patient_view_use_legacy_timeline: boolean;
 }

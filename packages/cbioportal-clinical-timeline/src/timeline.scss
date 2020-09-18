@@ -1,0 +1,151 @@
+$width: 1200px;
+$borderColor: #ccc;
+
+.tl-timeline-wrapper {
+    position: relative;
+
+    min-height: 200px;
+
+    .tl-timeline-reset-buttons {
+        position: absolute;
+        top: -25px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        div {
+            margin-right: 10px;
+        }
+        div:last-child {
+            margin-right: 0px;
+        }
+    }
+}
+
+.tl-timelineviewport {
+    border-top: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    display: inline-block;
+    width: $width;
+    flex-grow: 1;
+}
+
+.tl-viewport-pseudo-border {
+    width: 1px;
+    background: $borderColor;
+}
+
+.tl-timeline {
+    position: relative;
+
+    .tl-cursor {
+        position: absolute;
+        top: 0;
+        left: 0px;
+        border-left: 1px dashed #999;
+        width: 1px;
+        height: 1000px;
+        display: none;
+        z-index: 10;
+        overflow: visible;
+        pointer-events: none;
+
+        > div {
+            position: absolute;
+            background: #999;
+            color: #fff;
+            padding: 1px;
+            font-size: 9px;
+            white-space: nowrap;
+            width: 75px;
+            top: 0px;
+            left: -37.5px;
+            text-align: center;
+            opacity: 1;
+            border-radius: 4px;
+            display: none;
+        }
+    }
+
+    .tl-track {
+        // This allows sensing the pointer for the purpose of the hover effect
+        pointer-events: all;
+
+        rect.tl-track-highlight {
+            // On mouse hover, another handler will turn this opacity to 1
+            fill: #f2f2f2;
+            opacity: 0;
+        }
+    }
+}
+
+.tl-timeline-leftbar {
+    .tl-timeline-tracklabels {
+        font-size: 12px;
+        text-transform: uppercase;
+        > div {
+            white-space: nowrap;
+            border-bottom: 1px dashed #eee;
+            padding-right: 10px;
+            padding-top: 2px;
+        }
+    }
+}
+
+.tl-zoom-selectbox {
+    position: absolute;
+    height: 1000px;
+    background: #ccc;
+    left: 100px;
+    z-index: 100;
+    opacity: 0.3;
+    display: none;
+}
+
+.tl-zoom-selectbox-mask {
+    position: absolute;
+    z-index: 99;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: none;
+}
+
+.tl-timeline-tooltip {
+    //background-color: #000000 !important;
+    max-width: 480px !important;
+    min-width: 300px;
+
+    &:hover {
+        z-index: 1070 !important;
+    }
+
+    //.arrow {
+    //    border-right-color: #000000 !important;
+    //    border-left-color: #000000 !important;
+    //
+    //    &:after {
+    //        border-right-color: #000000 !important;
+    //        border-left-color: #000000 !important;
+    //    }
+    //}
+    .popover-content {
+        padding: 2px 5px !important;
+        border: none;
+        //background-color: #000000;
+        //color: #fff;
+        font-size: 10px;
+
+        td,
+        th {
+            padding: 1px 5px;
+        }
+    }
+}
+
+.timeline-label:last-of-type {
+    display: none;
+}

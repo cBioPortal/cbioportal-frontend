@@ -33,7 +33,6 @@ import GroupComparisonURLWrapper, {
 } from './GroupComparisonURLWrapper';
 
 import styles from './styles.module.scss';
-import 'cbioportal-frontend-commons/dist/styles.css';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';

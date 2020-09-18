@@ -7,10 +7,12 @@ import {
     VictoryLine,
     VictoryScatter,
 } from 'victory';
-import CBIOPORTAL_VICTORY_THEME from '../../../shared/theme/cBioPoralTheme';
 import { action, computed, observable } from 'mobx';
 import { Sample } from 'cbioportal-ts-api-client';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    CBIOPORTAL_VICTORY_THEME,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import WindowStore from '../../../shared/components/window/WindowStore';
 import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';

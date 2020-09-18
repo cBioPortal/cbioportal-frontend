@@ -1061,7 +1061,7 @@ export default class ComparisonStore {
                 this.mrnaEnrichmentDataRequestGroups.result &&
                 this.mrnaEnrichmentDataRequestGroups.result.length > 1
             ) {
-                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
                     groups: this.mrnaEnrichmentDataRequestGroups.result!,
                 });
@@ -1146,7 +1146,7 @@ export default class ComparisonStore {
                 this.proteinEnrichmentDataRequestGroups.result &&
                 this.proteinEnrichmentDataRequestGroups.result.length > 1
             ) {
-                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
                     groups: this.proteinEnrichmentDataRequestGroups.result!,
                 });
@@ -1230,7 +1230,7 @@ export default class ComparisonStore {
                 this.methylationEnrichmentDataRequestGroups.result &&
                 this.methylationEnrichmentDataRequestGroups.result.length > 1
             ) {
-                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
                     groups: this.methylationEnrichmentDataRequestGroups.result!,
                 });

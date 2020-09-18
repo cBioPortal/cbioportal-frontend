@@ -1,43 +1,34 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import Slider from 'react-rangeslider';
-import { Popover, Table } from 'react-bootstrap';
+import { Popover } from 'react-bootstrap';
 import styles from './styles.module.scss';
 import './styles.scss';
 import { sleep } from '../../../shared/lib/TimeUtils';
 import * as _ from 'lodash';
 import {
     VictoryChart,
-    VictoryContainer,
     VictoryLine,
-    VictoryTooltip,
     VictoryAxis,
     VictoryLegend,
     VictoryLabel,
     VictoryScatter,
-    VictoryTheme,
     VictoryZoomContainer,
 } from 'victory';
 import {
     getEstimates,
-    getMedian,
     getLineData,
     getScatterData,
     getScatterDataWithOpacity,
     getStats,
     calculateLogRank,
     getDownloadContent,
-    convertScatterDataToDownloadData,
-    downSampling,
     GroupedScatterData,
     filterScatterData,
     SurvivalPlotFilters,
 } from './SurvivalUtil';
-import CBIOPORTAL_VICTORY_THEME, {
-    baseLabelStyles,
-} from '../../../shared/theme/cBioPoralTheme';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
 import { DefaultTooltip, DownloadControls } from 'cbioportal-frontend-commons';
@@ -48,7 +39,12 @@ import { toSvgDomNodeWithLegend } from '../../studyView/StudyViewUtils';
 import classnames from 'classnames';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import TruncatedTextWithTooltipSVG from '../../../shared/components/TruncatedTextWithTooltipSVG';
-import { EditableSpan, pluralize } from 'cbioportal-frontend-commons';
+import {
+    baseLabelStyles,
+    CBIOPORTAL_VICTORY_THEME,
+    EditableSpan,
+    pluralize,
+} from 'cbioportal-frontend-commons';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',

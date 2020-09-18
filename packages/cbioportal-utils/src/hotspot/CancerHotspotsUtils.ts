@@ -58,24 +58,22 @@ export function groupHotspotsByMutations(
     return hotspotMap;
 }
 
-export function filterHotspotsByMutations(
-    mutations: Mutation[],
+export function filterHotspotsByMutation(
+    mutation: Mutation,
     index: IHotspotIndex,
     filter?: (hotspot: Hotspot) => boolean
 ): Hotspot[] {
     let hotspots: Hotspot[] = [];
 
-    mutations.forEach(mutation => {
-        const genomicLocation = extractGenomicLocation(mutation);
-        const aggregatedHotspots = genomicLocation
-            ? index[genomicLocationString(genomicLocation)]
-            : undefined;
+    const genomicLocation = extractGenomicLocation(mutation);
+    const aggregatedHotspots = genomicLocation
+        ? index[genomicLocationString(genomicLocation)]
+        : undefined;
 
-        // TODO remove redundant hotspots
-        if (aggregatedHotspots) {
-            hotspots = hotspots.concat(aggregatedHotspots.hotspots);
-        }
-    });
+    // TODO remove redundant hotspots
+    if (aggregatedHotspots) {
+        hotspots = aggregatedHotspots.hotspots;
+    }
 
     if (filter) {
         hotspots = hotspots.filter(filter);
@@ -84,17 +82,51 @@ export function filterHotspotsByMutations(
     return hotspots;
 }
 
-export function filterRecurrentHotspotsByMutations(
+export function filterHotspotsByMutations(
+    mutations: Mutation[],
+    index: IHotspotIndex,
+    filter?: (hotspot: Hotspot) => boolean
+): Hotspot[] {
+    let hotspots: Hotspot[] = [];
+
+    mutations.forEach(mutation => {
+        hotspots = hotspots.concat(
+            filterHotspotsByMutation(mutation, index, filter)
+        );
+    });
+
+    return hotspots;
+}
+
+export function filterLinearClusterHotspotsByMutations(
     mutations: Mutation[],
     index: IHotspotIndex
 ): Hotspot[] {
-    return filterHotspotsByMutations(
-        mutations,
-        index,
-        (hotspot: Hotspot) =>
-            hotspot.type.toLowerCase().includes('single') ||
-            hotspot.type.toLowerCase().includes('indel')
-    );
+    let hotspots: Hotspot[] = [];
+    // if mutation type is splice, get splice hotspot, otherwise get recurrent hotspot
+    mutations.forEach(mutation => {
+        if (
+            mutation.mutationType &&
+            mutation.mutationType.toLowerCase().includes('splice')
+        ) {
+            hotspots = hotspots.concat(
+                filterHotspotsByMutation(mutation, index, (hotspot: Hotspot) =>
+                    hotspot.type.toLowerCase().includes('splice')
+                )
+            );
+        } else {
+            hotspots = hotspots.concat(
+                filterHotspotsByMutation(
+                    mutation,
+                    index,
+                    (hotspot: Hotspot) =>
+                        hotspot.type.toLowerCase().includes('single') ||
+                        hotspot.type.toLowerCase().includes('indel')
+                )
+            );
+        }
+    });
+    return hotspots;
 }
 
 export function filter3dHotspotsByMutations(
@@ -106,11 +138,11 @@ export function filter3dHotspotsByMutations(
     );
 }
 
-export function isRecurrentHotspot(
+export function isLinearClusterHotspot(
     mutation: Mutation,
     index: IHotspotIndex
 ): boolean {
-    return filterRecurrentHotspotsByMutations([mutation], index).length > 0;
+    return filterLinearClusterHotspotsByMutations([mutation], index).length > 0;
 }
 
 export function is3dHotspot(mutation: Mutation, index: IHotspotIndex): boolean {
@@ -128,6 +160,9 @@ export function isHotspot(
 export function defaultHotspotFilter(hotspot: Hotspot) {
     const type = hotspot.type.toLowerCase();
     return (
-        type.includes('single') || type.includes('indel') || type.includes('3d')
+        type.includes('single') ||
+        type.includes('indel') ||
+        type.includes('3d') ||
+        type.includes('splice')
     );
 }

@@ -56,6 +56,9 @@ categories:
       - 'chore'
       - 'dependencies'
       - 'cl-chore'
+  - title: '📦 Package Improvements'
+    labels:
+      - 'cl-package'
   - title: '📐 Prototype'
     labels:
       - 'cl-prototype'
