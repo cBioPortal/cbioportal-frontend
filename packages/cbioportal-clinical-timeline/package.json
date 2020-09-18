@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-clinical-timeline",
   "description": "cBioPortal Clinical Timeline",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -37,7 +37,7 @@
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
-    "cbioportal-frontend-commons": "^0.3.6"
+    "cbioportal-frontend-commons": "^0.3.7"
   },
   "devDependencies": {
     "@testing-library/react": "^9.3.2",
