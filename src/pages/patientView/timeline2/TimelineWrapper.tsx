@@ -227,14 +227,8 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                     (att: any) => att.key === 'SAMPLE_ID'
                                 );
 
-                                const errorDiv = (
-                                    <div>
-                                        Error. Cannot find data for sample.
-                                    </div>
-                                );
-
                                 if (!hoveredSample || !hoveredSample.value) {
-                                    return errorDiv;
+                                    return null;
                                 }
 
                                 const sampleWithClinicalData = sampleManager.samples.find(
@@ -288,7 +282,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                         </table>
                                     );
                                 } else {
-                                    return errorDiv;
+                                    return null;
                                 }
                             };
 
