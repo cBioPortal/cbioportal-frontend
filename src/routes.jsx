@@ -39,6 +39,7 @@ import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab
 import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
 import Visualize from 'bundle-loader?lazy!babel-loader!./pages/staticPages/visualize/Visualize';
 import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus/AboutUs';
+import InstallationMap from 'bundle-loader?lazy!babel-loader!./pages/staticPages/installations/InstallationMap';
 import Software from 'bundle-loader?lazy!babel-loader!./pages/staticPages/software/Software';
 import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
@@ -317,6 +318,10 @@ export const makeRoutes = routing => {
                 path="/tutorials"
                 onEnter={handleEnter}
                 getComponent={lazyLoadComponent(Tutorials)}
+            />
+            <Route
+                path="/installations"
+                getComponent={lazyLoadComponent(InstallationMap)}
             />
             <Route
                 path="/visualize"

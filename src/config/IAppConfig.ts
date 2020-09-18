@@ -129,4 +129,5 @@ export interface IServerConfig {
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
     patient_view_use_legacy_timeline: boolean;
+    installation_map_url: string;
 }
