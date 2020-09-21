@@ -140,7 +140,7 @@ export function getPatientViewUrl(
 }
 
 export function getComparisonUrl(params: Partial<GroupComparisonURLQuery>) {
-    return buildCBioPortalPageUrl('comparison', params);
+    return buildCBioPortalPageUrl('/comparison', params);
 }
 
 export function redirectToComparisonPage(
@@ -155,7 +155,7 @@ export function redirectToComparisonPage(
 export function getComparisonLoadingUrl(
     params?: Partial<GroupComparisonLoadingParams>
 ) {
-    return buildCBioPortalPageUrl('loading/comparison', params || {});
+    return buildCBioPortalPageUrl('/loading/comparison', params || {});
 }
 
 export function getPubMedUrl(pmid: string) {
