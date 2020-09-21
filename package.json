@@ -172,6 +172,7 @@
     "jszip": "^3.5.0",
     "lerna": "3.19.0",
     "less": "^2.7.2",
+    "linear-algebra": "^3.1.4",
     "little-loader": "^0.2.0",
     "loader-utils": "^1.0.2",
     "lodash": "^4.17.11",
