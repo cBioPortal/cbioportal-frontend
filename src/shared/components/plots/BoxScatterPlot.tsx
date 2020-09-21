@@ -54,6 +54,7 @@ export interface IBaseBoxScatterPlotPoint {
 
 export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
     label: string;
+    median: number;
     data: D[];
 }
 
