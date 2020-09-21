@@ -16644,9 +16644,9 @@ pathval@^1.1.0:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
   integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
 
-"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#dbf72dac455b0df75fc097cd59fd6f2cf0359b23":
+"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#unstable":
   version "2.0.3"
-  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/dbf72dac455b0df75fc097cd59fd6f2cf0359b23"
+  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/582dfc9006226f9c5fd39e992393b1cf47fc7a23"
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"
