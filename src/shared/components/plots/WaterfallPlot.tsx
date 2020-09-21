@@ -57,6 +57,7 @@ export interface IBaseWaterfallPlotData extends IValue1D {
 
 export interface IWaterfallPlotProps<D extends IBaseWaterfallPlotData> {
     svgId?: string;
+    svgRef?: (elt: SVGElement | null) => void;
     title?: string;
     data: D[];
     chartWidth: number;
@@ -671,6 +672,7 @@ export default class WaterfallPlot<
             >
                 <svg
                     id={this.props.svgId || ''}
+                    ref={this.props.svgRef}
                     style={{
                         width: this.svgWidth,
                         height: this.svgHeight,
