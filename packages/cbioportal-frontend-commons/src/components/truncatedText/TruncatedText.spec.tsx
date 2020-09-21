@@ -1,5 +1,5 @@
 import { default as TruncatedText, truncateText } from './TruncatedText';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { default as DefaultTooltip } from '../defaultTooltip/DefaultTooltip';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount, ReactWrapper } from 'enzyme';
@@ -11,7 +11,7 @@ describe('TruncatedText', () => {
     let componentShort: ReactWrapper<any, any>;
     let componentLong: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeEach(() => {
         const shortText = 'noTip';
         const longText =
             'it might be a good idea to truncate this text and show the full value in a tooltip';

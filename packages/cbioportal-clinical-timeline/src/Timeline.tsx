@@ -29,6 +29,7 @@ import CustomTrackHeader from './CustomTrackHeader';
 
 interface ITimelineProps {
     store: TimelineStore;
+    onClickDownload: () => void;
     customTracks?: CustomTrackSpecification[];
     width: number;
 }
@@ -247,12 +248,15 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customTracks,
     width,
+    onClickDownload,
 }: ITimelineProps) {
     const tracks = store.data;
-    const height =
+    const SCROLLBAR_PADDING = 15;
+    let height =
         TICK_AXIS_HEIGHT +
         _.sumBy(tracks, t => t.height) +
-        _.sumBy(customTracks || [], t => t.height(store));
+        _.sumBy(customTracks || [], t => t.height(store)) +
+        SCROLLBAR_PADDING;
 
     const refs = {
         cursor: useRef(null),
@@ -368,6 +372,10 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     </div>
                 </div>
                 <div
+                    className={'tl-viewport-pseudo-border'}
+                    style={{ height: height - SCROLLBAR_PADDING }}
+                />
+                <div
                     ref={refs.timelineViewPort}
                     className={'tl-timelineviewport'}
                     style={{ flexShrink: 1, height }}
@@ -418,7 +426,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         </div>
                     )}
                 </div>
+                <div
+                    className={'tl-viewport-pseudo-border'}
+                    style={{ height: height - SCROLLBAR_PADDING }}
+                />
                 <DownloadControls
+                    buttons={['PDF', 'PNG', 'SVG']}
                     filename="timeline"
                     getSvg={() =>
                         getSvg(
@@ -427,6 +440,13 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             customTracks
                         )
                     }
+                    additionalRightButtons={[
+                        {
+                            key: 'Data (ZIP)',
+                            content: <span>Data (ZIP)</span>,
+                            onClick: onClickDownload,
+                        },
+                    ]}
                     dontFade={true}
                     type={'button'}
                     style={{ marginLeft: 7 }}

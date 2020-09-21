@@ -214,22 +214,11 @@ export default class PatientViewPage extends React.Component<
     }
 
     public get showNewTimeline() {
-        const forcedOn =
-            getBrowserWindow().localStorage.getItem('force_timeline') ===
-            'true';
-        return (
-            forcedOn ||
-            ['triage-portal', 'genie-portal'].includes(
-                AppConfig.serverConfig.app_name!
-            )
-        );
+        return !AppConfig.serverConfig.patient_view_use_legacy_timeline;
     }
 
     public get showOldTimeline() {
-        const forcedOn =
-            getBrowserWindow().localStorage.getItem('force_timeline') ===
-            'true';
-        return !this.showNewTimeline || forcedOn;
+        return AppConfig.serverConfig.patient_view_use_legacy_timeline;
     }
 
     public handleSampleClick(

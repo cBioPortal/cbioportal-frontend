@@ -633,8 +633,9 @@ export default class DownloadTab extends React.Component<
             this.props.store
                 .nonSelectedDownloadableMolecularProfilesGroupByName,
             this.props.store.studies,
-            this.props.store.selectedMolecularProfiles,
-            this.props.store.genericAssayDataGroupByProfileIdSuffix
+            this.props.store.selectedMolecularProfiles
+            // disable generic assay download for now
+            // this.props.store.genericAssayDataGroupByProfileIdSuffix
         );
 
         switch (status) {
@@ -717,7 +718,8 @@ export default class DownloadTab extends React.Component<
                                                 .nonSelectedDownloadableMolecularProfilesGroupByName
                                                 .result!
                                         )}
-                                    {!_.isEmpty(
+                                    {/* disable generic assay download for now */}
+                                    {/* {!_.isEmpty(
                                         this.props.store
                                             .genericAssayProfilesGroupByProfileIdSuffix
                                             .result
@@ -726,7 +728,7 @@ export default class DownloadTab extends React.Component<
                                             this.props.store
                                                 .genericAssayProfilesGroupByProfileIdSuffix
                                                 .result!
-                                        )}
+                                        )} */}
                                 </tbody>
                             </table>
                         </div>
