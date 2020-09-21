@@ -32,17 +32,7 @@ import 'cytoscape-navigator/cytoscape.js-navigator.css';
 import 'react-toastify/dist/ReactToastify.css';
 import styles from './pathwayMapper.module.scss';
 import PathwayMapper, { ICBioData } from 'pathway-mapper';
-import {
-    MUT_COLOR_FUSION,
-    MUT_COLOR_INFRAME,
-    MUT_COLOR_MISSENSE,
-    MUT_COLOR_OTHER,
-    MUT_COLOR_TRUNC,
-    CNA_COLOR_AMP,
-    CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
-    CNA_COLOR_HOMDEL,
-} from 'shared/lib/Colors';
+
 interface IPatientViewPathwayMapperProps {
     store: PatientViewPageStore;
     appStore: AppStore;
@@ -77,7 +67,6 @@ export default class PatientViewPathwayMapper extends React.Component<
         onResult: (genes: string[]) => {
             // show loading text only if there are actually new genes to load
             if (genes.length < 0) {
-                console.log('valo', genes);
                 const tId = toast('Loading alteration data...', {
                     autoClose: false,
                     draggable: false,
@@ -134,44 +123,35 @@ export default class PatientViewPathwayMapper extends React.Component<
 
         console.log('Inside alteration data for query genes');
 
-        const mutationData = this.props.store.mergedMutationDataIncludingUncalledFilteredByGene
-            // .filter(data => data[0].mutationType !== "Fusion")
-            .map(data => ({
-                gene: data[0].gene.hugoGeneSymbol,
-                altered: 1,
-                percentAltered: data[0].mutationType,
-                sequenced: 1,
-            }));
-
         this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.forEach(
             altData => {
-                const maybeT = {
+                const mutationType = {
                     gene: altData[0].gene.hugoGeneSymbol,
                     altered: 1,
                     sequenced: 1,
                     percentAltered: altData[0].mutationType,
                 };
-                if (maybeT) {
-                    alterationFrequencyData.push(maybeT);
+                if (mutationType) {
+                    console.log('not empty for mutation');
+                    alterationFrequencyData.push(mutationType);
                 }
             }
         );
 
         this.props.store.mergedDiscreteCNADataFilteredByGene.forEach(
             altData => {
-                const maybeT = {
+                const cna = {
                     gene: altData[0].gene.hugoGeneSymbol,
                     altered: 1,
                     sequenced: 1,
                     percentAltered: this.getCNAtypes(altData[0].alteration),
                 };
-                if (maybeT) {
-                    alterationFrequencyData.push(maybeT);
+                if (cna) {
+                    console.log('not empty for cna');
+                    alterationFrequencyData.push(cna);
                 }
             }
         );
-        console.log('in alteration data');
-        console.log(alterationFrequencyData);
 
         return alterationFrequencyData;
     }
@@ -179,7 +159,7 @@ export default class PatientViewPathwayMapper extends React.Component<
         if (CNAtype == 1) return 'GAIN';
         else if (CNAtype == 0) return 'DIPLOID';
         else if (CNAtype == -1) return 'SHALLOWDEL';
-        else if (CNAtype == 2) return 'DeepDel';
+        else if (CNAtype == -2) return 'DeepDel';
         else return 'AMP';
     }
 
@@ -196,24 +176,21 @@ export default class PatientViewPathwayMapper extends React.Component<
         return keyed_genes;
     }
     @computed get isNewStoreReady() {
+        console.log(this.storeForAllData);
         return (
             this.storeForAllData &&
             this.storeForAllData.samples.isComplete &&
             this.storeForAllData.mergedMutationData &&
             this.storeForAllData.coverageInformation.isComplete &&
-            this.storeForAllData.mergedDiscreteCNADataFilteredByGene
+            this.storeForAllData.mergedDiscreteCNADataFilteredByGene &&
+            this.storeForAllData
+                .mergedMutationDataIncludingUncalledFilteredByGene
         );
     }
     public render() {
         //control the data
         if (this.isNewStoreReady) {
             this.addGenomicData(this.alterationFrequencyData);
-            console.log(
-                'this.alterationFrequencyData',
-                this.alterationFrequencyData
-            );
-
-            this.addPatientViewData(this.alterationFrequencyData);
             this.getQueryGenes(this.alterationFrequencyData);
             this.dismissActiveToasts();
         }
@@ -241,16 +218,14 @@ export default class PatientViewPathwayMapper extends React.Component<
                                 cBioAlterationData={
                                     this.alterationFrequencyData
                                 }
-                                onAddGenes={this.handleAddGenes}
                                 changePathwayHandler={this.handlePathwayChange}
                                 addGenomicDataHandler={
                                     this.addGenomicDataHandler
                                 }
                                 tableComponent={this.renderTable}
-                                // validGenes={this.validGenes}
+                                validGenes={this.validGenes}
                                 toast={toast}
-                                view={'patient'}
-                                //alterationColor = {this.getOncoprintColors()}
+                                patientView={true}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -267,13 +242,9 @@ export default class PatientViewPathwayMapper extends React.Component<
     }
 
     @computed get storeForAllData(): PatientViewPageStore | undefined {
-        console.log('store for all data');
-        if (
-            this.urlWrapperForAllGenes &&
-            (!this.urlWrapperForAllGenes.hasSessionId ||
-                !this.urlWrapperForAllGenes.remoteSessionData.isPending)
-        ) {
-            return undefined;
+        let patientStore: PatientViewPageStore | undefined;
+        if (this.urlWrapperForAllGenes) {
+            return patientStore;
         } else {
             return undefined;
         }
@@ -303,7 +274,17 @@ export default class PatientViewPathwayMapper extends React.Component<
 
         return urlWrapper;
     }
-
+    @computed get validGenes() {
+        console.log('validgenes');
+        if (this.validNonQueryGenes.isComplete) {
+            // Valid genes are accumulated.
+            this.validNonQueryGenes.result.forEach(gene => {
+                this.accumulatedValidGenes[gene] = true;
+            });
+        }
+        console.log(this.accumulatedValidGenes);
+        return this.accumulatedValidGenes;
+    }
     /**
      * addGenomicData function is implemented in PathwayMapper component and overlays
      * alteration data onto genes. Through this function callback, the function implemented
@@ -324,23 +305,7 @@ export default class PatientViewPathwayMapper extends React.Component<
         // Pathway genes here are the genes that are in the pathway and valid whose alteration data is not calculated yet.
         // Pathway genes does NOT always include all of the non-query genes
         // Some of the pathway genes may be invalid/unknown gene symbols
-        console.log('handlePathwayChange');
-        console.log('pathwayGenes', pathwayGenes);
         this.newGenesFromPathway = pathwayGenes;
-    }
-
-    @autobind
-    @action
-    private handleAddGenes(selectedGenes: string[]) {
-        console.log('handleAddGenes');
-        //addGenesToQuery(this.props.urlWrapper, selectedGenes);
-    }
-    @autobind
-    @action
-    private addPatientViewData(cBioAlterationData: ICBioData[]) {
-        console.log('addpatientViewData');
-
-        //addGenesToQuery(this.props.urlWrapper, selectedGenes);
     }
     @autobind
     private dismissActiveToasts() {
