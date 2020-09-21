@@ -126,13 +126,13 @@ export default class PathwayMapperTable extends React.Component<
         };
 
         this._columns[IPathwayMapperTableColumnType.SCORE] = {
-            name: 'Score',
+            name: '# Genes Matched',
             render: (d: IPathwayMapperTable) => (
                 <span>
                     <b>{d.score.toFixed(2)}</b>
                 </span>
             ),
-            tooltip: <span>Score</span>,
+            tooltip: <span>Number of Genes Matched</span>,
             filter: (
                 d: IPathwayMapperTable,
                 filterString: string,
