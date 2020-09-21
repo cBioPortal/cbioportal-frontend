@@ -292,7 +292,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         fill={'#00AAF8'}
                         symbol="circle"
                         useLogSpaceTicks={true}
-                        containerRef={ref => (this.svgContainer = ref)}
+                        svgRef={ref => (this.svgContainer = ref)}
                         compressXAxis
                         legendData={[
                             {
