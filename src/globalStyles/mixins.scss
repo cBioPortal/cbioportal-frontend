@@ -5,3 +5,34 @@
     border-radius: $cornerBorderRadius;
     border: 1px dashed $borderColor;
 }
+
+@mixin scrollbar-always-visible {
+    // force scrollbar visible
+    // source: https://gist.github.com/devinrhode2/2573411#gistcomment-2243001
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+        background-color: rgba(0, 0, 0, 0);
+        -webkit-border-radius: 100px;
+    }
+
+    &::-webkit-scrollbar:hover {
+        //background-color: rgba(0, 0, 0, 0.09);
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.21);
+        -webkit-border-radius: 100px;
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    &::-webkit-scrollbar-thumb:active {
+        background: rgba(0, 0, 0, 0.42);
+        -webkit-border-radius: 100px;
+    }
+}
