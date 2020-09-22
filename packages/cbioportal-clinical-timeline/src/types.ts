@@ -5,6 +5,10 @@ export interface TimelineEvent {
     render?(item: TimelineEvent): JSX.Element | string;
 }
 
+export interface TimelineEventInternal extends TimelineEvent {
+    track: TimelineTrackSpecification;
+}
+
 export enum TimelineTrackType {
     DEFAULT,
     LINE_CHART,

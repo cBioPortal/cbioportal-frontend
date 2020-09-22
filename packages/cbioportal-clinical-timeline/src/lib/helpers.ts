@@ -213,7 +213,11 @@ function flattenTrack(
 ): { track: TimelineTrackSpecification; indent: number; height: number }[] {
     const ret = [{ track, indent, height: getTrackHeight(track) }];
 
-    if (track.tracks) {
+    if (track.items) {
+        track.items.forEach(event => ((event as any).track = track));
+    }
+
+    if (!isTrackCollapsed(track.uid) && track.tracks) {
         // if track is not collapsed, then sort nested tracks and recurse
         const sortedNestedTracks = sortNestedTracks(track.tracks);
         ret.push(

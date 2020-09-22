@@ -1,6 +1,7 @@
 import {
     EventPosition,
     TimelineEvent,
+    TimelineEventInternal,
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
@@ -166,10 +167,11 @@ export function renderPoint(
 ) {
     // If there's specific render functions and multiple data,
     //  we'll show that render in the tooltip.
+
     if (events.length === 1 && events[0].render) {
         return events[0].render(events[0]);
-    } else if (trackData.renderEvents) {
-        return trackData.renderEvents(events);
+    } else if ((events[0] as TimelineEventInternal).track.renderEvents) {
+        return (events[0] as TimelineEventInternal).track.renderEvents!(events);
     } else {
         return (
             <g>
@@ -214,8 +216,17 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
     }: ITimelineTrackProps) {
         let eventsGroupedByPosition;
 
-        if (trackData.items) {
-            eventsGroupedByPosition = groupEventsByPosition(trackData.items);
+        let events = trackData.items;
+
+        console.log(trackData.type);
+        const isCollapsed = trackData.type === 'Medical Therapy';
+
+        if (isCollapsed) {
+            events = _.flatMap(trackData.tracks, t => t.items);
+        }
+
+        if (events) {
+            eventsGroupedByPosition = groupEventsByPosition(events);
             if (trackData.sortSimultaneousEvents) {
                 eventsGroupedByPosition = _.mapValues(
                     eventsGroupedByPosition,
