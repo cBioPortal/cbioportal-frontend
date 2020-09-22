@@ -36,6 +36,7 @@ export type PlotsColoringParam = {
     logScale?: string;
     colorByMutationType?: string;
     colorByCopyNumber?: string;
+    colorBySv?: string;
 };
 
 const PlotsColoringParamProps: Required<PlotsColoringParam> = {
@@ -43,6 +44,7 @@ const PlotsColoringParamProps: Required<PlotsColoringParam> = {
     logScale: '',
     colorByMutationType: '',
     colorByCopyNumber: '',
+    colorBySv: '',
 };
 
 export enum ResultsViewURLQueryEnum {

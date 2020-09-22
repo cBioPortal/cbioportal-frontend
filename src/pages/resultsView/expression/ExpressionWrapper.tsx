@@ -52,7 +52,11 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import BoxScatterPlot, {
     IBoxScatterPlotData,
 } from '../../../shared/components/plots/BoxScatterPlot';
-import { ColoringType, PlotType } from '../plots/PlotsTab';
+import {
+    ColoringType,
+    PlotType,
+    SelectedColoringTypes,
+} from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 
@@ -603,23 +607,23 @@ export default class ExpressionWrapper extends React.Component<
 
     @computed get scatterPlotAppearance() {
         return makeScatterPlotPointAppearance(
-            this.viewType,
-            this.mutationDataExists,
-            this.cnaDataExists,
+            this.coloringTypes,
+            this.mutationDataExists.result!,
+            this.cnaDataExists.result!,
+            false,
             this.props.store.driverAnnotationSettings.driversAnnotated
         );
     }
 
-    @computed get viewType() {
-        if (this.showMutations && this.showCna) {
-            return ColoringType.MutationTypeAndCopyNumber;
-        } else if (this.showMutations) {
-            return ColoringType.MutationType;
-        } else if (this.showCna) {
-            return ColoringType.CopyNumber;
-        } else {
-            return ColoringType.None;
+    @computed get coloringTypes() {
+        const ret: SelectedColoringTypes = {};
+        if (this.showMutations) {
+            ret[ColoringType.MutationType] = true;
         }
+        if (this.showCna) {
+            ret[ColoringType.CopyNumber] = true;
+        }
+        return ret;
     }
 
     private boxCalculationFilter(d: IBoxScatterPlotPoint) {
@@ -642,7 +646,7 @@ export default class ExpressionWrapper extends React.Component<
     }
 
     @computed get zIndexSortBy() {
-        return scatterPlotZIndexSortBy<IPlotSampleData>(this.viewType);
+        return scatterPlotZIndexSortBy<IPlotSampleData>(this.coloringTypes);
     }
 
     @computed get axisLogScaleFunction(): IAxisLogScaleParams | undefined {
@@ -661,7 +665,11 @@ export default class ExpressionWrapper extends React.Component<
 
     @autobind
     private getChart() {
-        if (this.boxPlotData.isComplete) {
+        if (
+            this.boxPlotData.isComplete &&
+            this.mutationDataExists.isComplete &&
+            this.cnaDataExists.isComplete
+        ) {
             return (
                 <ChartContainer
                     getSVGElement={this.getSvg}
@@ -689,10 +697,8 @@ export default class ExpressionWrapper extends React.Component<
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
                             _.flatten(this.boxPlotData.result.map(d => d.data)),
-                            this.viewType,
+                            this.coloringTypes,
                             PlotType.BoxPlot,
-                            this.mutationDataExists,
-                            this.cnaDataExists,
                             this.props.store.driverAnnotationSettings
                                 .driversAnnotated,
                             []
