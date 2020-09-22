@@ -1,2 +1,1 @@
-# set e.g.
-# export CBIOPORTAL_URL="http://localhost:8080"
+export BACKEND_BRANCH=thehyve:rfc56_pdannotations_for_cna
