@@ -55,6 +55,7 @@ import {
     fetchCopyNumberSegmentsForSamples,
     getAlterationTypesInOql,
     getDefaultProfilesForOql,
+    getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
@@ -174,10 +175,7 @@ import {
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
     generateStudyViewSurvivalPlotTitle,
-    getSurvivalAttributes,
-    plotsPriority,
     getSurvivalStatusBoolean,
-    notSurvivalAttribute,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
@@ -238,6 +236,7 @@ export type SurvivalType = {
     id: string;
     title: string;
     associatedAttrs: string[];
+    survivalStatusAttribute: ClinicalAttribute;
     filter: (s: string) => boolean;
     survivalData: PatientSurvival[];
 };
@@ -3584,20 +3583,10 @@ export class StudyViewPageStore {
         let _chartMetaSet = this._customCharts.toJS();
         _chartMetaSet = _.merge(_chartMetaSet, this._geneSpecificCharts.toJS());
 
-        // only filter out survival attributes when there are more than 4 types of survival attributes
-        const filteredClinicalAttributes =
-            _.entries(this.survivalClinicalAttributesPrefix.result).length > 4
-                ? _.filter(this.clinicalAttributes.result, attribute =>
-                      notSurvivalAttribute(
-                          this.survivalClinicalAttributesPrefix.result,
-                          attribute.clinicalAttributeId
-                      )
-                  )
-                : this.clinicalAttributes.result;
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            filteredClinicalAttributes,
+            this.clinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
@@ -3616,14 +3605,19 @@ export class StudyViewPageStore {
         );
 
         _.reduce(
-            this.survivalPlots,
+            this.survivalPlots.result,
             (acc: { [id: string]: ChartMeta }, survivalPlot) => {
                 acc[survivalPlot.id] = {
                     uniqueKey: survivalPlot.id,
                     dataType: getChartMetaDataType(survivalPlot.id),
                     patientAttribute: true,
                     displayName: survivalPlot.title,
-                    priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
+                    // use survival status attribute's priority as KM plot's priority for non-reserved plots
+                    priority:
+                        STUDY_VIEW_CONFIG.priority[survivalPlot.id] ||
+                        getPriorityByClinicalAttribute(
+                            survivalPlot.survivalStatusAttribute
+                        ),
                     renderWhenDataChange: false,
                     description: '',
                 };
@@ -4284,8 +4278,8 @@ export class StudyViewPageStore {
                 key,
                 STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]
             );
-            if (getDefaultPriorityByUniqueKey(key) !== 0) {
-                // hide *_SURVIVAL chart if cancer type is mixed or have more than one cancer type
+            // check priority for survival plots, hide the plot if priority is 0
+            if (this.chartMetaSet[key].priority !== 0) {
                 this.changeChartVisibility(key, true);
             }
         });
@@ -5056,28 +5050,47 @@ export class StudyViewPageStore {
         },
     });
 
-    @computed private get survivalPlots() {
-        let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
-            prefix => {
-                let plotTitle =
-                    this.survivalDescriptions.result &&
-                    this.survivalDescriptions.result[prefix]
-                        ? generateStudyViewSurvivalPlotTitle(
-                              this.survivalDescriptions.result![prefix][0]
-                                  .displayName
-                          )
-                        : `${prefix} Survival`;
-                return {
-                    id: `${prefix}_SURVIVAL`,
-                    title: plotTitle,
-                    associatedAttrs: [`${prefix}_STATUS`, `${prefix}_MONTHS`],
-                    filter: s => getSurvivalStatusBoolean(s, prefix),
-                    survivalData: [],
-                };
-            }
-        );
-        return survivalTypes;
-    }
+    readonly survivalPlots = remoteData<SurvivalType[]>({
+        await: () => [
+            this.survivalClinicalAttributesPrefix,
+            this.clinicalAttributeIdToClinicalAttribute,
+            this.survivalDescriptions,
+        ],
+        invoke: async () => {
+            let survivalTypes: SurvivalType[] = this.survivalClinicalAttributesPrefix.result.map(
+                prefix => {
+                    // title shoud starts with 'KM plot:'
+                    let plotTitle = 'KM Plot: ';
+                    plotTitle +=
+                        this.survivalDescriptions.result &&
+                        this.survivalDescriptions.result[prefix]
+                            ? generateStudyViewSurvivalPlotTitle(
+                                  this.survivalDescriptions.result![prefix][0]
+                                      .displayName
+                              )
+                            : `${prefix} Survival`;
+
+                    const survivalStatusAttribute = this
+                        .clinicalAttributeIdToClinicalAttribute.result![
+                        `${prefix}_STATUS`
+                    ];
+                    return {
+                        id: `${prefix}_SURVIVAL`,
+                        title: plotTitle,
+                        survivalStatusAttribute,
+                        associatedAttrs: [
+                            `${prefix}_STATUS`,
+                            `${prefix}_MONTHS`,
+                        ],
+                        filter: s => getSurvivalStatusBoolean(s, prefix),
+                        survivalData: [],
+                    };
+                }
+            );
+            return survivalTypes;
+        },
+        default: [],
+    });
 
     public async getPieChartDataDownload(
         chartMeta: ChartMeta,
@@ -5294,9 +5307,9 @@ export class StudyViewPageStore {
         });
     }
 
-    public async getSurvivalDownloadData(chartMeta: ChartMeta) {
+    public getSurvivalDownloadData(chartMeta: ChartMeta) {
         const matchedPlot = _.find(
-            this.survivalPlots,
+            this.survivalPlots.result,
             plot => plot.id === chartMeta.uniqueKey
         );
         if (matchedPlot && this.survivalData.result) {
@@ -5504,9 +5517,13 @@ export class StudyViewPageStore {
     }
 
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.survivalData, this.selectedPatientKeys],
+        await: () => [
+            this.survivalData,
+            this.selectedPatientKeys,
+            this.survivalPlots,
+        ],
         invoke: async () => {
-            return this.survivalPlots.map(obj => {
+            return this.survivalPlots.result.map(obj => {
                 obj.survivalData = getPatientSurvivals(
                     this.survivalData.result,
                     this.selectedPatientKeys.result!,
@@ -5522,10 +5539,14 @@ export class StudyViewPageStore {
     });
 
     readonly survivalData = remoteData<{ [id: string]: ClinicalData[] }>({
-        await: () => [this.clinicalAttributes, this.samples],
+        await: () => [
+            this.clinicalAttributes,
+            this.samples,
+            this.survivalPlots,
+        ],
         invoke: async () => {
             const attributeIds = _.flatten(
-                this.survivalPlots.map(obj => obj.associatedAttrs)
+                this.survivalPlots.result.map(obj => obj.associatedAttrs)
             );
             if (!_.isEmpty(attributeIds)) {
                 const filter: ClinicalDataMultiStudyFilter = {
@@ -6483,31 +6504,10 @@ export class StudyViewPageStore {
     readonly survivalClinicalAttributesPrefix = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: () => {
-            const attributes = getSurvivalAttributes(
-                this.clinicalAttributes.result!
-            );
-            // get paired attributes
-            const attributePrefixes = _.reduce(
-                attributes,
-                (attributePrefixes, attribute) => {
-                    let prefix = attribute.substring(
-                        0,
-                        attribute.indexOf('_STATUS')
-                    );
-                    if (!attributePrefixes.includes(prefix)) {
-                        if (attributes.includes(`${prefix}_MONTHS`)) {
-                            attributePrefixes.push(prefix);
-                        }
-                    }
-                    return attributePrefixes;
-                },
-                [] as string[]
-            );
-            // change prefix order based on priority
             return Promise.resolve(
-                _.sortBy(attributePrefixes, prefix => {
-                    return plotsPriority[prefix] || 999;
-                })
+                getSurvivalClinicalAttributesPrefix(
+                    this.clinicalAttributes.result
+                )
             );
         },
         default: [],
