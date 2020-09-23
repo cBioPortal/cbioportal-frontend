@@ -564,7 +564,9 @@ export class StudyViewPageStore {
             this._comparisonGroupsChangeCount;
             if (
                 this.studyIds.length > 0 &&
-                this.isLoggedIn &&
+                (this.isLoggedIn ||
+                    AppConfig.serverConfig.authenticationMethod ===
+                        'noauthsessionservice') &&
                 !this.pendingDecision.result
             ) {
                 const groups = await comparisonClient.getGroupsForStudies(
