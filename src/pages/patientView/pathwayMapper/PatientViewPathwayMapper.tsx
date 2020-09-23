@@ -17,12 +17,8 @@ import { Row } from 'react-bootstrap';
 
 import { AppStore } from 'AppStore';
 import { remoteData } from 'cbioportal-frontend-commons';
-import { fetchGenes, mergeDiscreteCNAData } from 'shared/lib/StoreUtils';
-import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
-import {
-    getAlterationData,
-    percentAltered,
-} from 'shared/components/oncoprint/OncoprintUtils';
+import { fetchGenes } from 'shared/lib/StoreUtils';
+import { getGeneticTrackRuleSetParams } from 'shared/components/oncoprint/OncoprintUtils';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer, toast } from 'react-toastify';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
@@ -38,6 +34,9 @@ interface IPatientViewPathwayMapperProps {
     appStore: AppStore;
     urlWrapper: PatientViewUrlWrapper;
 }
+
+const DEFAULT_RULESET_PARAMS = getGeneticTrackRuleSetParams(true, true, true);
+
 @observer
 export default class PatientViewPathwayMapper extends React.Component<
     IPatientViewPathwayMapperProps
@@ -59,8 +58,6 @@ export default class PatientViewPathwayMapper extends React.Component<
     private readonly validNonQueryGenes = remoteData<string[]>({
         invoke: async () => {
             const genes = await fetchGenes(this.newGenesFromPathway);
-
-            console.log('valid Non Query Genes', genes);
 
             return genes.map(gene => gene.hugoGeneSymbol);
         },
@@ -121,8 +118,6 @@ export default class PatientViewPathwayMapper extends React.Component<
     @computed get alterationFrequencyDataForQueryGenes() {
         const alterationFrequencyData: ICBioData[] = [];
 
-        console.log('Inside alteration data for query genes');
-
         this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.forEach(
             altData => {
                 const mutationType = {
@@ -130,9 +125,14 @@ export default class PatientViewPathwayMapper extends React.Component<
                     altered: 1,
                     sequenced: 1,
                     percentAltered: altData[0].mutationType,
+                    geneticTrackRuleSetParams: DEFAULT_RULESET_PARAMS,
+                    geneticTrackData: this.props.store.geneticTrackData.result
+                        ? this.props.store.geneticTrackData.result[
+                              altData[0].gene.hugoGeneSymbol
+                          ]
+                        : undefined,
                 };
                 if (mutationType) {
-                    console.log('not empty for mutation');
                     alterationFrequencyData.push(mutationType);
                 }
             }
@@ -145,9 +145,14 @@ export default class PatientViewPathwayMapper extends React.Component<
                     altered: 1,
                     sequenced: 1,
                     percentAltered: this.getCNAtypes(altData[0].alteration),
+                    geneticTrackRuleSetParams: DEFAULT_RULESET_PARAMS,
+                    geneticTrackData: this.props.store.geneticTrackData.result
+                        ? this.props.store.geneticTrackData.result[
+                              altData[0].gene.hugoGeneSymbol
+                          ]
+                        : undefined,
                 };
                 if (cna) {
-                    console.log('not empty for cna');
                     alterationFrequencyData.push(cna);
                 }
             }
@@ -168,7 +173,6 @@ export default class PatientViewPathwayMapper extends React.Component<
 
         const allGenes = allTypes.filter((x, i, a) => a.indexOf(x) == i);
         //This parameter needs the hugoGeneSymbol in PathwayMapper
-        console.log('all genes');
 
         const keyed_genes = allGenes.map(gene => {
             return { hugoGeneSymbol: gene };
@@ -176,7 +180,6 @@ export default class PatientViewPathwayMapper extends React.Component<
         return keyed_genes;
     }
     @computed get isNewStoreReady() {
-        console.log(this.storeForAllData);
         return (
             this.storeForAllData &&
             this.storeForAllData.samples.isComplete &&
@@ -195,7 +198,6 @@ export default class PatientViewPathwayMapper extends React.Component<
             this.dismissActiveToasts();
         }
         if (!this.PathwayMapperComponent) {
-            console.log('PATHWAY COMPONENT CANNOT BE CREATED');
             return null;
         }
         return (
@@ -257,7 +259,6 @@ export default class PatientViewPathwayMapper extends React.Component<
      */
     @computed get urlWrapperForAllGenes(): PatientViewUrlWrapper | undefined {
         let urlWrapper: PatientViewUrlWrapper | undefined;
-        console.log('urlwrapper for all genes');
         if (
             this.validNonQueryGenes.isComplete &&
             this.validNonQueryGenes.result.length > 0
@@ -275,14 +276,12 @@ export default class PatientViewPathwayMapper extends React.Component<
         return urlWrapper;
     }
     @computed get validGenes() {
-        console.log('validgenes');
         if (this.validNonQueryGenes.isComplete) {
             // Valid genes are accumulated.
             this.validNonQueryGenes.result.forEach(gene => {
                 this.accumulatedValidGenes[gene] = true;
             });
         }
-        console.log(this.accumulatedValidGenes);
         return this.accumulatedValidGenes;
     }
     /**
@@ -295,7 +294,6 @@ export default class PatientViewPathwayMapper extends React.Component<
     private addGenomicDataHandler(
         addGenomicData: (alterationData: ICBioData[]) => void
     ) {
-        console.log('addGenomicDataHandler');
         this.addGenomicData = addGenomicData;
     }
 

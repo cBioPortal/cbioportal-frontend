@@ -1456,7 +1456,9 @@ export default class PatientViewPage extends React.Component<
                                     id={PatientViewPageTabs.PATHWAY_MAPPER}
                                     linkText={'Pathways'}
                                 >
-                                    {true /*showPM ? ( control if the values are complete*/ ? (
+                                    {/*showPM ? ( control if the values are complete*/ this
+                                        .patientViewPageStore.geneticTrackData
+                                        .isComplete ? (
                                         <PatientViewPathwayMapper
                                             store={this.patientViewPageStore}
                                             appStore={this.props.appStore}
