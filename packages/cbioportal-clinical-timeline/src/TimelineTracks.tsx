@@ -15,32 +15,42 @@ export interface ITimelineTracks {
     width: number;
     handleTrackHover: (e: React.MouseEvent<SVGGElement>) => void;
     customTracks?: CustomTrackSpecification[];
+    visibleTracks?: string[];
 }
 
 export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer(
-    function({ store, width, handleTrackHover, customTracks }) {
+    function({ store, width, handleTrackHover, customTracks, visibleTracks }) {
         const tracks = store.data;
-
         let nextY = 0;
 
         return (
             <>
                 <g transform={`translate(0 ${TICK_AXIS_HEIGHT})`}>
                     {tracks.map(track => {
+                        const isTrackVisible =
+                            visibleTracks === undefined ||
+                            visibleTracks.includes(track.track.type);
+
                         const y = nextY;
-                        nextY += track.height;
-                        return (
-                            <TimelineTrack
-                                limit={store.trimmedLimit}
-                                trackData={track.track}
-                                getPosition={store.getPosition}
-                                handleTrackHover={handleTrackHover}
-                                store={store}
-                                y={y}
-                                height={track.height}
-                                width={width}
-                            />
-                        );
+
+                        nextY += isTrackVisible ? track.height : 0;
+
+                        if (isTrackVisible) {
+                            return (
+                                <TimelineTrack
+                                    limit={store.trimmedLimit}
+                                    trackData={track.track}
+                                    getPosition={store.getPosition}
+                                    handleTrackHover={handleTrackHover}
+                                    store={store}
+                                    y={y}
+                                    height={track.height}
+                                    width={width}
+                                />
+                            );
+                        } else {
+                            return null;
+                        }
                     })}
                     {customTracks &&
                         customTracks.map(track => {
