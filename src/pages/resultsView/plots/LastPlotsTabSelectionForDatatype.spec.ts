@@ -15,10 +15,10 @@ function createFakeCallbacks() {
 
 // parts of AxisMenuSelection needed to make things compile that are not
 // used in PlotsTabSelectionHistory
-const untestedSelectionFields: AxisMenuSelection = {
+const untestedSelectionFields = {
     mutationCountBy: MutationCountBy.MutationType,
     logScale: false,
-};
+} as AxisMenuSelection;
 
 describe('PlotsTabSelectionHistory', () => {
     describe('horizontal updates', () => {
