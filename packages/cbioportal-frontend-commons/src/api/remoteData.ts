@@ -47,3 +47,17 @@ export const remoteData: MobxPromiseFactory = function<R>(
     });
     return mobxPromise;
 };
+
+export function mobxPromiseResolve<R>(value: R): MobxPromise<R> {
+    // wraps a constant value in MobxPromise interface so
+    //  it can be passed in as a promise.
+    return {
+        status: 'complete',
+        peekStatus: 'complete',
+        isPending: false,
+        isComplete: true,
+        isError: false,
+        result: value,
+        error: undefined,
+    };
+}
