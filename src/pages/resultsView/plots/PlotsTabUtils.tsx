@@ -78,6 +78,7 @@ import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { observable, ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
+import jStat from 'jStat';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -2368,10 +2369,16 @@ export function makeBoxScatterPlotData(
     let ret = _.entries(categoryToData).map(entry => ({
         label: entry[0],
         data: entry[1],
+        median: jStat.median(
+            entry[1].map((d: IBoxScatterPlotPoint) => d.value)
+        ),
     }));
     const categoryOrder = horzData.categoryOrder;
     if (categoryOrder) {
         ret = _.sortBy(ret, datum => categoryOrder.indexOf(datum.label));
+    } else {
+        // default sort alphabetically
+        ret = _.sortBy(ret, datum => datum.label);
     }
     return ret;
 }
