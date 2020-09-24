@@ -284,45 +284,60 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             }
         },
         render: () => {
+            const numActiveGroups = this.props.store
+                ._activeGroupsNotOverlapRemoved.result!.length;
             let content: any = [];
-            if (
-                this.props.store._activeGroupsNotOverlapRemoved.result!.length >
-                10
-            ) {
-                content.push(<span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>);
-            } else if (
-                this.props.store._activeGroupsNotOverlapRemoved.result!
-                    .length === 0
-            ) {
-                content.push(<span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>);
+            if (numActiveGroups > 10) {
+                content = <span>{SURVIVAL_TOO_MANY_GROUPS_MSG}</span>;
+            } else if (numActiveGroups === 0) {
+                content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
-                content.push(
-                    <OverlapExclusionIndicator
-                        store={this.props.store}
-                        only="patient"
-                        survivalTabMode={true}
-                    />
-                );
-                content.push(
-                    <div
-                        style={{
-                            display: 'flex',
-                        }}
-                    >
-                        {this.survivalPrefixTable.component && (
-                            <div
-                                style={{
-                                    marginRight: 15,
-                                    marginTop: 15,
-                                    minWidth: 400,
-                                    maxWidth: 400,
-                                }}
-                            >
-                                {this.survivalPrefixTable.component}
+                content = (
+                    <>
+                        <div
+                            className={'tabMessageContainer'}
+                            style={{ marginBottom: 10 }}
+                        >
+                            <div className="alert alert-info">
+                                <i
+                                    className="fa fa-md fa-info-circle"
+                                    style={{
+                                        verticalAlign: 'middle !important',
+                                        marginRight: 6,
+                                        marginBottom: 1,
+                                    }}
+                                />
+                                Interpret all outcome results with caution, as
+                                they can be confounded by many different
+                                variables that are not controlled for in these
+                                analyses. Consider consulting a statistician.
                             </div>
-                        )}
-                        {this.survivalUI.component}
-                    </div>
+                            <OverlapExclusionIndicator
+                                store={this.props.store}
+                                only="patient"
+                                survivalTabMode={true}
+                            />
+                        </div>
+                        <div
+                            style={{
+                                display: 'flex',
+                            }}
+                        >
+                            {this.survivalPrefixTable.component && (
+                                <div
+                                    style={{
+                                        marginRight: 15,
+                                        marginTop: 15,
+                                        minWidth: 400,
+                                        maxWidth: 400,
+                                    }}
+                                >
+                                    {this.survivalPrefixTable.component}
+                                </div>
+                            )}
+                            {this.survivalUI.component}
+                        </div>
+                    </>
                 );
             }
             return (
@@ -418,8 +433,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.pValuesByPrefix,
         ],
         render: () => {
-            let content: any = [];
-            let plotHeader: any = [];
+            let content: any = null;
+            let plotHeader: any = null;
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
             const patientToAnalysisGroups = this.analysisGroupsComputations
@@ -475,7 +490,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             messageBeforeTooltip = `${this.differentDescriptionExistMessage} ${messageBeforeTooltip}`;
                         }
 
-                        plotHeader.push(
+                        plotHeader = (
                             <div className={'tabMessageContainer'}>
                                 <div
                                     className={'alert alert-warning'}
@@ -505,7 +520,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                             </div>
                         );
                     }
-                    content.push(
+                    content = (
                         <div style={{ marginBottom: 40 }}>
                             <h4 className="forceHeaderStyle h4">
                                 {survivalTitleText[key]}
@@ -586,7 +601,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                         </div>
                     );
                 } else {
-                    content.push(
+                    content = (
                         <div className={'alert alert-info'}>
                             {survivalTitleText[key]} not available
                         </div>
