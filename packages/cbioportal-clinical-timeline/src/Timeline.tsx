@@ -35,6 +35,7 @@ interface ITimelineProps {
     customTracks?: CustomTrackSpecification[];
     width: number;
     hideLabels?: boolean;
+    visibleTracks?: string[];
 }
 
 const getFocusedPoints = _.debounce(function(
@@ -253,12 +254,19 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     width,
     hideLabels = false,
     onClickDownload,
+    visibleTracks,
 }: ITimelineProps) {
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
     let height =
         TICK_AXIS_HEIGHT +
-        _.sumBy(tracks, t => t.height) +
+        _.sumBy(tracks, t => {
+            if (visibleTracks) {
+                return visibleTracks.includes(t.track.type) ? t.height : 0;
+            } else {
+                return t.height;
+            }
+        }) +
         _.sumBy(customTracks || [], t => t.height(store)) +
         SCROLLBAR_PADDING;
 
@@ -421,6 +429,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         width={renderWidth}
                                         customTracks={customTracks}
                                         handleTrackHover={memoizedHoverCallback}
+                                        visibleTracks={visibleTracks}
                                     />
                                     <TickAxis
                                         store={store}
