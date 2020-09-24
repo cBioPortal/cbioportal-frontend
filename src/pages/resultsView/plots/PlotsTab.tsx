@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, computed, observable, runInAction } from 'mobx';
+import { toJS, action, computed, observable, runInAction } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -56,6 +56,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getAxisDataOverlapSampleCount,
+    getCategoryOptions,
     maybeSetLogScale,
 } from './PlotsTabUtils';
 import {
@@ -166,6 +167,7 @@ export type AxisMenuSelection = {
     selectedGenesetOption?: PlotsTabOption;
     selectedGenericAssayOption?: PlotsTabOption;
     isGenericAssayType?: boolean;
+    selectedCategories: any[];
     dataType?: string;
     dataSourceId?: string;
     mutationCountBy: MutationCountBy;
@@ -1159,6 +1161,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 });
             },
             _isGenericAssayType: undefined,
+            selectedCategories: [],
         });
     }
 
@@ -2586,6 +2589,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    readonly horzAxisCategories = remoteData({
+        await: () => [this.horzAxisDataPromise],
+        invoke: () => {
+            return Promise.resolve(
+                getCategoryOptions(this.horzAxisDataPromise.result!)
+            );
+        },
+    });
+
     @computed get vertAxisDataPromise() {
         return makeAxisDataPromise(
             this.vertSelection,
@@ -2602,6 +2614,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.genericAssayMolecularDataCache
         );
     }
+
+    readonly vertAxisCategories = remoteData({
+        await: () => [this.vertAxisDataPromise],
+        invoke: () => {
+            return Promise.resolve(
+                getCategoryOptions(this.vertAxisDataPromise.result!)
+            );
+        },
+    });
 
     @computed get vertAxisDataHasNegativeNumbers(): boolean {
         if (
@@ -3131,6 +3152,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 ) || [];
         }
 
+        const axisCategoriesPromise = vertical
+            ? this.vertAxisCategories
+            : this.horzAxisCategories;
+
         return (
             <form className="main-form">
                 <h4 className="tab-title">
@@ -3471,6 +3496,33 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         </div>
                                     )}
                                 </div>
+                            </div>
+                        )}
+                    {axisCategoriesPromise.isComplete &&
+                        axisCategoriesPromise.result.length > 0 &&
+                        this.plotType.isComplete &&
+                        this.plotType.result === PlotType.BoxPlot && (
+                            <div
+                                style={{ marginBottom: '5px' }}
+                                className="form-group"
+                            >
+                                <label className="label-text">
+                                    Filter categories
+                                </label>
+                                <Select
+                                    className="Select"
+                                    isClearable={true}
+                                    isSearchable={true}
+                                    value={toJS(
+                                        axisSelection.selectedCategories
+                                    )}
+                                    isMulti
+                                    options={axisCategoriesPromise.result}
+                                    onChange={(options: any[] | null) => {
+                                        axisSelection.selectedCategories =
+                                            options || [];
+                                    }}
+                                />
                             </div>
                         )}
                     {isBoxPlotWithMoreThanOneCategory && axisIsStringData && (
@@ -4112,7 +4164,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 let categoryData: IStringAxisData;
                 let numberData: INumberAxisData;
                 let horizontal: boolean;
+                let selectedCategories: { [category: string]: any } = {};
                 if (isNumberData(horzAxisData) && isStringData(vertAxisData)) {
+                    selectedCategories = _.keyBy(
+                        this.vertSelection.selectedCategories,
+                        c => c.value
+                    );
                     categoryData = vertAxisData;
                     numberData = horzAxisData;
                     horizontal = true;
@@ -4120,46 +4177,53 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     isStringData(horzAxisData) &&
                     isNumberData(vertAxisData)
                 ) {
+                    selectedCategories = _.keyBy(
+                        this.horzSelection.selectedCategories,
+                        c => c.value
+                    );
                     categoryData = horzAxisData;
                     numberData = vertAxisData;
                     horizontal = false;
                 } else {
                     return Promise.resolve({ horizontal: false, data: [] });
                 }
+                let data = makeBoxScatterPlotData(
+                    categoryData,
+                    numberData,
+                    this.props.store.sampleKeyToSample.result!,
+                    this.props.store.coverageInformation.result!.samples,
+                    this.mutationDataExists.result
+                        ? {
+                              molecularProfileIds: _.values(
+                                  this.props.store
+                                      .studyToMutationMolecularProfile.result!
+                              ).map(p => p.molecularProfileId),
+                              data: this.mutationPromise.result!,
+                          }
+                        : undefined,
+                    this.cnaDataExists.result
+                        ? {
+                              molecularProfileIds: _.values(
+                                  this.props.store
+                                      .studyToMolecularProfileDiscreteCna
+                                      .result!
+                              ).map(p => p.molecularProfileId),
+                              data: this.cnaPromise.result!,
+                          }
+                        : undefined,
+                    this.selectedGeneForStyling,
+                    clinicalData && {
+                        clinicalAttribute: this.coloringMenuSelection
+                            .selectedOption!.info.clinicalAttribute!,
+                        data: clinicalData,
+                    }
+                );
+                if (selectedCategories && !_.isEmpty(selectedCategories)) {
+                    data = data.filter(d => d.label in selectedCategories);
+                }
                 return Promise.resolve({
                     horizontal,
-                    data: makeBoxScatterPlotData(
-                        categoryData,
-                        numberData,
-                        this.props.store.sampleKeyToSample.result!,
-                        this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataExists.result
-                            ? {
-                                  molecularProfileIds: _.values(
-                                      this.props.store
-                                          .studyToMutationMolecularProfile
-                                          .result!
-                                  ).map(p => p.molecularProfileId),
-                                  data: this.mutationPromise.result!,
-                              }
-                            : undefined,
-                        this.cnaDataExists.result
-                            ? {
-                                  molecularProfileIds: _.values(
-                                      this.props.store
-                                          .studyToMolecularProfileDiscreteCna
-                                          .result!
-                                  ).map(p => p.molecularProfileId),
-                                  data: this.cnaPromise.result!,
-                              }
-                            : undefined,
-                        this.selectedGeneForStyling,
-                        clinicalData && {
-                            clinicalAttribute: this.coloringMenuSelection
-                                .selectedOption!.info.clinicalAttribute!,
-                            data: clinicalData,
-                        }
-                    ),
+                    data,
                 });
             }
         },
