@@ -141,7 +141,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             store={stores[1]}
                             width={width}
                             onClickDownload={() => downloadZippedTracks(data)}
-                            hideLabels={true}
+                            hideLabels={false}
                             hideXAxis={true}
                             visibleTracks={[]}
                             customTracks={[
