@@ -141,62 +141,62 @@ export default class PatientViewMutationsTab extends React.Component<
         renderPending: () => <LoadingIndicator isLoading={true} size="small" />,
         render: () => (
             <div className="borderedChart" style={{ display: 'inline-block' }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 5,
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <LabeledCheckbox
-                            checked={this.dataStore.onlyShowSelectedInVAFChart}
-                            onChange={() =>
-                                this.dataStore.setOnlyShowSelectedInVAFChart(
-                                    !this.dataStore.onlyShowSelectedInVAFChart
-                                )
-                            }
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFOnlyHighlighted' }}
-                        >
-                            <span style={{ marginTop: -3 }}>
-                                {SHOW_ONLY_SELECTED_LABEL}
-                            </span>
-                        </LabeledCheckbox>
-                        <LabeledCheckbox
-                            checked={this.vafLineChartLogScale}
-                            onChange={() => {
-                                this.vafLineChartLogScale = !this
-                                    .vafLineChartLogScale;
-                            }}
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFLogScale' }}
-                        >
-                            <span style={{ marginTop: -3 }}>Log scale</span>
-                        </LabeledCheckbox>
-                        <LabeledCheckbox
-                            checked={!this.vafLineChartZeroToOneYAxis}
-                            onChange={() => {
-                                this.vafLineChartZeroToOneYAxis = !this
-                                    .vafLineChartZeroToOneYAxis;
-                            }}
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFDataRange' }}
-                        >
-                            <span style={{ marginTop: -3 }}>
-                                Set y-axis to data range
-                            </span>
-                        </LabeledCheckbox>
-                    </div>
-                    <DownloadControls
-                        filename="vafHeatmap"
-                        getSvg={() => this.vafLineChartSvg}
-                        buttons={['SVG', 'PNG', 'PDF']}
-                        type="button"
-                        dontFade
-                    />
-                </div>
+                {/*<div*/}
+                {/*    style={{*/}
+                {/*        display: 'flex',*/}
+                {/*        alignItems: 'center',*/}
+                {/*        justifyContent: 'space-between',*/}
+                {/*        marginBottom: 5,*/}
+                {/*    }}*/}
+                {/*>*/}
+                {/*    <div style={{ display: 'flex', alignItems: 'center' }}>*/}
+                {/*        <LabeledCheckbox*/}
+                {/*            checked={this.dataStore.onlyShowSelectedInVAFChart}*/}
+                {/*            onChange={() =>*/}
+                {/*                this.dataStore.setOnlyShowSelectedInVAFChart(*/}
+                {/*                    !this.dataStore.onlyShowSelectedInVAFChart*/}
+                {/*                )*/}
+                {/*            }*/}
+                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
+                {/*            inputProps={{ 'data-test': 'VAFOnlyHighlighted' }}*/}
+                {/*        >*/}
+                {/*            <span style={{ marginTop: -3 }}>*/}
+                {/*                {SHOW_ONLY_SELECTED_LABEL}*/}
+                {/*            </span>*/}
+                {/*        </LabeledCheckbox>*/}
+                {/*        <LabeledCheckbox*/}
+                {/*            checked={this.vafLineChartLogScale}*/}
+                {/*            onChange={() => {*/}
+                {/*                this.vafLineChartLogScale = !this*/}
+                {/*                    .vafLineChartLogScale;*/}
+                {/*            }}*/}
+                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
+                {/*            inputProps={{ 'data-test': 'VAFLogScale' }}*/}
+                {/*        >*/}
+                {/*            <span style={{ marginTop: -3 }}>Log scale</span>*/}
+                {/*        </LabeledCheckbox>*/}
+                {/*        <LabeledCheckbox*/}
+                {/*            checked={!this.vafLineChartZeroToOneYAxis}*/}
+                {/*            onChange={() => {*/}
+                {/*                this.vafLineChartZeroToOneYAxis = !this*/}
+                {/*                    .vafLineChartZeroToOneYAxis;*/}
+                {/*            }}*/}
+                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
+                {/*            inputProps={{ 'data-test': 'VAFDataRange' }}*/}
+                {/*        >*/}
+                {/*            <span style={{ marginTop: -3 }}>*/}
+                {/*                Set y-axis to data range*/}
+                {/*            </span>*/}
+                {/*        </LabeledCheckbox>*/}
+                {/*    </div>*/}
+                {/*    <DownloadControls*/}
+                {/*        filename="vafHeatmap"*/}
+                {/*        getSvg={() => this.vafLineChartSvg}*/}
+                {/*        buttons={['SVG', 'PNG', 'PDF']}*/}
+                {/*        type="button"*/}
+                {/*        dontFade*/}
+                {/*    />*/}
+                {/*</div>*/}
 
                 {this.props.sampleManager && (
                     <VAFChartWrapper
