@@ -28,6 +28,7 @@ import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
 
 import classNames from 'classnames';
+import getSvg from './svg/getSvg';
 
 interface ITimelineProps {
     store: TimelineStore;
@@ -36,21 +37,8 @@ interface ITimelineProps {
     width: number;
     hideLabels?: boolean;
     visibleTracks?: string[];
+    hideXAxis?: boolean;
 }
-
-const getFocusedPoints = _.debounce(function(
-    point: number,
-    store: TimelineStore
-) {
-    const p = getPointInTrimmedSpaceFromScreenRead(point, store.ticks);
-
-    const focusedPoints = store.allItems.filter(event =>
-        intersect(p - 5, p + 5, event.start - 5, event.end + 5)
-    );
-
-    return focusedPoints;
-},
-100);
 
 function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
     const $timeline = jQuery(refs.timeline.current);
@@ -132,8 +120,6 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
                     startVal,
                     store.ticks
                 );
-
-                //getFocusedPoints(point, store);
 
                 const years = Math.floor(myStart / TickIntervalEnum.YEAR);
                 const months = Math.floor(
@@ -255,11 +241,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     hideLabels = false,
     onClickDownload,
     visibleTracks,
+    hideXAxis,
 }: ITimelineProps) {
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
     let height =
-        TICK_AXIS_HEIGHT +
+        (!hideXAxis ? TICK_AXIS_HEIGHT : 0) +
         _.sumBy(tracks, t => {
             if (visibleTracks) {
                 return visibleTracks.includes(t.track.type) ? t.height : 0;
@@ -431,10 +418,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         handleTrackHover={memoizedHoverCallback}
                                         visibleTracks={visibleTracks}
                                     />
-                                    <TickAxis
-                                        store={store}
-                                        width={renderWidth}
-                                    />{' '}
+                                    {hideXAxis !== true && (
+                                        <TickAxis
+                                            store={store}
+                                            width={renderWidth}
+                                        />
+                                    )}
                                     {/*TickAxis needs to go on top so its not covered by tracks*/}
                                 </g>
                             </svg>
@@ -470,94 +459,5 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         </div>
     );
 });
-
-function getSvg(
-    store: TimelineStore,
-    timelineG: SVGGElement | null,
-    customTracks?: CustomTrackSpecification[]
-) {
-    if (!timelineG) {
-        return null;
-    }
-
-    const svg = (document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'svg'
-    ) as unknown) as SVGElement;
-    document.body.appendChild(svg); // add to body so that we can do getBBox calculations for layout
-
-    const everythingG = (document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'g'
-    ) as unknown) as SVGGElement;
-    svg.append(everythingG);
-
-    try {
-        // Add headers
-        const headersG = getTrackHeadersG(store, customTracks);
-        everythingG.appendChild(headersG);
-        const headersSize = headersG.getBBox();
-        const headersPadding = 10;
-
-        // Add separating line between headers and tracks
-        const separatingLine = (document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'line'
-        ) as unknown) as SVGLineElement;
-        separatingLine.setAttribute(
-            'x1',
-            `${headersSize.width + headersPadding}`
-        );
-        separatingLine.setAttribute(
-            'x2',
-            `${headersSize.width + headersPadding}`
-        );
-        separatingLine.setAttribute('y1', '0');
-        separatingLine.setAttribute(
-            'y2',
-            `${headersSize.y + headersSize.height}`
-        );
-        separatingLine.setAttribute(
-            'style',
-            `stroke-width:1; stroke:${TICK_AXIS_COLOR}`
-        );
-        everythingG.appendChild(separatingLine);
-
-        // Add tracks
-        // Clone node so we don't disrupt the UI
-        timelineG = timelineG.cloneNode(true) as SVGGElement;
-        everythingG.appendChild(timelineG);
-        // Move tracks over from labels
-        timelineG.setAttribute(
-            'transform',
-            `translate(${headersSize.width + headersPadding} 0)`
-        );
-
-        const everythingSize = everythingG.getBBox();
-
-        // Set svg size to include everything
-        svg.setAttribute('width', `${everythingSize.width}`);
-        svg.setAttribute('height', `${everythingSize.height}`);
-
-        // Finishing touches
-        // Filter out non-download elements
-        jQuery(svg)
-            .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
-            .remove();
-
-        // Extend track header borders
-        jQuery(svg)
-            .find(`.${EXPORT_TRACK_HEADER_BORDER_CLASSNAME}`)
-            .each(function() {
-                this.setAttribute(
-                    'x2',
-                    `${headersSize.width + headersPadding}`
-                );
-            });
-    } finally {
-        document.body.removeChild(svg); // remove from body no matter what happens
-    }
-    return svg;
-}
 
 export default Timeline;
