@@ -132,6 +132,7 @@ export default class SurvivalPrefixTable extends React.Component<
             <LazyMobXTable
                 columns={COLUMNS}
                 showColumnVisibility={false}
+                initialFilterString={'patients>870'}
                 initialSortColumn={ColumnName.P_VALUE}
                 initialSortDirection={'asc'}
                 dataStore={this.dataStore}
