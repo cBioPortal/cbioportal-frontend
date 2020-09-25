@@ -81,6 +81,7 @@ type LazyMobXTableProps<T> = {
     initialItemsPerPage?: number;
     itemsLabel?: string;
     itemsLabelPlural?: string;
+    initialFilterString?: string;
     showFilter?: boolean;
     showFilterClearButton?: boolean;
     showCopyDownload?: boolean;
@@ -753,6 +754,7 @@ export default class LazyMobXTable<T> extends React.Component<
 > {
     private store: LazyMobXTableStore<T>;
     private handlers: { [fnName: string]: (...args: any[]) => void };
+    private initialFilterTextSet = false;
     private filterInput: HTMLInputElement;
     private filterInputReaction: IReactionDisposer;
     private pageToHighlightReaction: IReactionDisposer;
@@ -765,6 +767,7 @@ export default class LazyMobXTable<T> extends React.Component<
         showColumnVisibility: true,
         showPaginationAtTop: false,
         showCountHeader: false,
+        initialFilterString: '',
     };
 
     public get dataStore() {
@@ -848,6 +851,11 @@ export default class LazyMobXTable<T> extends React.Component<
             },
             filterInputRef: (input: HTMLInputElement) => {
                 this.filterInput = input;
+                if (input && !this.initialFilterTextSet) {
+                    input.value = this.props.initialFilterString!;
+                    this.store.setFilterString(this.props.initialFilterString!);
+                    this.initialFilterTextSet = true;
+                }
             },
         };
         this.getDownloadData = this.getDownloadData.bind(this);
