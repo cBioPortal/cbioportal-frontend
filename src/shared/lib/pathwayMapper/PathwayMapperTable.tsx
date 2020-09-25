@@ -31,6 +31,7 @@ interface IPathwayMapperTableProps {
     selectedPathway: string;
     changePathway: (pathway: string) => void;
     initialSortColumn?: string;
+    view: string;
 }
 
 type PathwayMapperTableColumn = Column<IPathwayMapperTable>;
@@ -82,8 +83,13 @@ export default class PathwayMapperTable extends React.Component<
         this._columns = {};
         this.generateColumns();
     }
-
+    private sc_column = '';
     generateColumns() {
+        //this condition is used to set the label of the score column
+        this.sc_column = 'Score';
+        if (this.props.view === 'patient') {
+            this.sc_column = '# Genes matched';
+        }
         const lengthThreshold = 20;
 
         this._columns = {};
@@ -126,7 +132,7 @@ export default class PathwayMapperTable extends React.Component<
         };
 
         this._columns[IPathwayMapperTableColumnType.SCORE] = {
-            name: '# Genes Matched',
+            name: this.sc_column,
             render: (d: IPathwayMapperTable) => (
                 <span>
                     <b>{d.score.toFixed(2)}</b>

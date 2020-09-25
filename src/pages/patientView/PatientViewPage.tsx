@@ -1456,19 +1456,11 @@ export default class PatientViewPage extends React.Component<
                                     id={PatientViewPageTabs.PATHWAY_MAPPER}
                                     linkText={'Pathways'}
                                 >
-                                    {true /*showPM ? ( control if the values are complete*/ ? (
-                                        <PatientViewPathwayMapper
-                                            store={this.patientViewPageStore}
-                                            appStore={this.props.appStore}
-                                            urlWrapper={this.urlWrapper}
-                                        />
-                                    ) : (
-                                        <LoadingIndicator
-                                            isLoading={true}
-                                            size={'big'}
-                                            center={true}
-                                        />
-                                    )}
+                                    <PatientViewPathwayMapper
+                                        store={this.patientViewPageStore}
+                                        appStore={this.props.appStore}
+                                        urlWrapper={this.urlWrapper}
+                                    />
                                 </MSKTab>
 
                                 <MSKTab

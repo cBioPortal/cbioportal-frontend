@@ -3,7 +3,9 @@ import _ from 'lodash';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { addGenesToQuery, ResultsViewTab } from '../ResultsViewPageHelpers';
 import 'pathway-mapper/dist/base.css';
-import PathwayMapperTable, { IPathwayMapperTable } from './PathwayMapperTable';
+import PathwayMapperTable, {
+    IPathwayMapperTable,
+} from '../../../shared/lib/pathwayMapper/PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import {
@@ -365,6 +367,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                 data={data}
                 selectedPathway={selectedPathway}
                 changePathway={onPathwaySelect}
+                view={'results'}
             />
         );
     }
