@@ -38,9 +38,15 @@ interface ITimelineProps {
     hideLabels?: boolean;
     visibleTracks?: string[];
     hideXAxis?: boolean;
+    disableZoom?: boolean;
 }
 
-function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
+function handleMouseEvents(
+    e: any,
+    store: TimelineStore,
+    refs: any,
+    zoomDisabled: boolean = true
+) {
     const $timeline = jQuery(refs.timeline.current);
     const $zoomSelectBox = jQuery(refs.zoomSelectBox.current);
     const $zoomSelectBoxMask = jQuery(refs.zoomSelectBoxMask.current);
@@ -87,7 +93,9 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
             store.dragging = undefined;
             break;
         case 'mousedown':
-            store.dragging = { start: null, end: null };
+            if (!zoomDisabled) {
+                store.dragging = { start: null, end: null };
+            }
             break;
 
         case 'mousemove':
@@ -111,40 +119,16 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
                     width: Math.abs(store.dragging.end - store.dragging.start),
                 });
             } else {
-                //const point = (pos / $timeline.width()!) * store.absoluteWidth;
-
-                const width = $timeline.width()!;
-                const percStart = pos / width;
-                const startVal = percStart * store.absoluteWidth;
-                const myStart = getPointInTrimmedSpaceFromScreenRead(
-                    startVal,
-                    store.ticks
-                );
-
-                const years = Math.floor(myStart / TickIntervalEnum.YEAR);
-                const months = Math.floor(
-                    (myStart - years * TickIntervalEnum.YEAR) /
-                        TickIntervalEnum.MONTH
-                );
-                const days = Math.floor(
-                    myStart -
-                        (years * TickIntervalEnum.YEAR +
-                            months * TickIntervalEnum.MONTH)
-                );
-
-                const yearText = years > 0 ? `${years}y` : '';
-                const monthText = months > 0 ? ` ${months}m` : '';
-                const dayText = days > 0 ? ` ${days}d` : '';
-
-                const label = `${yearText}${monthText}${dayText}`;
-
-                jQuery(refs.cursor.current).css({
-                    left:
-                        e.clientX -
-                        $timeline.offset()!.left +
-                        (jQuery(document).scrollLeft() || 0),
-                    display: 'block',
-                });
+                // if zooming is enabled and we're not dragging, show the zoom cursor
+                if (!zoomDisabled) {
+                    jQuery(refs.cursor.current).css({
+                        left:
+                            e.clientX -
+                            $timeline.offset()!.left +
+                            (jQuery(document).scrollLeft() || 0),
+                        display: 'block',
+                    });
+                }
             }
             break;
     }

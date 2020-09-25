@@ -99,7 +99,11 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
         if (stores && wrapperStore) {
             return (
                 <>
-                    <div style={{ marginTop: 20 }}>
+                    <div>
+                        <VAFChartControls
+                            wrapperStore={wrapperStore}
+                            sampleManager={sampleManager}
+                        />
                         <Timeline
                             store={stores[0]}
                             width={width}
@@ -133,10 +137,6 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                                     labelForExport: 'VAF',
                                 },
                             ]}
-                        />
-                        <VAFChartControls
-                            wrapperStore={wrapperStore}
-                            sampleManager={sampleManager}
                         />
                     </div>
                 </>
