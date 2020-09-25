@@ -8,9 +8,14 @@ import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyM
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
+import _ from 'lodash';
+import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
+import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import { observable, computed } from 'mobx';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
+    groupNames: string[];
     getSelectedPrefix: () => string | undefined;
     setSelectedPrefix: (p: string) => void;
 }
@@ -19,6 +24,7 @@ export type SurvivalPrefixSummary = {
     prefix: string;
     displayText: string;
     numPatients: number;
+    numPatientsPerGroup: { [groupName: string]: number };
     pValue: number | null;
     qValue: number | null;
 };
@@ -39,6 +45,26 @@ class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataS
 
 enum ColumnName {
     P_VALUE = 'p-Value',
+}
+
+function makeGroupColumnName(groupName: string) {
+    return `# in ${groupName}`;
+}
+function makeGroupColumn(groupName: string) {
+    const name = makeGroupColumnName(groupName);
+    return {
+        name,
+        render: (d: SurvivalPrefixSummary) => (
+            <span>{d.numPatientsPerGroup[groupName]}</span>
+        ),
+        sortBy: (d: SurvivalPrefixSummary) => d.numPatientsPerGroup[groupName],
+        filter: filterNumericalColumn(
+            (d: SurvivalPrefixSummary) => d.numPatientsPerGroup[groupName],
+            name
+        ),
+        download: (d: SurvivalPrefixSummary) =>
+            d.numPatientsPerGroup[groupName].toString(),
+    };
 }
 
 const COLUMNS = [
@@ -109,30 +135,73 @@ const COLUMNS = [
     },
 ];
 
+function initColumnVisibility(groupNames: string[]) {
+    const ret: { [group: string]: boolean } = {};
+    for (const c of COLUMNS) {
+        ret[c.name] = true;
+    }
+    for (const n of groupNames) {
+        ret[makeGroupColumnName(n)] = false;
+    }
+    return ret;
+}
+
 @observer
 export default class SurvivalPrefixTable extends React.Component<
     ISurvivalPrefixTableProps,
     {}
 > {
     private dataStore: SurvivalPrefixTableStore;
+    @observable private columnVisibility: { [group: string]: boolean };
+
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
         this.dataStore = new SurvivalPrefixTableStore(
             () => this.props.survivalPrefixes,
             this.props.getSelectedPrefix
         );
+        this.columnVisibility = initColumnVisibility(props.groupNames);
     }
     @autobind
     private onRowClick(d: SurvivalPrefixSummary) {
         this.props.setSelectedPrefix(d.prefix);
     }
 
+    @autobind
+    private onColumnToggled(
+        columnId: string,
+        columnVisibilityDefs: IColumnVisibilityDef[]
+    ) {
+        this.columnVisibility = toggleColumnVisibility(
+            this.columnVisibility,
+            columnId,
+            columnVisibilityDefs
+        );
+    }
+
+    @computed get columns() {
+        const cols = COLUMNS.slice();
+        const insertionPoint = cols.findIndex(
+            c => c.name === ColumnName.P_VALUE
+        );
+        // insert "Num patients in group" columns right before p value
+        return [
+            ...COLUMNS.slice(0, insertionPoint),
+            ...this.props.groupNames.map(makeGroupColumn),
+            ...COLUMNS.slice(insertionPoint),
+        ];
+    }
+
     public render() {
         return (
             <LazyMobXTable
-                columns={COLUMNS}
-                showColumnVisibility={false}
-                initialFilterString={'patients>870'}
+                columns={this.columns}
+                showColumnVisibility={true}
+                columnVisibility={this.columnVisibility}
+                columnVisibilityProps={{
+                    onColumnToggled: this.onColumnToggled,
+                }}
+                initialFilterString={'patients>10'}
                 initialSortColumn={ColumnName.P_VALUE}
                 initialSortDirection={'asc'}
                 dataStore={this.dataStore}
