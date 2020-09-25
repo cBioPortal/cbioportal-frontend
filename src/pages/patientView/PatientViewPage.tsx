@@ -1517,40 +1517,8 @@ export default class PatientViewPage extends React.Component<
                                             id="genomicEvolution"
                                             linkText="Genomic Evolution"
                                         >
-                                            <VAFChartWrapper
-                                                dataStore={this.dataStore}
-                                                caseMetaData={{
-                                                    color:
-                                                        sampleManager.sampleColors,
-                                                    label:
-                                                        sampleManager.sampleLabels,
-                                                    index:
-                                                        sampleManager.sampleIndex,
-                                                }}
-                                                data={
-                                                    this.patientViewPageStore
-                                                        .clinicalEvents.result
-                                                }
-                                                sampleManager={sampleManager}
-                                                width={WindowStore.size.width}
-                                                samples={
-                                                    this.patientViewPageStore
-                                                        .samples.result
-                                                }
-                                                mutationProfileId={
-                                                    this.patientViewPageStore
-                                                        .mutationMolecularProfileId
-                                                        .result!
-                                                }
-                                                coverageInformation={
-                                                    this.patientViewPageStore
-                                                        .coverageInformation
-                                                        .result
-                                                }
-                                            />
-
                                             <PatientViewMutationsTab
-                                                store={
+                                                patientViewPageStore={
                                                     this.patientViewPageStore
                                                 }
                                                 mutationTableColumnVisibility={
