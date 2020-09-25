@@ -328,8 +328,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     style={{
                                         marginRight: 15,
                                         marginTop: 15,
-                                        minWidth: 400,
-                                        maxWidth: 400,
+                                        minWidth: 475,
+                                        maxWidth: 475,
                                     }}
                                 >
                                     {this.survivalPrefixTable.component}
@@ -357,9 +357,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.patientSurvivals,
             this.pValuesByPrefix,
             this.qValuesByPrefix,
+            this.analysisGroupsComputations,
         ],
         render: () => {
             const patientSurvivals = this.props.store.patientSurvivals.result!;
+            const analysisGroups = this.analysisGroupsComputations.result!
+                .analysisGroups;
+            const patientToAnalysisGroups = this.analysisGroupsComputations
+                .result!.patientToAnalysisGroups;
             const pValues = this.pValuesByPrefix.result!;
             const qValues = this.qValuesByPrefix.result!;
             const survivalTitleText = this.survivalTitleText.result!;
@@ -368,16 +373,35 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 // only show table if theres more than one prefix option
                 return (
                     <SurvivalPrefixTable
+                        groupNames={analysisGroups.map(g => g.name)}
                         survivalPrefixes={_.map(
                             this.survivalTitleText.result! as Dictionary<
                                 string
                             >,
                             (displayText, prefix) => {
+                                const numPatientsPerGroup = analysisGroups.reduce(
+                                    (countsMap, group) => {
+                                        countsMap[group.name] = 0;
+                                        return countsMap;
+                                    },
+                                    {} as { [group: string]: number }
+                                );
+
+                                for (const s of patientSurvivals[prefix]) {
+                                    const groups =
+                                        patientToAnalysisGroups[
+                                            s.uniquePatientKey
+                                        ];
+                                    for (const groupName of groups) {
+                                        numPatientsPerGroup[groupName] += 1;
+                                    }
+                                }
                                 return {
                                     prefix,
                                     displayText,
                                     numPatients:
                                         patientSurvivals[prefix].length,
+                                    numPatientsPerGroup,
                                     pValue: pValues[prefix],
                                     qValue: qValues[prefix],
                                 };
