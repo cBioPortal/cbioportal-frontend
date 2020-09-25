@@ -372,6 +372,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         store={store}
                                         specification={track}
                                         handleTrackHover={memoizedHoverCallback}
+                                        disableHover={track.disableHover}
                                     />
                                 );
                             })}
