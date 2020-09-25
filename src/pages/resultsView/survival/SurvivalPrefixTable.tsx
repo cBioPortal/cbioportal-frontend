@@ -7,6 +7,7 @@ import autobind from 'autobind-decorator';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
+import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -56,6 +57,10 @@ const COLUMNS = [
         name: '# Patients With Data',
         render: (d: SurvivalPrefixSummary) => <span>{d.numPatients}</span>,
         sortBy: (d: SurvivalPrefixSummary) => d.numPatients,
+        filter: filterNumericalColumn(
+            (d: SurvivalPrefixSummary) => d.numPatients,
+            '# Patients With Data'
+        ),
         download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
     },
     {
@@ -68,6 +73,10 @@ const COLUMNS = [
             </span>
         ),
         sortBy: (d: SurvivalPrefixSummary) => d.pValue,
+        filter: filterNumericalColumn(
+            (d: SurvivalPrefixSummary) => d.pValue,
+            ColumnName.P_VALUE
+        ),
         download: (d: SurvivalPrefixSummary) =>
             d.pValue !== null
                 ? toConditionalPrecision(d.pValue, 3, 0.01)
@@ -84,6 +93,10 @@ const COLUMNS = [
             </span>
         ),
         sortBy: (d: SurvivalPrefixSummary) => d.qValue,
+        filter: filterNumericalColumn(
+            (d: SurvivalPrefixSummary) => d.qValue,
+            'q-Value'
+        ),
         download: (d: SurvivalPrefixSummary) =>
             d.qValue !== null
                 ? toConditionalPrecision(d.qValue, 3, 0.01)
