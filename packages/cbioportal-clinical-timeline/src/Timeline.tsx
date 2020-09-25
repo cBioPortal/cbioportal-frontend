@@ -306,6 +306,11 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
 
     const renderWidth = store.viewPortWidth ? store.viewPortWidth * myZoom : 0;
 
+    const filteredTracks =
+        visibleTracks === undefined
+            ? tracks
+            : tracks.filter(t => visibleTracks.includes(t.track.type));
+
     return (
         <div ref={refs.wrapper} className={'tl-timeline-wrapper'}>
             <div className={'tl-timeline-reset-buttons'}>
@@ -349,7 +354,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             minWidth: store.headersWidth,
                         }}
                     >
-                        {tracks.map(track => {
+                        {filteredTracks.map(track => {
                             return (
                                 <TrackHeader
                                     store={store}
