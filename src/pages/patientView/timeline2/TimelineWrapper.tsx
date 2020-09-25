@@ -163,6 +163,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                                             sampleManager={sampleManager}
                                         />
                                     ),
+                                    disableHover: true,
                                     height: (store: TimelineStore) => {
                                         return wrapperStore.vafChartHeight;
                                     },

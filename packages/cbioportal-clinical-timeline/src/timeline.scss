@@ -153,3 +153,11 @@ $borderColor: #ccc;
 .tl-displaynone {
     display: none;
 }
+
+.tl-hover-disabled {
+    background: none !important;
+
+    .tl-track-highlight {
+        display: none;
+    }
+}

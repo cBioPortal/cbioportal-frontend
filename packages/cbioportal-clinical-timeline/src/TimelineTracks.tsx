@@ -63,6 +63,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                                     handleTrackHover={handleTrackHover}
                                     width={width}
                                     y={y}
+                                    disableHover={track.disableHover}
                                 />
                             );
                         })}
