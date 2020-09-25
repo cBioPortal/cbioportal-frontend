@@ -81,6 +81,7 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import TimelineWrapper from './timeline2/TimelineWrapper';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
+import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
 
 export interface IPatientViewPageProps {
@@ -1502,15 +1503,52 @@ export default class PatientViewPage extends React.Component<
                                             </div>
                                         )}
                                 </MSKTab>
-                                {this.patientViewPageStore.sampleIds.length >
-                                    1 &&
+                                {!!sampleManager &&
+                                    this.patientViewPageStore.sampleIds.length >
+                                        1 &&
                                     this.patientViewPageStore
-                                        .existsSomeMutationWithVAFData && (
+                                        .existsSomeMutationWithVAFData &&
+                                    this.patientViewPageStore.clinicalEvents
+                                        .isComplete &&
+                                    this.patientViewPageStore.clinicalEvents
+                                        .result.length > 0 && (
                                         <MSKTab
                                             key={1}
                                             id="genomicEvolution"
                                             linkText="Genomic Evolution"
                                         >
+                                            <VAFChartWrapper
+                                                dataStore={this.dataStore}
+                                                caseMetaData={{
+                                                    color:
+                                                        sampleManager.sampleColors,
+                                                    label:
+                                                        sampleManager.sampleLabels,
+                                                    index:
+                                                        sampleManager.sampleIndex,
+                                                }}
+                                                data={
+                                                    this.patientViewPageStore
+                                                        .clinicalEvents.result
+                                                }
+                                                sampleManager={sampleManager}
+                                                width={WindowStore.size.width}
+                                                samples={
+                                                    this.patientViewPageStore
+                                                        .samples.result
+                                                }
+                                                mutationProfileId={
+                                                    this.patientViewPageStore
+                                                        .mutationMolecularProfileId
+                                                        .result!
+                                                }
+                                                coverageInformation={
+                                                    this.patientViewPageStore
+                                                        .coverageInformation
+                                                        .result
+                                                }
+                                            />
+
                                             <PatientViewMutationsTab
                                                 store={
                                                     this.patientViewPageStore
