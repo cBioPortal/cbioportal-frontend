@@ -129,6 +129,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                                     height: (store: TimelineStore) => {
                                         return wrapperStore.vafChartHeight;
                                     },
+                                    disableHover: true,
                                     labelForExport: 'VAF',
                                 },
                             ]}
