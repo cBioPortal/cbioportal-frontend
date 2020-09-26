@@ -54,7 +54,7 @@ export interface IMultipleCategoryBarPlotProps {
     axisStyle?: any;
     countAxisLabel?: string;
     tooltip?: (datum: any) => JSX.Element;
-    containerRef?: (svgContainer: SVGElement | null) => void;
+    svgRef?: (svgContainer: SVGElement | null) => void;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -847,8 +847,8 @@ export default class MultipleCategoryBarPlot extends React.Component<
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                         onMouseMove={this.onMouseMove}
                         ref={ref => {
-                            if (this.props.containerRef) {
-                                this.props.containerRef(ref);
+                            if (this.props.svgRef) {
+                                this.props.svgRef(ref);
                             }
                         }}
                     >
