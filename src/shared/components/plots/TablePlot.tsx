@@ -26,7 +26,7 @@ import { wrapTick } from './TickUtils';
 import { iterateOverEntries } from './TablePlotUtils';
 
 export interface ITablePlotProps {
-    svgId?: string;
+    svgRef?: (elt: SVGElement | null) => void;
     horzData: IStringAxisData['data'];
     vertData: IStringAxisData['data'];
     horzCategoryOrder?: string[];
@@ -399,7 +399,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
                     style={{ width: this.svgWidth, height: this.svgHeight }}
                 >
                     <svg
-                        id={this.props.svgId || ''}
+                        ref={this.props.svgRef}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,

@@ -319,7 +319,7 @@ export default class GeneBarPlot extends React.Component<
                         countAxisLabel={`${this.yAxislabel} (%)`}
                         tooltip={this.getTooltip}
                         categoryToColor={this.props.categoryToColor}
-                        containerRef={ref => (this.svgContainer = ref)}
+                        svgRef={ref => (this.svgContainer = ref)}
                     />
                 </div>
             </div>

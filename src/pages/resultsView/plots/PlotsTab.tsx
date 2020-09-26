@@ -83,7 +83,6 @@ import BoxScatterPlot, {
 import autobind from 'autobind-decorator';
 import fileDownload from 'react-file-download';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
-import ScrollBar from '../../../shared/components/Scrollbar/ScrollBar';
 import {
     dataPointIsLimited,
     LegendDataWithId,
@@ -252,12 +251,17 @@ const discreteVsDiscretePlotTypeOptions = [
 
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
+    private plotSvg: SVGElement | null = null;
+
     private horzSelection: AxisMenuSelection;
     private vertSelection: AxisMenuSelection;
     private selectionHistory = new LastPlotsTabSelectionForDatatype();
     private coloringMenuSelection: ColoringMenuSelection;
 
     private scrollPane: HTMLDivElement;
+    private dummyScrollPane: HTMLDivElement;
+    private scrollingDummyPane = false;
+    @observable plotElementWidth = 0;
 
     @observable boxPlotSortByMedian = false;
     @observable searchCaseInput: string;
@@ -313,11 +317,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.coloringMenuSelection.colorByMutationType = !this
                 .coloringMenuSelection.colorByMutationType;
         }
-    }
-
-    @autobind
-    private getScrollPane() {
-        return this.scrollPane;
     }
 
     // determine whether formatting for points in the scatter plot (based on
@@ -663,7 +662,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     private getSvg() {
-        return document.getElementById(SVG_ID) as SVGElement | null;
+        return this.plotSvg;
     }
 
     private downloadFilename = 'plot'; // todo: more specific?
@@ -3651,6 +3650,49 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @autobind
     private assignScrollPaneRef(el: HTMLDivElement) {
         this.scrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+            $(el).scroll(this.synchronizeScrollPanes);
+        }
+    }
+    @autobind
+    private assignDummyScrollPaneRef(el: HTMLDivElement) {
+        this.dummyScrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+
+            $(el).scroll(this.synchronizeScrollPanes);
+
+            $(el).on('mousedown', () => {
+                this.scrollingDummyPane = true;
+            });
+            $(el).on('mouseup', () => {
+                this.scrollingDummyPane = false;
+            });
+        }
+    }
+    @autobind
+    private assignPlotSvgRef(el: SVGElement | null) {
+        this.plotSvg = el;
+        if (el) {
+            this.plotElementWidth = el.scrollWidth;
+        } else {
+            this.plotElementWidth = 0;
+        }
+    }
+    @autobind
+    private synchronizeScrollPanes() {
+        if (!this.scrollPane || !this.dummyScrollPane) {
+            // Can't do anything if both panes don't exist yet
+            return;
+        }
+        if (this.scrollingDummyPane) {
+            // prevent infinite loop by only updating in one direction
+            //  based on whether user is clicking in the dummy pane
+            this.scrollPane.scrollLeft = this.dummyScrollPane.scrollLeft;
+        } else {
+            this.dummyScrollPane.scrollLeft = this.scrollPane.scrollLeft;
+        }
     }
 
     @autobind
@@ -4286,7 +4328,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         ) {
                             plotElt = (
                                 <TablePlot
-                                    svgId={SVG_ID}
+                                    svgRef={this.assignPlotSvgRef}
                                     horzData={
                                         (this.horzAxisDataPromise
                                             .result! as IStringAxisData).data
@@ -4317,6 +4359,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotElt = (
                                 <MultipleCategoryBarPlot
                                     svgId={SVG_ID}
+                                    svgRef={this.assignPlotSvgRef}
                                     horzData={
                                         (this.horzAxisDataPromise
                                             .result! as IStringAxisData).data
@@ -4358,6 +4401,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotElt = (
                                 <PlotsTabScatterPlot
                                     svgId={SVG_ID}
+                                    svgRef={this.assignPlotSvgRef}
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
                                     data={this.scatterPlotData.result}
@@ -4422,6 +4466,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotElt = (
                                 <PlotsTabWaterfallPlot
                                     svgId={SVG_ID}
+                                    svgRef={this.assignPlotSvgRef}
                                     axisLabel={this.waterfallLabel.result!}
                                     data={this.waterfallPlotData.result.data}
                                     size={scatterPlotSize}
@@ -4494,6 +4539,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             plotElt = (
                                 <PlotsTabBoxPlot
                                     svgId={SVG_ID}
+                                    svgRef={this.assignPlotSvgRef}
                                     domainPadding={75}
                                     boxWidth={this.boxPlotBoxWidth}
                                     axisLabelX={this.horzLabel.result!}
@@ -4573,16 +4619,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             data-test="PlotsTabPlotDiv"
                             className="borderedChart posRelative"
                         >
-                            <ScrollBar
-                                style={{ position: 'relative', top: -5 }}
-                                getScrollEl={this.getScrollPane}
-                            />
                             {this.showUtilitiesMenu && (
                                 <div
                                     style={{
                                         textAlign: 'left',
                                         position: 'relative',
-                                        zIndex: 1,
+                                        zIndex: 2,
                                         marginTop: '-6px',
                                         marginBottom: this.isWaterfallPlot
                                             ? '9px'
@@ -4774,12 +4816,41 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     type="button"
                                 />
                             )}
+                            <Observer>
+                                {() => (
+                                    <div
+                                        className="dummyScrollDiv scrollbarAlwaysVisible"
+                                        style={{
+                                            position: 'relative',
+                                            width: '100%',
+                                            maxWidth: this.plotElementWidth,
+                                            overflow: 'scroll',
+                                            marginTop: 35,
+                                            marginBottom: -25, // reduce excessive padding caused by the marginTop
+                                            zIndex: 1, // make sure it receives mouse even though marginBottom pulls the plot on top of it
+                                        }}
+                                        ref={this.assignDummyScrollPaneRef}
+                                    >
+                                        <div
+                                            style={{
+                                                minWidth:
+                                                    this.plotElementWidth - 8, // subtract 8 due to the pseudo-scrollbar element adding bulk
+                                                height: 1,
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                            </Observer>
                             <div
-                                ref={this.assignScrollPaneRef}
                                 style={{
                                     position: 'relative',
                                     display: 'inline-block',
+                                    width: '100%',
+                                    overflow: 'scroll',
+                                    marginTop: -13,
                                 }}
+                                className="hideScrollbar"
+                                ref={this.assignScrollPaneRef}
                             >
                                 {plotElt}
                             </div>

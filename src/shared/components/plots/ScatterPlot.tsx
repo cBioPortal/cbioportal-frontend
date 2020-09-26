@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import bind from 'bind-decorator';
 import { computed, observable } from 'mobx';
 import {
     VictoryChart,
@@ -39,6 +38,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import LegendDataComponent from './LegendDataComponent';
 import LegendLabelComponent from './LegendLabelComponent';
+import autobind from 'autobind-decorator';
 
 export interface IBaseScatterPlotData {
     x: number;
@@ -47,6 +47,7 @@ export interface IBaseScatterPlotData {
 
 export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     svgId?: string;
+    svgRef?: (elt: SVGElement | null) => void;
     title?: string;
     data: D[];
     chartWidth: number;
@@ -103,7 +104,7 @@ export default class ScatterPlot<
     @observable.ref private container: HTMLDivElement;
     private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
 
-    @bind
+    @autobind
     private containerRef(container: HTMLDivElement) {
         this.container = container;
     }
@@ -507,7 +508,7 @@ export default class ScatterPlot<
         return this.props.chartHeight + this.bottomLegendHeight;
     }
 
-    @bind
+    @autobind
     private x(d: D) {
         if (this.props.logX) {
             return this.props.logX!.fLogScale(d.x, 0);
@@ -516,7 +517,7 @@ export default class ScatterPlot<
         }
     }
 
-    @bind
+    @autobind
     private y(d: D) {
         if (this.props.logY) {
             return this.props.logY!.fLogScale(d.y, 0);
@@ -544,12 +545,12 @@ export default class ScatterPlot<
         return tickFormatNumeral(t, ticks);
     }
 
-    @bind
+    @autobind
     private tickFormatX(t: number, i: number, ticks: number[]) {
         return this.tickFormat(t, ticks, this.props.logX);
     }
 
-    @bind
+    @autobind
     private tickFormatY(t: number, i: number, ticks: number[]) {
         return this.tickFormat(t, ticks, this.props.logY);
     }
@@ -620,7 +621,7 @@ export default class ScatterPlot<
         }
     }
 
-    @bind
+    @autobind
     private getChart() {
         return (
             <div
@@ -629,6 +630,7 @@ export default class ScatterPlot<
             >
                 <svg
                     id={this.props.svgId || ''}
+                    ref={this.props.svgRef}
                     style={{
                         width: this.svgWidth,
                         height: this.svgHeight,
