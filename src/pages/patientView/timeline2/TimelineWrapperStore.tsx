@@ -1,11 +1,13 @@
 import { action, observable } from 'mobx';
-import _ from 'lodash';
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
+import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 
 export default class TimelineWrapperStore {
     @observable groupByOption: string | null = null;
+
+    @observable.ref groupByTracks: CustomTrackSpecification[] = [];
 
     @observable vafChartHeight: number = 240;
 
