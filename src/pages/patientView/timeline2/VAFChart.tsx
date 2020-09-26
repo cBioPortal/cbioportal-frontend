@@ -1,17 +1,10 @@
-import React, { ReactSVGElement } from 'react';
+import React from 'react';
 import { Observer, observer } from 'mobx-react';
-import { computed, observable, action } from 'mobx';
+import { action, computed } from 'mobx';
 import autobind from 'autobind-decorator';
-import {
-    TimelineStore,
-    TimelineEvent,
-    getPointInTrimmedSpaceFromScreenRead,
-} from 'cbioportal-clinical-timeline';
+import { TimelineEvent, TimelineStore } from 'cbioportal-clinical-timeline';
 import SampleMarker from './SampleMarker';
-import {
-    ISampleMetaDeta,
-    ITimeline2Props,
-} from 'pages/patientView/timeline2/TimelineWrapper';
+import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { computeRenderData, IPoint } from '../mutation/VAFLineChartUtils';
@@ -23,14 +16,16 @@ import classnames from 'classnames';
 import { Portal } from 'react-portal';
 import survivalStyles from '../../resultsView/survival/styles.module.scss';
 import styles from '../mutation/styles.module.scss';
-import { mutationTooltip } from '../mutation/PatientViewMutationsTabUtils';
-import SampleManager from '../SampleManager';
-import { clinicalValueToSamplesMap } from '../SampleManager';
+import {
+    MutationStatus,
+    mutationTooltip,
+} from '../mutation/PatientViewMutationsTabUtils';
+import SampleManager, { clinicalValueToSamplesMap } from '../SampleManager';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import { GROUP_BY_NONE } from './VAFChartControls';
-import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import TimelineWrapperStore from './TimelineWrapperStore';
+import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 
 interface IVAFChartProps {
     dataStore: PatientViewMutationsDataStore;
@@ -199,7 +194,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @action
     recalculateTotalHeight() {
         let footerHeight: number = 0;
-        let yPosition = this.sampleYPosition;
+        let yPosition = this.sampleIdToYPosition;
         for (let index in yPosition) {
             if (yPosition[index] > footerHeight)
                 footerHeight = yPosition[index];
@@ -231,7 +226,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             this.props.mutationProfileId,
             this.props.coverageInformation,
             this.props.wrapperStore.groupByOption!,
-            this.sampleToClinicalValue
+            this.sampleIdToClinicalValue
         );
     }
 
@@ -278,6 +273,41 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             });
         });
         return positionList;
+    }
+
+    @computed get sampleGroups() {
+        let sampleGroups: { [groupIndex: number]: string[] } = {};
+        this.sampleEvents.forEach((sample, i) => {
+            sample.event.attributes.forEach((attribute: any, i: number) => {
+                if (attribute.key === 'SAMPLE_ID') {
+                    // check the group value of this sample id
+                    console.info(
+                        'Sample id ' +
+                            attribute.value +
+                            ' is in group ' +
+                            this.sampleIdToClinicalValue[attribute.value]
+                    );
+                    if (
+                        sampleGroups[
+                            this.clinicalValuesForGrouping.indexOf(
+                                this.sampleIdToClinicalValue[attribute.value]
+                            )
+                        ] == undefined
+                    )
+                        sampleGroups[
+                            this.clinicalValuesForGrouping.indexOf(
+                                this.sampleIdToClinicalValue[attribute.value]
+                            )
+                        ] = [];
+                    sampleGroups[
+                        this.clinicalValuesForGrouping.indexOf(
+                            this.sampleIdToClinicalValue[attribute.value]
+                        )
+                    ].push(attribute.value);
+                }
+            });
+        });
+        return sampleGroups;
     }
 
     @computed get yPosition() {
@@ -348,16 +378,11 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return clinicalValuesForGrouping;
     }
 
-    @computed get sampleToClinicalValue() {
-        let sampleToClinicalValue: { [sampleId: string]: string } = {};
-        if (
-            !(
-                this.props.wrapperStore.groupByOption == null ||
-                this.props.wrapperStore.groupByOption === GROUP_BY_NONE
-            )
-        ) {
+    @computed get sampleIdToClinicalValue() {
+        let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
+        if (this.groupingByIsSelected) {
             this.props.sampleManager.samples.forEach((sample, i) => {
-                sampleToClinicalValue[
+                sampleIdToClinicalValue[
                     sample.id
                 ] = SampleManager!.getClinicalAttributeInSample(
                     sample,
@@ -365,52 +390,40 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 )!.value;
             });
         }
-        return sampleToClinicalValue;
+        return sampleIdToClinicalValue;
     }
 
-    @computed get sampleYPosition() {
-        // compute sample y position inside the footer
-        let yStart = 0;
-        let yPosition: { [sampleId: string]: number } = {};
+    @computed get groupingByIsSelected() {
+        return !(
+            this.props.wrapperStore.groupByOption == null ||
+            this.props.wrapperStore.groupByOption === GROUP_BY_NONE
+        );
+    }
+
+    @computed get sampleIdToYPosition() {
+        // compute sample y position on the x-axis footer
+        let yStart = -5.5;
+        let yPositions: { [sampleId: string]: number } = {};
         let xCount: number[] = [];
-        // if a groupByOption was selected, arrange samples by clinical attribute value
-        if (
-            !(
-                this.props.wrapperStore.groupByOption == null ||
-                this.props.wrapperStore.groupByOption === GROUP_BY_NONE
-            )
-        ) {
-            // get for each clinical attribute value the list of corresponding samples
-            let map = clinicalValueToSamplesMap(
-                this.props.sampleManager.samples,
-                this.props.wrapperStore.groupByOption!
+        this.sampleEvents.map((event: TimelineEvent, i: number) => {
+            const sampleId = event.event!.attributes.find(
+                (att: any) => att.key === 'SAMPLE_ID'
             );
-            map.forEach((sampleList: string[], clinicalValue: any) => {
-                let lines = 0;
-                sampleList.forEach((sampleId, i) => {
-                    //const sampleIndex = this.sampleIdOrder[sampleId];
-                    const x = this.xPosition[sampleId];
-                    xCount[x] = xCount[x] ? xCount[x] + 1 : 1;
-                    if (xCount[x] > lines) lines = xCount[x];
-                    yPosition[sampleId] = yStart + xCount[x] * 15;
-                });
-                // get also the y position of label
-                yPosition[clinicalValue] = yStart;
-                yStart = yStart + 15 * lines;
-            });
-        }
-        // else arrange them only by startdate (one under the other when having same startdate)
-        else {
-            this.sampleEvents.map((event: TimelineEvent, i: number) => {
-                const sampleId = event.event!.attributes.find(
-                    (att: any) => att.key === 'SAMPLE_ID'
-                );
-                const x = this.xPosition[sampleId.value];
-                xCount[x] = xCount[x] ? xCount[x] + 1 : 1;
-                yPosition[sampleId.value] = yStart + xCount[x] * 15;
-            });
-        }
-        return yPosition;
+            const x = this.xPosition[sampleId.value];
+            xCount[x] = xCount[x] ? xCount[x] + 1 : 1;
+            yPositions[sampleId.value] = yStart + xCount[x] * 15;
+        });
+        return yPositions;
+    }
+
+    @computed get groupIndexToTrackHeight() {
+        return _.mapValues(this.sampleGroups, (sampleIds: string[]) => {
+            const yPositions = _(sampleIds)
+                .map((i: string) => this.sampleIdToYPosition[i])
+                .uniq()
+                .value();
+            return yPositions.length * 20; // FIXME do lookup height in TimelineLib
+        });
     }
 
     @autobind
@@ -551,7 +564,26 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         }
     }
 
+    @action
+    // Update store with groupBy sample tracks
+    setGroupByTracks() {
+        const tracks: CustomTrackSpecification[] = [];
+        _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
+            const index = parseInt(key);
+            tracks.push({
+                renderHeader: () => this.groupByTrackLabel(index),
+                renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
+                height: () => this.groupIndexToTrackHeight[index],
+                labelForExport: this.clinicalValuesForGrouping[index],
+            });
+        });
+        this.props.wrapperStore.groupByTracks = tracks;
+    }
+
     render() {
+        // FIXME move out of render method
+        if (this.groupingByIsSelected) this.setGroupByTracks();
+
         return (
             <svg
                 width={this.props.store.pixelWidth}
@@ -581,18 +613,9 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                 vaf: d.y,
                             };
 
-                            let color = 'rgb(0,0,0)';
-                            if (
-                                !(
-                                    this.props.wrapperStore.groupByOption ==
-                                        null ||
-                                    this.props.wrapperStore.groupByOption ===
-                                        GROUP_BY_NONE
-                                )
-                            )
-                                color = this.clinicalValueToColor[
-                                    this.sampleToClinicalValue[d.sampleId]
-                                ];
+                            const color = this.groupingByIsSelected
+                                ? this.groupColorBySampleId(d.sampleId)
+                                : 'rgb(0,0,0)';
 
                             return (
                                 <g>
@@ -626,53 +649,66 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                     }
                 )}
 
-                <g transform={`translate(0,${this.dataHeight})`}>
-                    {this.sampleEvents.map(
-                        (event: TimelineEvent, i: number) => {
-                            const sampleId = event.event!.attributes.find(
-                                (att: any) => att.key === 'SAMPLE_ID'
-                            );
-                            const x = this.xPosition[sampleId.value];
-                            const y = this.sampleYPosition[sampleId.value];
-                            const color =
-                                this.props.sampleMetaData.color[
-                                    sampleId.value
-                                ] || '#333333';
-                            const label =
-                                this.props.sampleMetaData.label[
-                                    sampleId.value
-                                ] || '-';
-                            return (
-                                <g transform={`translate(${x})`}>
-                                    <SampleMarker
-                                        color={color}
-                                        label={label}
-                                        y={y}
-                                    />
-                                </g>
-                            );
-                        }
-                    )}
-                </g>
-                <g transform={`translate(0,${this.dataHeight})`}>
-                    {this.clinicalValuesForGrouping.map((label, index) => {
-                        return (
-                            <g transform={`translate(0,0)`}>
-                                <text
-                                    y={this.sampleYPosition[label] + 15 + 7.5}
-                                    font-family="sans-serif"
-                                    font-size="12px"
-                                    fill={this.clinicalValueToColor[label]}
-                                >
-                                    {label}
-                                </text>
-                            </g>
-                        );
-                    })}
-                </g>
+                {!this.groupingByIsSelected && this.sampleIcons()}
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>
             </svg>
+        );
+    }
+
+    @autobind
+    sampleIcons() {
+        const svg = (
+            <g transform={`translate(0,${this.dataHeight})`}>
+                {this.sampleEvents.map((event: TimelineEvent, i: number) => {
+                    const sampleId = event.event!.attributes.find(
+                        (att: any) => att.key === 'SAMPLE_ID'
+                    );
+                    return this.sampleIcon(sampleId.value);
+                })}
+            </g>
+        );
+        return svg;
+    }
+
+    @autobind
+    sampeIconsGroupByTrack(sampleIds: string[]) {
+        return <g>{sampleIds.map(sampleId => this.sampleIcon(sampleId))}</g>;
+    }
+
+    @autobind
+    groupByTrackLabel(groupIndex: number) {
+        return (
+            <text style={{ color: this.groupColorByGroupIndex(groupIndex) }}>
+                {this.clinicalValuesForGrouping[groupIndex]}
+            </text>
+        );
+    }
+
+    @autobind
+    groupColorByGroupIndex(groupIndex: number) {
+        return this.clinicalValueToColor[
+            this.clinicalValuesForGrouping[groupIndex]
+        ];
+    }
+
+    @autobind
+    groupColorBySampleId(sampleId: string) {
+        return this.clinicalValueToColor[
+            this.sampleIdToClinicalValue[sampleId]
+        ];
+    }
+
+    @autobind
+    sampleIcon(sampleId: string) {
+        const x = this.xPosition[sampleId];
+        const y = this.sampleIdToYPosition[sampleId];
+        const color = this.props.sampleMetaData.color[sampleId] || '#333333';
+        const label = this.props.sampleMetaData.label[sampleId] || '-';
+        return (
+            <g transform={`translate(${x})`}>
+                <SampleMarker color={color} label={label} y={y} />
+            </g>
         );
     }
 }

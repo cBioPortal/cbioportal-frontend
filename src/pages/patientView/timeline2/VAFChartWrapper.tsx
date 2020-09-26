@@ -25,6 +25,9 @@ import {
     configureGenieTimeline,
     sortTracks,
 } from 'pages/patientView/timeline2/helpers';
+import { computed } from 'mobx';
+import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
+import { wrapper } from 'react-bootstrap/lib/utils/deprecationWarning';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -96,55 +99,51 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
             (window as any).store = store1;
         }, []);
 
-        if (stores && wrapperStore) {
-            return (
-                <>
-                    <div>
-                        <VAFChartControls
-                            wrapperStore={wrapperStore}
-                            sampleManager={sampleManager}
-                        />
-                        <Timeline
-                            store={stores[0]}
-                            width={width}
-                            headerWidth={150}
-                            onClickDownload={() => downloadZippedTracks(data)}
-                            hideLabels={false}
-                            hideXAxis={true}
-                            visibleTracks={[]}
-                            customTracks={[
-                                {
-                                    renderHeader: () => 'VAF',
-                                    renderTrack: (store: TimelineStore) => (
-                                        <VAFChart
-                                            dataStore={dataStore}
-                                            store={store}
-                                            wrapperStore={wrapperStore}
-                                            sampleMetaData={caseMetaData}
-                                            samples={samples}
-                                            mutationProfileId={
-                                                mutationProfileId
-                                            }
-                                            coverageInformation={
-                                                coverageInformation
-                                            }
-                                            sampleManager={sampleManager}
-                                        />
-                                    ),
-                                    height: (store: TimelineStore) => {
-                                        return wrapperStore.vafChartHeight;
-                                    },
-                                    disableHover: true,
-                                    labelForExport: 'VAF',
-                                },
-                            ]}
-                        />
-                    </div>
-                </>
-            );
-        } else {
-            return <div />;
-        }
+        if (!stores || !wrapperStore) return null;
+
+        const groupByTracks = wrapperStore.groupByTracks;
+
+        const vafPlotTrack = {
+            renderHeader: () => 'VAF',
+            renderTrack: (store: TimelineStore) => (
+                <VAFChart
+                    dataStore={dataStore}
+                    store={store}
+                    wrapperStore={wrapperStore}
+                    sampleMetaData={caseMetaData}
+                    samples={samples}
+                    mutationProfileId={mutationProfileId}
+                    coverageInformation={coverageInformation}
+                    sampleManager={sampleManager}
+                />
+            ),
+            height: (store: TimelineStore) => {
+                return wrapperStore.vafChartHeight;
+            },
+            labelForExport: 'VAF',
+        } as CustomTrackSpecification;
+
+        let customTracks = [vafPlotTrack].concat(wrapperStore.groupByTracks);
+
+        return (
+            <>
+                <div style={{ marginTop: 20 }}>
+                    <VAFChartControls
+                        wrapperStore={wrapperStore}
+                        sampleManager={sampleManager}
+                    />
+                    <Timeline
+                        store={stores[0]}
+                        width={width}
+                        onClickDownload={() => downloadZippedTracks(data)}
+                        hideLabels={false}
+                        hideXAxis={true} // make dynamic - only show when not in sequential mode
+                        visibleTracks={[]}
+                        customTracks={customTracks}
+                    />
+                </div>
+            </>
+        );
     }
 );
 
