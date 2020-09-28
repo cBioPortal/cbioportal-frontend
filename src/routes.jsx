@@ -74,6 +74,19 @@ function tabParamValidator(tabEnum) {
     };
 }
 
+function comparisonTabParamValidator() {
+    // comparison tab includes generic assay tabs which is not predictable
+    // validate tabs by checking it's degined in GroupComparisonTab
+    // or validate generic assay tabs by checking if it starts with GroupComparisonTab.GENERIC_ASSAY_PREFIX
+    return function(params) {
+        return (
+            !params.tab ||
+            Object.values(GroupComparisonTab).indexOf(params.tab) > -1 ||
+            !params.tab.startsWith(GroupComparisonTab.GENERIC_ASSAY_PREFIX)
+        );
+    };
+}
+
 /**
  * Validates results page and patient page custom tabs
  * @param location
@@ -242,7 +255,7 @@ export const makeRoutes = routing => {
                 getComponent={lazyLoadComponent(
                     GroupComparisonPage,
                     null,
-                    tabParamValidator(GroupComparisonTab)
+                    comparisonTabParamValidator
                 )}
             />
 

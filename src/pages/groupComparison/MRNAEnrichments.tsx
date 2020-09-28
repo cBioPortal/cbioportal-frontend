@@ -45,6 +45,7 @@ export default class MRNAEnrichments extends React.Component<
             this.props.store.mrnaEnrichmentAnalysisGroups,
             this.props.store.studies,
             this.props.store.sampleKeyToSample,
+            this.props.store.mRNAEnrichmentProfiles,
         ],
         render: () => {
             // since mRNA enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
@@ -57,7 +58,9 @@ export default class MRNAEnrichments extends React.Component<
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
                     <EnrichmentsDataSetDropdown
-                        dataSets={this.props.store.mRNAEnrichmentProfiles}
+                        dataSets={
+                            this.props.store.mRNAEnrichmentProfiles.result!
+                        }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
                             this.props.store.selectedmRNAEnrichmentProfileMap
