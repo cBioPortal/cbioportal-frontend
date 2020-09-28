@@ -1,13 +1,20 @@
 import React from 'react';
 import { Observer, observer } from 'mobx-react';
-import { action, computed } from 'mobx';
+import { action, autorun, computed } from 'mobx';
 import autobind from 'autobind-decorator';
 import { TimelineEvent, TimelineStore } from 'cbioportal-clinical-timeline';
 import SampleMarker from './SampleMarker';
 import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import { computeRenderData, IPoint } from '../mutation/VAFLineChartUtils';
+import {
+    ceil10,
+    computeRenderData,
+    floor10,
+    getYAxisTickmarks,
+    IPoint,
+    numLeadingDecimalZeros,
+} from '../mutation/VAFLineChartUtils';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import _ from 'lodash';
 import { Popover } from 'react-bootstrap';
@@ -26,6 +33,7 @@ import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtil
 import { GROUP_BY_NONE } from './VAFChartControls';
 import TimelineWrapperStore from './TimelineWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
+import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 
 interface IVAFChartProps {
     dataStore: PatientViewMutationsDataStore;
@@ -226,6 +234,60 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         );
     }
 
+    @computed get minYValue() {
+        return _(this.renderData.lineData)
+            .flatten()
+            .map((d: IPoint) => d.y)
+            .min();
+    }
+
+    @computed get maxYValue() {
+        return _(this.renderData.lineData)
+            .flatten()
+            .map((d: IPoint) => d.y)
+            .max();
+    }
+
+    @computed get maxYTickmark() {
+        if (
+            !this.props.wrapperStore.vafChartYAxisToDataRange ||
+            this.maxYValue === undefined
+        )
+            return 1;
+        return ceil10(
+            this.maxYValue,
+            -numLeadingDecimalZeros(this.maxYValue) - 1
+        );
+    }
+
+    @computed get minYTickmark() {
+        if (
+            !this.props.wrapperStore.vafChartYAxisToDataRange ||
+            this.minYValue === undefined
+        )
+            return 0;
+        return floor10(
+            this.minYValue,
+            -numLeadingDecimalZeros(this.minYValue) - 1
+        );
+    }
+
+    @computed get ticks(): { label: string; value: number; offset: number }[] {
+        const yPadding = 10;
+        const tickmarkValues = getYAxisTickmarks(
+            this.minYTickmark,
+            this.maxYTickmark
+        );
+        const numDecimals = numLeadingDecimalZeros(this.minYTickmark) + 1;
+        return _.map(tickmarkValues, (v: number) => {
+            return {
+                label: v.toFixed(numDecimals),
+                value: v,
+                offset: this.scaleYValue(v),
+            };
+        });
+    }
+
     @computed get lineData() {
         let scaledData: IPoint[][] = [];
         this.renderData.lineData.map((dataPoints: IPoint[], index: number) => {
@@ -282,6 +344,16 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return positionList;
     }
 
+    @computed get yPosition() {
+        let scaledY: { [originalY: number]: number } = {};
+        this.renderData.lineData.forEach((data: IPoint[], index: number) => {
+            data.forEach((d: IPoint, i: number) => {
+                scaledY[d.y] = this.scaleYValue(d.y);
+            });
+        });
+        return scaledY;
+    }
+
     @computed get sampleGroups() {
         let sampleGroups: { [groupIndex: number]: string[] } = {};
         this.sampleEvents.forEach((sample, i) => {
@@ -317,46 +389,57 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return sampleGroups;
     }
 
-    @computed get yPosition() {
-        let scaledY: { [originalY: number]: number } = {};
-        let minY = this.props.wrapperStore.dataHeight,
-            maxY = 0;
-        this.renderData.lineData.forEach((data: IPoint[], index: number) => {
-            data.forEach((d: IPoint, i: number) => {
-                if (this.props.wrapperStore.vafChartLogScale)
-                    scaledY[d.y] =
-                        this.props.wrapperStore.dataHeight -
-                        (Math.log10(Math.max(MIN_LOG_ARG, d.y)) / 2 + 1) *
-                            this.props.wrapperStore.dataHeight;
-                else
-                    scaledY[d.y] =
-                        this.props.wrapperStore.dataHeight -
-                        d.y * this.props.wrapperStore.dataHeight;
-                if (scaledY[d.y] < minY) minY = scaledY[d.y];
-                if (scaledY[d.y] > maxY) maxY = scaledY[d.y];
-            });
-        });
+    // of datum value on svg y-axis coordinate system
+    @computed get scaleYValue() {
+        const yPadding = 10;
 
         if (
-            this.props.wrapperStore.vafChartYAxisToDataRange &&
-            (minY > 0 || maxY < this.props.wrapperStore.dataHeight)
+            this.maxYTickmark !== undefined &&
+            this.minYTickmark !== undefined
         ) {
-            this.props.wrapperStore.maxYAxisToDataRange = maxY;
-            this.props.wrapperStore.minYAxisToDataRange = minY;
-            // recalculate scaledY for this range only
-            this.renderData.lineData.forEach(
-                (data: IPoint[], index: number) => {
-                    data.forEach((d: IPoint, i: number) => {
-                        scaledY[d.y] =
-                            ((this.props.wrapperStore.dataHeight - 1) *
-                                (scaledY[d.y] - minY)) /
-                                (maxY - minY) +
-                            1;
-                    });
-                }
-            );
+            // when truncating the range of values is distributed
+            // differently over the svg vertical space
+            const rangeMinusPadding =
+                this.props.wrapperStore.dataHeight - yPadding * 2;
+
+            if (this.props.wrapperStore.vafChartLogScale) {
+                const logMinTickmark = Math.log10(
+                    Math.max(MIN_LOG_ARG, this.minYTickmark)
+                );
+                const logMaxTickmark = Math.log10(
+                    Math.max(MIN_LOG_ARG, this.maxYTickmark)
+                );
+                const valueRange = logMaxTickmark - logMinTickmark;
+                const linearTransformationScale =
+                    rangeMinusPadding / valueRange;
+
+                return (y: number) => {
+                    const logY = Math.log10(Math.max(MIN_LOG_ARG, y));
+                    // translate so that min tickmark represents the 0 line
+                    const translatedY = logY - logMinTickmark;
+                    return (
+                        this.props.wrapperStore.dataHeight -
+                        yPadding -
+                        translatedY * linearTransformationScale
+                    );
+                };
+            } else {
+                const valueRange = this.maxYTickmark - this.minYTickmark;
+                const linearTransformationScale =
+                    rangeMinusPadding / valueRange;
+
+                return (y: number) => {
+                    // translate so that min tickmark represents the 0 line
+                    const translatedY = y - this.minYTickmark;
+                    return (
+                        this.props.wrapperStore.dataHeight -
+                        yPadding -
+                        translatedY * linearTransformationScale
+                    );
+                };
+            }
         }
-        return scaledY;
+        return (y: number) => y;
     }
 
     @computed get sampleIdOrder() {
@@ -594,10 +677,30 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         this.props.wrapperStore.groupByTracks = tracks;
     }
 
-    render() {
-        // FIXME move out of render method
-        if (this.groupingByIsSelected) this.setGroupByTracks();
+    yAxisHeaderReaction = autorun(() => {
+        this.renderHeader(this.ticks);
+    });
 
+    groupByTracksReaction = autorun(() => {
+        if (this.groupingByIsSelected) this.setGroupByTracks();
+    });
+
+    destroy() {
+        this.yAxisHeaderReaction();
+        this.groupByTracksReaction();
+    }
+
+    @action
+    renderHeader(ticks: { label: string; value: number; offset: number }[]) {
+        this.props.wrapperStore.vafPlotHeader = (store: TimelineStore) => (
+            <VAFChartHeader
+                ticks={ticks}
+                legendHeight={this.props.wrapperStore.vafChartHeight}
+            />
+        );
+    }
+
+    render() {
         return (
             <svg
                 width={this.props.store.pixelWidth}

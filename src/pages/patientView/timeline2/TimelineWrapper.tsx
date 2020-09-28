@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
-import { VAFChartControls, VAFChartHeader } from './VAFChartControls';
+import { VAFChartControls } from './VAFChartControls';
 import VAFChart from 'pages/patientView/timeline2/VAFChart';
 import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 

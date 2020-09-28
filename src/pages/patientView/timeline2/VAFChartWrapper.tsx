@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import _ from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
-import { Sample } from 'cbioportal-ts-api-client';
+import { ClinicalEvent, Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
-import { VAFChartControls, VAFChartHeader } from './VAFChartControls';
+import { VAFChartControls } from './VAFChartControls';
 import VAFChart from 'pages/patientView/timeline2/VAFChart';
 import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 
@@ -16,8 +15,6 @@ import {
     TimelineStore,
     TimelineTrackSpecification,
 } from 'cbioportal-clinical-timeline';
-
-import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import SampleManager from 'pages/patientView/SampleManager';
 import { downloadZippedTracks } from 'pages/patientView/timeline/timelineTSV';
 import {
@@ -25,9 +22,7 @@ import {
     configureGenieTimeline,
     sortTracks,
 } from 'pages/patientView/timeline2/helpers';
-import { computed } from 'mobx';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
-import { wrapper } from 'react-bootstrap/lib/utils/deprecationWarning';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -104,9 +99,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
         const groupByTracks = wrapperStore.groupByTracks;
 
         const vafPlotTrack = {
-            renderHeader: (store: TimelineStore) => (
-                <VAFChartHeader wrapperStore={wrapperStore} />
-            ),
+            renderHeader: wrapperStore.vafPlotHeader,
             renderTrack: (store: TimelineStore) => (
                 <VAFChart
                     dataStore={dataStore}

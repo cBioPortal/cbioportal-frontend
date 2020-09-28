@@ -210,3 +210,68 @@ export function computeRenderData(
         grayPoints,
     };
 }
+
+export function getYAxisTickmarks(
+    minY: number,
+    maxY: number,
+    numTicks: number = 6
+): number[] {
+    const tickmarkSize = (maxY - minY) / (numTicks - 1);
+    const tickMarks = [minY];
+    for (let i = 1; i < numTicks; i++) {
+        const rawValue = tickMarks[i - 1] + tickmarkSize;
+        tickMarks[i] = rawValue;
+    }
+    return tickMarks;
+}
+
+/**
+ * Decimal adjustment of a number.
+ * from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/floor
+ * @param {String}  type  The type of adjustment.
+ * @param {Number}  value The number.
+ * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+ * @returns {Number} The adjusted value.
+ */
+function decimalAdjust(
+    type: 'floor' | 'ceil' | 'round',
+    value: number,
+    exp: number
+) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    // If the value is not a number or the exp is not an integer...
+    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+    }
+    // Shift
+    let shiftStr = value.toString().split('e');
+    let shiftNum = Math[type](
+        +(shiftStr[0] + 'e' + (shiftStr[1] ? +shiftStr[1] - exp : -exp))
+    );
+    // Shift back
+    shiftStr = shiftNum.toString().split('e');
+    return +(shiftStr[0] + 'e' + (shiftStr[1] ? +shiftStr[1] + exp : exp));
+}
+
+// Convenience functions for decimal round, floor and ceil
+export function round10(value: number, exp: number) {
+    return decimalAdjust('round', value, exp);
+}
+export function floor10(value: number, exp: number) {
+    return decimalAdjust('floor', value, exp);
+}
+export function ceil10(value: number, exp: number) {
+    return decimalAdjust('ceil', value, exp);
+}
+
+// Number of zero's between comma and first digit
+// Examples: 0 -> 0, 0.1 -> 0, 0.01 -> 1, 0.0001 -> 3
+export function numLeadingDecimalZeros(y: number) {
+    if (y === 0 || y >= 0.1) return 0;
+    return -Math.floor(Math.log10(y) / Math.log10(10) + 1);
+}
