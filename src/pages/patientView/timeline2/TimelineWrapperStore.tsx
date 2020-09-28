@@ -11,11 +11,19 @@ export default class TimelineWrapperStore {
 
     @observable vafChartHeight: number = 240;
 
+    @observable showSequentialMode: boolean | undefined = undefined;
+
     @observable onlyShowSelectedInVAFChart: boolean | undefined = undefined;
 
     @observable vafChartLogScale: boolean | undefined = undefined;
 
     @observable vafChartYAxisToDataRange: boolean | undefined = undefined;
+
+    @observable minYAxisToDataRange: number = 0;
+
+    @observable maxYAxisToDataRange: number = 0;
+
+    @observable dataHeight: number = 200;
 
     @observable.ref tooltipModel: {
         datum: {
@@ -41,6 +49,11 @@ export default class TimelineWrapperStore {
     @action
     setGroupByOption(value: string) {
         this.groupByOption = value;
+    }
+
+    @action
+    setShowSequentialMode(value: boolean) {
+        this.showSequentialMode = value;
     }
 
     @action

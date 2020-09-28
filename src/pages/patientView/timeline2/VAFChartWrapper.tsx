@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
-import VAFChartControls from './VAFChartControls';
+import { VAFChartControls, VAFChartHeader } from './VAFChartControls';
 import VAFChart from 'pages/patientView/timeline2/VAFChart';
 import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 
@@ -104,7 +104,9 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
         const groupByTracks = wrapperStore.groupByTracks;
 
         const vafPlotTrack = {
-            renderHeader: () => 'VAF',
+            renderHeader: (store: TimelineStore) => (
+                <VAFChartHeader wrapperStore={wrapperStore} />
+            ),
             renderTrack: (store: TimelineStore) => (
                 <VAFChart
                     dataStore={dataStore}
@@ -117,6 +119,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                     sampleManager={sampleManager}
                 />
             ),
+            disableHover: true,
             height: (store: TimelineStore) => {
                 return wrapperStore.vafChartHeight;
             },
@@ -137,7 +140,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                         width={width}
                         onClickDownload={() => downloadZippedTracks(data)}
                         hideLabels={false}
-                        hideXAxis={true} // make dynamic - only show when not in sequential mode
+                        hideXAxis={wrapperStore.showSequentialMode}
                         visibleTracks={[]}
                         customTracks={customTracks}
                     />
