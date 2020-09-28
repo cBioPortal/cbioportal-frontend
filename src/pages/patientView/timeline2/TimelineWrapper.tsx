@@ -136,46 +136,46 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                         </div>
                     </div>
 
-                    <div style={{ marginTop: 20 }}>
-                        <Timeline
-                            store={stores[1]}
-                            width={width}
-                            onClickDownload={() => downloadZippedTracks(data)}
-                            hideLabels={false}
-                            hideXAxis={true}
-                            visibleTracks={[]}
-                            customTracks={[
-                                {
-                                    renderHeader: () => 'VAF',
-                                    renderTrack: (store: TimelineStore) => (
-                                        <VAFChart
-                                            dataStore={dataStore}
-                                            store={store}
-                                            wrapperStore={wrapperStore}
-                                            sampleMetaData={caseMetaData}
-                                            samples={samples}
-                                            mutationProfileId={
-                                                mutationProfileId
-                                            }
-                                            coverageInformation={
-                                                coverageInformation
-                                            }
-                                            sampleManager={sampleManager}
-                                        />
-                                    ),
-                                    disableHover: true,
-                                    height: (store: TimelineStore) => {
-                                        return wrapperStore.vafChartHeight;
-                                    },
-                                    labelForExport: 'VAF',
-                                },
-                            ]}
-                        />
-                        <VAFChartControls
-                            wrapperStore={wrapperStore}
-                            sampleManager={sampleManager}
-                        />
-                    </div>
+                    {/*<div style={{ marginTop: 20 }}>*/}
+                    {/*    <Timeline*/}
+                    {/*        store={stores[1]}*/}
+                    {/*        width={width}*/}
+                    {/*        onClickDownload={() => downloadZippedTracks(data)}*/}
+                    {/*        hideLabels={false}*/}
+                    {/*        hideXAxis={true}*/}
+                    {/*        visibleTracks={[]}*/}
+                    {/*        customTracks={[*/}
+                    {/*            {*/}
+                    {/*                renderHeader: () => 'VAF',*/}
+                    {/*                renderTrack: (store: TimelineStore) => (*/}
+                    {/*                    <VAFChart*/}
+                    {/*                        dataStore={dataStore}*/}
+                    {/*                        store={store}*/}
+                    {/*                        wrapperStore={wrapperStore}*/}
+                    {/*                        sampleMetaData={caseMetaData}*/}
+                    {/*                        samples={samples}*/}
+                    {/*                        mutationProfileId={*/}
+                    {/*                            mutationProfileId*/}
+                    {/*                        }*/}
+                    {/*                        coverageInformation={*/}
+                    {/*                            coverageInformation*/}
+                    {/*                        }*/}
+                    {/*                        sampleManager={sampleManager}*/}
+                    {/*                    />*/}
+                    {/*                ),*/}
+                    {/*                disableHover: true,*/}
+                    {/*                height: (store: TimelineStore) => {*/}
+                    {/*                    return wrapperStore.vafChartHeight;*/}
+                    {/*                },*/}
+                    {/*                labelForExport: 'VAF',*/}
+                    {/*            },*/}
+                    {/*        ]}*/}
+                    {/*    />*/}
+                    {/*    <VAFChartControls*/}
+                    {/*        wrapperStore={wrapperStore}*/}
+                    {/*        sampleManager={sampleManager}*/}
+                    {/*    />*/}
+                    {/*</div>*/}
                 </>
             );
         } else {

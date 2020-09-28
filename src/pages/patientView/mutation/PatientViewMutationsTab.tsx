@@ -23,6 +23,7 @@ import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
 import Timeline from '../timeline/Timeline';
 import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
+import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
 
 export interface IPatientViewMutationsTabProps {
     patientViewPageStore: PatientViewPageStore;
@@ -445,10 +446,34 @@ export default class PatientViewMutationsTab extends React.Component<
                         </button>
                         {this.showTimeline && (
                             <div style={{ marginTop: 10 }}>
-                                <Timeline
-                                    store={this.props.patientViewPageStore}
-                                    width={WindowStore.size.width - 100}
+                                <TimelineWrapper
+                                    dataStore={this.dataStore}
+                                    caseMetaData={{
+                                        color: this.props.sampleManager
+                                            .sampleColors,
+                                        label: this.props.sampleManager
+                                            .sampleLabels,
+                                        index: this.props.sampleManager
+                                            .sampleIndex,
+                                    }}
+                                    data={
+                                        this.props.patientViewPageStore
+                                            .clinicalEvents.result
+                                    }
                                     sampleManager={this.props.sampleManager}
+                                    width={WindowStore.size.width}
+                                    samples={
+                                        this.props.patientViewPageStore.samples
+                                            .result
+                                    }
+                                    mutationProfileId={
+                                        this.props.patientViewPageStore
+                                            .mutationMolecularProfileId.result!
+                                    }
+                                    coverageInformation={
+                                        this.props.patientViewPageStore
+                                            .coverageInformation.result
+                                    }
                                 />
                             </div>
                         )}

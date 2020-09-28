@@ -74,7 +74,6 @@ import {
     extractResourceIdFromTabId,
     getPatientViewResourceTabId,
     PatientViewPageTabs,
-    PatientViewResourceTabPrefix,
 } from './PatientViewPageTabs';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
@@ -82,7 +81,6 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import TimelineWrapper from './timeline2/TimelineWrapper';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 
 export interface IPatientViewPageProps {
     params: any; // react route
