@@ -62,7 +62,7 @@ import TrialMatchTable from './trialMatch/TrialMatchTable';
 import 'cbioportal-frontend-commons/dist/styles.css';
 import 'react-mutation-mapper/dist/styles.css';
 import 'react-table/react-table.css';
-import { trackPatient, trackEvent } from 'shared/lib/tracking';
+import { trackPatient } from 'shared/lib/tracking';
 import PatientViewUrlWrapper from './PatientViewUrlWrapper';
 import { PagePath } from 'shared/enums/PagePaths';
 import { GeneFilterOption } from './mutation/GeneFilterMenu';
@@ -73,7 +73,6 @@ import {
     extractResourceIdFromTabId,
     getPatientViewResourceTabId,
     PatientViewPageTabs,
-    PatientViewResourceTabPrefix,
 } from './PatientViewPageTabs';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
@@ -81,7 +80,6 @@ import ResourceTab from '../../shared/components/resources/ResourceTab';
 import TimelineWrapper from './timeline2/TimelineWrapper';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
 
 export interface IPatientViewPageProps {
