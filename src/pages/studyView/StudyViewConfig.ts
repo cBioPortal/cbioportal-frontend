@@ -116,6 +116,8 @@ const studyViewFrontEnd = {
         MUTATED_GENES_TABLE: 90,
         FUSION_GENES_TABLE: 85,
         CNA_GENES_TABLE: 80,
+        PATIENT_TREATMENTS_TABLE: 75,
+        SAMPLE_TREATMENTS_TABLE: 75,
         CANCER_STUDIES: 70,
         SEQUENCED: 60,
         HAS_CNA_DATA: 50,
