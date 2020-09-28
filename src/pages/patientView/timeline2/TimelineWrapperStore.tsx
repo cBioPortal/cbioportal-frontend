@@ -3,11 +3,18 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
+import { TimelineStore } from 'cbioportal-clinical-timeline';
 
 export default class TimelineWrapperStore {
+    // static dataHeight: number = 200;
+
     @observable groupByOption: string | null = null;
 
     @observable.ref groupByTracks: CustomTrackSpecification[] = [];
+
+    @observable vafPlotHeader: (store: TimelineStore) => any = (
+        store: TimelineStore
+    ) => 'VAF';
 
     @observable vafChartHeight: number = 240;
 
