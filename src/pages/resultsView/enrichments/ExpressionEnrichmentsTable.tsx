@@ -9,7 +9,7 @@ import { Checkbox } from 'react-bootstrap';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from './styles.module.scss';
-import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
+import { ExpressionEnrichmentRow } from 'shared/model/EnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';

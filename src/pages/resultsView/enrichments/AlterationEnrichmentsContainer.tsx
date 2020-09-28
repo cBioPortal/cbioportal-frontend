@@ -92,8 +92,18 @@ export default class AlterationEnrichmentContainer extends React.Component<
             this.data,
             this._enrichedGroups,
             this.significanceFilter,
-            this.selectedGenes
+            this.filterByGene
         );
+    }
+
+    @autobind
+    private filterByGene(hugoGeneSymbol: string) {
+        if (this.selectedGenes) {
+            return this.selectedGenes.includes(hugoGeneSymbol);
+        } else {
+            // no need to filter the data since there is no selection
+            return true;
+        }
     }
 
     @autobind
@@ -418,7 +428,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             }
                             xAxisDomain={15}
                             xAxisTickValues={[-10, 0, 10]}
-                            selectedGenesSet={this.selectedGenesSet}
+                            selectedSet={this.selectedGenesSet}
                             onGeneNameClick={this.onGeneNameClick}
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared}
