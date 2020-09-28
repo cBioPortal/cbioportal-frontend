@@ -710,7 +710,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.borderWidth
                         )}
-                        height={getHeightByDimension(
+                        height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
@@ -738,7 +738,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.borderWidth
                         )}
-                        height={getHeightByDimension(
+                        height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
