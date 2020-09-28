@@ -55,6 +55,7 @@ import BoxScatterPlot, {
 import { ColoringType, PlotType } from '../plots/PlotsTab';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 
 export interface ExpressionWrapperProps {
     store: ResultsViewPageStore;
@@ -146,14 +147,7 @@ export default class ExpressionWrapper extends React.Component<
     }
 
     @computed get boxWidth() {
-        const maxWidth = 80; // width with 1 box
-        const minWidth = 18; // width with 33 boxes - value of 18 is calibrated to fit all 33 tcga pan-can atlas studies
-
-        // solving linear equation for maxWidth at 1 and minWidth at 33
-        const m = (minWidth - maxWidth) / 32;
-        const b = maxWidth - m;
-
-        return Math.max(m * this.selectedStudies.length + b, minWidth);
+        return getBoxWidth(this.selectedStudies.length);
     }
 
     readonly sampleStudyData = remoteData<IStringAxisData>({

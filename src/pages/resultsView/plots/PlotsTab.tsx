@@ -106,6 +106,7 @@ import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledC
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 
 enum EventKey {
     horz_logScale,
@@ -4182,16 +4183,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get boxPlotBoxWidth() {
-        const SMALL_BOX_WIDTH = 30;
-        const LARGE_BOX_WIDTH = 60;
-
         if (this.boxPlotData.isComplete) {
-            return this.boxPlotData.result.data.length > 7
-                ? SMALL_BOX_WIDTH
-                : LARGE_BOX_WIDTH;
+            return getBoxWidth(this.boxPlotData.result.data.length);
         } else {
             // irrelevant - nothing should be plotted anyway
-            return SMALL_BOX_WIDTH;
+            return 10;
         }
     }
 
@@ -4540,7 +4536,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 <PlotsTabBoxPlot
                                     svgId={SVG_ID}
                                     svgRef={this.assignPlotSvgRef}
-                                    domainPadding={75}
+                                    domainPadding={50}
                                     boxWidth={this.boxPlotBoxWidth}
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
