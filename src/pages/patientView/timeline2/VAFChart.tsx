@@ -187,10 +187,6 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return 20;
     }
 
-    @computed get dataHeight() {
-        return 200;
-    }
-
     @action
     recalculateTotalHeight() {
         let footerHeight: number = 0;
@@ -202,10 +198,10 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         footerHeight = footerHeight + 20;
 
         this.props.wrapperStore.setVafChartHeight(
-            _.sum([this.dataHeight, footerHeight])
+            _.sum([this.props.wrapperStore.dataHeight, footerHeight])
         );
 
-        return _.sum([this.dataHeight, footerHeight]);
+        return _.sum([this.props.wrapperStore.dataHeight, footerHeight]);
     }
 
     @computed get mutations() {
@@ -263,12 +259,23 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @computed get xPosition() {
         let positionList: { [sampleId: string]: number } = {};
+        let sequentialDistance: number = 0;
+        let sequentialPadding: number = 10;
+        if (this.props.wrapperStore.showSequentialMode) {
+            sequentialDistance =
+                (this.props.store.pixelWidth - sequentialPadding * 2) /
+                (this.sampleEvents.length - 1);
+        }
+
         this.sampleEvents.forEach((sample, i) => {
             sample.event.attributes.forEach((attribute: any, i: number) => {
                 if (attribute.key === 'SAMPLE_ID') {
-                    positionList[
-                        attribute.value
-                    ] = this.props.store.getPosition(sample)!.pixelLeft;
+                    positionList[attribute.value] = this.props.wrapperStore
+                        .showSequentialMode
+                        ? this.sampleIdOrder[attribute.value] *
+                              sequentialDistance +
+                          sequentialPadding
+                        : this.props.store.getPosition(sample)!.pixelLeft;
                 }
             });
         });
@@ -312,16 +319,19 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @computed get yPosition() {
         let scaledY: { [originalY: number]: number } = {};
-        let minY = this.dataHeight,
+        let minY = this.props.wrapperStore.dataHeight,
             maxY = 0;
         this.renderData.lineData.forEach((data: IPoint[], index: number) => {
             data.forEach((d: IPoint, i: number) => {
                 if (this.props.wrapperStore.vafChartLogScale)
                     scaledY[d.y] =
-                        this.dataHeight -
+                        this.props.wrapperStore.dataHeight -
                         (Math.log10(Math.max(MIN_LOG_ARG, d.y)) / 2 + 1) *
-                            this.dataHeight;
-                else scaledY[d.y] = this.dataHeight - d.y * this.dataHeight;
+                            this.props.wrapperStore.dataHeight;
+                else
+                    scaledY[d.y] =
+                        this.props.wrapperStore.dataHeight -
+                        d.y * this.props.wrapperStore.dataHeight;
                 if (scaledY[d.y] < minY) minY = scaledY[d.y];
                 if (scaledY[d.y] > maxY) maxY = scaledY[d.y];
             });
@@ -329,14 +339,17 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
         if (
             this.props.wrapperStore.vafChartYAxisToDataRange &&
-            (minY > 0 || maxY < this.dataHeight)
+            (minY > 0 || maxY < this.props.wrapperStore.dataHeight)
         ) {
+            this.props.wrapperStore.maxYAxisToDataRange = maxY;
+            this.props.wrapperStore.minYAxisToDataRange = minY;
             // recalculate scaledY for this range only
             this.renderData.lineData.forEach(
                 (data: IPoint[], index: number) => {
                     data.forEach((d: IPoint, i: number) => {
                         scaledY[d.y] =
-                            ((this.dataHeight - 1) * (scaledY[d.y] - minY)) /
+                            ((this.props.wrapperStore.dataHeight - 1) *
+                                (scaledY[d.y] - minY)) /
                                 (maxY - minY) +
                             1;
                     });
@@ -353,6 +366,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     }
 
     @computed get clinicalValueToColor() {
+        console.info(this.sampleGroups);
         let clinicalValueToColor: { [clinicalValue: string]: string } = {};
         const uniqueColorGetter = makeUniqueColorGetter();
         const map = clinicalValueToSamplesMap(
@@ -659,7 +673,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @autobind
     sampleIcons() {
         const svg = (
-            <g transform={`translate(0,${this.dataHeight})`}>
+            <g transform={`translate(0,${this.props.wrapperStore.dataHeight})`}>
                 {this.sampleEvents.map((event: TimelineEvent, i: number) => {
                     const sampleId = event.event!.attributes.find(
                         (att: any) => att.key === 'SAMPLE_ID'
