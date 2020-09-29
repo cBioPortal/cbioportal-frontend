@@ -78,6 +78,7 @@ import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import TimelineWrapper from './timeline2/TimelineWrapper';
+import ClinicalEventsTable from 'pages/patientView/timeline2/ClinicalEventsTable';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -1455,6 +1456,7 @@ export default class PatientViewPage extends React.Component<
                                     key={2}
                                     id={PatientViewPageTabs.ClinicalData}
                                     linkText="Clinical Data"
+                                    className={'patient-clinical-data-tab'}
                                 >
                                     <div className="clearfix">
                                         <FeatureTitle
@@ -1462,7 +1464,9 @@ export default class PatientViewPage extends React.Component<
                                             isLoading={
                                                 this.patientViewPageStore
                                                     .clinicalDataPatient
-                                                    .isPending
+                                                    .isPending ||
+                                                this.patientViewPageStore
+                                                    .clinicalEvents.isPending
                                             }
                                             className="pull-left"
                                         />
@@ -1478,8 +1482,6 @@ export default class PatientViewPage extends React.Component<
                                             />
                                         )}
                                     </div>
-
-                                    <br />
 
                                     <div className="clearfix">
                                         <FeatureTitle
@@ -1503,6 +1505,20 @@ export default class PatientViewPage extends React.Component<
                                             />
                                         )}
                                     </div>
+
+                                    <hr />
+
+                                    <h2 className={'hr'}>Timeline Data</h2>
+
+                                    {this.patientViewPageStore.clinicalEvents
+                                        .isComplete && (
+                                        <ClinicalEventsTable
+                                            clinicalEvents={
+                                                this.patientViewPageStore
+                                                    .clinicalEvents.result
+                                            }
+                                        />
+                                    )}
                                 </MSKTab>
 
                                 <MSKTab
