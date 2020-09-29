@@ -46,6 +46,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_genomenexus: true,
     // TODO should support more sources such as clinvar,gnomad,sift
     show_genomenexus_annotation_sources: 'mutation_assessor',
+    survival_initial_x_axis_limit: 0,
     skin_authorization_message:
         'Access to this portal is only available to authorized users.',
     skin_documentation_about: 'About-Us.md',
