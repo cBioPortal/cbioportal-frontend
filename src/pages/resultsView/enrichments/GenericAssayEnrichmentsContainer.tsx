@@ -1,35 +1,28 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, computed, action } from 'mobx';
-import ExpressionEnrichmentTable, {
-    ExpressionEnrichmentTableColumnType,
-} from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
 import styles from './styles.module.scss';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
-    ExpressionEnrichmentWithQ,
-    getExpressionRowData,
-    getExpressionScatterData,
-    getEnrichmentColumns,
+    getGenericAssayEnrichmentRowData,
+    GenericAssayEnrichmentWithQ,
+    getGenericAssayEnrichmentColumns,
+    getGenericAssayScatterData,
     getFilteredData,
-    EnrichmentType,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import { ExpressionEnrichmentRow } from 'shared/model/EnrichmentRow';
-import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
-import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import * as _ from 'lodash';
 import autobind from 'autobind-decorator';
-import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
-import {
-    CheckedSelect,
-    EllipsisTextTooltip,
-    Option,
-} from 'cbioportal-frontend-commons';
-import { ExtendedAlteration } from '../ResultsViewPageStore';
+import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
+import GenericAssayEnrichmentsTable, {
+    GenericAssayEnrichmentTableColumnType,
+} from './GenericAssayEnrichmentsTable';
+import { GenericAssayEnrichmentsTableDataStore } from './GenericAssayEnrichmentsTableDataStore';
+import { GenericAssayEnrichmentRow } from 'shared/model/EnrichmentRow';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
+import MiniScatterChart from './MiniScatterChart';
 
-export interface IExpressionEnrichmentContainerProps {
-    data: ExpressionEnrichmentWithQ[];
+export interface IGenericAssayEnrichmentsContainerProps {
+    data: GenericAssayEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
     groups: {
         name: string;
@@ -42,59 +35,48 @@ export interface IExpressionEnrichmentContainerProps {
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
-    enrichmentType: EnrichmentType;
+    genericAssayType: string;
     alteredVsUnalteredMode?: boolean;
-    queriedHugoGeneSymbols?: string[];
-    oqlFilteredCaseAggregatedData?: {
-        [uniqueSampleKey: string]: ExtendedAlteration[];
-    };
-    isGeneCheckBoxEnabled?: boolean;
 }
 
 @observer
-export default class ExpressionEnrichmentContainer extends React.Component<
-    IExpressionEnrichmentContainerProps,
+export default class GenericAssayEnrichmentsContainer extends React.Component<
+    IGenericAssayEnrichmentsContainerProps,
     {}
 > {
-    static defaultProps: Partial<IExpressionEnrichmentContainerProps> = {
+    static defaultProps: Partial<IGenericAssayEnrichmentsContainerProps> = {
         alteredVsUnalteredMode: true,
-        isGeneCheckBoxEnabled: false,
     };
 
-    @observable overExpressedFilter: boolean = true;
-    @observable underExpressedFilter: boolean = true;
     @observable significanceFilter: boolean = false;
-    @observable.shallow checkedGenes: string[] = [];
-    @observable clickedGeneHugo: string;
-    @observable clickedGeneEntrez: number;
-    @observable.ref selectedGenes: string[] | null;
-    @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
-    @observable.ref _expressedGroups: string[] = this.props.groups.map(
+    @observable clickedEntityStableId: string;
+    @observable.ref selectedStableIds: string[] | null;
+    @observable.ref highlightedRow: GenericAssayEnrichmentRow | undefined;
+    @observable.ref _enrichedGroups: string[] = this.props.groups.map(
         group => group.name
     );
-    @observable private svgContainer: SVGElement | null;
 
-    @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(
+    @computed get data(): GenericAssayEnrichmentRow[] {
+        return getGenericAssayEnrichmentRowData(
             this.props.data,
-            this.props.queriedHugoGeneSymbols || [],
             this.props.groups
         );
     }
 
-    @computed get filteredData(): ExpressionEnrichmentRow[] {
+    @computed get filteredData(): GenericAssayEnrichmentRow[] {
         return getFilteredData(
             this.data,
-            this._expressedGroups,
+            this._enrichedGroups,
             this.significanceFilter,
-            this.filterByGene
+            this.filterByStableId,
+            true
         );
     }
 
     @autobind
-    private filterByGene(hugoGeneSymbol: string) {
-        if (this.selectedGenes) {
-            return this.selectedGenes.includes(hugoGeneSymbol);
+    private filterByStableId(stableId: string) {
+        if (this.selectedStableIds) {
+            return this.selectedStableIds.includes(stableId);
         } else {
             // no need to filter the data since there is no selection
             return true;
@@ -107,39 +89,28 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @autobind
-    private onCheckGene(hugoGeneSymbol: string) {
-        const index = this.checkedGenes.indexOf(hugoGeneSymbol);
-        if (index !== -1) {
-            this.checkedGenes.splice(index, 1);
-        } else {
-            this.checkedGenes.push(hugoGeneSymbol);
-        }
+    private onEntityClick(stableId: string) {
+        this.clickedEntityStableId = stableId;
     }
 
     @autobind
-    private onGeneNameClick(hugoGeneSymbol: string, entrezGeneId: number) {
-        this.clickedGeneHugo = hugoGeneSymbol;
-        this.clickedGeneEntrez = entrezGeneId;
-    }
-
-    @autobind
-    private onSelection(hugoGeneSymbols: string[]) {
-        this.selectedGenes = hugoGeneSymbols;
+    private onSelection(stableIds: string[]) {
+        this.selectedStableIds = stableIds;
     }
 
     @autobind
     private onSelectionCleared() {
-        this.selectedGenes = null;
+        this.selectedStableIds = null;
     }
 
-    private dataStore = new EnrichmentsTableDataStore(
+    private dataStore = new GenericAssayEnrichmentsTableDataStore(
         () => {
             return this.filteredData;
         },
         () => {
             return this.highlightedRow;
         },
-        (c: ExpressionEnrichmentRow) => {
+        (c: GenericAssayEnrichmentRow) => {
             this.highlightedRow = c;
         }
     );
@@ -154,34 +125,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         return this.props.groups[1];
     }
 
-    @computed get group1CheckboxLabel() {
-        if (this.props.alteredVsUnalteredMode) {
-            return 'Over-expressed';
-        } else {
-            return (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                    Enriched in&nbsp;
-                    <EllipsisTextTooltip text={this.group1.name!} />
-                </span>
-            );
-        }
-    }
-
-    @computed get group2CheckboxLabel() {
-        if (this.props.alteredVsUnalteredMode) {
-            return 'Under-expressed';
-        } else {
-            return (
-                <span style={{ display: 'flex', alignItems: 'center' }}>
-                    Enriched in&nbsp;
-                    <EllipsisTextTooltip text={this.group2.name!} />
-                </span>
-            );
-        }
-    }
-
-    @computed get selectedGenesSet() {
-        return _.keyBy(this.selectedGenes || []);
+    @computed get selectedEntitiesSet() {
+        return _.keyBy(this.selectedStableIds || []);
     }
 
     @computed get isTwoGroupAnalysis(): boolean {
@@ -189,19 +134,15 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @computed get customColumns() {
-        return getEnrichmentColumns(
+        return getGenericAssayEnrichmentColumns(
             this.props.groups,
-            this.props.enrichmentType,
             this.props.alteredVsUnalteredMode
         );
     }
 
     @computed get visibleOrderedColumnNames() {
         const columns = [];
-        columns.push(
-            ExpressionEnrichmentTableColumnType.GENE,
-            ExpressionEnrichmentTableColumnType.CYTOBAND
-        );
+        columns.push(GenericAssayEnrichmentTableColumnType.ENTITY_ID);
 
         this.props.groups.forEach(group => {
             columns.push(group.name + ' mean');
@@ -212,22 +153,18 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         });
 
         if (this.isTwoGroupAnalysis) {
-            columns.push(ExpressionEnrichmentTableColumnType.LOG_RATIO);
+            columns.push(GenericAssayEnrichmentTableColumnType.LOG_RATIO);
         }
 
         columns.push(
-            ExpressionEnrichmentTableColumnType.P_VALUE,
-            ExpressionEnrichmentTableColumnType.Q_VALUE
+            GenericAssayEnrichmentTableColumnType.P_VALUE,
+            GenericAssayEnrichmentTableColumnType.Q_VALUE
         );
 
         if (this.isTwoGroupAnalysis && this.props.alteredVsUnalteredMode) {
-            columns.push(ExpressionEnrichmentTableColumnType.TENDENCY);
+            columns.push(GenericAssayEnrichmentTableColumnType.TENDENCY);
         } else {
-            if (this.props.enrichmentType === EnrichmentType.DNA_METHYLATION) {
-                columns.push(ExpressionEnrichmentTableColumnType.METHYLATION);
-            } else {
-                columns.push(ExpressionEnrichmentTableColumnType.EXPRESSED);
-            }
+            columns.push(GenericAssayEnrichmentTableColumnType.EXPRESSED);
         }
 
         return columns;
@@ -236,11 +173,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @autobind
     @action
     onChange(values: { value: string }[]) {
-        this._expressedGroups = _.map(values, datum => datum.value);
+        this._enrichedGroups = _.map(values, datum => datum.value);
     }
 
     @computed get selectedValues() {
-        return this._expressedGroups.map(id => ({ value: id }));
+        return this._enrichedGroups.map(id => ({ value: id }));
     }
 
     @computed get options(): Option[] {
@@ -255,9 +192,9 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     }
 
     @computed get selectedRow() {
-        if (this.clickedGeneHugo) {
+        if (this.clickedEntityStableId) {
             return this.props.data.filter(
-                d => d.hugoGeneSymbol === this.clickedGeneHugo
+                d => d.stableId === this.clickedEntityStableId
             )[0];
         }
         return undefined;
@@ -272,10 +209,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
             );
         }
 
-        const data: any[] = getExpressionScatterData(
-            this.data,
-            this.props.queriedHugoGeneSymbols || []
-        );
+        const data: any[] = getGenericAssayScatterData(this.data);
         const maxData: any = _.maxBy(data, d => {
             return Math.ceil(Math.abs(d.x));
         });
@@ -286,7 +220,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={data}
-                            selectedSet={this.selectedGenesSet}
+                            selectedSet={this.selectedEntitiesSet}
                             xAxisLeftLabel={
                                 this.group2.nameOfEnrichmentDirection ||
                                 this.group2.name
@@ -297,7 +231,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             }
                             xAxisDomain={Math.ceil(Math.abs(maxData.x))}
                             xAxisTickValues={null}
-                            onGeneNameClick={this.onGeneNameClick}
+                            onGenericAssayEntityClick={this.onEntityClick}
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared}
                         />
@@ -306,24 +240,12 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                         selectedProfile={this.props.selectedProfile}
                         groups={this.props.groups}
                         sampleKeyToSample={this.props.sampleKeyToSample}
-                        queriedHugoGeneSymbols={
-                            this.props.queriedHugoGeneSymbols
-                        }
-                        oqlFilteredCaseAggregatedData={
-                            this.props.oqlFilteredCaseAggregatedData
-                        }
                         selectedRow={this.selectedRow}
-                        enrichmentType={this.props.enrichmentType}
+                        genericAssayType={this.props.genericAssayType}
                     />
                 </div>
 
                 <div className={styles.TableContainer}>
-                    <div>
-                        <h3>{this.props.selectedProfile.name}</h3>
-                        {!!this.props.isGeneCheckBoxEnabled && (
-                            <AddCheckedGenes checkedGenes={this.checkedGenes} />
-                        )}
-                    </div>
                     <hr
                         style={{
                             marginTop: 0,
@@ -352,21 +274,11 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                             </label>
                         </div>
                     </div>
-                    <ExpressionEnrichmentTable
+                    <GenericAssayEnrichmentsTable
                         data={this.filteredData}
-                        onCheckGene={
-                            !!this.props.isGeneCheckBoxEnabled
-                                ? this.onCheckGene
-                                : undefined
-                        }
-                        onGeneNameClick={this.onGeneNameClick}
+                        onEntityClick={this.onEntityClick}
                         dataStore={this.dataStore}
                         mutexTendency={this.props.alteredVsUnalteredMode}
-                        checkedGenes={
-                            !!this.props.isGeneCheckBoxEnabled
-                                ? this.checkedGenes
-                                : undefined
-                        }
                         visibleOrderedColumnNames={
                             this.visibleOrderedColumnNames
                         }
