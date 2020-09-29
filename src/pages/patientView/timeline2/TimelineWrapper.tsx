@@ -26,7 +26,7 @@ import {
     getSampleInfo,
 } from 'pages/patientView/timeline2/TimelineWrapperUtils';
 import { renderStack, renderSuperscript } from 'cbioportal-clinical-timeline';
-import { downloadZippedTracks } from 'pages/patientView/timeline/timelineTSV';
+import { downloadZippedTracks } from 'pages/patientView/timeline2/timeline-data-utils';
 
 function makeItems(eventData: ClinicalEvent[]) {
     return eventData.map((e: ClinicalEvent) => {
