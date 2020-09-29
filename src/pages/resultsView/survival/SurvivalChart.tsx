@@ -45,6 +45,7 @@ import {
     pluralize,
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import AppConfig from 'appConfig';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -92,7 +93,7 @@ export default class SurvivalChart
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
     @observable highlightedCurve = '';
-    @observable public sliderValue = this.maximumDataMonthValue;
+    @observable public sliderValue = this.getInitialSliderValue();
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
@@ -128,6 +129,17 @@ export default class SurvivalChart
             y: 50,
         },
     };
+
+    private getInitialSliderValue() {
+        if (AppConfig.serverConfig.survival_initial_x_axis_limit) {
+            return Math.min(
+                AppConfig.serverConfig.survival_initial_x_axis_limit,
+                this.maximumDataMonthValue
+            );
+        } else {
+            return this.maximumDataMonthValue;
+        }
+    }
 
     private events = [
         {
