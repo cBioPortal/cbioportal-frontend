@@ -497,6 +497,10 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         );
     }
 
+    @computed get numGroupByGroups() {
+        return this.groupingByIsSelected ? _.keys(this.sampleGroups).length : 0;
+    }
+
     @computed get sampleIdToYPosition() {
         // compute sample y position on the x-axis footer
         let yStart = -5.5;
@@ -700,6 +704,14 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         );
     }
 
+    @computed get groupColor() {
+        return (sampleId: string) => {
+            return this.groupingByIsSelected && this.numGroupByGroups > 1
+                ? this.groupColorBySampleId(sampleId)
+                : 'rgb(0,0,0)';
+        };
+    }
+
     render() {
         return (
             <svg
@@ -730,9 +742,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                 vaf: d.y,
                             };
 
-                            const color = this.groupingByIsSelected
-                                ? this.groupColorBySampleId(d.sampleId)
-                                : 'rgb(0,0,0)';
+                            const color = this.groupColor(d.sampleId);
 
                             return (
                                 <g>
@@ -804,9 +814,11 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @autobind
     groupColorByGroupIndex(groupIndex: number) {
-        return this.clinicalValueToColor[
-            this.clinicalValuesForGrouping[groupIndex]
-        ];
+        return this.groupingByIsSelected && this.numGroupByGroups > 1
+            ? this.clinicalValueToColor[
+                  this.clinicalValuesForGrouping[groupIndex]
+              ]
+            : 'rgb(0,0,0)';
     }
 
     @autobind
