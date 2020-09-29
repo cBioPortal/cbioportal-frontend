@@ -20,20 +20,17 @@ export function downloadZippedTracks(events: ClinicalEvent[]) {
 export function groupTimelineData(events: ClinicalEvent[]) {
     const groupedData = _.groupBy(events, d => d.eventType);
 
-    return _.mapValues(groupedData, (data, eventType) => {
-        return getRows(data);
-    });
+    return _.mapValues(groupedData, data => getRows(data));
 }
 
 function toTSV(events: ClinicalEvent[]): string {
-    // First get the extra columns
-
     const rows = getRows(events);
 
     return rows.map(row => row.join('\t')).join('\n') + '\n';
 }
 
 function getRows(events: ClinicalEvent[]): string[][] {
+    // First get the extra columns
     const extraColumnsMap: { [columnKey: string]: any } = {};
     for (const event of events) {
         for (const attribute of event.attributes) {
