@@ -3291,7 +3291,7 @@ export function getLimitValues(data: any[]): string[] {
         .value();
 }
 
-export function stringsToOptions(vals: string[]) {
+function stringsToOptions(vals: string[]) {
     return vals.map(v => ({ value: v, label: v }));
 }
 export function getCategoryOptions(data: IAxisData) {
