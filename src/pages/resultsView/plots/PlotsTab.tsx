@@ -2563,6 +2563,52 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
+    @computed get mutationDataForColoring() {
+        if (this.mutationDataExists.result) {
+            return {
+                molecularProfileIds: _.values(
+                    this.props.store.studyToMutationMolecularProfile.result!
+                ).map(p => p.molecularProfileId),
+                data: this.mutationPromise.result!,
+            };
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get cnaDataForColoring() {
+        if (this.cnaDataExists.result) {
+            return {
+                molecularProfileIds: _.values(
+                    this.props.store.studyToMolecularProfileDiscreteCna.result!
+                ).map(p => p.molecularProfileId),
+                data: this.cnaPromise.result!,
+            };
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get clinicalDataForColoring() {
+        let clinicalData;
+        if (
+            this.coloringMenuSelection.selectedOption &&
+            this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+        ) {
+            const promise = this.props.store.clinicalDataCache.get(
+                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
+            );
+            clinicalData = promise.result!.data as ClinicalData[];
+        }
+        return (
+            clinicalData && {
+                clinicalAttribute: this.coloringMenuSelection.selectedOption!
+                    .info.clinicalAttribute!,
+                data: clinicalData,
+            }
+        );
+    }
+
     @computed get plotDataExistsForTwoAxes() {
         return (
             this.horzAxisDataPromise.isComplete &&
@@ -3924,32 +3970,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.props.store.sampleKeyToSample.result!,
                             this.props.store.coverageInformation.result!
                                 .samples,
-                            this.mutationDataExists.result
-                                ? {
-                                      molecularProfileIds: _.values(
-                                          this.props.store
-                                              .studyToMutationMolecularProfile
-                                              .result!
-                                      ).map(p => p.molecularProfileId),
-                                      data: this.mutationPromise.result!,
-                                  }
-                                : undefined,
-                            this.cnaDataExists.result
-                                ? {
-                                      molecularProfileIds: _.values(
-                                          this.props.store
-                                              .studyToMolecularProfileDiscreteCna
-                                              .result!
-                                      ).map(p => p.molecularProfileId),
-                                      data: this.cnaPromise.result!,
-                                  }
-                                : undefined,
+                            this.mutationDataForColoring,
+                            this.cnaDataForColoring,
                             this.selectedGeneForStyling,
-                            clinicalData && {
-                                clinicalAttribute: this.coloringMenuSelection
-                                    .selectedOption!.info.clinicalAttribute!,
-                                data: clinicalData,
-                            }
+                            this.clinicalDataForColoring
                         )
                     );
                 } else {
@@ -4028,31 +4052,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             this.props.store.coverageInformation.result!
                                 .samples,
                             selectedGene,
-                            this.mutationDataExists.result
-                                ? {
-                                      molecularProfileIds: _.values(
-                                          this.props.store
-                                              .studyToMutationMolecularProfile
-                                              .result!
-                                      ).map(p => p.molecularProfileId),
-                                      data: this.mutationPromise.result!,
-                                  }
-                                : undefined,
-                            this.cnaDataShown
-                                ? {
-                                      molecularProfileIds: _.values(
-                                          this.props.store
-                                              .studyToMolecularProfileDiscreteCna
-                                              .result!
-                                      ).map(p => p.molecularProfileId),
-                                      data: this.cnaPromise.result!,
-                                  }
-                                : undefined,
-                            clinicalData && {
-                                clinicalAttribute: this.coloringMenuSelection
-                                    .selectedOption!.info.clinicalAttribute!,
-                                data: clinicalData,
-                            }
+                            this.mutationDataForColoring,
+                            this.cnaDataForColoring,
+                            this.clinicalDataForColoring
                         ),
                     });
                 } else {
@@ -4145,17 +4147,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return ret;
         },
         invoke: () => {
-            let clinicalData;
-            if (
-                this.coloringMenuSelection.selectedOption &&
-                this.coloringMenuSelection.selectedOption.info.clinicalAttribute
-            ) {
-                const promise = this.props.store.clinicalDataCache.get(
-                    this.coloringMenuSelection.selectedOption.info
-                        .clinicalAttribute
-                );
-                clinicalData = promise.result!.data as ClinicalData[];
-            }
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
             if (!horzAxisData || !vertAxisData) {
@@ -4187,36 +4178,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 } else {
                     return Promise.resolve({ horizontal: false, data: [] });
                 }
+
                 let data = makeBoxScatterPlotData(
                     categoryData,
                     numberData,
                     this.props.store.sampleKeyToSample.result!,
                     this.props.store.coverageInformation.result!.samples,
-                    this.mutationDataExists.result
-                        ? {
-                              molecularProfileIds: _.values(
-                                  this.props.store
-                                      .studyToMutationMolecularProfile.result!
-                              ).map(p => p.molecularProfileId),
-                              data: this.mutationPromise.result!,
-                          }
-                        : undefined,
-                    this.cnaDataExists.result
-                        ? {
-                              molecularProfileIds: _.values(
-                                  this.props.store
-                                      .studyToMolecularProfileDiscreteCna
-                                      .result!
-                              ).map(p => p.molecularProfileId),
-                              data: this.cnaPromise.result!,
-                          }
-                        : undefined,
+                    this.mutationDataForColoring,
+                    this.cnaDataForColoring,
                     this.selectedGeneForStyling,
-                    clinicalData && {
-                        clinicalAttribute: this.coloringMenuSelection
-                            .selectedOption!.info.clinicalAttribute!,
-                        data: clinicalData,
-                    }
+                    this.clinicalDataForColoring
                 );
                 if (selectedCategories && !_.isEmpty(selectedCategories)) {
                     data = data.filter(d => d.label in selectedCategories);
