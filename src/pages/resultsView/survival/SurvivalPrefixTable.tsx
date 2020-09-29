@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ClinicalDataEnrichmentWithQ } from 'pages/groupComparison/GroupComparisonUtils';
-import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
+import LazyMobXTable, {
+    Column,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { ClinicalDataEnrichmentTableColumnType } from 'pages/groupComparison/ClinicalDataEnrichmentsTable';
 import autobind from 'autobind-decorator';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
@@ -12,6 +14,7 @@ import _ from 'lodash';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { observable, computed } from 'mobx';
+import AppConfig from 'appConfig';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -64,6 +67,7 @@ function makeGroupColumn(groupName: string) {
         ),
         download: (d: SurvivalPrefixSummary) =>
             d.numPatientsPerGroup[groupName].toString(),
+        visible: false,
     };
 }
 
@@ -78,6 +82,7 @@ const COLUMNS = [
         ) => d.displayText.toUpperCase().indexOf(filterStringUpper) > -1,
         sortBy: (d: SurvivalPrefixSummary) => d.displayText,
         download: (d: SurvivalPrefixSummary) => d.displayText,
+        visible: true,
     },
     {
         name: '# Patients With Data',
@@ -88,7 +93,10 @@ const COLUMNS = [
             '# Patients With Data'
         ),
         download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
+        visible: true,
     },
+];
+const P_Q_COLUMNS = [
     {
         name: ColumnName.P_VALUE,
         render: (d: SurvivalPrefixSummary) => (
@@ -108,6 +116,7 @@ const COLUMNS = [
                 ? toConditionalPrecision(d.pValue, 3, 0.01)
                 : 'N/A',
         tooltip: <span>Derived from Log Rank test.</span>,
+        visible: true,
     },
     {
         name: 'q-Value',
@@ -132,19 +141,9 @@ const COLUMNS = [
                 Derived from Benjamini-Hochberg FDR correction procedure.
             </span>
         ),
+        visible: true,
     },
 ];
-
-function initColumnVisibility(groupNames: string[]) {
-    const ret: { [group: string]: boolean } = {};
-    for (const c of COLUMNS) {
-        ret[c.name] = true;
-    }
-    for (const n of groupNames) {
-        ret[makeGroupColumnName(n)] = false;
-    }
-    return ret;
-}
 
 @observer
 export default class SurvivalPrefixTable extends React.Component<
@@ -160,7 +159,13 @@ export default class SurvivalPrefixTable extends React.Component<
             () => this.props.survivalPrefixes,
             this.props.getSelectedPrefix
         );
-        this.columnVisibility = initColumnVisibility(props.groupNames);
+        this.columnVisibility = this.initColumnVisibility();
+    }
+    private initColumnVisibility() {
+        return _.mapValues(
+            _.keyBy(this.columns, c => c.name),
+            c => c.visible!
+        );
     }
     @autobind
     private onRowClick(d: SurvivalPrefixSummary) {
@@ -180,16 +185,18 @@ export default class SurvivalPrefixTable extends React.Component<
     }
 
     @computed get columns() {
-        const cols = COLUMNS.slice();
-        const insertionPoint = cols.findIndex(
-            c => c.name === ColumnName.P_VALUE
-        );
         // insert "Num patients in group" columns right before p value
-        return [
-            ...COLUMNS.slice(0, insertionPoint),
+        const cols: Column<SurvivalPrefixSummary>[] = [
+            ...COLUMNS,
             ...this.props.groupNames.map(makeGroupColumn),
-            ...COLUMNS.slice(insertionPoint),
         ];
+        if (
+            AppConfig.serverConfig
+                .survival_show_p_q_values_in_survival_type_table
+        ) {
+            cols.push(...P_Q_COLUMNS);
+        }
+        return cols;
     }
 
     public render() {
