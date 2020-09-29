@@ -2217,6 +2217,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.onHorizontalAxisGeneSelect(oldVerticalGene);
         }
 
+        this.vertSelection.selectedCategories = [];
+
         this.autoChooseColoringMenuGene();
     }
 
@@ -2252,6 +2254,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.onVerticalAxisGeneSelect(oldHorizontalGene);
         }
 
+        this.horzSelection.selectedCategories = [];
+
         this.autoChooseColoringMenuGene();
     }
 
@@ -2260,6 +2264,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public onVerticalAxisDataSourceSelect(option: PlotsTabOption) {
         this.vertSelection.selectedDataSourceOption = option;
         this.vertSelection.selectedGenericAssayOption = undefined;
+        this.vertSelection.selectedCategories = [];
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
         maybeSetLogScale(this.vertSelection);
@@ -2271,6 +2276,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     public onHorizontalAxisDataSourceSelect(option: PlotsTabOption) {
         this.horzSelection.selectedDataSourceOption = option;
         this.horzSelection.selectedGenericAssayOption = undefined;
+        this.horzSelection.selectedCategories = [];
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
         maybeSetLogScale(this.horzSelection);
@@ -2362,6 +2368,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             'selectedDataSourceOption',
             'logScale',
             'mutationCountBy',
+            'selectedCategories',
         ];
 
         // only swap genes if vertSelection is not set to "Same gene"
