@@ -3292,11 +3292,12 @@ export function getLimitValues(data: any[]): string[] {
 }
 
 export function maybeSetLogScale(axisSelection: AxisMenuSelection) {
-    if (
-        axisSelection.dataType === AlterationTypeConstants.MRNA_EXPRESSION &&
-        axisSelection.dataSourceId &&
-        axisSelection.dataSourceId.includes('rna_seq')
-    ) {
-        axisSelection.logScale = true;
+    if (axisSelection.dataType === AlterationTypeConstants.MRNA_EXPRESSION) {
+        if (
+            !axisSelection.dataSourceId ||
+            axisSelection.dataSourceId.includes('rna_seq')
+        ) {
+            axisSelection.logScale = true;
+        }
     }
 }
