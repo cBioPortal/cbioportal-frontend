@@ -11,10 +11,6 @@ import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
 describe('AlleleFreqColumnFormatter', () => {
-    before(() => {});
-
-    after(() => {});
-
     it('uncalled mutations component w/o reads should have 0 opacity', () => {
         const uncalledMutationWithoutSupport = {
             molecularProfileId: `study_${MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,

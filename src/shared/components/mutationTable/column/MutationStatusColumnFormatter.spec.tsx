@@ -39,8 +39,6 @@ describe('MutationStatusColumnFormatter', () => {
         );
     });
 
-    after(() => {});
-
     it('gets mutation status data properly', () => {
         assert.equal(
             MutationStatusColumnFormatter.getData(germlineData),

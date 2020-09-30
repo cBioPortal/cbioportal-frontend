@@ -9,10 +9,6 @@ import sinon from 'sinon';
 import { DiscreteCopyNumberData } from 'cbioportal-ts-api-client';
 
 describe('CnaColumnFormatter', () => {
-    before(() => {});
-
-    after(() => {});
-
     it('CNA column renderer shows correct text based on alteration value', () => {
         let output = mount(
             CnaColumnFormatter.renderFunction([

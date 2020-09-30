@@ -10,8 +10,6 @@ import {
 describe('ColumnVisibilityControls', () => {
     beforeEach(() => {});
 
-    after(() => {});
-
     it('does not render list item if togglabe is false', () => {
         var cols: IColumnVisibilityDef[] = [
             {
