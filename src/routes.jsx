@@ -222,7 +222,7 @@ export const makeRoutes = routing => {
                             plots_vert_selection: JSON.stringify({
                                 dataType:
                                     AlterationTypeConstants.MRNA_EXPRESSION,
-                                logScale: true,
+                                logScale: 'true',
                             }),
                         },
                         `/results/${ResultsViewTab.PLOTS}`
