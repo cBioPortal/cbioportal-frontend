@@ -107,8 +107,9 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                         <Timeline
                             store={stores[0]}
                             width={width}
+                            headerWidth={150}
                             onClickDownload={() => downloadZippedTracks(data)}
-                            hideLabels={true}
+                            hideLabels={false}
                             hideXAxis={true}
                             visibleTracks={[]}
                             customTracks={[

@@ -39,6 +39,7 @@ interface ITimelineProps {
     visibleTracks?: string[];
     hideXAxis?: boolean;
     disableZoom?: boolean;
+    headerWidth?: number;
 }
 
 function handleMouseEvents(
@@ -226,6 +227,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     onClickDownload,
     visibleTracks,
     hideXAxis,
+    headerWidth,
 }: ITimelineProps) {
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
@@ -335,6 +337,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             'tl-displaynone': hideLabels,
                         })}
                         style={{
+                            width: headerWidth || 'auto',
                             minWidth: store.headersWidth,
                         }}
                     >
