@@ -81,9 +81,8 @@ import {
 } from 'oncokb-ts-api-client';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
 import {
-    DEFAULT_SURVIVAL_PRIORITY,
     getSurvivalAttributes,
-    plotsPriority,
+    RESERVED_SURVIVAL_PLOT_PRIORITY,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
 import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
@@ -1312,8 +1311,27 @@ export function getSurvivalClinicalAttributesPrefix(
         [] as string[]
     );
     // change prefix order based on priority
-    return _.sortBy(attributePrefixes, prefix => {
-        return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
+    // determine priority by using survival status priority
+    const statusAttributes = _.filter(clinicalAttributes, attribute =>
+        /_STATUS$/i.test(attribute.clinicalAttributeId)
+    );
+    const priorityByPrefix = _.chain(statusAttributes)
+        .keyBy(attribute =>
+            attribute.clinicalAttributeId.substring(
+                0,
+                attribute.clinicalAttributeId.indexOf('_STATUS')
+            )
+        )
+        .mapValues(attribute => Number(attribute.priority))
+        .value();
+
+    // return attribute prefixes by desc order based on priority
+    return attributePrefixes.sort((attr1, attr2) => {
+        const attr1Priority =
+            RESERVED_SURVIVAL_PLOT_PRIORITY[attr1] || priorityByPrefix[attr1];
+        const attr2Priority =
+            RESERVED_SURVIVAL_PLOT_PRIORITY[attr2] || priorityByPrefix[attr2];
+        return attr2Priority - attr1Priority;
     });
 }
 

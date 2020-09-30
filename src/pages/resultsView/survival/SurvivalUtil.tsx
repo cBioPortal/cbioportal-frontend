@@ -59,11 +59,13 @@ export const survivalPlotTooltipxLabelWithEvent: {
     DSS: 'Time of Death',
 };
 
-export const plotsPriority: { [prefix: string]: number } = {
-    OS: 1,
-    DFS: 2,
-    PFS: 3,
-    DSS: 4,
+// OS, DFS, PFS, DSS are four reserved KM plot types
+// use priority from RESERVED_SURVIVAL_PLOT_PRIORITY for these four types
+export const RESERVED_SURVIVAL_PLOT_PRIORITY: { [prefix: string]: number } = {
+    OS: 400,
+    DFS: 300,
+    PFS: 250,
+    DSS: 250,
 };
 
 // when try to find if a data is null
@@ -79,8 +81,6 @@ export const survivalClinicalDataNullValueSet = new Set([
     '',
     'na',
 ]);
-
-export const DEFAULT_SURVIVAL_PRIORITY = 999;
 
 export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
     let estimates: number[] = [];
@@ -421,16 +421,4 @@ export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
         .filter(id => /_STATUS$/i.test(id) || /_MONTHS$/i.test(id))
         .uniq()
         .value();
-}
-
-export function notSurvivalAttribute(
-    survivalClinicalAttributesPrefixes: string[],
-    attributeId: string
-) {
-    return _.every(survivalClinicalAttributesPrefixes, prefix => {
-        return (
-            `${prefix}_STATUS` !== attributeId &&
-            `${prefix}_MONTHS` !== attributeId
-        );
-    });
 }
