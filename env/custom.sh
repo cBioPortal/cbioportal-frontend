@@ -1,2 +1,1 @@
-# set e.g.
-# export CBIOPORTAL_URL="http://localhost:8080"
+export BACKEND=thehyve:temp_base_vus_enrichment
