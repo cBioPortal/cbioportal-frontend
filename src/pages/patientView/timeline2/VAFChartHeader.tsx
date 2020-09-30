@@ -24,14 +24,19 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                     width: width,
                 }}
             >
-                <svg height={legendHeight} width={width}>
-                    <text y={10} style={{ textAlign: 'left' }}>
-                        VAF
-                    </text>
+                <svg
+                    height={legendHeight}
+                    width={width}
+                    style={{
+                        textTransform: 'none',
+                        position: 'relative',
+                        right: -15,
+                    }}
+                >
                     <text
                         style={{ textAlign: 'left' }}
                         text-anchor="middle"
-                        transform={`translate(${width - 60},${mqxTickOffset /
+                        transform={`translate(${width - 40},${mqxTickOffset /
                             2}) rotate(-90)`}
                     >
                         Allele Frequency
