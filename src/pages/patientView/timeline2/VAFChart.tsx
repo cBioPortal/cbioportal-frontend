@@ -667,17 +667,18 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @action
     // Update store with groupBy sample tracks
-    setGroupByTracks() {
+    setGroupByTracks(sampleGroups: { [index: number]: string[] }) {
         const tracks: CustomTrackSpecification[] = [];
-        _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
-            const index = parseInt(key);
-            tracks.push({
-                renderHeader: () => this.groupByTrackLabel(index),
-                renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
-                height: () => this.groupIndexToTrackHeight[index],
-                labelForExport: this.clinicalValuesForGrouping[index],
+        if (sampleGroups[-1] === undefined)
+            _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
+                const index = parseInt(key);
+                tracks.push({
+                    renderHeader: () => this.groupByTrackLabel(index),
+                    renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
+                    height: () => this.groupIndexToTrackHeight[index],
+                    labelForExport: this.clinicalValuesForGrouping[index],
+                });
             });
-        });
         this.props.wrapperStore.groupByTracks = tracks;
     }
 
@@ -686,7 +687,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     });
 
     groupByTracksReaction = autorun(() => {
-        if (this.groupingByIsSelected) this.setGroupByTracks();
+        this.setGroupByTracks(this.sampleGroups);
     });
 
     destroy() {
