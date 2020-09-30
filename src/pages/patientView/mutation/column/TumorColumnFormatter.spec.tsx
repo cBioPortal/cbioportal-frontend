@@ -24,10 +24,6 @@ describe('TumorColumnFormatter', () => {
         },
     ];
 
-    before(() => {});
-
-    after(() => {});
-
     it('test get present samples', () => {
         let presentSamples = TumorColumnFormatter.getPresentSamples(testData);
         assert(presentSamples['A'], 'sample A is present and is called');

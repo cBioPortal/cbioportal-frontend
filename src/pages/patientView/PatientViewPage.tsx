@@ -1260,6 +1260,16 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .generateGenomeNexusHgvsgUrl
                                                     }
+                                                    sampleIdToClinicalDataMap={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .clinicalDataGroupedBySampleMap
+                                                    }
+                                                    existsSomeMutationWithAscnProperty={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .existsSomeMutationWithAscnProperty
+                                                    }
                                                 />
                                             </div>
                                         )}

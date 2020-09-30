@@ -6,16 +6,46 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const patienViewUrl =
+const patientViewUrl =
     CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
+const ascnPatientViewUrl =
+    CBIOPORTAL_URL + '/patient?studyId=ascn_test_study&caseId=FAKE_P001';
 
 describe('patient view page', function() {
+    describe('mutation table for study with ASCN data', () => {
+        beforeEach(() => {
+            goToUrlAndSetLocalStorage(ascnPatientViewUrl);
+            waitForPatientView();
+        });
+
+        it('displays ASCN columns', () => {
+            var res = browser.checkElement(
+                'div[data-test=patientview-mutation-table] table'
+            );
+            assertScreenShotMatch(res);
+        });
+    });
+
+    describe('mutation table for study with no ASCN data', () => {
+        beforeEach(() => {
+            goToUrlAndSetLocalStorage(patientViewUrl);
+            waitForPatientView();
+        });
+
+        it('does not display ASCN columns for studies with no ASCN data', () => {
+            var res = browser.checkElement(
+                'div[data-test=patientview-mutation-table] table'
+            );
+            assertScreenShotMatch(res);
+        });
+    });
+
     describe('gene panel icons', () => {
         const iconIndexGenePanelSample = 2;
         const iconIndexWholeGenomeSample = 3;
 
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(patienViewUrl);
+            goToUrlAndSetLocalStorage(patientViewUrl);
             waitForPatientView();
         });
 

@@ -59,6 +59,7 @@ import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
     cancerTypeForOncoKb,
+    existsSomeMutationWithAscnPropertyInCollection,
     fetchAllReferenceGenomeGenes,
     fetchCnaOncoKbDataWithNumericGeneMolecularData,
     fetchCopyNumberSegmentsForSamples,
@@ -73,6 +74,8 @@ import {
     groupBy,
     IDataQueryFilter,
     isMutationProfile,
+    groupBySampleId,
+    mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
     getGenomeNexusUrl,
     fetchSurvivalDataExists,
@@ -210,6 +213,15 @@ import { makeUniqueColorGetter } from '../../shared/components/plots/PlotUtils';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import {
+    CLINICAL_ATTRIBUTE_FIELD_ENUM,
+    CLINICAL_ATTRIBUTE_ID_ENUM,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
+    GENETIC_PROFILE_FIELD_ENUM,
+    PUTATIVE_DRIVER,
+    REQUEST_ARG_ENUM,
+    SAMPLE_CANCER_TYPE_UNKNOWN,
+} from 'shared/constants';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -347,19 +359,19 @@ export function buildDefaultOQLProfile(
     for (var i = 0; i < profilesTypes.length; i++) {
         var type = profilesTypes[i];
         switch (type) {
-            case 'MUTATION_EXTENDED':
+            case AlterationTypeConstants.MUTATION_EXTENDED:
                 default_oql_uniq['MUT'] = true;
                 default_oql_uniq['FUSION'] = true;
                 break;
-            case 'COPY_NUMBER_ALTERATION':
+            case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                 default_oql_uniq['AMP'] = true;
                 default_oql_uniq['HOMDEL'] = true;
                 break;
-            case 'MRNA_EXPRESSION':
+            case AlterationTypeConstants.MRNA_EXPRESSION:
                 default_oql_uniq['EXP>=' + zScoreThreshold] = true;
                 default_oql_uniq['EXP<=-' + zScoreThreshold] = true;
                 break;
-            case 'PROTEIN_LEVEL':
+            case AlterationTypeConstants.PROTEIN_LEVEL:
                 default_oql_uniq['PROT>=' + rppaScoreThreshold] = true;
                 default_oql_uniq['PROT<=-' + rppaScoreThreshold] = true;
                 break;
@@ -385,10 +397,10 @@ export function extendSamplesWithCancerType(
         if (clinicalData) {
             clinicalData.forEach((clinicalDatum: ClinicalData) => {
                 switch (clinicalDatum.clinicalAttributeId) {
-                    case 'CANCER_TYPE_DETAILED':
+                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED:
                         sample.cancerTypeDetailed = clinicalDatum.value;
                         break;
-                    case 'CANCER_TYPE':
+                    case CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE:
                         sample.cancerType = clinicalDatum.value;
                         break;
                     default:
@@ -411,7 +423,7 @@ export function extendSamplesWithCancerType(
             if (study) {
                 sample.cancerType = study.cancerType.name;
             } else {
-                sample.cancerType = 'Unknown';
+                sample.cancerType = SAMPLE_CANCER_TYPE_UNKNOWN;
             }
         }
         if (sample.cancerType && !sample.cancerTypeDetailed) {
@@ -968,7 +980,10 @@ export class ResultsViewPageStore {
             const profiles: MolecularProfile[] = this.selectedMolecularProfiles
                 .result!;
             return Promise.resolve(
-                _.groupBy(profiles, 'molecularAlterationType')
+                _.groupBy(
+                    profiles,
+                    GENETIC_PROFILE_FIELD_ENUM.MOLECULAR_ALTERATION_TYPE
+                )
             );
         },
     });
@@ -992,7 +1007,7 @@ export class ResultsViewPageStore {
             const specialAttributes = [
                 {
                     clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-                    datatype: 'COUNTS_MAP',
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_COUNTS_MAP,
                     description:
                         'Number of point mutations in the sample counted by different types of nucleotide changes.',
                     displayName: 'Mutation spectrum',
@@ -1005,7 +1020,7 @@ export class ResultsViewPageStore {
                 // if more than one study, add "Study of Origin" attribute
                 specialAttributes.push({
                     clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-                    datatype: 'STRING',
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_STRING,
                     description: 'Study which the sample is a part of.',
                     displayName: 'Study of origin',
                     patientAttribute: false,
@@ -1017,7 +1032,7 @@ export class ResultsViewPageStore {
                 // if different number of samples and patients, add "Num Samples of Patient" attribute
                 specialAttributes.push({
                     clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
-                    datatype: 'NUMBER',
+                    datatype: CLINICAL_ATTRIBUTE_FIELD_ENUM.DATATYPE_NUMBER,
                     description: 'Number of queried samples for each patient.',
                     displayName: '# Samples per Patient',
                     patientAttribute: true,
@@ -1036,7 +1051,10 @@ export class ResultsViewPageStore {
         await: () => [this.clinicalAttributes],
         invoke: () =>
             Promise.resolve(
-                _.keyBy(this.clinicalAttributes.result!, 'clinicalAttributeId')
+                _.keyBy(
+                    this.clinicalAttributes.result!,
+                    CLINICAL_ATTRIBUTE_FIELD_ENUM.ID
+                )
             ),
     });
 
@@ -1221,7 +1239,7 @@ export class ResultsViewPageStore {
                 if (identifiers.length) {
                     return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            projection: 'DETAILED',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                             molecularDataMultipleStudyFilter: {
                                 entrezGeneIds: _.map(
                                     this.genes.result,
@@ -1290,7 +1308,7 @@ export class ResultsViewPageStore {
                 if (sampleIdentifiers.length) {
                     return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            projection: 'DETAILED',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                             molecularDataMultipleStudyFilter: {
                                 entrezGeneIds: _.map(
                                     this.genes.result,
@@ -1333,7 +1351,10 @@ export class ResultsViewPageStore {
             const coExpressionProfiles = filterAndSortProfiles(
                 this.molecularProfilesInStudies.result!
             );
-            const studyToProfiles = _.groupBy(coExpressionProfiles, 'studyId');
+            const studyToProfiles = _.groupBy(
+                coExpressionProfiles,
+                GENETIC_PROFILE_FIELD_ENUM.STUDY_ID
+            );
             // we know these are all mrna and protein profiles
             const sampleMolecularIdentifiers = _.flatten(
                 this.samples.result!.map(s => {
@@ -1360,7 +1381,7 @@ export class ResultsViewPageStore {
                                 entrezGeneIds,
                                 sampleMolecularIdentifiers,
                             } as MolecularDataMultipleStudyFilter,
-                            projection: 'META',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_META,
                         }
                     )
                     .then(function(response: request.Response) {
@@ -1444,7 +1465,7 @@ export class ResultsViewPageStore {
                 }
 
                 const molecularProfileId = profile.molecularProfileId;
-                const projection = 'META';
+                const projection = REQUEST_ARG_ENUM.PROJECTION_META;
                 const dataFilter = {
                     entrezGeneIds: this.genes.result!.map(g => g.entrezGeneId),
                     ...dataQueryFilter,
@@ -1871,7 +1892,7 @@ export class ResultsViewPageStore {
                 if (genePanelIds.length) {
                     genePanels = await client.fetchGenePanelsUsingPOST({
                         genePanelIds,
-                        projection: 'DETAILED',
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     });
                 }
                 return computeGenePanelInformation(
@@ -2285,7 +2306,8 @@ export class ResultsViewPageStore {
         invoke: async () => {
             return this.selectedMolecularProfiles.result!.filter(
                 profile =>
-                    profile.molecularAlterationType === 'MUTATION_EXTENDED'
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
             );
         },
         onError: error => {},
@@ -2298,8 +2320,8 @@ export class ResultsViewPageStore {
             return this.selectedMolecularProfiles.result!.filter(
                 profile =>
                     profile.molecularAlterationType ===
-                        'COPY_NUMBER_ALTERATION' &&
-                    profile.datatype === 'DISCRETE'
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                    profile.datatype === DataTypeConstants.DISCRETE
             );
         },
         onError: error => {},
@@ -2511,7 +2533,7 @@ export class ResultsViewPageStore {
                             sampleListIds: sampleListsToQuery.map(
                                 spec => spec.sampleListId
                             ),
-                            projection: 'DETAILED',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         }
                     );
                     // add samples from those sample lists to corresponding study
@@ -2586,7 +2608,7 @@ export class ResultsViewPageStore {
                     uniqueStudyIds.map(studyId => {
                         return client.getAllSampleListsInStudyUsingGET({
                             studyId: studyId,
-                            projection: 'SUMMARY',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
                         });
                     })
                 );
@@ -2642,7 +2664,9 @@ export class ResultsViewPageStore {
     readonly allStudies = remoteData(
         {
             invoke: async () =>
-                await client.getAllStudiesUsingGET({ projection: 'SUMMARY' }),
+                await client.getAllStudiesUsingGET({
+                    projection: REQUEST_ARG_ENUM.PROJECTION_SUMMARY,
+                }),
         },
         []
     );
@@ -2767,7 +2791,8 @@ export class ResultsViewPageStore {
             const mutationProfiles = _.filter(
                 this.selectedMolecularProfiles.result,
                 (profile: MolecularProfile) =>
-                    profile.molecularAlterationType === 'MUTATION_EXTENDED'
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.MUTATION_EXTENDED
             );
 
             if (mutationProfiles.length === 0) {
@@ -2806,12 +2831,26 @@ export class ResultsViewPageStore {
 
             return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
                 {
-                    projection: 'DETAILED',
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: data,
                 }
             );
         },
     });
+
+    @computed get existsSomeMutationWithAscnProperty(): {
+        [property: string]: boolean;
+    } {
+        if (this.mutations.result === undefined) {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                [] as Mutation[]
+            );
+        } else {
+            return existsSomeMutationWithAscnPropertyInCollection(
+                this.mutations.result
+            );
+        }
+    }
 
     public mutationsTabFilteringSettings = this.makeMutationsTabFilteringSettings();
 
@@ -2926,6 +2965,7 @@ export class ResultsViewPageStore {
             this.indexedVariantAnnotations,
             this.uniqueSampleKeyToTumorType.result!,
             this.generateGenomeNexusHgvsgUrl,
+            this.clinicalDataGroupedBySampleMap,
             this.genomeNexusClient,
             this.genomeNexusInternalClient,
             () => this.urlWrapper.query.mutations_transcript_id
@@ -2997,13 +3037,63 @@ export class ResultsViewPageStore {
             await: () => [this.studies, this.samples],
             invoke: () =>
                 this.getClinicalData(
-                    'SAMPLE',
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
                     this.studies.result!,
                     this.samples.result,
-                    ['CANCER_TYPE', 'CANCER_TYPE_DETAILED']
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.CANCER_TYPE_DETAILED,
+                    ]
                 ),
         },
         []
+    );
+
+    readonly ascnClinicalDataForSamples = remoteData<ClinicalData[]>(
+        {
+            await: () => [this.studies, this.samples],
+            invoke: () =>
+                this.getClinicalData(
+                    REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
+                    this.studies.result!,
+                    this.samples.result,
+                    [
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_WGD,
+                        CLINICAL_ATTRIBUTE_ID_ENUM.ASCN_PURITY,
+                    ]
+                ),
+        },
+        []
+    );
+
+    @computed get sampleIds(): string[] {
+        if (this.samples.result) {
+            return this.samples.result.map(sample => sample.sampleId);
+        }
+        return [];
+    }
+
+    readonly ascnClinicalDataGroupedBySample = remoteData(
+        {
+            await: () => [this.ascnClinicalDataForSamples],
+            invoke: async () =>
+                groupBySampleId(
+                    this.sampleIds,
+                    this.ascnClinicalDataForSamples.result
+                ),
+        },
+        []
+    );
+
+    readonly clinicalDataGroupedBySampleMap = remoteData(
+        {
+            await: () => [this.ascnClinicalDataGroupedBySample],
+            invoke: async () =>
+                mapSampleIdToClinicalData(
+                    this.ascnClinicalDataGroupedBySample.result
+                ),
+        },
+        {}
     );
 
     private getClinicalData(
@@ -3097,7 +3187,7 @@ export class ResultsViewPageStore {
                             sampleFilter: {
                                 sampleIdentifiers,
                             } as SampleFilter,
-                            projection: 'DETAILED',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         })
                     );
                 }
@@ -3107,7 +3197,7 @@ export class ResultsViewPageStore {
                             sampleFilter: {
                                 sampleListIds,
                             } as SampleFilter,
-                            projection: 'DETAILED',
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                         })
                     );
                 }
@@ -3281,7 +3371,7 @@ export class ResultsViewPageStore {
             invoke: async () => {
                 return client.fetchStudiesUsingPOST({
                     studyIds: this.studyIds.result!,
-                    projection: 'DETAILED',
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                 });
             },
         },
@@ -4220,7 +4310,7 @@ export class ResultsViewPageStore {
 
                 const customDriverBinary: boolean =
                     (this.driverAnnotationSettings.customBinary &&
-                        mutation.driverFilter === 'Putative_Driver') ||
+                        mutation.driverFilter === PUTATIVE_DRIVER) ||
                     false;
 
                 const customDriverTier: string | undefined =
@@ -4255,7 +4345,10 @@ export class ResultsViewPageStore {
                 this.mutations.result
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
-                          ['annotation_summary', 'hotspots'],
+                          [
+                              GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                          ],
                           AppConfig.serverConfig.isoformOverrideSource,
                           this.genomeNexusClient
                       )
@@ -4609,7 +4702,7 @@ export class ResultsViewPageStore {
     @cached get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary'],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
                 this.genomeNexusClient
             )
         );
@@ -4618,7 +4711,10 @@ export class ResultsViewPageStore {
     @cached get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary', 'mutation_assessor'],
+                [
+                    GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                    GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+                ],
                 this.genomeNexusClient
             )
         );
@@ -4832,7 +4928,8 @@ export class ResultsViewPageStore {
                                         entrezGeneIds: [q.entrezGeneId],
                                         ...dataQueryFilter,
                                     } as MutationFilter,
-                                    projection: 'DETAILED',
+                                    projection:
+                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                                 }
                             );
                         } else {
