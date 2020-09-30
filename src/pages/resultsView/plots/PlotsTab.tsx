@@ -56,6 +56,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getAxisDataOverlapSampleCount,
+    maybeSetLogScale,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -2254,6 +2255,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedDataSourceOption = option;
         this.vertSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
+        maybeSetLogScale(this.vertSelection);
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
         this.autoChooseColoringMenuGene();
     }
@@ -2264,6 +2266,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedDataSourceOption = option;
         this.horzSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
+        maybeSetLogScale(this.horzSelection);
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
         this.autoChooseColoringMenuGene();
     }
