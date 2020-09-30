@@ -6,12 +6,13 @@ import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { MobxPromise } from 'mobxpromise';
 // import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IUserMessage {
     dateStart?: number;
     dateEnd: number;
-    content: string;
+    content: string | JSX.Element;
     id: string;
 }
 
@@ -40,14 +41,23 @@ let MESSAGE_DATA: IUserMessage[];
 //     ];
 // }
 
+interface IUserMessagerProps {
+    dataUrl?: string;
+    messages?: IUserMessage[];
+}
+
 @observer
 export default class UserMessager extends React.Component<
-    { dataUrl?: string },
+    IUserMessagerProps,
     {}
 > {
-    messageData = remoteData<IUserMessage[]>(async () => {
-        return Promise.resolve(MESSAGE_DATA);
-    });
+    constructor(props: IUserMessagerProps) {
+        super(props);
+        this.messageData = remoteData<IUserMessage[]>(async () => {
+            return Promise.resolve(props.messages || MESSAGE_DATA);
+        });
+    }
+    private messageData: MobxPromise<IUserMessage[]>;
 
     @observable dismissed = false;
 
@@ -57,6 +67,7 @@ export default class UserMessager extends React.Component<
                 makeMessageKey(message.id)
             );
             const expired = Date.now() > message.dateEnd;
+            console.log(notYetShown, expired);
             return notYetShown && !expired;
         });
 
@@ -75,6 +86,12 @@ export default class UserMessager extends React.Component<
     }
 
     render() {
+        console.log(
+            !isWebdriver(),
+            !this.dismissed,
+            this.messageData.isComplete,
+            this.shownMessage
+        );
         if (
             !isWebdriver() &&
             !this.dismissed &&
@@ -87,11 +104,15 @@ export default class UserMessager extends React.Component<
                         className={classNames(styles.close, 'fa', 'fa-close')}
                         onClick={this.close}
                     />
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: this.shownMessage!.content,
-                        }}
-                    ></div>
+                    {typeof this.shownMessage.content === 'string' ? (
+                        <div
+                            dangerouslySetInnerHTML={{
+                                __html: this.shownMessage.content,
+                            }}
+                        />
+                    ) : (
+                        <div>{this.shownMessage.content}</div>
+                    )}
                 </div>
             );
         } else {

@@ -21,7 +21,7 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import { showCustomTab } from '../../shared/lib/customTabs';
@@ -53,6 +53,8 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
+import UserMessager from 'shared/components/userMessager/UserMessage';
+import { Portal } from 'react-portal';
 
 export function initStore(
     appStore: AppStore,
@@ -417,52 +419,6 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-
-            {
-                id: ResultsViewTab.EXPRESSION,
-                hide: () => {
-                    return (
-                        this.resultsViewPageStore.expressionProfiles.result
-                            .length === 0 ||
-                        this.resultsViewPageStore.studies.result.length < 2
-                    );
-                },
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={8}
-                            id={ResultsViewTab.EXPRESSION}
-                            linkText={'Expression'}
-                        >
-                            {store.studyIdToStudy.isComplete &&
-                                store.filteredAndAnnotatedMutations
-                                    .isComplete &&
-                                store.genes.isComplete &&
-                                store.coverageInformation.isComplete && (
-                                    <ExpressionWrapper
-                                        store={store}
-                                        studyMap={store.studyIdToStudy.result}
-                                        genes={store.genes.result}
-                                        expressionProfiles={
-                                            store.expressionProfiles
-                                        }
-                                        numericGeneMolecularDataCache={
-                                            store.numericGeneMolecularDataCache
-                                        }
-                                        mutations={
-                                            store.filteredAndAnnotatedMutations
-                                                .result!
-                                        }
-                                        coverageInformation={
-                                            store.coverageInformation.result
-                                        }
-                                    />
-                                )}
-                        </MSKTab>
-                    );
-                },
-            },
-
             {
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
@@ -584,6 +540,50 @@ export default class ResultsViewPage extends React.Component<
         });
     }
 
+    readonly userMessages = remoteData({
+        await: () => [
+            this.resultsViewPageStore.expressionProfiles,
+            this.resultsViewPageStore.studies,
+        ],
+        invoke: () => {
+            if (
+                this.resultsViewPageStore.expressionProfiles.result.length >
+                    0 &&
+                this.resultsViewPageStore.studies.result.length > 1
+            ) {
+                return Promise.resolve([
+                    {
+                        dateEnd: 10000000000000000000,
+                        content: (
+                            <span>
+                                Looking for the <strong>Expression</strong> tab?
+                                {` `}
+                                That functionality is now available{` `}
+                                <a
+                                    style={{
+                                        color: 'white',
+                                        textDecoration: 'underline',
+                                    }}
+                                    onClick={() =>
+                                        this.urlWrapper.updateURL(
+                                            {},
+                                            `results/${ResultsViewTab.EXPRESSION_REDIRECT}`
+                                        )
+                                    }
+                                >
+                                    in the <strong>Plots</strong> tab.
+                                </a>
+                            </span>
+                        ),
+                        id: '2020_merge_expression_to_plots',
+                    },
+                ]);
+            } else {
+                return Promise.resolve([]);
+            }
+        },
+    });
+
     @computed get pageContent() {
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
             return (
@@ -627,6 +627,21 @@ export default class ResultsViewPage extends React.Component<
                             />
                         </div>
                     )}
+
+                    {this.userMessages.isComplete &&
+                        this.userMessages.result.length > 0 && (
+                            <Portal
+                                isOpened={true}
+                                node={document.getElementById(
+                                    'pageTopContainer'
+                                )}
+                            >
+                                <UserMessager
+                                    messages={this.userMessages.result}
+                                />
+                            </Portal>
+                        )}
+
                     {this.resultsViewPageStore.studies.isPending && (
                         <LoadingIndicator
                             isLoading={true}

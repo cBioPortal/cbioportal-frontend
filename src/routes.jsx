@@ -61,6 +61,9 @@ import {
 } from 'pages/patientView/PatientViewPageTabs';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
+import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
+import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
+import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 /**
  * Validates that the parameters either do not have
@@ -199,6 +202,30 @@ export const makeRoutes = routing => {
                     redirectTo(
                         { comparison_subtab: 'survival' },
                         '/results/comparison'
+                    );
+                }}
+                component={getBlankPage()}
+            />
+
+            {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
+            <Route
+                path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
+                onEnter={() => {
+                    redirectTo(
+                        {
+                            plots_horz_selection: JSON.stringify({
+                                dataType: CLIN_ATTR_DATA_TYPE,
+                                selectedDataSourceOption:
+                                    SpecialAttribute.StudyOfOrigin,
+                            }),
+
+                            plots_vert_selection: JSON.stringify({
+                                dataType:
+                                    AlterationTypeConstants.MRNA_EXPRESSION,
+                                logScale: true,
+                            }),
+                        },
+                        `/results/${ResultsViewTab.PLOTS}`
                     );
                 }}
                 component={getBlankPage()}
