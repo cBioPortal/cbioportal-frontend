@@ -33,6 +33,16 @@ export const CNA_COLOR_GAIN = '#ffb6c1';
 export const CNA_COLOR_HETLOSS = '#8fd8d8';
 export const CNA_COLOR_HOMDEL = '#0000ff';
 
+// colors of ASCNCopyNumber icon
+export const ASCN_AMP = '#ff0000';
+export const ASCN_GAIN = '#e15b5b';
+export const ASCN_HETLOSS = '#2a5eea';
+export const ASCN_HOMDEL = '#0000ff';
+export const ASCN_LIGHTGREY = '#bcbcbc';
+export const ASCN_DARKGREY = '#a9a9a9';
+export const ASCN_BLACK = '#000000';
+export const ASCN_WHITE = '#ffffff';
+
 export const DEFAULT_NA_COLOR = LIGHT_GREY;
 export const DEFAULT_UNKNOWN_COLOR = DARK_GREY;
 

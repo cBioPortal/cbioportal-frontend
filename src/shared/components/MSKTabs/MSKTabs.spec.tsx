@@ -31,8 +31,6 @@ describe('MSKTabs', () => {
         tabs.update();
     });
 
-    after(() => {});
-
     it('initial render only mounts first tab', done => {
         setTimeout(function() {
             assert.equal(tabs.update().find('.msk-tab').length, 1);

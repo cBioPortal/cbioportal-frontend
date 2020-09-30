@@ -18,6 +18,7 @@ import { MUTATION_STATUS_FILTER_ID } from 'shared/components/mutationMapper/Muta
 
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
@@ -25,6 +26,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     discreteCNACache?: DiscreteCNACache;
     cancerTypeCache?: CancerTypeCache;
     mutationCountCache?: MutationCountCache;
+    existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     userEmailAddress: string;
 }
 
@@ -78,7 +80,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 this.props.store.canonicalTranscript,
                 this.props.store.mutationData,
                 this.props.store.indexedVariantAnnotations,
-                this.props.store.activeTranscript
+                this.props.store.activeTranscript,
+                this.props.store.clinicalDataGroupedBySampleMap
             ) === 'pending'
         );
     }
@@ -146,6 +149,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 isCanonicalTranscript={this.props.store.isCanonicalTranscript}
                 selectedTranscriptId={this.props.store.activeTranscript.result}
+                sampleIdToClinicalDataMap={
+                    this.props.store.clinicalDataGroupedBySampleMap
+                }
+                existsSomeMutationWithAscnProperty={
+                    this.props.existsSomeMutationWithAscnProperty
+                }
             />
         );
     }
