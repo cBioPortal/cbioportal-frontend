@@ -141,7 +141,7 @@ export default class PatientViewMutationsTab extends React.Component<
         ],
         renderPending: () => <LoadingIndicator isLoading={true} size="small" />,
         render: () => (
-            <div className="borderedChart" style={{ display: 'inline-block' }}>
+            <div style={{ width: WindowStore.size.width - 50 }}>
                 {/*<div*/}
                 {/*    style={{*/}
                 {/*        display: 'flex',*/}
@@ -429,7 +429,6 @@ export default class PatientViewMutationsTab extends React.Component<
             ) {
                 return (
                     <div
-                        className="borderedChart"
                         style={{
                             marginBottom: 20,
                             padding: this.showTimeline ? 10 : 5,

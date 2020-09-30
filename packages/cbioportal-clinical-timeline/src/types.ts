@@ -21,6 +21,7 @@ export interface TimelineTrackSpecification {
     sortSimultaneousEvents?: (e: TimelineEvent[]) => TimelineEvent[];
     trackType?: TimelineTrackType;
     getLineChartValue?: (e: TimelineEvent) => number | null;
+    disableHover?: boolean;
 }
 
 export interface TimelineTick {
