@@ -322,7 +322,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @computed get xPosition() {
         let positionList: { [sampleId: string]: number } = {};
         let sequentialDistance: number = 0;
-        let sequentialPadding: number = 10;
+        let sequentialPadding: number = 20;
         if (this.props.wrapperStore.showSequentialMode) {
             sequentialDistance =
                 (this.props.store.pixelWidth - sequentialPadding * 2) /
