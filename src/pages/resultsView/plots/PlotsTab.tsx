@@ -440,6 +440,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         pill.plotModel.vertical.dataSource
                                     );
                                 }
+                                maybeSetLogScale(this.horzSelection);
+                                maybeSetLogScale(this.vertSelection);
                                 if (pill.plotModel.vertical.useSameGene) {
                                     this.selectSameGeneOptionForVerticalAxis();
                                 }
@@ -2255,8 +2257,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedDataSourceOption = option;
         this.vertSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
-        maybeSetLogScale(this.vertSelection);
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        maybeSetLogScale(this.vertSelection);
         this.autoChooseColoringMenuGene();
     }
 
@@ -2266,8 +2268,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedDataSourceOption = option;
         this.horzSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
-        maybeSetLogScale(this.horzSelection);
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        maybeSetLogScale(this.horzSelection);
         this.autoChooseColoringMenuGene();
     }
 
