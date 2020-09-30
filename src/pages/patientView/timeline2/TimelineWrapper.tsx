@@ -41,6 +41,7 @@ export interface ITimeline2Props {
     samples: Sample[];
     mutationProfileId: string;
     coverageInformation: CoverageInformation;
+    headerWidth?: number;
 }
 
 const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
@@ -53,6 +54,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
         samples,
         mutationProfileId,
         coverageInformation,
+        headerWidth,
     }: ITimeline2Props) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
@@ -106,6 +108,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             <Timeline
                                 store={stores[0]}
                                 width={width}
+                                headerWidth={headerWidth}
                                 onClickDownload={() =>
                                     downloadZippedTracks(data)
                                 }
@@ -135,47 +138,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                             />
                         </div>
                     </div>
-
-                    {/*<div style={{ marginTop: 20 }}>*/}
-                    {/*    <Timeline*/}
-                    {/*        store={stores[1]}*/}
-                    {/*        width={width}*/}
-                    {/*        onClickDownload={() => downloadZippedTracks(data)}*/}
-                    {/*        hideLabels={false}*/}
-                    {/*        hideXAxis={true}*/}
-                    {/*        visibleTracks={[]}*/}
-                    {/*        customTracks={[*/}
-                    {/*            {*/}
-                    {/*                renderHeader: () => 'VAF',*/}
-                    {/*                renderTrack: (store: TimelineStore) => (*/}
-                    {/*                    <VAFChart*/}
-                    {/*                        dataStore={dataStore}*/}
-                    {/*                        store={store}*/}
-                    {/*                        wrapperStore={wrapperStore}*/}
-                    {/*                        sampleMetaData={caseMetaData}*/}
-                    {/*                        samples={samples}*/}
-                    {/*                        mutationProfileId={*/}
-                    {/*                            mutationProfileId*/}
-                    {/*                        }*/}
-                    {/*                        coverageInformation={*/}
-                    {/*                            coverageInformation*/}
-                    {/*                        }*/}
-                    {/*                        sampleManager={sampleManager}*/}
-                    {/*                    />*/}
-                    {/*                ),*/}
-                    {/*                disableHover: true,*/}
-                    {/*                height: (store: TimelineStore) => {*/}
-                    {/*                    return wrapperStore.vafChartHeight;*/}
-                    {/*                },*/}
-                    {/*                labelForExport: 'VAF',*/}
-                    {/*            },*/}
-                    {/*        ]}*/}
-                    {/*    />*/}
-                    {/*    <VAFChartControls*/}
-                    {/*        wrapperStore={wrapperStore}*/}
-                    {/*        sampleManager={sampleManager}*/}
-                    {/*    />*/}
-                    {/*</div>*/}
                 </>
             );
         } else {
