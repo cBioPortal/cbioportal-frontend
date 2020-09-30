@@ -50,6 +50,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                     display: 'flex',
                     alignItems: 'center',
                 }}
+                data-test={'VAFChartControls'}
             >
                 <span style={{ marginTop: -3, marginRight: 3 }}>Group by:</span>
                 <div
@@ -61,6 +62,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                     }}
                 >
                     <ReactSelect
+                        name={'group-by-options-select'}
                         value={groupByValue()}
                         options={groupByOptions}
                         onChange={(option: any) => {
