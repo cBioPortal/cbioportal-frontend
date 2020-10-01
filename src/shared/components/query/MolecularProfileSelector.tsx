@@ -4,12 +4,12 @@ import { MolecularProfile } from 'cbioportal-ts-api-client';
 import FontAwesome from 'react-fontawesome';
 import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
-import classNames from 'classnames';
 import { FlexRow } from '../flexbox/FlexBox';
 import { QueryStoreComponent } from './QueryStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import AppConfig from 'appConfig';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 @observer
 export default class MolecularProfileSelector extends QueryStoreComponent<
@@ -27,7 +27,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             <FlexRow padded className={styles.MolecularProfileSelector}>
                 <SectionHeader
                     className="sectionLabel"
-                    promises={[this.store.molecularProfiles]}
+                    promises={[this.store.molecularProfilesInSelectedStudies]}
                 >
                     Select Genomic Profiles:
                 </SectionHeader>
@@ -51,8 +51,10 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                         'Protein/phosphoprotein level'
                     )}
                     {!!(
-                        this.store.molecularProfiles.isComplete &&
-                        !this.store.molecularProfiles.result.length
+                        this.store.molecularProfilesInSelectedStudies
+                            .isComplete &&
+                        !this.store.molecularProfilesInSelectedStudies.result
+                            .length
                     ) && (
                         <strong>
                             No Genomic Profiles available for this Cancer Study
@@ -121,12 +123,12 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
         let profiles = this.store.getFilteredProfiles(molecularAlterationType);
         if (!profiles.length) return null;
 
-        let groupProfileIds = profiles.map(
-            profile => profile.molecularProfileId
+        const isGroupSelected = _.some(profiles, profile =>
+            this.store.isProfileTypeSelected(
+                getSuffixOfMolecularProfile(profile)
+            )
         );
-        let groupIsSelected =
-            _.intersection(this.store.selectedProfileIds, groupProfileIds)
-                .length > 0;
+
         let output: JSX.Element[] = [];
 
         if (profiles.length > 1 && !this.store.forDownloadTab)
@@ -136,7 +138,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                     profile={profiles[0]}
                     type="checkbox"
                     label={`${groupLabel}. Select one of the profiles below:`}
-                    checked={groupIsSelected}
+                    checked={isGroupSelected}
                     isGroupToggle={true}
                 />
             );
@@ -155,9 +157,8 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
                         ? groupLabel
                         : profile.name
                 }
-                checked={_.includes(
-                    this.store.selectedProfileIds,
-                    profile.molecularProfileId
+                checked={this.store.isProfileTypeSelected(
+                    getSuffixOfMolecularProfile(profile)
                 )}
                 isGroupToggle={false}
             />
@@ -177,7 +178,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
 
         if (this.store.forDownloadTab) return output;
 
-        if (groupIsSelected && molecularAlterationType == 'MRNA_EXPRESSION') {
+        if (isGroupSelected && molecularAlterationType == 'MRNA_EXPRESSION') {
             output.push(
                 <div key={output.length} className={styles.zScore}>
                     Enter a z-score threshold{' '}
@@ -197,7 +198,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
             );
         }
 
-        if (groupIsSelected && molecularAlterationType == 'PROTEIN_LEVEL') {
+        if (isGroupSelected && molecularAlterationType == 'PROTEIN_LEVEL') {
             output.push(
                 <div key={output.length} className={styles.zScore}>
                     Enter a z-score threshold{' '}

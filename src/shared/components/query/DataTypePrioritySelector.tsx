@@ -2,40 +2,60 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import styles from './styles/styles.module.scss';
 import { QueryStore, QueryStoreComponent } from './QueryStore';
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react';
-import { FlexRow, FlexCol } from '../flexbox/FlexBox';
+import { FlexRow } from '../flexbox/FlexBox';
 import SectionHeader from '../sectionHeader/SectionHeader';
-import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { MakeMobxView } from '../MobxView';
+import { remoteData } from 'cbioportal-frontend-commons';
+import { getMolecularProfileOptions } from './QueryStoreUtils';
 
 @observer
 export default class DataTypePrioritySelector extends QueryStoreComponent<
     {},
     {}
 > {
+    readonly molecularProfileCategorySet = remoteData({
+        await: () => [this.store.groupedMolecularProfilesByType],
+        invoke: () => {
+            return Promise.resolve(
+                getMolecularProfileOptions(
+                    this.store.groupedMolecularProfilesByType.result
+                )
+            );
+        },
+        default: [],
+    });
+
+    readonly flexRowContent = MakeMobxView({
+        await: () => [this.molecularProfileCategorySet],
+        render: () => {
+            return (
+                <div style={{ display: 'flex' }}>
+                    {this.molecularProfileCategorySet.result.map(option => {
+                        return (
+                            <DataTypePriorityCheckBox
+                                label={option.label}
+                                id={option.id}
+                                profileTypes={option.profileTypes}
+                                store={this.store}
+                            />
+                        );
+                    })}
+                </div>
+            );
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} />,
+        renderError: () => (
+            <span key="error">
+                Error loading profiles for selected studies.
+            </span>
+        ),
+    });
+
     render() {
         if (!this.store.isVirtualStudyQuery) return null;
 
-        let flexRowContents: JSX.Element[] = [];
-        flexRowContents.push(
-            <LoadingIndicator
-                key="loading"
-                isLoading={this.store.profileAvailability.isPending}
-            />
-        );
-        if (this.store.profileAvailability.isError) {
-            flexRowContents.push(
-                <span key="error">
-                    Error loading profiles for selected studies.
-                </span>
-            );
-        } else if (this.store.profileAvailability.isComplete) {
-            flexRowContents = flexRowContents.concat(
-                checkBoxes(this.store.profileAvailability.result, this.store)
-            );
-        }
         return (
             <FlexRow
                 padded
@@ -45,7 +65,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
                 <SectionHeader className="sectionLabel">
                     Select Molecular Profiles:
                 </SectionHeader>
-                <FlexRow>{flexRowContents}</FlexRow>
+                <FlexRow>{this.flexRowContent.component}</FlexRow>
             </FlexRow>
         );
     }
@@ -54,51 +74,31 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
 export const DataTypePriorityCheckBox = observer(
     (props: {
         label: string;
-        state: 'mutation' | 'cna';
+        id: string;
+        profileTypes: string[];
         store: QueryStore;
-        dataTest: string;
-    }) => (
-        <label className={styles.DataTypePriorityLabel}>
-            <input
-                type="checkbox"
-                checked={props.store.dataTypePriority[props.state] || false}
-                onChange={event => {
-                    props.store.dataTypePriority[props.state] =
-                        event.currentTarget.checked;
-                }}
-                data-test={props.dataTest}
-            />
-            {props.label}
-        </label>
-    )
-);
+    }) => {
+        let isSelected = true;
+        props.profileTypes.forEach(profileType => {
+            isSelected =
+                isSelected && props.store.isProfileTypeSelected(profileType);
+        });
 
-export function checkBoxes(
-    availability: { mutation: boolean; cna: boolean },
-    store: QueryStore
-): JSX.Element[] {
-    let buttons = [];
-    if (availability.mutation) {
-        buttons.push(
-            <DataTypePriorityCheckBox
-                key="M"
-                label={'Mutation'}
-                state={'mutation'}
-                store={store}
-                dataTest="M"
-            />
+        return (
+            <label className={styles.DataTypePriorityLabel}>
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={event => {
+                        props.store.setProfileTypes(
+                            props.profileTypes,
+                            event.currentTarget.checked
+                        );
+                    }}
+                    data-test={props.id}
+                />
+                {props.label}
+            </label>
         );
     }
-    if (availability.cna) {
-        buttons.push(
-            <DataTypePriorityCheckBox
-                key="C"
-                label={'Copy number alterations'}
-                state={'cna'}
-                store={store}
-                dataTest="C"
-            />
-        );
-    }
-    return buttons;
-}
+);

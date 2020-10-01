@@ -625,11 +625,7 @@ export class ResultsViewPageStore {
     @observable public urlValidationError: string | null = null;
 
     @computed get profileFilter() {
-        if (this.urlWrapper.query.profileFilter) {
-            return parseInt(this.urlWrapper.query.profileFilter, 10);
-        } else {
-            return 0;
-        }
+        return this.urlWrapper.query.profileFilter || '0';
     }
 
     @observable ajaxErrors: Error[] = [];

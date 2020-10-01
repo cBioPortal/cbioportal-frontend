@@ -1452,6 +1452,7 @@ export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
     return _.mapValues(
         _.keyBy([
             AlterationTypeConstants.MUTATION_EXTENDED,
+            AlterationTypeConstants.STRUCTURAL_VARIANT,
             AlterationTypeConstants.COPY_NUMBER_ALTERATION,
             AlterationTypeConstants.MRNA_EXPRESSION,
             AlterationTypeConstants.PROTEIN_LEVEL,

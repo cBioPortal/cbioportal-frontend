@@ -215,11 +215,11 @@ describe('case set selection in modify query form', function() {
         browser.pause(100);
 
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
@@ -262,11 +262,11 @@ describe('case set selection in modify query form', function() {
         );
 
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
@@ -346,22 +346,22 @@ describe('genetic profile selection in modify query form', function() {
 
         // wait for data type priority selector to load
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
             10000
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
             ),
             "'Mutation' should be selected"
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]'
             ),
             "'Copy number alterations' should be selected"
         );
@@ -447,22 +447,22 @@ describe('genetic profile selection in modify query form', function() {
 
         // wait for data type priority selector to load
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
             10000
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
             ),
             "'Mutation' should be selected"
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]'
             ),
             "'Copy number alterations' should be selected"
         );

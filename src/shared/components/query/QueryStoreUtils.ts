@@ -4,9 +4,25 @@ import {
     QueryStore,
 } from './QueryStore';
 import { MolecularProfile, SampleList } from 'cbioportal-ts-api-client';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import * as _ from 'lodash';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
+import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+
+export enum MutationProfilesEnum {
+    mutations = 'mutations',
+}
+
+export enum CNAProfilesEnum {
+    cna = 'cna',
+    gistic = 'gistic',
+    cna_rae = 'cna_rae',
+    cna_consensus = 'cna_consensus',
+}
+
+export enum StructuralVariantProfilesEnum {
+    fusion = 'fusion', // TODO: should be removed once fusion profiles are removed from data files and database
+    structural_variants = 'structural_variants',
+}
 
 export function currentQueryParams(store: QueryStore) {
     const selectableSelectedStudyIds = store.selectableSelectedStudyIds;
@@ -16,86 +32,81 @@ export function currentQueryParams(store: QueryStore) {
         .map(caseRow => caseRow.studyId + ':' + caseRow.sampleId)
         .join('+');
 
-    // select default profiles for OQL alteration types
-    let genetic_profile_ids_PROFILE_MUTATION_EXTENDED = store.getSelectedProfileIdFromMolecularAlterationType(
-        'MUTATION_EXTENDED'
-    );
-    if (
-        store.alterationTypesInOQL.haveMutInQuery &&
-        !genetic_profile_ids_PROFILE_MUTATION_EXTENDED &&
-        store.defaultMutationProfile
-    ) {
-        genetic_profile_ids_PROFILE_MUTATION_EXTENDED =
-            store.defaultMutationProfile.molecularProfileId;
-    }
+    let profileFilters: string[] = Object.keys(store.selectedProfileIdSet);
 
-    let genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT = store.getSelectedProfileIdFromMolecularAlterationType(
-        'STRUCTURAL_VARIANT'
-    );
-    if (
-        store.alterationTypesInOQL.haveStructuralVariantInQuery &&
-        !genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT &&
-        store.defaultStructuralVariantProfile
-    ) {
-        genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT =
-            store.defaultStructuralVariantProfile.molecularProfileId;
-    }
+    // If there is a single non-virtual study in selection, add profiles based on the alteration types in the OQL if they are not pre-selected.
+    // Example: If there are anything specific to mutation, ex: TP53: MUT = TRUNC INFRAME, then include/select mutation profile if it not selected in molecular profile slection section. Similarly even for other alteration type (Mutation, Structural Variant, Copy Number Alteration, mRNA Expression and Protein) in OQL
+    if (!store.isVirtualStudyQuery) {
+        // select default profiles for OQL alteration types
+        let selectedMutationProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
+            'MUTATION_EXTENDED'
+        );
+        if (
+            store.alterationTypesInOQL.haveMutInQuery &&
+            !selectedMutationProfileType &&
+            store.defaultMutationProfile
+        ) {
+            profileFilters.push(
+                getSuffixOfMolecularProfile(store.defaultMutationProfile)
+            );
+        }
 
-    let genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION = store.getSelectedProfileIdFromMolecularAlterationType(
-        'COPY_NUMBER_ALTERATION'
-    );
-    if (
-        store.alterationTypesInOQL.haveCnaInQuery &&
-        !genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION &&
-        store.defaultCnaProfile
-    ) {
-        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION =
-            store.defaultCnaProfile.molecularProfileId;
-    }
+        let selectedStructuralVariantProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
+            'STRUCTURAL_VARIANT'
+        );
+        if (
+            store.alterationTypesInOQL.haveStructuralVariantInQuery &&
+            !selectedStructuralVariantProfileType &&
+            store.defaultStructuralVariantProfile
+        ) {
+            profileFilters.push(
+                getSuffixOfMolecularProfile(
+                    store.defaultStructuralVariantProfile
+                )
+            );
+        }
 
-    let genetic_profile_ids_PROFILE_MRNA_EXPRESSION = store.getSelectedProfileIdFromMolecularAlterationType(
-        'MRNA_EXPRESSION'
-    );
-    if (
-        store.alterationTypesInOQL.haveMrnaInQuery &&
-        !genetic_profile_ids_PROFILE_MRNA_EXPRESSION &&
-        store.defaultMrnaProfile
-    ) {
-        genetic_profile_ids_PROFILE_MRNA_EXPRESSION =
-            store.defaultMrnaProfile.molecularProfileId;
-    }
+        let selectedCNAProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
+            'COPY_NUMBER_ALTERATION'
+        );
+        if (
+            store.alterationTypesInOQL.haveCnaInQuery &&
+            !selectedCNAProfileType &&
+            store.defaultCnaProfile
+        ) {
+            profileFilters.push(
+                getSuffixOfMolecularProfile(store.defaultCnaProfile)
+            );
+        }
 
-    let genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION = store.getSelectedProfileIdFromMolecularAlterationType(
-        'PROTEIN_LEVEL'
-    );
-    if (
-        store.alterationTypesInOQL.haveProtInQuery &&
-        !genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION &&
-        store.defaultProtProfile
-    ) {
-        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION =
-            store.defaultProtProfile.molecularProfileId;
+        let selectedMRNAProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
+            'MRNA_EXPRESSION'
+        );
+        if (
+            store.alterationTypesInOQL.haveMrnaInQuery &&
+            !selectedMRNAProfileType &&
+            store.defaultMrnaProfile
+        ) {
+            profileFilters.push(
+                getSuffixOfMolecularProfile(store.defaultMrnaProfile)
+            );
+        }
+
+        let selectedProtienProfileType = store.getSelectedProfileTypeFromMolecularAlterationType(
+            'PROTEIN_LEVEL'
+        );
+        if (
+            store.alterationTypesInOQL.haveProtInQuery &&
+            !selectedProtienProfileType &&
+            store.defaultProtProfile
+        ) {
+            profileFilters.push(
+                getSuffixOfMolecularProfile(store.defaultProtProfile)
+            );
+        }
     }
 
     const ret: CancerStudyQueryUrlParams = {
-        genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-        genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
-        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-        genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-        genetic_profile_ids_PROFILE_METHYLATION:
-            store.getSelectedProfileIdFromMolecularAlterationType(
-                'METHYLATION'
-            ) ||
-            store.getSelectedProfileIdFromMolecularAlterationType(
-                'METHYLATION_BINARY'
-            ),
-        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
-        genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType(
-            'GENESET_SCORE'
-        ),
-        genetic_profile_ids_PROFILE_GENERIC_ASSAY: store.getSelectedProfileIdFromMolecularAlterationType(
-            'GENERIC_ASSAY'
-        ),
         cancer_study_id:
             selectableSelectedStudyIds.length === 1
                 ? selectableSelectedStudyIds[0]
@@ -103,8 +114,7 @@ export function currentQueryParams(store: QueryStore) {
         cancer_study_list: undefined,
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
-        data_priority: store.dataTypePriorityCode,
-        profileFilter: store.dataTypePriorityCode,
+        profileFilter: profileFilters.join(','),
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
         case_ids,
         gene_list: normalizeQuery(store.geneQuery) || ' ', // empty string won't work
@@ -121,29 +131,6 @@ export function currentQueryParams(store: QueryStore) {
     }
 
     return { query: ret };
-}
-
-export function profileAvailability(molecularProfiles: MolecularProfile[]) {
-    let hasMutationProfile = false;
-    let hasCNAProfile = false;
-    for (const profile of molecularProfiles) {
-        if (!profile.showProfileInAnalysisTab) continue;
-
-        switch (profile.molecularAlterationType) {
-            case AlterationTypeConstants.MUTATION_EXTENDED:
-                hasMutationProfile = true;
-                break;
-            case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-                hasCNAProfile = true;
-                break;
-        }
-
-        if (hasMutationProfile && hasCNAProfile) break;
-    }
-    return {
-        mutation: hasMutationProfile,
-        cna: hasCNAProfile,
-    };
 }
 
 export function categorizedSamplesCount(
@@ -286,4 +273,46 @@ export function categorizedSamplesCount(
             0
         ),
     };
+}
+
+export function getMolecularProfileOptions(molecularProfilesByType: {
+    [profileType: string]: MolecularProfile[];
+}) {
+    const molecularProfileOptions: {
+        label: string;
+        id: string;
+        profileTypes: string[];
+    }[] = [];
+
+    if (molecularProfilesByType[MutationProfilesEnum.mutations]) {
+        molecularProfileOptions.push({
+            label: 'Mutations',
+            id: MutationProfilesEnum.mutations,
+            profileTypes: [MutationProfilesEnum.mutations],
+        });
+    }
+
+    const structuralVariantProfileTypes = Object.keys(
+        StructuralVariantProfilesEnum
+    ).filter(profileType => molecularProfilesByType[profileType] !== undefined);
+    if (structuralVariantProfileTypes.length > 0) {
+        molecularProfileOptions.push({
+            label: 'Structural variants',
+            id: structuralVariantProfileTypes.join('-'),
+            profileTypes: structuralVariantProfileTypes,
+        });
+    }
+
+    const cnaProfileTypes = Object.keys(CNAProfilesEnum).filter(
+        profileType => molecularProfilesByType[profileType] !== undefined
+    );
+    if (cnaProfileTypes.length > 0) {
+        molecularProfileOptions.push({
+            label: 'Copy number alterations',
+            id: cnaProfileTypes.join('-'),
+            profileTypes: cnaProfileTypes,
+        });
+    }
+
+    return molecularProfileOptions;
 }

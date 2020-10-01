@@ -73,6 +73,7 @@ import {
 import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { CNAProfilesEnum } from 'shared/components/query/QueryStoreUtils';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -89,13 +90,6 @@ export enum NumericalGroupComparisonType {
 export enum DataType {
     STRING = 'STRING',
     NUMBER = 'NUMBER',
-}
-
-export enum CNAProfilesEnum {
-    cna = 'cna',
-    gistic = 'gistic',
-    rae = 'rae',
-    cna_consensus = 'cna_consensus',
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -2772,7 +2766,7 @@ export function getCNASamplesCount(molecularProfileSampleCountSet: {
     return (
         molecularProfileSampleCountSet[CNAProfilesEnum.cna] ||
         molecularProfileSampleCountSet[CNAProfilesEnum.gistic] ||
-        molecularProfileSampleCountSet[CNAProfilesEnum.rae] ||
+        molecularProfileSampleCountSet[CNAProfilesEnum.cna_rae] ||
         molecularProfileSampleCountSet[CNAProfilesEnum.cna_consensus] ||
         0
     );

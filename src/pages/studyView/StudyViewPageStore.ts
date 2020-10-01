@@ -6188,6 +6188,7 @@ export class StudyViewPageStore {
                 .join(','),
             tab_index: 'tab_visualize',
         };
+        let molecularProfileFilters: string[] = [];
 
         if (
             this.filteredVirtualStudies.result.length === 0 &&
@@ -6197,52 +6198,57 @@ export class StudyViewPageStore {
                 this.alterationTypesInOQL.haveMutInQuery &&
                 this.defaultMutationProfile
             ) {
-                formOps[
-                    'genetic_profile_ids_PROFILE_MUTATION_EXTENDED'
-                ] = this.defaultMutationProfile.molecularProfileId;
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultMutationProfile)
+                );
             }
             if (
                 this.alterationTypesInOQL.haveStructuralVariantInQuery &&
                 this.defaultStructuralVariantProfile
             ) {
-                formOps[
-                    'genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT'
-                ] = this.defaultStructuralVariantProfile.molecularProfileId;
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(
+                        this.defaultStructuralVariantProfile
+                    )
+                );
             }
             if (
                 this.alterationTypesInOQL.haveCnaInQuery &&
                 this.defaultCnaProfile
             ) {
-                formOps[
-                    'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION'
-                ] = this.defaultCnaProfile.molecularProfileId;
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultCnaProfile)
+                );
             }
             if (
                 this.alterationTypesInOQL.haveMrnaInQuery &&
                 this.defaultMrnaProfile
             ) {
-                formOps[
-                    'genetic_profile_ids_PROFILE_MRNA_EXPRESSION'
-                ] = this.defaultMrnaProfile.molecularProfileId;
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultMrnaProfile)
+                );
             }
             if (
                 this.alterationTypesInOQL.haveProtInQuery &&
                 this.defaultProtProfile
             ) {
-                formOps[
-                    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION'
-                ] = this.defaultProtProfile.molecularProfileId;
+                molecularProfileFilters.push(
+                    getSuffixOfMolecularProfile(this.defaultProtProfile)
+                );
             }
         } else {
-            let data_priority = '0';
-            let { mutation, cna } = {
-                mutation: !_.isEmpty(this.mutationProfiles.result),
-                cna: !_.isEmpty(this.cnaProfiles),
-            };
-            if (mutation && cna) data_priority = '0';
-            else if (mutation) data_priority = '1';
-            else if (cna) data_priority = '2';
-            formOps.data_priority = data_priority;
+            molecularProfileFilters = _.chain([
+                ...this.mutationProfiles.result,
+                ...this.cnaProfiles.result,
+                ...this.structuralVariantProfiles.result,
+            ])
+                .map(profile => getSuffixOfMolecularProfile(profile))
+                .uniq()
+                .value();
+        }
+
+        if (molecularProfileFilters.length > 0) {
+            formOps.profileFilter = molecularProfileFilters.join(',');
         }
 
         if (this.chartsAreFiltered) {
