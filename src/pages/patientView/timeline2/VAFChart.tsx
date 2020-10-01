@@ -14,7 +14,7 @@ import {
     getYAxisTickmarks,
     IPoint,
     numLeadingDecimalZeros,
-} from '../mutation/VAFLineChartUtils';
+} from './VAFChartUtils';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import _ from 'lodash';
 import { Popover } from 'react-bootstrap';
@@ -34,6 +34,7 @@ import { GROUP_BY_NONE } from './VAFChartControls';
 import TimelineWrapperStore from './TimelineWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
+import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 
 interface IVAFChartProps {
     dataStore: PatientViewMutationsDataStore;
@@ -49,7 +50,6 @@ interface IVAFChartProps {
 const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
 const HIGHLIGHT_COLOR = '#318ec4';
 const SCATTER_DATA_POINT_SIZE = 3;
-const MIN_LOG_ARG = 0.001;
 
 const VAFPoint: React.FunctionComponent<{
     x: number;
@@ -248,7 +248,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             .max();
     }
 
-    @computed get maxYTickmark() {
+    @computed get maxYTickmarkValue() {
         if (
             !this.props.wrapperStore.vafChartYAxisToDataRange ||
             this.maxYValue === undefined
@@ -260,7 +260,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         );
     }
 
-    @computed get minYTickmark() {
+    @computed get minYTickmarkValue() {
         if (
             !this.props.wrapperStore.vafChartYAxisToDataRange ||
             this.minYValue === undefined
@@ -275,10 +275,10 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @computed get ticks(): { label: string; value: number; offset: number }[] {
         const yPadding = 10;
         const tickmarkValues = getYAxisTickmarks(
-            this.minYTickmark,
-            this.maxYTickmark
+            this.minYTickmarkValue,
+            this.maxYTickmarkValue
         );
-        const numDecimals = numLeadingDecimalZeros(this.minYTickmark) + 1;
+        const numDecimals = numLeadingDecimalZeros(this.minYTickmarkValue) + 1;
         return _.map(tickmarkValues, (v: number) => {
             return {
                 label: v.toFixed(numDecimals),
@@ -389,57 +389,14 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return sampleGroups;
     }
 
-    // of datum value on svg y-axis coordinate system
+    // returns function for scaling svg y-axis coordinate system
     @computed get scaleYValue() {
-        const yPadding = 10;
-
-        if (
-            this.maxYTickmark !== undefined &&
-            this.minYTickmark !== undefined
-        ) {
-            // when truncating the range of values is distributed
-            // differently over the svg vertical space
-            const rangeMinusPadding =
-                this.props.wrapperStore.dataHeight - yPadding * 2;
-
-            if (this.props.wrapperStore.vafChartLogScale) {
-                const logMinTickmark = Math.log10(
-                    Math.max(MIN_LOG_ARG, this.minYTickmark)
-                );
-                const logMaxTickmark = Math.log10(
-                    Math.max(MIN_LOG_ARG, this.maxYTickmark)
-                );
-                const valueRange = logMaxTickmark - logMinTickmark;
-                const linearTransformationScale =
-                    rangeMinusPadding / valueRange;
-
-                return (y: number) => {
-                    const logY = Math.log10(Math.max(MIN_LOG_ARG, y));
-                    // translate so that min tickmark represents the 0 line
-                    const translatedY = logY - logMinTickmark;
-                    return (
-                        this.props.wrapperStore.dataHeight -
-                        yPadding -
-                        translatedY * linearTransformationScale
-                    );
-                };
-            } else {
-                const valueRange = this.maxYTickmark - this.minYTickmark;
-                const linearTransformationScale =
-                    rangeMinusPadding / valueRange;
-
-                return (y: number) => {
-                    // translate so that min tickmark represents the 0 line
-                    const translatedY = y - this.minYTickmark;
-                    return (
-                        this.props.wrapperStore.dataHeight -
-                        yPadding -
-                        translatedY * linearTransformationScale
-                    );
-                };
-            }
-        }
-        return (y: number) => y;
+        return yValueScaleFunction(
+            this.minYTickmarkValue,
+            this.maxYTickmarkValue,
+            this.props.wrapperStore.dataHeight,
+            this.props.wrapperStore.vafChartLogScale
+        );
     }
 
     @computed get sampleIdOrder() {

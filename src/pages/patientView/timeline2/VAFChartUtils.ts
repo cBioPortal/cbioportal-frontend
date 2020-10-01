@@ -6,6 +6,8 @@ import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 
+const MIN_LOG_ARG = 0.001;
+
 export interface IPoint {
     x: number;
     y: number;
@@ -269,7 +271,57 @@ export function ceil10(value: number, exp: number) {
     return decimalAdjust('ceil', value, exp);
 }
 
-// Number of zero's between comma and first digit
+export function yValueScaleFunction(
+    minTickmarkValue: number,
+    maxTickmarkValue: number,
+    plotRange: number,
+    log10Transform: boolean | undefined
+): (value: number) => number {
+    const yPadding = 10;
+
+    if (maxTickmarkValue !== undefined && minTickmarkValue !== undefined) {
+        // when truncating the range of values is distributed
+        // differently over the svg vertical space
+        const rangeMinusPadding = plotRange - yPadding * 2;
+
+        if (log10Transform) {
+            const logMinTickmark = Math.log10(
+                Math.max(MIN_LOG_ARG, minTickmarkValue)
+            );
+            const logMaxTickmark = Math.log10(
+                Math.max(MIN_LOG_ARG, maxTickmarkValue)
+            );
+            const valueRange = logMaxTickmark - logMinTickmark;
+            const linearTransformationScale = rangeMinusPadding / valueRange;
+
+            return (y: number) => {
+                const logY = Math.log10(Math.max(MIN_LOG_ARG, y));
+                // translate so that min tickmark represents the 0 line
+                const translatedY = logY - logMinTickmark;
+                return (
+                    plotRange -
+                    yPadding -
+                    translatedY * linearTransformationScale
+                );
+            };
+        } else {
+            const valueRange = maxTickmarkValue - minTickmarkValue;
+            const linearTransformationScale = rangeMinusPadding / valueRange;
+
+            return (y: number) => {
+                // translate so that min tickmark represents the 0 line
+                const translatedY = y - minTickmarkValue;
+                return (
+                    plotRange -
+                    yPadding -
+                    translatedY * linearTransformationScale
+                );
+            };
+        }
+    }
+    return (y: number) => y;
+}
+
 // Examples: 0 -> 0, 0.1 -> 0, 0.01 -> 1, 0.0001 -> 3
 export function numLeadingDecimalZeros(y: number) {
     if (y === 0 || y >= 0.1) return 0;
