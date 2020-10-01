@@ -25,12 +25,14 @@ import {
 import { SortDirection } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
 import { DEFAULT_SORTING_COLUMN } from '../StudyViewConfig';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountSummary[];
     filters: string[];
     highlightedRow?: (value: string | undefined) => void;
     onUserSelection: (values: string[]) => void;
+    openComparisonPage?: () => void;
     label?: string;
     labelDescription?: string;
     patientAttribute: boolean;
@@ -308,6 +310,33 @@ export default class ClinicalTable extends React.Component<
         this.sortDirection = sortDirection;
     }
 
+    @computed get selectedClinicalValues() {
+        const filtersMap = _.keyBy(this.props.filters);
+        return this.props.data.filter(d => d.value in filtersMap);
+    }
+
+    @computed get extraButtons() {
+        if (this.props.openComparisonPage) {
+            return [
+                {
+                    content: (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <ComparisonVsIcon
+                                width={17}
+                                style={{ marginRight: 5 }}
+                            />
+                            Compare
+                        </div>
+                    ),
+                    onClick: this.props.openComparisonPage,
+                    isDisabled: () => this.selectedClinicalValues.length === 1,
+                },
+            ];
+        } else {
+            return [];
+        }
+    }
+
     render() {
         return (
             <ClinicalTableComponent
@@ -318,6 +347,7 @@ export default class ClinicalTable extends React.Component<
                 addAll={this.addAll}
                 removeAll={this.removeAll}
                 showAddRemoveAllButtons={this.props.showAddRemoveAllButtons}
+                extraButtons={this.extraButtons}
                 sortBy={this.sortBy}
                 sortDirection={this.sortDirection}
                 afterSorting={this.afterSorting}
