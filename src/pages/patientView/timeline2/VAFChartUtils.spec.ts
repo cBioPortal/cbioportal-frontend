@@ -878,4 +878,8 @@ describe('VAFChartUtils', () => {
     describe('numLeadingDecimalZeros', () => {
         // TODO
     });
+
+    describe('yValueScaleFunction', () => {
+        // TODO
+    });
 });
