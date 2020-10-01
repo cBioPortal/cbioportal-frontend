@@ -44,6 +44,11 @@ export type IFixedHeaderTableProps<T> = {
     showControlsAtTop?: boolean;
     hideControls?: boolean;
     showAddRemoveAllButtons?: boolean;
+    extraButtons?: {
+        content: any;
+        onClick: () => void;
+        isDisabled: () => boolean;
+    }[];
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
     removeAllDisabled?: boolean;
@@ -386,6 +391,16 @@ export default class FixedHeaderTable<T> extends React.Component<
                                 Deselect all
                             </button>
                         )}
+                        {this.props.extraButtons &&
+                            this.props.extraButtons.map(btn => (
+                                <button
+                                    className="btn btn-default btn-xs"
+                                    onClick={btn.onClick}
+                                    disabled={btn.isDisabled()}
+                                >
+                                    {btn.content}
+                                </button>
+                            ))}
                     </div>
                 </If>
 
