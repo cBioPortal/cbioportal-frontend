@@ -95,6 +95,4 @@ describe('FrequencyBar', () => {
             'component should have a tooltip'
         );
     });
-
-    after(() => {});
 });

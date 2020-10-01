@@ -7,10 +7,6 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
 
 describe('AlleleCountColumnFormatter', () => {
-    before(() => {});
-
-    after(() => {});
-
     it('ignores invalid allele count values', () => {
         const samples = [
             'SAMPLE1',

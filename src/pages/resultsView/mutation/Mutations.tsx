@@ -225,6 +225,9 @@ export default class Mutations extends React.Component<
                         generateGenomeNexusHgvsgUrl={
                             this.props.store.generateGenomeNexusHgvsgUrl
                         }
+                        existsSomeMutationWithAscnProperty={
+                            this.props.store.existsSomeMutationWithAscnProperty
+                        }
                         mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
                         showTranscriptDropDown={
                             AppConfig.serverConfig.show_transcript_dropdown
