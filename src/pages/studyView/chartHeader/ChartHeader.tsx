@@ -21,6 +21,7 @@ import FlexAlignedCheckbox from '../../../shared/components/FlexAlignedCheckbox'
 import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -109,9 +110,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     onMouseEnter={() => (this.comparisonSubmenuOpen = true)}
                     onMouseLeave={() => (this.comparisonSubmenuOpen = false)}
                 >
-                    <div>
-                        <img
-                            src={require('../../../rootImages/compare_vs.svg')}
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <ComparisonVsIcon
                             className={classnames(
                                 'fa fa-fw',
                                 styles.menuItemIcon
@@ -185,9 +185,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             <a
                 className="dropdown-item"
                 onClick={() => this.props.openComparisonPage()}
+                style={{ display: 'flex', alignItems: 'center' }}
             >
-                <img
-                    src={require('../../../rootImages/compare_vs.svg')}
+                <ComparisonVsIcon
                     className={classnames('fa fa-fw', styles.menuItemIcon)}
                 />
                 Compare Groups
