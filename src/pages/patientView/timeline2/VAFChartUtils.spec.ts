@@ -1,16 +1,13 @@
 import { assert } from 'chai';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import { MutationStatus } from './PatientViewMutationsTabUtils';
+import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../shared/lib/StoreUtils';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
-import { makeMutationHeatmapData } from './oncoprint/MutationOncoprintUtils';
-import { MutationOncoprintMode } from './oncoprint/MutationOncoprint';
-import { assertDeepEqualInAnyOrder } from '../../../shared/lib/SpecUtils';
-import { computeRenderData, IPoint } from './VAFLineChartUtils';
+import { computeRenderData, IPoint } from './VAFChartUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 import _ from 'lodash';
 
-describe('VAFLineChartUtils', () => {
+describe('VAFChartUtils', () => {
     describe('computeRenderData', () => {
         function roughlyDeepEqualPoints(
             actual: IPoint[],
@@ -860,5 +857,25 @@ describe('VAFLineChartUtils', () => {
                 }
             );
         });
+    });
+
+    describe('getYAxisTickmarks', () => {
+        // TODO
+    });
+
+    describe('round10', () => {
+        // TODO
+    });
+
+    describe('floor10', () => {
+        // TODO
+    });
+
+    describe('ceil10', () => {
+        // TODO
+    });
+
+    describe('numLeadingDecimalZeros', () => {
+        // TODO
     });
 });

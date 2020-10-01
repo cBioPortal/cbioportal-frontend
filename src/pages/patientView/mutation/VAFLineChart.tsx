@@ -33,7 +33,7 @@ import invertIncreasingFunction, {
 } from '../../../shared/lib/invertIncreasingFunction';
 import { mutationTooltip } from './PatientViewMutationsTabUtils';
 import { tickFormatNumeral } from '../../../shared/components/plots/TickUtils';
-import { computeRenderData, IPoint } from './VAFLineChartUtils';
+import { computeRenderData, IPoint } from '../timeline2/VAFChartUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 
 export interface IVAFLineChartProps {
