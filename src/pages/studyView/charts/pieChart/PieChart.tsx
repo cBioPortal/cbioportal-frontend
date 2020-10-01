@@ -31,6 +31,7 @@ export interface IPieChartProps {
     height: number;
     data: ClinicalDataCountSummary[];
     filters: string[];
+    openComparisonPage?: () => void;
     onUserSelection: (values: string[]) => void;
     placement: 'left' | 'right';
     patientAttribute: boolean;
@@ -308,6 +309,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
                     <ClinicalTable
                         width={300}
                         height={150}
+                        openComparisonPage={this.props.openComparisonPage}
                         data={this.props.data}
                         label={this.props.label}
                         labelDescription={this.props.labelDescription}
