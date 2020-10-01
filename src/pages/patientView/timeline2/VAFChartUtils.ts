@@ -1,5 +1,5 @@
 import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
-import { MutationStatus } from './PatientViewMutationsTabUtils';
+import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
