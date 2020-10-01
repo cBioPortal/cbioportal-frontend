@@ -5,6 +5,7 @@ import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
+import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 
 const MIN_LOG_ARG = 0.001;
 
@@ -218,6 +219,7 @@ export function getYAxisTickmarks(
     maxY: number,
     numTicks: number = 6
 ): number[] {
+    if (numTicks === 0) return [minY, maxY];
     const tickmarkSize = (maxY - minY) / (numTicks - 1);
     const tickMarks = [minY];
     for (let i = 1; i < numTicks; i++) {
@@ -324,6 +326,6 @@ export function yValueScaleFunction(
 
 // Examples: 0 -> 0, 0.1 -> 0, 0.01 -> 1, 0.0001 -> 3
 export function numLeadingDecimalZeros(y: number) {
-    if (y === 0 || y >= 0.1) return 0;
-    return -Math.floor(Math.log10(y) / Math.log10(10) + 1);
+    if (y == 0 || y >= 0.1) return 0;
+    return numberOfLeadingDecimalZeros(y);
 }

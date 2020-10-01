@@ -3,9 +3,20 @@ import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../shared/lib/StoreUtils';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
-import { computeRenderData, IPoint } from './VAFChartUtils';
+import {
+    ceil10,
+    computeRenderData,
+    floor10,
+    getYAxisTickmarks,
+    IPoint,
+    numLeadingDecimalZeros,
+    round10,
+    yValueScaleFunction,
+} from './VAFChartUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 import _ from 'lodash';
+import { assertDeepEqualInAnyOrder } from 'shared/lib/SpecUtils';
+import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
 
 describe('VAFChartUtils', () => {
     describe('computeRenderData', () => {
@@ -860,26 +871,95 @@ describe('VAFChartUtils', () => {
     });
 
     describe('getYAxisTickmarks', () => {
-        // TODO
+        it('handles normal case', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, 6);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 2, 4, 6, 8, 10]);
+        });
+        it('handles zero length', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, 0);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 10]);
+        });
+        it('handles undefined length (defaults to 6)', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, undefined);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 2, 4, 6, 8, 10]);
+        });
+        it('handles same minY and maxY', () => {
+            const tickmarks = getYAxisTickmarks(0, 0, 6);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 0, 0, 0, 0, 0]);
+        });
     });
 
     describe('round10', () => {
-        // TODO
+        it('rounds integer', () => {
+            assert.equal(round10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(round10(1.001, 0), 1);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(round10(1.0018, -3), 1.002);
+        });
     });
 
     describe('floor10', () => {
-        // TODO
+        it('rounds integer', () => {
+            assert.equal(floor10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(floor10(1.001, 0), 1);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(floor10(1.0015, -3), 1.001);
+        });
     });
 
     describe('ceil10', () => {
-        // TODO
+        it('rounds integer', () => {
+            assert.equal(ceil10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(ceil10(1.001, 0), 2);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(ceil10(1.0013, -3), 1.002);
+        });
     });
 
     describe('numLeadingDecimalZeros', () => {
-        // TODO
+        it('handles integer correctly', () => {
+            assert.equal(numLeadingDecimalZeros(1), 0);
+        });
+        it('handles decimal correctly', () => {
+            assert.equal(numLeadingDecimalZeros(0.001), 2);
+        });
+        it('handles decimal larger than 1 correctly', () => {
+            assert.equal(numLeadingDecimalZeros(1.001), 0);
+        });
+        it('handles decimal larger than 0.1 correctly', () => {
+            assert.equal(numLeadingDecimalZeros(0.1), 0);
+        });
     });
 
     describe('yValueScaleFunction', () => {
-        // TODO
+        it('handles linear scale, zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(0, 10, 120, false);
+            assert.equal(f(1), 120 - yPadding - 10);
+        });
+        it('handles linear scale, larger than zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(1, 9, 120, false);
+            assert.equal(f(1), 120 - yPadding - 0);
+        });
+        it('handles log10 scale, zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(0, 10, 120, true);
+            assert.equal(f(1), 120 - yPadding - 75);
+        });
+        it('handles log10 scale, larger than zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(1, 9, 120, true);
+            assert.approximately(f(2), 120 - yPadding - 31.5, 0.1);
+        });
     });
 });
