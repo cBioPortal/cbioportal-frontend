@@ -322,7 +322,7 @@ export default class ClinicalTable extends React.Component<
                     content: (
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <ComparisonVsIcon
-                                width={17}
+                                width={16}
                                 style={{ marginRight: 5 }}
                             />
                             Compare
