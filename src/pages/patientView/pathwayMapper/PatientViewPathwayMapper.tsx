@@ -5,6 +5,7 @@ import { PatientViewPageTabs } from '../PatientViewPageTabs';
 import 'pathway-mapper/dist/base.css';
 import PathwayMapperTable, {
     IPathwayMapperTable,
+    IPathwayMapperTableColumnType,
 } from '../../../shared/lib/pathwayMapper/PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
@@ -269,7 +270,12 @@ export default class PatientViewPathwayMapper extends React.Component<
                 data={data}
                 selectedPathway={selectedPathway}
                 changePathway={onPathwaySelect}
-                view={'patient'}
+                columnsOverride={{
+                    [IPathwayMapperTableColumnType.SCORE]: {
+                        name: '# Genes matched',
+                        tooltip: <span>Number of Genes Matched</span>,
+                    },
+                }}
             />
         );
     }

@@ -5,6 +5,7 @@ import { addGenesToQuery, ResultsViewTab } from '../ResultsViewPageHelpers';
 import 'pathway-mapper/dist/base.css';
 import PathwayMapperTable, {
     IPathwayMapperTable,
+    IPathwayMapperTableColumnType,
 } from '../../../shared/lib/pathwayMapper/PathwayMapperTable';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
@@ -367,7 +368,6 @@ export default class ResultsViewPathwayMapper extends React.Component<
                 data={data}
                 selectedPathway={selectedPathway}
                 changePathway={onPathwaySelect}
-                view={'results'}
             />
         );
     }
