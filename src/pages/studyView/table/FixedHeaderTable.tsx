@@ -391,18 +391,19 @@ export default class FixedHeaderTable<T> extends React.Component<
                                 Deselect all
                             </button>
                         )}
-                        {this.props.extraButtons &&
-                            this.props.extraButtons.map(btn => (
-                                <button
-                                    className="btn btn-default btn-xs"
-                                    onClick={btn.onClick}
-                                    disabled={btn.isDisabled()}
-                                >
-                                    {btn.content}
-                                </button>
-                            ))}
                     </div>
                 </If>
+                {this.props.extraButtons &&
+                    this.props.extraButtons.map(btn => (
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={btn.onClick}
+                            disabled={btn.isDisabled()}
+                            style={{ marginLeft: 3 }}
+                        >
+                            {btn.content}
+                        </button>
+                    ))}
 
                 <If condition={this.props.numberOfSelectedRows > 0}>
                     <div className="btn-group">
