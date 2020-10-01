@@ -3628,9 +3628,11 @@ export class StudyViewPageStore {
 
         if (
             this.displayTreatments.result &&
-            ['triage-portal', 'genie-portal'].includes(
-                AppConfig.serverConfig.app_name!
-            )
+            [
+                'triage-portal',
+                'genie-portal',
+                'cbioportal-genie-private',
+            ].includes(AppConfig.serverConfig.app_name!)
         ) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
@@ -3647,9 +3649,11 @@ export class StudyViewPageStore {
 
         if (
             this.displayTreatments.result &&
-            ['triage-portal', 'genie-portal'].includes(
-                AppConfig.serverConfig.app_name!
-            )
+            [
+                'triage-portal',
+                'genie-portal',
+                'cbioportal-genie-private',
+            ].includes(AppConfig.serverConfig.app_name!)
         ) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
                 uniqueKey: 'PATIENT_TREATMENTS',
