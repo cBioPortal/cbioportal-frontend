@@ -225,10 +225,10 @@ export default class AddChartByType extends React.Component<
                         addAll={this.addAll}
                         removeAll={this.removeAll}
                         showSelectableNumber={true}
-                        showAddRemoveAllButtons={true}
+                        showAddRemoveAllButton={true}
                         autoFocusSearchAfterRendering={true}
-                        removeAllDisabled={
-                            !_.some(this.options, o => o.selected)
+                        numberOfSelectedRows={
+                            this.getCurrentSelectedRows().length
                         }
                         hideControls={this.props.hideControls}
                     />

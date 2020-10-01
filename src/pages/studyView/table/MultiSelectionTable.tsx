@@ -748,6 +748,7 @@ export class MultiSelectionTable extends React.Component<
                         afterSorting={this.afterSorting}
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
+                        showSetOperationsButton={true}
                         numberOfSelectedRows={this.selectedRowsKeys.length}
                     />
                 )}
