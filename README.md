@@ -242,7 +242,7 @@ webdriver-manager update
 webdriver-manager start
 ```
 
-6. In a second terminal, build and serve the frontend version under test:
+6. If not already running at _localhost:3000_, open a second terminal and start the frontend dev server:
 
 ```
 export BRANCH_ENV=custom
@@ -297,7 +297,7 @@ Some random remarks on e2e-test development
 - Although webdriverio takes asynchronous behavor of webbrosers into account it does not defend against asynchronous behavior of specific web components (e.g., database access). Not taking this asynchronicity into account will result in `flaky` tests. Typically, flaky test run well on the local system used for development (that has plenty of free resources at moment of test), but fail often on a CI system. Often this is the result of longer times needed page/component update causing tests to fail because the test evaluates a condition before it is loaded. In webdriverio the `waitForExist()`, `waitForVisible()` and `waitFor()` method should be used to pause test execution until the page has been updated. Sometimes it is needed to wait for the appearance of a DOM element which presence is tested.
 ```javascript
 browser.waitForExist('id=button');
-assert($('id=button));
+assert($('id=button'));
 ```
 - Reference screenshosts that are created on host system directly (not in dockerized process) differ from screenshots produced by the dockerized setup (e.g., on CircleCI) and cannot be used as references
 
