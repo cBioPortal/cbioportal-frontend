@@ -38,15 +38,20 @@ export type IFixedHeaderTableProps<T> = {
     headerHeight?: number;
     rowHeight?: number;
     numberOfSelectedRows: number;
+    showSetOperationsButton?: boolean;
     afterSelectingRows?: () => void;
     toggleSelectionOperator?: () => void;
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
     showControlsAtTop?: boolean;
     hideControls?: boolean;
-    showAddRemoveAllButtons?: boolean;
+    extraButtons?: {
+        content: any;
+        onClick: () => void;
+        isDisabled: () => boolean;
+    }[];
+    showAddRemoveAllButton?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
-    removeAllDisabled?: boolean;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
     highlightedRowClassName?: (data: T) => string;
@@ -95,7 +100,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     public static defaultProps = {
         showControlsAtTop: false,
-        showAddRemoveAllButtons: false,
+        showAddRemoveAllButton: false,
         autoFocusSearchAfterRendering: false,
         width: 398,
         height: 350,
@@ -347,6 +352,44 @@ export default class FixedHeaderTable<T> extends React.Component<
         });
     }
 
+    getAddRemoveAllButton() {
+        const allSelected =
+            this.props.numberOfSelectedRows === this.props.data.length;
+
+        let dataTest: string, onClick: () => void, content: string;
+        let showButton = false;
+
+        if (allSelected && this.props.removeAll) {
+            dataTest = 'fixed-header-table-remove-all';
+            onClick = this.onRemoveAll;
+            content = 'Deselect all';
+            showButton = true;
+        } else if (this.props.addAll) {
+            dataTest = 'fixed-header-table-add-all';
+            onClick = this.onAddAll;
+            content = `Select all${
+                this.props.showSelectableNumber
+                    ? ` (${this._store.dataStore.sortedFilteredData.length})`
+                    : ''
+            }`;
+            showButton = true;
+        }
+
+        if (showButton) {
+            return (
+                <button
+                    className="btn btn-default btn-xs"
+                    data-test={dataTest!}
+                    onClick={onClick!}
+                >
+                    {content!}
+                </button>
+            );
+        } else {
+            return null;
+        }
+    }
+
     getControls() {
         return (
             <div className={classnames(styles.controls)}>
@@ -361,35 +404,25 @@ export default class FixedHeaderTable<T> extends React.Component<
                         )}
                     />
                 )}
-                <If condition={this.props.showAddRemoveAllButtons}>
-                    <div className={'btn-group'} role={'group'}>
-                        {this.props.addAll && (
-                            <button
-                                className="btn btn-default btn-xs"
-                                onClick={this.onAddAll}
-                                data-test="fixed-header-table-add-all"
-                            >
-                                {`Select all${
-                                    this.props.showSelectableNumber
-                                        ? ` (${this._store.dataStore.sortedFilteredData.length})`
-                                        : ''
-                                }`}
-                            </button>
-                        )}
-                        {this.props.removeAll && (
-                            <button
-                                className="btn btn-default btn-xs"
-                                data-test="fixed-header-table-remove-all"
-                                onClick={this.onRemoveAll}
-                                disabled={this.props.removeAllDisabled}
-                            >
-                                Deselect all
-                            </button>
-                        )}
-                    </div>
-                </If>
+                {this.props.showAddRemoveAllButton &&
+                    this.getAddRemoveAllButton()}
+                {this.props.extraButtons &&
+                    this.props.extraButtons.map(btn => (
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={btn.onClick}
+                            disabled={btn.isDisabled()}
+                        >
+                            {btn.content}
+                        </button>
+                    ))}
 
-                <If condition={this.props.numberOfSelectedRows > 0}>
+                <If
+                    condition={
+                        this.props.showSetOperationsButton &&
+                        this.props.numberOfSelectedRows > 0
+                    }
+                >
                     <div className="btn-group">
                         <button
                             className="btn btn-default btn-xs"
