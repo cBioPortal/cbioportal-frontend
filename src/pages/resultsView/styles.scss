@@ -36,45 +36,6 @@
 .oncoprintContainer {
     border: none !important;
     padding: 0 !important;
-
-    #oncoprintDiv {
-        .oncoprintjs__track_options__toggle_btn_img {
-            top: 4px;
-        }
-        .oncoprintjs__track_options__toggle_btn_img,
-        .oncoprintjs__header__toggle_btn_img {
-            border-width: 0px !important;
-            border-radius: $cornerBorderRadius;
-            position: relative;
-            &:hover {
-                background-color: #eee;
-            }
-        }
-
-        .oncoprintjs__track_options__dropdown,
-        .oncoprintjs__header__dropdown {
-            border: 1px solid rgba(0, 0, 0, 0.15) !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
-            border-radius: $cornerBorderRadius;
-            z-index: 10000;
-            li {
-                &.oncoprintjs__track_options__separator,
-                &.oncoprintjs__header__separator {
-                    border-top: 1px solid #dddddd !important;
-                }
-                &:not(.oncoprintjs__track_options__separator, .oncoprintjs__header__separator) {
-                    border-width: 0 !important;
-                }
-                padding: 2px 5px;
-                &:hover {
-                    background: #fff !important;
-                    text-decoration: underline;
-                }
-            }
-        }
-    }
 }
 
 .oncoprintContainer {
