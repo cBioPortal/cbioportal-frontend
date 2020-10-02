@@ -24,6 +24,7 @@ import WindowStore from '../../../../shared/components/window/WindowStore';
 import { getGeneticTrackKey } from './OncoprinterGeneticUtils';
 import SuccessBanner from '../../../studyView/infoBanner/SuccessBanner';
 import InfoBanner from '../../../../shared/components/banners/InfoBanner';
+import '../../../../globalStyles/oncoprintStyles.scss';
 
 interface IOncoprinterProps {
     divId: string;
