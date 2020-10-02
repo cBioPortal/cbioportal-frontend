@@ -759,9 +759,13 @@ export function getEnrichmentColumns(
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].meanExpression,
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].meanExpression
+                    : null,
             download: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].meanExpression.toFixed(2),
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].meanExpression.toFixed(2)
+                    : Datalabel.NA,
             uniqueName:
                 group.name + ExpressionEnrichmentTableColumnType.MEAN_SUFFIX,
         });
@@ -773,7 +777,7 @@ export function getEnrichmentColumns(
                 <span>
                     {d.groupsSet[group.name]
                         ? d.groupsSet[group.name].standardDeviation.toFixed(2)
-                        : 'NA'}
+                        : Datalabel.NA}
                 </span>
             ),
             tooltip: (
@@ -783,9 +787,13 @@ export function getEnrichmentColumns(
                 </span>
             ),
             sortBy: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].standardDeviation,
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].standardDeviation
+                    : null,
             download: (d: ExpressionEnrichmentRow) =>
-                d.groupsSet[group.name].standardDeviation.toFixed(2),
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].standardDeviation.toFixed(2)
+                    : Datalabel.NA,
             uniqueName:
                 group.name +
                 ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
@@ -897,9 +905,13 @@ export function getGenericAssayEnrichmentColumns(
                 <span>Mean of the listed entity in {group.description}</span>
             ),
             sortBy: (d: GenericAssayEnrichmentRow) =>
-                d.groupsSet[group.name].meanExpression,
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].meanExpression
+                    : null,
             download: (d: GenericAssayEnrichmentRow) =>
-                d.groupsSet[group.name].meanExpression.toFixed(2),
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].meanExpression.toFixed(2)
+                    : Datalabel.NA,
             uniqueName:
                 group.name + GenericAssayEnrichmentTableColumnType.MEAN_SUFFIX,
         });
@@ -911,7 +923,7 @@ export function getGenericAssayEnrichmentColumns(
                 <span>
                     {d.groupsSet[group.name]
                         ? d.groupsSet[group.name].standardDeviation.toFixed(2)
-                        : 'NA'}
+                        : Datalabel.NA}
                 </span>
             ),
             tooltip: (
@@ -921,9 +933,13 @@ export function getGenericAssayEnrichmentColumns(
                 </span>
             ),
             sortBy: (d: GenericAssayEnrichmentRow) =>
-                d.groupsSet[group.name].standardDeviation,
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].standardDeviation
+                    : null,
             download: (d: GenericAssayEnrichmentRow) =>
-                d.groupsSet[group.name].standardDeviation.toFixed(2),
+                d.groupsSet[group.name]
+                    ? d.groupsSet[group.name].standardDeviation.toFixed(2)
+                    : Datalabel.NA,
             uniqueName:
                 group.name +
                 GenericAssayEnrichmentTableColumnType.STANDARD_DEVIATION_SUFFIX,
