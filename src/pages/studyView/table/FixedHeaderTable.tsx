@@ -381,7 +381,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                     className="btn btn-default btn-xs"
                     data-test={dataTest!}
                     onClick={onClick!}
-                    style={{ marginLeft: 3 }}
                 >
                     {content!}
                 </button>
@@ -413,7 +412,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                             className="btn btn-default btn-xs"
                             onClick={btn.onClick}
                             disabled={btn.isDisabled()}
-                            style={{ marginLeft: 3 }}
                         >
                             {btn.content}
                         </button>
