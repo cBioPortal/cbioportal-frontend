@@ -388,10 +388,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 );
 
                                 for (const s of patientSurvivals[prefix]) {
+                                    // count the number of patients in each active group
                                     const groups =
                                         patientToAnalysisGroups[
                                             s.uniquePatientKey
-                                        ];
+                                        ] || [];
                                     for (const groupName of groups) {
                                         numPatientsPerGroup[groupName] += 1;
                                     }
