@@ -378,6 +378,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
+                        openComparisonPage={this.openComparisonPage}
                         filters={this.props.filters}
                         data={this.props.promise.result}
                         placement={this.placement}
