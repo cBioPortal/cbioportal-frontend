@@ -647,3 +647,9 @@ h6.blackHeader {
 .nowrap {
     white-space: nowrap;
 }
+
+h2.divider {
+    margin: 40px 0 !important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid $borderColor;
+}

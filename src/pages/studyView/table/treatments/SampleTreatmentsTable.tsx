@@ -269,6 +269,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
                         numberOfSelectedRows={this.selectedRowsKeys.length}
+                        showSetOperationsButton={true}
                     />
                 )}
             </div>
