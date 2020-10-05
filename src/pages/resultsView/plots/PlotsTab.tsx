@@ -115,7 +115,7 @@ enum EventKey {
     utilities_horizontalBars,
     utilities_showRegressionLine,
     utilities_viewLimitValues,
-    utilities_sortByMedian,
+    sortByMedian,
 }
 
 export enum ColoringType {
@@ -1316,7 +1316,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
                 break;
-            case EventKey.utilities_sortByMedian:
+            case EventKey.sortByMedian:
                 this.boxPlotSortByMedian = !this.boxPlotSortByMedian;
                 break;
         }
@@ -3011,6 +3011,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             ? this.onVerticalAxisDataSourceSelect
             : this.onHorizontalAxisDataSourceSelect;
 
+        const isBoxPlotWithMoreThanOneCategory =
+            this.plotType.isComplete && // boxplot
+            this.plotType.result === PlotType.BoxPlot &&
+            this.defaultSortedBoxPlotData.isComplete && // [note: use defaultSorted so that the checkbox doesnt flicker while resorting boxPlotData]
+            this.defaultSortedBoxPlotData.result.data.length > 1; // with more than one category
+        const axisDataPromise = vertical
+            ? this.vertAxisDataPromise
+            : this.horzAxisDataPromise;
+        const axisIsStringData =
+            axisDataPromise.isComplete && isStringData(axisDataPromise.result!);
+
         switch (axisSelection.dataType) {
             case CLIN_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Clinical Attribute';
@@ -3461,6 +3472,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 </div>
                             </div>
                         )}
+                    {isBoxPlotWithMoreThanOneCategory && axisIsStringData && (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="SortByMedian"
+                                    type="checkbox"
+                                    name="utilities_sortByMedian"
+                                    value={EventKey.sortByMedian}
+                                    checked={this.boxPlotSortByMedian}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Sort Categories by Median
+                            </label>
+                        </div>
+                    )}
                 </div>
             </form>
         );
@@ -3537,18 +3563,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const showRegression =
             this.plotType.isComplete &&
             this.plotType.result === PlotType.ScatterPlot;
-        const showSortBoxplotByMedian = // boxplot with more than one category
-            this.plotType.isComplete &&
-            this.plotType.result === PlotType.BoxPlot &&
-            this.defaultSortedBoxPlotData.isComplete && // use defaultSorted so that the checkbox doesnt flicker while resorting boxPlotData
-            this.defaultSortedBoxPlotData.result.data.length > 1;
         if (
             !showSearchOptions &&
             !showSampleColoringOptions &&
             !showDiscreteVsDiscreteOption &&
             !showStackedBarHorizontalOption &&
-            !showRegression &&
-            !showSortBoxplotByMedian
+            !showRegression
         ) {
             return <span></span>;
         }
@@ -3630,21 +3650,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     onClick={this.onInputClick}
                                 />{' '}
                                 Show Regression Line
-                            </label>
-                        </div>
-                    )}
-                    {showSortBoxplotByMedian && (
-                        <div className="checkbox" style={{ marginTop: 14 }}>
-                            <label>
-                                <input
-                                    data-test="SortByMedian"
-                                    type="checkbox"
-                                    name="utilities_sortByMedian"
-                                    value={EventKey.utilities_sortByMedian}
-                                    checked={this.boxPlotSortByMedian}
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Sort Categories by Median
                             </label>
                         </div>
                     )}
