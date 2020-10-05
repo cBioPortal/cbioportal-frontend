@@ -39,6 +39,7 @@ export interface IVAFChartWrapperProps {
     samples: Sample[];
     mutationProfileId: string;
     coverageInformation: CoverageInformation;
+    headerWidth?: number;
 }
 
 const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer(
@@ -51,6 +52,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
         samples,
         mutationProfileId,
         coverageInformation,
+        headerWidth,
     }: IVAFChartWrapperProps) {
         const [events, setEvents] = useState<
             TimelineTrackSpecification[] | null
@@ -129,6 +131,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                         sampleManager={sampleManager}
                     />
                     <Timeline
+                        key={headerWidth}
                         store={stores[0]}
                         width={width}
                         onClickDownload={() => downloadZippedTracks(data)}
@@ -136,6 +139,11 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                         hideXAxis={wrapperStore.showSequentialMode}
                         visibleTracks={[]}
                         customTracks={customTracks}
+                        headerWidth={
+                            wrapperStore.groupByTracks.length
+                                ? 150
+                                : headerWidth
+                        }
                     />
                 </div>
             </>

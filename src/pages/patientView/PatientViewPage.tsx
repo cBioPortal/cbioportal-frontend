@@ -926,7 +926,6 @@ export default class PatientViewPage extends React.Component<
                                                             dataStore={
                                                                 this.dataStore
                                                             }
-                                                            headerWidth={150}
                                                             caseMetaData={{
                                                                 color:
                                                                     sampleManager.sampleColors,

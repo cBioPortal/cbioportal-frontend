@@ -46,7 +46,7 @@ function handleMouseEvents(
     e: any,
     store: TimelineStore,
     refs: any,
-    zoomDisabled: boolean = true
+    zoomDisabled: boolean = false
 ) {
     const $timeline = jQuery(refs.timeline.current);
     const $zoomSelectBox = jQuery(refs.zoomSelectBox.current);
@@ -243,6 +243,8 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         _.sumBy(customTracks || [], t => t.height(store)) +
         SCROLLBAR_PADDING;
 
+    console.log(headerWidth);
+
     const refs = {
         cursor: useRef(null),
         wrapper: useRef(null),
@@ -338,7 +340,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         })}
                         style={{
                             width: headerWidth || 'auto',
-                            minWidth: store.headersWidth,
+                            minWidth: headerWidth || store.headersWidth,
                         }}
                     >
                         {filteredTracks.map(track => {
@@ -385,7 +387,11 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                 handleMouseEvents(e, store, refs)
                             }
                         >
-                            <div ref={refs.cursor} className={'tl-cursor'}>
+                            <div
+                                ref={refs.cursor}
+                                style={{ height: height - SCROLLBAR_PADDING }}
+                                className={'tl-cursor'}
+                            >
                                 <div ref={refs.cursorText} />
                             </div>
                             <div
@@ -394,6 +400,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             />
                             <div
                                 ref={refs.zoomSelectBox}
+                                style={{ height: height - SCROLLBAR_PADDING }}
                                 className={'tl-zoom-selectbox'}
                             />
 

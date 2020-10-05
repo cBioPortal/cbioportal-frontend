@@ -1,7 +1,5 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
-import { getYAxisTickmarks } from 'pages/patientView/mutation/VAFLineChartUtils';
 import _ from 'lodash';
 
 interface IVAFChartHeaderProps {
@@ -11,7 +9,7 @@ interface IVAFChartHeaderProps {
 
 const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
     function({ ticks, legendHeight }) {
-        const width = 140;
+        const width = 50;
         const mqxTickOffset =
             _(ticks)
                 .map(t => t.offset)
@@ -22,6 +20,7 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                 style={{
                     height: legendHeight,
                     width: width,
+                    marginLeft: 'auto',
                 }}
             >
                 <svg
@@ -30,7 +29,6 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                     style={{
                         textTransform: 'none',
                         position: 'relative',
-                        right: -15,
                     }}
                 >
                     <text
