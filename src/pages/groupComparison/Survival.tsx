@@ -296,7 +296,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     <>
                         <div
                             className={'tabMessageContainer'}
-                            style={{ marginBottom: 10 }}
+                            style={{ paddingBottom: 0 }}
                         >
                             <div className="alert alert-info">
                                 <i
