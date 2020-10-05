@@ -556,11 +556,11 @@ describe('oncoprint', function() {
             clickQueryByGeneButton();
 
             browser.waitForExist(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
                 10000
             );
             browser.waitForExist(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
                 10000
             );
 
