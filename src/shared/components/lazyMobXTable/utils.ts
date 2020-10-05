@@ -7,18 +7,23 @@ export function maxPage(displayDataLength: number, itemsPerPage: number) {
     }
 }
 
+const validSymbols = ['<', '<=', '>', '>=', '='];
 export function parseNumericalFilter(filterString: string, columnName: string) {
     let ret = null;
     // matching column<value, column=value, column>value, with spaces potentially in between
     const parsed = filterString.match(
-        /([^ \t\r]+)[ \t\r]*([<>=])[ \t\r]*([^ \t\r]+)/
+        /([^ \t\r<>=]+)[ \t\r]*([<>=]+)[ \t\r]*([^ \t\r<>=]+)/
     );
     if (parsed) {
         const columnSearch = parsed[1];
         const symbol = parsed[2];
         const value = parseFloat(parsed[3]);
 
-        if (columnName.includes(columnSearch) && !isNaN(value)) {
+        if (
+            columnName.includes(columnSearch) &&
+            validSymbols.includes(symbol) &&
+            !isNaN(value)
+        ) {
             ret = {
                 symbol,
                 value,
@@ -51,8 +56,14 @@ export function filterNumericalColumn<D>(
                 case '>':
                     ret = rowValue > parsed.value;
                     break;
+                case '>=':
+                    ret = rowValue >= parsed.value;
+                    break;
                 case '<':
                     ret = rowValue < parsed.value;
+                    break;
+                case '<=':
+                    ret = rowValue <= parsed.value;
                     break;
                 case '=':
                     ret = rowValue === parsed.value;
