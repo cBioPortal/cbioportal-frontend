@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { MobxPromise } from 'mobxpromise';
+import { Portal } from 'react-portal';
 // import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IUserMessage {
@@ -67,7 +68,6 @@ export default class UserMessager extends React.Component<
                 makeMessageKey(message.id)
             );
             const expired = Date.now() > message.dateEnd;
-            console.log(notYetShown, expired);
             return notYetShown && !expired;
         });
 
@@ -86,12 +86,6 @@ export default class UserMessager extends React.Component<
     }
 
     render() {
-        console.log(
-            !isWebdriver(),
-            !this.dismissed,
-            this.messageData.isComplete,
-            this.shownMessage
-        );
         if (
             !isWebdriver() &&
             !this.dismissed &&
@@ -99,21 +93,30 @@ export default class UserMessager extends React.Component<
             this.shownMessage
         ) {
             return (
-                <div className={styles.messager}>
-                    <i
-                        className={classNames(styles.close, 'fa', 'fa-close')}
-                        onClick={this.close}
-                    />
-                    {typeof this.shownMessage.content === 'string' ? (
-                        <div
-                            dangerouslySetInnerHTML={{
-                                __html: this.shownMessage.content,
-                            }}
+                <Portal
+                    isOpened={true}
+                    node={document.getElementById('pageTopContainer')}
+                >
+                    <div className={styles.messager}>
+                        <i
+                            className={classNames(
+                                styles.close,
+                                'fa',
+                                'fa-close'
+                            )}
+                            onClick={this.close}
                         />
-                    ) : (
-                        <div>{this.shownMessage.content}</div>
-                    )}
-                </div>
+                        {typeof this.shownMessage.content === 'string' ? (
+                            <div
+                                dangerouslySetInnerHTML={{
+                                    __html: this.shownMessage.content,
+                                }}
+                            />
+                        ) : (
+                            <div>{this.shownMessage.content}</div>
+                        )}
+                    </div>
+                </Portal>
             );
         } else {
             return null;
