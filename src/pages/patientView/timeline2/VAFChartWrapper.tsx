@@ -112,6 +112,7 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
                     mutationProfileId={mutationProfileId}
                     coverageInformation={coverageInformation}
                     sampleManager={sampleManager}
+                    headerWidth={headerWidth}
                 />
             ),
             disableHover: true,
