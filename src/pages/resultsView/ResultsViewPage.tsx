@@ -54,7 +54,6 @@ import OQLTextArea, {
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 import UserMessager from 'shared/components/userMessager/UserMessage';
-import { Portal } from 'react-portal';
 
 export function initStore(
     appStore: AppStore,
@@ -553,7 +552,7 @@ export default class ResultsViewPage extends React.Component<
             ) {
                 return Promise.resolve([
                     {
-                        dateEnd: 10000000000000000000,
+                        dateEnd: 10000000000000000000, // TODO: Remove this message a few months after 10/2020
                         content: (
                             <span>
                                 Looking for the <strong>Expression</strong> tab?
@@ -630,16 +629,7 @@ export default class ResultsViewPage extends React.Component<
 
                     {this.userMessages.isComplete &&
                         this.userMessages.result.length > 0 && (
-                            <Portal
-                                isOpened={true}
-                                node={document.getElementById(
-                                    'pageTopContainer'
-                                )}
-                            >
-                                <UserMessager
-                                    messages={this.userMessages.result}
-                                />
-                            </Portal>
+                            <UserMessager messages={this.userMessages.result} />
                         )}
 
                     {this.resultsViewPageStore.studies.isPending && (
