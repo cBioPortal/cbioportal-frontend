@@ -83,6 +83,9 @@ $borderColor: #ccc;
 
 .tl-timeline-leftbar {
     .tl-timeline-tracklabels {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
         font-size: 12px;
         text-transform: uppercase;
         > div {

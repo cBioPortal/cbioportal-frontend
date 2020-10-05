@@ -28,13 +28,17 @@ import {
     mutationTooltip,
 } from '../mutation/PatientViewMutationsTabUtils';
 import SampleManager, { clinicalValueToSamplesMap } from '../SampleManager';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    stringListToIndexSet,
+    TruncatedText,
+} from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import { GROUP_BY_NONE } from './VAFChartControls';
 import TimelineWrapperStore from './TimelineWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
+import './styles.scss';
 
 interface IVAFChartProps {
     dataStore: PatientViewMutationsDataStore;

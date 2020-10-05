@@ -43,24 +43,9 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
         }
 
         return (
-            <div
-                style={{
-                    marginTop: 5,
-                    marginLeft: 130,
-                    display: 'flex',
-                    alignItems: 'center',
-                }}
-                data-test={'VAFChartControls'}
-            >
-                <span style={{ marginTop: -3, marginRight: 3 }}>Group by:</span>
-                <div
-                    style={{
-                        minWidth: 200,
-                        width: 200,
-                        zIndex: 20,
-                        marginRight: 15,
-                    }}
-                >
+            <div className={'VAFChartControls'} data-test={'VAFChartControls'}>
+                <label>
+                    Group by:&nbsp;
                     <ReactSelect
                         name={'group-by-options-select'}
                         value={groupByValue()}
@@ -70,72 +55,65 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                                 option ? option.value : ''
                             );
                         }}
+                        styles={{
+                            container: (styles: any) => ({
+                                ...styles,
+                                width: 250,
+                            }),
+                        }}
                         clearable={false}
                         searchable={true}
                     />
-                </div>
-                <div style={{ float: 'left', marginRight: 15, marginTop: 4 }}>
-                    <LabeledCheckbox
+                </label>
+
+                <label className="checkbox-inline">
+                    <input
+                        type="checkbox"
                         checked={wrapperStore.showSequentialMode}
                         onChange={() =>
                             wrapperStore.setShowSequentialMode(
                                 !wrapperStore.showSequentialMode
                             )
                         }
-                        labelProps={{ style: { marginRight: 10 } }}
-                        inputProps={{ 'data-test': 'TableShowSequentialMode' }}
-                    >
-                        <span style={{ marginTop: -3 }}>
-                            Show samples in sequential mode
-                        </span>
-                    </LabeledCheckbox>
-                </div>
-                <div style={{ float: 'left', marginRight: 15, marginTop: 4 }}>
-                    <LabeledCheckbox
+                    />{' '}
+                    Show samples in sequential mode
+                </label>
+                <label className="checkbox-inline">
+                    <input
+                        type="checkbox"
                         checked={wrapperStore.onlyShowSelectedInVAFChart}
                         onChange={() =>
                             wrapperStore.setOnlyShowSelectedInVAFChart(
                                 !wrapperStore.onlyShowSelectedInVAFChart
                             )
                         }
-                        labelProps={{ style: { marginRight: 10 } }}
-                        inputProps={{ 'data-test': 'TableShowOnlyHighlighted' }}
-                    >
-                        <span style={{ marginTop: -3 }}>
-                            Show only selected mutations
-                        </span>
-                    </LabeledCheckbox>
-                </div>
-                <div style={{ float: 'left', marginRight: 15, marginTop: 4 }}>
-                    <LabeledCheckbox
+                    />{' '}
+                    Show only selected mutations
+                </label>
+                <label className="checkbox-inline">
+                    <input
+                        type="checkbox"
                         checked={wrapperStore.vafChartLogScale}
                         onChange={() => {
                             wrapperStore.setVafChartLogScale(
                                 !wrapperStore.vafChartLogScale
                             );
                         }}
-                        labelProps={{ style: { marginRight: 10 } }}
-                        inputProps={{ 'data-test': 'VAFLogScale' }}
-                    >
-                        <span style={{ marginTop: -3 }}>Log scale</span>
-                    </LabeledCheckbox>
-                </div>
-                <div style={{ float: 'left', marginRight: 15, marginTop: 4 }}>
-                    <LabeledCheckbox
+                    />{' '}
+                    Log scale
+                </label>
+                <label className="checkbox-inline">
+                    <input
+                        type="checkbox"
                         checked={wrapperStore.vafChartYAxisToDataRange}
                         onChange={() => {
                             wrapperStore.setVafChartYAxisToDataRange(
                                 !wrapperStore.vafChartYAxisToDataRange
                             );
                         }}
-                        labelProps={{ style: { marginRight: 10 } }}
-                        inputProps={{ 'data-test': 'VAFDataRange' }}
-                    >
-                        <span style={{ marginTop: -3 }}>
-                            Set y-axis to data range
-                        </span>
-                    </LabeledCheckbox>
-                </div>
+                    />{' '}
+                    Set y-axis to data range
+                </label>
             </div>
         );
     }

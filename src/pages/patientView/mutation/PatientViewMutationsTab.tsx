@@ -92,7 +92,6 @@ export default class PatientViewMutationsTab extends React.Component<
             return currentParams;
         });
     }
-
     get vafLineChartZeroToOneYAxis() {
         const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
             .yAxisDataRangeInChart;
@@ -142,63 +141,6 @@ export default class PatientViewMutationsTab extends React.Component<
         renderPending: () => <LoadingIndicator isLoading={true} size="small" />,
         render: () => (
             <div style={{ width: WindowStore.size.width - 50 }}>
-                {/*<div*/}
-                {/*    style={{*/}
-                {/*        display: 'flex',*/}
-                {/*        alignItems: 'center',*/}
-                {/*        justifyContent: 'space-between',*/}
-                {/*        marginBottom: 5,*/}
-                {/*    }}*/}
-                {/*>*/}
-                {/*    <div style={{ display: 'flex', alignItems: 'center' }}>*/}
-                {/*        <LabeledCheckbox*/}
-                {/*            checked={this.dataStore.onlyShowSelectedInVAFChart}*/}
-                {/*            onChange={() =>*/}
-                {/*                this.dataStore.setOnlyShowSelectedInVAFChart(*/}
-                {/*                    !this.dataStore.onlyShowSelectedInVAFChart*/}
-                {/*                )*/}
-                {/*            }*/}
-                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
-                {/*            inputProps={{ 'data-test': 'VAFOnlyHighlighted' }}*/}
-                {/*        >*/}
-                {/*            <span style={{ marginTop: -3 }}>*/}
-                {/*                {SHOW_ONLY_SELECTED_LABEL}*/}
-                {/*            </span>*/}
-                {/*        </LabeledCheckbox>*/}
-                {/*        <LabeledCheckbox*/}
-                {/*            checked={this.vafLineChartLogScale}*/}
-                {/*            onChange={() => {*/}
-                {/*                this.vafLineChartLogScale = !this*/}
-                {/*                    .vafLineChartLogScale;*/}
-                {/*            }}*/}
-                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
-                {/*            inputProps={{ 'data-test': 'VAFLogScale' }}*/}
-                {/*        >*/}
-                {/*            <span style={{ marginTop: -3 }}>Log scale</span>*/}
-                {/*        </LabeledCheckbox>*/}
-                {/*        <LabeledCheckbox*/}
-                {/*            checked={!this.vafLineChartZeroToOneYAxis}*/}
-                {/*            onChange={() => {*/}
-                {/*                this.vafLineChartZeroToOneYAxis = !this*/}
-                {/*                    .vafLineChartZeroToOneYAxis;*/}
-                {/*            }}*/}
-                {/*            labelProps={{ style: { marginRight: 10 } }}*/}
-                {/*            inputProps={{ 'data-test': 'VAFDataRange' }}*/}
-                {/*        >*/}
-                {/*            <span style={{ marginTop: -3 }}>*/}
-                {/*                Set y-axis to data range*/}
-                {/*            </span>*/}
-                {/*        </LabeledCheckbox>*/}
-                {/*    </div>*/}
-                {/*    <DownloadControls*/}
-                {/*        filename="vafHeatmap"*/}
-                {/*        getSvg={() => this.vafLineChartSvg}*/}
-                {/*        buttons={['SVG', 'PNG', 'PDF']}*/}
-                {/*        type="button"*/}
-                {/*        dontFade*/}
-                {/*    />*/}
-                {/*</div>*/}
-
                 {this.props.sampleManager && (
                     <VAFChartWrapper
                         dataStore={this.dataStore}
@@ -222,23 +164,9 @@ export default class PatientViewMutationsTab extends React.Component<
                             this.props.patientViewPageStore.coverageInformation
                                 .result
                         }
+                        headerWidth={this.showTimeline ? 150 : 50}
                     />
                 )}
-
-                {/*<VAFLineChart*/}
-                {/*    dataStore={this.dataStore}*/}
-                {/*    samples={this.props.store.samples.result!}*/}
-                {/*    coverageInformation={*/}
-                {/*        this.props.store.coverageInformation.result!*/}
-                {/*    }*/}
-                {/*    mutationProfileId={*/}
-                {/*        this.props.store.mutationMolecularProfileId.result!*/}
-                {/*    }*/}
-                {/*    sampleManager={this.props.sampleManager}*/}
-                {/*    svgRef={this.vafLineChartSvgRef}*/}
-                {/*    logScale={this.vafLineChartLogScale}*/}
-                {/*    zeroToOneAxis={this.vafLineChartZeroToOneYAxis}*/}
-                {/*/>*/}
             </div>
         ),
         showLastRenderWhenPending: true,
@@ -431,20 +359,14 @@ export default class PatientViewMutationsTab extends React.Component<
                     <div
                         style={{
                             marginBottom: 20,
-                            padding: this.showTimeline ? 10 : 5,
                             width: WindowStore.size.width - 50,
                         }}
                     >
                         <button
-                            className="btn btn-xs btn-default"
-                            style={{
-                                paddingTop: 0,
-                                paddingBottom: 0,
-                                marginLeft: this.showTimeline ? -5 : 0, // negative margins hardcoded in to make button not move when its clicked
-                                marginTop: this.showTimeline ? -10 : 0, // ^^
-                            }}
+                            className="btn btn-xs btn-default displayBlock"
                             onClick={this.toggleTimeline}
                             data-test="ToggleTimeline"
+                            style={{ margin: 'auto' }}
                         >
                             {this.showTimeline
                                 ? 'Hide Timeline'
@@ -480,6 +402,7 @@ export default class PatientViewMutationsTab extends React.Component<
                                         this.props.patientViewPageStore
                                             .coverageInformation.result
                                     }
+                                    headerWidth={150}
                                 />
                             </div>
                         )}
@@ -498,7 +421,6 @@ export default class PatientViewMutationsTab extends React.Component<
         ),
         render: () => (
             <div data-test="GenomicEvolutionTab">
-                {this.timeline.component}
                 <MSKTabs
                     activeTabId={this.plotTab}
                     onTabClick={this.setPlotTab}
@@ -507,6 +429,8 @@ export default class PatientViewMutationsTab extends React.Component<
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
                         <div style={{ paddingBottom: 10 }}>
+                            {this.timeline.component}
+
                             {this.vafLineChart.component}
                         </div>
                     </MSKTab>
