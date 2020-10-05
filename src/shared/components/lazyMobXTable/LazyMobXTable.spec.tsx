@@ -2766,6 +2766,13 @@ describe('utils', () => {
                 }
             );
             assert.deepEqual(
+                parseNumericalFilter('patients >=100', 'patients with data'),
+                {
+                    symbol: '>=',
+                    value: 100,
+                }
+            );
+            assert.deepEqual(
                 parseNumericalFilter('patients= 100.111', 'patients with data'),
                 {
                     symbol: '=',
@@ -2774,6 +2781,14 @@ describe('utils', () => {
             );
             assert.deepEqual(parseNumericalFilter('P < 0.05', 'P-Value'), {
                 symbol: '<',
+                value: 0.05,
+            });
+            assert.deepEqual(parseNumericalFilter('P <= 0.05', 'P-Value'), {
+                symbol: '<=',
+                value: 0.05,
+            });
+            assert.deepEqual(parseNumericalFilter('P<= 0.05', 'P-Value'), {
+                symbol: '<=',
                 value: 0.05,
             });
         });
@@ -2791,6 +2806,10 @@ describe('utils', () => {
         it('returns null on invalid input', () => {
             assert.deepEqual(
                 parseNumericalFilter('patients >abcd', 'patients'),
+                null
+            );
+            assert.deepEqual(
+                parseNumericalFilter('patients =>>1', 'patients'),
                 null
             );
             assert.deepEqual(
@@ -2820,7 +2839,7 @@ describe('utils', () => {
                 true
             );
             assert.equal(
-                filter({ value: 4 }, 'patients<5', 'PATIENTS<5'),
+                filter({ value: 4 }, 'patients<=5', 'PATIENTS<=5'),
                 true
             );
             assert.equal(
@@ -2828,7 +2847,7 @@ describe('utils', () => {
                 true
             );
             assert.equal(
-                filter({ value: 9 }, 'patients> 10', 'PATIENTS> 10'),
+                filter({ value: 9 }, 'patients>= 10', 'PATIENTS>= 10'),
                 false
             );
             assert.equal(
