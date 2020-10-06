@@ -2,33 +2,20 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
 import styles from './styles/styles.module.scss';
-import {
-    action,
-    ObservableMap,
-    expr,
-    toJS,
-    computed,
-    observable,
-    autorun,
-} from 'mobx';
-import { observer, Observer } from 'mobx-react';
+import { action, computed, ObservableMap } from 'mobx';
+import { observer } from 'mobx-react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { Geneset } from 'cbioportal-ts-api-client';
-import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
-import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
-import { Td } from 'reactable';
 import { toPrecision } from '../../lib/FormatUtils';
-import { getHierarchyData } from 'shared/lib/StoreUtils';
 import ReactSelect from 'react-select1';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import {
-    VictoryChart,
-    VictoryScatter,
-    VictoryTheme,
-    VictorySelectionContainer,
     VictoryAxis,
+    VictoryChart,
     VictoryLabel,
     VictoryLine,
+    VictoryScatter,
+    VictorySelectionContainer,
 } from 'victory';
 import { QueryStoreComponent } from './QueryStore';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
@@ -85,6 +72,46 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                 }
             }
         );
+    }
+
+    // assumes that values are symmetrically centered around 0
+    @computed get xAxisTickSize() {
+        if (this.props.plotData && this.props.plotData.length > 0) {
+            const datumUpper = _.maxBy(
+                this.props.plotData,
+                (d: { x: number; y: number; fill: string }) => d.x
+            );
+            const upper = datumUpper!.x;
+            const datumLower = _.minBy(
+                this.props.plotData,
+                (d: { x: number; y: number; fill: string }) => d.x
+            );
+            const lower = datumLower!.x;
+            let max = Math.max(upper, Math.abs(lower));
+            // round to next integer
+            max = Math.round(max);
+            // tick size is half of the max value
+            return max / 2;
+        }
+        return 0.5;
+    }
+
+    @computed get xAxisTickValues() {
+        return [
+            -2 * this.xAxisTickSize,
+            -this.xAxisTickSize,
+            0,
+            this.xAxisTickSize,
+            2 * this.xAxisTickSize,
+        ];
+    }
+
+    @computed get xAxisMaxValue() {
+        return 2.5 * this.xAxisTickSize;
+    }
+
+    @computed get xAxisMinValue() {
+        return -2.5 * this.xAxisTickSize;
     }
 
     render() {
@@ -150,8 +177,11 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                             >
                                 <VictoryAxis
                                     crossAxis
-                                    domain={[-1, 1.25]}
-                                    tickValues={[-1, -0.5, 0, 0.5, 1]}
+                                    domain={[
+                                        this.xAxisMinValue,
+                                        this.xAxisMaxValue,
+                                    ]}
+                                    tickValues={this.xAxisTickValues}
                                     style={{ axisLabel: { padding: 35 } }}
                                     label={'GSVA score'}
                                     offsetY={50}
@@ -171,7 +201,12 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 />
                                 <VictoryLabel
                                     text="significance"
-                                    datum={{ x: 1, y: 1.3 }}
+                                    datum={{
+                                        x: this.xAxisTickValues[
+                                            this.xAxisTickValues.length - 1
+                                        ],
+                                        y: 1.3,
+                                    }}
                                     textAnchor="start"
                                 />
                                 <VictoryLine
@@ -183,8 +218,13 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                         parent: { border: 'dotted 1px #f00' },
                                     }}
                                     data={[
-                                        { x: -1.2, y: 1.3 },
-                                        { x: 1, y: 1.3 },
+                                        { x: this.xAxisMinValue, y: 1.3 },
+                                        {
+                                            x: this.xAxisTickValues[
+                                                this.xAxisTickValues.length - 1
+                                            ],
+                                            y: 1.3,
+                                        },
                                     ]}
                                 />
                                 <VictoryLine
