@@ -136,6 +136,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType;
 
     @observable newlyAdded = false;
+    @observable private preselectedHugoGeneSymbols: string[] = [];
 
     constructor(props: IChartContainerProps) {
         super(props);
@@ -151,6 +152,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             onValueSelection: action((values: any) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
+            }),
+            onUserPreselection: action((values: string[]) => {
+                this.preselectedHugoGeneSymbols = values;
             }),
             onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
@@ -258,7 +262,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @autobind
     @action
-    openComparisonPage(params: {
+    openComparisonPage(params?: {
         // for numerical clinical attributes
         categorizationType?: NumericalGroupComparisonType;
         // for mutated genes table
@@ -321,7 +325,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     this.props.store.openComparisonPage(
                         this.props.chartMeta,
-                        params
+                        params || {}
                     );
                     break;
             }
@@ -382,7 +386,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
-                        openComparisonPage={() => this.openComparisonPage({})}
+                        openComparisonPage={this.openComparisonPage}
                         filters={this.props.filters}
                         data={this.props.promise.result}
                         placement={this.placement}
@@ -443,11 +447,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
-                        openComparisonPage={hugoGeneSymbols =>
-                            this.openComparisonPage({ hugoGeneSymbols })
-                        }
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
+                        onUserPreselection={this.handlers.onUserPreselection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -486,6 +488,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
+                        onUserPreselection={this.handlers.onUserPreselection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -524,6 +527,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.onValueSelection}
+                        onUserPreselection={this.handlers.onUserPreselection}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -860,6 +864,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
+                    preselectedHugoGeneSymbols={this.preselectedHugoGeneSymbols}
                     toggleLogScale={this.handlers.onToggleLogScale}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
