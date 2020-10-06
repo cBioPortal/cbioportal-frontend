@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import AppConfig from 'appConfig';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
@@ -12,44 +13,42 @@ import {
     toJS,
 } from 'mobx';
 import {
+    AndedPatientTreatmentFilters,
+    AndedSampleTreatmentFilters,
+    CancerStudy,
+    ClinicalAttribute,
+    ClinicalAttributeCount,
+    ClinicalAttributeCountFilter,
+    ClinicalData,
+    ClinicalDataBin,
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
     ClinicalDataFilter,
-    DensityPlotBin,
-    Sample,
-    SampleIdentifier,
-    StudyViewFilter,
-    DataFilterValue,
-    GeneFilter,
-    ClinicalDataBin,
-    GenomicDataBinFilter,
-    GenomicDataFilter,
-    GenomicDataBin,
-    AndedPatientTreatmentFilters,
-    AndedSampleTreatmentFilters,
-    OredPatientTreatmentFilters,
-    OredSampleTreatmentFilters,
-    SampleTreatmentFilter,
-    SampleTreatmentRow,
-    PatientTreatmentRow,
-} from 'cbioportal-ts-api-client';
-import {
-    CancerStudy,
-    ClinicalAttribute,
-    ClinicalAttributeCount,
-    ClinicalAttributeCountFilter,
-    ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
+    DataFilterValue,
+    DensityPlotBin,
+    Gene,
+    GeneFilter,
     GenePanel,
+    GenomicDataBin,
+    GenomicDataBinFilter,
+    GenomicDataFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    MutationMultipleStudyFilter,
+    OredPatientTreatmentFilters,
+    OredSampleTreatmentFilters,
     Patient,
     ResourceData,
     ResourceDefinition,
+    Sample,
+    SampleIdentifier,
+    SampleMolecularIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -62,14 +61,15 @@ import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
     calculateLayout,
+    ChartDataCountSet,
     ChartMeta,
     ChartMetaDataTypeEnum,
     ChartMetaWithDimensionAndChartType,
     ChartType,
     clinicalAttributeComparator,
-    ChartDataCountSet,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
+    convertGenomicDataBinsToClinicalDataBins,
     DataType,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
@@ -77,15 +77,17 @@ import {
     getChartSettingsMap,
     getClinicalDataBySamples,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getCNASamplesCount,
+    getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenomicChartUniqueKey,
+    getGenomicDataAsClinicalData,
     getGroupsFromBins,
     getGroupsFromQuartiles,
     getMolecularProfileIdsFromUniqueKey,
@@ -101,6 +103,7 @@ import {
     isLogScaleByDataBins,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
+    pickNewColorForClinicData,
     RectangleBounds,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
@@ -109,12 +112,8 @@ import {
     StudyWithSamples,
     submitToPage,
     updateSavedUserPreferenceChartIds,
-    getGenomicDataAsClinicalData,
-    convertGenomicDataBinsToClinicalDataBins,
-    getGenomicChartUniqueKey,
-    pickNewColorForClinicData,
 } from './StudyViewUtils';
-import MobxPromise, { MobxPromiseUnionType } from 'mobxpromise';
+import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
@@ -139,7 +138,10 @@ import {
 import onMobxPromise from '../../shared/lib/onMobxPromise';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
+import {
+    Group,
+    SessionGroupData,
+} from '../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
     finalizeStudiesAttr,
@@ -179,16 +181,16 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    toSampleTreatmentFilter,
     toPatientTreatmentFilter,
+    toSampleTreatmentFilter,
     treatmentUniqueKey,
 } from './table/treatments/treatmentsTableUtil';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
-import { Group } from '../../shared/api/ComparisonGroupClient';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { REQUEST_ARG_ENUM } from 'shared/constants';
 
 export type ChartUserSetting = {
     id: string;
@@ -793,6 +795,105 @@ export class StudyViewPageStore {
         });
     }
 
+    private createMutatedGeneComparisonSession(
+        hugoGeneSymbols: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // Get mutations among currently selected samples
+        const promises: any[] = [this.selectedSamples, this.mutationProfiles];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[],
+                    mutationProfiles: MolecularProfile[]
+                ) => {
+                    const studyToMutationProfile = _.keyBy(
+                        mutationProfiles,
+                        p => p.studyId
+                    );
+                    const sampleMolecularIdentifiers = selectedSamples.reduce(
+                        (array, sample) => {
+                            if (sample.studyId in studyToMutationProfile) {
+                                array.push({
+                                    sampleId: sample.sampleId,
+                                    molecularProfileId:
+                                        studyToMutationProfile[sample.studyId]
+                                            .molecularProfileId,
+                                });
+                            }
+                            return array;
+                        },
+                        [] as SampleMolecularIdentifier[]
+                    );
+
+                    const genes = await client.fetchGenesUsingPOST({
+                        geneIdType: 'HUGO_GENE_SYMBOL',
+                        geneIds: hugoGeneSymbols,
+                    });
+
+                    const mutationMultipleStudyFilter = {
+                        entrezGeneIds: genes.map(g => g.entrezGeneId),
+                        sampleMolecularIdentifiers,
+                    } as MutationMultipleStudyFilter;
+
+                    const mutationsByGene = _.groupBy(
+                        await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+                            {
+                                projection:
+                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                                mutationMultipleStudyFilter,
+                            }
+                        ),
+                        m => m.gene.hugoGeneSymbol
+                    );
+
+                    const sampleMap = _.keyBy(
+                        selectedSamples,
+                        s => s.uniqueSampleKey
+                    );
+                    const mutatedSampleKeysByGene = _.mapValues(
+                        mutationsByGene,
+                        mutations => {
+                            return _.uniq(
+                                mutations.map(m => m.uniqueSampleKey)
+                            );
+                        }
+                    );
+                    const groups = _.map(
+                        mutatedSampleKeysByGene,
+                        (sampleKeys, gene) => {
+                            const sampleIdentifiers = sampleKeys.map(key => {
+                                const sample = sampleMap[key];
+                                return {
+                                    sampleId: sample.sampleId,
+                                    studyId: sample.studyId,
+                                };
+                            });
+                            return getGroupParameters(
+                                gene,
+                                sampleIdentifiers,
+                                this.studyIds
+                            );
+                        }
+                    );
+
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+
+                    // create session and get id
+                    const { id } = await comparisonClient.addComparisonSession({
+                        groups,
+                        origin: this.studyIds,
+                    });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
     private createCategoricalAttributeComparisonSession(
         chartMeta: ChartMeta,
         clinicalAttributeValues: ClinicalDataCountSummary[],
@@ -944,17 +1045,23 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    public async openComparisonPage(params: {
-        chartMeta: ChartMeta;
-        categorizationType?: NumericalGroupComparisonType;
-        clinicalAttributeValues?: ClinicalDataCountSummary[];
-    }) {
+    public async openComparisonPage(
+        chartMeta: ChartMeta,
+        params: {
+            // for numerical attribute
+            categorizationType?: NumericalGroupComparisonType;
+            // for string attribute
+            clinicalAttributeValues?: ClinicalDataCountSummary[];
+            // for mutated genes table
+            hugoGeneSymbols?: string[];
+        }
+    ) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
         const comparisonWindow: any = window.open(
             getComparisonLoadingUrl({
                 phase: LoadingPhase.DOWNLOADING_GROUPS,
-                clinicalAttributeName: params.chartMeta.displayName,
+                clinicalAttributeName: chartMeta.displayName,
                 origin: this.studyIds.join(','),
             }),
             '_blank'
@@ -998,18 +1105,24 @@ export class StudyViewPageStore {
             }
         };
 
-        switch (this.chartsType.get(params.chartMeta.uniqueKey)) {
+        switch (this.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
                 sessionId = await this.createCategoricalAttributeComparisonSession(
-                    params.chartMeta,
+                    chartMeta,
                     params.clinicalAttributeValues!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                sessionId = await this.createMutatedGeneComparisonSession(
+                    params.hugoGeneSymbols!,
                     statusCallback
                 );
                 break;
             default:
                 sessionId = await this.createNumberAttributeComparisonSession(
-                    params.chartMeta,
+                    chartMeta,
                     params.categorizationType ||
                         NumericalGroupComparisonType.QUARTILES,
                     statusCallback
@@ -4731,8 +4844,9 @@ export class StudyViewPageStore {
                 return internalClient.fetchFilteredSamplesUsingPOST({
                     studyViewFilter,
                 });
+            } else {
+                return Promise.resolve(this.samples.result);
             }
-            return Promise.resolve(this.samples.result);
         },
         onError: error => {},
         default: [],

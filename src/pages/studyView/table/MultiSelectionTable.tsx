@@ -38,6 +38,7 @@ import {
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -77,6 +78,7 @@ export type MultiSelectionTableProps = {
     onUserSelection: (value: string[][]) => void;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
+    openComparisonPage?: (selectedRowsKeys: string[]) => void;
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
@@ -729,6 +731,30 @@ export class MultiSelectionTable extends React.Component<
         this.sortDirection = sortDirection;
     }
 
+    @computed get extraButtons() {
+        const openComparisonPage = this.props.openComparisonPage;
+        if (openComparisonPage) {
+            return [
+                {
+                    content: (
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <ComparisonVsIcon
+                                width={16}
+                                style={{ marginRight: 5 }}
+                            />
+                            Compare
+                        </div>
+                    ),
+                    onClick: () =>
+                        openComparisonPage(this.selectedRowsKeys.slice()),
+                    isDisabled: () => this.selectedRowsKeys.length < 2, // cant compare less than 2
+                },
+            ];
+        } else {
+            return [];
+        }
+    }
+
     public render() {
         const tableId = `${this.props.tableType}-table`;
         return (
@@ -743,6 +769,7 @@ export class MultiSelectionTable extends React.Component<
                         afterSelectingRows={this.afterSelectingRows}
                         defaultSelectionOperator={this.selectionType}
                         toggleSelectionOperator={this.toggleSelectionOperator}
+                        extraButtons={this.extraButtons}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
