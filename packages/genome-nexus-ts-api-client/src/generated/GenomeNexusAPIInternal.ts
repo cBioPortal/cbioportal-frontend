@@ -466,9 +466,17 @@ export type TranscriptConsequenceSummary = {
 
         'hugoGeneSymbol': string
 
+        'polyphenPrediction': string
+
+        'polyphenScore': number
+
         'proteinPosition': IntegerRange
 
         'refSeq': string
+
+        'siftPrediction': string
+
+        'siftScore': number
 
         'transcriptId': string
 
