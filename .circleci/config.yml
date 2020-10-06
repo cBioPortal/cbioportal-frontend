@@ -268,6 +268,9 @@ jobs:
       - restore_cache:
           keys:
           - v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - maven-repo-v1-{{ .Branch }}-{{ checksum "pom.xml" }}
+          - maven-repo-v1-{{ .Branch }}-
+          - maven-repo-v1-
       - run:
           name: Create MySQL data directory when no cache found
           command: |
@@ -291,6 +294,10 @@ jobs:
           paths:
             - /tmp/mysql
           key: v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: maven-repo-v1-{{ .Branch }}-{{ checksum "pom.xml" }}
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
