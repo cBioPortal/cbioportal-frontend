@@ -339,7 +339,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             'tl-displaynone': hideLabels,
                         })}
                         style={{
-                            display: 'flex',
                             width: headerWidth || 'auto',
                             minWidth: headerWidth || store.headersWidth,
                         }}
