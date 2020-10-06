@@ -35,14 +35,15 @@ describe('homepage', function() {
         });
     }
 
-    it('it should have 27 (small test db), 29 (public test db) or 32 studies (production) in list', function() {
+    // this just shows that we have some studies listed
+    it('it should have some (>0) studies listed ', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
 
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
-        expect([27, 29, 33]).to.include(
+        expect(0).to.be.below(
             browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
                 .value.length
         );
