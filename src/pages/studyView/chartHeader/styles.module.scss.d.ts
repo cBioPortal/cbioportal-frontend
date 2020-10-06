@@ -1,6 +1,7 @@
 declare const styles: {
   readonly "clickable": string;
   readonly "controls": string;
+  readonly "disabledMenuItem": string;
   readonly "downloadControl": string;
   readonly "draggable": string;
   readonly "dropdownHoverEffect": string;

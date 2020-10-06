@@ -76,9 +76,9 @@ export type MultiSelectionTableProps = {
     height: number;
     filters: string[][];
     onUserSelection: (value: string[][]) => void;
+    onUserPreselection?: (rowsKeys: string[]) => void;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
-    openComparisonPage?: (selectedRowsKeys: string[]) => void;
     cancerGeneFilterEnabled?: boolean;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
@@ -644,6 +644,8 @@ export class MultiSelectionTable extends React.Component<
         } else {
             this.selectedRowsKeys = _.xorBy(this.selectedRowsKeys, [record]);
         }
+        this.props.onUserPreselection &&
+            this.props.onUserPreselection(this.selectedRowsKeys);
     }
     @observable private _selectionType: SelectionOperatorEnum;
 
@@ -657,6 +659,7 @@ export class MultiSelectionTable extends React.Component<
                 this.selectedRowsKeys.map(selectedRowsKey => [selectedRowsKey])
             );
         }
+        this.props.onUserPreselection && this.props.onUserPreselection([]);
         this.selectedRowsKeys = [];
     }
 
@@ -731,30 +734,6 @@ export class MultiSelectionTable extends React.Component<
         this.sortDirection = sortDirection;
     }
 
-    @computed get extraButtons() {
-        const openComparisonPage = this.props.openComparisonPage;
-        if (openComparisonPage) {
-            return [
-                {
-                    content: (
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <ComparisonVsIcon
-                                width={16}
-                                style={{ marginRight: 5 }}
-                            />
-                            Compare
-                        </div>
-                    ),
-                    onClick: () =>
-                        openComparisonPage(this.selectedRowsKeys.slice()),
-                    isDisabled: () => this.selectedRowsKeys.length < 2, // cant compare less than 2
-                },
-            ];
-        } else {
-            return [];
-        }
-    }
-
     public render() {
         const tableId = `${this.props.tableType}-table`;
         return (
@@ -769,7 +748,6 @@ export class MultiSelectionTable extends React.Component<
                         afterSelectingRows={this.afterSelectingRows}
                         defaultSelectionOperator={this.selectionType}
                         toggleSelectionOperator={this.toggleSelectionOperator}
-                        extraButtons={this.extraButtons}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
