@@ -43,9 +43,9 @@ export interface IChartHeaderProps {
         | ((dataType?: DataType) => string);
     downloadTypes?: DownloadControlsButton[];
     description?: ISurvivalDescription;
-    openComparisonPage: (
-        categorizationType?: NumericalGroupComparisonType
-    ) => void;
+    openComparisonPage: (params: {
+        categorizationType?: NumericalGroupComparisonType;
+    }) => void;
 }
 
 export interface ChartControls {
@@ -143,9 +143,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <a
                                     className="dropdown-item"
                                     onClick={() => {
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.QUARTILES
-                                        );
+                                        this.props.openComparisonPage({
+                                            categorizationType:
+                                                NumericalGroupComparisonType.QUARTILES,
+                                        });
                                     }}
                                 >
                                     Quartiles
@@ -155,9 +156,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <a
                                     className="dropdown-item"
                                     onClick={() => {
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.MEDIAN
-                                        );
+                                        this.props.openComparisonPage({
+                                            categorizationType:
+                                                NumericalGroupComparisonType.MEDIAN,
+                                        });
                                     }}
                                 >
                                     Median
@@ -167,9 +169,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <a
                                     className="dropdown-item"
                                     onClick={() =>
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.BINS
-                                        )
+                                        this.props.openComparisonPage({
+                                            categorizationType:
+                                                NumericalGroupComparisonType.BINS,
+                                        })
                                     }
                                 >
                                     Current bins
@@ -184,7 +187,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         return (
             <a
                 className="dropdown-item"
-                onClick={() => this.props.openComparisonPage()}
+                onClick={() => this.props.openComparisonPage({})}
                 style={{ display: 'flex', alignItems: 'center' }}
             >
                 <ComparisonVsIcon
