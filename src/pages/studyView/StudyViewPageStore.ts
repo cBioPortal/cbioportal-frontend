@@ -796,6 +796,7 @@ export class StudyViewPageStore {
     }
 
     private createMutatedGeneComparisonSession(
+        chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
         statusCallback: (phase: LoadingPhase) => void
     ) {
@@ -887,6 +888,7 @@ export class StudyViewPageStore {
                     const { id } = await comparisonClient.addComparisonSession({
                         groups,
                         origin: this.studyIds,
+                        clinicalAttributeName: chartMeta.displayName,
                     });
                     return resolve(id);
                 }
@@ -1116,6 +1118,7 @@ export class StudyViewPageStore {
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 sessionId = await this.createMutatedGeneComparisonSession(
+                    chartMeta,
                     params.hugoGeneSymbols!,
                     statusCallback
                 );
