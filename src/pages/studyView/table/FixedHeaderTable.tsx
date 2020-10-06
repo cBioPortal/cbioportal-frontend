@@ -392,7 +392,11 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     getControls() {
         return (
-            <div className={classnames(styles.controls)}>
+            <div
+                className={classnames(styles.controls, {
+                    [styles.controlsAtTop]: !!this.props.showControlsAtTop,
+                })}
+            >
                 {!this.props.showControlsAtTop && (
                     <input
                         placeholder={'Search...'}

@@ -32,12 +32,24 @@ $study-view-table-icon-size: 10px;
     font-size: 13px !important;
     padding: 0 5px;
 
-    button {
-        margin-left: 3px;
+    &:not(.controlsAtTop) {
+        button {
+            margin-left: 3px;
+        }
+
+        .tableSearchInput {
+            margin-right: 10px;
+        }
     }
 
-    .tableSearchInput {
-        margin-right: 10px;
+    &.controlsAtTop {
+        button {
+            margin-right: 3px;
+        }
+
+        .tableSearchInput {
+            margin-left: 10px;
+        }
     }
 }
 
