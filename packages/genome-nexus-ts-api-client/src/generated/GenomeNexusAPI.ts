@@ -790,9 +790,17 @@ export type TranscriptConsequenceSummary = {
 
         'hugoGeneSymbol': string
 
+        'polyphenPrediction': string
+
+        'polyphenScore': number
+
         'proteinPosition': IntegerRange
 
         'refSeq': string
+
+        'siftPrediction': string
+
+        'siftScore': number
 
         'transcriptId': string
 
@@ -1011,7 +1019,7 @@ export default class GenomeNexusAPI {
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationPOSTWithHttpInfo(parameters: {
         'variants': Array < string > ,
@@ -1073,7 +1081,7 @@ export default class GenomeNexusAPI {
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"] (GRCh37) or ["1:g.182712A>C", "2:g.265023C>T", "3:g.319781del", "19:g.110753dup", "1:g.1385015_1387562del"] (GRCh38)
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationPOST(parameters: {
             'variants': Array < string > ,
@@ -1357,7 +1365,7 @@ export default class GenomeNexusAPI {
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationByGenomicLocationPOSTWithHttpInfo(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
@@ -1419,7 +1427,7 @@ export default class GenomeNexusAPI {
      * @param {} genomicLocations - List of Genomic Locations
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationByGenomicLocationPOST(parameters: {
             'genomicLocations': Array < GenomicLocation > ,
@@ -1474,7 +1482,7 @@ export default class GenomeNexusAPI {
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationByGenomicLocationGETWithHttpInfo(parameters: {
         'genomicLocation': string,
@@ -1534,7 +1542,7 @@ export default class GenomeNexusAPI {
      * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationByGenomicLocationGET(parameters: {
         'genomicLocation': string,
@@ -1588,7 +1596,7 @@ export default class GenomeNexusAPI {
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationGETWithHttpInfo(parameters: {
         'variant': string,
@@ -1648,7 +1656,7 @@ export default class GenomeNexusAPI {
      * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} token - Map of tokens. For example {"source1":"put-your-token1-here","source2":"put-your-token2-here"}
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots
      */
     fetchVariantAnnotationGET(parameters: {
         'variant': string,
