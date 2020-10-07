@@ -6,7 +6,7 @@ import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataS
 import { VAFChartControls } from './VAFChartControls';
 import VAFChart from 'pages/patientView/timeline2/VAFChart';
 import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
-
+//
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
 import {
@@ -16,13 +16,14 @@ import {
     TimelineTrackSpecification,
 } from 'cbioportal-clinical-timeline';
 import SampleManager from 'pages/patientView/SampleManager';
-import { downloadZippedTracks } from 'pages/patientView/timeline/timelineTSV';
+
 import {
     buildBaseConfig,
     configureGenieTimeline,
     sortTracks,
 } from 'pages/patientView/timeline2/helpers';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
+import { downloadZippedTracks } from 'pages/patientView/timeline2/timelineDataUtils';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
