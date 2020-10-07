@@ -193,7 +193,7 @@
     "oncokb-ts-api-client": "^1.1.1",
     "oncoprintjs": "4.2.1",
     "parameter-validator": "^1.0.2",
-    "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#unstable",
+    "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#ab852c7ebeafe895560a495e7337c674c5176047",
     "pdfobject": "^2.0.201604172",
     "pegjs": "^0.10.0",
     "plotly.js": "^1.42.5",

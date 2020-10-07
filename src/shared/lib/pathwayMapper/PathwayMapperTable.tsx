@@ -31,7 +31,9 @@ interface IPathwayMapperTableProps {
     selectedPathway: string;
     changePathway: (pathway: string) => void;
     initialSortColumn?: string;
-    columnsOverride?: any | null;
+    columnsOverride: {
+        [columnEnum: number]: Partial<PathwayMapperTableColumn>;
+    };
 }
 
 type PathwayMapperTableColumn = Column<IPathwayMapperTable>;

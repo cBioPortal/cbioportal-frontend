@@ -181,6 +181,8 @@ export default class PatientViewPathwayMapper extends React.Component<
                                 tableComponent={this.renderTable}
                                 validGenes={this.validGenes}
                                 patientView={true}
+                                //message banner patch will be removed
+                                messageBanner={this.renderBanner}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -190,10 +192,6 @@ export default class PatientViewPathwayMapper extends React.Component<
                 </div>
             </div>
         );
-    }
-
-    componentWillUnmount(): void {
-        // this.toastReaction();
     }
 
     @computed get storeForAllData(): PatientViewPageStore | undefined {
@@ -258,7 +256,11 @@ export default class PatientViewPathwayMapper extends React.Component<
         // Some of the pathway genes may be invalid/unknown gene symbols
         this.newGenesFromPathway = pathwayGenes;
     }
-
+    //will be removed when Banner is added
+    @autobind
+    private renderBanner() {
+        return null;
+    }
     @autobind
     private renderTable(
         data: IPathwayMapperTable[],

@@ -250,6 +250,8 @@ export default class ResultsViewPathwayMapper extends React.Component<
                                 tableComponent={this.renderTable}
                                 validGenes={this.validGenes}
                                 toast={toast}
+                                //messageBanner Patch will be removed
+                                messageBanner={this.renderBanner}
                             />
                             <ToastContainer
                                 closeButton={<i className="fa fa-times" />}
@@ -356,7 +358,11 @@ export default class ResultsViewPathwayMapper extends React.Component<
             });
         }, 2000);
     }
-
+    //will be removed when banner is added
+    @autobind
+    private renderBanner() {
+        return null;
+    }
     @autobind
     private renderTable(
         data: IPathwayMapperTable[],
@@ -368,6 +374,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                 data={data}
                 selectedPathway={selectedPathway}
                 changePathway={onPathwaySelect}
+                columnsOverride={{}}
             />
         );
     }
