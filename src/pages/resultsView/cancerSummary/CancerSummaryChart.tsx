@@ -145,9 +145,9 @@ export class CancerSummaryChart extends React.Component<
         } else {
             const profiledCount = this.scatterPlotTooltipModel.datum
                 .profiledCount as number;
-            let tooltopMessage = 'Not profiled';
+            let tooltipMessage = 'Not profiled';
             if (profiledCount > 0) {
-                tooltopMessage = `${profiledCount} ${pluralize(
+                tooltipMessage = `${profiledCount} ${pluralize(
                     'sample',
                     profiledCount
                 )}  profiled`;
@@ -177,7 +177,7 @@ export class CancerSummaryChart extends React.Component<
                     }}
                     placement={tooltipPlacement}
                 >
-                    <div style={{ whiteSpace: 'normal' }}>{tooltopMessage}</div>
+                    <div style={{ whiteSpace: 'normal' }}>{tooltipMessage}</div>
                 </Popover>,
                 document.body
             );
@@ -527,6 +527,26 @@ export class CancerSummaryChart extends React.Component<
                                 target: 'data',
                                 mutation: () => {
                                     self.scatterPlotTooltipModel = null;
+                                },
+                            },
+                        ];
+                    },
+                    onMouseEnter: () => {
+                        return [
+                            {
+                                target: 'data',
+                                mutation: () => {
+                                    self.shouldUpdatePosition = true;
+                                },
+                            },
+                        ];
+                    },
+                    onMouseLeave: () => {
+                        return [
+                            {
+                                target: 'data',
+                                mutation: () => {
+                                    self.shouldUpdatePosition = false;
                                 },
                             },
                         ];
