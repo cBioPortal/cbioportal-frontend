@@ -86,6 +86,7 @@ import {
     getOncoprinterHeatmapInput,
 } from '../../../pages/staticPages/tools/oncoprinter/OncoprinterImportUtils';
 import { buildCBioPortalPageUrl } from '../../api/urls';
+import '../../../globalStyles/oncoprintStyles.scss';
 
 interface IResultsViewOncoprintProps {
     divId: string;
