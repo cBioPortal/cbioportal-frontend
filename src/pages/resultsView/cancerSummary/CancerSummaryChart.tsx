@@ -119,8 +119,65 @@ export class CancerSummaryChart extends React.Component<
     @observable private isBarPlotTooltipHovered = false;
     @observable private shouldUpdatePosition = false; // Prevents chasing tooltip
 
-    private svg: SVGElement;
     @observable mousePosition = { x: 0, y: 0 };
+
+    private plotSvg: SVGElement | null = null;
+    private dummyScrollPane: HTMLDivElement;
+
+    private scrollPane: HTMLDivElement;
+    private scrollingDummyPane = false;
+    @observable plotElementWidth = 0;
+    @autobind
+    private getSvg() {
+        return this.plotSvg;
+    }
+    @autobind
+    private assignScrollPaneRef(el: HTMLDivElement) {
+        this.scrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+            $(el).scroll(this.synchronizeScrollPanes);
+        }
+    }
+    @autobind
+    private assignDummyScrollPaneRef(el: HTMLDivElement) {
+        this.dummyScrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+
+            $(el).scroll(this.synchronizeScrollPanes);
+
+            $(el).on('mousedown', () => {
+                this.scrollingDummyPane = true;
+            });
+            $(el).on('mouseup', () => {
+                this.scrollingDummyPane = false;
+            });
+        }
+    }
+    @autobind
+    private assignPlotSvgRef(el: SVGElement | null) {
+        this.plotSvg = el;
+        if (el) {
+            this.plotElementWidth = el.scrollWidth;
+        } else {
+            this.plotElementWidth = 0;
+        }
+    }
+    @autobind
+    private synchronizeScrollPanes() {
+        if (!this.scrollPane || !this.dummyScrollPane) {
+            // Can't do anything if both panes don't exist yet
+            return;
+        }
+        if (this.scrollingDummyPane) {
+            // prevent infinite loop by only updating in one direction
+            //  based on whether user is clicking in the dummy pane
+            this.scrollPane.scrollLeft = this.dummyScrollPane.scrollLeft;
+        } else {
+            this.dummyScrollPane.scrollLeft = this.scrollPane.scrollLeft;
+        }
+    }
 
     constructor(props: CancerSummaryChartProps) {
         super(props);
@@ -679,7 +736,35 @@ export class CancerSummaryChart extends React.Component<
     @autobind private getChart() {
         return (
             <div style={this.overflowStyle} className="borderedChart">
-                <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+                <Observer>
+                    {() => (
+                        <div
+                            className="dummyScrollDiv scrollbarAlwaysVisible"
+                            style={{
+                                position: 'relative',
+                                width: '100%',
+                                maxWidth: this.plotElementWidth,
+                                overflow: 'scroll',
+                                marginTop: 35,
+                                marginBottom: -25, // reduce excessive padding caused by the marginTop
+                                zIndex: 1, // make sure it receives mouse even though marginBottom pulls the plot on top of it
+                            }}
+                            ref={this.assignDummyScrollPaneRef}
+                        >
+                            <div
+                                style={{
+                                    minWidth: this.plotElementWidth - 8, // subtract 8 due to the pseudo-scrollbar element adding bulk
+                                    height: 1,
+                                }}
+                            />
+                        </div>
+                    )}
+                </Observer>
+                <div
+                    style={{ overflowX: 'auto', overflowY: 'hidden' }}
+                    className="hideScrollbar"
+                    ref={this.assignScrollPaneRef}
+                >
                     <svg
                         style={{
                             width: this.svgWidth,
@@ -690,7 +775,7 @@ export class CancerSummaryChart extends React.Component<
                         width={this.svgWidth}
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                        ref={(ref: any) => (this.svg = ref)}
+                        ref={this.assignPlotSvgRef}
                         onMouseMove={this.onMouseMove}
                     >
                         <g transform={`translate(${this.leftPadding}, 0)`}>
@@ -803,7 +888,7 @@ export class CancerSummaryChart extends React.Component<
                     </svg>
                 </div>
                 <DownloadControls
-                    getSvg={() => this.svg}
+                    getSvg={this.getSvg}
                     getData={this.getData}
                     filename="cancer_types_summary"
                     dontFade={true}
