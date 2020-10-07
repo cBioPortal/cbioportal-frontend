@@ -323,6 +323,7 @@ jobs:
           destination: /imageCompare.html
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo
+        BACKEND_SOURCE_DIR: /tmp/cbioportal
         TEST_HOME: /tmp/repo/end-to-end-test
         FRONTEND_TEST_USE_LOCAL_DIST: true
         NO_PARALLEL: true

@@ -77,21 +77,43 @@ run_database_container() {
 
 run_cbioportal_container() {
 
-    # stop cbioportal container if running
-   (docker stop $E2E_CBIOPORTAL_HOST_NAME && docker rm $E2E_CBIOPORTAL_HOST_NAME) || true
+	# stop cbioportal container if running
+	(docker stop $E2E_CBIOPORTAL_HOST_NAME && docker rm $E2E_CBIOPORTAL_HOST_NAME) || true
 
-    # start cbioportal
-    # port 8081 opened for development in Local context
-    docker run -d --restart=always \
-        --name=$E2E_CBIOPORTAL_HOST_NAME \
-        --net=$DOCKER_NETWORK_NAME \
-        -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
-        -p 8081:8080 \
-        $BACKEND_IMAGE_NAME \
-        /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
+	if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
 
-    sleeptime=0
+		if [ ! -e "$BACKEND_SOURCE_DIR/portal/target/war-exploded" ]; then
+			echo "Compiled resources for backend cannot be found."
+			echo "Please run 'mvn install' and unzip te war file in '/portal/target/war-exploded'"
+			exit 1
+		fi
+
+		# run from custom backend
+		docker run -d --restart=always \
+			--name=$E2E_CBIOPORTAL_HOST_NAME \
+			--net=$DOCKER_NETWORK_NAME \
+			-v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+			-v "$BACKEND_SOURCE_DIR:/cbioportal:ro" \
+			-v "$BACKEND_SOURCE_DIR/portal/target/war-exploded:/cbioportal-webapp:ro" \
+			-e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
+			-p 8081:8080 \
+			cbioportal/cbioportal:latest \
+			/bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /cbioportal-webapp'
+
+	else
+		# run from dockerhub image
+		docker run -d --restart=always \
+		   --name=$E2E_CBIOPORTAL_HOST_NAME \
+		   --net=$DOCKER_NETWORK_NAME \
+		   -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
+		   -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
+		   -p 8081:8080 \
+		   $BACKEND_IMAGE_NAME \
+		   /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
+
+	fi
+
+	sleeptime=0
     maxtime=180
     while ! docker run --rm --net=$DOCKER_NETWORK_NAME busybox ping -c 1 "$E2E_CBIOPORTAL_HOST_NAME" &> /dev/null; do
         echo Waiting for cbioportal to initialize...
