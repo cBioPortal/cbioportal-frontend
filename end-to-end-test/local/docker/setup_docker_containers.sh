@@ -82,6 +82,8 @@ run_cbioportal_container() {
 
 	if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
 
+		echo "Running with custom backend"
+
 		if [ ! -e "$BACKEND_SOURCE_DIR/portal/target/war-exploded" ]; then
 			echo "Compiled resources for backend cannot be found."
 			echo "Please run 'mvn install' and unzip te war file in '/portal/target/war-exploded'"
@@ -97,10 +99,12 @@ run_cbioportal_container() {
 			-v "$BACKEND_SOURCE_DIR/portal/target/war-exploded:/cbioportal-webapp:ro" \
 			-e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
 			-p 8081:8080 \
-			cbioportal/cbioportal:latest \
+			$BACKEND_IMAGE_NAME \
 			/bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /cbioportal-webapp'
 
 	else
+		echo "Running with $BACKEND_IMAGE_NAME backend"
+
 		# run from dockerhub image
 		docker run -d --restart=always \
 		   --name=$E2E_CBIOPORTAL_HOST_NAME \
