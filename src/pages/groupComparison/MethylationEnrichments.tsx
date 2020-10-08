@@ -84,6 +84,7 @@ export default class MethylationEnrichments extends React.Component<
                         }
                         isGeneCheckBoxEnabled={this.props.resultsViewMode}
                         enrichmentType={EnrichmentType.DNA_METHYLATION}
+                        groupsSelectorPlaceholder={'High methylation in ...'}
                     />
                 </div>
             );
