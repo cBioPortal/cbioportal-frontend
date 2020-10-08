@@ -3,6 +3,7 @@
 set -e 
 set -u
 set -o pipefail
+set -v
 
 DIR=$PWD
 
