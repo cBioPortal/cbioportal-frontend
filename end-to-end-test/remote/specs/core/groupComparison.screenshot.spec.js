@@ -464,6 +464,47 @@ describe('group comparison page screenshot tests', function() {
             });
             assertScreenShotMatch(res);
         });
+
+        it('group comparison page microbiome signature tab several groups', function() {
+            // use study blca_tcga_pan_can_atlas_2018 for microbiome signature tests
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/comparison/generic_assay_microbiome_signature?sessionId=5d63f222e4b0d777deb05c78&unselectedGroups=%5B%22NA%22%5D`
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonGenericAssayEnrichments"]',
+                10000
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonGenericAssayEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=Collimonas', 10000);
+            browser.click('b=Collimonas');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
+        it('group comparison page microbiome signature tab two groups', function() {
+            // use study blca_tcga_pan_can_atlas_2018 for microbiome signature tests
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/comparison/generic_assay_microbiome_signature?sessionId=5d63f222e4b0d777deb05c78&unselectedGroups=%5B%22NA%22%2C%22White%22%5D`
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonGenericAssayEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=Lawsonia', 10000);
+            browser.click('b=Lawsonia');
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
     });
 
     describe('delete group from session', function() {
