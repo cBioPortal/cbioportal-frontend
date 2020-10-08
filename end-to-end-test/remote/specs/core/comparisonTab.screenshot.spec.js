@@ -473,6 +473,41 @@ describe('results view comparison tab screenshot tests', function() {
             });
             assertScreenShotMatch(res);
         });
+
+        it('results view comparison tab microbiome signature tab several groups', function() {
+            goToUrlAndSetLocalStorage(
+                `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=blca_tcga_pan_can_atlas_2018&case_set_id=blca_tcga_pan_can_atlas_2018_cnaseq&comparison_selectedGroups=%5B"CDKN2A"%2C"MDM2"%2C"MDM4"%5D&comparison_subtab=generic_assay_microbiome_signature&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pan_can_atlas_2018_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pan_can_atlas_2018_mutations&profileFilter=0&tab_index=tab_visualize`
+            );
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonGenericAssayEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=Polyomavirus', 10000);
+            browser.click('b=Polyomavirus');
+            browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
+        it('results view comparison tab microbiome signature tab two groups', function() {
+            // deselect a group
+            browser.click('button[data-test="groupSelectorButtonMDM4"]');
+
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonGenericAssayEnrichments"]',
+                10000
+            );
+            browser.waitForVisible('b=Wolbachia', 10000);
+            browser.click('b=Wolbachia');
+            browser.moveToObject('body', 0, 0);
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
     });
 
     describe('delete group from session', function() {
