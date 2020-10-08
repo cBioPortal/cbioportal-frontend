@@ -364,12 +364,6 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             sample.event.attributes.forEach((attribute: any, i: number) => {
                 if (attribute.key === 'SAMPLE_ID') {
                     // check the group value of this sample id
-                    console.info(
-                        'Sample id ' +
-                            attribute.value +
-                            ' is in group ' +
-                            this.sampleIdToClinicalValue[attribute.value]
-                    );
                     if (
                         sampleGroups[
                             this.clinicalValuesForGrouping.indexOf(
