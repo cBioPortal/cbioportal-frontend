@@ -143,6 +143,12 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                 width: columnWidth,
             },
             [SampleTreatmentsTableColumnKey.COUNT]: {
+                tooltip: (
+                    <span>
+                        Number of samples acquired before treatment or after/on
+                        treatment
+                    </span>
+                ),
                 name: columnKey,
                 headerRender: () => (
                     <TreatmentGenericColumnHeader
