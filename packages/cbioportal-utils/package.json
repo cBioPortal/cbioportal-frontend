@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-utils",
   "description": "cBioPortal Utilities",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -32,7 +32,7 @@
     "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0"
   },
   "dependencies": {
-    "genome-nexus-ts-api-client": "^1.1.6",
+    "genome-nexus-ts-api-client": "^1.1.7",
     "lodash": "^4.17.11",
     "oncokb-ts-api-client": "^1.1.2",
     "superagent": "^3.8.3",
