@@ -6,6 +6,7 @@ declare const styles: {
   readonly "cancerGenesRow": string;
   readonly "cbioportal-frontend": string;
   readonly "controls": string;
+  readonly "controlsAtTop": string;
   readonly "controlsBtn": string;
   readonly "del": string;
   readonly "displayFlex": string;
