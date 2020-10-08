@@ -256,8 +256,8 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
                     <div className={styles.Checkboxes}>
                         <div style={{ width: 250, marginRight: 7 }}>
                             <CheckedSelect
-                                name={'enrichedGroupsSelector'}
-                                placeholder={'Select enriched groups'}
+                                name={'groupsSelector'}
+                                placeholder={'High in ...'}
                                 onChange={this.onChange}
                                 options={this.options}
                                 value={this.selectedValues}
