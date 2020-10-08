@@ -8,7 +8,7 @@ set -v
 DIR=$PWD
 
 cd $TEST_HOME/local/docker
-./build_portal_image.sh &> /dev/null
+./build_portal_image.sh
 
 MD5_TEST_STUDIES=$(find $TEST_HOME/local/studies/ -type f -exec md5sum {} \; | md5sum | sed "s/\s.*$//")
 if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
