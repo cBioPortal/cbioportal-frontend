@@ -635,7 +635,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 const index = parseInt(key);
                 tracks.push({
                     renderHeader: () => this.groupByTrackLabel(index),
-                    renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
+                    renderTrack: () => this.sampleIconsGroupByTrack(sampleIds),
                     height: () => this.groupIndexToTrackHeight[index],
                     labelForExport: this.clinicalValuesForGrouping[index],
                 });
@@ -761,7 +761,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     }
 
     @autobind
-    sampeIconsGroupByTrack(sampleIds: string[]) {
+    sampleIconsGroupByTrack(sampleIds: string[]) {
         return <g>{sampleIds.map(sampleId => this.sampleIcon(sampleId))}</g>;
     }
 
