@@ -18,7 +18,9 @@ const CustomTrackHeader: React.FunctionComponent<ICustomTrackHeaderProps> = func
 }: ICustomTrackHeaderProps) {
     return (
         <div
-            className={classNames({ 'tl-hover-disabled': disableHover })}
+            className={classNames('tl-custom-track-header', {
+                'tl-hover-disabled': disableHover,
+            })}
             style={{ paddingLeft: 5, height: specification.height(store) }}
             onMouseEnter={handleTrackHover}
             onMouseLeave={handleTrackHover}

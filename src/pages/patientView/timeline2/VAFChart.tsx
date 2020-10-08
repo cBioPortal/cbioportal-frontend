@@ -659,10 +659,12 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @action
     renderHeader(ticks: { label: string; value: number; offset: number }[]) {
         this.props.wrapperStore.vafPlotHeader = (store: TimelineStore) => (
-            <VAFChartHeader
-                ticks={ticks}
-                legendHeight={this.props.wrapperStore.vafChartHeight}
-            />
+            <div className={'positionAbsolute'} style={{ right: -6 }}>
+                <VAFChartHeader
+                    ticks={ticks}
+                    legendHeight={this.props.wrapperStore.vafChartHeight}
+                />
+            </div>
         );
     }
 

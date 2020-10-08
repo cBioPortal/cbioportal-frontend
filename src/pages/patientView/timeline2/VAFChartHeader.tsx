@@ -20,7 +20,6 @@ const VAFChartHeader: React.FunctionComponent<IVAFChartHeaderProps> = observer(
                 style={{
                     height: legendHeight,
                     width: width,
-                    marginLeft: 'auto',
                 }}
             >
                 <svg
