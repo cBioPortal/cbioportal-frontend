@@ -82,6 +82,8 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.TABLE,
     ChartTypeEnum.BAR_CHART,
     ChartTypeEnum.MUTATED_GENES_TABLE,
+    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
+    ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
 ];
 
 export interface IChartContainerProps {
@@ -136,7 +138,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType;
 
     @observable newlyAdded = false;
-    @observable private preselectedHugoGeneSymbols: string[] = [];
+    @observable private selectedRowsKeys: string[] = [];
 
     constructor(props: IChartContainerProps) {
         super(props);
@@ -153,8 +155,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onValueSelection: action((values: any) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
             }),
-            onUserPreselection: action((values: string[]) => {
-                this.preselectedHugoGeneSymbols = values;
+            onChangeSelectedRows: action((values: string[]) => {
+                this.selectedRowsKeys = values;
             }),
             onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
@@ -267,6 +269,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         categorizationType?: NumericalGroupComparisonType;
         // for mutated genes table
         hugoGeneSymbols?: string[];
+        // for treatments tables
+        treatmentUniqueKeys?: string[];
     }) {
         if (this.comparisonPagePossible) {
             switch (this.props.chartType) {
@@ -323,6 +327,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     break;
                 case ChartTypeEnum.BAR_CHART:
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
+                case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+                case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                     this.props.store.openComparisonPage(
                         this.props.chartMeta,
                         params || {}
@@ -448,8 +454,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
-                        onUserPreselection={this.handlers.onUserPreselection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -487,8 +496,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
-                        onUserPreselection={this.handlers.onUserPreselection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -526,8 +538,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
-                        onUserPreselection={this.handlers.onUserPreselection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -579,7 +594,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -620,7 +639,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -728,7 +751,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
                                 columnKey:
@@ -756,7 +783,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
                                 columnKey:
@@ -864,7 +895,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
-                    preselectedHugoGeneSymbols={this.preselectedHugoGeneSymbols}
+                    selectedRowsKeys={this.selectedRowsKeys}
                     toggleLogScale={this.handlers.onToggleLogScale}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
