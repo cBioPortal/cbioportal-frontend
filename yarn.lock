@@ -2712,6 +2712,11 @@
   resolved "https://registry.yarnpkg.com/@types/events/-/events-3.0.0.tgz#2862f3f58a9a7f7c3e78d79f130dd4d71c25c2a7"
   integrity sha512-EaObqwIvayI5a8dCzhFrjKzVwKLxjoG9T6Ppd5CEo07LRKfQ8Yokw54r5+Wq7FaBQ+yXRvQAYPrHwya1/UFt9g==
 
+"@types/expired-storage@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/expired-storage/-/expired-storage-1.0.0.tgz#ab09e16f00c4912b49606d67d39c07644ed81d1e"
+  integrity sha512-2qKcvbYqf6dTCAbnwmuFB9CTXxIaKp430DCpklBTBnr6j7w4gPYvUvi5wQQ58RONK/Sgt424I4ADSk/j6MSOfA==
+
 "@types/glob@^7.1.1":
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/@types/glob/-/glob-7.1.1.tgz#aa59a1c6e3fbc421e07ccd31a944c30eba521575"
@@ -9393,6 +9398,11 @@ expect@^22.4.0:
     jest-matcher-utils "^22.4.3"
     jest-message-util "^22.4.3"
     jest-regex-util "^22.4.3"
+
+expired-storage@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/expired-storage/-/expired-storage-1.0.2.tgz#0c494185ca58149dc949b846ad8eb7c97fc52933"
+  integrity sha1-DElBhcpYFJ3JSbhGrY63yX/FKTM=
 
 exports-loader@^0.6.3:
   version "0.6.4"
