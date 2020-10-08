@@ -43,11 +43,13 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
+    PatientTreatmentRow,
     ResourceData,
     ResourceDefinition,
     Sample,
     SampleIdentifier,
     SampleMolecularIdentifier,
+    SampleTreatmentRow,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import {
@@ -184,6 +186,7 @@ import {
     toPatientTreatmentFilter,
     toSampleTreatmentFilter,
     treatmentUniqueKey,
+    treatmentComparisonGroupName,
 } from './table/treatments/treatmentsTableUtil';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
@@ -795,6 +798,81 @@ export class StudyViewPageStore {
         });
     }
 
+    private createTreatmentsComparisonSession(
+        chartMeta: ChartMeta,
+        chartType: ChartType,
+        treatmentUniqueKeys: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // For patient treatments comparison, use all samples for that treatment, pre- and post-
+        const isPatientType =
+            chartType === ChartTypeEnum.PATIENT_TREATMENTS_TABLE;
+        const promises = [this.selectedSampleSet, this.sampleTreatments];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSampleSet: ComplexKeyMap<Sample>,
+                    sampleTreatments: SampleTreatmentRow[]
+                ) => {
+                    const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
+                    const desiredTreatments = sampleTreatments.filter(
+                        t =>
+                            treatmentUniqueKey(t, isPatientType) in
+                            treatmentKeysMap
+                    );
+                    // If sample type, then there will be exactly one treatment row per id.
+                    // If patient type, potentially more than one treatment row per id because it ignores the time
+                    const treatmentsGroupedById = _.groupBy(
+                        desiredTreatments,
+                        t => treatmentUniqueKey(t, isPatientType)
+                    );
+
+                    const groups = _.map(
+                        treatmentsGroupedById,
+                        (treatmentRows, id) => {
+                            const selectedSampleIdentifiers = _.flatMap(
+                                treatmentRows,
+                                treatmentRow => {
+                                    return treatmentRow.samples.filter(s =>
+                                        selectedSampleSet.has(s, [
+                                            'sampleId',
+                                            'studyId',
+                                        ])
+                                    );
+                                }
+                            ).map(s => ({
+                                studyId: s.studyId,
+                                sampleId: s.sampleId,
+                            }));
+                            return getGroupParameters(
+                                treatmentComparisonGroupName(
+                                    treatmentRows[0],
+                                    isPatientType
+                                ),
+                                selectedSampleIdentifiers,
+                                this.studyIds
+                            );
+                        }
+                    );
+
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+
+                    // create session and get id
+                    const { id } = await comparisonClient.addComparisonSession({
+                        groups,
+                        origin: this.studyIds,
+                        clinicalAttributeName: chartMeta.displayName,
+                    });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
     private createMutatedGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
@@ -1056,6 +1134,8 @@ export class StudyViewPageStore {
             clinicalAttributeValues?: ClinicalDataCountSummary[];
             // for mutated genes table
             hugoGeneSymbols?: string[];
+            // for treatments tables
+            treatmentUniqueKeys?: string[];
         }
     ) {
         // open window before the first `await` call - this makes it a synchronous window.open,
@@ -1107,7 +1187,8 @@ export class StudyViewPageStore {
             }
         };
 
-        switch (this.chartsType.get(chartMeta.uniqueKey)) {
+        const chartType = this.chartsType.get(chartMeta.uniqueKey);
+        switch (chartType) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
                 sessionId = await this.createCategoricalAttributeComparisonSession(
@@ -1120,6 +1201,15 @@ export class StudyViewPageStore {
                 sessionId = await this.createMutatedGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                sessionId = await this.createTreatmentsComparisonSession(
+                    chartMeta,
+                    chartType,
+                    params.treatmentUniqueKeys!,
                     statusCallback
                 );
                 break;
@@ -4706,6 +4796,17 @@ export class StudyViewPageStore {
         },
     });
 
+    public readonly selectedSampleSet = remoteData({
+        await: () => [this.selectedSamples],
+        invoke: () =>
+            Promise.resolve(
+                ComplexKeyMap.from(this.selectedSamples.result!, s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }))
+            ),
+    });
+
     public readonly sampleSetByKey = remoteData({
         await: () => [this.samples],
         invoke: () => {
@@ -6736,14 +6837,14 @@ export class StudyViewPageStore {
     @computed
     get sampleTreatmentFiltersAsStrings(): string[][] {
         return this.sampleTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(treatmentUniqueKey);
+            return outer.filters.map(t => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get patientTreatmentFiltersAsStrings(): string[][] {
         return this.patientTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(treatmentUniqueKey);
+            return outer.filters.map(t => treatmentUniqueKey(t));
         });
     }
 
