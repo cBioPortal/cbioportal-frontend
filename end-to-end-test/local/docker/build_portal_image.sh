@@ -15,6 +15,9 @@ if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
    git clone "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git" .
    git fetch --all
    git checkout -b $BACKEND_BRANCH origin/$BACKEND_BRANCH
+   wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+   wget -q -O - https://cli-assets.heroku.com/apt/release.key | sudo apt-key add -
+   sudo apt-get update && sudo apt-get install maven -y
    mvn clean install -DskipTests
    unzip $BACKEND_SOURCE_DIR/portal/target/cbioportal*.war -d $BACKEND_SOURCE_DIR/portal/target/war-exploded
    cd $DIR
