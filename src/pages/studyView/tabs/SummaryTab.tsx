@@ -342,11 +342,6 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
-                props.description = {
-                    description: chartMeta.description,
-                    studyName: '',
-                    displayName: '',
-                };
                 props.filters = this.store.sampleTreatmentFiltersAsStrings;
                 props.promise = this.store.sampleTreatments;
                 props.onValueSelection = this.store.onSampleTreatmentSelection;
@@ -356,11 +351,6 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
-                props.description = {
-                    description: chartMeta.description,
-                    studyName: '',
-                    displayName: '',
-                };
                 props.filters = this.store.patientTreatmentFiltersAsStrings;
                 props.promise = this.store.patientTreatments;
                 props.onValueSelection = this.store.onPatientTreatmentSelection;
