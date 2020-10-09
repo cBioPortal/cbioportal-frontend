@@ -10,8 +10,9 @@ set -v
 if [[ $BACKEND_IMAGE_NAME == $CUSTOM_BACKEND_IMAGE_NAME ]]; then
    echo "Building custom backend ..."
    DIR=$PWD
-   git clone "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git"
+   mkdir -p $BACKEND_SOURCE_DIR
    cd $BACKEND_SOURCE_DIR
+   git clone "https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git" .
    git fetch --all
    git checkout -b $BACKEND_BRANCH origin/$BACKEND_BRANCH
    mvn clean install -DskipTests
