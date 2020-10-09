@@ -65,6 +65,7 @@ import {
     PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
 } from '../table/treatments/PatientTreatmentsTable';
+import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -286,7 +287,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         );
                     const values = this.props.promise
                         .result! as ClinicalDataCountSummary[];
-                    if (values.length > MAX_GROUPS_IN_SESSION) {
+                    if (
+                        doesChartHaveComparisonGroupsLimit(
+                            this.props.chartMeta
+                        ) &&
+                        values.length > MAX_GROUPS_IN_SESSION
+                    ) {
                         this.props.setComparisonConfirmationModal(hideModal => {
                             return (
                                 <Modal
