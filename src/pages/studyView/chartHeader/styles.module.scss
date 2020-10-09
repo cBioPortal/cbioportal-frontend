@@ -50,6 +50,11 @@ $iconFontSize: 14px;
     width: 15px;
 }
 
+.disabledMenuItem {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 .survivalIcon {
     width: $fontSize - 1px;
     height: $fontSize - 1px;
