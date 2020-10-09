@@ -33,6 +33,7 @@ export interface IChartHeaderProps {
     active: boolean;
     resetChart: () => void;
     deleteChart: () => void;
+    selectedRowsKeys?: string[];
     toggleLogScale?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
@@ -43,9 +44,11 @@ export interface IChartHeaderProps {
         | ((dataType?: DataType) => string);
     downloadTypes?: DownloadControlsButton[];
     description?: ISurvivalDescription;
-    openComparisonPage: (
-        categorizationType?: NumericalGroupComparisonType
-    ) => void;
+    openComparisonPage: (params: {
+        categorizationType?: NumericalGroupComparisonType;
+        hugoGeneSymbols?: string[];
+        treatmentUniqueKeys?: string[];
+    }) => void;
 }
 
 export interface ChartControls {
@@ -95,104 +98,168 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     @computed get comparisonButton() {
         const submenuWidth = 120;
-        if (this.props.chartType === ChartTypeEnum.BAR_CHART) {
-            return (
-                <div
-                    className={classnames(
-                        'dropdown-item',
-                        styles.dropdownHoverEffect
-                    )}
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        padding: '3px 20px',
-                    }}
-                    onMouseEnter={() => (this.comparisonSubmenuOpen = true)}
-                    onMouseLeave={() => (this.comparisonSubmenuOpen = false)}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+        switch (this.props.chartType) {
+            case ChartTypeEnum.BAR_CHART:
+                return (
+                    <div
+                        className={classnames(
+                            'dropdown-item',
+                            styles.dropdownHoverEffect
+                        )}
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            padding: '3px 20px',
+                        }}
+                        onMouseEnter={() => (this.comparisonSubmenuOpen = true)}
+                        onMouseLeave={() =>
+                            (this.comparisonSubmenuOpen = false)
+                        }
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <ComparisonVsIcon
+                                className={classnames(
+                                    'fa fa-fw',
+                                    styles.menuItemIcon
+                                )}
+                            />
+                            <span>Compare Groups</span>
+                        </div>
+                        <i
+                            className={'fa fa-xs fa-fw fa-caret-right'}
+                            style={{ lineHeight: 'inherit' }}
+                        />
+
+                        {this.comparisonSubmenuOpen && (
+                            <ul
+                                className={classnames('dropdown-menu', {
+                                    show: this.comparisonSubmenuOpen,
+                                })}
+                                style={{
+                                    top: 0,
+                                    margin: '-6px 0',
+                                    left:
+                                        this.props.placement === 'left'
+                                            ? -submenuWidth
+                                            : '100%',
+                                    minWidth: submenuWidth,
+                                }}
+                            >
+                                <li>
+                                    <a
+                                        className="dropdown-item"
+                                        onClick={() => {
+                                            this.props.openComparisonPage({
+                                                categorizationType:
+                                                    NumericalGroupComparisonType.QUARTILES,
+                                            });
+                                        }}
+                                    >
+                                        Quartiles
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        className="dropdown-item"
+                                        onClick={() => {
+                                            this.props.openComparisonPage({
+                                                categorizationType:
+                                                    NumericalGroupComparisonType.MEDIAN,
+                                            });
+                                        }}
+                                    >
+                                        Median
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        className="dropdown-item"
+                                        onClick={() =>
+                                            this.props.openComparisonPage({
+                                                categorizationType:
+                                                    NumericalGroupComparisonType.BINS,
+                                            })
+                                        }
+                                    >
+                                        Current bins
+                                    </a>
+                                </li>
+                            </ul>
+                        )}
+                    </div>
+                );
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                return (
+                    <a
+                        className={classnames('dropdown-item', {
+                            [styles.disabledMenuItem]:
+                                this.props.selectedRowsKeys!.length < 2,
+                        })}
+                        onClick={() => {
+                            const hugoGeneSymbols = this.props
+                                .selectedRowsKeys!;
+                            if (hugoGeneSymbols.length >= 2) {
+                                this.props.openComparisonPage({
+                                    hugoGeneSymbols: hugoGeneSymbols.slice(), // slice() gets rid of mobx wrapping which messes up API calls
+                                });
+                            }
+                        }}
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
                         <ComparisonVsIcon
                             className={classnames(
                                 'fa fa-fw',
                                 styles.menuItemIcon
                             )}
                         />
-                        <span>Compare Groups</span>
-                    </div>
-                    <i
-                        className={'fa fa-xs fa-fw fa-caret-right'}
-                        style={{ lineHeight: 'inherit' }}
-                    />
-
-                    {this.comparisonSubmenuOpen && (
-                        <ul
-                            className={classnames('dropdown-menu', {
-                                show: this.comparisonSubmenuOpen,
-                            })}
-                            style={{
-                                top: 0,
-                                margin: '-6px 0',
-                                left:
-                                    this.props.placement === 'left'
-                                        ? -submenuWidth
-                                        : '100%',
-                                minWidth: submenuWidth,
-                            }}
-                        >
-                            <li>
-                                <a
-                                    className="dropdown-item"
-                                    onClick={() => {
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.QUARTILES
-                                        );
-                                    }}
-                                >
-                                    Quartiles
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    className="dropdown-item"
-                                    onClick={() => {
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.MEDIAN
-                                        );
-                                    }}
-                                >
-                                    Median
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    className="dropdown-item"
-                                    onClick={() =>
-                                        this.props.openComparisonPage(
-                                            NumericalGroupComparisonType.BINS
-                                        )
-                                    }
-                                >
-                                    Current bins
-                                </a>
-                            </li>
-                        </ul>
-                    )}
-                </div>
-            );
+                        Compare Groups
+                    </a>
+                );
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                return (
+                    <a
+                        className={classnames('dropdown-item', {
+                            [styles.disabledMenuItem]:
+                                this.props.selectedRowsKeys!.length < 2,
+                        })}
+                        onClick={() => {
+                            const treatmentUniqueKeys = this.props
+                                .selectedRowsKeys!;
+                            if (treatmentUniqueKeys.length >= 2) {
+                                this.props.openComparisonPage({
+                                    treatmentUniqueKeys: treatmentUniqueKeys.slice(), // slice() gets rid of mobx wrapping which messes up API calls
+                                });
+                            }
+                        }}
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <ComparisonVsIcon
+                            className={classnames(
+                                'fa fa-fw',
+                                styles.menuItemIcon
+                            )}
+                        />
+                        Compare Groups
+                    </a>
+                );
+            default:
+                return (
+                    <a
+                        className="dropdown-item"
+                        onClick={() => this.props.openComparisonPage({})}
+                        style={{ display: 'flex', alignItems: 'center' }}
+                    >
+                        <ComparisonVsIcon
+                            className={classnames(
+                                'fa fa-fw',
+                                styles.menuItemIcon
+                            )}
+                        />
+                        Compare Groups
+                    </a>
+                );
         }
-
-        return (
-            <a
-                className="dropdown-item"
-                onClick={() => this.props.openComparisonPage()}
-                style={{ display: 'flex', alignItems: 'center' }}
-            >
-                <ComparisonVsIcon
-                    className={classnames('fa fa-fw', styles.menuItemIcon)}
-                />
-                Compare Groups
-            </a>
-        );
     }
 
     @computed get menuItems() {
