@@ -194,6 +194,7 @@ import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
+import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -1083,10 +1084,9 @@ export class StudyViewPageStore {
                         // do not slice for comparison on cancer studies chart
                         .slice(
                             0,
-                            chartMeta.uniqueKey ===
-                                SpecialChartsUniqueKeyEnum.CANCER_STUDIES
-                                ? undefined
-                                : MAX_GROUPS_IN_SESSION
+                            doesChartHaveComparisonGroupsLimit(chartMeta)
+                                ? MAX_GROUPS_IN_SESSION
+                                : undefined
                         )
                         .filter(attrVal => {
                             const lcValue = attrVal.value.toLowerCase();
