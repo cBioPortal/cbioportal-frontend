@@ -30,6 +30,7 @@ const config = {
             'react-if',
             'react-select1',
             'igv',
+            'jstat',
         ],
     },
 

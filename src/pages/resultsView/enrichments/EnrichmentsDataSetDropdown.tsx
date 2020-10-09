@@ -5,12 +5,10 @@ import styles from './styles.module.scss';
 import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import autobind from 'autobind-decorator';
 import MolecularProfileSelector from '../../../shared/components/MolecularProfileSelector';
-import { MobxPromise } from 'mobxpromise';
-import * as _ from 'lodash';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import _ from 'lodash';
 
 export interface IEnrichmentsDataSetDropdownProps {
-    dataSets: MobxPromise<MolecularProfile[]>;
+    dataSets: MolecularProfile[];
     onChange: (studyMolecularProfileMap: {
         [id: string]: MolecularProfile;
     }) => void;
@@ -28,7 +26,6 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
 > {
     @autobind
     private change(selectedStudyId: string, o: any) {
-        // at this point, we know dataSets is complete because otherwise this callback wouldnt be fired
         let updatedStudyMolecularProfileMap = _.mapValues(
             this.props.selectedProfileByStudyId,
             (molecularProfile, studyId) => {
@@ -51,41 +48,29 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
         }
     }
 
-    @computed private get molecularProfileMap() {
-        if (this.props.dataSets.isComplete) {
-            return _.keyBy(
-                this.props.dataSets.result!,
-                x => x.molecularProfileId
-            );
-        }
-        return {};
-    }
-
     @computed private get studiesMap() {
         return _.keyBy(this.props.studies, x => x.studyId);
     }
 
+    @computed private get molecularProfileMap() {
+        return _.keyBy(this.props.dataSets, x => x.molecularProfileId);
+    }
+
     @computed private get showEnrichmentsDataSetDropdown() {
-        if (this.props.dataSets.isComplete) {
-            let molecularProfilesMap = _.groupBy(
-                this.props.dataSets.result!,
-                profile => profile.studyId
-            );
-            return !!_.find(
-                molecularProfilesMap,
-                molecularProfiles => molecularProfiles.length > 1
-            );
-        }
-        return false;
+        let molecularProfilesMap = _.groupBy(
+            this.props.dataSets,
+            profile => profile.studyId
+        );
+        return _.some(
+            molecularProfilesMap,
+            molecularProfiles => molecularProfiles.length > 1
+        );
     }
 
     public render() {
-        if (this.props.dataSets.isPending) {
-            return <LoadingIndicator isLoading={true} />;
-        }
         if (this.showEnrichmentsDataSetDropdown || !!this.props.alwaysShow) {
             let studyProfilesMap = _.groupBy(
-                this.props.dataSets.result!,
+                this.props.dataSets,
                 x => x.studyId
             );
             const includeStudyName = Object.keys(studyProfilesMap).length > 1;

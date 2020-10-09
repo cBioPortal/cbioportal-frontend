@@ -7,6 +7,7 @@ import {
     ExpressionEnrichmentWithQ,
     getAlterationsTooltipContent,
     EnrichmentType,
+    GenericAssayEnrichmentWithQ,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import * as _ from 'lodash';
 import autobind from 'autobind-decorator';
@@ -16,6 +17,7 @@ import {
     INumberAxisData,
     makeBoxScatterPlotData,
     getBoxPlotDownloadData,
+    deriveDisplayTextFromGenericAssayType,
 } from '../plots/PlotsTabUtils';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
@@ -51,7 +53,8 @@ export interface IExpressionEnrichmentsBoxPlotProps {
     oqlFilteredCaseAggregatedData?: {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
-    selectedRow?: ExpressionEnrichmentWithQ;
+    selectedRow?: ExpressionEnrichmentWithQ | GenericAssayEnrichmentWithQ;
+    genericAssayType?: string;
 }
 
 @observer
@@ -82,11 +85,25 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         );
     }
 
+    @computed get isGenericAssay() {
+        return !!this.props.genericAssayType;
+    }
+
     @computed get axisLabelY() {
         if (this.props.selectedRow !== undefined) {
-            return `${this.props.selectedRow.hugoGeneSymbol}, ${
-                this.props.selectedProfile.name
-            }${this.logScale ? ' (log2)' : ''}`;
+            if (this.isGenericAssay) {
+                return `${
+                    (this.props.selectedRow as GenericAssayEnrichmentWithQ)
+                        .stableId
+                }, ${this.props.selectedProfile.name}`;
+            } else {
+                return `${
+                    (this.props.selectedRow as ExpressionEnrichmentWithQ)
+                        .hugoGeneSymbol
+                }, ${this.props.selectedProfile.name}${
+                    this.logScale ? ' (log2)' : ''
+                }`;
+            }
         }
         return '';
     }
@@ -133,32 +150,70 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         invoke: async () => {
             const axisData: INumberAxisData = { data: [], datatype: 'number' };
             if (this.props.selectedRow !== undefined) {
-                const modecluarData = await client.fetchAllMolecularDataInMolecularProfileUsingPOST(
-                    {
-                        molecularProfileId: this.props.selectedProfile
-                            .molecularProfileId,
-                        molecularDataFilter: {
-                            entrezGeneIds: [
-                                this.props.selectedRow.entrezGeneId,
-                            ],
-                            sampleIds: _.map(
-                                this.props.sampleKeyToSample,
-                                sample => sample.sampleId
-                            ),
-                        } as any,
+                if (this.isGenericAssay) {
+                    const molecularData = await client.fetchGenericAssayDataInMolecularProfileUsingPOST(
+                        {
+                            molecularProfileId: this.props.selectedProfile
+                                .molecularProfileId,
+                            genericAssayDataFilter: {
+                                genericAssayStableIds: [
+                                    (this.props
+                                        .selectedRow as GenericAssayEnrichmentWithQ)
+                                        .stableId,
+                                ],
+                                sampleIds: _.map(
+                                    this.props.sampleKeyToSample,
+                                    sample => sample.sampleId
+                                ),
+                            } as any,
+                        }
+                    );
+
+                    const axisData_Data = axisData.data;
+
+                    for (const d of molecularData) {
+                        // generic assay data can be any continuous number optionally prefixed with a '>' or '<' threshold symbol (e.g., '>8.00')
+                        // but data with threshold is no a exact number, we should skip those.
+                        if (/[<>]+/.test(d.value)) {
+                            continue;
+                        } else {
+                            const value = parseFloat(d.value);
+                            axisData_Data.push({
+                                uniqueSampleKey: d.uniqueSampleKey,
+                                value,
+                            });
+                        }
                     }
-                );
+                } else {
+                    const molecularData = await client.fetchAllMolecularDataInMolecularProfileUsingPOST(
+                        {
+                            molecularProfileId: this.props.selectedProfile
+                                .molecularProfileId,
+                            molecularDataFilter: {
+                                entrezGeneIds: [
+                                    (this.props
+                                        .selectedRow as ExpressionEnrichmentWithQ)
+                                        .entrezGeneId,
+                                ],
+                                sampleIds: _.map(
+                                    this.props.sampleKeyToSample,
+                                    sample => sample.sampleId
+                                ),
+                            } as any,
+                        }
+                    );
 
-                const axisData_Data = axisData.data;
+                    const axisData_Data = axisData.data;
 
-                for (const d of modecluarData) {
-                    const value = this.logScale
-                        ? Math.log(d.value + 1) / Math.log(2)
-                        : d.value;
-                    axisData_Data.push({
-                        uniqueSampleKey: d.uniqueSampleKey,
-                        value,
-                    });
+                    for (const d of molecularData) {
+                        const value = this.logScale
+                            ? Math.log(d.value + 1) / Math.log(2)
+                            : d.value;
+                        axisData_Data.push({
+                            uniqueSampleKey: d.uniqueSampleKey,
+                            value,
+                        });
+                    }
                 }
             }
             return Promise.resolve(axisData);
@@ -213,21 +268,40 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                 </span>
             );
             if (this.boxPlotData.isComplete) {
-                content = (
-                    <div>
-                        <a
-                            href={getSampleViewUrl(d.studyId, d.sampleId)}
-                            target="_blank"
-                        >
-                            <b>{d.sampleId}</b>
-                        </a>
-                        <br />
-                        {this.props.enrichmentType}
-                        {this.logScale ? ' (log2)' : ''}: {d.value.toFixed(3)}
-                        {!!alterationContent && <br />}
-                        {alterationContent}
-                    </div>
-                );
+                if (this.isGenericAssay) {
+                    content = (
+                        <div>
+                            <a
+                                href={getSampleViewUrl(d.studyId, d.sampleId)}
+                                target="_blank"
+                            >
+                                <b>{d.sampleId}</b>
+                            </a>
+                            <br />
+                            {deriveDisplayTextFromGenericAssayType(
+                                this.props.genericAssayType!
+                            )}
+                            : {d.value.toFixed(3)}
+                        </div>
+                    );
+                } else {
+                    content = (
+                        <div>
+                            <a
+                                href={getSampleViewUrl(d.studyId, d.sampleId)}
+                                target="_blank"
+                            >
+                                <b>{d.sampleId}</b>
+                            </a>
+                            <br />
+                            {this.props.enrichmentType}
+                            {this.logScale ? ' (log2)' : ''}:{' '}
+                            {d.value.toFixed(3)}
+                            {!!alterationContent && <br />}
+                            {alterationContent}
+                        </div>
+                    );
+                }
             }
             return content;
         };
@@ -238,7 +312,8 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         if (this.props.selectedRow === undefined) {
             plotElt = (
                 <div className={classNames('text-center', styles.BoxEmpty)}>
-                    Click on a gene in the table to render this plot.
+                    Click on {this.isGenericAssay ? 'an entity' : 'gene'} in the
+                    table to render this plot.
                 </div>
             );
         } else if (this.boxPlotData.isPending) {
@@ -252,15 +327,28 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                 </div>
             );
         } else if (
-            this.props.selectedRow.hugoGeneSymbol &&
             this.boxPlotData.isComplete &&
             this.boxPlotData.result.length > 0
         ) {
             let axisLabelX = `Group`;
-            if (this.props.queriedHugoGeneSymbols !== undefined) {
+            if (
+                !this.isGenericAssay &&
+                this.props.queriedHugoGeneSymbols !== undefined
+            ) {
                 axisLabelX = `Query: ${getGeneSummary(
                     this.props.queriedHugoGeneSymbols
                 )}`;
+            }
+
+            let downloadFileName = '';
+            if (this.isGenericAssay) {
+                downloadFileName = `${this.props.selectedProfile.genericAssayType}_enrichment`;
+            } else {
+                downloadFileName = `${
+                    this.props.enrichmentType === EnrichmentType.DNA_METHYLATION
+                        ? 'methylation'
+                        : 'expression'
+                }_enrichment`;
             }
 
             plotElt = (
@@ -269,12 +357,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         buttons={['SVG', 'PNG', 'Data']}
                         getSvg={() => this.svgContainer}
                         getData={this.getData}
-                        filename={`${
-                            this.props.enrichmentType ===
-                            EnrichmentType.DNA_METHYLATION
-                                ? 'methylation'
-                                : 'expression'
-                        }_enrichment`}
+                        filename={downloadFileName}
                         dontFade={true}
                         style={{ position: 'absolute', right: 10, top: 10 }}
                         type="button"
@@ -292,7 +375,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                         fill={'#00AAF8'}
                         symbol="circle"
                         useLogSpaceTicks={true}
-                        containerRef={ref => (this.svgContainer = ref)}
+                        svgRef={ref => (this.svgContainer = ref)}
                         compressXAxis
                         legendData={[
                             {

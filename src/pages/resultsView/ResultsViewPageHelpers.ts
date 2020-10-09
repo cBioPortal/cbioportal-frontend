@@ -22,6 +22,18 @@ export enum ResultsViewTab {
     DOWNLOAD = 'download',
 }
 
+export enum ResultsViewComparisonSubTab {
+    OVERLAP = 'overlap',
+    SURVIVAL = 'survival',
+    CLINICAL = 'clinical',
+    MUTATIONS = 'mutations',
+    CNA = 'cna',
+    MRNA = 'mrna',
+    PROTEIN = 'protein',
+    DNAMETHYLATION = 'dna_methylation',
+    GENERIC_ASSAY_PREFIX = 'generic_assay',
+}
+
 export function getTabId(pathname: string) {
     const match = pathname.match(/results\/([^\/]+)/);
     if (match) {

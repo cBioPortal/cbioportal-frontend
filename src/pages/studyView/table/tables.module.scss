@@ -26,11 +26,31 @@ $study-view-table-icon-size: 10px;
 
 .controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: left;
     align-items: center;
     flex-grow: 1;
     font-size: 13px !important;
     padding: 0 5px;
+
+    &:not(.controlsAtTop) {
+        button {
+            margin-left: 3px;
+        }
+
+        .tableSearchInput {
+            margin-right: 10px;
+        }
+    }
+
+    &.controlsAtTop {
+        button {
+            margin-right: 3px;
+        }
+
+        .tableSearchInput {
+            margin-left: 10px;
+        }
+    }
 }
 
 .controlsBtn {

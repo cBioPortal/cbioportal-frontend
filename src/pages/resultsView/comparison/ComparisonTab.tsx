@@ -30,6 +30,8 @@ import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
 import StructuralVariantEnrichments from 'pages/groupComparison/StructuralVariantEnrichments';
+import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
+import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -126,6 +128,7 @@ export default class ComparisonTab extends React.Component<
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
+            this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
         ],
         render: () => {
             return (
@@ -254,6 +257,34 @@ export default class ComparisonTab extends React.Component<
                             />
                         </MSKTab>
                     )}
+                    {this.store.showGenericAssayTab &&
+                        _.keys(
+                            this.store
+                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .result
+                        ).map(genericAssayType => {
+                            return (
+                                <MSKTab
+                                    id={`${
+                                        ResultsViewComparisonSubTab.GENERIC_ASSAY_PREFIX
+                                    }_${genericAssayType.toLowerCase()}`}
+                                    linkText={deriveDisplayTextFromGenericAssayType(
+                                        genericAssayType
+                                    )}
+                                    anchorClassName={
+                                        this.store.genericAssayTabUnavailable
+                                            ? 'greyedOut'
+                                            : ''
+                                    }
+                                >
+                                    <GenericAssayEnrichments
+                                        store={this.store}
+                                        genericAssayType={genericAssayType}
+                                        resultsViewMode={true}
+                                    />
+                                </MSKTab>
+                            );
+                        })}
                 </MSKTabs>
             );
         },

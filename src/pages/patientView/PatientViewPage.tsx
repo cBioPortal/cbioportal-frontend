@@ -10,7 +10,6 @@ import {
     ClinicalDataBySampleId,
     RequestStatus,
 } from 'cbioportal-ts-api-client';
-import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import { Else, If, Then } from 'react-if';
 import SampleManager from './SampleManager';
 import PatientHeader from './patientHeader/PatientHeader';
@@ -79,6 +78,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
 import PatientViewStructuralVariantTable from './structuralVariant/PatientViewStructuralVariantTable';
 import TimelineWrapper from './timeline2/TimelineWrapper';
+import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -1202,6 +1202,16 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .generateGenomeNexusHgvsgUrl
                                                     }
+                                                    sampleIdToClinicalDataMap={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .clinicalDataGroupedBySampleMap
+                                                    }
+                                                    existsSomeMutationWithAscnProperty={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .existsSomeMutationWithAscnProperty
+                                                    }
                                                 />
                                             </div>
                                         )}
@@ -1405,17 +1415,10 @@ export default class PatientViewPage extends React.Component<
                                     key={2}
                                     id={PatientViewPageTabs.ClinicalData}
                                     linkText="Clinical Data"
+                                    className={'patient-clinical-data-tab'}
                                 >
                                     <div className="clearfix">
-                                        <FeatureTitle
-                                            title="Patient"
-                                            isLoading={
-                                                this.patientViewPageStore
-                                                    .clinicalDataPatient
-                                                    .isPending
-                                            }
-                                            className="pull-left"
-                                        />
+                                        <h3 className={'pull-left'}>Patient</h3>
                                         {this.patientViewPageStore
                                             .clinicalDataPatient.isComplete && (
                                             <ClinicalInformationPatientTable
@@ -1429,18 +1432,8 @@ export default class PatientViewPage extends React.Component<
                                         )}
                                     </div>
 
-                                    <br />
-
                                     <div className="clearfix">
-                                        <FeatureTitle
-                                            title="Samples"
-                                            isLoading={
-                                                this.patientViewPageStore
-                                                    .clinicalDataGroupedBySample
-                                                    .isPending
-                                            }
-                                            className="pull-left"
-                                        />
+                                        <h3 className={'pull-left'}>Samples</h3>
                                         {this.patientViewPageStore
                                             .clinicalDataGroupedBySample
                                             .isComplete && (
@@ -1453,6 +1446,18 @@ export default class PatientViewPage extends React.Component<
                                             />
                                         )}
                                     </div>
+
+                                    <h2 className={'divider'}>Timeline Data</h2>
+
+                                    {this.patientViewPageStore.clinicalEvents
+                                        .isComplete && (
+                                        <ClinicalEventsTables
+                                            clinicalEvents={
+                                                this.patientViewPageStore
+                                                    .clinicalEvents.result
+                                            }
+                                        />
+                                    )}
                                 </MSKTab>
 
                                 <MSKTab

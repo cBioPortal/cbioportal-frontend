@@ -37,6 +37,9 @@ import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
 import StructuralVariantEnrichments from './StructuralVariantEnrichments';
+import GenericAssayEnrichments from './GenericAssayEnrichments';
+import _ from 'lodash';
+import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -114,6 +117,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
+            this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
         ],
         render: () => {
             return (
@@ -228,6 +232,33 @@ export default class GroupComparisonPage extends React.Component<
                             <MethylationEnrichments store={this.store} />
                         </MSKTab>
                     )}
+                    {this.store.showGenericAssayTab &&
+                        _.keys(
+                            this.store
+                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .result
+                        ).map(genericAssayType => {
+                            return (
+                                <MSKTab
+                                    id={`${
+                                        GroupComparisonTab.GENERIC_ASSAY_PREFIX
+                                    }_${genericAssayType.toLowerCase()}`}
+                                    linkText={deriveDisplayTextFromGenericAssayType(
+                                        genericAssayType
+                                    )}
+                                    anchorClassName={
+                                        this.store.genericAssayTabUnavailable
+                                            ? 'greyedOut'
+                                            : ''
+                                    }
+                                >
+                                    <GenericAssayEnrichments
+                                        store={this.store}
+                                        genericAssayType={genericAssayType}
+                                    />
+                                </MSKTab>
+                            );
+                        })}
                 </MSKTabs>
             );
         },

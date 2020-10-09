@@ -18,10 +18,6 @@ describe('CopyDownloadControls', () => {
         text: 'This data is incomplete, because sometimes shift happens!',
     };
 
-    before(() => {});
-
-    after(() => {});
-
     it('downloads the complete data without any error messages', done => {
         const resolvedPromiseWithCompleteData = Promise.resolve(completeData);
         const downloadData = () => resolvedPromiseWithCompleteData;

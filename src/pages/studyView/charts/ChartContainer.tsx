@@ -378,6 +378,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         )}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onValueSelection}
+                        openComparisonPage={this.openComparisonPage}
                         filters={this.props.filters}
                         data={this.props.promise.result}
                         placement={this.placement}
@@ -641,10 +642,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return () => (
                         <SurvivalChart
                             ref={this.handlers.ref}
-                            patientSurvivals={data.patientSurvivals}
+                            sortedGroupedSurvivals={data.sortedGroupedSurvivals}
                             patientToAnalysisGroups={
                                 data.patientToAnalysisGroups
                             }
+                            pValue={data.pValue}
                             analysisGroups={data.analysisGroups}
                             legendLocation={LegendLocation.TOOLTIP}
                             title={this.props.title}
@@ -710,7 +712,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.borderWidth
                         )}
-                        height={getHeightByDimension(
+                        height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}
@@ -738,7 +740,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.props.dimension,
                             this.borderWidth
                         )}
-                        height={getHeightByDimension(
+                        height={getTableHeightByDimension(
                             this.props.dimension,
                             this.chartHeaderHeight
                         )}

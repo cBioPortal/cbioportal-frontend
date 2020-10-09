@@ -59,11 +59,13 @@ export const survivalPlotTooltipxLabelWithEvent: {
     DSS: 'Time of Death',
 };
 
-export const plotsPriority: { [prefix: string]: number } = {
-    OS: 1,
-    DFS: 2,
-    PFS: 3,
-    DSS: 4,
+// OS, DFS, PFS, DSS are four reserved KM plot types
+// use priority from RESERVED_SURVIVAL_PLOT_PRIORITY for these four types
+export const RESERVED_SURVIVAL_PLOT_PRIORITY: { [prefix: string]: number } = {
+    OS: 400,
+    DFS: 300,
+    PFS: 250,
+    DSS: 250,
 };
 
 // when try to find if a data is null
@@ -79,8 +81,6 @@ export const survivalClinicalDataNullValueSet = new Set([
     '',
     'na',
 ]);
-
-export const DEFAULT_SURVIVAL_PRIORITY = 999;
 
 export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
     let estimates: number[] = [];
@@ -243,73 +243,6 @@ export function getStats(
     } else {
         return [0, 0, 'N/A'];
     }
-}
-
-export function calculateLogRank(
-    alteredPatientSurvivals: PatientSurvival[],
-    unalteredPatientSurvivals: PatientSurvival[]
-): number {
-    let alteredIndex = 0;
-    let unalteredIndex = 0;
-    let totalAlteredNumberOfFailure = 0;
-    let totalExpectation = 0;
-    let totalVariance = 0;
-
-    while (
-        alteredIndex < alteredPatientSurvivals.length &&
-        unalteredIndex < unalteredPatientSurvivals.length
-    ) {
-        let alteredNumberOfFailure = 0;
-        let unalteredNumberOfFailure = 0;
-        const alteredAtRisk = alteredPatientSurvivals.length - alteredIndex;
-        const unalteredAtRisk =
-            unalteredPatientSurvivals.length - unalteredIndex;
-        const alteredPatientSurvival = alteredPatientSurvivals[alteredIndex];
-        const unalteredPatientSurvival =
-            unalteredPatientSurvivals[unalteredIndex];
-
-        if (
-            alteredPatientSurvival.months < unalteredPatientSurvival.months ||
-            alteredPatientSurvival.months === unalteredPatientSurvival.months
-        ) {
-            if (alteredPatientSurvival.status) {
-                alteredNumberOfFailure = 1;
-            }
-            alteredIndex += 1;
-        }
-
-        if (
-            alteredPatientSurvival.months > unalteredPatientSurvival.months ||
-            alteredPatientSurvival.months === unalteredPatientSurvival.months
-        ) {
-            if (unalteredPatientSurvival.status) {
-                unalteredNumberOfFailure = 1;
-            }
-            unalteredIndex += 1;
-        }
-
-        const numberOfFailures =
-            alteredNumberOfFailure + unalteredNumberOfFailure;
-        const atRisk = alteredAtRisk + unalteredAtRisk;
-        const expectation = (alteredAtRisk / atRisk) * numberOfFailures;
-        const variance =
-            (numberOfFailures *
-                (atRisk - numberOfFailures) *
-                alteredAtRisk *
-                unalteredAtRisk) /
-            (atRisk * atRisk * (atRisk - 1));
-
-        totalAlteredNumberOfFailure += alteredNumberOfFailure;
-        totalExpectation += expectation;
-        totalVariance += variance;
-    }
-
-    const chiSquareScore =
-        ((totalAlteredNumberOfFailure - totalExpectation) *
-            (totalAlteredNumberOfFailure - totalExpectation)) /
-        totalVariance;
-
-    return 1 - jStat.chisquare.cdf(chiSquareScore, 1);
 }
 
 export function getDownloadContent(
@@ -488,16 +421,4 @@ export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
         .filter(id => /_STATUS$/i.test(id) || /_MONTHS$/i.test(id))
         .uniq()
         .value();
-}
-
-export function notSurvivalAttribute(
-    survivalClinicalAttributesPrefixes: string[],
-    attributeId: string
-) {
-    return _.every(survivalClinicalAttributesPrefixes, prefix => {
-        return (
-            `${prefix}_STATUS` !== attributeId &&
-            `${prefix}_MONTHS` !== attributeId
-        );
-    });
 }

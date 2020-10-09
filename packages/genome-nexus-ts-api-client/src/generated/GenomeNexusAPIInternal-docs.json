@@ -2021,6 +2021,15 @@
           "type": "string",
           "description": "Hugo gene symbol"
         },
+        "polyphenPrediction": {
+          "type": "string",
+          "description": "Polyphen Prediction"
+        },
+        "polyphenScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Polyphen Score"
+        },
         "proteinPosition": {
           "description": "Protein position (start and end)",
           "$ref": "#/definitions/IntegerRange"
@@ -2028,6 +2037,15 @@
         "refSeq": {
           "type": "string",
           "description": "RefSeq id"
+        },
+        "siftPrediction": {
+          "type": "string",
+          "description": "Sift Prediction"
+        },
+        "siftScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Sift Score"
         },
         "transcriptId": {
           "type": "string",

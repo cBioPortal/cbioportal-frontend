@@ -44,6 +44,7 @@ export default class ProteinEnrichments extends React.Component<
             this.props.store.selectedProteinEnrichmentProfileMap,
             this.props.store.proteinEnrichmentAnalysisGroups,
             this.props.store.studies,
+            this.props.store.proteinEnrichmentProfiles,
         ],
         render: () => {
             // since protein enrichments tab is enabled only for one study, selectedProteinEnrichmentProfileMap
@@ -56,7 +57,9 @@ export default class ProteinEnrichments extends React.Component<
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
                     <EnrichmentsDataSetDropdown
-                        dataSets={this.props.store.proteinEnrichmentProfiles}
+                        dataSets={
+                            this.props.store.proteinEnrichmentProfiles.result!
+                        }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
                             this.props.store.selectedProteinEnrichmentProfileMap

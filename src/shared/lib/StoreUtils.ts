@@ -84,13 +84,14 @@ import {
 } from 'oncokb-ts-api-client';
 import { REFERENCE_GENOME } from './referenceGenomeUtils';
 import {
-    DEFAULT_SURVIVAL_PRIORITY,
     getSurvivalAttributes,
-    plotsPriority,
+    RESERVED_SURVIVAL_PLOT_PRIORITY,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
 import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
 import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
+import { ASCNAttributes } from 'shared/enums/ASCNEnums';
+import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
 export const MolecularAlterationType_filenameSuffix: {
     [K in MolecularProfile['molecularAlterationType']]?: string;
@@ -1239,6 +1240,47 @@ export function generateMutationIdByGeneAndProteinChangeAndEvent(
     ].join('_');
 }
 
+/** scan a collection of Mutations to see if any contain values for ASCN fields/properties
+ *
+ * all mutations (whether passed as a simple array or as an array of array)
+ * are scanned (once per known ASCN field/property) to see whether any mutation can be found
+ * which has a (non-empty) value defined for the field. A map from field name to boolean
+ * result is returned.
+ *
+ * @param mutations - a union type (either array of Mutation or array of array of Mutation)
+ * @returns Object/Dictionary with key from {ASCN_field_names} and boolean value per key
+ */
+export function existsSomeMutationWithAscnPropertyInCollection(
+    mutations: Mutation[] | Mutation[][]
+): {
+    [property: string]: boolean;
+} {
+    const existsSomeMutationWithAscnPropertyMap: {
+        [property: string]: boolean;
+    } = {};
+    for (let p of Object.values(ASCNAttributes)) {
+        if (mutations.length == 0) {
+            existsSomeMutationWithAscnPropertyMap[p] = false;
+            continue;
+        }
+        existsSomeMutationWithAscnPropertyMap[p] = _.some(
+            mutations,
+            mutationElement => {
+                if (mutationElement.hasOwnProperty('variantAllele')) {
+                    // element is a single mutation
+                    return hasASCNProperty(mutationElement as Mutation, p);
+                } else {
+                    // element is a mutation array
+                    return _.some(mutationElement as Mutation[], m => {
+                        return hasASCNProperty(m, p);
+                    });
+                }
+            }
+        );
+    }
+    return existsSomeMutationWithAscnPropertyMap;
+}
+
 export function generateDataQueryFilter(
     sampleListId: string | null,
     sampleIds?: string[]
@@ -1280,6 +1322,19 @@ export function groupBySampleId(
             (cd: ClinicalData) => cd.sampleId === k
         ),
     }));
+}
+
+export function mapSampleIdToClinicalData(
+    clinicalDataGroupedBySampleId: Array<{
+        id: string;
+        clinicalData: ClinicalData[];
+    }>
+) {
+    const sampleIdToClinicalDataMap = _.chain(clinicalDataGroupedBySampleId)
+        .keyBy('id')
+        .mapValues(o => o.clinicalData)
+        .value();
+    return sampleIdToClinicalDataMap;
 }
 
 export function groupBy<T>(
@@ -1357,8 +1412,27 @@ export function getSurvivalClinicalAttributesPrefix(
         [] as string[]
     );
     // change prefix order based on priority
-    return _.sortBy(attributePrefixes, prefix => {
-        return plotsPriority[prefix] || DEFAULT_SURVIVAL_PRIORITY;
+    // determine priority by using survival status priority
+    const statusAttributes = _.filter(clinicalAttributes, attribute =>
+        /_STATUS$/i.test(attribute.clinicalAttributeId)
+    );
+    const priorityByPrefix = _.chain(statusAttributes)
+        .keyBy(attribute =>
+            attribute.clinicalAttributeId.substring(
+                0,
+                attribute.clinicalAttributeId.indexOf('_STATUS')
+            )
+        )
+        .mapValues(attribute => Number(attribute.priority))
+        .value();
+
+    // return attribute prefixes by desc order based on priority
+    return attributePrefixes.sort((attr1, attr2) => {
+        const attr1Priority =
+            RESERVED_SURVIVAL_PLOT_PRIORITY[attr1] || priorityByPrefix[attr1];
+        const attr2Priority =
+            RESERVED_SURVIVAL_PLOT_PRIORITY[attr2] || priorityByPrefix[attr2];
+        return attr2Priority - attr1Priority;
     });
 }
 

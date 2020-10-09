@@ -50,6 +50,8 @@ import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
 import { Group } from '../../shared/api/ComparisonGroupClient';
 import { isNotGermlineMutation } from '../../shared/lib/MutationUtils';
+import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean;
@@ -823,6 +825,29 @@ export function getMultipleGeneResultKey(
         : _.map(groupedOql.list, data => data.gene).join(' / ');
 }
 
+export function calculateQValuesAndSortEnrichmentData<
+    T extends { pValue: number; qValue?: number }
+>(data: T[], sortFunction: (data: any[]) => any[]): any[] {
+    const dataWithpValue: T[] = [];
+    const dataWithoutpValue: T[] = [];
+    data.forEach(datum => {
+        if (datum.pValue === undefined) {
+            dataWithoutpValue.push(datum);
+        } else {
+            dataWithpValue.push(datum);
+        }
+    });
+
+    const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
+    const qValues = calculateQValues(sortedByPValue.map(c => c.pValue));
+
+    qValues.forEach((qValue, index) => {
+        sortedByPValue[index].qValue = qValue;
+    });
+
+    return sortFunction([...sortedByPValue, ...dataWithoutpValue]);
+}
+
 export function makeEnrichmentDataPromise<
     T extends {
         cytoband?: string;
@@ -880,27 +905,10 @@ export function makeEnrichmentDataPromise<
                     if (refGene) d.cytoband = refGene.cytoband;
                 }
 
-                const dataWithpValue: T[] = [];
-                const dataWithoutpValue: T[] = [];
-                data.forEach(datum => {
-                    datum.pValue === undefined
-                        ? dataWithoutpValue.push(datum)
-                        : dataWithpValue.push(datum);
-                });
-
-                const sortedByPValue = _.sortBy(dataWithpValue, c => c.pValue);
-                const qValues = calculateQValues(
-                    sortedByPValue.map(c => c.pValue)
+                return calculateQValuesAndSortEnrichmentData(
+                    data,
+                    sortEnrichmentData
                 );
-
-                qValues.forEach((qValue, index) => {
-                    sortedByPValue[index].qValue = qValue;
-                });
-
-                return sortEnrichmentData([
-                    ...sortedByPValue,
-                    ...dataWithoutpValue,
-                ]);
             } else {
                 return [];
             }
@@ -910,6 +918,41 @@ export function makeEnrichmentDataPromise<
 
 function sortEnrichmentData(data: any[]): any[] {
     return _.sortBy(data, ['pValue', 'hugoGeneSymbol']);
+}
+
+export function makeGenericAssayEnrichmentDataPromise(params: {
+    resultViewPageStore?: ResultsViewPageStore;
+    await: MobxPromise_await;
+    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    fetchData: () => Promise<GenericAssayEnrichment[]>;
+}): MobxPromise<GenericAssayEnrichmentWithQ[]> {
+    return remoteData({
+        await: () => {
+            const ret = params.await();
+            if (params.resultViewPageStore) {
+                ret.push(params.resultViewPageStore.selectedMolecularProfiles);
+            }
+            return ret;
+        },
+        invoke: async () => {
+            const profileMap = params.getSelectedProfileMap();
+            if (profileMap) {
+                let data = await params.fetchData();
+                return calculateQValuesAndSortEnrichmentData(
+                    data,
+                    sortGenericAssayEnrichmentData
+                );
+            } else {
+                return [];
+            }
+        },
+    });
+}
+
+function sortGenericAssayEnrichmentData(
+    data: GenericAssayEnrichmentWithQ[]
+): GenericAssayEnrichmentWithQ[] {
+    return _.sortBy(data, ['pValue', 'stableId']);
 }
 
 export function fetchPatients(samples: Sample[]) {

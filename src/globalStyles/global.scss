@@ -11,6 +11,17 @@ body {
     padding: 0;
 }
 
+.scrollbarAlwaysVisible {
+    @include scrollbar-always-visible;
+}
+.hideScrollbar {
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
 //get rid of blue border around active button
 button:active,
 button:focus,
@@ -635,4 +646,10 @@ h6.blackHeader {
 
 .nowrap {
     white-space: nowrap;
+}
+
+h2.divider {
+    margin: 40px 0 !important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid $borderColor;
 }

@@ -23,7 +23,6 @@ import {
     getScatterData,
     getScatterDataWithOpacity,
     getStats,
-    calculateLogRank,
     getDownloadContent,
     GroupedScatterData,
     filterScatterData,
@@ -45,6 +44,8 @@ import {
     EditableSpan,
     pluralize,
 } from 'cbioportal-frontend-commons';
+import { logRankTest } from 'pages/resultsView/survival/logRankTest';
+import AppConfig from 'appConfig';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -52,7 +53,7 @@ export enum LegendLocation {
 }
 
 export interface ISurvivalChartProps {
-    patientSurvivals: ReadonlyArray<PatientSurvival>;
+    sortedGroupedSurvivals: { [group: string]: PatientSurvival[] };
     patientToAnalysisGroups: { [uniquePatientKey: string]: string[] };
     analysisGroups: ReadonlyArray<AnalysisGroup>; // identified by `value`
     analysisClinicalAttribute?: ClinicalAttribute;
@@ -71,7 +72,7 @@ export interface ISurvivalChartProps {
     showTable?: boolean;
     legendLocation?: LegendLocation;
     showNaPatientsHiddenToggle?: boolean;
-    showLogRankPVal?: boolean;
+    pValue?: number | null;
     showDownloadButtons?: boolean;
     showSlider?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
@@ -92,7 +93,7 @@ export default class SurvivalChart
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
     @observable highlightedCurve = '';
-    @observable public sliderValue = this.maximumDataMonthValue;
+    @observable public sliderValue = this.getInitialSliderValue();
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
@@ -128,6 +129,17 @@ export default class SurvivalChart
             y: 50,
         },
     };
+
+    private getInitialSliderValue() {
+        if (AppConfig.serverConfig.survival_initial_x_axis_limit) {
+            return Math.min(
+                AppConfig.serverConfig.survival_initial_x_axis_limit,
+                this.maximumDataMonthValue
+            );
+        } else {
+            return this.maximumDataMonthValue;
+        }
+    }
 
     private events = [
         {
@@ -211,34 +223,8 @@ export default class SurvivalChart
         };
     }
 
-    @computed get sortedGroupedSurvivals(): {
-        [groupValue: string]: PatientSurvival[];
-    } {
-        const patientToAnalysisGroups = this.props.patientToAnalysisGroups;
-        const survivalsByAnalysisGroup = _.reduce(
-            this.props.patientSurvivals,
-            (map, nextSurv) => {
-                if (nextSurv.uniquePatientKey in patientToAnalysisGroups) {
-                    // only include this data if theres an analysis group (curve) to put it in
-                    const groups =
-                        patientToAnalysisGroups[nextSurv.uniquePatientKey];
-                    groups.forEach(group => {
-                        map[group] = map[group] || [];
-                        map[group].push(nextSurv);
-                    });
-                }
-                return map;
-            },
-            {} as { [groupValue: string]: PatientSurvival[] }
-        );
-
-        return _.mapValues(survivalsByAnalysisGroup, survivals =>
-            survivals.sort((a, b) => a.months - b.months)
-        );
-    }
-
     @computed get estimates(): { [groupValue: string]: number[] } {
-        return _.mapValues(this.sortedGroupedSurvivals, survivals =>
+        return _.mapValues(this.props.sortedGroupedSurvivals, survivals =>
             getEstimates(survivals)
         );
     }
@@ -246,20 +232,23 @@ export default class SurvivalChart
     @computed
     get unfilteredScatterData(): GroupedScatterData {
         // map through groups and generate plot data for each
-        return _.mapValues(this.sortedGroupedSurvivals, (survivals, group) => {
-            const estimates = this.estimates[group];
-            const groupName = this.analysisGroupsMap[group].name;
-            return {
-                numOfCases: survivals.length,
-                line: getLineData(survivals, estimates),
-                scatterWithOpacity: getScatterDataWithOpacity(
-                    survivals,
-                    estimates,
-                    groupName
-                ),
-                scatter: getScatterData(survivals, estimates, groupName),
-            };
-        });
+        return _.mapValues(
+            this.props.sortedGroupedSurvivals,
+            (survivals, group) => {
+                const estimates = this.estimates[group];
+                const groupName = this.analysisGroupsMap[group].name;
+                return {
+                    numOfCases: survivals.length,
+                    line: getLineData(survivals, estimates),
+                    scatterWithOpacity: getScatterDataWithOpacity(
+                        survivals,
+                        estimates,
+                        groupName
+                    ),
+                    scatter: getScatterData(survivals, estimates, groupName),
+                };
+            }
+        );
     }
 
     // Only recalculate the scatter data based on the plot filter.
@@ -281,7 +270,6 @@ export default class SurvivalChart
         showTable: true,
         showSlider: true,
         legendLocation: LegendLocation.CHART,
-        showLogRankPVal: true,
         showNaPatientsHiddenToggle: false,
         showDownloadButtons: true,
         yAxisTickCount: 11,
@@ -298,15 +286,11 @@ export default class SurvivalChart
     }
 
     @computed get logRankTestPVal(): number | null {
-        if (this.analysisGroupsWithData.length === 2) {
-            // log rank test only makes sense with two groups
-            return calculateLogRank(
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[0].value
-                ],
-                this.sortedGroupedSurvivals[
-                    this.analysisGroupsWithData[1].value
-                ]
+        if (this.analysisGroupsWithData.length > 1) {
+            return logRankTest(
+                ...this.analysisGroupsWithData.map(group => {
+                    return this.props.sortedGroupedSurvivals[group.value];
+                })
             );
         } else {
             return null;
@@ -332,7 +316,7 @@ export default class SurvivalChart
     }
 
     private get pValueText() {
-        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
+        if (this.props.pValue !== null && this.props.pValue !== undefined) {
             return (
                 <VictoryLabel
                     x={this.styleOpts.pValue.x}
@@ -340,7 +324,7 @@ export default class SurvivalChart
                     style={baseLabelStyles}
                     textAnchor={this.styleOpts.pValue.textAnchor}
                     text={`Logrank Test P-Value: ${toConditionalPrecision(
-                        this.logRankTestPVal,
+                        this.props.pValue,
                         3,
                         0.01
                     )}`}
@@ -394,7 +378,7 @@ export default class SurvivalChart
         for (const group of this.analysisGroupsWithData) {
             data.push({
                 scatterData: getScatterData(
-                    this.sortedGroupedSurvivals[group.value],
+                    this.props.sortedGroupedSurvivals[group.value],
                     this.estimates[group.value],
                     group.value
                 ),
@@ -530,7 +514,7 @@ export default class SurvivalChart
     }
 
     @computed get maximumDataMonthValue() {
-        return _.chain(this.sortedGroupedSurvivals)
+        return _.chain(this.props.sortedGroupedSurvivals)
             .map(survivals => survivals[survivals.length - 1].months)
             .max()
             .ceil()
@@ -727,7 +711,7 @@ export default class SurvivalChart
             <tr>
                 <td>{!!grp.name ? grp.name : grp.value}</td>
                 {getStats(
-                    this.sortedGroupedSurvivals[grp.value],
+                    this.props.sortedGroupedSurvivals[grp.value],
                     this.estimates[grp.value]
                 ).map(stat => (
                     <td>
@@ -739,7 +723,9 @@ export default class SurvivalChart
     }
 
     public render() {
-        if (this.props.patientSurvivals.length === 0) {
+        if (
+            _.flatten(_.values(this.props.sortedGroupedSurvivals)).length === 0
+        ) {
             return <div className={'alert alert-info'}>No data to plot.</div>;
         } else {
             return (

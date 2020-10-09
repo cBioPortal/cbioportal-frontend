@@ -191,8 +191,6 @@ describe('StoreUtils', () => {
         };
     });
 
-    after(() => {});
-
     describe('fetchCosmicCount', () => {
         it("won't fetch cosmic data if there are no mutations", done => {
             const fetchStub = sinon.stub();
