@@ -41,7 +41,9 @@ export type SampleTreatmentsTableProps = {
     width: number;
     height: number;
     filters: string[][];
-    onUserSelection: (value: string[][]) => void;
+    onSubmitSelection: (value: string[][]) => void;
+    onChangeSelectedRows: (rowsKeys: string[]) => void;
+    selectedRowsKeys: string[];
     selectedTreatments: string[];
     defaultSortBy: SampleTreatmentsTableColumnKey;
     columns: SampleTreatmentsTableColumn[];
@@ -86,7 +88,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
             <LabeledCheckbox
                 checked={this.isChecked(treatmentUniqueKey(row))}
                 disabled={this.isDisabled(treatmentUniqueKey(row))}
-                onChange={_ => this.togglePreSelectRow(treatmentUniqueKey(row))}
+                onChange={_ => this.toggleSelectRow(treatmentUniqueKey(row))}
                 labelProps={{
                     style: {
                         display: 'flex',
@@ -274,7 +276,9 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                         afterSorting={this.afterSorting}
                         fixedTopRowsData={this.preSelectedRows}
                         highlightedRowClassName={this.selectedRowClassName}
-                        numberOfSelectedRows={this.selectedRowsKeys.length}
+                        numberOfSelectedRows={
+                            this.props.selectedRowsKeys.length
+                        }
                         showSetOperationsButton={true}
                     />
                 )}
