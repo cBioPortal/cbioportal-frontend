@@ -32,6 +32,7 @@ import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments
 import StructuralVariantEnrichments from 'pages/groupComparison/StructuralVariantEnrichments';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
+import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;

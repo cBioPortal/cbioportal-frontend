@@ -305,7 +305,7 @@ export class QueryStore {
         return this._defaultSelectedIds;
     }
 
-    private profileFilterSet?: ObservableMap<boolean>;
+    @observable private profileFilterSet?: ObservableMap<boolean>;
 
     dataTypePriorityFromUrl?: string;
     profileIdsFromUrl?: string[];

@@ -63,6 +63,7 @@ export default class StructuralVariantEnrichments extends React.Component<
                     <EnrichmentsDataSetDropdown
                         dataSets={
                             this.props.store.structuralVariantEnrichmentProfiles
+                                .result!
                         }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={

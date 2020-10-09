@@ -4757,9 +4757,8 @@ export class ResultsViewPageStore {
             if (oncoKbDataForOncoprint instanceof Error) {
                 return Promise.resolve(new Error());
             } else {
-                const uniqueSampleKeyToTumorType = this
-                    .uniqueSampleKeyToTumorType.result!;
                 return Promise.resolve((mutation: Mutation) => {
+                    const uniqueSampleKeyToTumorType = {};
                     const id = generateQueryVariantId(
                         mutation.entrezGeneId,
                         cancerTypeForOncoKb(
