@@ -128,6 +128,7 @@ export class PatientTreatmentsTable extends TreatmentsTable<
                 width: columnWidth,
             },
             [PatientTreatmentsTableColumnKey.COUNT]: {
+                tooltip: <span>Number of patients treated</span>,
                 name: columnKey,
                 headerRender: () => (
                     <TreatmentGenericColumnHeader

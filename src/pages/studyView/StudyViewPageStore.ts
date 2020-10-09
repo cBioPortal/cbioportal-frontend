@@ -3626,14 +3626,7 @@ export class StudyViewPageStore {
             _chartMetaSet
         );
 
-        if (
-            this.displayTreatments.result &&
-            [
-                'triage-portal',
-                'genie-portal',
-                'cbioportal-genie-private',
-            ].includes(AppConfig.serverConfig.app_name!)
-        ) {
+        if (this.displayTreatments.result) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -3643,18 +3636,10 @@ export class StudyViewPageStore {
                     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
                 ),
                 renderWhenDataChange: true,
-                description: '',
+                description:
+                    'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
             };
-        }
 
-        if (
-            this.displayTreatments.result &&
-            [
-                'triage-portal',
-                'genie-portal',
-                'cbioportal-genie-private',
-            ].includes(AppConfig.serverConfig.app_name!)
-        ) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -3664,7 +3649,8 @@ export class StudyViewPageStore {
                     ChartTypeEnum.PATIENT_TREATMENTS_TABLE
                 ),
                 renderWhenDataChange: true,
-                description: '',
+                description:
+                    'List of treatments and the corresponding number of patients treated',
             };
         }
 
