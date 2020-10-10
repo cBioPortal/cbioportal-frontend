@@ -403,8 +403,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 return {
                                     prefix,
                                     displayText,
-                                    numPatients:
-                                        patientSurvivals[prefix].length,
+                                    numPatients: _.sumBy(
+                                        patientSurvivals[prefix],
+                                        s =>
+                                            +(
+                                                s.uniquePatientKey in
+                                                patientToAnalysisGroups
+                                            )
+                                    ),
                                     numPatientsPerGroup,
                                     pValue: pValues[prefix],
                                     qValue: qValues[prefix],
