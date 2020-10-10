@@ -363,6 +363,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const patientSurvivals = this.props.store.patientSurvivals.result!;
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
+            const uidToAnalysisGroup = _.keyBy(analysisGroups, g => g.value);
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
             const pValues = this.pValuesByPrefix.result!;
@@ -389,12 +390,14 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
 
                                 for (const s of patientSurvivals[prefix]) {
                                     // count the number of patients in each active group
-                                    const groups =
+                                    const groupUids =
                                         patientToAnalysisGroups[
                                             s.uniquePatientKey
                                         ] || [];
-                                    for (const groupName of groups) {
-                                        numPatientsPerGroup[groupName] += 1;
+                                    for (const uid of groupUids) {
+                                        numPatientsPerGroup[
+                                            uidToAnalysisGroup[uid].name
+                                        ] += 1;
                                     }
                                 }
                                 return {
