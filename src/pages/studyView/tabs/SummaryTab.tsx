@@ -117,7 +117,6 @@ export class StudySummaryTab extends React.Component<
             chartType: this.props.store.chartsType.get(chartMeta.uniqueKey),
             store: this.props.store,
             dimension: this.store.chartsDimension.get(chartMeta.uniqueKey),
-            openComparisonPage: this.store.openComparisonPage,
             title: chartMeta.displayName,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,

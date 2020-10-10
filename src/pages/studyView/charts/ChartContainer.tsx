@@ -65,6 +65,7 @@ import {
     PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
 } from '../table/treatments/PatientTreatmentsTable';
+import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -81,6 +82,9 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.PIE_CHART,
     ChartTypeEnum.TABLE,
     ChartTypeEnum.BAR_CHART,
+    ChartTypeEnum.MUTATED_GENES_TABLE,
+    ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
+    ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
 ];
 
 export interface IChartContainerProps {
@@ -113,11 +117,6 @@ export interface IChartContainerProps {
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
     onChangeCancerGeneFilter?: (filtered: boolean) => void;
-    openComparisonPage: (params: {
-        chartMeta: ChartMeta;
-        categorizationType?: NumericalGroupComparisonType;
-        clinicalAttributeValues?: { value: string; color: string }[];
-    }) => void;
     analysisGroupsSettings: StudyViewPageStore['analysisGroupsSettings'];
     patientToAnalysisGroup?: MobxPromise<{
         [uniquePatientKey: string]: string;
@@ -140,6 +139,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType;
 
     @observable newlyAdded = false;
+    @observable private selectedRowsKeys: string[] = [];
 
     constructor(props: IChartContainerProps) {
         super(props);
@@ -155,6 +155,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             onValueSelection: action((values: any) => {
                 this.props.onValueSelection(this.props.chartMeta, values);
+            }),
+            onChangeSelectedRows: action((values: string[]) => {
+                this.selectedRowsKeys = values;
             }),
             onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
@@ -262,20 +265,34 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @autobind
     @action
-    openComparisonPage(categorizationType?: NumericalGroupComparisonType) {
+    openComparisonPage(params?: {
+        // for numerical clinical attributes
+        categorizationType?: NumericalGroupComparisonType;
+        // for mutated genes table
+        hugoGeneSymbols?: string[];
+        // for treatments tables
+        treatmentUniqueKeys?: string[];
+    }) {
         if (this.comparisonPagePossible) {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
                     const openComparison = () =>
-                        this.props.openComparisonPage({
-                            chartMeta: this.props.chartMeta,
-                            clinicalAttributeValues: this.props.promise
-                                .result! as ClinicalDataCountSummary[],
-                        });
+                        this.props.store.openComparisonPage(
+                            this.props.chartMeta,
+                            {
+                                clinicalAttributeValues: this.props.promise
+                                    .result! as ClinicalDataCountSummary[],
+                            }
+                        );
                     const values = this.props.promise
                         .result! as ClinicalDataCountSummary[];
-                    if (values.length > MAX_GROUPS_IN_SESSION) {
+                    if (
+                        doesChartHaveComparisonGroupsLimit(
+                            this.props.chartMeta
+                        ) &&
+                        values.length > MAX_GROUPS_IN_SESSION
+                    ) {
                         this.props.setComparisonConfirmationModal(hideModal => {
                             return (
                                 <Modal
@@ -315,10 +332,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     }
                     break;
                 case ChartTypeEnum.BAR_CHART:
-                    this.props.openComparisonPage({
-                        chartMeta: this.props.chartMeta,
-                        categorizationType,
-                    });
+                case ChartTypeEnum.MUTATED_GENES_TABLE:
+                case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+                case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                    this.props.store.openComparisonPage(
+                        this.props.chartMeta,
+                        params || {}
+                    );
                     break;
             }
         }
@@ -440,7 +460,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -478,7 +502,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -516,7 +544,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -568,7 +600,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -609,7 +645,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                         genePanelCache={this.props.genePanelCache}
@@ -717,7 +757,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
                                 columnKey:
@@ -745,7 +789,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             this.chartHeaderHeight
                         )}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onValueSelection}
+                        onSubmitSelection={this.handlers.onValueSelection}
+                        onChangeSelectedRows={
+                            this.handlers.onChangeSelectedRows
+                        }
+                        selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
                                 columnKey:
@@ -853,6 +901,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
+                    selectedRowsKeys={this.selectedRowsKeys}
                     toggleLogScale={this.handlers.onToggleLogScale}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
