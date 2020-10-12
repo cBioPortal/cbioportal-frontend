@@ -22,7 +22,10 @@ import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
-import { getHugoGeneSymbols } from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    getHugoGeneSymbols,
+    getComparisonParamsForTable,
+} from 'pages/studyView/StudyViewComparisonUtils';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -191,34 +194,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 );
             case ChartTypeEnum.MUTATED_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
-                return (
-                    <a
-                        className={classnames('dropdown-item', {
-                            [styles.disabledMenuItem]:
-                                this.props.selectedRowsKeys!.length < 2,
-                        })}
-                        onClick={() => {
-                            const hugoGeneSymbols = getHugoGeneSymbols(
-                                this.props.chartType,
-                                this.props.selectedRowsKeys!
-                            );
-                            if (this.props.selectedRowsKeys!.length >= 2) {
-                                this.props.openComparisonPage({
-                                    hugoGeneSymbols: hugoGeneSymbols.slice(), // slice() gets rid of mobx wrapping which messes up API calls
-                                });
-                            }
-                        }}
-                        style={{ display: 'flex', alignItems: 'center' }}
-                    >
-                        <ComparisonVsIcon
-                            className={classnames(
-                                'fa fa-fw',
-                                styles.menuItemIcon
-                            )}
-                        />
-                        Compare Groups
-                    </a>
-                );
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                 return (
@@ -228,12 +203,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 this.props.selectedRowsKeys!.length < 2,
                         })}
                         onClick={() => {
-                            const treatmentUniqueKeys = this.props
-                                .selectedRowsKeys!;
-                            if (treatmentUniqueKeys.length >= 2) {
-                                this.props.openComparisonPage({
-                                    treatmentUniqueKeys: treatmentUniqueKeys.slice(), // slice() gets rid of mobx wrapping which messes up API calls
-                                });
+                            if (this.props.selectedRowsKeys!.length >= 2) {
+                                this.props.openComparisonPage(
+                                    getComparisonParamsForTable(
+                                        this.props.selectedRowsKeys!,
+                                        this.props.chartType
+                                    )
+                                );
                             }
                         }}
                         style={{ display: 'flex', alignItems: 'center' }}
