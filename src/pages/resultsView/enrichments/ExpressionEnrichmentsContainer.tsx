@@ -49,6 +49,7 @@ export interface IExpressionEnrichmentContainerProps {
         [uniqueSampleKey: string]: ExtendedAlteration[];
     };
     isGeneCheckBoxEnabled?: boolean;
+    groupsSelectorPlaceholder?: string;
 }
 
 @observer
@@ -59,6 +60,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     static defaultProps: Partial<IExpressionEnrichmentContainerProps> = {
         alteredVsUnalteredMode: true,
         isGeneCheckBoxEnabled: false,
+        groupsSelectorPlaceholder: 'High expression in ...',
     };
 
     @observable overExpressedFilter: boolean = true;
@@ -334,8 +336,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<
                     <div className={styles.Checkboxes}>
                         <div style={{ width: 250, marginRight: 7 }}>
                             <CheckedSelect
-                                name={'enrichedGroupsSelector'}
-                                placeholder={'Select enriched groups'}
+                                name={'groupsSelector'}
+                                placeholder={
+                                    this.props.groupsSelectorPlaceholder
+                                }
                                 onChange={this.onChange}
                                 options={this.options}
                                 value={this.selectedValues}
