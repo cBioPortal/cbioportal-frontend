@@ -545,6 +545,9 @@ export default class ResultsViewPage extends React.Component<
             this.resultsViewPageStore.studies,
         ],
         invoke: () => {
+            // TODO: This is only here temporarily to shepherd users from
+            //      now-deleted Expression tab to the Plots tab.
+            //  Remove a few months after 10/2020
             if (
                 this.resultsViewPageStore.expressionProfiles.result.length >
                     0 &&
@@ -552,7 +555,7 @@ export default class ResultsViewPage extends React.Component<
             ) {
                 return Promise.resolve([
                     {
-                        dateEnd: 10000000000000000000, // TODO: Remove this message a few months after 10/2020
+                        dateEnd: 10000000000000000000,
                         content: (
                             <span>
                                 Looking for the <strong>Expression</strong> tab?
