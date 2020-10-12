@@ -26,6 +26,8 @@ import {
     survivalPlotTooltipxLabelWithEvent,
     generateSurvivalPlotTitleFromDisplayName,
     getStatusCasesHeaderText,
+    getMedian,
+    getEstimates,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -380,24 +382,24 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 string
                             >,
                             (displayText, prefix) => {
-                                const numPatientsPerGroup = analysisGroups.reduce(
-                                    (countsMap, group) => {
-                                        countsMap[group.name] = 0;
-                                        return countsMap;
-                                    },
-                                    {} as { [group: string]: number }
+                                const patientSurvivalsPerGroup = _.mapValues(
+                                    _.keyBy(
+                                        analysisGroups,
+                                        group => group.name
+                                    ),
+                                    () => [] as PatientSurvival[] // initialize empty arrays
                                 );
 
                                 for (const s of patientSurvivals[prefix]) {
-                                    // count the number of patients in each active group
+                                    // collect patient survivals by which groups the patient is in
                                     const groupUids =
                                         patientToAnalysisGroups[
                                             s.uniquePatientKey
                                         ] || [];
                                     for (const uid of groupUids) {
-                                        numPatientsPerGroup[
+                                        patientSurvivalsPerGroup[
                                             uidToAnalysisGroup[uid].name
-                                        ] += 1;
+                                        ].push(s);
                                     }
                                 }
                                 return {
@@ -411,7 +413,23 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                                 patientToAnalysisGroups
                                             )
                                     ),
-                                    numPatientsPerGroup,
+                                    numPatientsPerGroup: _.mapValues(
+                                        patientSurvivalsPerGroup,
+                                        survivals => survivals.length
+                                    ),
+                                    medianPerGroup: _.mapValues(
+                                        patientSurvivalsPerGroup,
+                                        survivals => {
+                                            const sorted = _.sortBy(
+                                                survivals,
+                                                s => s.months
+                                            );
+                                            return getMedian(
+                                                sorted,
+                                                getEstimates(sorted)
+                                            );
+                                        }
+                                    ),
                                     pValue: pValues[prefix],
                                     qValue: qValues[prefix],
                                 };
