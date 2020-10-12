@@ -98,8 +98,6 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
 
         if (!stores || !wrapperStore) return null;
 
-        const groupByTracks = wrapperStore.groupByTracks;
-
         const vafPlotTrack = {
             renderHeader: wrapperStore.vafPlotHeader,
             renderTrack: (store: TimelineStore) => (
