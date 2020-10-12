@@ -22,6 +22,7 @@ import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
+import { getHugoGeneSymbols } from 'pages/studyView/StudyViewComparisonUtils';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -189,6 +190,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     </div>
                 );
             case ChartTypeEnum.MUTATED_GENES_TABLE:
+            case ChartTypeEnum.CNA_GENES_TABLE:
                 return (
                     <a
                         className={classnames('dropdown-item', {
@@ -196,9 +198,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 this.props.selectedRowsKeys!.length < 2,
                         })}
                         onClick={() => {
-                            const hugoGeneSymbols = this.props
-                                .selectedRowsKeys!;
-                            if (hugoGeneSymbols.length >= 2) {
+                            const hugoGeneSymbols = getHugoGeneSymbols(
+                                this.props.chartType,
+                                this.props.selectedRowsKeys!
+                            );
+                            if (this.props.selectedRowsKeys!.length >= 2) {
                                 this.props.openComparisonPage({
                                     hugoGeneSymbols: hugoGeneSymbols.slice(), // slice() gets rid of mobx wrapping which messes up API calls
                                 });

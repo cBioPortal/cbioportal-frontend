@@ -83,6 +83,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.TABLE,
     ChartTypeEnum.BAR_CHART,
     ChartTypeEnum.MUTATED_GENES_TABLE,
+    ChartTypeEnum.CNA_GENES_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
 ];
@@ -331,10 +332,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         openComparison();
                     }
                     break;
-                case ChartTypeEnum.BAR_CHART:
-                case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
-                case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                default:
                     this.props.store.openComparisonPage(
                         this.props.chartMeta,
                         params || {}
