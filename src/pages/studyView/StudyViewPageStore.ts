@@ -41,6 +41,7 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     MutationMultipleStudyFilter,
+    NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
@@ -198,8 +199,13 @@ import { REQUEST_ARG_ENUM } from 'shared/constants';
 import {
     createAlteredGeneComparisonSession,
     doesChartHaveComparisonGroupsLimit,
+    getCnaData,
+    getMutationData,
 } from 'pages/studyView/StudyViewComparisonUtils';
-import { NumericGeneMolecularData } from 'cbioportal-ts-api-client/src';
+import {
+    CNA_AMP_VALUE,
+    CNA_HOMDEL_VALUE,
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export type ChartUserSetting = {
     id: string;
@@ -896,45 +902,17 @@ export class StudyViewPageStore {
                     selectedSamples: Sample[],
                     cnaProfiles: MolecularProfile[]
                 ) => {
-                    const studyToCnaProfile = _.keyBy(
+                    const cnaData = await getCnaData(
+                        selectedSamples,
                         cnaProfiles,
-                        p => p.studyId
+                        hugoGeneSymbols
                     );
-                    const sampleMolecularIdentifiers = selectedSamples.reduce(
-                        (array, sample) => {
-                            if (sample.studyId in studyToCnaProfile) {
-                                array.push({
-                                    sampleId: sample.sampleId,
-                                    molecularProfileId:
-                                        studyToCnaProfile[sample.studyId]
-                                            .molecularProfileId,
-                                });
-                            }
-                            return array;
-                        },
-                        [] as SampleMolecularIdentifier[]
-                    );
-
-                    const genes = await client.fetchGenesUsingPOST({
-                        geneIdType: 'HUGO_GENE_SYMBOL',
-                        geneIds: hugoGeneSymbols,
-                    });
-
                     const cnaByGeneAndAlteration = _.groupBy(
-                        (
-                            await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                                {
-                                    projection:
-                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                                    molecularDataMultipleStudyFilter: {
-                                        entrezGeneIds: genes.map(
-                                            g => g.entrezGeneId
-                                        ),
-                                        sampleMolecularIdentifiers,
-                                    } as MolecularDataMultipleStudyFilter,
-                                }
-                            )
-                        ).filter(d => d.value && Math.abs(d.value) === 2), // filter out non-alterations
+                        cnaData.filter(
+                            d =>
+                                d.value === CNA_AMP_VALUE ||
+                                d.value === CNA_HOMDEL_VALUE
+                        ),
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
                                 d.value
@@ -971,43 +949,14 @@ export class StudyViewPageStore {
                     selectedSamples: Sample[],
                     mutationProfiles: MolecularProfile[]
                 ) => {
-                    const studyToMutationProfile = _.keyBy(
+                    const mutationData = await getMutationData(
+                        selectedSamples,
                         mutationProfiles,
-                        p => p.studyId
+                        hugoGeneSymbols
                     );
-                    const sampleMolecularIdentifiers = selectedSamples.reduce(
-                        (array, sample) => {
-                            if (sample.studyId in studyToMutationProfile) {
-                                array.push({
-                                    sampleId: sample.sampleId,
-                                    molecularProfileId:
-                                        studyToMutationProfile[sample.studyId]
-                                            .molecularProfileId,
-                                });
-                            }
-                            return array;
-                        },
-                        [] as SampleMolecularIdentifier[]
-                    );
-
-                    const genes = await client.fetchGenesUsingPOST({
-                        geneIdType: 'HUGO_GENE_SYMBOL',
-                        geneIds: hugoGeneSymbols,
-                    });
-
-                    const mutationMultipleStudyFilter = {
-                        entrezGeneIds: genes.map(g => g.entrezGeneId),
-                        sampleMolecularIdentifiers,
-                    } as MutationMultipleStudyFilter;
 
                     const mutationsByGene = _.groupBy(
-                        await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
-                            {
-                                projection:
-                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                                mutationMultipleStudyFilter,
-                            }
-                        ),
+                        mutationData,
                         m => m.gene.hugoGeneSymbol
                     );
 
