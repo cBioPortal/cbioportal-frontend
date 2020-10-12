@@ -28,6 +28,7 @@ export type SurvivalPrefixSummary = {
     displayText: string;
     numPatients: number;
     numPatientsPerGroup: { [groupName: string]: number };
+    medianPerGroup: { [groupName: string]: string };
     pValue: number | null;
     qValue: number | null;
 };
@@ -50,11 +51,8 @@ enum ColumnName {
     P_VALUE = 'p-Value',
 }
 
-function makeGroupColumnName(groupName: string) {
-    return `# in ${groupName}`;
-}
 function makeGroupColumn(groupName: string) {
-    const name = makeGroupColumnName(groupName);
+    const name = `# in ${groupName}`;
     return {
         name,
         render: (d: SurvivalPrefixSummary) => (
@@ -67,6 +65,31 @@ function makeGroupColumn(groupName: string) {
         ),
         download: (d: SurvivalPrefixSummary) =>
             d.numPatientsPerGroup[groupName].toString(),
+        visible: false,
+    };
+}
+function makeGroupMedianSurvivalColumn(groupName: string) {
+    const name = `Median survival in ${groupName}`;
+    return {
+        name,
+        render: (d: SurvivalPrefixSummary) => (
+            <span>{d.medianPerGroup[groupName]}</span>
+        ),
+        sortBy: (d: SurvivalPrefixSummary) => {
+            const asNumber = parseFloat(d.medianPerGroup[groupName]);
+            if (isNaN(asNumber)) {
+                return Number.POSITIVE_INFINITY;
+            }
+            return asNumber;
+        },
+        filter: filterNumericalColumn((d: SurvivalPrefixSummary) => {
+            const asNumber = parseFloat(d.medianPerGroup[groupName]);
+            if (isNaN(asNumber)) {
+                return Number.POSITIVE_INFINITY;
+            }
+            return asNumber;
+        }, name),
+        download: (d: SurvivalPrefixSummary) => d.medianPerGroup[groupName],
         visible: false,
     };
 }
@@ -189,6 +212,7 @@ export default class SurvivalPrefixTable extends React.Component<
         const cols: Column<SurvivalPrefixSummary>[] = [
             ...COLUMNS,
             ...this.props.groupNames.map(makeGroupColumn),
+            ...this.props.groupNames.map(makeGroupMedianSurvivalColumn),
         ];
         if (
             AppConfig.serverConfig
