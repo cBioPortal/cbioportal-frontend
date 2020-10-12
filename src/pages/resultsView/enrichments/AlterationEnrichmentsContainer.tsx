@@ -547,8 +547,8 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         </div>
                         <div style={{ width: 250, marginRight: 7 }}>
                             <CheckedSelect
-                                name={'enrichedGroupsSelector'}
-                                placeholder={'Select enriched groups'}
+                                name={'groupsSelector'}
+                                placeholder={'Enriched in ...'}
                                 onChange={this.onChange}
                                 options={this.options}
                                 value={this.selectedValues}
