@@ -1,9 +1,5 @@
 import * as _ from 'lodash';
-import {
-    CoverageInformation,
-    CoverageInformationForCase,
-} from '../../pages/resultsView/ResultsViewPageStoreUtils';
-import { GenePanelData } from 'cbioportal-ts-api-client';
+import { CoverageInformation } from './GenePanelUtils';
 
 export function isSampleProfiled(
     uniqueSampleKey: string,

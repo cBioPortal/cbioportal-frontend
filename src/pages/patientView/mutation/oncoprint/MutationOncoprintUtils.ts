@@ -1,11 +1,11 @@
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
+import { CoverageInformation } from '../../../../shared/lib/GenePanelUtils';
 import {
     IGeneHeatmapTrackDatum,
     IHeatmapTrackSpec,
 } from '../../../../shared/components/oncoprint/Oncoprint';
-import { CoverageInformation } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { isSampleProfiled } from '../../../../shared/lib/isSampleProfiled';
 import { MutationStatus } from '../PatientViewMutationsTabUtils';
 import { getVariantAlleleFrequency } from '../../../../shared/lib/MutationUtils';

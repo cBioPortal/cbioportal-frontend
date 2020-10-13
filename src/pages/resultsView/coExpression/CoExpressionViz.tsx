@@ -24,7 +24,7 @@ import {
     AlterationTypeConstants,
     GeneticEntityType,
 } from '../ResultsViewPageStore';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import _ from 'lodash';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { CoExpressionWithQ } from './CoExpressionTabUtils';
