@@ -736,8 +736,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 }
                 // otherwise, pick the default based on available options
                 const dataTypeOptions = self.dataTypeOptions.result!;
-                if (this._dataType === undefined && dataTypeOptions.length) {
-                    // return computed default if _dataType is undefined and if there are options to select a default value from
+                if (
+                    !dataTypeOptions.find(o => o.value === this._dataType) &&
+                    dataTypeOptions.length
+                ) {
+                    // return computed default if _dataType is undefined or invalid and if there are options to select a default value from
                     if (
                         vertical &&
                         !!dataTypeOptions.find(
@@ -4194,7 +4197,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get boxPlotBoxWidth() {
         if (this.boxPlotData.isComplete) {
-            return getBoxWidth(this.boxPlotData.result.data.length);
+            return getBoxWidth(
+                this.boxPlotData.result.data.length,
+                this.boxPlotData.result.horizontal ? 400 : 600 // squish boxes more into vertical area
+            );
         } else {
             // irrelevant - nothing should be plotted anyway
             return 10;
