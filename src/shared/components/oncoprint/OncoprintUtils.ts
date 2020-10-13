@@ -28,7 +28,7 @@ import {
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     makeClinicalTrackData,

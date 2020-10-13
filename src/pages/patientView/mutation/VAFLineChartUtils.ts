@@ -3,7 +3,7 @@ import { MutationStatus } from './PatientViewMutationsTabUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 
 export interface IPoint {
     x: number;
