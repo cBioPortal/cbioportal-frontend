@@ -129,9 +129,10 @@ export interface VictoryBoxPlotModel extends BoxPlotModel {
     realMax: number;
 }
 
-export function getBoxWidth(numBoxes: number) {
-    const maxTotalWidth = 750;
-
+export function getBoxWidth(
+    numBoxes: number,
+    approximatePlotWidth: number = 750
+) {
     const maxWidth = 80; // width with 1 box
     const minWidth = 18; // width with 33 boxes, calibrated to fit all 33 TCGA
     //                      pan-can atlas studies in one screen.
@@ -139,7 +140,7 @@ export function getBoxWidth(numBoxes: number) {
     // fit all (boxes + padding) at maxWidth if possible, otherwise smush in
     let boxWidth = Math.min(
         maxWidth,
-        maxTotalWidth / (numBoxes + (numBoxes - 1) / 2)
+        approximatePlotWidth / (numBoxes + (numBoxes - 1) / 2)
     );
     // don't smush too much
     boxWidth = Math.max(minWidth, boxWidth);
