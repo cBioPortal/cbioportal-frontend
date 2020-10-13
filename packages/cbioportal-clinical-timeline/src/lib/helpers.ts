@@ -22,10 +22,16 @@ export function getTrackHeight(track: TimelineTrackSpecification) {
     }
 }
 
-export function getAttributeValue(name: string, event: TimelineEvent) {
+export function getAttributeValue(name: string | RegExp, event: TimelineEvent) {
     const att = _.at(event as any, ['event.attributes']);
     const attObj = att[0]
-        ? att[0].find((a: any) => a.key === 'RESULT')
+        ? att[0].find((a: any) => {
+              if (name instanceof RegExp) {
+                  return name.test(a.key);
+              } else {
+                  return a.key === name;
+              }
+          })
         : undefined;
     return attObj ? attObj.value : undefined;
 }
