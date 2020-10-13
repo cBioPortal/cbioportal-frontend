@@ -99,6 +99,7 @@ export type GeneticTrackDatum_Data = Pick<
     | 'entrezGeneId'
     | 'putativeDriver'
     | 'mutationStatus'
+    | 'eventInfo'
 >;
 
 export type GeneticTrackDatum_ProfiledIn = {

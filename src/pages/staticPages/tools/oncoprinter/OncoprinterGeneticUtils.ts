@@ -736,6 +736,13 @@ export function annotateGeneticTrackData(
                             d.driverFilter === PUTATIVE_DRIVER)
                     );
                     return !excludeVUS || d.putativeDriver;
+                }
+                if (
+                    d.molecularProfileAlterationType ===
+                    AlterationTypeConstants.STRUCTURAL_VARIANT
+                ) {
+                    //TODO: fetch oncokb data for structural variants once we have
+                    return !excludeVUS;
                 } else {
                     return true;
                 }

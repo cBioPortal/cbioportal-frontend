@@ -71,7 +71,6 @@ export type CancerStudyQueryUrlParams = {
     cancer_study_id: string;
     cancer_study_list?: string;
     genetic_profile_ids_PROFILE_MUTATION_EXTENDED?: string;
-    genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT?: string;
     genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION?: string;
     genetic_profile_ids_PROFILE_MRNA_EXPRESSION?: string;
     genetic_profile_ids_PROFILE_METHYLATION?: string;
@@ -333,6 +332,16 @@ export class QueryStore {
                                 ];
                                 if (molecularProfile) {
                                     acc.push(molecularProfile);
+                                    if (
+                                        molecularProfile.molecularAlterationType ===
+                                        AlterationTypeConstants.MUTATION_EXTENDED
+                                    ) {
+                                        acc = acc.concat(
+                                            this.getFilteredProfiles(
+                                                'STRUCTURAL_VARIANT'
+                                            )
+                                        );
+                                    }
                                 }
                                 return acc;
                             }, [])
@@ -1996,7 +2005,6 @@ export class QueryStore {
 
         let profileIds = [
             params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            params.genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
             params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
             params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
             params.genetic_profile_ids_PROFILE_METHYLATION,

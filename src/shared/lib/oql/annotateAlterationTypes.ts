@@ -26,6 +26,7 @@ export function annotateAlterationTypes(
             break;
         case AlterationTypeConstants.STRUCTURAL_VARIANT: {
             datum.alterationType = AlterationTypeConstants.STRUCTURAL_VARIANT;
+            //TODO: what should it be?
             datum.alterationSubType = '';
             break;
         }

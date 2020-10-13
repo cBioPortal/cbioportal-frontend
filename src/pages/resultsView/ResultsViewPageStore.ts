@@ -329,6 +329,7 @@ export interface AnnotatedNumericGeneMolecularData
 export interface AnnotatedExtendedAlteration
     extends ExtendedAlteration,
         AnnotatedMutation,
+        AnnotatedStructuralVariant,
         AnnotatedNumericGeneMolecularData {}
 
 export interface ExtendedSample extends Sample {
@@ -792,7 +793,11 @@ export class ResultsViewPageStore {
     }
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
-        await: () => [this.studyToMolecularProfiles, this.studies],
+        await: () => [
+            this.studyToMolecularProfiles,
+            this.studies,
+            this.molecularProfileIdToMolecularProfile,
+        ],
         invoke: () => {
             // if there are multiple studies or if there are no selected molecular profiles in query
             // derive default profiles based on profileFilter (refers to old data priority)
@@ -813,6 +818,38 @@ export class ResultsViewPageStore {
                     this.selectedMolecularProfileIds,
                     (id: string) => id
                 ); // optimization
+
+                const hasMutationProfileInQuery = _.some(
+                    this.selectedMolecularProfileIds,
+                    molecularProfileId => {
+                        const molecularProfile = this
+                            .molecularProfileIdToMolecularProfile.result[
+                            molecularProfileId
+                        ];
+                        return (
+                            molecularProfile !== undefined &&
+                            molecularProfile.molecularAlterationType ===
+                                AlterationTypeConstants.MUTATION_EXTENDED
+                        );
+                    }
+                );
+
+                if (hasMutationProfileInQuery) {
+                    const structuralVariantProfile = _.find(
+                        this.molecularProfilesInStudies.result!,
+                        molecularProfile => {
+                            return (
+                                molecularProfile.molecularAlterationType ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT
+                            );
+                        }
+                    );
+                    if (structuralVariantProfile) {
+                        idLookupMap[
+                            structuralVariantProfile.molecularProfileId
+                        ] = structuralVariantProfile.molecularProfileId;
+                    }
+                }
                 return Promise.resolve(
                     this.molecularProfilesInStudies.result!.filter(
                         (profile: MolecularProfile) =>

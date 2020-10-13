@@ -1063,11 +1063,7 @@ export class PatientViewPageStore {
 
     readonly genePanelData = remoteData(
         {
-            await: () => [
-                this.mutatedGenes,
-                this.samples,
-                this.molecularProfilesInStudy,
-            ],
+            await: () => [this.samples, this.molecularProfilesInStudy],
             invoke: async () => {
                 // gather sample molecular identifiers
                 const sampleMolecularIdentifiers: SampleMolecularIdentifier[] = [];
@@ -1085,10 +1081,7 @@ export class PatientViewPageStore {
                 });
                 // query for gene panel data using sample molecular identifiers
                 let genePanelData: GenePanelData[] = [];
-                if (
-                    sampleMolecularIdentifiers.length &&
-                    this.mutatedGenes.result!.length
-                ) {
+                if (sampleMolecularIdentifiers.length) {
                     genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
                         {
                             sampleMolecularIdentifiers,

@@ -14,8 +14,13 @@ import {
     generateOqlData,
     updateOqlData,
     decideMolecularProfileSortingOrder,
+    generateStructuralDownloadData,
 } from './DownloadUtils';
-import { AnnotatedMutation, ExtendedAlteration } from '../ResultsViewPageStore';
+import {
+    AnnotatedMutation,
+    AnnotatedStructuralVariant,
+    ExtendedAlteration,
+} from '../ResultsViewPageStore';
 
 describe('DownloadUtils', () => {
     const genes = [
@@ -121,7 +126,7 @@ describe('DownloadUtils', () => {
         },
     };
 
-    const sampleDataWithBothMutationAndFusion = [
+    const sampleDataWithMutation = [
         {
             putativeDriver: true,
             isHotspot: true,
@@ -175,52 +180,6 @@ describe('DownloadUtils', () => {
             alterationSubType: 'missense',
         },
         {
-            putativeDriver: true,
-            isHotspot: false,
-            oncoKbOncogenic: 'likely oncogenic',
-            simplifiedMutationType: 'fusion',
-            uniqueSampleKey: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
-            uniquePatientKey: 'UC0wMDAwMzc4Om1za19pbXBhY3RfMjAxNw',
-            molecularProfileId: 'msk_impact_2017_mutations',
-            sampleId: 'P-0000378-T01-IM3',
-            patientId: 'P-0000378',
-            entrezGeneId: 1956,
-            gene: {
-                geneticEntityId: 1575,
-                entrezGeneId: 1956,
-                hugoGeneSymbol: 'EGFR',
-                type: 'protein-coding',
-            },
-            studyId: 'msk_impact_2017',
-            center: 'MSKCC-DMP',
-            mutationStatus: 'NA',
-            validationStatus: 'NA',
-            tumorAltCount: -1,
-            tumorRefCount: -1,
-            normalAltCount: -1,
-            normalRefCount: -1,
-            startPosition: -1,
-            endPosition: -1,
-            referenceAllele: 'NA',
-            proteinChange: 'EGFR-intragenic',
-            mutationType: 'Fusion',
-            functionalImpactScore: 'NA',
-            fisValue: -1,
-            linkXvar: 'NA',
-            linkPdb: 'NA',
-            linkMsa: 'NA',
-            ncbiBuild: 'NA',
-            variantType: 'NA',
-            keyword: 'EGFR EGFR-intragenic',
-            variantAllele: 'NA',
-            refseqMrnaId: 'NA',
-            proteinPosStart: -1,
-            proteinPosEnd: -1,
-            molecularProfileAlterationType: 'MUTATION_EXTENDED',
-            alterationType: 'FUSION',
-            alterationSubType: 'fusion',
-        },
-        {
             putativeDriver: false,
             isHotspot: false,
             oncoKbOncogenic: '',
@@ -272,18 +231,47 @@ describe('DownloadUtils', () => {
         },
     ] as (ExtendedAlteration & AnnotatedMutation)[];
 
+    const sampleDataWithStructuralVariant = [
+        {
+            uniqueSampleKey: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
+            uniquePatientKey: 'UC0wMDAwMzc4Om1za19pbXBhY3RfMjAxNw',
+            molecularProfileId: 'msk_impact_2017_fusion',
+            sampleId: 'P-0000378-T01-IM3',
+            patientId: 'P-0000378',
+            studyId: 'msk_impact_2017',
+            site1EntrezGeneId: 1956,
+            site1HugoSymbol: 'EGFR',
+            site1Chromosome: 'NA',
+            site1Position: -1,
+            ncbiBuild: 'NA',
+            center: 'MSKCC-DMP',
+            eventInfo: 'EGFR-intragenic',
+            variantClass: 'INTRAGENIC',
+            comments: 'EGFR EGFR-intragenic',
+            molecularProfileAlterationType: 'STRUCTURAL_VARIANT',
+            alterationType: 'STRUCTURAL_VARIANT',
+            alterationSubType: '',
+        },
+    ] as (ExtendedAlteration & AnnotatedStructuralVariant)[];
+
     const caseAggregatedDataByOQLLine = [
         {
             cases: {
                 samples: {
-                    UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: sampleDataWithBothMutationAndFusion,
+                    UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [
+                        ...sampleDataWithMutation,
+                        ...sampleDataWithStructuralVariant,
+                    ],
                     VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
                 },
             },
             oql: {
                 gene: 'EGFR',
                 oql_line: 'EGFR: AMP HOMDEL MUT FUSION;',
-                data: sampleDataWithBothMutationAndFusion,
+                data: [
+                    ...sampleDataWithMutation,
+                    ...sampleDataWithStructuralVariant,
+                ],
             },
         },
         {
@@ -346,9 +334,9 @@ describe('DownloadUtils', () => {
                 'mutation data is empty for the sample with no alteration'
             );
             assert.equal(
-                oqlData.fusion.length,
+                oqlData.structuralVariant.length,
                 0,
-                'fusion data is empty for the sample with no alteration'
+                'structural variant data is empty for the sample with no alteration'
             );
             assert.equal(
                 oqlData.mrnaExp.length,
@@ -395,9 +383,9 @@ describe('DownloadUtils', () => {
                 'mutation data is empty for the sample with mrna and protein data only'
             );
             assert.equal(
-                oqlData.fusion.length,
+                oqlData.structuralVariant.length,
                 0,
-                'fusion data is empty for the sample with mrna and protein data only'
+                'structural variant data is empty for the sample with mrna and protein data only'
             );
 
             assert.equal(
@@ -430,7 +418,10 @@ describe('DownloadUtils', () => {
                 study_id: 'msk_impact_2017',
                 uid: 'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3',
                 trackLabel: 'EGFR',
-                data: sampleDataWithBothMutationAndFusion,
+                data: [
+                    ...sampleDataWithMutation,
+                    ...sampleDataWithStructuralVariant,
+                ],
                 disp_structuralVariant: true,
                 disp_cna: 'amp',
                 disp_mut: 'missense_rec',
@@ -441,32 +432,32 @@ describe('DownloadUtils', () => {
             assert.equal(
                 oqlData.geneSymbol,
                 'EGFR',
-                'gene symbol is correct for the sample with both mutation and fusion data'
+                'gene symbol is correct for the sample with both mutation and structural variant data'
             );
             assert.deepEqual(
                 oqlData.mrnaExp,
                 [],
-                'mRNA expression data is empty for the sample with mutation and fusion data'
+                'mRNA expression data is empty for the sample with mutation and structural variant data'
             );
             assert.deepEqual(
                 oqlData.proteinLevel,
                 [],
-                'protein level data is empty for the sample with mutation and fusion data'
+                'protein level data is empty for the sample with mutation and structural variant data'
             );
             assert.deepEqual(
                 oqlData.cna,
                 [],
-                'CNA data is empty for the sample with mutation and fusion data'
+                'CNA data is empty for the sample with mutation and structural variant data'
             );
             assert.deepEqual(
-                oqlData.fusion,
+                oqlData.structuralVariant,
                 ['EGFR-intragenic'],
-                'fusion data is correct for the sample with mutation and fusion data'
+                'structural variant data is correct for the sample with mutation and structural variant data'
             );
             assert.deepEqual(
                 oqlData.mutation,
                 ['G598A', 'G239C'],
-                'mutation data is correct for the sample with mutation and fusion data'
+                'mutation data is correct for the sample with mutation and structural variant data'
             );
         });
     });
@@ -562,7 +553,7 @@ describe('DownloadUtils', () => {
         it('generates download data for mutated samples', () => {
             const sampleAlterationDataByGene = {
                 EGFR_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [
-                    ...sampleDataWithBothMutationAndFusion,
+                    ...sampleDataWithMutation,
                 ],
                 PTEN_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
                 TP53_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
@@ -584,7 +575,7 @@ describe('DownloadUtils', () => {
                     'P-0000378-T01-IM3',
                     'NA',
                     'NA',
-                    'G598A EGFR-intragenic G239C',
+                    'G598A G239C',
                 ],
                 ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
             ];
@@ -593,6 +584,45 @@ describe('DownloadUtils', () => {
                 downloadData,
                 expectedResult,
                 'mutation download data is correctly generated'
+            );
+        });
+    });
+
+    describe('generateStructuralVariantDownloadData', () => {
+        it('generates download data for structural variant samples', () => {
+            const sampleAlterationDataByGene = {
+                EGFR_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [
+                    ...sampleDataWithStructuralVariant,
+                ],
+                PTEN_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
+                TP53_UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3: [],
+                EGFR_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
+                PTEN_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
+                TP53_VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ: [],
+            };
+
+            const downloadData = generateStructuralDownloadData(
+                sampleAlterationDataByGene,
+                samples,
+                genes
+            );
+
+            const expectedResult = [
+                ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
+                [
+                    'msk_impact_2017',
+                    'P-0000378-T01-IM3',
+                    'NA',
+                    'NA',
+                    'EGFR-intragenic',
+                ],
+                ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
+            ];
+
+            assert.deepEqual(
+                downloadData,
+                expectedResult,
+                'structural variant download data is correctly generated'
             );
         });
     });
@@ -823,9 +853,9 @@ describe('DownloadUtils', () => {
                 'mutation data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3'
             );
             assert.deepEqual(
-                caseAlterationData[0].oqlData['EGFR'].fusion,
+                caseAlterationData[0].oqlData['EGFR'].structuralVariant,
                 ['EGFR-intragenic'],
-                'fusion data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3'
+                'structural variant data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3'
             );
 
             assert.equal(
@@ -861,12 +891,12 @@ describe('DownloadUtils', () => {
                 sequenced: true,
                 geneSymbol: 'EGFR',
                 mutation: [],
-                fusion: [],
+                structuralVariant: [],
                 cna: [],
                 mrnaExp: [],
                 proteinLevel: [],
                 isMutationNotProfiled: false,
-                isFusionNotProfiled: false,
+                isStructuralVariantNotProfiled: false,
                 isCnaNotProfiled: false,
                 isMrnaExpNotProfiled: false,
                 isProteinLevelNotProfiled: false,
@@ -1081,9 +1111,9 @@ describe('DownloadUtils', () => {
                 'cna is profiled for the zero not profiled GeneticTrackDatum'
             );
             assert.equal(
-                oqlData0.isFusionNotProfiled,
+                oqlData0.isStructuralVariantNotProfiled,
                 false,
-                'fusion is profiled for the zero not profiled GeneticTrackDatum'
+                'structural variant is profiled for the zero not profiled GeneticTrackDatum'
             );
             assert.equal(
                 oqlData0.isMrnaExpNotProfiled,
@@ -1113,9 +1143,9 @@ describe('DownloadUtils', () => {
                 'cna is profiled for the one not profiled GeneticTrackDatum'
             );
             assert.equal(
-                oqlData1.isFusionNotProfiled,
+                oqlData1.isStructuralVariantNotProfiled,
                 true,
-                'fusion is not profiled for the one not profiled GeneticTrackDatum'
+                'structural variant is not profiled for the one not profiled GeneticTrackDatum'
             );
             assert.equal(
                 oqlData1.isMrnaExpNotProfiled,
@@ -1145,9 +1175,9 @@ describe('DownloadUtils', () => {
                 'cna is not profiled for the two not profiled GeneticTrackDatum'
             );
             assert.equal(
-                oqlData2.isFusionNotProfiled,
+                oqlData2.isStructuralVariantNotProfiled,
                 true,
-                'fusion is not profiled for the two not profiled GeneticTrackDatum'
+                'structural variant is not profiled for the two not profiled GeneticTrackDatum'
             );
             assert.equal(
                 oqlData2.isMrnaExpNotProfiled,

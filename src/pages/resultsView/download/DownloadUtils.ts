@@ -48,7 +48,7 @@ export function generateOqlData(
     }
 ): IOqlData {
     const proteinChanges: string[] = [];
-    const fusions: string[] = [];
+    const structuralVariants: string[] = [];
     const cnaAlterations: ISubAlteration[] = [];
     const proteinLevels: ISubAlteration[] = [];
     const mrnaExpressions: ISubAlteration[] = [];
@@ -88,13 +88,12 @@ export function generateOqlData(
                 }
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
-                if (alteration.mutationType.toLowerCase().includes('fusion')) {
-                    fusions.push(alteration.proteinChange);
-                    alterationTypes.push('FUSION');
-                } else {
-                    proteinChanges.push(alteration.proteinChange);
-                    alterationTypes.push('MUT');
-                }
+                proteinChanges.push(alteration.proteinChange);
+                alterationTypes.push('MUT');
+                break;
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                structuralVariants.push(alteration.eventInfo);
+                alterationTypes.push('FUSION');
                 break;
         }
     }
@@ -111,12 +110,12 @@ export function generateOqlData(
                 : true,
         geneSymbol: datum.trackLabel,
         mutation: proteinChanges,
-        fusion: fusions,
+        structuralVariant: structuralVariants,
         cna: cnaAlterations,
         mrnaExp: mrnaExpressions,
         proteinLevel: proteinLevels,
         isMutationNotProfiled: false,
-        isFusionNotProfiled: false,
+        isStructuralVariantNotProfiled: false,
         isCnaNotProfiled: false,
         isMrnaExpNotProfiled: false,
         isProteinLevelNotProfiled: false,
@@ -132,7 +131,7 @@ export function updateOqlData(
     }
 ): IOqlData {
     let isMutationNotProfiled = true;
-    let isFusionNotProfiled = true;
+    let isStructuralVariantNotProfiled = true;
     let isCnaNotProfiled = true;
     let isMrnaExpNotProfiled = true;
     let isProteinLevelNotProfiled = true;
@@ -157,15 +156,15 @@ export function updateOqlData(
                         break;
                     case AlterationTypeConstants.MUTATION_EXTENDED:
                         isMutationNotProfiled = false;
-                    case AlterationTypeConstants.FUSION:
-                        isFusionNotProfiled = false;
+                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                        isStructuralVariantNotProfiled = false;
                         break;
                 }
             }
         }
     }
     oql.isMutationNotProfiled = isMutationNotProfiled;
-    oql.isFusionNotProfiled = isFusionNotProfiled;
+    oql.isStructuralVariantNotProfiled = isStructuralVariantNotProfiled;
     oql.isCnaNotProfiled = isCnaNotProfiled;
     oql.isMrnaExpNotProfiled = isMrnaExpNotProfiled;
     oql.isProteinLevelNotProfiled = isProteinLevelNotProfiled;

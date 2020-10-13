@@ -140,6 +140,9 @@ export function getFilteredMolecularProfiles(
         switch (dataPriority) {
             case MolecularProfileFilterEnum.Mutation:
                 defaultProfiles.push(getDefaultMutationProfile(profiles));
+                defaultProfiles.push(
+                    getDefaultStructuralVariantProfile(profiles)
+                );
                 break;
             case MolecularProfileFilterEnum.CNA:
                 defaultProfiles.push(getDefaultCNAProfile(profiles));
@@ -147,6 +150,9 @@ export function getFilteredMolecularProfiles(
             case MolecularProfileFilterEnum.MutationAndCNA:
                 defaultProfiles.push(getDefaultMutationProfile(profiles));
                 defaultProfiles.push(getDefaultCNAProfile(profiles));
+                defaultProfiles.push(
+                    getDefaultStructuralVariantProfile(profiles)
+                );
         }
     }
     // get rid of any undefined items

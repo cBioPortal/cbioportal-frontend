@@ -648,9 +648,8 @@ export function buildResultsViewPageTitle(
 
 export function getMolecularProfiles(query: any) {
     //if there's only one study, we read profiles from query params and filter out undefined
-    let molecularProfiles = [
+    let molecularProfiles: string[] = [
         query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-        query.genetic_profile_ids_PROFILE_STRUCTURAL_VARIANT,
         query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
         query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
         query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
