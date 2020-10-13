@@ -47,7 +47,7 @@ export function toSampleTreatmentFilter(
     const split = uniqueKey.split('::');
     return {
         treatment: split[0],
-        time: split[1] as 'Pre' | 'Post' | 'Unknown',
+        time: split[1] as 'Pre' | 'Post',
     };
 }
 
