@@ -837,7 +837,7 @@ function scatterPlotCnaAndSvLegendData(
             const isUnprofiledSv =
                 ColoringType.StructuralVariant in coloringTypes &&
                 !isPointProfiledForSv(d);
-            if (isUnprofiledCna || isUnprofiledSv) {
+            if (isUnprofiledCna && isUnprofiledSv) {
                 showNotProfiledElement = true;
             }
             return ret;
@@ -904,6 +904,7 @@ function scatterPlotCnaAndSvLegendData(
                 fill: notProfiledCnaAndSvAppearance.stroke, // for waterfall plot
                 type: legendSymbol,
                 strokeWidth: CNA_STROKE_WIDTH,
+                strokeOpacity: notProfiledCnaAndSvAppearance.strokeOpacity,
             },
             highlighting: onClick && {
                 uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
@@ -1929,7 +1930,7 @@ function getCnaAndSvAppearance(
         ColoringType.StructuralVariant in coloringTypes &&
         !isPointProfiledForSv(d);
 
-    if (isUnprofiledCna || isUnprofiledSv) {
+    if (isUnprofiledCna && isUnprofiledSv) {
         return notProfiledCnaAndSvAppearance;
     } else if (hasSvData) {
         // prioritize sv over cna
@@ -2158,7 +2159,13 @@ export function tooltipMutationsSection(mutations: AnnotatedMutation[]) {
     );
 }
 
-export function tooltipCnaSection(data: AnnotatedNumericGeneMolecularData[]) {
+export function tooltipCnaSection<D extends IPlotSampleData>(datum: D) {
+    if (!isPointProfiledForCna(datum)) {
+        return <span>Not profiled for copy number alterations.</span>;
+    } else if (datum.copyNumberAlterations.length === 0) {
+        return null;
+    }
+    const data = datum.copyNumberAlterations;
     const oncoKbIcon = (alt: AnnotatedNumericGeneMolecularData) => (
         <img
             src={require('../../../rootImages/oncokb-oncogenic-1.svg')}
@@ -2204,12 +2211,17 @@ export function tooltipCnaSection(data: AnnotatedNumericGeneMolecularData[]) {
     );
 }
 
-function tooltipSvSection(structuralVariants: StructuralVariant[]) {
+function tooltipSvSection<D extends IPlotSampleData>(datum: D) {
+    if (!isPointProfiledForSv(datum)) {
+        return <span>Not profiled for structural variants.</span>;
+    } else if (datum.structuralVariants.length === 0) {
+        return null;
+    }
     return (
         <span>
             {`Structural Variant: `}
             {joinJsx(
-                structuralVariants.map(v => (
+                datum.structuralVariants.map(v => (
                     <span style={{ fontWeight: 'bold' }}>{v.variantClass}</span>
                 )),
                 <span>{`, `}</span>
@@ -2281,14 +2293,9 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
     if (d.mutations.length > 0) {
         mutationsSection = tooltipMutationsSection(d.mutations);
     }
-    let cnaSection: any = null;
-    if (d.copyNumberAlterations.length > 0) {
-        cnaSection = tooltipCnaSection(d.copyNumberAlterations);
-    }
-    let svSection: any = null;
-    if (d.structuralVariants.length > 0) {
-        svSection = tooltipSvSection(d.structuralVariants);
-    }
+    const cnaSection = tooltipCnaSection(d);
+    const svSection = tooltipSvSection(d);
+
     let clinicalDataSection: any = null;
     if (coloringClinicalAttribute) {
         clinicalDataSection = tooltipClinicalDataSection(
@@ -2360,14 +2367,8 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
     if (d.mutations.length > 0) {
         mutationsSection = tooltipMutationsSection(d.mutations);
     }
-    let cnaSection: any = null;
-    if (d.copyNumberAlterations.length > 0) {
-        cnaSection = tooltipCnaSection(d.copyNumberAlterations);
-    }
-    let svSection: any = null;
-    if (d.structuralVariants.length > 0) {
-        svSection = tooltipSvSection(d.structuralVariants);
-    }
+    const cnaSection = tooltipCnaSection(d);
+    const svSection = tooltipSvSection(d);
     let clinicalDataSection: any = null;
     if (coloringClinicalAttribute) {
         clinicalDataSection = tooltipClinicalDataSection(
