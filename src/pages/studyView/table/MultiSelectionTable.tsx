@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
-import FixedHeaderTable from './FixedHeaderTable';
+import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
@@ -38,7 +38,6 @@ import {
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
-import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -77,6 +76,9 @@ export type MultiSelectionTableProps = {
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
+    extraButtons?: IFixedHeaderTableProps<
+        MultiSelectionTableRow
+    >['extraButtons'];
     selectedRowsKeys: string[];
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
@@ -752,6 +754,7 @@ export class MultiSelectionTable extends React.Component<
                         afterSelectingRows={this.afterSelectingRows}
                         defaultSelectionOperator={this.selectionType}
                         toggleSelectionOperator={this.toggleSelectionOperator}
+                        extraButtons={this.props.extraButtons}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}

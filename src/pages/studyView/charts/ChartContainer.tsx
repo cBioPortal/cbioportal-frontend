@@ -65,7 +65,11 @@ import {
     PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
 } from '../table/treatments/PatientTreatmentsTable';
-import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    doesChartHaveComparisonGroupsLimit,
+    getComparisonParamsForTable,
+} from 'pages/studyView/StudyViewComparisonUtils';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -380,6 +384,27 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return this.highlightChart ? 2 : 1;
     }
 
+    private comparisonButtonForTables = {
+        content: (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <ComparisonVsIcon
+                    className={classnames('fa fa-fw')}
+                    style={{ marginRight: 4 }}
+                />
+                Compare
+            </div>
+        ),
+        onClick: () => {
+            this.openComparisonPage(
+                getComparisonParamsForTable(
+                    this.selectedRowsKeys,
+                    this.chartType
+                )
+            );
+        },
+        isDisabled: () => this.selectedRowsKeys!.length < 2,
+    };
+
     @computed
     get chart(): (() => JSX.Element) | null {
         switch (this.chartType) {
@@ -462,6 +487,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -546,6 +572,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -759,6 +786,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
@@ -791,6 +819,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
