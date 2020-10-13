@@ -162,6 +162,32 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 ],
                 trackEventRenderers: [
                     {
+                        trackTypeMatch: /STATUS/i,
+                        configureTrack: (cat: TimelineTrackSpecification) => {
+                            const oldRenderer = cat.renderEvents;
+                            cat.items.forEach(item => {
+                                // this will match any attribute with key that contains STATUS
+                                if (
+                                    getAttributeValue(/STATUS/i, item) ===
+                                    'DECEASED'
+                                ) {
+                                    item.render = item => (
+                                        <svg height={15} width={15}>
+                                            <rect
+                                                y={
+                                                    TIMELINE_TRACK_HEIGHT / 2 -
+                                                    5
+                                                }
+                                                width="10"
+                                                height="10"
+                                            />
+                                        </svg>
+                                    );
+                                }
+                            });
+                        },
+                    },
+                    {
                         trackTypeMatch: /LAB_TEST/i,
                         configureTrack: (cat: TimelineTrackSpecification) => {
                             const psaTrack = cat.tracks
@@ -197,23 +223,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
                                 //console.log(psaValues.map(v => v.value));
                                 const max = _.max(psaValues);
-
-                                /*psaTrack.items.forEach(event => {
-                                    event.render = () => {
-                                        let perc =
-                                            getAttributeValue('VALUE', event) /
-                                            (max || 1)!;
-                                        perc = perc > 0.2 ? perc : 0.2;
-                                        return (
-                                            <circle
-                                                cx={0}
-                                                cy={TIMELINE_TRACK_HEIGHT / 2}
-                                                r={8 * perc}
-                                                fill={'#999999'}
-                                            />
-                                        );
-                                    };
-                                });*/
                             }
                         },
                     },
