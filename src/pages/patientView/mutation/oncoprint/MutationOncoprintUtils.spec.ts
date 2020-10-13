@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import { CoverageInformation } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { makeMutationHeatmapData } from './MutationOncoprintUtils';
 import { MutationOncoprintMode } from './MutationOncoprint';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../../shared/lib/StoreUtils';
+import { CoverageInformation } from '../../../../shared/lib/GenePanelUtils';
 import { MutationStatus } from '../PatientViewMutationsTabUtils';
 import { assertDeepEqualInAnyOrder } from '../../../../shared/lib/SpecUtils';
 

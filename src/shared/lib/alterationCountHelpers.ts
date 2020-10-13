@@ -9,7 +9,7 @@ import {
 } from '../../pages/resultsView/cancerSummary/CancerSummaryContent';
 import { Sample, MolecularProfile } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
-import { CoverageInformation } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from './GenePanelUtils';
 import { isSampleProfiledInMultiple } from './isSampleProfiled';
 
 export function getAlterationCountsForCancerTypesByGene(
