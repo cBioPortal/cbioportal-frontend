@@ -446,6 +446,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     readonly survivalUI = MakeMobxView({
         await: () => [
             this.props.store.survivalDescriptions,
+            this.props.store.survivalXAxisLabelGroupByPrefix,
             this.props.store.survivalClinicalAttributesPrefix,
             this.props.store.patientSurvivals,
             this.props.store.activeStudiesClinicalAttributes,
@@ -567,7 +568,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         patientToAnalysisGroups
                                     }
                                     title={survivalTitleText[key]}
-                                    xAxisLabel={`Months ${survivalTitleText[key]}`}
+                                    xAxisLabel={
+                                        this.props.store
+                                            .survivalXAxisLabelGroupByPrefix
+                                            .result![key]
+                                    }
                                     yAxisLabel={survivalTitleText[key]}
                                     totalCasesHeader="Number of Cases, Total"
                                     statusCasesHeader={`Number of Cases, ${getStatusCasesHeaderText(
