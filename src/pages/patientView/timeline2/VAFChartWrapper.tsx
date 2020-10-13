@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { RefObject, useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
 import { ClinicalEvent, Sample } from 'cbioportal-ts-api-client';
@@ -24,6 +24,7 @@ import {
 } from 'pages/patientView/timeline2/helpers';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { downloadZippedTracks } from 'pages/patientView/timeline2/timelineDataUtils';
+import { Portal } from 'react-overlays/lib';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -102,24 +103,30 @@ const VAFChartWrapper: React.FunctionComponent<IVAFChartWrapperProps> = observer
         const groupByTracks = wrapperStore.groupByTracks;
 
         const vafPlotTrack = {
-            renderHeader: wrapperStore.vafPlotHeader,
-            renderTrack: (store: TimelineStore) => (
-                <VAFChart
-                    dataStore={dataStore}
-                    store={store}
-                    wrapperStore={wrapperStore}
-                    sampleMetaData={caseMetaData}
-                    samples={samples}
-                    mutationProfileId={mutationProfileId}
-                    coverageInformation={coverageInformation}
-                    sampleManager={sampleManager}
-                />
-            ),
+            //renderHeader: wrapperStore.vafPlotHeader,
+            renderTrack: (store: TimelineStore, headerEl?: HTMLDivElement) => {
+                return (
+                    <>
+                        <VAFChart
+                            dataStore={dataStore}
+                            store={store}
+                            wrapperStore={wrapperStore}
+                            sampleMetaData={caseMetaData}
+                            samples={samples}
+                            mutationProfileId={mutationProfileId}
+                            coverageInformation={coverageInformation}
+                            sampleManager={sampleManager}
+                            headerEl={headerEl}
+                        />
+                    </>
+                );
+            },
             disableHover: true,
             height: (store: TimelineStore) => {
                 return wrapperStore.vafChartHeight;
             },
             labelForExport: 'VAF',
+            uid: 'vafplot',
         } as CustomTrackSpecification;
 
         let customTracks = [vafPlotTrack].concat(wrapperStore.groupByTracks);

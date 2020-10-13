@@ -5,10 +5,14 @@ import classNames from 'classnames';
 
 export type CustomTrackSpecification = {
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.
-    renderTrack: (store: TimelineStore) => React.ReactElement<SVGGElement>;
+    renderTrack: (
+        store: TimelineStore,
+        headerTargetEl: any
+    ) => React.ReactElement<SVGGElement>;
     height: (store: TimelineStore) => number;
     labelForExport: string;
     disableHover?: boolean;
+    uid: string;
 };
 
 export interface ICustomTrackProps {
@@ -44,7 +48,12 @@ const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
                 height={specification.height(store)}
                 width={width}
             />
-            {specification.renderTrack(store)}
+            {specification.renderTrack(
+                store,
+                document.getElementsByClassName(
+                    `tl-track-uid-${specification.uid}`
+                )[0]
+            )}
             <line
                 x1={0}
                 x2={width}

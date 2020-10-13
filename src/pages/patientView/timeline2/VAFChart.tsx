@@ -49,6 +49,7 @@ interface IVAFChartProps {
     mutationProfileId: string;
     coverageInformation: CoverageInformation;
     sampleManager: SampleManager;
+    headerEl?: HTMLDivElement;
 }
 
 const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
@@ -632,34 +633,36 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                     renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
                     height: () => this.groupIndexToTrackHeight[index],
                     labelForExport: this.clinicalValuesForGrouping[index],
+                    uid: `groupbytracks-${index}`,
                 });
             });
         this.props.wrapperStore.groupByTracks = tracks;
     }
 
-    yAxisHeaderReaction = autorun(() => {
-        this.renderHeader(this.ticks);
-    });
+    // yAxisHeaderReaction = autorun(() => {
+    //     this.renderHeader(this.ticks);
+    // });
 
     groupByTracksReaction = autorun(() => {
         this.setGroupByTracks(this.sampleGroups);
     });
 
     destroy() {
-        this.yAxisHeaderReaction();
+        // this.yAxisHeaderReaction();
         this.groupByTracksReaction();
     }
 
     @action
     renderHeader(ticks: { label: string; value: number; offset: number }[]) {
-        this.props.wrapperStore.vafPlotHeader = (store: TimelineStore) => (
-            <div className={'positionAbsolute'} style={{ right: -6 }}>
-                <VAFChartHeader
-                    ticks={ticks}
-                    legendHeight={this.props.wrapperStore.vafChartHeight}
-                />
-            </div>
-        );
+        return null;
+        // this.props.wrapperStore.vafPlotHeader = (store: TimelineStore) => (
+        //     <div className={'positionAbsolute'} style={{ right: -6 }}>
+        //         <VAFChartHeader
+        //             ticks={ticks}
+        //             legendHeight={this.props.wrapperStore.vafChartHeight}
+        //         />
+        //     </div>
+        // );
     }
 
     @computed get groupColor() {
@@ -672,44 +675,72 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     render() {
         return (
-            <svg
-                width={this.props.store.pixelWidth}
-                height={this.recalculateTotalHeight()}
-            >
-                {this.renderData.lineData.map(
-                    (data: IPoint[], index: number) => {
-                        return data.map((d: IPoint, i: number) => {
-                            let x1 = this.xPosition[d.sampleId],
-                                x2;
-                            let y1 = this.yPosition[d.y],
-                                y2;
+            <>
+                {this.props.headerEl && (
+                    <Portal node={this.props.headerEl}>
+                        <div
+                            className={'positionAbsolute'}
+                            style={{ right: -6 }}
+                        >
+                            <VAFChartHeader
+                                ticks={this.ticks}
+                                legendHeight={
+                                    this.props.wrapperStore.vafChartHeight
+                                }
+                            />
+                        </div>
+                    </Portal>
+                )}
+                <svg
+                    width={this.props.store.pixelWidth}
+                    height={this.recalculateTotalHeight()}
+                >
+                    {this.renderData.lineData.map(
+                        (data: IPoint[], index: number) => {
+                            return data.map((d: IPoint, i: number) => {
+                                let x1 = this.xPosition[d.sampleId],
+                                    x2;
+                                let y1 = this.yPosition[d.y],
+                                    y2;
 
-                            const nextPoint: IPoint = data[i + 1];
-                            if (nextPoint) {
-                                x2 = this.xPosition[nextPoint.sampleId];
-                                y2 = this.yPosition[nextPoint.y];
-                            }
+                                const nextPoint: IPoint = data[i + 1];
+                                if (nextPoint) {
+                                    x2 = this.xPosition[nextPoint.sampleId];
+                                    y2 = this.yPosition[nextPoint.y];
+                                }
 
-                            let tooltipDatum: {
-                                mutationStatus: MutationStatus;
-                                sampleId: string;
-                                vaf: number;
-                            } = {
-                                mutationStatus: d.mutationStatus,
-                                sampleId: d.sampleId,
-                                vaf: d.y,
-                            };
+                                let tooltipDatum: {
+                                    mutationStatus: MutationStatus;
+                                    sampleId: string;
+                                    vaf: number;
+                                } = {
+                                    mutationStatus: d.mutationStatus,
+                                    sampleId: d.sampleId,
+                                    vaf: d.y,
+                                };
 
-                            const color = this.groupColor(d.sampleId);
+                                const color = this.groupColor(d.sampleId);
 
-                            return (
-                                <g>
-                                    {x2 && y2 && (
-                                        <VAFPointConnector
-                                            x1={x1}
-                                            y1={y1}
-                                            x2={x2}
-                                            y2={y2}
+                                return (
+                                    <g>
+                                        {x2 && y2 && (
+                                            <VAFPointConnector
+                                                x1={x1}
+                                                y1={y1}
+                                                x2={x2}
+                                                y2={y2}
+                                                color={color}
+                                                tooltipDatum={tooltipDatum}
+                                                mutation={d.mutation}
+                                                dataStore={this.props.dataStore}
+                                                wrapperStore={
+                                                    this.props.wrapperStore
+                                                }
+                                            />
+                                        )}
+                                        <VAFPoint
+                                            x={x1}
+                                            y={y1}
                                             color={color}
                                             tooltipDatum={tooltipDatum}
                                             mutation={d.mutation}
@@ -718,26 +749,17 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                                 this.props.wrapperStore
                                             }
                                         />
-                                    )}
-                                    <VAFPoint
-                                        x={x1}
-                                        y={y1}
-                                        color={color}
-                                        tooltipDatum={tooltipDatum}
-                                        mutation={d.mutation}
-                                        dataStore={this.props.dataStore}
-                                        wrapperStore={this.props.wrapperStore}
-                                    />
-                                </g>
-                            );
-                        });
-                    }
-                )}
+                                    </g>
+                                );
+                            });
+                        }
+                    )}
 
-                {!this.groupingByIsSelected && this.sampleIcons()}
-                <Observer>{this.getHighlights}</Observer>
-                <Observer>{this.getTooltipComponent}</Observer>
-            </svg>
+                    {!this.groupingByIsSelected && this.sampleIcons()}
+                    <Observer>{this.getHighlights}</Observer>
+                    <Observer>{this.getTooltipComponent}</Observer>
+                </svg>
+            </>
         );
     }
 
