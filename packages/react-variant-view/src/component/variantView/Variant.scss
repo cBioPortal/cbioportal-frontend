@@ -1,0 +1,97 @@
+.sidebar {
+    position: sticky !important;
+    top: 0;
+}
+
+.componentHeader {
+    border-bottom: 2px solid #e0e0e0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #a86767;
+}
+
+.annotation-track-selector.small {
+    width: 200px !important;
+}
+
+.variant-page {
+    max-width: 1391px !important;
+    margin: 0 auto;
+}
+
+.variant-page-container {
+    display: flex;
+    justify-content: center;
+}
+
+/* hide mutation mapper meta column */
+/* we cannot disable the whole meta column because we need the computed data */
+/* TODO There might be a better way to trigger the computation of those values instead of rendering the whole column */
+.gn-mutation-mapper .mutationMapperMetaColumn {
+    display: none;
+}
+
+.loading-spinner {
+    color: aqua;
+}
+
+.loadingIndicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Open Sans', Georgia, sans-serif, serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+    color: #49a8e5;
+}
+
+.rc-tooltip {
+    opacity: 1 !important;
+}
+
+.page-section {
+    padding-bottom: 40px;
+    h4 {
+        margin-bottom: 20px;
+    }
+
+    &:first-child {
+        margin-top: 25px;
+    }
+}
+
+.page-body {
+    font-size: 0.875rem;
+}
+
+.Main {
+    position: relative;
+    min-height: 100vh;
+}
+
+.mskcc-footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 5px 20px;
+
+    a {
+        padding: 2px 10px;
+    }
+}
+
+.borderedChart {
+    border: 1px dashed #ddd;
+    padding: 20px;
+    border-radius: 4px;
+}
