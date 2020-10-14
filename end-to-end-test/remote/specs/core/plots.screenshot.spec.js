@@ -157,6 +157,7 @@ describe('plots tab screenshot tests', function() {
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             });
         });
+        browser.waitForExist('[data-test="swapHorzVertButton"]');
         browser.click('[data-test="swapHorzVertButton"]');
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
