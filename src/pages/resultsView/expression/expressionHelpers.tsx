@@ -6,7 +6,7 @@ import {
     NumericGeneMolecularData,
     MolecularProfile,
 } from 'cbioportal-ts-api-client';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import { getOncoprintMutationType } from '../../../shared/components/oncoprint/DataUtils';
 import {
