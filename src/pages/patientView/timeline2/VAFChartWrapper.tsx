@@ -412,9 +412,9 @@ export default class VAFChartWrapper extends React.Component<
             ),
             renderTrack: (store: TimelineStore) => (
                 <VAFChart
-                    dataStore={this.props.dataStore}
-                    store={store}
-                    wrapperStore={this.wrapperStore}
+                    mutationsStore={this.props.dataStore}
+                    sampleTimelineEventStore={store}
+                    store={this.wrapperStore}
                     /** ticks deps */
                     yPosition={this.yPosition}
                     lineData={this.lineData}

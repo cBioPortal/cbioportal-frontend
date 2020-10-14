@@ -43,17 +43,17 @@ import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 import './styles.scss';
 
 interface IVAFChartProps {
-    dataStore: {
+    mutationsStore: {
         setMouseOverMutation: (mutation: Mutation | null) => void;
         toggleSelectedMutation: (mutation: Mutation) => void;
         getMouseOverMutation: () => Mutation | null;
         selectedMutations: Readonly<Mutation[]>;
     };
-    store: {
+    sampleTimelineEventStore: {
         sampleEvents: TimelineEvent[];
         pixelWidth: number;
     };
-    wrapperStore: {
+    store: {
         dataHeight: number;
         setVafChartHeight: (n: number) => void;
         onlyShowSelectedInVAFChart: boolean | undefined;
@@ -219,11 +219,11 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         }
         footerHeight = footerHeight + 20;
 
-        this.props.wrapperStore.setVafChartHeight(
-            _.sum([this.props.wrapperStore.dataHeight, footerHeight])
+        this.props.store.setVafChartHeight(
+            _.sum([this.props.store.dataHeight, footerHeight])
         );
 
-        return _.sum([this.props.wrapperStore.dataHeight, footerHeight]);
+        return _.sum([this.props.store.dataHeight, footerHeight]);
     }
 
     @computed get lineData() {
@@ -260,17 +260,17 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @autobind
     private getHighlights() {
         const highlightedMutations = [];
-        if (!this.props.wrapperStore.onlyShowSelectedInVAFChart) {
+        if (!this.props.store.onlyShowSelectedInVAFChart) {
             // dont bold highlighted mutations if we're only showing highlighted mutations
             highlightedMutations.push(
-                ...this.props.dataStore.selectedMutations
+                ...this.props.mutationsStore.selectedMutations
             );
         }
         // Using old functionality to get mouseOverMUtation from PatientsViewMutationDataStore
         // so highlighting a mutation in the VAF chart will highlight it also in the mutation table.
         // Also if multiple VAF charts are present in the page all will share the highlighting.
         // If this is not desired, comment the following line and uncomment the next.
-        const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
+        const mouseOverMutation = this.props.mutationsStore.getMouseOverMutation();
         /*const mouseOverMutation = this.props.wrapperStore.tooltipModel
             ? this.props.wrapperStore.tooltipModel.mutation
             : null;*/
@@ -398,7 +398,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     render() {
         return (
             <svg
-                width={this.props.store.pixelWidth}
+                width={this.props.sampleTimelineEventStore.pixelWidth}
                 height={this.recalculateTotalHeight()}
             >
                 {this.props.lineData.map((data: IPoint[], index: number) => {
@@ -438,13 +438,13 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                         datum={tooltipDatum}
                                         mutation={d.mutation}
                                         toggleSelectedMutation={mutation =>
-                                            this.props.dataStore.toggleSelectedMutation(
+                                            this.props.mutationsStore.toggleSelectedMutation(
                                                 mutation
                                             )
                                         }
                                         setTooltipModel={model => {
                                             this.tooltipModel = model;
-                                            this.props.dataStore.setMouseOverMutation(
+                                            this.props.mutationsStore.setMouseOverMutation(
                                                 model.mutation
                                             );
                                         }}
@@ -457,13 +457,13 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                     datum={tooltipDatum}
                                     mutation={d.mutation}
                                     toggleSelectedMutation={mutation =>
-                                        this.props.dataStore.toggleSelectedMutation(
+                                        this.props.mutationsStore.toggleSelectedMutation(
                                             mutation
                                         )
                                     }
                                     setTooltipModel={model => {
                                         this.tooltipModel = model;
-                                        this.props.dataStore.setMouseOverMutation(
+                                        this.props.mutationsStore.setMouseOverMutation(
                                             model.mutation
                                         );
                                     }}
@@ -473,8 +473,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                     });
                 })}
 
-                {!this.props.wrapperStore.groupingByIsSelected &&
-                    this.sampleIcons()}
+                {!this.props.store.groupingByIsSelected && this.sampleIcons()}
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>
             </svg>
@@ -484,8 +483,8 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @autobind
     sampleIcons() {
         const svg = (
-            <g transform={`translate(0,${this.props.wrapperStore.dataHeight})`}>
-                {this.props.store.sampleEvents.map(
+            <g transform={`translate(0,${this.props.store.dataHeight})`}>
+                {this.props.sampleTimelineEventStore.sampleEvents.map(
                     (event: TimelineEvent, i: number) => {
                         const sampleId = event.event!.attributes.find(
                             (att: any) => att.key === 'SAMPLE_ID'

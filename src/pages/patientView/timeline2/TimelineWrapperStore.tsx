@@ -1,8 +1,6 @@
 import { action, computed, observable } from 'mobx';
 
 export default class TimelineWrapperStore {
-    // static dataHeight: number = 200;
-
     @observable groupByOption: string | null = null;
 
     @observable vafChartHeight: number = 240;
