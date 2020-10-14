@@ -1,6 +1,6 @@
 {
   "name": "react-variant-view",
-  "version": "0.0.0",
+  "version": "0.1.0-beta.0",
   "description": "cBioPortal Variant Viewer",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -44,7 +44,7 @@
     "cbioportal-utils": "^0.2.7",
     "classnames": "^2.2.5",
     "font-awesome": "^4.7.0",
-    "genome-nexus-ts-api-client": "^1.1.6",
+    "genome-nexus-ts-api-client": "^1.1.7",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
