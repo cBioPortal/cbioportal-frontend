@@ -137,6 +137,16 @@ export default class VAFChartWrapper extends React.Component<
         });
     }
 
+    @computed get yPosition() {
+        let scaledY: { [originalY: number]: number } = {};
+        this.renderData.lineData.forEach((data: IPoint[], index: number) => {
+            data.forEach((d: IPoint, i: number) => {
+                scaledY[d.y] = this.scaleYValue(d.y);
+            });
+        });
+        return scaledY;
+    }
+
     // returns function for scaling svg y-axis coordinate system
     @computed get scaleYValue() {
         return yValueScaleFunction(
@@ -405,8 +415,10 @@ export default class VAFChartWrapper extends React.Component<
                     dataStore={this.props.dataStore}
                     store={store}
                     wrapperStore={this.wrapperStore}
-                    scaleYValue={this.scaleYValue}
+                    /** ticks deps */
+                    yPosition={this.yPosition}
                     renderData={this.renderData}
+                    /** groupByTracks deps */
                     groupColor={this.groupColor}
                     xPosition={this.xPosition}
                     sampleIdToYPosition={this.sampleIdToYPosition}

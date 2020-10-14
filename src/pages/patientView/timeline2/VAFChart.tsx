@@ -35,13 +35,15 @@ interface IVAFChartProps {
     dataStore: PatientViewMutationsDataStore;
     store: TimelineStore;
     wrapperStore: TimelineWrapperStore;
-    scaleYValue: (value: number) => number;
+
+    xPosition: { [sampleId: string]: number };
+    yPosition: { [value: number]: number };
     renderData: {
         lineData: IPoint[][];
         grayPoints: IPoint[];
     };
+
     groupColor: (s: string) => any;
-    xPosition: { [sampleId: string]: number };
     sampleIdToYPosition: { [sampleId: string]: number };
     sampleIcon: (sampleId: string) => JSX.Element;
 }
@@ -213,7 +215,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 dataPoints.map((dataPoint: IPoint, i: number) => {
                     scaledData[index].push({
                         x: this.props.xPosition[dataPoint.sampleId],
-                        y: this.yPosition[dataPoint.y],
+                        y: this.props.yPosition[dataPoint.y],
                         sampleId: dataPoint.sampleId,
                         mutation: dataPoint.mutation,
                         mutationStatus: dataPoint.mutationStatus,
@@ -236,18 +238,6 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             );
         }
         return map;
-    }
-
-    @computed get yPosition() {
-        let scaledY: { [originalY: number]: number } = {};
-        this.props.renderData.lineData.forEach(
-            (data: IPoint[], index: number) => {
-                data.forEach((d: IPoint, i: number) => {
-                    scaledY[d.y] = this.props.scaleYValue(d.y);
-                });
-            }
-        );
-        return scaledY;
     }
 
     @autobind
@@ -399,13 +389,13 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                         return data.map((d: IPoint, i: number) => {
                             let x1 = this.props.xPosition[d.sampleId],
                                 x2;
-                            let y1 = this.yPosition[d.y],
+                            let y1 = this.props.yPosition[d.y],
                                 y2;
 
                             const nextPoint: IPoint = data[i + 1];
                             if (nextPoint) {
                                 x2 = this.props.xPosition[nextPoint.sampleId];
-                                y2 = this.yPosition[nextPoint.y];
+                                y2 = this.props.yPosition[nextPoint.y];
                             }
 
                             let tooltipDatum: {
