@@ -408,10 +408,10 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     numPatients: _.sumBy(
                                         patientSurvivals[prefix],
                                         s =>
-                                            +(
-                                                s.uniquePatientKey in
-                                                patientToAnalysisGroups
-                                            )
+                                            s.uniquePatientKey in
+                                            patientToAnalysisGroups
+                                                ? 1
+                                                : 0
                                     ),
                                     numPatientsPerGroup: _.mapValues(
                                         patientSurvivalsPerGroup,
