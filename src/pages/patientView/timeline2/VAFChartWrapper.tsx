@@ -139,7 +139,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get yPosition() {
         let scaledY: { [originalY: number]: number } = {};
-        this.renderData.lineData.forEach((data: IPoint[], index: number) => {
+        this.lineData.forEach((data: IPoint[], index: number) => {
             data.forEach((d: IPoint, i: number) => {
                 scaledY[d.y] = this.scaleYValue(d.y);
             });
@@ -167,7 +167,7 @@ export default class VAFChartWrapper extends React.Component<
         }
     }
 
-    @computed get renderData() {
+    @computed get lineData() {
         return computeRenderData(
             this.props.samples,
             this.mutations,
@@ -176,18 +176,18 @@ export default class VAFChartWrapper extends React.Component<
             this.props.coverageInformation,
             this.wrapperStore.groupByOption!,
             this.sampleIdToClinicalValue
-        );
+        ).lineData;
     }
 
     @computed get minYValue() {
-        return _(this.renderData.lineData)
+        return _(this.lineData)
             .flatten()
             .map((d: IPoint) => d.y)
             .min();
     }
 
     @computed get maxYValue() {
-        return _(this.renderData.lineData)
+        return _(this.lineData)
             .flatten()
             .map((d: IPoint) => d.y)
             .max();
@@ -417,7 +417,7 @@ export default class VAFChartWrapper extends React.Component<
                     wrapperStore={this.wrapperStore}
                     /** ticks deps */
                     yPosition={this.yPosition}
-                    renderData={this.renderData}
+                    lineData={this.lineData}
                     /** groupByTracks deps */
                     groupColor={this.groupColor}
                     xPosition={this.xPosition}

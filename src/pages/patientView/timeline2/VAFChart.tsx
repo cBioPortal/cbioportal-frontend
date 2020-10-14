@@ -38,10 +38,7 @@ interface IVAFChartProps {
 
     xPosition: { [sampleId: string]: number };
     yPosition: { [value: number]: number };
-    renderData: {
-        lineData: IPoint[][];
-        grayPoints: IPoint[];
-    };
+    lineData: IPoint[][];
 
     groupColor: (s: string) => any;
     sampleIdToYPosition: { [sampleId: string]: number };
@@ -209,20 +206,18 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @computed get lineData() {
         let scaledData: IPoint[][] = [];
-        this.props.renderData.lineData.map(
-            (dataPoints: IPoint[], index: number) => {
-                scaledData[index] = [];
-                dataPoints.map((dataPoint: IPoint, i: number) => {
-                    scaledData[index].push({
-                        x: this.props.xPosition[dataPoint.sampleId],
-                        y: this.props.yPosition[dataPoint.y],
-                        sampleId: dataPoint.sampleId,
-                        mutation: dataPoint.mutation,
-                        mutationStatus: dataPoint.mutationStatus,
-                    });
+        this.props.lineData.map((dataPoints: IPoint[], index: number) => {
+            scaledData[index] = [];
+            dataPoints.map((dataPoint: IPoint, i: number) => {
+                scaledData[index].push({
+                    x: this.props.xPosition[dataPoint.sampleId],
+                    y: this.props.yPosition[dataPoint.y],
+                    sampleId: dataPoint.sampleId,
+                    mutation: dataPoint.mutation,
+                    mutationStatus: dataPoint.mutationStatus,
                 });
-            }
-        );
+            });
+        });
         return scaledData;
     }
 
@@ -384,63 +379,59 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 width={this.props.store.pixelWidth}
                 height={this.recalculateTotalHeight()}
             >
-                {this.props.renderData.lineData.map(
-                    (data: IPoint[], index: number) => {
-                        return data.map((d: IPoint, i: number) => {
-                            let x1 = this.props.xPosition[d.sampleId],
-                                x2;
-                            let y1 = this.props.yPosition[d.y],
-                                y2;
+                {this.props.lineData.map((data: IPoint[], index: number) => {
+                    return data.map((d: IPoint, i: number) => {
+                        let x1 = this.props.xPosition[d.sampleId],
+                            x2;
+                        let y1 = this.props.yPosition[d.y],
+                            y2;
 
-                            const nextPoint: IPoint = data[i + 1];
-                            if (nextPoint) {
-                                x2 = this.props.xPosition[nextPoint.sampleId];
-                                y2 = this.props.yPosition[nextPoint.y];
-                            }
+                        const nextPoint: IPoint = data[i + 1];
+                        if (nextPoint) {
+                            x2 = this.props.xPosition[nextPoint.sampleId];
+                            y2 = this.props.yPosition[nextPoint.y];
+                        }
 
-                            let tooltipDatum: {
-                                mutationStatus: MutationStatus;
-                                sampleId: string;
-                                vaf: number;
-                            } = {
-                                mutationStatus: d.mutationStatus,
-                                sampleId: d.sampleId,
-                                vaf: d.y,
-                            };
+                        let tooltipDatum: {
+                            mutationStatus: MutationStatus;
+                            sampleId: string;
+                            vaf: number;
+                        } = {
+                            mutationStatus: d.mutationStatus,
+                            sampleId: d.sampleId,
+                            vaf: d.y,
+                        };
 
-                            const color = this.props.groupColor(d.sampleId);
+                        const color = this.props.groupColor(d.sampleId);
 
-                            return (
-                                <g>
-                                    {x2 && y2 && (
-                                        <VAFPointConnector
-                                            x1={x1}
-                                            y1={y1}
-                                            x2={x2}
-                                            y2={y2}
-                                            color={color}
-                                            tooltipDatum={tooltipDatum}
-                                            mutation={d.mutation}
-                                            dataStore={this.props.dataStore}
-                                            wrapperStore={
-                                                this.props.wrapperStore
-                                            }
-                                        />
-                                    )}
-                                    <VAFPoint
-                                        x={x1}
-                                        y={y1}
+                        return (
+                            <g>
+                                {x2 && y2 && (
+                                    <VAFPointConnector
+                                        x1={x1}
+                                        y1={y1}
+                                        x2={x2}
+                                        y2={y2}
                                         color={color}
                                         tooltipDatum={tooltipDatum}
                                         mutation={d.mutation}
                                         dataStore={this.props.dataStore}
                                         wrapperStore={this.props.wrapperStore}
                                     />
-                                </g>
-                            );
-                        });
-                    }
-                )}
+                                )}
+                                <VAFPoint
+                                    x={x1}
+                                    y={y1}
+                                    color={color}
+                                    tooltipDatum={tooltipDatum}
+                                    mutation={d.mutation}
+                                    dataStore={this.props.dataStore}
+                                    wrapperStore={this.props.wrapperStore}
+                                />
+                            </g>
+                        );
+                    });
+                })}
 
                 {!this.props.wrapperStore.groupingByIsSelected &&
                     this.sampleIcons()}
