@@ -424,9 +424,9 @@ export default class VAFChartWrapper extends React.Component<
             ),
             renderTrack: (store: TimelineStore) => (
                 <VAFChart
-                    mutationsStore={this.props.dataStore}
-                    sampleTimelineEventStore={store}
                     store={this.wrapperStore}
+                    mutationsStore={this.props.dataStore}
+                    sampleEvents={store.sampleEvents}
                     /** ticks deps */
                     yPosition={this.yPosition}
                     lineData={this.lineData}
@@ -436,6 +436,7 @@ export default class VAFChartWrapper extends React.Component<
                     sampleIdToYPosition={this.sampleIdToYPosition}
                     sampleIcon={this.sampleIcon}
                     height={this.vafChartHeight}
+                    width={this.store.pixelWidth}
                 />
             ),
             disableHover: true,
