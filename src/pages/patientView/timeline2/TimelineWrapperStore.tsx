@@ -1,20 +1,12 @@
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
-import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
-import { TimelineStore } from 'cbioportal-clinical-timeline';
 
 export default class TimelineWrapperStore {
     // static dataHeight: number = 200;
 
     @observable groupByOption: string | null = null;
-
-    @observable.ref groupByTracks: CustomTrackSpecification[] = [];
-
-    @observable vafPlotHeader: (store: TimelineStore) => any = (
-        store: TimelineStore
-    ) => 'VAF';
 
     @observable vafChartHeight: number = 240;
 
@@ -95,5 +87,9 @@ export default class TimelineWrapperStore {
             mouseEvent: mouseEvent,
             tooltipOnPoint: tooltipOnPoint,
         };
+    }
+
+    @computed get groupingByIsSelected() {
+        return !(this.groupByOption == null || this.groupByOption === 'None');
     }
 }
