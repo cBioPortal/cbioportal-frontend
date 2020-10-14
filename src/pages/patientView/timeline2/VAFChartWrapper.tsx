@@ -400,6 +400,18 @@ export default class VAFChartWrapper extends React.Component<
         return clinicalValuesForGrouping;
     }
 
+    @computed get vafChartHeight() {
+        let footerHeight: number = 0;
+        let yPosition = this.sampleIdToYPosition;
+        for (let index in yPosition) {
+            if (yPosition[index] > footerHeight)
+                footerHeight = yPosition[index];
+        }
+        footerHeight = footerHeight + 20;
+        console.log(footerHeight);
+        return _.sum([this.wrapperStore.dataHeight, footerHeight]);
+    }
+
     render() {
         if (!this.store || !this.wrapperStore) return null;
 
@@ -407,7 +419,7 @@ export default class VAFChartWrapper extends React.Component<
             renderHeader: (store: TimelineStore) => (
                 <VAFChartHeader
                     ticks={this.ticks}
-                    legendHeight={this.wrapperStore.vafChartHeight}
+                    legendHeight={this.vafChartHeight}
                 />
             ),
             renderTrack: (store: TimelineStore) => (
@@ -423,12 +435,11 @@ export default class VAFChartWrapper extends React.Component<
                     xPosition={this.xPosition}
                     sampleIdToYPosition={this.sampleIdToYPosition}
                     sampleIcon={this.sampleIcon}
+                    height={this.vafChartHeight}
                 />
             ),
             disableHover: true,
-            height: (store: TimelineStore) => {
-                return this.wrapperStore.vafChartHeight;
-            },
+            height: (store: TimelineStore) => this.vafChartHeight,
             labelForExport: 'VAF',
         } as CustomTrackSpecification;
 

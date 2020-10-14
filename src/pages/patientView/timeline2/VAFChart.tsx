@@ -54,8 +54,6 @@ interface IVAFChartProps {
         pixelWidth: number;
     };
     store: {
-        dataHeight: number;
-        setVafChartHeight: (n: number) => void;
         onlyShowSelectedInVAFChart: boolean | undefined;
         groupingByIsSelected: boolean;
     };
@@ -67,6 +65,8 @@ interface IVAFChartProps {
     groupColor: (s: string) => any;
     sampleIdToYPosition: { [sampleId: string]: number };
     sampleIcon: (sampleId: string) => JSX.Element;
+
+    height: number;
 }
 
 const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
@@ -207,23 +207,6 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @computed get headerHeight() {
         return 20;
-    }
-
-    @action
-    recalculateTotalHeight() {
-        let footerHeight: number = 0;
-        let yPosition = this.props.sampleIdToYPosition;
-        for (let index in yPosition) {
-            if (yPosition[index] > footerHeight)
-                footerHeight = yPosition[index];
-        }
-        footerHeight = footerHeight + 20;
-
-        this.props.store.setVafChartHeight(
-            _.sum([this.props.store.dataHeight, footerHeight])
-        );
-
-        return _.sum([this.props.store.dataHeight, footerHeight]);
     }
 
     @computed get lineData() {
@@ -399,7 +382,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return (
             <svg
                 width={this.props.sampleTimelineEventStore.pixelWidth}
-                height={this.recalculateTotalHeight()}
+                height={this.props.height}
             >
                 {this.props.lineData.map((data: IPoint[], index: number) => {
                     return data.map((d: IPoint, i: number) => {
@@ -483,7 +466,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @autobind
     sampleIcons() {
         const svg = (
-            <g transform={`translate(0,${this.props.store.dataHeight})`}>
+            <g transform={`translate(0,${this.props.height - 20})`}>
                 {this.props.sampleTimelineEventStore.sampleEvents.map(
                     (event: TimelineEvent, i: number) => {
                         const sampleId = event.event!.attributes.find(

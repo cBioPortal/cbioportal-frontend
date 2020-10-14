@@ -3,8 +3,6 @@ import { action, computed, observable } from 'mobx';
 export default class TimelineWrapperStore {
     @observable groupByOption: string | null = null;
 
-    @observable vafChartHeight: number = 240;
-
     @observable showSequentialMode: boolean | undefined = undefined;
 
     @observable onlyShowSelectedInVAFChart: boolean | undefined = undefined;
@@ -18,11 +16,6 @@ export default class TimelineWrapperStore {
     @observable maxYAxisToDataRange: number = 0;
 
     @observable dataHeight: number = 200;
-
-    @action
-    setVafChartHeight(value: number) {
-        this.vafChartHeight = value;
-    }
 
     @action
     setGroupByOption(value: string) {
