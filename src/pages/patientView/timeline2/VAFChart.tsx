@@ -59,8 +59,7 @@ interface IVAFChartProps {
     yPosition: { [value: number]: number };
     lineData: IPoint[][];
 
-    groupColor: (s: string) => any;
-    sampleIdToYPosition: { [sampleId: string]: number };
+    groupColor: (s: string) => string;
     sampleIcon: (sampleId: string) => JSX.Element;
 
     height: number;

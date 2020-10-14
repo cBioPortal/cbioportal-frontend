@@ -433,7 +433,6 @@ export default class VAFChartWrapper extends React.Component<
                     /** groupByTracks deps */
                     groupColor={this.groupColor}
                     xPosition={this.xPosition}
-                    sampleIdToYPosition={this.sampleIdToYPosition}
                     sampleIcon={this.sampleIcon}
                     height={this.vafChartHeight}
                     width={this.store.pixelWidth}
