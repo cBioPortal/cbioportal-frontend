@@ -86,7 +86,7 @@ run_cbioportal_container() {
         --name=$E2E_CBIOPORTAL_HOST_NAME \
         --net=$DOCKER_NETWORK_NAME \
         -v "$TEST_HOME/local/runtime-config/portal.properties:/cbioportal/portal.properties:ro" \
-        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=false -Dapp.name=localdbe2e" \
+        -e JAVA_OPTS="-Xms2g -Xmx4g -Dauthenticate=noauthsessionservice -Dapp.name=localdbe2e -Dsession.service.url=http://cbio-session-service:5000/api/sessions/my_portal/" \
         -p 8081:8080 \
         $BACKEND_IMAGE_NAME \
         /bin/sh -c 'java ${JAVA_OPTS} -jar webapp-runner.jar /app.war'
@@ -205,7 +205,7 @@ echo Run database container
 run_database_container
 
 # echo Start session service
-# run_session_service
+run_session_service
 
 echo Run/restart cbioportal container
 run_cbioportal_container
