@@ -60,8 +60,9 @@ describe('group comparison page screenshot tests', function() {
                 60000
             );
             browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement(
+            var res = checkElementWithMouseDisabled(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]',
+                0,
                 { hide: ['.qtip'] }
             );
             assertScreenShotMatch(res);
