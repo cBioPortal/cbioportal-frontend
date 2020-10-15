@@ -221,17 +221,6 @@ describe('result page screenshot tests', function() {
     runResultsTestSuite('no session');
 });
 
-describe('expression tab', function() {
-    it('expression tab with complex oql', () => {
-        goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%3AMUT%3B&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga&show_samples=false`
-        );
-        browser.waitForExist('.borderedChart svg', 60000);
-        var res = browser.checkElement('[data-test="expressionTabDiv"]');
-        assertScreenShotMatch(res);
-    });
-});
-
 describe('download tab screenshot tests', function() {
     it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
