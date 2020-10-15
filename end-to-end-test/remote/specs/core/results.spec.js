@@ -403,22 +403,6 @@ describe('Results Page', function() {
                 )
             );
         });
-        it('should not be present in expression tab with simple query', function() {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga`
-            );
-            browser.waitForVisible('.borderedChart svg', 10000);
-            assert(
-                !browser.isVisible(
-                    `${yesBannerSelector}.expression-oql-status-banner`
-                )
-            );
-            assert(
-                !browser.isVisible(
-                    `${noBannerSelector}.expression-oql-status-banner`
-                )
-            );
-        });
 
         it('should be present in oncoprint tab with explicit query', function() {
             goToUrlAndSetLocalStorage(explicitOqlQueryUrl);
@@ -572,25 +556,6 @@ describe('Results Page', function() {
             assert(
                 !browser.isVisible(
                     `${noBannerSelector}.download-oql-status-banner`
-                )
-            );
-        });
-        it('should be present in expression tab with explicit query', function() {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga`
-            );
-            browser.waitForVisible(
-                `${noBannerSelector}.expression-oql-status-banner`,
-                10000
-            );
-            assert(
-                !browser.isVisible(
-                    `${yesBannerSelector}.expression-oql-status-banner`
-                )
-            );
-            assert(
-                browser.isVisible(
-                    `${noBannerSelector}.expression-oql-status-banner`
                 )
             );
         });
