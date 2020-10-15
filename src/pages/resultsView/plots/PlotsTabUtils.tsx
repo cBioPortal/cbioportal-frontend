@@ -3199,8 +3199,6 @@ export function makeClinicalAttributeOptions(
 export function makeAxisLogScaleFunction(
     axisSelection: AxisMenuSelection
 ): IAxisLogScaleParams | undefined {
-    const MIN_LOG_ARGUMENT = 0.01;
-
     if (!axisSelection.logScale) {
         return undefined;
     }
@@ -3215,9 +3213,9 @@ export function makeAxisLogScaleFunction(
     ) {
         // log-transformation parameters for non-genericAssay reponse
         // profile data. Note: log2-transformation is used by default
-        label = 'log2';
-        fLogScale = (x: number) => Math.log2(Math.max(x, MIN_LOG_ARGUMENT));
-        fInvLogScale = (x: number) => Math.pow(2, x);
+        label = 'log2(value + 1)';
+        fLogScale = (x: number) => Math.log2(Math.max(x, 0) + 1);
+        fInvLogScale = (x: number) => Math.pow(2, x) - 1;
     } else {
         // log-transformation parameters for generic assay reponse profile
         // data. Note: log10-transformation is used for generic assays
