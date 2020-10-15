@@ -61,7 +61,6 @@ describe('plots tab screenshot tests', function() {
                 value: 'rna_seq_v2_mrna',
             });
         });
-        browser.click('input[data-test="HorizontalLogCheckbox"]');
         browser.waitForExist('input[data-test="ShowRegressionline"]', 3000);
         browser.click('input[data-test="ShowRegressionline"]');
         waitForAndCheckPlotsTab();
@@ -158,6 +157,7 @@ describe('plots tab screenshot tests', function() {
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             });
         });
+        browser.waitForExist('[data-test="swapHorzVertButton"]');
         browser.click('[data-test="swapHorzVertButton"]');
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({

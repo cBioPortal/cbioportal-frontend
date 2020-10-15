@@ -56,6 +56,7 @@ import {
     getColoringMenuOptionValue,
     basicAppearance,
     getAxisDataOverlapSampleCount,
+    maybeSetLogScale,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -114,7 +115,7 @@ enum EventKey {
     utilities_horizontalBars,
     utilities_showRegressionLine,
     utilities_viewLimitValues,
-    utilities_sortByMedian,
+    sortByMedian,
 }
 
 export enum ColoringType {
@@ -439,6 +440,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                         pill.plotModel.vertical.dataSource
                                     );
                                 }
+                                maybeSetLogScale(this.horzSelection);
+                                maybeSetLogScale(this.vertSelection);
                                 if (pill.plotModel.vertical.useSameGene) {
                                     this.selectSameGeneOptionForVerticalAxis();
                                 }
@@ -727,12 +730,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._selectedGeneOption = o;
             },
             get dataType() {
-                if (!self.dataTypeOptions.isComplete) {
+                const dataTypeOptionsPromise = self.dataTypeOptions;
+                if (!dataTypeOptionsPromise.isComplete) {
                     // if there are no options to select a default from, then return the stored value for this variable
                     return this._dataType;
                 }
                 // otherwise, pick the default based on available options
-                const dataTypeOptions = self.dataTypeOptions.result!;
+                const dataTypeOptions = dataTypeOptionsPromise.result!;
                 if (this._dataType === undefined && dataTypeOptions.length) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
@@ -1313,7 +1317,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case EventKey.utilities_viewLimitValues:
                 this.viewLimitValues = !this.viewLimitValues;
                 break;
-            case EventKey.utilities_sortByMedian:
+            case EventKey.sortByMedian:
                 this.boxPlotSortByMedian = !this.boxPlotSortByMedian;
                 break;
         }
@@ -2255,6 +2259,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.vertSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
+        maybeSetLogScale(this.vertSelection);
         this.autoChooseColoringMenuGene();
     }
 
@@ -2265,6 +2270,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.horzSelection.selectedGenericAssayOption = undefined;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
+        maybeSetLogScale(this.horzSelection);
         this.autoChooseColoringMenuGene();
     }
 
@@ -3006,6 +3012,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             ? this.onVerticalAxisDataSourceSelect
             : this.onHorizontalAxisDataSourceSelect;
 
+        const isBoxPlotWithMoreThanOneCategory =
+            this.plotType.isComplete && // boxplot
+            this.plotType.result === PlotType.BoxPlot &&
+            this.defaultSortedBoxPlotData.isComplete && // [note: use defaultSorted so that the checkbox doesnt flicker while resorting boxPlotData]
+            this.defaultSortedBoxPlotData.result.data.length > 1; // with more than one category
+        const axisDataPromise = vertical
+            ? this.vertAxisDataPromise
+            : this.horzAxisDataPromise;
+        const axisIsStringData =
+            axisDataPromise.isComplete && isStringData(axisDataPromise.result!);
+
         switch (axisSelection.dataType) {
             case CLIN_ATTR_DATA_TYPE:
                 dataSourceLabel = 'Clinical Attribute';
@@ -3456,6 +3473,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                 </div>
                             </div>
                         )}
+                    {isBoxPlotWithMoreThanOneCategory && axisIsStringData && (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="SortByMedian"
+                                    type="checkbox"
+                                    name="utilities_sortByMedian"
+                                    value={EventKey.sortByMedian}
+                                    checked={this.boxPlotSortByMedian}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Sort Categories by Median
+                            </label>
+                        </div>
+                    )}
                 </div>
             </form>
         );
@@ -3532,18 +3564,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         const showRegression =
             this.plotType.isComplete &&
             this.plotType.result === PlotType.ScatterPlot;
-        const showSortBoxplotByMedian = // boxplot with more than one category
-            this.plotType.isComplete &&
-            this.plotType.result === PlotType.BoxPlot &&
-            this.defaultSortedBoxPlotData.isComplete && // use defaultSorted so that the checkbox doesnt flicker while resorting boxPlotData
-            this.defaultSortedBoxPlotData.result.data.length > 1;
         if (
             !showSearchOptions &&
             !showSampleColoringOptions &&
             !showDiscreteVsDiscreteOption &&
             !showStackedBarHorizontalOption &&
-            !showRegression &&
-            !showSortBoxplotByMedian
+            !showRegression
         ) {
             return <span></span>;
         }
@@ -3625,21 +3651,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     onClick={this.onInputClick}
                                 />{' '}
                                 Show Regression Line
-                            </label>
-                        </div>
-                    )}
-                    {showSortBoxplotByMedian && (
-                        <div className="checkbox" style={{ marginTop: 14 }}>
-                            <label>
-                                <input
-                                    data-test="SortByMedian"
-                                    type="checkbox"
-                                    name="utilities_sortByMedian"
-                                    value={EventKey.utilities_sortByMedian}
-                                    checked={this.boxPlotSortByMedian}
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Sort Categories by Median
                             </label>
                         </div>
                     )}
@@ -4184,7 +4195,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get boxPlotBoxWidth() {
         if (this.boxPlotData.isComplete) {
-            return getBoxWidth(this.boxPlotData.result.data.length);
+            return getBoxWidth(
+                this.boxPlotData.result.data.length,
+                this.boxPlotData.result.horizontal ? 400 : 600 // squish boxes more into vertical area
+            );
         } else {
             // irrelevant - nothing should be plotted anyway
             return 10;

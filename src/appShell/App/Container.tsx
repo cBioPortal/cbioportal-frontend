@@ -98,7 +98,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                     />
                 </Helmet>
 
-                <div className="pageTopContainer">
+                <div id="pageTopContainer" className="pageTopContainer">
                     <UserMessager />
 
                     {shouldShowStudyViewWarning() && <StudyAgreement />}
