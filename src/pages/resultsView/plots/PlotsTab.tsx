@@ -730,17 +730,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 this._selectedGeneOption = o;
             },
             get dataType() {
-                if (!self.dataTypeOptions.isComplete) {
+                const dataTypeOptionsPromise = self.dataTypeOptions;
+                if (!dataTypeOptionsPromise.isComplete) {
                     // if there are no options to select a default from, then return the stored value for this variable
                     return this._dataType;
                 }
                 // otherwise, pick the default based on available options
-                const dataTypeOptions = self.dataTypeOptions.result!;
-                if (
-                    !dataTypeOptions.find(o => o.value === this._dataType) &&
-                    dataTypeOptions.length
-                ) {
-                    // return computed default if _dataType is undefined or invalid and if there are options to select a default value from
+                const dataTypeOptions = dataTypeOptionsPromise.result!;
+                if (this._dataType === undefined && dataTypeOptions.length) {
+                    // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (
                         vertical &&
                         !!dataTypeOptions.find(
