@@ -25,7 +25,7 @@ export function createQueryStore(
             query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
 
-        // check if user-created comparison groups should be reset
+        // check if certain parameters should be reset
         if (currentQuery) {
             const importantQueryDetailsChanged =
                 currentQuery.cancer_study_id !== query.cancer_study_id ||
@@ -35,7 +35,21 @@ export function createQueryStore(
                 currentQuery.case_set_id !== query.case_set_id;
 
             if (importantQueryDetailsChanged) {
-                (query as any).comparison_createdGroupsSessionId = undefined;
+                // reset comparison groups
+                (query as Partial<
+                    ResultsViewURLQuery
+                >).comparison_createdGroupsSessionId = undefined;
+
+                // reset plots tab selection, because available data may change
+                (query as Partial<
+                    ResultsViewURLQuery
+                >).plots_horz_selection = undefined;
+                (query as Partial<
+                    ResultsViewURLQuery
+                >).plots_vert_selection = undefined;
+                (query as Partial<
+                    ResultsViewURLQuery
+                >).plots_coloring_selection = undefined;
             }
         }
 

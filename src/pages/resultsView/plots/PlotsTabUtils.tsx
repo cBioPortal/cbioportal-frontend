@@ -3290,3 +3290,35 @@ export function getLimitValues(data: any[]): string[] {
         .uniq()
         .value();
 }
+
+function stringsToOptions(vals: string[]) {
+    return vals.map(v => ({ value: v, label: v }));
+}
+export function getCategoryOptions(data: IAxisData) {
+    if (isStringData(data)) {
+        const categories = data.data.reduce((catMap, d) => {
+            if (_.isArray(d.value)) {
+                for (const v of d.value) {
+                    catMap[v] = true;
+                }
+            } else {
+                catMap[d.value] = true;
+            }
+            return catMap;
+        }, {} as { [category: string]: true });
+        return stringsToOptions(_.sortBy(Object.keys(categories)));
+    } else {
+        return [];
+    }
+}
+
+export function maybeSetLogScale(axisSelection: AxisMenuSelection) {
+    if (axisSelection.dataType === AlterationTypeConstants.MRNA_EXPRESSION) {
+        if (
+            !axisSelection.dataSourceId ||
+            axisSelection.dataSourceId.includes('rna_seq')
+        ) {
+            axisSelection.logScale = true;
+        }
+    }
+}

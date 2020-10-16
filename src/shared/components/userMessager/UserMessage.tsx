@@ -6,12 +6,14 @@ import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
+import { MobxPromise } from 'mobxpromise';
+import { Portal } from 'react-portal';
 // import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IUserMessage {
     dateStart?: number;
     dateEnd: number;
-    content: string;
+    content: string | JSX.Element;
     id: string;
 }
 
@@ -40,14 +42,23 @@ let MESSAGE_DATA: IUserMessage[];
 //     ];
 // }
 
+interface IUserMessagerProps {
+    dataUrl?: string;
+    messages?: IUserMessage[];
+}
+
 @observer
 export default class UserMessager extends React.Component<
-    { dataUrl?: string },
+    IUserMessagerProps,
     {}
 > {
-    messageData = remoteData<IUserMessage[]>(async () => {
-        return Promise.resolve(MESSAGE_DATA);
-    });
+    constructor(props: IUserMessagerProps) {
+        super(props);
+        this.messageData = remoteData<IUserMessage[]>(async () => {
+            return Promise.resolve(props.messages || MESSAGE_DATA);
+        });
+    }
+    private messageData: MobxPromise<IUserMessage[]>;
 
     @observable dismissed = false;
 
@@ -82,17 +93,30 @@ export default class UserMessager extends React.Component<
             this.shownMessage
         ) {
             return (
-                <div className={styles.messager}>
-                    <i
-                        className={classNames(styles.close, 'fa', 'fa-close')}
-                        onClick={this.close}
-                    />
-                    <div
-                        dangerouslySetInnerHTML={{
-                            __html: this.shownMessage!.content,
-                        }}
-                    ></div>
-                </div>
+                <Portal
+                    isOpened={true}
+                    node={document.getElementById('pageTopContainer')}
+                >
+                    <div className={styles.messager}>
+                        <i
+                            className={classNames(
+                                styles.close,
+                                'fa',
+                                'fa-close'
+                            )}
+                            onClick={this.close}
+                        />
+                        {typeof this.shownMessage.content === 'string' ? (
+                            <div
+                                dangerouslySetInnerHTML={{
+                                    __html: this.shownMessage.content,
+                                }}
+                            />
+                        ) : (
+                            <div>{this.shownMessage.content}</div>
+                        )}
+                    </div>
+                </Portal>
             );
         } else {
             return null;

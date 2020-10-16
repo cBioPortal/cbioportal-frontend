@@ -129,26 +129,21 @@ export interface VictoryBoxPlotModel extends BoxPlotModel {
     realMax: number;
 }
 
-export function getBoxWidth(numBoxes: number) {
-    // We need getBoxWidth to satisfy these properties:
-    // [I] getBoxWidth(1) = maxWidth, the width with 1 box
-    // [II] getBoxWidth(33) = minWidth, the width with 33 boxes,
-    // [III] numBoxes * getBoxWidth(numBoxes) should grow monotonically:
-    //      We don't want the total width to get bigger than one screen
-    //      for 15 boxes, before settling back down to one screen for 33.
-    //      It would be better if the total width grew slowly but steadily.
-
-    // One function form that meets requirement [III] is getBoxWidth(n) = A/n + B.
-    //  Notice that n * getBoxWidth(n) = A + Bn, which is monotonic.
-
-    // Plugging in requirements [I] and [II] and solving for A and B,
-    //  we get the values below.
-
+export function getBoxWidth(
+    numBoxes: number,
+    approximatePlotWidth: number = 750
+) {
     const maxWidth = 80; // width with 1 box
     const minWidth = 18; // width with 33 boxes, calibrated to fit all 33 TCGA
     //                      pan-can atlas studies in one screen.
 
-    const A = (33 * (maxWidth - minWidth)) / 32;
-    const B = maxWidth - A;
-    return A / numBoxes + B;
+    // fit all (boxes + padding) at maxWidth if possible, otherwise smush in
+    let boxWidth = Math.min(
+        maxWidth,
+        approximatePlotWidth / (numBoxes + (numBoxes - 1) / 2)
+    );
+    // don't smush too much
+    boxWidth = Math.max(minWidth, boxWidth);
+
+    return boxWidth;
 }
