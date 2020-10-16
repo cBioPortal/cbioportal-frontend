@@ -410,7 +410,7 @@ export default class VAFLineChart extends React.Component<
                 ...this.props.dataStore.selectedMutations
             );
         }
-        const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
+        const mouseOverMutation = this.props.dataStore.mouseOverMutation;
         if (mouseOverMutation) {
             highlightedMutations.push(mouseOverMutation);
         }

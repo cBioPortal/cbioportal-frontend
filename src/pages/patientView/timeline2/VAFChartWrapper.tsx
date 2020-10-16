@@ -321,6 +321,7 @@ export default class VAFChartWrapper extends React.Component<
         const y = this.sampleIdToYPosition[sampleId];
         const color = this.props.caseMetaData.color[sampleId] || '#333333';
         const label = this.props.caseMetaData.label[sampleId] || '-';
+        //TODO Use MultipleSampleMarker
         return (
             <g transform={`translate(${x})`}>
                 <SampleMarker color={color} label={label} y={y} />
@@ -408,12 +409,14 @@ export default class VAFChartWrapper extends React.Component<
                 footerHeight = yPosition[index];
         }
         footerHeight = footerHeight + 20;
-        console.log(footerHeight);
         return _.sum([this.wrapperStore.dataHeight, footerHeight]);
     }
 
     render() {
         if (!this.store || !this.wrapperStore) return null;
+
+        const mouseOverMutation = this.props.dataStore.mouseOverMutation;
+        const selectedMutations = this.props.dataStore.selectedMutations;
 
         const vafPlotTrack = {
             renderHeader: (store: TimelineStore) => (
@@ -424,15 +427,25 @@ export default class VAFChartWrapper extends React.Component<
             ),
             renderTrack: (store: TimelineStore) => (
                 <VAFChart
-                    store={this.wrapperStore}
-                    mutationsStore={this.props.dataStore}
+                    mouseOverMutation={mouseOverMutation}
+                    onMutationMouseOver={m =>
+                        this.props.dataStore.setMouseOverMutation(m)
+                    }
+                    selectedMutations={selectedMutations}
+                    onMutationClick={m =>
+                        this.props.dataStore.toggleSelectedMutation(m)
+                    }
                     sampleEvents={store.sampleEvents}
-                    /** ticks deps */
+                    onlyShowSelectedInVAFChart={
+                        this.wrapperStore.onlyShowSelectedInVAFChart
+                    }
+                    groupingByIsSelected={
+                        this.wrapperStore.groupingByIsSelected
+                    }
+                    xPosition={this.xPosition}
                     yPosition={this.yPosition}
                     lineData={this.lineData}
-                    /** groupByTracks deps */
                     groupColor={this.groupColor}
-                    xPosition={this.xPosition}
                     sampleIcon={this.sampleIcon}
                     height={this.vafChartHeight}
                     width={this.store.pixelWidth}
