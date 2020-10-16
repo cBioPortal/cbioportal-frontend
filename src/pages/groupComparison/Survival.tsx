@@ -332,6 +332,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         marginTop: 15,
                                         minWidth: 475,
                                         maxWidth: 475,
+                                        height: 'fit-content',
+                                        overflowX: 'scroll',
                                     }}
                                 >
                                     {this.survivalPrefixTable.component}
