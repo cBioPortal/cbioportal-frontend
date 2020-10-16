@@ -375,13 +375,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.potentialColoringType ===
                 PotentialColoringType.LimitValGenomicData
         ) {
-            if (colorByMutationType) {
+            if (colorByMutationType && this.mutationDataCanBeShown) {
                 ret[ColoringType.MutationType] = true;
             }
-            if (colorByCopyNumber) {
+            if (colorByCopyNumber && this.cnaDataCanBeShown) {
                 ret[ColoringType.CopyNumber] = true;
             }
-            if (colorByStructuralVariant) {
+            if (colorByStructuralVariant && this.svDataCanBeShown) {
                 ret[ColoringType.StructuralVariant] = true;
             }
         }
@@ -2602,20 +2602,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }`;
     }
 
-    @computed get cnaDataShown() {
-        return !!(
-            this.cnaDataCanBeShown &&
-            ColoringType.CopyNumber in this.coloringTypes
-        );
-    }
-
-    @computed get svDataShown() {
-        return !!(
-            this.svDataCanBeShown &&
-            ColoringType.StructuralVariant in this.coloringTypes
-        );
-    }
-
     readonly cnaPromise = remoteData({
         await: () =>
             this.props.store.annotatedCnaCache.getAll(
@@ -2642,13 +2628,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.mutationDataExists.result &&
             this.potentialColoringType !== PotentialColoringType.None &&
             this.potentialColoringType !== PotentialColoringType.LimitVal
-        );
-    }
-
-    @computed get mutationDataShown() {
-        return !!(
-            this.mutationDataExists.result &&
-            ColoringType.MutationType in this.coloringTypes
         );
     }
 
@@ -2929,7 +2908,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get scatterPlotStrokeWidth() {
-        if (this.cnaDataShown || this.svDataShown) {
+        if (
+            ColoringType.CopyNumber in this.coloringTypes ||
+            ColoringType.StructuralVariant in this.coloringTypes
+        ) {
             return CNA_STROKE_WIDTH;
         } else {
             return 1;
