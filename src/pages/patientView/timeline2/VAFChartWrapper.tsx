@@ -12,7 +12,6 @@ import 'cbioportal-clinical-timeline/dist/styles.css';
 import {
     configureTracks,
     Timeline,
-    TimelineEvent,
     TimelineStore,
 } from 'cbioportal-clinical-timeline';
 import SampleManager, {
@@ -39,7 +38,7 @@ import { VAFChartHeader } from './VAFChartHeader';
 import autobind from 'autobind-decorator';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
-import SampleMarker from './SampleMarker';
+import { MultipleSampleMarker } from './SampleMarker';
 
 export interface ISampleMetaDeta {
     color: { [sampleId: string]: string };
@@ -216,38 +215,12 @@ export default class VAFChartWrapper extends React.Component<
                 const index = parseInt(key);
                 tracks.push({
                     renderHeader: () => this.groupByTrackLabel(index),
-                    renderTrack: () => this.sampleIconsGroupByTrack(sampleIds),
-                    height: () => this.groupIndexToTrackHeight[index],
+                    renderTrack: () => this.sampleIcons(sampleIds),
+                    height: () => 20,
                     labelForExport: this.clinicalValuesForGrouping[index],
                 });
             });
         return tracks;
-    }
-
-    @computed get groupIndexToTrackHeight() {
-        return _.mapValues(this.sampleGroups, (sampleIds: string[]) => {
-            const yPositions = _(sampleIds)
-                .map((i: string) => this.sampleIdToYPosition[i])
-                .uniq()
-                .value();
-            return yPositions.length * 20; // FIXME do lookup height in TimelineLib
-        });
-    }
-
-    @computed get sampleIdToYPosition() {
-        // compute sample y position on the x-axis footer
-        let yStart = -5.5;
-        let yPositions: { [sampleId: string]: number } = {};
-        let xCount: number[] = [];
-        this.store.sampleEvents.map((event: TimelineEvent, i: number) => {
-            const sampleId = event.event!.attributes.find(
-                (att: any) => att.key === 'SAMPLE_ID'
-            );
-            const x = this.xPosition[sampleId.value];
-            xCount[x] = xCount[x] ? xCount[x] + 1 : 1;
-            yPositions[sampleId.value] = yStart + xCount[x] * 15;
-        });
-        return yPositions;
     }
 
     @computed get xPosition() {
@@ -311,22 +284,35 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @autobind
-    sampleIconsGroupByTrack(sampleIds: string[]) {
-        return <g>{sampleIds.map(sampleId => this.sampleIcon(sampleId))}</g>;
-    }
-
-    @autobind
-    sampleIcon(sampleId: string) {
-        const x = this.xPosition[sampleId];
-        const y = this.sampleIdToYPosition[sampleId];
-        const color = this.props.caseMetaData.color[sampleId] || '#333333';
-        const label = this.props.caseMetaData.label[sampleId] || '-';
-        //TODO Use MultipleSampleMarker
-        return (
-            <g transform={`translate(${x})`}>
-                <SampleMarker color={color} label={label} y={y} />
-            </g>
+    sampleIcons(sampleIds: string[]) {
+        const sampleidsByXCoordinate = _.groupBy(
+            sampleIds,
+            sampleId => this.xPosition[sampleId]
         );
+        const sampleIcons = Object.values(sampleidsByXCoordinate).map(
+            groupedSampleIds => {
+                const firstSampleId = groupedSampleIds[0];
+                const x = this.xPosition[firstSampleId];
+                const y = 10;
+
+                const colors = groupedSampleIds.map(
+                    sampleId => this.props.caseMetaData.color[sampleId]
+                ) || ['#333333'];
+                const labels = groupedSampleIds.map(
+                    sampleId => this.props.caseMetaData.label[sampleId]
+                ) || ['-'];
+                return (
+                    <g transform={`translate(${x})`}>
+                        <MultipleSampleMarker
+                            colors={colors}
+                            labels={labels}
+                            y={y}
+                        />
+                    </g>
+                );
+            }
+        );
+        return <g>{sampleIcons}</g>;
     }
 
     @autobind
@@ -402,13 +388,7 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get vafChartHeight() {
-        let footerHeight: number = 0;
-        let yPosition = this.sampleIdToYPosition;
-        for (let index in yPosition) {
-            if (yPosition[index] > footerHeight)
-                footerHeight = yPosition[index];
-        }
-        footerHeight = footerHeight + 20;
+        let footerHeight: number = 20;
         return _.sum([this.wrapperStore.dataHeight, footerHeight]);
     }
 
@@ -446,7 +426,7 @@ export default class VAFChartWrapper extends React.Component<
                     yPosition={this.yPosition}
                     lineData={this.lineData}
                     groupColor={this.groupColor}
-                    sampleIcon={this.sampleIcon}
+                    sampleIcons={this.sampleIcons}
                     height={this.vafChartHeight}
                     width={this.store.pixelWidth}
                 />

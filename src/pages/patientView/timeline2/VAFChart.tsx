@@ -58,7 +58,7 @@ interface IVAFChartProps {
     lineData: IPoint[][];
 
     groupColor: (s: string) => string;
-    sampleIcon: (sampleId: string) => JSX.Element;
+    sampleIcons: (sampleIds: string[]) => JSX.Element;
 
     height: number;
     width: number;
@@ -449,16 +449,17 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @autobind
     sampleIcons() {
+        const sampleIds = this.props.sampleEvents.map(
+            (event: TimelineEvent, i: number) => {
+                const sampleId = event.event!.attributes.find(
+                    (att: any) => att.key === 'SAMPLE_ID'
+                );
+                return sampleId.value;
+            }
+        );
         const svg = (
             <g transform={`translate(0,${this.props.height - 20})`}>
-                {this.props.sampleEvents.map(
-                    (event: TimelineEvent, i: number) => {
-                        const sampleId = event.event!.attributes.find(
-                            (att: any) => att.key === 'SAMPLE_ID'
-                        );
-                        return this.props.sampleIcon(sampleId.value);
-                    }
-                )}
+                {this.props.sampleIcons(sampleIds)}
             </g>
         );
         return svg;
