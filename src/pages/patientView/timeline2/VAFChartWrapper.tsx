@@ -207,10 +207,9 @@ export default class VAFChartWrapper extends React.Component<
         return sampleIdToClinicalValue;
     }
 
-    /** groupByTracks dependencies **/
-    @computed get groupByTracks() {
+    @computed get sampleIconsTracks() {
         const tracks: CustomTrackSpecification[] = [];
-        if (this.sampleGroups[-1] === undefined)
+        if (this.wrapperStore.groupingByIsSelected) {
             _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
                 const index = parseInt(key);
                 tracks.push({
@@ -220,6 +219,14 @@ export default class VAFChartWrapper extends React.Component<
                     labelForExport: this.clinicalValuesForGrouping[index],
                 });
             });
+        } else {
+            tracks.push({
+                renderHeader: () => '',
+                renderTrack: () => this.sampleIcons(this.store.sampleIds),
+                height: () => 20,
+                labelForExport: 'VAF Samples',
+            });
+        }
         return tracks;
     }
 
@@ -342,35 +349,31 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get sampleGroups() {
         let sampleGroups: { [groupIndex: number]: string[] } = {};
-        this.store.sampleEvents.forEach((sample, i) => {
-            sample.event.attributes.forEach((attribute: any, i: number) => {
-                if (attribute.key === 'SAMPLE_ID') {
-                    // check the group value of this sample id
-                    console.info(
-                        'Sample id ' +
-                            attribute.value +
-                            ' is in group ' +
-                            this.sampleIdToClinicalValue[attribute.value]
-                    );
-                    if (
-                        sampleGroups[
-                            this.clinicalValuesForGrouping.indexOf(
-                                this.sampleIdToClinicalValue[attribute.value]
-                            )
-                        ] == undefined
+        this.store.sampleIds.forEach((sampleId, i) => {
+            // check the group value of this sample id
+            console.info(
+                'Sample id ' +
+                    sampleId +
+                    ' is in group ' +
+                    this.sampleIdToClinicalValue[sampleId]
+            );
+            if (
+                sampleGroups[
+                    this.clinicalValuesForGrouping.indexOf(
+                        this.sampleIdToClinicalValue[sampleId]
                     )
-                        sampleGroups[
-                            this.clinicalValuesForGrouping.indexOf(
-                                this.sampleIdToClinicalValue[attribute.value]
-                            )
-                        ] = [];
-                    sampleGroups[
-                        this.clinicalValuesForGrouping.indexOf(
-                            this.sampleIdToClinicalValue[attribute.value]
-                        )
-                    ].push(attribute.value);
-                }
-            });
+                ] == undefined
+            )
+                sampleGroups[
+                    this.clinicalValuesForGrouping.indexOf(
+                        this.sampleIdToClinicalValue[sampleId]
+                    )
+                ] = [];
+            sampleGroups[
+                this.clinicalValuesForGrouping.indexOf(
+                    this.sampleIdToClinicalValue[sampleId]
+                )
+            ].push(sampleId);
         });
         return sampleGroups;
     }
@@ -415,18 +418,13 @@ export default class VAFChartWrapper extends React.Component<
                     onMutationClick={m =>
                         this.props.dataStore.toggleSelectedMutation(m)
                     }
-                    sampleEvents={store.sampleEvents}
                     onlyShowSelectedInVAFChart={
                         this.wrapperStore.onlyShowSelectedInVAFChart
-                    }
-                    groupingByIsSelected={
-                        this.wrapperStore.groupingByIsSelected
                     }
                     xPosition={this.xPosition}
                     yPosition={this.yPosition}
                     lineData={this.lineData}
                     groupColor={this.groupColor}
-                    sampleIcons={this.sampleIcons}
                     height={this.vafChartHeight}
                     width={this.store.pixelWidth}
                 />
@@ -436,7 +434,7 @@ export default class VAFChartWrapper extends React.Component<
             labelForExport: 'VAF',
         } as CustomTrackSpecification;
 
-        let customTracks = [vafPlotTrack].concat(this.groupByTracks);
+        let customTracks = [vafPlotTrack].concat(this.sampleIconsTracks);
 
         return (
             <>

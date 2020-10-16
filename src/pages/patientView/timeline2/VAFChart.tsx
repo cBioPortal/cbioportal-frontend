@@ -2,7 +2,6 @@ import React from 'react';
 import { Observer, observer } from 'mobx-react';
 import { computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
-import { TimelineEvent } from 'cbioportal-clinical-timeline';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { IPoint } from './VAFChartUtils';
 import _ from 'lodash';
@@ -48,17 +47,13 @@ interface IVAFChartProps {
     selectedMutations: Readonly<Mutation[]>;
     onMutationClick: (mutation: Mutation) => void;
 
-    sampleEvents: TimelineEvent[];
-
     onlyShowSelectedInVAFChart: boolean | undefined;
-    groupingByIsSelected: boolean;
 
     xPosition: { [sampleId: string]: number };
     yPosition: { [value: number]: number };
     lineData: IPoint[][];
 
     groupColor: (s: string) => string;
-    sampleIcons: (sampleIds: string[]) => JSX.Element;
 
     height: number;
     width: number;
@@ -440,28 +435,9 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                     });
                 })}
 
-                {!this.props.groupingByIsSelected && this.sampleIcons()}
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>
             </svg>
         );
-    }
-
-    @autobind
-    sampleIcons() {
-        const sampleIds = this.props.sampleEvents.map(
-            (event: TimelineEvent, i: number) => {
-                const sampleId = event.event!.attributes.find(
-                    (att: any) => att.key === 'SAMPLE_ID'
-                );
-                return sampleId.value;
-            }
-        );
-        const svg = (
-            <g transform={`translate(0,${this.props.height - 20})`}>
-                {this.props.sampleIcons(sampleIds)}
-            </g>
-        );
-        return svg;
     }
 }

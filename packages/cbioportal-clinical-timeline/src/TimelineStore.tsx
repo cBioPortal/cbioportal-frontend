@@ -66,6 +66,19 @@ export class TimelineStore {
         );
     }
 
+    @computed get sampleIds() {
+        const sampleIds: string[] = [];
+        this.sampleEvents.forEach((sample, i) => {
+            sample.event.attributes.forEach((attribute: any, i: number) => {
+                if (attribute.key === 'SAMPLE_ID') {
+                    sampleIds.push(attribute.value);
+                }
+            });
+        });
+
+        return sampleIds;
+    }
+
     @computed get expandedTrims() {
         return this._expandedTrims;
     }
