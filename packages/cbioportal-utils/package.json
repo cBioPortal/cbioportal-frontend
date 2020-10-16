@@ -35,8 +35,7 @@
     "genome-nexus-ts-api-client": "^1.1.7",
     "lodash": "^4.17.11",
     "oncokb-ts-api-client": "^1.1.2",
-    "superagent": "5.2.2",
-    "oncokb-ts-api-client": "^1.1.2",
+    "superagent": "5.2.2"
   },
   "devDependencies": {
     "@testing-library/react": "^9.3.2",

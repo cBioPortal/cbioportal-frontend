@@ -133,10 +133,8 @@ import {
     filterAndAnnotateMutations,
     getOncoKbOncogenic,
 } from '../../resultsView/ResultsViewPageStoreUtils';
-import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
 import { AppStore } from 'AppStore';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
-import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
 import { checkNonProfiledGenesExist } from '../PatientViewPageUtils';
 import autobind from 'autobind-decorator';

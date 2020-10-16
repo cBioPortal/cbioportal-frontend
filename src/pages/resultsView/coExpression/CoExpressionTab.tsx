@@ -335,7 +335,7 @@ export default class CoExpressionTab extends React.Component<
                         AlterationTypeConstants.GENESET_SCORE
                     ) {
                         const genesetIds = _.chain(data)
-                            .map(datum => datum.geneticEntityId)
+                            .map((datum: CoExpression) => datum.geneticEntityId)
                             .uniq()
                             .value();
                         const genesets = await internalClient.fetchGenesetsUsingPOST(

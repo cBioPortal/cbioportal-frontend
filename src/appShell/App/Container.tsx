@@ -1,33 +1,25 @@
-import * as React from 'react';
-
-import 'cbioportal-frontend-commons/dist/styles.css';
-import '../../globalStyles/prefixed-global.scss';
-
-import PortalHeader from './PortalHeader';
-import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
-import { observer } from 'mobx-react';
-
-import AppConfig from 'appConfig';
-import Helmet from 'react-helmet';
-import { If, Else, Then } from 'react-if';
-import UserMessager from 'shared/components/userMessager/UserMessage';
-
-import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
-import { ServerConfigHelpers } from 'config/config';
-import { observable } from 'mobx';
-import StudyViewWarning, {
-import {
-    shouldShowStudyViewWarning,
-} from 'pages/studyView/studyPageHeader/studyViewWarning/StudyViewWarning';
-import { formatErrorLog, formatErrorMessages } from 'shared/lib/errorFormatter';
-import { ErrorAlert } from 'shared/components/errorAlert/ErrorAlert';
-import { SiteError } from 'cbioportal-utils';
-    StudyAgreement,
-} from 'appShell/App/usageAgreements/StudyAgreement';
 import {
     GenieAgreement,
     shouldShowGenieWarning,
 } from 'appShell/App/usageAgreements/GenieAgreement';
+import {
+    shouldShowStudyViewWarning,
+    StudyAgreement,
+} from 'appShell/App/usageAgreements/StudyAgreement';
+import UserMessager from 'shared/components/userMessager/UserMessage';
+import AppConfig from 'appConfig';
+import { formatErrorLog } from 'shared/lib/errorFormatter';
+import { ErrorAlert } from 'shared/components/errorAlert/ErrorAlert';
+import { SiteError } from 'cbioportal-utils';
+import PortalHeader from 'appShell/App/PortalHeader';
+import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
+import React from 'react';
+import Helmet from 'react-helmet';
+import { If, Then, Else } from 'react-if';
+import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
+import { ServerConfigHelpers } from 'config/config';
 
 interface IContainerProps {
     location: Location;
