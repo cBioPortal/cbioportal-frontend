@@ -26,6 +26,8 @@ import {
     survivalPlotTooltipxLabelWithEvent,
     generateSurvivalPlotTitleFromDisplayName,
     getStatusCasesHeaderText,
+    getMedian,
+    getEstimates,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -330,6 +332,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                         marginTop: 15,
                                         minWidth: 475,
                                         maxWidth: 475,
+                                        height: 'fit-content',
+                                        overflowX: 'scroll',
                                     }}
                                 >
                                     {this.survivalPrefixTable.component}
@@ -363,6 +367,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             const patientSurvivals = this.props.store.patientSurvivals.result!;
             const analysisGroups = this.analysisGroupsComputations.result!
                 .analysisGroups;
+            const uidToAnalysisGroup = _.keyBy(analysisGroups, g => g.value);
             const patientToAnalysisGroups = this.analysisGroupsComputations
                 .result!.patientToAnalysisGroups;
             const pValues = this.pValuesByPrefix.result!;
@@ -379,30 +384,54 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                 string
                             >,
                             (displayText, prefix) => {
-                                const numPatientsPerGroup = analysisGroups.reduce(
-                                    (countsMap, group) => {
-                                        countsMap[group.name] = 0;
-                                        return countsMap;
-                                    },
-                                    {} as { [group: string]: number }
+                                const patientSurvivalsPerGroup = _.mapValues(
+                                    _.keyBy(
+                                        analysisGroups,
+                                        group => group.name
+                                    ),
+                                    () => [] as PatientSurvival[] // initialize empty arrays
                                 );
 
                                 for (const s of patientSurvivals[prefix]) {
-                                    // count the number of patients in each active group
-                                    const groups =
+                                    // collect patient survivals by which groups the patient is in
+                                    const groupUids =
                                         patientToAnalysisGroups[
                                             s.uniquePatientKey
                                         ] || [];
-                                    for (const groupName of groups) {
-                                        numPatientsPerGroup[groupName] += 1;
+                                    for (const uid of groupUids) {
+                                        patientSurvivalsPerGroup[
+                                            uidToAnalysisGroup[uid].name
+                                        ].push(s);
                                     }
                                 }
                                 return {
                                     prefix,
                                     displayText,
-                                    numPatients:
-                                        patientSurvivals[prefix].length,
-                                    numPatientsPerGroup,
+                                    numPatients: _.sumBy(
+                                        patientSurvivals[prefix],
+                                        s =>
+                                            s.uniquePatientKey in
+                                            patientToAnalysisGroups
+                                                ? 1
+                                                : 0
+                                    ),
+                                    numPatientsPerGroup: _.mapValues(
+                                        patientSurvivalsPerGroup,
+                                        survivals => survivals.length
+                                    ),
+                                    medianPerGroup: _.mapValues(
+                                        patientSurvivalsPerGroup,
+                                        survivals => {
+                                            const sorted = _.sortBy(
+                                                survivals,
+                                                s => s.months
+                                            );
+                                            return getMedian(
+                                                sorted,
+                                                getEstimates(sorted)
+                                            );
+                                        }
+                                    ),
                                     pValue: pValues[prefix],
                                     qValue: qValues[prefix],
                                 };
