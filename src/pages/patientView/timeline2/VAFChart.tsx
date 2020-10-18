@@ -23,6 +23,10 @@ import {
 import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import { GROUP_BY_NONE } from './VAFChartControls';
 
+export interface IColorPoint extends IPoint {
+    color: string;
+}
+
 type Datum = {
     mutationStatus: MutationStatus | null;
     sampleId: string;
@@ -49,11 +53,7 @@ interface IVAFChartProps {
 
     onlyShowSelectedInVAFChart: boolean | undefined;
 
-    xPosition: { [sampleId: string]: number };
-    yPosition: { [value: number]: number };
-    lineData: IPoint[][];
-
-    groupColor: (s: string) => string;
+    lineData: IColorPoint[][];
 
     height: number;
     width: number;
@@ -199,26 +199,9 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return 20;
     }
 
-    @computed get lineData() {
-        let scaledData: IPoint[][] = [];
-        this.props.lineData.map((dataPoints: IPoint[], index: number) => {
-            scaledData[index] = [];
-            dataPoints.map((dataPoint: IPoint, i: number) => {
-                scaledData[index].push({
-                    x: this.props.xPosition[dataPoint.sampleId],
-                    y: this.props.yPosition[dataPoint.y],
-                    sampleId: dataPoint.sampleId,
-                    mutation: dataPoint.mutation,
-                    mutationStatus: dataPoint.mutationStatus,
-                });
-            });
-        });
-        return scaledData;
-    }
-
     @computed get mutationToDataPoints() {
-        const map = new ComplexKeyMap<IPoint[]>();
-        for (const lineData of this.lineData) {
+        const map = new ComplexKeyMap<IColorPoint[]>();
+        for (const lineData of this.props.lineData) {
             map.set(
                 {
                     hugoGeneSymbol: lineData[0].mutation.gene.hugoGeneSymbol,
@@ -369,39 +352,57 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     render() {
         return (
             <svg width={this.props.width} height={this.props.height}>
-                {this.props.lineData.map((data: IPoint[], index: number) => {
-                    return data.map((d: IPoint, i: number) => {
-                        let x1 = this.props.xPosition[d.sampleId],
-                            x2;
-                        let y1 = this.props.yPosition[d.y],
-                            y2;
+                {this.props.lineData.map(
+                    (data: IColorPoint[], index: number) => {
+                        return data.map((d: IColorPoint, i: number) => {
+                            let x1 = d.x,
+                                x2;
+                            let y1 = d.y,
+                                y2;
 
-                        const nextPoint: IPoint = data[i + 1];
-                        if (nextPoint) {
-                            x2 = this.props.xPosition[nextPoint.sampleId];
-                            y2 = this.props.yPosition[nextPoint.y];
-                        }
+                            const nextPoint: IColorPoint = data[i + 1];
+                            if (nextPoint) {
+                                x2 = nextPoint.x;
+                                y2 = nextPoint.y;
+                            }
 
-                        let tooltipDatum: {
-                            mutationStatus: MutationStatus;
-                            sampleId: string;
-                            vaf: number;
-                        } = {
-                            mutationStatus: d.mutationStatus,
-                            sampleId: d.sampleId,
-                            vaf: d.y,
-                        };
+                            let tooltipDatum: {
+                                mutationStatus: MutationStatus;
+                                sampleId: string;
+                                vaf: number;
+                            } = {
+                                mutationStatus: d.mutationStatus,
+                                sampleId: d.sampleId,
+                                vaf: d.y,
+                            };
 
-                        const color = this.props.groupColor(d.sampleId);
+                            const color = d.color;
 
-                        return (
-                            <g>
-                                {x2 && y2 && (
-                                    <VAFPointConnector
-                                        x1={x1}
-                                        y1={y1}
-                                        x2={x2}
-                                        y2={y2}
+                            return (
+                                <g>
+                                    {x2 && y2 && (
+                                        <VAFPointConnector
+                                            x1={x1}
+                                            y1={y1}
+                                            x2={x2}
+                                            y2={y2}
+                                            color={color}
+                                            datum={tooltipDatum}
+                                            mutation={d.mutation}
+                                            onMutationClick={
+                                                this.props.onMutationClick
+                                            }
+                                            setTooltipModel={model => {
+                                                this.tooltipModel = model;
+                                                this.props.onMutationMouseOver(
+                                                    model.mutation
+                                                );
+                                            }}
+                                        />
+                                    )}
+                                    <VAFPoint
+                                        x={x1}
+                                        y={y1}
                                         color={color}
                                         datum={tooltipDatum}
                                         mutation={d.mutation}
@@ -415,25 +416,11 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                             );
                                         }}
                                     />
-                                )}
-                                <VAFPoint
-                                    x={x1}
-                                    y={y1}
-                                    color={color}
-                                    datum={tooltipDatum}
-                                    mutation={d.mutation}
-                                    onMutationClick={this.props.onMutationClick}
-                                    setTooltipModel={model => {
-                                        this.tooltipModel = model;
-                                        this.props.onMutationMouseOver(
-                                            model.mutation
-                                        );
-                                    }}
-                                />
-                            </g>
-                        );
-                    });
-                })}
+                                </g>
+                            );
+                        });
+                    }
+                )}
 
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>

@@ -4,7 +4,7 @@ import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils
 import { ClinicalEvent, Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import { VAFChartControls } from './VAFChartControls';
-import VAFChart from 'pages/patientView/timeline2/VAFChart';
+import VAFChart, { IColorPoint } from 'pages/patientView/timeline2/VAFChart';
 import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 import _ from 'lodash';
 import 'cbioportal-clinical-timeline/dist/styles.css';
@@ -178,6 +178,24 @@ export default class VAFChartWrapper extends React.Component<
         ).lineData;
     }
 
+    @computed get scaledAndColoredLineData(): IColorPoint[][] {
+        let scaledData: IColorPoint[][] = [];
+        this.lineData.map((dataPoints: IPoint[], index: number) => {
+            scaledData[index] = [];
+            dataPoints.map((dataPoint: IPoint, i: number) => {
+                scaledData[index].push({
+                    x: this.xPosition[dataPoint.sampleId],
+                    y: this.yPosition[dataPoint.y],
+                    sampleId: dataPoint.sampleId,
+                    mutation: dataPoint.mutation,
+                    mutationStatus: dataPoint.mutationStatus,
+                    color: this.groupColor(dataPoint.sampleId),
+                });
+            });
+        });
+        return scaledData;
+    }
+
     @computed get minYValue() {
         return _(this.lineData)
             .flatten()
@@ -261,13 +279,11 @@ export default class VAFChartWrapper extends React.Component<
         );
     }
 
-    @computed get groupColor() {
-        return (sampleId: string) => {
-            return this.wrapperStore.groupingByIsSelected &&
-                this.numGroupByGroups > 1
-                ? this.groupColorBySampleId(sampleId)
-                : 'rgb(0,0,0)';
-        };
+    groupColor(sampleId: string) {
+        return this.wrapperStore.groupingByIsSelected &&
+            this.numGroupByGroups > 1
+            ? this.groupColorBySampleId(sampleId)
+            : 'rgb(0,0,0)';
     }
 
     @autobind
@@ -421,10 +437,7 @@ export default class VAFChartWrapper extends React.Component<
                     onlyShowSelectedInVAFChart={
                         this.wrapperStore.onlyShowSelectedInVAFChart
                     }
-                    xPosition={this.xPosition}
-                    yPosition={this.yPosition}
-                    lineData={this.lineData}
-                    groupColor={this.groupColor}
+                    lineData={this.scaledAndColoredLineData}
                     height={this.vafChartHeight}
                     width={this.store.pixelWidth}
                 />
