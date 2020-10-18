@@ -36,7 +36,10 @@ import {
 } from './VAFChartUtils';
 import { VAFChartHeader } from './VAFChartHeader';
 import autobind from 'autobind-decorator';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    EllipsisTextTooltip,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from 'shared/components/plots/PlotUtils';
 import { MultipleSampleMarker } from './SampleMarker';
 
@@ -341,9 +344,15 @@ export default class VAFChartWrapper extends React.Component<
     @autobind
     groupByTrackLabel(groupIndex: number) {
         return (
-            <text style={{ color: this.groupColorByGroupIndex(groupIndex) }}>
-                {this.clinicalValuesForGrouping[groupIndex]}
-            </text>
+            <EllipsisTextTooltip
+                text={this.clinicalValuesForGrouping[groupIndex]}
+                style={{
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    color: this.groupColorByGroupIndex(groupIndex),
+                }}
+            />
         );
     }
 
