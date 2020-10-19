@@ -672,20 +672,16 @@ describe('submit genes to results view query', () => {
         waitForOncoprint(20000);
 
         // only mrna profile is there
-        const query = browser.execute(function() {
-            return urlWrapper.query;
-        }).value;
+        const profileFilter = (
+            browser.execute(function() {
+                return urlWrapper.query;
+            }).value.profileFilter || ''
+        ).split(',');
+        assert.equal(profileFilter.includes('mutations'), false);
+        assert.equal(profileFilter.includes('gistic'), false);
         assert.equal(
-            query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            undefined
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            undefined
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-            'acc_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores'
+            profileFilter.includes('rna_seq_v2_mrna_median_Zscores'),
+            true
         );
     });
 });
