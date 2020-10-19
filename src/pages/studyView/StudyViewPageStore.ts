@@ -37,9 +37,11 @@ import {
     GenomicDataBin,
     GenomicDataBinFilter,
     GenomicDataFilter,
+    MolecularDataMultipleStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
     MutationMultipleStudyFilter,
+    NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
@@ -194,7 +196,16 @@ import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { REQUEST_ARG_ENUM } from 'shared/constants';
-import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    createAlteredGeneComparisonSession,
+    doesChartHaveComparisonGroupsLimit,
+    getCnaData,
+    getMutationData,
+} from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    CNA_AMP_VALUE,
+    CNA_HOMDEL_VALUE,
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export type ChartUserSetting = {
     id: string;
@@ -874,6 +885,53 @@ export class StudyViewPageStore {
         });
     }
 
+    private createCnaGeneComparisonSession(
+        chartMeta: ChartMeta,
+        hugoGeneSymbols: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // Get mutations among currently selected samples
+        const promises: any[] = [this.selectedSamples, this.cnaProfiles];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[],
+                    cnaProfiles: MolecularProfile[]
+                ) => {
+                    const cnaData = await getCnaData(
+                        selectedSamples,
+                        cnaProfiles,
+                        hugoGeneSymbols
+                    );
+                    const cnaByGeneAndAlteration = _.groupBy(
+                        cnaData.filter(
+                            d =>
+                                d.value === CNA_AMP_VALUE ||
+                                d.value === CNA_HOMDEL_VALUE
+                        ),
+                        (d: NumericGeneMolecularData) =>
+                            `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
+                                d.value
+                            )}`
+                    );
+
+                    return resolve(
+                        await createAlteredGeneComparisonSession(
+                            chartMeta,
+                            this.studyIds,
+                            cnaByGeneAndAlteration,
+                            statusCallback
+                        )
+                    );
+                }
+            );
+        });
+    }
+
     private createMutatedGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
@@ -891,85 +949,25 @@ export class StudyViewPageStore {
                     selectedSamples: Sample[],
                     mutationProfiles: MolecularProfile[]
                 ) => {
-                    const studyToMutationProfile = _.keyBy(
+                    const mutationData = await getMutationData(
+                        selectedSamples,
                         mutationProfiles,
-                        p => p.studyId
+                        hugoGeneSymbols
                     );
-                    const sampleMolecularIdentifiers = selectedSamples.reduce(
-                        (array, sample) => {
-                            if (sample.studyId in studyToMutationProfile) {
-                                array.push({
-                                    sampleId: sample.sampleId,
-                                    molecularProfileId:
-                                        studyToMutationProfile[sample.studyId]
-                                            .molecularProfileId,
-                                });
-                            }
-                            return array;
-                        },
-                        [] as SampleMolecularIdentifier[]
-                    );
-
-                    const genes = await client.fetchGenesUsingPOST({
-                        geneIdType: 'HUGO_GENE_SYMBOL',
-                        geneIds: hugoGeneSymbols,
-                    });
-
-                    const mutationMultipleStudyFilter = {
-                        entrezGeneIds: genes.map(g => g.entrezGeneId),
-                        sampleMolecularIdentifiers,
-                    } as MutationMultipleStudyFilter;
 
                     const mutationsByGene = _.groupBy(
-                        await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
-                            {
-                                projection:
-                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                                mutationMultipleStudyFilter,
-                            }
-                        ),
+                        mutationData,
                         m => m.gene.hugoGeneSymbol
                     );
 
-                    const sampleMap = _.keyBy(
-                        selectedSamples,
-                        s => s.uniqueSampleKey
+                    return resolve(
+                        await createAlteredGeneComparisonSession(
+                            chartMeta,
+                            this.studyIds,
+                            mutationsByGene,
+                            statusCallback
+                        )
                     );
-                    const mutatedSampleKeysByGene = _.mapValues(
-                        mutationsByGene,
-                        mutations => {
-                            return _.uniq(
-                                mutations.map(m => m.uniqueSampleKey)
-                            );
-                        }
-                    );
-                    const groups = _.map(
-                        mutatedSampleKeysByGene,
-                        (sampleKeys, gene) => {
-                            const sampleIdentifiers = sampleKeys.map(key => {
-                                const sample = sampleMap[key];
-                                return {
-                                    sampleId: sample.sampleId,
-                                    studyId: sample.studyId,
-                                };
-                            });
-                            return getGroupParameters(
-                                gene,
-                                sampleIdentifiers,
-                                this.studyIds
-                            );
-                        }
-                    );
-
-                    statusCallback(LoadingPhase.CREATING_SESSION);
-
-                    // create session and get id
-                    const { id } = await comparisonClient.addComparisonSession({
-                        groups,
-                        origin: this.studyIds,
-                        clinicalAttributeName: chartMeta.displayName,
-                    });
-                    return resolve(id);
                 }
             );
         });
@@ -1132,7 +1130,7 @@ export class StudyViewPageStore {
             categorizationType?: NumericalGroupComparisonType;
             // for string attribute
             clinicalAttributeValues?: ClinicalDataCountSummary[];
-            // for mutated genes table
+            // for altered genes tables
             hugoGeneSymbols?: string[];
             // for treatments tables
             treatmentUniqueKeys?: string[];
@@ -1199,6 +1197,13 @@ export class StudyViewPageStore {
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 sessionId = await this.createMutatedGeneComparisonSession(
+                    chartMeta,
+                    params.hugoGeneSymbols!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.CNA_GENES_TABLE:
+                sessionId = await this.createCnaGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
                     statusCallback

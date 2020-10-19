@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
-import FixedHeaderTable from '../FixedHeaderTable';
+import FixedHeaderTable, { IFixedHeaderTableProps } from '../FixedHeaderTable';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
@@ -26,6 +26,7 @@ import {
     filterTreatmentCell,
 } from './treatmentsTableUtil';
 import { TreatmentsTable } from './AbstractTreatmentsTable';
+import { MultiSelectionTableRow } from 'pages/studyView/table/MultiSelectionTable';
 
 export enum PatientTreatmentsTableColumnKey {
     TREATMENT = 'Treatment',
@@ -45,6 +46,9 @@ export type PatientTreatmentsTableProps = {
     filters: string[][];
     onSubmitSelection: (value: string[][]) => void;
     onChangeSelectedRows: (rowsKeys: string[]) => void;
+    extraButtons?: IFixedHeaderTableProps<
+        MultiSelectionTableRow
+    >['extraButtons'];
     selectedRowsKeys: string[];
     selectedTreatments: string[];
     defaultSortBy: PatientTreatmentsTableColumnKey;
@@ -252,6 +256,7 @@ export class PatientTreatmentsTable extends TreatmentsTable<
                         afterSelectingRows={this.afterSelectingRows}
                         defaultSelectionOperator={this.selectionType}
                         toggleSelectionOperator={this.toggleSelectionOperator}
+                        extraButtons={this.props.extraButtons}
                         sortBy={this.sortBy}
                         sortDirection={this.sortDirection}
                         afterSorting={this.afterSorting}
