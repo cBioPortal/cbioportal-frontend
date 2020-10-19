@@ -5,13 +5,15 @@ import { getDefaultCancerCellFractionColumnDefinition } from './CancerCellFracti
 import CancerCellFractionElement from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
 import SampleManager from 'pages/patientView/SampleManager';
 import { initMutation } from 'test/MutationMockUtils';
+import { Mutation } from 'cbioportal-ts-api-client';
 
 describe('CancerCellFractionColumnFormatter', () => {
     function createMutationWithoutASCN() {
         let mutationWithoutASCN = initMutation({
             sampleId: 'S003',
         });
-        delete mutationWithoutASCN.alleleSpecificCopyNumber;
+        delete (mutationWithoutASCN as Partial<Mutation>)
+            .alleleSpecificCopyNumber;
         return mutationWithoutASCN;
     }
 
@@ -19,7 +21,9 @@ describe('CancerCellFractionColumnFormatter', () => {
         let mutationWithoutCCF = initMutation({
             sampleId: 'S002',
         });
-        delete mutationWithoutCCF.alleleSpecificCopyNumber.ccfExpectedCopies;
+        delete (mutationWithoutCCF.alleleSpecificCopyNumber as Partial<
+            Mutation['alleleSpecificCopyNumber']
+        >).ccfExpectedCopies;
         return mutationWithoutCCF;
     }
 

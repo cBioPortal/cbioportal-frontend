@@ -59,7 +59,7 @@ export class ThumbnailExpandVAFPlot extends React.Component<
                 overlay={<VAFPlot {...expandedProps} />}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
-                mouseLeaveDelay={isWebdriver ? 2 : 0.05}
+                mouseLeaveDelay={isWebdriver() ? 2 : 0.05}
             >
                 <div className={this.props.cssClass || ''}>
                     <VAFPlot {...thumbnailProps} />
