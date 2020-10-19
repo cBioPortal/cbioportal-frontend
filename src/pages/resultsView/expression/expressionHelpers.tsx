@@ -221,7 +221,7 @@ export function expressionTooltip(
     let cna = null;
 
     if (d.mutations.length > 0) {
-        mutations = tooltipMutationsSection(d.mutations);
+        mutations = tooltipMutationsSection(d);
     }
 
     const nonDiploidCna = d.copyNumberAlterations.filter(x => x.value !== 0);

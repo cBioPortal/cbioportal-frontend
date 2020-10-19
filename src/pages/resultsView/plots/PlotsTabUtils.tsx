@@ -832,11 +832,13 @@ function scatterPlotCnaAndSvLegendData(
 
             const ret = d.dispCna ? d.dispCna.value : null;
             const isUnprofiledCna =
-                ColoringType.CopyNumber in coloringTypes &&
-                !isPointProfiledForCna(d);
+                ColoringType.CopyNumber in coloringTypes
+                    ? !isPointProfiledForCna(d)
+                    : true;
             const isUnprofiledSv =
-                ColoringType.StructuralVariant in coloringTypes &&
-                !isPointProfiledForSv(d);
+                ColoringType.StructuralVariant in coloringTypes
+                    ? !isPointProfiledForSv(d)
+                    : true;
             if (isUnprofiledCna && isUnprofiledSv) {
                 showNotProfiledElement = true;
             }
@@ -1925,10 +1927,13 @@ function getCnaAndSvAppearance(
         ColoringType.CopyNumber in coloringTypes && doesPointHaveCnaData(d);
 
     const isUnprofiledCna =
-        ColoringType.CopyNumber in coloringTypes && !isPointProfiledForCna(d);
+        ColoringType.CopyNumber in coloringTypes
+            ? !isPointProfiledForCna(d)
+            : true;
     const isUnprofiledSv =
-        ColoringType.StructuralVariant in coloringTypes &&
-        !isPointProfiledForSv(d);
+        ColoringType.StructuralVariant in coloringTypes
+            ? !isPointProfiledForSv(d)
+            : true;
 
     if (isUnprofiledCna && isUnprofiledSv) {
         return notProfiledCnaAndSvAppearance;
@@ -2107,7 +2112,13 @@ function mutationsProteinChanges(
     );
 }
 
-export function tooltipMutationsSection(mutations: AnnotatedMutation[]) {
+export function tooltipMutationsSection<D extends IPlotSampleData>(datum: D) {
+    if (!isPointProfiledForMutations(datum)) {
+        return <span>Not profiled for mutations.</span>;
+    } else if (datum.mutations.length === 0) {
+        return null;
+    }
+    const mutations = datum.mutations;
     const oncoKbIcon = (mutation: AnnotatedMutation) => (
         <img
             src={require('../../../rootImages/oncokb-oncogenic-1.svg')}
@@ -2289,10 +2300,7 @@ function generalScatterPlotTooltip<D extends IPlotSampleData>(
     vertKeyThresholdType: keyof D,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
-    let mutationsSection: any = null;
-    if (d.mutations.length > 0) {
-        mutationsSection = tooltipMutationsSection(d.mutations);
-    }
+    const mutationsSection = tooltipMutationsSection(d);
     const cnaSection = tooltipCnaSection(d);
     const svSection = tooltipSvSection(d);
 
@@ -2363,10 +2371,7 @@ function generalWaterfallPlotTooltip<D extends IWaterfallPlotData>(
     thresholdTypeKey?: keyof D,
     coloringClinicalAttribute?: ClinicalAttribute
 ) {
-    let mutationsSection: any = null;
-    if (d.mutations.length > 0) {
-        mutationsSection = tooltipMutationsSection(d.mutations);
-    }
+    const mutationsSection = tooltipMutationsSection(d);
     const cnaSection = tooltipCnaSection(d);
     const svSection = tooltipSvSection(d);
     let clinicalDataSection: any = null;

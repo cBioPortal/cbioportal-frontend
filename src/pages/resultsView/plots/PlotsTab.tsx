@@ -4648,7 +4648,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontal={horizontal}
                                     fill={this.waterfallPlotColor}
                                     fillOpacity={1}
-                                    stroke={this.waterfallPlotColor}
+                                    stroke={this.scatterPlotStroke}
                                     strokeOpacity={1}
                                     strokeWidth={this.scatterPlotStrokeWidth}
                                     symbol={this.scatterPlotSymbol}
@@ -4917,7 +4917,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                             'ViewStructuralVariant',
                                                     }}
                                                 >
-                                                    Structural Variant
+                                                    Structural Variant{`\u00B9`}
                                                 </LabeledCheckbox>
                                             )}
                                         {this.coloringByGene &&
