@@ -677,16 +677,16 @@ describe('PlotsTabUtils', () => {
     });
 
     describe('makeAxisLogScaleFunction', () => {
-        it('should return log2-transformation function for non treatment data', () => {
+        it('should return log2(val+1)-transformation function for non treatment data', () => {
             const axisMenuSelection = ({
                 dataType: AlterationTypeConstants.MRNA_EXPRESSION,
                 logScale: true,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
-            assert.equal(funcs!.fLogScale(2), 1);
-            assert.equal(funcs!.fInvLogScale(1), 2);
-            assert.equal(funcs!.fLogScale(8), 3);
-            assert.equal(funcs!.fInvLogScale(3), 8);
+            assert.equal(funcs!.fLogScale(2), Math.log2(3));
+            assert.equal(funcs!.fInvLogScale(1), 1);
+            assert.equal(funcs!.fLogScale(8), Math.log2(9));
+            assert.equal(funcs!.fInvLogScale(3), 7);
         });
 
         it('should return log10-transformation function for treatment data', () => {
