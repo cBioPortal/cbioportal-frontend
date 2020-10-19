@@ -246,10 +246,7 @@ export default class GeneSymbolValidatorMessage extends React.Component<
 
         return (
             <div id="geneBoxValidationStatus">
-                <GeneSymbolValidatorMessageChild
-                    replaceGene={this.props.replaceGene}
-                    {...this.props}
-                />
+                <GeneSymbolValidatorMessageChild {...this.props} />
             </div>
         );
     }

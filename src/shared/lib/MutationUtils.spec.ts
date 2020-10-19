@@ -761,11 +761,14 @@ describe('MutationUtils', () => {
         const mutationWithoutASCNProperty = initMutation({
             sampleId: 'P1_sample1',
         });
-        delete mutationWithoutASCNProperty.alleleSpecificCopyNumber.ascnMethod;
+        delete (mutationWithoutASCNProperty.alleleSpecificCopyNumber as Partial<
+            Mutation['alleleSpecificCopyNumber']
+        >).ascnMethod;
         const mutationWithoutASCN = initMutation({
             sampleId: 'P1_sample1',
         });
-        delete mutationWithoutASCN.alleleSpecificCopyNumber;
+        delete (mutationWithoutASCN as Partial<Mutation>)
+            .alleleSpecificCopyNumber;
 
         it('checks if mutation has allele specific copy number and specified sub-property', () => {
             const hasASCNMethod = hasASCNProperty(

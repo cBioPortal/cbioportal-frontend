@@ -7,7 +7,10 @@ import {
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    AnnotatedExtendedAlteration,
+} from '../../../resultsView/ResultsViewPageStore';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     fillGeneticTrackDatum,
@@ -707,8 +710,10 @@ export function annotateGeneticTrackData(
             const newObj = _.clone(object);
             newObj.data = newObj.data.filter(d => {
                 // clear previous annotations
-                delete d.oncoKbOncogenic;
-                delete d.putativeDriver;
+                delete (d as Partial<OncoprinterGeneticTrackDatum_Data>)
+                    .oncoKbOncogenic;
+                delete (d as Partial<OncoprinterGeneticTrackDatum_Data>)
+                    .putativeDriver;
                 // annotate and filter out if necessary
                 switch (d.molecularProfileAlterationType) {
                     case AlterationTypeConstants.COPY_NUMBER_ALTERATION:

@@ -611,7 +611,7 @@ export function getAlterationEnrichmentColumns(
         enrichedGroupColum.tooltip = (
             <table>
                 <tr>
-                    <td>Log ratio > 0</td>
+                    <td>Log ratio {'>'} 0</td>
                     <td>: Enriched in {group1.name}</td>
                 </tr>
                 <tr>
@@ -728,7 +728,7 @@ export function getEnrichmentColumns(
         enrichedGroupColum.tooltip = (
             <table>
                 <tr>
-                    <td>Log ratio > 0</td>
+                    <td>Log ratio {'>'} 0</td>
                     <td>: Enriched in {group1.name}</td>
                 </tr>
                 <tr>
@@ -877,7 +877,7 @@ export function getGenericAssayEnrichmentColumns(
         enrichedGroupColum.tooltip = (
             <table>
                 <tr>
-                    <td>Log ratio > 0</td>
+                    <td>Log ratio {'>'} 0</td>
                     <td>: Enriched in {group1.name}</td>
                 </tr>
                 <tr>
