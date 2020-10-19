@@ -58,6 +58,7 @@ import {
     getAxisDataOverlapSampleCount,
     getCategoryOptions,
     maybeSetLogScale,
+    logScalePossibleForProfile,
 } from './PlotsTabUtils';
 import {
     ClinicalAttribute,
@@ -3045,9 +3046,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     isDisabledAxisLogCheckbox(vertical: boolean): boolean {
-        return vertical
+        const axisSelection = vertical
+            ? this.vertSelection
+            : this.horzSelection;
+
+        // dont disable the log box for rna_seq even if there are
+        //  negative values
+        const isValidMrnaProfile =
+            axisSelection.dataType ===
+                AlterationTypeConstants.MRNA_EXPRESSION &&
+            axisSelection.dataSourceId &&
+            logScalePossibleForProfile(axisSelection.dataSourceId);
+
+        const hasNegativeNumbers = vertical
             ? this.vertAxisDataHasNegativeNumbers
             : this.horzAxisDataHasNegativeNumbers;
+
+        return !isValidMrnaProfile && hasNegativeNumbers;
     }
 
     private getAxisMenu(
