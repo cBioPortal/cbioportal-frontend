@@ -140,7 +140,6 @@ export enum PlotType {
     WaterfallPlot,
     BoxPlot,
     DiscreteVsDiscrete,
-    Table,
 }
 
 export enum DiscreteVsDiscretePlotType {
@@ -651,10 +650,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             return PotentialColoringType.None;
         }
 
-        if (this.limitValuesCanBeShown) {
+        if (this.limitValuesCanBeShown && this.coloringByGene) {
             return PotentialColoringType.LimitValGenomicData;
-        } else {
+        } else if (this.limitValuesCanBeShown) {
+            return PotentialColoringType.LimitVal;
+        } else if (this.coloringByGene) {
             return PotentialColoringType.GenomicData;
+        } else {
+            return PotentialColoringType.None;
         }
     }
 
@@ -1376,7 +1379,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @autobind
     @action
-    private updateColoringMenuGene(entrezGeneId: number) {
+    public updateColoringMenuGene(entrezGeneId: number) {
         this.coloringMenuSelection.selectedOption = undefined;
         this.coloringMenuSelection.default.entrezGeneId = entrezGeneId;
     }
@@ -4386,8 +4389,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @computed get showUtilitiesMenu() {
         return (
-            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown) &&
-            (this.mutationDataCanBeShown || this.cnaDataCanBeShown)
+            this.plotType.isComplete &&
+            this.plotType.result !== PlotType.DiscreteVsDiscrete &&
+            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown)
         );
     }
 
@@ -4433,7 +4437,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return !!(
             this.coloringMenuSelection.selectedOption &&
             this.coloringMenuSelection.selectedOption.info.entrezGeneId !==
-                undefined
+                undefined &&
+            this.coloringMenuSelection.selectedOption.info.entrezGeneId !==
+                NONE_SELECTED_OPTION_NUMERICAL_VALUE
         );
     }
 
