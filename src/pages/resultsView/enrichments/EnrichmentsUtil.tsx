@@ -47,9 +47,11 @@ export type GenericAssayEnrichmentWithQ = GenericAssayEnrichment & {
     qValue: number;
 };
 
+export const CNA_AMP_VALUE = 2;
+export const CNA_HOMDEL_VALUE = -2;
 export const CNA_TO_ALTERATION: { [cna: number]: string } = {
-    '2': 'AMP',
-    '-2': 'HOMDEL',
+    [CNA_AMP_VALUE]: 'AMP',
+    [CNA_HOMDEL_VALUE]: 'HOMDEL',
 };
 
 export enum GeneOptionLabel {
