@@ -65,7 +65,11 @@ import {
     PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
 } from '../table/treatments/PatientTreatmentsTable';
-import { doesChartHaveComparisonGroupsLimit } from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    doesChartHaveComparisonGroupsLimit,
+    getComparisonParamsForTable,
+} from 'pages/studyView/StudyViewComparisonUtils';
+import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -83,6 +87,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.TABLE,
     ChartTypeEnum.BAR_CHART,
     ChartTypeEnum.MUTATED_GENES_TABLE,
+    ChartTypeEnum.CNA_GENES_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
 ];
@@ -331,10 +336,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         openComparison();
                     }
                     break;
-                case ChartTypeEnum.BAR_CHART:
-                case ChartTypeEnum.MUTATED_GENES_TABLE:
-                case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
-                case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                default:
                     this.props.store.openComparisonPage(
                         this.props.chartMeta,
                         params || {}
@@ -381,6 +383,27 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     get borderWidth() {
         return this.highlightChart ? 2 : 1;
     }
+
+    private comparisonButtonForTables = {
+        content: (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <ComparisonVsIcon
+                    className={classnames('fa fa-fw')}
+                    style={{ marginRight: 4 }}
+                />
+                Compare
+            </div>
+        ),
+        onClick: () => {
+            this.openComparisonPage(
+                getComparisonParamsForTable(
+                    this.selectedRowsKeys,
+                    this.chartType
+                )
+            );
+        },
+        isDisabled: () => this.selectedRowsKeys!.length < 2,
+    };
 
     @computed
     get chart(): (() => JSX.Element) | null {
@@ -464,6 +487,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -548,6 +572,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
@@ -761,6 +786,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
@@ -793,6 +819,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeSelectedRows={
                             this.handlers.onChangeSelectedRows
                         }
+                        extraButtons={[this.comparisonButtonForTables]}
                         selectedRowsKeys={this.selectedRowsKeys}
                         columns={[
                             {
