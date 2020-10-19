@@ -939,14 +939,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     placement={this.placement}
                     description={this.props.description}
                 />
-                <div
-                    style={{
-                        display: 'flex',
-                        flexGrow: 1,
-                        margin: 'auto',
-                        alignItems: 'center',
-                    }}
-                >
+                <div className={styles.chartInnerWrapper}>
                     {this.props.promise.isPending && (
                         <LoadingIndicator
                             isLoading={true}
@@ -954,7 +947,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         />
                     )}
                     {this.props.promise.isError && (
-                        <div>Error when loading data.</div>
+                        <div className={styles.chartError}>
+                            <i className="fa fa-warning" aria-hidden="true"></i>{' '}
+                            Error when loading data.
+                        </div>
                     )}
 
                     {(!this.props.chartMeta.renderWhenDataChange ||
