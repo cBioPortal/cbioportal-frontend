@@ -211,7 +211,7 @@ export default class MutualExclusivityTable extends React.Component<
             tooltip: (
                 <table>
                     <tr>
-                        <td>Log2 ratio > 0</td>
+                        <td>Log2 ratio {'>'} 0</td>
                         <td>: Tendency towards co-occurrence</td>
                     </tr>
                     <tr>
