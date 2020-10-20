@@ -5,7 +5,7 @@ import { IPdbChain } from '../../model/Pdb';
 import PdbChainDataStore from '../mutationMapper/PdbChainDataStore';
 import PdbChainInfo from '../PdbChainInfo';
 import PdbHeaderCache from '../../cache/PdbHeaderCache';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { PdbHeader } from 'genome-nexus-ts-api-client';
 import OrganismColumnFormatter from './column/OrganismColumnFormatter';
 import LazyLoadedTableCell from 'shared/lib/LazyLoadedTableCell';
@@ -23,6 +23,11 @@ export default class PdbChainTable extends React.Component<
     IPdbChainTableProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed private get columns(): Column<IPdbChain>[] {
         const ret: Column<IPdbChain>[] = [];
 

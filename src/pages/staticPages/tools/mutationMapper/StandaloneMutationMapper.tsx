@@ -6,6 +6,7 @@ import {
     default as MutationMapper,
 } from 'shared/components/mutationMapper/MutationMapper';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
+import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
 
 export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     // add standalone view specific props here if needed
@@ -41,7 +42,9 @@ export default class StandaloneMutationMapper extends MutationMapper<
                     this.props.genomeNexusMutationAssessorCache
                 }
                 pubMedCache={this.props.pubMedCache}
-                dataStore={this.props.store.dataStore}
+                dataStore={
+                    this.props.store.dataStore as MutationMapperDataStore
+                }
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.downloadDataFetcher}
                 myCancerGenomeData={this.props.store.myCancerGenomeData}

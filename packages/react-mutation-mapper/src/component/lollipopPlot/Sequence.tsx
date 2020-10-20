@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 
 import { SequenceSpec } from '../../model/SequenceSpec';
 
@@ -20,6 +20,7 @@ export default class Sequence extends React.Component<SequenceProps, {}> {
 
     constructor(props: SequenceProps) {
         super(props);
+        makeObservable(this);
     }
 
     public get hitRect() {

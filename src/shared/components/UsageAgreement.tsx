@@ -2,7 +2,7 @@ import React from 'react';
 import { Alert, Button, Modal, Checkbox, ButtonGroup } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { computed, observable, ObservableMap } from 'mobx';
+import { computed, makeObservable, observable, ObservableMap } from 'mobx';
 import expiredStorage from 'expired-storage';
 
 import _ from 'lodash';
@@ -27,7 +27,12 @@ export default class UsageAgreement extends React.Component<
     @observable
     modalShow: boolean = false;
 
-    @observable checkedItems = observable.map<boolean>();
+    @observable checkedItems = observable.map<string, boolean>();
+
+    constructor(props: IUsageAgreement) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed get expirationInSeconds() {
         return this.props.expirationInDays
@@ -45,8 +50,11 @@ export default class UsageAgreement extends React.Component<
     @computed get isAgreementComplete(): boolean {
         return (
             this.useCheckboxes === false ||
-            (this.checkedItems.entries().length === this.props.clauses.length &&
-                _.every(this.checkedItems.values(), val => val === true))
+            (this.checkedItems.size === this.props.clauses.length &&
+                _.every(
+                    Array.from(this.checkedItems.values()),
+                    val => val === true
+                ))
         );
     }
 

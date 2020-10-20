@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import {
     DataFilterValue,
@@ -87,6 +87,10 @@ export default class UserSelections extends React.Component<
     IUserSelectionsProps,
     {}
 > {
+    constructor(props: IUserSelectionsProps) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     get showFilters() {
         //return isFiltered(this.props.filter)

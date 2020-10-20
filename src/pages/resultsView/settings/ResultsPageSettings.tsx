@@ -6,7 +6,6 @@ import DriverAnnotationControls, {
     IDriverAnnotationControlsHandlers,
     IDriverAnnotationControlsState,
 } from './DriverAnnotationControls';
-import { IObservableObject } from 'mobx';
 import {
     boldedTabList,
     buildDriverAnnotationControlsHandlers,
@@ -35,8 +34,7 @@ export default class ResultsPageSettings extends React.Component<
     IResultsPageSettingsProps,
     {}
 > {
-    private driverSettingsState: IDriverAnnotationControlsState &
-        IObservableObject;
+    private driverSettingsState: IDriverAnnotationControlsState;
     private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
 
     constructor(props: IResultsPageSettingsProps) {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
-import { IObservableObject, ObservableMap } from 'mobx';
+import { ObservableMap } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     EditableSpan,
@@ -30,7 +30,7 @@ export interface IDriverAnnotationControlsState {
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
-    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    selectedCustomDriverAnnotationTiers?: ObservableMap<string, boolean>;
     annotateCustomDriverBinary?: boolean;
 }
 
@@ -47,7 +47,7 @@ export interface IDriverAnnotationControlsHandlers {
 }
 
 export interface IDriverAnnotationControlsProps {
-    state: IDriverAnnotationControlsState & IObservableObject;
+    state: IDriverAnnotationControlsState;
     handlers: IDriverAnnotationControlsHandlers;
 }
 

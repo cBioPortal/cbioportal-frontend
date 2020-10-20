@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 
 import { Mutation } from 'cbioportal-utils';
 
@@ -36,6 +36,7 @@ export class DefaultMutationMapperDataStore implements DataStore {
         highlightFilters: DataFilter[] = [],
         groupFilters: { group: string; filter: DataFilter }[] = []
     ) {
+        makeObservable(this);
         this.data = data;
         this.customFilterApplier = customFilterApplier;
 

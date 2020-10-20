@@ -2,7 +2,7 @@ import _ from 'lodash';
 import classnames from 'classnames';
 import * as React from 'react';
 import ReactTable, { Column } from 'react-table';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import { Cache, MobxCache } from 'cbioportal-utils';
@@ -23,6 +23,10 @@ export default class PtmAnnotationTable extends React.Component<
     PtmSummaryTableProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         data: [],
         initialSortColumn: 'type',

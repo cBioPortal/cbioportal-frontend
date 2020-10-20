@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import FeatureTitle from 'shared/components/featureTitle/FeatureTitle';
 import { IMutationalSignature } from 'shared/model/MutationalSignature';
@@ -25,6 +25,10 @@ export default class MutationalSignaturesContainer extends React.Component<
     IMutationalSignaturesContainerProps,
     {}
 > {
+    constructor(props: IMutationalSignaturesContainerProps) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get availableVersions() {
         // mutational signatures version is stored in the profile id
         // split the id by "_", the last part is the version info
@@ -46,8 +50,7 @@ export default class MutationalSignaturesContainer extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onVersionChange(option: { label: string; value: string }): void {
         this.props.onVersionChange(option.value);
     }

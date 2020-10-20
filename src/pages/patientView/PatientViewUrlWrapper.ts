@@ -1,7 +1,7 @@
 import URLWrapper from 'shared/lib/URLWrapper';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import { PagePath } from 'shared/enums/PagePaths';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { PatientViewPageTabs } from './PatientViewPageTabs';
 
 export type PatientViewUrlQuery = {
@@ -50,6 +50,7 @@ export default class PatientViewUrlWrapper extends URLWrapper<
                 },
             },
         });
+        makeObservable(this);
     }
 
     public setActiveTab(tab: string): void {

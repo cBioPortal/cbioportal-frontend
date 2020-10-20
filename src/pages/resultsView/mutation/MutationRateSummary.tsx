@@ -9,7 +9,7 @@ import {
     germlineMutationRate,
     somaticMutationRate,
 } from 'shared/lib/MutationUtils';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { MobxPromise } from 'mobxpromise';
 import { observer } from 'mobx-react';
 
@@ -35,6 +35,10 @@ export default class MutationRateSummary extends React.Component<
     IMutationRateSummaryProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     public get germlineMutationRate() {
         let samples: SampleIdentifier[] | undefined;

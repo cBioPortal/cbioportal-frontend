@@ -7,7 +7,14 @@ import './styles.scss';
 import autobind from 'autobind-decorator';
 import Spinner from 'react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-import { autorun, IReactionDisposer, observable, reaction } from 'mobx';
+import {
+    action,
+    autorun,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    reaction,
+} from 'mobx';
 import { ReactChild, ReactChildren } from 'react';
 import { observer } from 'mobx-react';
 import { JsxElement } from 'typescript';
@@ -36,6 +43,11 @@ export class DeferredRender extends React.Component<
     {}
 > {
     @observable renderedOnce = false;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     render() {
         if (!this.renderedOnce) {
@@ -89,13 +101,6 @@ export class MSKTab extends React.Component<IMSKTabProps, {}> {
     }
 }
 
-interface IMSKTabsState {
-    activeTabId: string;
-    currentPage: number;
-    pageBreaks: string[];
-    deferedActiveTabId: string;
-}
-
 interface IMSKTabsProps {
     className?: string;
     id?: string;
@@ -110,7 +115,11 @@ interface IMSKTabsProps {
     loadingComponent?: JSX.Element;
 }
 
-export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
+@observer
+export class MSKTabs extends React.Component<IMSKTabsProps> {
+    @observable currentPage: number = 1;
+    @observable pageBreaks: string[] = [];
+
     private shownTabs: string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: { id: string; element: HTMLLIElement }[] = [];
@@ -137,11 +146,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     constructor(props: IMSKTabsProps) {
         super(props);
-
-        this.state = {
-            currentPage: 1,
-            pageBreaks: [] as string[],
-        } as IMSKTabsState;
+        makeObservable(this);
     }
 
     private cloneTab(
@@ -176,16 +181,14 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         }
     }
 
+    @action
     nextPage() {
-        this.setState({
-            currentPage: this.state.currentPage + 1,
-        } as IMSKTabsState);
+        this.currentPage += 1;
     }
 
+    @action
     prevPage() {
-        this.setState({
-            currentPage: this.state.currentPage - 1,
-        } as IMSKTabsState);
+        this.currentPage -= 1;
     }
 
     render() {
@@ -281,10 +284,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
         // if pagination is disabled, pages.length and pagesCount will be always 1
         const pages = this.tabPages(children, effectiveActiveTab);
-        const pageCount = this.state.pageBreaks.length + 1;
+        const pageCount = this.pageBreaks.length + 1;
 
         const prev =
-            this.state.currentPage > 1 ? (
+            this.currentPage > 1 ? (
                 <li key="prevPage" style={{ cursor: 'pointer' }}>
                     <a onClick={this.prevPage.bind(this)}>
                         <i
@@ -296,7 +299,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             ) : null;
 
         const next =
-            this.state.currentPage < pageCount ? (
+            this.currentPage < pageCount ? (
                 <li key="nextPage" style={{ cursor: 'pointer' }}>
                     <a onClick={this.nextPage.bind(this)}>
                         <i
@@ -315,7 +318,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 className={classnames('nav', `nav-${navButtonStyle}`)}
             >
                 {prev}
-                {pages[this.state.currentPage - 1]}
+                {pages[this.currentPage - 1]}
                 {next}
             </ul>
         );
@@ -341,8 +344,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 // find out if we need to add another page
                 if (
                     this.props.getPaginationWidth &&
-                    this.state.pageBreaks.length > 0 &&
-                    this.state.pageBreaks[currentPage - 1] === tab.props.id
+                    this.pageBreaks.length > 0 &&
+                    this.pageBreaks[currentPage - 1] === tab.props.id
                 ) {
                     currentPage++;
                     pages[currentPage - 1] = [];
@@ -446,19 +449,14 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         (window as any).test = this.tabIdToNavTabWidth;
     }
 
-    @autobind
+    @action.bound
     initPaging() {
         if (this.props.getPaginationWidth) {
             // find page breaks: depends on width of the container
-            const pageBreaks: string[] = this.findPageBreaks();
+            this.pageBreaks = this.findPageBreaks();
 
             // find current page: depends on active tab id
-            const currentPage: number = this.findCurrentPage(pageBreaks);
-
-            this.setState({
-                currentPage,
-                pageBreaks,
-            } as IMSKTabsState);
+            this.currentPage = this.findCurrentPage(this.pageBreaks);
         }
     }
 

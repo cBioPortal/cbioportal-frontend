@@ -1,5 +1,5 @@
 import { SortMetric } from './ISortMetric';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import { lazyMobXTableSort } from '../components/lazyMobXTable/LazyMobXTable';
 import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from 'shared/components/paginationControls/PaginationControls';
 
@@ -92,25 +92,41 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     @observable protected dataSelector: (d: T) => boolean;
     @observable public dataHighlighter: (d: T) => boolean;
 
-    @observable public filterString: string;
+    @observable.ref public filterString: string;
     @observable public sortMetric: SortMetric<T> | undefined;
     @observable public sortAscending: boolean | undefined;
     @observable public page: number;
     @observable public itemsPerPage: number;
 
+    protected getSortedData?: () => T[]; // optional, allows overriding by extending classes
+    protected getSortedFilteredData?: () => T[]; // optional, allows overriding by extending classes
+    protected getTableData?: () => T[]; // optional, allows overriding by extending classes
+
     @computed get allData() {
         return this.getData();
     }
     @computed get sortedData() {
-        return getSortedData(this.allData, this.sortMetric, this.sortAscending);
+        if (!this.getSortedData) {
+            return getSortedData(
+                this.allData,
+                this.sortMetric,
+                this.sortAscending
+            );
+        } else {
+            return this.getSortedData();
+        }
     }
 
     @computed get sortedFilteredData() {
-        return getSortedFilteredData(
-            this.sortedData,
-            this.filterString,
-            this.dataFilter
-        );
+        if (!this.getSortedFilteredData) {
+            return getSortedFilteredData(
+                this.sortedData,
+                this.filterString,
+                this.dataFilter
+            );
+        } else {
+            return this.getSortedFilteredData();
+        }
     }
 
     @computed get sortedFilteredSelectedData() {
@@ -118,10 +134,14 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     @computed get tableData() {
-        return getTableData(
-            this.sortedFilteredData,
-            this.sortedFilteredSelectedData
-        );
+        if (!this.getTableData) {
+            return getTableData(
+                this.sortedFilteredData,
+                this.sortedFilteredSelectedData
+            );
+        } else {
+            return this.getTableData();
+        }
     }
 
     @computed get visibleData(): T[] {
@@ -161,6 +181,10 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
         this.dataHighlighter = () => false;
         this.dataSelector = () => false;
         this.dataFilter = () => true;
+        makeObservable<
+            SimpleGetterLazyMobXTableApplicationDataStore<T>,
+            'dataFilter' | 'dataSelector'
+        >(this);
     }
 }
 

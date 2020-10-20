@@ -9,6 +9,7 @@ import {
     reaction,
     runInAction,
     toJS,
+    makeObservable,
 } from 'mobx';
 import ExtendedRouterStore, {
     getRemoteSession,
@@ -62,6 +63,8 @@ export default class URLWrapper<
         public sessionEnabled = false,
         public urlCharThresholdForSession = 1500
     ) {
+        makeObservable(this);
+
         this.properties = _.entries(this.propertiesMap).map(entry => ({
             name: entry[0],
             ...entry[1],
@@ -183,7 +186,7 @@ export default class URLWrapper<
         return this._query;
     }
 
-    //@observable _sessionId: string;
+    //@observable.ref _sessionId: string;
 
     @computed get aliasToPropertyName() {
         const ret: { [alias: string]: keyof QueryParamsType } = {};
@@ -396,7 +399,7 @@ export default class URLWrapper<
             : this.routing.query.session_id;
     }
 
-    @observable public _sessionData: PortalSession | undefined;
+    @observable public _sessionData: PortalSession | undefined = undefined;
 
     @computed get isLoadingSession() {
         return !_.isEmpty(this.sessionId) && this.remoteSessionData.isPending;

@@ -6,6 +6,7 @@ import {
     IReactionDisposer,
     observable,
     reaction,
+    makeObservable,
 } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import './styles.scss';
@@ -249,10 +250,10 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
 }
 
 export class LazyMobXTableStore<T> {
-    @observable public filterString: string | undefined;
-    @observable private _itemsLabel: string | undefined;
-    @observable private _itemsLabelPlural: string | undefined;
-    @observable public sortColumn: string;
+    @observable.ref public filterString: string | undefined = undefined;
+    @observable.ref private _itemsLabel: string | undefined = undefined;
+    @observable.ref private _itemsLabelPlural: string | undefined;
+    @observable.ref public sortColumn: string;
     @observable public sortAscending: boolean;
     @observable.ref public columns: Column<T>[];
     @observable public dataStore: ILazyMobXTableApplicationDataStore<T>;
@@ -726,6 +727,7 @@ export class LazyMobXTableStore<T> {
     }
 
     constructor(lazyMobXTableProps: LazyMobXTableProps<T>) {
+        makeObservable(this);
         this.sortColumn = lazyMobXTableProps.initialSortColumn || '';
         this.sortAscending = lazyMobXTableProps.initialSortDirection !== 'desc'; // default ascending
         this.setProps(lazyMobXTableProps);
@@ -815,6 +817,7 @@ export default class LazyMobXTable<T> extends React.Component<
 
     constructor(props: LazyMobXTableProps<T>) {
         super(props);
+        makeObservable(this);
         this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {

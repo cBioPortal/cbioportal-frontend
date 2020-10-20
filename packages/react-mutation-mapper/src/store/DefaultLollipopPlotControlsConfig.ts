@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 
 import LollipopPlotControlsConfig from '../model/LollipopPlotControlsConfig';
 
@@ -12,6 +12,10 @@ export class DefaultLollipopPlotControlsConfig
 
     @observable
     public yMaxInput: number | undefined;
+
+    constructor() {
+        makeObservable(this);
+    }
 }
 
 export default DefaultLollipopPlotControlsConfig;

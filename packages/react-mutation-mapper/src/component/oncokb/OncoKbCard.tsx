@@ -1,6 +1,6 @@
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import classnames from 'classnames';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -25,6 +25,10 @@ export type OncoKbCardProps = {
 
 @observer
 export default class OncoKbCard extends React.Component<OncoKbCardProps> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     get oncokbLinkOut() {
         let link: string | undefined = undefined;

@@ -6,7 +6,7 @@ import collapsibleStyles from './collapsible.module.scss';
 import { Collapse } from 'react-collapse';
 import { levelIconClassNames } from '../../util/OncoKbUtils';
 import classnames from 'classnames';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 
@@ -36,6 +36,10 @@ const publicInstanceDisclaimerOverLay = (
 export default class OncoKbCardLevelsOfEvidenceDropdown extends React.Component<
     LevelsOfEvidenceDropdownProps
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable levelsCollapsed: boolean = true;
 
     public levelListItem(level: string, levelDes: JSX.Element) {
@@ -56,8 +60,7 @@ export default class OncoKbCardLevelsOfEvidenceDropdown extends React.Component<
         return rows;
     }
 
-    @autobind
-    @action
+    @action.bound
     handleLevelCollapse(): void {
         this.levelsCollapsed = !this.levelsCollapsed;
     }

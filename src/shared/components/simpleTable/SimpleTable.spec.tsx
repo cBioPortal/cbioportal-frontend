@@ -1,6 +1,6 @@
 import React from 'react';
 import { assert } from 'chai';
-import { shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import sinon from 'sinon';
 import SimpleTable from './SimpleTable';
 
@@ -20,7 +20,7 @@ describe('SimpleTable', () => {
     const classNameFalse: undefined = undefined;
 
     before(() => {
-        table = shallow(<SimpleTable headers={headers} rows={rows} />);
+        table = mount(<SimpleTable headers={headers} rows={rows} />);
     });
 
     it('renders 3 rows if passed headers and two rows', () => {
@@ -43,7 +43,7 @@ describe('SimpleTable', () => {
 
     it('has class name of className prop if provided', () => {
         assert.isTrue(
-            shallow(
+            mount(
                 <SimpleTable
                     className={classNameTrue}
                     headers={headers}
@@ -55,7 +55,7 @@ describe('SimpleTable', () => {
 
     it("does not have class name of 'undefined' if className prop is undefined", () => {
         assert.isFalse(
-            shallow(
+            mount(
                 <SimpleTable
                     className={classNameFalse}
                     headers={headers}

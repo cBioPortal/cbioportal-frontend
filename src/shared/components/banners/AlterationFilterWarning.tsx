@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { MakeMobxView } from '../MobxView';
 import classnames from 'classnames';
 
@@ -37,6 +37,10 @@ export default class AlterationFilterWarning extends React.Component<
     IAlterationFilterWarningProps,
     {}
 > {
+    constructor(props: IAlterationFilterWarningProps) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get excludeVUS() {
         if (this.props.mutationsTabModeSettings) {
             return this.props.mutationsTabModeSettings.excludeVUS;

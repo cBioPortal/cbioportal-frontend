@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { QueryStore } from 'shared/components/query/QueryStore';
 import { Observer, observer } from 'mobx-react';
-import { expr } from 'mobx';
+import { expr } from 'mobx-utils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export const StudySelectorStats: React.FunctionComponent<{

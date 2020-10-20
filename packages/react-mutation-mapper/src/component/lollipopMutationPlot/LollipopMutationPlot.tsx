@@ -2,7 +2,7 @@ import autobind from 'autobind-decorator';
 import { MobxCache, Mutation } from 'cbioportal-utils';
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Collapse } from 'react-collapse';
@@ -490,6 +490,25 @@ export default class LollipopMutationPlot extends React.Component<
     constructor(props: LollipopMutationPlotProps) {
         super(props);
 
+        makeObservable<
+            LollipopMutationPlot,
+            | 'mouseInPlot'
+            | 'yMaxInputFocused'
+            | 'geneXOffset'
+            | '_trackVisibility'
+            | 'showControls'
+            | 'trackVisibility'
+            | 'controlsConfig'
+            | 'groups'
+            | 'lollipops'
+            | 'domains'
+            | 'domainColorMap'
+            | 'domainMap'
+            | 'sequence'
+            | 'onXAxisOffset'
+            | 'onTrackVisibilityChange'
+        >(this);
+
         this.handlers = {
             handleYAxisMaxSliderChange: action(
                 (value: number) =>
@@ -584,8 +603,7 @@ export default class LollipopMutationPlot extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onXAxisOffset(offset: number) {
         this.geneXOffset = offset;
 
@@ -594,8 +612,7 @@ export default class LollipopMutationPlot extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onTrackVisibilityChange(selectedTrackNames: string[]) {
         if (this.props.onTrackVisibilityChange) {
             this.props.onTrackVisibilityChange(selectedTrackNames);

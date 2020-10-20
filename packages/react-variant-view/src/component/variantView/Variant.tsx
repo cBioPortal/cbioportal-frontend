@@ -1,4 +1,4 @@
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Col, Row } from 'react-bootstrap';
@@ -22,6 +22,15 @@ export function initDefaultVariantStore(props: IVariantProps) {
 class Variant extends React.Component<IVariantProps> {
     constructor(props: IVariantProps) {
         super(props);
+        makeObservable<
+            Variant,
+            | 'variantStore'
+            | 'myVariantInfo'
+            | 'oncokb'
+            | 'variantAnnotation'
+            | 'setActiveTranscript'
+            | 'onTranscriptSelect'
+        >(this);
     }
 
     public render(): React.ReactNode {

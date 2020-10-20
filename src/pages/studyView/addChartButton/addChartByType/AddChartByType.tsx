@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import styles from './styles.module.scss';
 import { ChartOption } from '../AddChartButton';
@@ -39,6 +39,10 @@ export default class AddChartByType extends React.Component<
     IAddChartByTypeProps,
     {}
 > {
+    constructor(props: IAddChartByTypeProps) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         firstColumnHeaderName: 'Name',
         hideControls: false,
@@ -187,8 +191,7 @@ export default class AddChartByType extends React.Component<
         return this.getCurrentSelectedRows().map(option => option.key);
     }
 
-    @autobind
-    @action
+    @action.bound
     addAll(selectedOptions: AddChartOption[]) {
         this.props.onAddAll(
             _.filter(selectedOptions, option => !option.disabled).map(
@@ -197,14 +200,12 @@ export default class AddChartByType extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     removeAll(selectedOptions: AddChartOption[]) {
         this.props.onClearAll(selectedOptions.map(option => option.key));
     }
 
-    @autobind
-    @action
+    @action.bound
     onOptionChange(option: AddChartOption) {
         this.props.onToggleOption(option.key);
     }

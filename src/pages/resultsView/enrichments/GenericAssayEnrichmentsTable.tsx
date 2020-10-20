@@ -4,7 +4,7 @@ import LazyMobXTable, {
     Column,
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { formatSignificanceValueWithStyle } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from './styles.module.scss';
@@ -42,6 +42,11 @@ export default class GenericAssayEnrichmentsTable extends React.Component<
     IGenericAssayEnrichmentTableProps,
     {}
 > {
+    constructor(props: IGenericAssayEnrichmentTableProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         columns: [
             GenericAssayEnrichmentTableColumnType.ENTITY_ID,
