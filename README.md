@@ -7,7 +7,7 @@ This repo contains the frontend code for cBioPortal which uses React, MobX and T
 | Branch name | [`master`](https://github.com/cBioPortal/cbioportal-frontend/tree/master) |  --|  [`rc`](https://github.com/cBioPortal/cbioportal-frontend/tree/rc) |
 | Description | All bug fixes and features not requiring database migrations go here. This code is either already in production or will be released this week | Next release that requires database migrations. Manual product review often takes place for this branch before release | Later releases with features that require database migrations. This is useful to allow merging in new features without affecting the upcoming release. Could be seen as a development branch, but note that only high quality pull requests are merged. That is the feature should be pretty much ready for release after merge. |
 | Test Status | [CircleCI master workflow](https://circleci.com/gh/cBioPortal/workflows/cbioportal-frontend/tree/master) | -- | [CircleCI rc workflow](https://circleci.com/gh/cBioPortal/workflows/cbioportal-frontend/tree/rc) |
-| Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.com/ | -- | https://rc--cbioportalfrontend.netlify.com |
+| Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.app/ | -- | https://rc--cbioportalfrontend.netlify.app |
 | Live instance backend | https://www.cbioportal.org / https://master.cbioportal.org | -- | https://rc.cbioportal.org |
 
 Note: you can always check the version of the live instance by checking the variable `window.FRONTEND_COMMIT` in the console.
@@ -62,7 +62,7 @@ To run unit/integration tests in watch mode
 yarn run test:watch
 ```
 
-To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
+To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before `.spec.`))
 ```
 yarn run test:watch -- --grep=#specName#
 ```
@@ -174,63 +174,94 @@ If all goes well, you will soon seen the end-to-end tests running via your Chrom
 ### Mount of frontend onto HTTPS backend
 A custom frontend can be tested against any backend in the web browser using a local node server (command `yarn run start`) and the `localdev` flag passed to th e browser (see section 'Check in cBioPortal context'). For remote backends that communicate over a HTTP over SSL (https) connection (e.g., cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `yarn run startSSL` in stead of `yarn run start`.
 
-## Run of `local e2e-tests`
+## Run of `localdb` e2e-tests
 To enable e2e-tests on for features that depend on data that are not included in studies served by the public cBioPortal instance, cbioportal-frontend provides the `e2e local database` (refered to as _e2e-localdb_ or _local e2e_ in this text) facility that allows developers to load custom studies in any backend version used for e2e-tests. CircleCI runs the `e2e-localdb` tests as a separate job.
 
 Files for the local database e2e-tests are located in the `./end-to-end-test/local` directory of cbioportal-frontend. The directory structure of `./end-to-end-test/local` is comparable to that of the `./end-to-end-test/remote` directory used for e2e-tests against remote public cBioPortal instances.
 
-### Contexts for e2e-localdb tests
-E2e-tests can run in _local context_ (workstation for software development) or _CircleCI context_ (for continuous integration testing). On CircleCI, e2e-tests can be conducted on commits that are inside or outside the context of a pull request. These different contexts for _e2e-localdb_ tests are refered to below as _Local_, _CircleCi_ and _CircleCI+PR_ contexts, respectively.
+### Running `localdb` e2e-tests for development
 
-### Running e2e-localdb tests in _Local_ context for development
-Running of e2e-localdb tests in _Local_ context in essence follows the procedure as defined in `.circleci/config.yml`. In _Local_ context the e2e-localdb tests can be run in a dockerized environment (usefull for generating screenshots) or directly on the host sytem. The `end-to-end-test/local/runtime-config/run_container_screenshot_test.sh` script is included to run e2e-local tests in a dockerized environment in _Local_ context. The `end-to-end-test/local/runtime-config/run_local_screenshot_test.sh` is included to run e2e-local tests on the host system directly in _Local_ context. Prior to running the script several environmental variables should be set. For local development follow these steps:
+1. Start cBioPortal (including session service) using the [cBioPortal docker compose solution](https://docs.cbioportal.org/2.1.1-deploy-with-docker-recommended/docker#quick-start).
+cBioPortal must be accessible on _http://localhost:8080_.
 
-1. Add `export BACKEND=cbioportal:rc` (or other backend branch) to `/env/custom.sh`.
-2. Setup a local docker container environment: 
+```
+cd
+git clone https://github.com/cBioPortal/cbioportal-docker-compose.git
+cd cbioportal-docker-compose
+./init.sh
+docker-compose up -d
+```
+
+:warning: If the frontend requires a specific backend version, make sure to deploy this instead of the default version supported by the docker compose solution.
+
+2. Install gene panels and gene sets for study_es_0:
+
+```
+cd ~/cbioportal-docker-compose
+docker-compose run --rm cbioportal sh -c '
+    cd /cbioportal/core/src/main/scripts/ \
+    && ./importGenePanel.pl --data /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel1.txt \
+    && ./importGenePanel.pl --data /cbioportal/core/src/test/scripts/test_data/study_es_0/data_gene_panel_testpanel2.txt \
+    && ./importGenesetData.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_genesets.gmt --new-version msigdb_6.1 \
+    && ./importGenesetHierarchy.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_tree.yaml'
+```
+
+Restart cBioPortal
+```
+docker-compose restart cbioportal
+```
+
+3. Load study_es_0 of the deployed (!) backend version and all studies in [end-to-end-test/local/studies](end-to-end-test/local/studies). At the moment of this writing:
+
+```
+docker-compose run --rm  -v <e2e_study_dir>:/studies cbioportal sh -c '
+    cd /cbioportal/core/src/main/scripts/importer \
+    && ./cbioportalImporter.py -s /cbioportal/core/src/test/scripts/test_data/study_es_0 \
+    && ./cbioportalImporter.py -s /studies/genepanel_test_study'
+    # add other studies if present
+```
+
+:info: The `<e2e_study_dir>` entry refer to the absolute path to [end-to-end-test/local/studies](end-to-end-test/local/studies) on the host system.
+
+4. Add `export CBIOPORTAL_URL="http://localhost:8080"` to `/env/custom.sh`.
+
+5. In a terminal, install webdriver-manager:
 
 ```bash
-export PORTAL_SOURCE_DIR=~/git/cbioportal-frontend # change path if needed
-export DB_DATA_DIR=/tmp/mysql # change path if needed
-export TEST_HOME="$PORTAL_SOURCE_DIR/end-to-end-test"
-source $PORTAL_SOURCE_DIR/env/custom.sh
-cd $TEST_HOME/local/runtime-config
-eval "$(./setup_environment.sh)"
-cd $PORTAL_SOURCE_DIR
+yarn global add webdriver-manager
 ```
 
-3. Running tests can be executed (a) on the local system or (b) in the docker environment;
-
-(a) local system (best for test development)
-```bash
-export CBIOPORTAL_URL='http://localhost:8081'
-$TEST_HOME/local/runtime-config/setup_local_context.sh -j -d -p -e # remove flags to exclude specific stages if desired (see below)
-cd $PORTAL_SOURCE_DIR
-./end-to-end-test/local/runtime-config/run_local_screenshot_test.sh # (repeat this step while developing)
+:warning: Add path to webdriver-manager installation (needed on Ubuntu Linux):
+```
+export PATH=$PATH:$(yarn global dir)/node_modules/webdriver-manager/bin
 ```
 
-(b) docker environment (best for making reference screenshots)
-```bash
-export CBIOPORTAL_URL='http://cbioportal:8080'
-yarn
-yarn build
-cd $TEST_HOME/local/docker
-./setup_docker_containers.sh -p -d -e # remove flags to exclude specific stages if desired (see below)
-cd $PORTAL_SOURCE_DIR
-$TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
+and start webdriver-manager:
+```
+webdriver-manager update
+webdriver-manager start
 ```
 
-4. When finished reclaim ports by killing selenium and node servers:
-```bash
-lsof -n -i4TCP:3000 && lsof -n -i4TCP:3000 | grep LISTEN | awk '{ print $2 }' | xargs kill # reclaims port 3000
-lsof -n -i4TCP:4444 && lsof -n -i4TCP:4444 | grep LISTEN | awk '{ print $2 }' | xargs kill # reclaims port 4444
+6. If not already running at _localhost:3000_, open a second terminal and start the frontend dev server:
+
+```
+export BRANCH_ENV=custom
+yarn install --frozen-lockfile
+yarn buildDLL:dev
+yarn start
 ```
 
-#### Inclusion of specific build stages
-Setup of the local context involves building of the local frontend code, building of the cbioportal database, building the cbioportal application, building the e2e service and the start of all docker containers. During rebuilding of the development environment the developer can specify which stept should be executed by providing `-j` (building of frontent code), `-d` (building of database), `-p` (building of cbioportal), and/or `-e` (building of e2e service) flags to the `setup_local_context.sh` script. For instance, to rebuild the database and start all containers the script can be executed as:
+7. In a third terminal, run the tests:
+
 ```
-./end-to-end-test/local/runtime-config/setup_local_context.sh -d
+export BRANCH_ENV=custom
+eval "$(./scripts/env_vars.sh)"
+export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
+export SCREENSHOT_DIRECTORY=./local/screenshots
+cd end-to-end-test
+yarn install
+yarn run test-webdriver-manager-debug
 ```
-When no parameters are passed, no build steps are executed (only (re)start of containers).
 
 ### Running e2e-localdb tests _CircleCI_ or _CircleCI+PR_ context
 E2e-tests on _CircleCI_ and _CircleCI+PR_ context are triggered via _hooks_ configured on GitHub. Configuration of hooks falls beyond the scope of this manual.
@@ -266,7 +297,7 @@ Some random remarks on e2e-test development
 - Although webdriverio takes asynchronous behavor of webbrosers into account it does not defend against asynchronous behavior of specific web components (e.g., database access). Not taking this asynchronicity into account will result in `flaky` tests. Typically, flaky test run well on the local system used for development (that has plenty of free resources at moment of test), but fail often on a CI system. Often this is the result of longer times needed page/component update causing tests to fail because the test evaluates a condition before it is loaded. In webdriverio the `waitForExist()`, `waitForVisible()` and `waitFor()` method should be used to pause test execution until the page has been updated. Sometimes it is needed to wait for the appearance of a DOM element which presence is tested.
 ```javascript
 browser.waitForExist('id=button');
-assert($('id=button));
+assert($('id=button'));
 ```
 - Reference screenshosts that are created on host system directly (not in dockerized process) differ from screenshots produced by the dockerized setup (e.g., on CircleCI) and cannot be used as references
 

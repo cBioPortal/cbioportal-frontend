@@ -31,6 +31,7 @@ import { ChartMeta, ChartType, RectangleBounds } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { toSampleTreatmentFilter } from '../table/treatments/treatmentsTableUtil';
 import { OredSampleTreatmentFilters } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import DelayedRender from 'shared/components/DelayedRender';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -117,7 +118,6 @@ export class StudySummaryTab extends React.Component<
             chartType: this.props.store.chartsType.get(chartMeta.uniqueKey),
             store: this.props.store,
             dimension: this.store.chartsDimension.get(chartMeta.uniqueKey),
-            openComparisonPage: this.store.openComparisonPage,
             title: chartMeta.displayName,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
@@ -378,7 +378,14 @@ export class StudySummaryTab extends React.Component<
         //      issue will be solved.
         return (
             <div key={chartMeta.uniqueKey}>
-                <ChartContainer key={chartMeta.uniqueKey} {...(props as any)} />
+                <DelayedRender>
+                    {/* Delay the render after a setTimeout, because synchronous rendering would jam UI updates
+                    and make things laggy */}
+                    <ChartContainer
+                        key={chartMeta.uniqueKey}
+                        {...(props as any)}
+                    />
+                </DelayedRender>
             </div>
         );
     };

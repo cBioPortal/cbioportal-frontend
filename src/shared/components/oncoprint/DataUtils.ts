@@ -29,10 +29,8 @@ import {
 } from '../../lib/oql/AccessorsForOqlFilter';
 import _ from 'lodash';
 import { MutationSpectrum } from 'cbioportal-ts-api-client';
-import {
-    CoverageInformation,
-    ExtendedClinicalAttribute,
-} from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { ExtendedClinicalAttribute } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { MUTATION_STATUS_GERMLINE } from 'shared/constants';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
@@ -291,13 +289,15 @@ export function makeGeneticTrackData(
 
             let sampleData =
                 caseAggregatedAlterationData[sample.uniqueSampleKey];
-            ret.push(
-                fillGeneticTrackDatum(
-                    newDatum,
-                    geneSymbolArray.join(' / '),
-                    sampleData
-                )
-            );
+            if (sampleData) {
+                ret.push(
+                    fillGeneticTrackDatum(
+                        newDatum,
+                        geneSymbolArray.join(' / '),
+                        sampleData
+                    )
+                );
+            }
         }
     } else {
         // case: Patients
@@ -336,13 +336,16 @@ export function makeGeneticTrackData(
 
             let patientData =
                 caseAggregatedAlterationData[patient.uniquePatientKey];
-            ret.push(
-                fillGeneticTrackDatum(
-                    newDatum,
-                    geneSymbolArray.join(' / '),
-                    patientData
-                )
-            );
+
+            if (patientData) {
+                ret.push(
+                    fillGeneticTrackDatum(
+                        newDatum,
+                        geneSymbolArray.join(' / '),
+                        patientData
+                    )
+                );
+            }
         }
     }
     return ret;

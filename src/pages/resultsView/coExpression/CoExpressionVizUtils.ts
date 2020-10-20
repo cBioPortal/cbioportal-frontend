@@ -4,7 +4,7 @@ import {
     NumericGeneMolecularData,
 } from 'cbioportal-ts-api-client';
 import { GenesetMolecularData } from 'cbioportal-ts-api-client';
-import { CoverageInformation } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 
 const nonBreakingSpace = '\xa0';

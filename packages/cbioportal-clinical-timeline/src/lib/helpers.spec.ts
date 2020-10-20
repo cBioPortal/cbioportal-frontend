@@ -1,7 +1,12 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
-import { formatDate, getPointInTrimmedSpace } from './helpers';
+import {
+    formatDate,
+    getAttributeValue,
+    getPointInTrimmedSpace,
+} from './helpers';
 import intersect from './intersect';
+import { TimelineEvent } from '../types';
 
 describe('getPointInTrimmedSpace', () => {
     let ticks;
@@ -159,5 +164,47 @@ describe('formatDate', () => {
             formatDate(365 * 3 + 30 * 2 + 1),
             '3 years, 2 months, 1 day'
         );
+    });
+});
+
+describe('getAttributeValue', () => {
+    it('gets attribute value by regexp', () => {
+        const event: TimelineEvent = {
+            end: 13524,
+            start: 13524,
+            event: {
+                uniquePatientKey: 'UC0wMDAwMDA0Om1za2ltcGFjdF90ZXN0X2p1bmU',
+                studyId: 'mskimpact_test_june',
+                patientId: 'P-0000004',
+                eventType: 'Sample acquisition',
+                attributes: [
+                    { key: 'SURGICAL_METHOD', value: 'Biopsy' },
+                    {
+                        key: 'SAMPLE_TYPE',
+                        value: 'Primary',
+                    },
+                    {
+                        key: 'CANCER_TYPE_DETAILED',
+                        value: 'Breast Invasive Ductal Carcinoma',
+                    },
+                    {
+                        key: 'SAMPLE_ID',
+                        value: 'P-0000004-T01-IM3',
+                    },
+                    { key: 'CANCER_TYPE', value: 'Breast Cancer' },
+                ],
+                startNumberOfDaysSinceDiagnosis: 13524,
+            },
+        };
+
+        assert.equal(
+            getAttributeValue('CANCER_TYPE_DETAILED', event),
+            'Breast Invasive Ductal Carcinoma'
+        );
+        assert.equal(
+            getAttributeValue(/_DETAILED/, event),
+            'Breast Invasive Ductal Carcinoma'
+        );
+        assert.equal(getAttributeValue('CANCER_TYPE_DETA', event), undefined);
     });
 });

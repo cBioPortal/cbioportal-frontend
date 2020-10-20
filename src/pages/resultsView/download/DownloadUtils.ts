@@ -24,10 +24,10 @@ import {
 } from './CaseAlterationTable';
 import { IGeneAlteration } from './GeneAlterationTable';
 import {
-    CoverageInformation,
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
 } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from 'shared/lib/GenePanelUtils';
 import {
     OQLLineFilterOutput,
     MergedTrackLineFilterOutput,

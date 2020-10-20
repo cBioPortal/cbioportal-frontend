@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import AppConfig from 'appConfig';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
@@ -12,44 +13,46 @@ import {
     toJS,
 } from 'mobx';
 import {
+    AndedPatientTreatmentFilters,
+    AndedSampleTreatmentFilters,
+    CancerStudy,
+    ClinicalAttribute,
+    ClinicalAttributeCount,
+    ClinicalAttributeCountFilter,
+    ClinicalData,
+    ClinicalDataBin,
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
     ClinicalDataCount,
     ClinicalDataCountFilter,
     ClinicalDataCountItem,
     ClinicalDataFilter,
-    DensityPlotBin,
-    Sample,
-    SampleIdentifier,
-    StudyViewFilter,
-    DataFilterValue,
-    GeneFilter,
-    ClinicalDataBin,
-    GenomicDataBinFilter,
-    GenomicDataFilter,
-    GenomicDataBin,
-    AndedPatientTreatmentFilters,
-    AndedSampleTreatmentFilters,
-    OredPatientTreatmentFilters,
-    OredSampleTreatmentFilters,
-    SampleTreatmentFilter,
-    SampleTreatmentRow,
-    PatientTreatmentRow,
-} from 'cbioportal-ts-api-client';
-import {
-    CancerStudy,
-    ClinicalAttribute,
-    ClinicalAttributeCount,
-    ClinicalAttributeCountFilter,
-    ClinicalData,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
+    DataFilterValue,
+    DensityPlotBin,
+    Gene,
+    GeneFilter,
     GenePanel,
+    GenomicDataBin,
+    GenomicDataBinFilter,
+    GenomicDataFilter,
+    MolecularDataMultipleStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
+    MutationMultipleStudyFilter,
+    NumericGeneMolecularData,
+    OredPatientTreatmentFilters,
+    OredSampleTreatmentFilters,
     Patient,
+    PatientTreatmentRow,
     ResourceData,
     ResourceDefinition,
+    Sample,
+    SampleIdentifier,
+    SampleMolecularIdentifier,
+    SampleTreatmentRow,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -63,14 +66,15 @@ import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
     calculateLayout,
+    ChartDataCountSet,
     ChartMeta,
     ChartMetaDataTypeEnum,
     ChartMetaWithDimensionAndChartType,
     ChartType,
     clinicalAttributeComparator,
-    ChartDataCountSet,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
+    convertGenomicDataBinsToClinicalDataBins,
     DataType,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
@@ -78,15 +82,17 @@ import {
     getChartSettingsMap,
     getClinicalDataBySamples,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getCNASamplesCount,
+    getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenomicChartUniqueKey,
+    getGenomicDataAsClinicalData,
     getGroupsFromBins,
     getGroupsFromQuartiles,
     getMolecularProfileIdsFromUniqueKey,
@@ -102,6 +108,7 @@ import {
     isLogScaleByDataBins,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
+    pickNewColorForClinicData,
     RectangleBounds,
     shouldShowChart,
     showOriginStudiesInSummaryDescription,
@@ -110,13 +117,9 @@ import {
     StudyWithSamples,
     submitToPage,
     updateSavedUserPreferenceChartIds,
-    getGenomicDataAsClinicalData,
-    convertGenomicDataBinsToClinicalDataBins,
-    getGenomicChartUniqueKey,
-    pickNewColorForClinicData,
     getFilteredMolecularProfilesByAlterationType,
 } from './StudyViewUtils';
-import MobxPromise, { MobxPromiseUnionType } from 'mobxpromise';
+import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
@@ -141,7 +144,10 @@ import {
 import onMobxPromise from '../../shared/lib/onMobxPromise';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
+import {
+    Group,
+    SessionGroupData,
+} from '../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
     finalizeStudiesAttr,
@@ -181,16 +187,27 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    toSampleTreatmentFilter,
     toPatientTreatmentFilter,
+    toSampleTreatmentFilter,
     treatmentUniqueKey,
+    treatmentComparisonGroupName,
 } from './table/treatments/treatmentsTableUtil';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
-import { Group } from '../../shared/api/ComparisonGroupClient';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { REQUEST_ARG_ENUM } from 'shared/constants';
+import {
+    createAlteredGeneComparisonSession,
+    doesChartHaveComparisonGroupsLimit,
+    getCnaData,
+    getMutationData,
+} from 'pages/studyView/StudyViewComparisonUtils';
+import {
+    CNA_AMP_VALUE,
+    CNA_HOMDEL_VALUE,
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
 export type ChartUserSetting = {
     id: string;
@@ -795,6 +812,169 @@ export class StudyViewPageStore {
         });
     }
 
+    private createTreatmentsComparisonSession(
+        chartMeta: ChartMeta,
+        chartType: ChartType,
+        treatmentUniqueKeys: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // For patient treatments comparison, use all samples for that treatment, pre- and post-
+        const isPatientType =
+            chartType === ChartTypeEnum.PATIENT_TREATMENTS_TABLE;
+        const promises = [this.selectedSampleSet, this.sampleTreatments];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSampleSet: ComplexKeyMap<Sample>,
+                    sampleTreatments: SampleTreatmentRow[]
+                ) => {
+                    const treatmentKeysMap = _.keyBy(treatmentUniqueKeys);
+                    const desiredTreatments = sampleTreatments.filter(
+                        t =>
+                            treatmentUniqueKey(t, isPatientType) in
+                            treatmentKeysMap
+                    );
+                    // If sample type, then there will be exactly one treatment row per id.
+                    // If patient type, potentially more than one treatment row per id because it ignores the time
+                    const treatmentsGroupedById = _.groupBy(
+                        desiredTreatments,
+                        t => treatmentUniqueKey(t, isPatientType)
+                    );
+
+                    const groups = _.map(
+                        treatmentsGroupedById,
+                        (treatmentRows, id) => {
+                            const selectedSampleIdentifiers = _.flatMap(
+                                treatmentRows,
+                                treatmentRow => {
+                                    return treatmentRow.samples.filter(s =>
+                                        selectedSampleSet.has(s, [
+                                            'sampleId',
+                                            'studyId',
+                                        ])
+                                    );
+                                }
+                            ).map(s => ({
+                                studyId: s.studyId,
+                                sampleId: s.sampleId,
+                            }));
+                            return getGroupParameters(
+                                treatmentComparisonGroupName(
+                                    treatmentRows[0],
+                                    isPatientType
+                                ),
+                                selectedSampleIdentifiers,
+                                this.studyIds
+                            );
+                        }
+                    );
+
+                    statusCallback(LoadingPhase.CREATING_SESSION);
+
+                    // create session and get id
+                    const { id } = await comparisonClient.addComparisonSession({
+                        groups,
+                        origin: this.studyIds,
+                        clinicalAttributeName: chartMeta.displayName,
+                    });
+                    return resolve(id);
+                }
+            );
+        });
+    }
+
+    private createCnaGeneComparisonSession(
+        chartMeta: ChartMeta,
+        hugoGeneSymbols: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // Get mutations among currently selected samples
+        const promises: any[] = [this.selectedSamples, this.cnaProfiles];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[],
+                    cnaProfiles: MolecularProfile[]
+                ) => {
+                    const cnaData = await getCnaData(
+                        selectedSamples,
+                        cnaProfiles,
+                        hugoGeneSymbols
+                    );
+                    const cnaByGeneAndAlteration = _.groupBy(
+                        cnaData.filter(
+                            d =>
+                                d.value === CNA_AMP_VALUE ||
+                                d.value === CNA_HOMDEL_VALUE
+                        ),
+                        (d: NumericGeneMolecularData) =>
+                            `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(
+                                d.value
+                            )}`
+                    );
+
+                    return resolve(
+                        await createAlteredGeneComparisonSession(
+                            chartMeta,
+                            this.studyIds,
+                            cnaByGeneAndAlteration,
+                            statusCallback
+                        )
+                    );
+                }
+            );
+        });
+    }
+
+    private createMutatedGeneComparisonSession(
+        chartMeta: ChartMeta,
+        hugoGeneSymbols: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ) {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // Get mutations among currently selected samples
+        const promises: any[] = [this.selectedSamples, this.mutationProfiles];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[],
+                    mutationProfiles: MolecularProfile[]
+                ) => {
+                    const mutationData = await getMutationData(
+                        selectedSamples,
+                        mutationProfiles,
+                        hugoGeneSymbols
+                    );
+
+                    const mutationsByGene = _.groupBy(
+                        mutationData,
+                        m => m.gene.hugoGeneSymbol
+                    );
+
+                    return resolve(
+                        await createAlteredGeneComparisonSession(
+                            chartMeta,
+                            this.studyIds,
+                            mutationsByGene,
+                            statusCallback
+                        )
+                    );
+                }
+            );
+        });
+    }
+
     private createCategoricalAttributeComparisonSession(
         chartMeta: ChartMeta,
         clinicalAttributeValues: ClinicalDataCountSummary[],
@@ -904,10 +1084,9 @@ export class StudyViewPageStore {
                         // do not slice for comparison on cancer studies chart
                         .slice(
                             0,
-                            chartMeta.uniqueKey ===
-                                SpecialChartsUniqueKeyEnum.CANCER_STUDIES
-                                ? undefined
-                                : MAX_GROUPS_IN_SESSION
+                            doesChartHaveComparisonGroupsLimit(chartMeta)
+                                ? MAX_GROUPS_IN_SESSION
+                                : undefined
                         )
                         .filter(attrVal => {
                             const lcValue = attrVal.value.toLowerCase();
@@ -946,17 +1125,25 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    public async openComparisonPage(params: {
-        chartMeta: ChartMeta;
-        categorizationType?: NumericalGroupComparisonType;
-        clinicalAttributeValues?: ClinicalDataCountSummary[];
-    }) {
+    public async openComparisonPage(
+        chartMeta: ChartMeta,
+        params: {
+            // for numerical attribute
+            categorizationType?: NumericalGroupComparisonType;
+            // for string attribute
+            clinicalAttributeValues?: ClinicalDataCountSummary[];
+            // for altered genes tables
+            hugoGeneSymbols?: string[];
+            // for treatments tables
+            treatmentUniqueKeys?: string[];
+        }
+    ) {
         // open window before the first `await` call - this makes it a synchronous window.open,
         //  which doesnt trigger pop-up blockers. We'll send it to the correct url once we get the result
         const comparisonWindow: any = window.open(
             getComparisonLoadingUrl({
                 phase: LoadingPhase.DOWNLOADING_GROUPS,
-                clinicalAttributeName: params.chartMeta.displayName,
+                clinicalAttributeName: chartMeta.displayName,
                 origin: this.studyIds.join(','),
             }),
             '_blank'
@@ -1000,18 +1187,42 @@ export class StudyViewPageStore {
             }
         };
 
-        switch (this.chartsType.get(params.chartMeta.uniqueKey)) {
+        const chartType = this.chartsType.get(chartMeta.uniqueKey);
+        switch (chartType) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
                 sessionId = await this.createCategoricalAttributeComparisonSession(
-                    params.chartMeta,
+                    chartMeta,
                     params.clinicalAttributeValues!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                sessionId = await this.createMutatedGeneComparisonSession(
+                    chartMeta,
+                    params.hugoGeneSymbols!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.CNA_GENES_TABLE:
+                sessionId = await this.createCnaGeneComparisonSession(
+                    chartMeta,
+                    params.hugoGeneSymbols!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                sessionId = await this.createTreatmentsComparisonSession(
+                    chartMeta,
+                    chartType,
+                    params.treatmentUniqueKeys!,
                     statusCallback
                 );
                 break;
             default:
                 sessionId = await this.createNumberAttributeComparisonSession(
-                    params.chartMeta,
+                    chartMeta,
                     params.categorizationType ||
                         NumericalGroupComparisonType.QUARTILES,
                     statusCallback
@@ -3629,14 +3840,7 @@ export class StudyViewPageStore {
             _chartMetaSet
         );
 
-        if (
-            this.displayTreatments.result &&
-            [
-                'triage-portal',
-                'genie-portal',
-                'cbioportal-genie-private',
-            ].includes(AppConfig.serverConfig.app_name!)
-        ) {
+        if (this.displayTreatments.result) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -3646,18 +3850,10 @@ export class StudyViewPageStore {
                     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
                 ),
                 renderWhenDataChange: true,
-                description: '',
+                description:
+                    'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
             };
-        }
 
-        if (
-            this.displayTreatments.result &&
-            [
-                'triage-portal',
-                'genie-portal',
-                'cbioportal-genie-private',
-            ].includes(AppConfig.serverConfig.app_name!)
-        ) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -3667,7 +3863,8 @@ export class StudyViewPageStore {
                     ChartTypeEnum.PATIENT_TREATMENTS_TABLE
                 ),
                 renderWhenDataChange: true,
-                description: '',
+                description:
+                    'List of treatments and the corresponding number of patients treated',
             };
         }
 
@@ -4616,6 +4813,17 @@ export class StudyViewPageStore {
         },
     });
 
+    public readonly selectedSampleSet = remoteData({
+        await: () => [this.selectedSamples],
+        invoke: () =>
+            Promise.resolve(
+                ComplexKeyMap.from(this.selectedSamples.result!, s => ({
+                    studyId: s.studyId,
+                    sampleId: s.sampleId,
+                }))
+            ),
+    });
+
     public readonly sampleSetByKey = remoteData({
         await: () => [this.samples],
         invoke: () => {
@@ -4757,8 +4965,9 @@ export class StudyViewPageStore {
                 return internalClient.fetchFilteredSamplesUsingPOST({
                     studyViewFilter,
                 });
+            } else {
+                return Promise.resolve(this.samples.result);
             }
-            return Promise.resolve(this.samples.result);
         },
         onError: error => {},
         default: [],
@@ -6662,14 +6871,14 @@ export class StudyViewPageStore {
     @computed
     get sampleTreatmentFiltersAsStrings(): string[][] {
         return this.sampleTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(treatmentUniqueKey);
+            return outer.filters.map(t => treatmentUniqueKey(t));
         });
     }
 
     @computed
     get patientTreatmentFiltersAsStrings(): string[][] {
         return this.patientTreatmentFilters.filters.map(outer => {
-            return outer.filters.map(treatmentUniqueKey);
+            return outer.filters.map(t => treatmentUniqueKey(t));
         });
     }
 

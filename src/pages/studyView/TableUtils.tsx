@@ -19,6 +19,10 @@ export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
     return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
 }
 
+export function getGeneFromUniqueKey(key: string) {
+    return key.split(':')[0];
+}
+
 export function getGeneColumnHeaderRender(
     cellMargin: number,
     headerName: string,

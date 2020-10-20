@@ -329,7 +329,7 @@ export default class ClinicalTable extends React.Component<
                         </div>
                     ),
                     onClick: this.props.openComparisonPage,
-                    isDisabled: () => this.selectedClinicalValues.length === 1,
+                    isDisabled: () => this.selectedClinicalValues.length === 1, // no selection means compare all, so only problem would be if exactly 1 is selected
                 },
             ];
         } else {

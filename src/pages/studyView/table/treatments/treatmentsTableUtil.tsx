@@ -13,9 +13,26 @@ export type Treatment =
     | PatientTreatmentRow
     | PatientTreatmentFilter;
 
-export function treatmentUniqueKey(cell: Treatment) {
+export function treatmentComparisonGroupName(
+    cell: Treatment,
+    ignoreTime?: boolean
+) {
     if (
-        (cell as SampleTreatmentFilter | SampleTreatmentRow).time !== undefined
+        (cell as SampleTreatmentFilter | SampleTreatmentRow).time !==
+            undefined &&
+        !ignoreTime
+    ) {
+        const castCell = cell as SampleTreatmentFilter | SampleTreatmentRow;
+        return `${castCell.time}-${castCell.treatment}`;
+    } else {
+        return cell.treatment;
+    }
+}
+export function treatmentUniqueKey(cell: Treatment, ignoreTime?: boolean) {
+    if (
+        (cell as SampleTreatmentFilter | SampleTreatmentRow).time !==
+            undefined &&
+        !ignoreTime
     ) {
         const castCell = cell as SampleTreatmentFilter | SampleTreatmentRow;
         return castCell.treatment + '::' + castCell.time;

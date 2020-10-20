@@ -1,4 +1,4 @@
-import { CoverageInformation } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../../lib/GenePanelUtils';
 import {
     ClinicalAttribute,
     MolecularProfile,

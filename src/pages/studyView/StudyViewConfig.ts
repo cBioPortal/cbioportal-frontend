@@ -235,5 +235,5 @@ const studyViewFrontEnd = {
 
 export const STUDY_VIEW_CONFIG: StudyViewConfig = _.assign(
     studyViewFrontEnd,
-    AppConfig.serverConfig.study_view
+    (AppConfig.serverConfig || {}).study_view
 );

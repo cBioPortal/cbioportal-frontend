@@ -10,10 +10,8 @@ import {
     Sample,
 } from 'cbioportal-ts-api-client';
 import { MobxPromise } from 'mobxpromise';
-import {
-    CoverageInformation,
-    ExtendedClinicalAttribute,
-} from '../../pages/resultsView/ResultsViewPageStoreUtils';
+import { ExtendedClinicalAttribute } from '../../pages/resultsView/ResultsViewPageStoreUtils';
+import { CoverageInformation } from '../lib/GenePanelUtils';
 import _ from 'lodash';
 import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
@@ -219,7 +217,7 @@ async function fetch(
                         studyId: sample.studyId,
                         uniquePatientKey: sample.uniquePatientKey,
                         uniqueSampleKey: sample.uniqueSampleKey,
-                        value: studyIdToStudy[sample.studyId].name,
+                        value: studyIdToStudy[sample.studyId].shortName,
                     } as ClinicalData)
             );
             break;

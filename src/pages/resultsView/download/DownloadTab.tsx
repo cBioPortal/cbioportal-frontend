@@ -12,10 +12,10 @@ import {
     AlterationTypeConstants,
 } from '../ResultsViewPageStore';
 import {
-    CoverageInformation,
     getSingleGeneResultKey,
     getMultipleGeneResultKey,
 } from '../ResultsViewPageStoreUtils';
+import { CoverageInformation } from 'shared/lib/GenePanelUtils';
 import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,

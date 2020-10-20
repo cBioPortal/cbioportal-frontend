@@ -16,7 +16,11 @@ import {
     getGroupsDownloadData,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
-import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    remoteData,
+    stringListToIndexSet,
+    findFirstMostCommonElt,
+} from 'cbioportal-frontend-commons';
 import {
     CancerStudy,
     ClinicalAttribute,
@@ -2032,6 +2036,36 @@ export default class ComparisonStore {
         {}
     );
 
+    readonly survivalXAxisLabelGroupByPrefix = remoteData({
+        await: () => [
+            this.activeStudiesClinicalAttributes,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            const survivalXAxisLabelGroupByPrefix = _.reduce(
+                this.survivalClinicalAttributesPrefix.result!,
+                (acc, prefix) => {
+                    const clinicalAttributeId = `${prefix}_MONTHS`;
+                    const clinicalAttributes = _.filter(
+                        this.activeStudiesClinicalAttributes.result,
+                        attr => attr.clinicalAttributeId === clinicalAttributeId
+                    );
+                    if (clinicalAttributes.length > 0) {
+                        const xLabels = clinicalAttributes.map(
+                            attr => attr.displayName
+                        );
+                        // find the most common text as the label
+                        // findFirstMostCommonElt require a sorted array as the input
+                        acc[prefix] = findFirstMostCommonElt(xLabels.sort())!;
+                    }
+                    return acc;
+                },
+                {} as { [prefix: string]: string }
+            );
+            return Promise.resolve(survivalXAxisLabelGroupByPrefix);
+        },
+    });
+
     readonly survivalDescriptions = remoteData({
         await: () => [
             this.activeStudiesClinicalAttributes,
@@ -2043,24 +2077,19 @@ export default class ComparisonStore {
                 this.survivalClinicalAttributesPrefix.result!,
                 (acc, prefix) => {
                     const clinicalAttributeId = `${prefix}_STATUS`;
-                    const clinicalAttributeMap = _.groupBy(
+                    const clinicalAttributes = _.filter(
                         this.activeStudiesClinicalAttributes.result,
-                        'clinicalAttributeId'
+                        attr => attr.clinicalAttributeId === clinicalAttributeId
                     );
-                    const studyIdToStudy: {
-                        [studyId: string]: CancerStudy;
-                    } = this.activeStudyIdToStudy.result;
-                    if (
-                        clinicalAttributeMap &&
-                        clinicalAttributeMap[clinicalAttributeId] &&
-                        clinicalAttributeMap[clinicalAttributeId].length > 0
-                    ) {
-                        clinicalAttributeMap[clinicalAttributeId].map(attr => {
+                    if (clinicalAttributes.length > 0) {
+                        clinicalAttributes.map(attr => {
                             if (!acc[prefix]) {
                                 acc[prefix] = [];
                             }
                             acc[prefix].push({
-                                studyName: studyIdToStudy[attr.studyId].name,
+                                studyName: this.activeStudyIdToStudy.result[
+                                    attr.studyId
+                                ].name,
                                 description: attr.description,
                                 displayName: attr.displayName,
                             } as ISurvivalDescription);

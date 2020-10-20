@@ -53,8 +53,11 @@ import {
     generateCopyNumberAlterationQuery,
     generateIdToIndicatorMap,
     generateProteinChangeQuery,
+    generateQueryVariantId,
+    IHotspotIndex,
     IOncoKbData,
     generateAnnotateStructuralVariantQueryFromGenes,
+    isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { MobxPromise } from 'mobxpromise';
@@ -70,7 +73,10 @@ import {
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
-import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    AnnotatedNumericGeneMolecularData,
+} from '../../pages/resultsView/ResultsViewPageStore';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import AppConfig from 'appConfig';
 import { getFrontendAssetUrl } from 'shared/api/urls';
@@ -88,8 +94,8 @@ import {
     RESERVED_SURVIVAL_PLOT_PRIORITY,
 } from '../../pages/resultsView/survival/SurvivalUtil';
 import request from 'superagent';
-import { Alteration, MUTCommand, SingleGeneQuery } from './oql/oql-parser';
-import { CUSTOM_CASE_LIST_ID } from '../components/query/QueryStore';
+import { MUTCommand, SingleGeneQuery } from './oql/oql-parser';
+import { getOncoKbOncogenic } from 'pages/resultsView/ResultsViewPageStoreUtils';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 
@@ -989,18 +995,22 @@ export async function fetchDiscreteCNAData(
     }
 }
 
-export function findMolecularProfileIdDiscrete(
+export function findDiscreteMolecularProfile(
     molecularProfilesInStudy: MobxPromise<MolecularProfile[]>
 ) {
     if (!molecularProfilesInStudy.result) {
         return undefined;
     }
 
-    const profile = molecularProfilesInStudy.result.find(
-        (p: MolecularProfile) => {
-            return p.datatype === 'DISCRETE';
-        }
-    );
+    return molecularProfilesInStudy.result.find((p: MolecularProfile) => {
+        return p.datatype === 'DISCRETE';
+    });
+}
+
+export function findMolecularProfileIdDiscrete(
+    molecularProfilesInStudy: MobxPromise<MolecularProfile[]>
+) {
+    const profile = findDiscreteMolecularProfile(molecularProfilesInStudy);
 
     return profile ? profile.molecularProfileId : undefined;
 }
@@ -1539,4 +1549,210 @@ export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
                 );
             })
     );
+}
+
+export function makeIsHotspotForOncoprint(
+    remoteData: MobxPromise<IHotspotIndex | undefined>
+): Promise<((m: Mutation) => boolean) | Error> {
+    // have to do it like this so that an error doesnt cause chain reaction of errors and app crash
+    if (remoteData.isComplete) {
+        const indexedHotspotData = remoteData.result;
+        if (indexedHotspotData) {
+            return Promise.resolve((mutation: Mutation) => {
+                return isLinearClusterHotspot(mutation, indexedHotspotData);
+            });
+        } else {
+            return Promise.resolve(
+                ((mutation: Mutation) => false) as (m: Mutation) => boolean
+            );
+        }
+    } else if (remoteData.isError) {
+        return Promise.resolve(new Error());
+    } else {
+        // pending: return endless promise to keep isHotspotForOncoprint pending
+        return new Promise(() => {});
+    }
+}
+
+export async function fetchOncoKbDataForOncoprint(
+    oncoKbAnnotatedGenes: MobxPromise<
+        { [entrezGeneId: number]: boolean } | Error
+    >,
+    mutations: MobxPromise<Mutation[]>
+) {
+    if (AppConfig.serverConfig.show_oncokb) {
+        let result;
+        try {
+            result = await fetchOncoKbData(
+                {},
+                oncoKbAnnotatedGenes.result!,
+                mutations,
+                'ONCOGENIC'
+            );
+        } catch (e) {
+            result = new Error();
+        }
+        return result;
+    } else {
+        return ONCOKB_DEFAULT;
+    }
+}
+
+export async function fetchCnaOncoKbDataForOncoprint(
+    oncoKbAnnotatedGenes: MobxPromise<{ [entrezGeneId: number]: boolean }>,
+    molecularData: MobxPromise<NumericGeneMolecularData[]>,
+    molecularProfileIdToMolecularProfile: MobxPromise<{
+        [molecularProfileId: string]: MolecularProfile;
+    }>
+) {
+    if (AppConfig.serverConfig.show_oncokb) {
+        let result;
+        try {
+            result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(
+                {},
+                oncoKbAnnotatedGenes.result!,
+                molecularData,
+                molecularProfileIdToMolecularProfile.result!,
+                'ONCOGENIC'
+            );
+        } catch (e) {
+            result = new Error();
+        }
+        return result;
+    } else {
+        return ONCOKB_DEFAULT;
+    }
+}
+export function makeGetOncoKbMutationAnnotationForOncoprint(
+    remoteData: MobxPromise<IOncoKbData | Error>
+) {
+    const oncoKbDataForOncoprint = remoteData.result!;
+    if (oncoKbDataForOncoprint instanceof Error) {
+        return Promise.resolve(new Error());
+    } else {
+        return Promise.resolve((mutation: Mutation) => {
+            const uniqueSampleKeyToTumorType = {};
+            const id = generateQueryVariantId(
+                mutation.entrezGeneId,
+                cancerTypeForOncoKb(
+                    mutation.uniqueSampleKey,
+                    uniqueSampleKeyToTumorType
+                ),
+                mutation.proteinChange,
+                mutation.mutationType
+            );
+            return oncoKbDataForOncoprint.indicatorMap![id];
+        });
+    }
+}
+
+export function makeGetOncoKbCnaAnnotationForOncoprint(
+    remoteData: MobxPromise<IOncoKbData | Error>,
+    oncoKb: boolean
+) {
+    const cnaOncoKbDataForOncoprint = remoteData.result!;
+    if (cnaOncoKbDataForOncoprint instanceof Error) {
+        return Promise.resolve(new Error());
+    } else {
+        return Promise.resolve((data: NumericGeneMolecularData) => {
+            if (oncoKb) {
+                const uniqueSampleKeyToTumorType = {};
+                const id = generateQueryVariantId(
+                    data.entrezGeneId,
+                    cancerTypeForOncoKb(
+                        data.uniqueSampleKey,
+                        uniqueSampleKeyToTumorType
+                    ),
+                    getAlterationString(data.value)
+                );
+                return cnaOncoKbDataForOncoprint.indicatorMap![id];
+            } else {
+                return undefined;
+            }
+        });
+    }
+}
+
+export function annotateMolecularDatum(
+    molecularDatum: NumericGeneMolecularData,
+    getOncoKbCnaAnnotationForOncoprint: (
+        datum: NumericGeneMolecularData
+    ) => IndicatorQueryResp | undefined,
+    molecularProfileIdToMolecularProfile: {
+        [molecularProfileId: string]: MolecularProfile;
+    },
+    entrezGeneIdToGene: {
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }
+): AnnotatedNumericGeneMolecularData {
+    const hugoGeneSymbol =
+        entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
+    let oncogenic = '';
+    if (
+        molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId]
+            .molecularAlterationType === 'COPY_NUMBER_ALTERATION'
+    ) {
+        const oncoKbDatum = getOncoKbCnaAnnotationForOncoprint(molecularDatum);
+        if (oncoKbDatum) {
+            oncogenic = getOncoKbOncogenic(oncoKbDatum);
+        }
+    }
+    return Object.assign(
+        { oncoKbOncogenic: oncogenic, hugoGeneSymbol },
+        molecularDatum
+    );
+}
+
+export function filterAndAnnotateMolecularData(
+    molecularData: NumericGeneMolecularData[],
+    entrezGeneIdToGene: MobxPromise<{
+        [entrezGeneId: number]: {
+            hugoGeneSymbol: string;
+            entrezGeneId: number;
+        };
+    }>,
+    getOncoKbCnaAnnotationForOncoprint: MobxPromise<
+        | Error
+        | ((data: NumericGeneMolecularData) => IndicatorQueryResp | undefined)
+    >,
+    molecularProfileIdToMolecularProfile: MobxPromise<{
+        [molecularProfileId: string]: MolecularProfile;
+    }>
+) {
+    let getOncoKbAnnotation: (
+        datum: NumericGeneMolecularData
+    ) => IndicatorQueryResp | undefined;
+    if (getOncoKbCnaAnnotationForOncoprint.result! instanceof Error) {
+        getOncoKbAnnotation = () => undefined;
+    } else {
+        getOncoKbAnnotation = getOncoKbCnaAnnotationForOncoprint.result! as typeof getOncoKbAnnotation;
+    }
+    const profileIdToProfile = molecularProfileIdToMolecularProfile.result!;
+    const vus: AnnotatedNumericGeneMolecularData[] = [];
+    const data = molecularData.reduce(
+        (acc: AnnotatedNumericGeneMolecularData[], next) => {
+            const d = annotateMolecularDatum(
+                next,
+                getOncoKbAnnotation,
+                profileIdToProfile,
+                entrezGeneIdToGene.result!
+            );
+            if (d.oncoKbOncogenic) {
+                // truthy check - empty string means not driver
+                acc.push(d);
+            } else {
+                vus.push(d);
+            }
+            return acc;
+        },
+        [] as AnnotatedNumericGeneMolecularData[]
+    );
+
+    return {
+        data,
+        vus,
+    };
 }

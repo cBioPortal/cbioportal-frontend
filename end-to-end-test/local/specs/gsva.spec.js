@@ -303,7 +303,7 @@ describe('gsva feature', function() {
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
                 );
-                horzDataSelect.$('.Select-value-label').click();
+                horzDataSelect.$('.Select-arrow-zone').click();
                 assert(horzDataSelect.$('.Select-option=Gene Sets'));
             });
 
@@ -311,7 +311,7 @@ describe('gsva feature', function() {
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
                 );
-                vertDataSelect.$('.Select-value-label').click();
+                vertDataSelect.$('.Select-arrow-zone').click();
                 assert(vertDataSelect.$('.Select-option=Gene Sets'));
             });
 
@@ -319,13 +319,13 @@ describe('gsva feature', function() {
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
                 );
-                horzDataSelect.$('.Select-value-label').click();
+                horzDataSelect.$('.Select-arrow-zone').click();
                 horzDataSelect.$('.Select-option=Gene Sets').click();
 
                 var horzProfileSelect = $('[name=h-profile-name-selector]').$(
                     '..'
                 );
-                horzProfileSelect.$('.Select-value-label').click();
+                horzProfileSelect.$('.Select-arrow-zone').click();
 
                 assert(
                     horzProfileSelect.$(
@@ -343,13 +343,13 @@ describe('gsva feature', function() {
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
                 );
-                vertDataSelect.$('.Select-value-label').click();
+                vertDataSelect.$('.Select-arrow-zone').click();
                 vertDataSelect.$('.Select-option=Gene Sets').click();
 
                 var vertProfileSelect = $('[name=v-profile-name-selector]').$(
                     '..'
                 );
-                vertProfileSelect.$('.Select-value-label').click();
+                vertProfileSelect.$('.Select-arrow-zone').click();
 
                 assert(
                     vertProfileSelect.$(
@@ -367,13 +367,13 @@ describe('gsva feature', function() {
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
                 );
-                horzDataSelect.$('.Select-value-label').click();
+                horzDataSelect.$('.Select-arrow-zone').click();
                 horzDataSelect.$('.Select-option=Gene Sets').click();
 
                 var horzProfileSelect = $('[name=h-profile-name-selector]').$(
                     '..'
                 );
-                horzProfileSelect.$('.Select-value-label').click();
+                horzProfileSelect.$('.Select-arrow-zone').click();
                 horzProfileSelect
                     .$(
                         '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
@@ -381,7 +381,7 @@ describe('gsva feature', function() {
                     .click();
 
                 var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
-                horzEntitySelect.$('.Select-value-label').click();
+                horzEntitySelect.$('.Select-arrow-zone').click();
 
                 assert(
                     horzEntitySelect.$(
@@ -394,13 +394,13 @@ describe('gsva feature', function() {
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
                 );
-                vertDataSelect.$('.Select-value-label').click();
+                vertDataSelect.$('.Select-arrow-zone').click();
                 vertDataSelect.$('.Select-option=Gene Sets').click();
 
                 var vertProfileSelect = $('[name=v-profile-name-selector]').$(
                     '..'
                 );
-                vertProfileSelect.$('.Select-value-label').click();
+                vertProfileSelect.$('.Select-arrow-zone').click();
                 vertProfileSelect
                     .$(
                         '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
@@ -408,7 +408,7 @@ describe('gsva feature', function() {
                     .click();
 
                 var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
-                vertEntitySelect.$('.Select-value-label').click();
+                vertEntitySelect.$('.Select-arrow-zone').click();
 
                 assert(
                     vertEntitySelect.$(
