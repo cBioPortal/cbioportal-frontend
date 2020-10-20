@@ -2825,7 +2825,7 @@
         "deprecated": false
       }
     },
-    "/structuralvariant/fetch": {
+    "/structural-variant/fetch": {
       "post": {
         "tags": [
           "Structural Variants"
