@@ -4,7 +4,6 @@ import lolex from 'lolex';
 import { Clock } from 'lolex';
 import { default as LazyMobXCache, CacheData } from './LazyMobXCache';
 import mobx from 'mobx';
-import { whyRun } from 'mobx';
 
 // We have to use 'done' rather than fake clock because for some reason fake clock isn't working with async/await
 //  in LazyMobXCache.populate

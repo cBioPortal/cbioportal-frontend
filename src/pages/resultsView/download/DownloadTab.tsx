@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {
@@ -83,6 +83,8 @@ export default class DownloadTab extends React.Component<
 > {
     constructor(props: IDownloadTabProps) {
         super(props);
+
+        makeObservable<DownloadTab, 'handleQueryButtonClick'>(this);
 
         this.handleMutationDownload = this.handleMutationDownload.bind(this);
         this.handleTransposedMutationDownload = this.handleTransposedMutationDownload.bind(

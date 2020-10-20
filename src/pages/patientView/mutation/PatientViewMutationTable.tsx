@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import {
     IMutationTableProps,
@@ -43,6 +43,7 @@ export default class PatientViewMutationTable extends MutationTable<
 > {
     constructor(props: IPatientViewMutationTableProps) {
         super(props);
+        makeObservable<PatientViewMutationTable, 'hasUncalledMutations'>(this);
     }
 
     public static defaultProps = {

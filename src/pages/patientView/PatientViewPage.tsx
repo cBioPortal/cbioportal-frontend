@@ -27,7 +27,7 @@ import ClinicalInformationSamples from './clinicalInformation/ClinicalInformatio
 import { inject, Observer, observer } from 'mobx-react';
 import { getSpanElementsFromCleanData } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from './copyNumberAlterations/CopyNumberTableWrapper';
-import { action, computed, observable, reaction } from 'mobx';
+import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import Timeline from './timeline/Timeline';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import PathologyReport from './pathologyReport/PathologyReport';
@@ -122,6 +122,17 @@ export default class PatientViewPage extends React.Component<
 
     constructor(props: IPatientViewPageProps) {
         super(props);
+        makeObservable<
+            PatientViewPage,
+            | 'mutationTableColumnVisibility'
+            | 'cnaTableColumnVisibility'
+            | 'onCnaTableColumnVisibilityToggled'
+            | 'onMutationTableColumnVisibilityToggled'
+            | 'shouldShowResources'
+            | 'shouldShowPathologyReport'
+            | 'hideTissueImageTab'
+            | 'shouldShowTrialMatch'
+        >(this);
         this.urlWrapper = new PatientViewUrlWrapper(props.routing);
         this.patientViewPageStore = new PatientViewPageStore(
             this.props.appStore

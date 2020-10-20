@@ -34,7 +34,14 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
-import { action, computed, observable, ObservableMap, reaction } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    ObservableMap,
+    reaction,
+    makeObservable,
+} from 'mobx';
 import {
     getProteinPositionFromProteinChange,
     IHotspotIndex,
@@ -447,7 +454,7 @@ export type DriverAnnotationSettings = {
     cosmicCountThreshold: number;
     customBinary: boolean;
     customTiersDefault: boolean;
-    driverTiers: ObservableMap<boolean>;
+    driverTiers: ObservableMap<string, boolean>;
     hotspots: boolean;
     oncoKb: boolean;
     driversAnnotated: boolean;
@@ -464,6 +471,7 @@ export type ModifyQueryParams = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
+        makeObservable(this);
         labelMobxPromises(this);
 
         this.urlWrapper = urlWrapper;
@@ -480,7 +488,7 @@ export class ResultsViewPageStore {
             cbioportalCountThreshold: 0,
             cosmicCount: false,
             cosmicCountThreshold: 0,
-            driverTiers: observable.map<boolean>(),
+            driverTiers: observable.map<string, boolean>(),
 
             _hotspots: false,
             _oncoKb: false,
@@ -732,7 +740,10 @@ export class ResultsViewPageStore {
         this.driverAnnotationSettings.cbioportalCountThreshold = 10;
         this.driverAnnotationSettings.cosmicCount = false;
         this.driverAnnotationSettings.cosmicCountThreshold = 10;
-        this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
+        this.driverAnnotationSettings.driverTiers = observable.map<
+            string,
+            boolean
+        >();
         (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig
             .serverConfig.oncoprint_oncokb_default;
         this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig

@@ -15,7 +15,7 @@ import {
     IAlterationData,
     ICancerSummaryChartData,
 } from './CancerSummaryContent';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { CSSProperties } from 'react';
 import autobind from 'autobind-decorator';
@@ -124,6 +124,14 @@ export class CancerSummaryChart extends React.Component<
 
     constructor(props: CancerSummaryChartProps) {
         super(props);
+        makeObservable<
+            CancerSummaryChart,
+            | 'barPlotTooltipModel'
+            | 'scatterPlotTooltipModel'
+            | 'barToolTipCounter'
+            | 'isBarPlotTooltipHovered'
+            | 'shouldUpdatePosition'
+        >(this);
     }
 
     @autobind

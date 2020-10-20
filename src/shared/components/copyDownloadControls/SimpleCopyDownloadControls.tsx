@@ -1,7 +1,7 @@
 import * as React from 'react';
 import fileDownload from 'react-file-download';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { CopyDownloadLinks } from './CopyDownloadLinks';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
@@ -41,6 +41,8 @@ export class SimpleCopyDownloadControls extends React.Component<
 
     constructor(props: ISimpleCopyDownloadControlsProps) {
         super(props);
+
+        makeObservable<SimpleCopyDownloadControls, 'showCopyMessage'>(this);
 
         this.handleDownload = this.handleDownload.bind(this);
         this.copyLinkRef = this.copyLinkRef.bind(this);

@@ -7,7 +7,14 @@ import styles from './styles/styles.module.scss';
 import classNames from 'classnames';
 import StudyList from './studyList/StudyList';
 import { observer, Observer } from 'mobx-react';
-import { action, computed, expr, IReactionDisposer, reaction } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    reaction,
+    makeObservable,
+} from 'mobx';
+import { expr } from 'mobx-utils';
 import memoize from 'memoize-weak-decorator';
 import { If, Then, Else } from 'react-if';
 import { QueryStore } from './QueryStore';
@@ -61,6 +68,7 @@ export default class CancerStudySelector extends React.Component<
 
     constructor(props: ICancerStudySelectorProps) {
         super(props);
+        makeObservable(this);
         this.store = this.props.queryStore;
     }
 

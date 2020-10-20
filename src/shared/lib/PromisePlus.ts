@@ -1,4 +1,10 @@
-import { action, computed, observable, runInAction } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    runInAction,
+    makeObservable,
+} from 'mobx';
 
 type PromisePlusStatus = 'complete' | 'pending' | 'error';
 
@@ -24,6 +30,7 @@ export default class PromisePlus<T> {
     }
 
     constructor(private _promise: Promise<T>) {
+        makeObservable<PromisePlus<T>, '_status' | '_result' | '_error'>(this);
         runInAction(() => {
             this._status = 'pending';
 

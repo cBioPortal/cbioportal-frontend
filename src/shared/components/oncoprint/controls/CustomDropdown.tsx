@@ -3,7 +3,7 @@ import { Button, Dropdown, ButtonProps } from 'react-bootstrap';
 import { RootCloseWrapper } from 'react-overlays';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 
 export interface ICustomDropdownProps extends ButtonProps {
     title: string;
@@ -48,6 +48,7 @@ export default class CustomDropdown extends React.Component<
 
     constructor(props: ButtonProps) {
         super(props);
+        makeObservable<CustomDropdown, 'open'>(this);
         this.toggle = () => {
             this.open = !this.open;
         };

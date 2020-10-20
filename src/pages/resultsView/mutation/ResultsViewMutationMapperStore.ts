@@ -25,7 +25,7 @@ import MutationMapperStore, {
     IMutationMapperStoreConfig,
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -85,6 +85,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             genomenexusClient,
             genomenexusInternalClient
         );
+
+        makeObservable(this);
 
         labelMobxPromises(this);
     }

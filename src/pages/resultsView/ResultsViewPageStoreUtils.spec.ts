@@ -428,7 +428,10 @@ describe('ResultsViewPageStoreUtils', () => {
                 false
             );
 
-            assert.deepEqual(mutationAnnotationSettings.driverTiers.toJS(), {});
+            assert.deepEqual(
+                _.fromPairs(mutationAnnotationSettings.driverTiers.toJSON()),
+                {}
+            );
         });
 
         it.skip('initializes selection for given tiers', () => {
@@ -447,7 +450,7 @@ describe('ResultsViewPageStoreUtils', () => {
             );
 
             assert.deepEqual(
-                mutationAnnotationSettings.driverTiers.toJS(),
+                _.fromPairs(mutationAnnotationSettings.driverTiers.toJSON()),
                 { a: false, b: false, c: false },
                 'initialized to false'
             );
@@ -463,7 +466,7 @@ describe('ResultsViewPageStoreUtils', () => {
             );
 
             assert.deepEqual(
-                mutationAnnotationSettings.driverTiers.toJS(),
+                _.fromPairs(mutationAnnotationSettings.driverTiers.toJSON()),
                 { a: true, b: true, c: true },
                 'initialized to true'
             );

@@ -91,7 +91,7 @@ export class TimelineStore {
     }
 
     private tooltipUidCounter = 0;
-    private tooltipModelsByUid = observable.map<TooltipModel>();
+    private tooltipModelsByUid = observable.map<string, TooltipModel>();
     @observable private _lastHoveredTooltipUid: string | null = null;
     @action
     public setHoveredTooltipUid(uid: string | null) {
@@ -104,7 +104,7 @@ export class TimelineStore {
         ) {
             return this._lastHoveredTooltipUid;
         } else if (this.tooltipModelsByUid.size === 1) {
-            return this.tooltipModelsByUid.keys()[0];
+            return this.tooltipModelsByUid.keys().next().value; // equivalent of keys()[0] with Iterators
         } else {
             return null;
         }
@@ -117,7 +117,7 @@ export class TimelineStore {
     }
 
     @computed get tooltipModels() {
-        return this.tooltipModelsByUid.entries();
+        return Array.from(this.tooltipModelsByUid.entries());
     }
 
     @autobind
@@ -148,7 +148,7 @@ export class TimelineStore {
 
     @action
     removeAllTooltipsExcept(tooltipUid: string) {
-        const uids = this.tooltipModelsByUid.keys();
+        const uids = Array.from(this.tooltipModelsByUid.keys());
         for (const uid of uids) {
             if (uid !== tooltipUid) {
                 this.tooltipModelsByUid.delete(uid);

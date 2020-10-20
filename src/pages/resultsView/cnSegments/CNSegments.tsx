@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import MobxPromise from 'mobxpromise';
 import autobind from 'autobind-decorator';
 import { Nav, NavItem } from 'react-bootstrap';
@@ -42,6 +42,7 @@ export default class CNSegments extends React.Component<
 
     constructor(props: { store: ResultsViewPageStore }) {
         super(props);
+        makeObservable(this);
         this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
     }
 

@@ -27,7 +27,7 @@ export default class UsageAgreement extends React.Component<
     @observable
     modalShow: boolean = false;
 
-    @observable checkedItems = observable.map<boolean>();
+    @observable checkedItems = observable.map<string, boolean>();
 
     @computed get expirationInSeconds() {
         return this.props.expirationInDays
@@ -45,8 +45,11 @@ export default class UsageAgreement extends React.Component<
     @computed get isAgreementComplete(): boolean {
         return (
             this.useCheckboxes === false ||
-            (this.checkedItems.entries().length === this.props.clauses.length &&
-                _.every(this.checkedItems.values(), val => val === true))
+            (this.checkedItems.size === this.props.clauses.length &&
+                _.every(
+                    Array.from(this.checkedItems.values()),
+                    val => val === true
+                ))
         );
     }
 

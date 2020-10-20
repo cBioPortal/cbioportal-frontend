@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import {
     CustomChart,
     StudyViewPageStore,
@@ -117,6 +117,11 @@ export default class StudyViewPage extends React.Component<
 
     constructor(props: IStudyViewPageProps) {
         super(props);
+
+        makeObservable<
+            StudyViewPage,
+            'toolbarLeft' | 'showReturnToDefaultChartListModal'
+        >(this);
 
         this.urlWrapper = new StudyViewURLWrapper(this.props.routing);
 

@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     applyDataFiltersOnDatum,
@@ -196,6 +196,8 @@ export default class MutationMapperDataStore
         groupFilters: { group: string; filter: DataFilter }[] = []
     ) {
         super(data);
+
+        makeObservable(this);
 
         this.dataFilters = dataFilters;
         this.selectionFilters = selectionFilters;

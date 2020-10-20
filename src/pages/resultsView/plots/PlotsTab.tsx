@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { toJS, action, computed, observable, runInAction } from 'mobx';
+import {
+    toJS,
+    action,
+    computed,
+    observable,
+    runInAction,
+    makeObservable,
+} from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -284,9 +291,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
     @observable plotExists = false;
-    @observable highlightedLegendItems = observable.shallowMap<
+    @observable highlightedLegendItems = observable.map<
+        string,
         LegendDataWithId
-    >();
+    >({}, { deep: false });
 
     @autobind
     @action
@@ -656,6 +664,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     constructor(props: IPlotsTabProps) {
         super(props);
+
+        makeObservable(this);
 
         this.horzSelection = this.initAxisMenuSelection(false);
         this.vertSelection = this.initAxisMenuSelection(true);
@@ -3003,9 +3013,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         };
         const highlightFunctions = [
             searchHighlight,
-            ...this.highlightedLegendItems
-                .values()
-                .map(x => x.highlighting!.isDatumHighlighted),
+            ...Array.from(this.highlightedLegendItems.values()).map(
+                x => x.highlighting!.isDatumHighlighted
+            ),
         ];
         return (d: IPlotSampleData) => {
             return _.some(highlightFunctions, f => f(d));

@@ -128,7 +128,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.GENOMIC] ||
                 [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
 
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
@@ -149,7 +149,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ChartMetaDataTypeEnum.GENE_SPECIFIC
             ] || [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(
@@ -168,7 +168,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.CLINICAL] ||
                 [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
     }
 
@@ -179,7 +179,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ChartMetaDataTypeEnum.CUSTOM_DATA
             ] || [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
     }
 

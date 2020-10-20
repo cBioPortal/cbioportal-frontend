@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
@@ -19,6 +19,7 @@ export class UserDataAccessToken {
         expirationDate: string,
         username: string
     ) {
+        makeObservable(this);
         this.token = token;
         this.creationDate = creationDate;
         this.expirationDate = expirationDate;

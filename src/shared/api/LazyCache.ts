@@ -1,10 +1,13 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 
 export default class LazyCache {
     @observable.ref protected _cache: any;
     protected dependencies: any[];
 
     constructor(..._dependencies: any[]) {
+        makeObservable<LazyCache, '_cache' | 'redefineCacheToTriggerMobX'>(
+            this
+        );
         this._cache = {};
         this.dependencies = _dependencies;
     }

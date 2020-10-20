@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import { cached } from 'mobxpromise';
 import {
@@ -87,6 +87,10 @@ export default class MutationMapperToolStore {
         },
         undefined
     );
+
+    constructor() {
+        makeObservable(this);
+    }
 
     @computed get isoformOverrideSource(): string {
         return AppConfig.serverConfig.isoformOverrideSource;

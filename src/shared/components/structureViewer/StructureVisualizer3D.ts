@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import $ from 'jquery';
-import { observable, computed, reaction, action } from 'mobx';
+import { observable, computed, reaction, action, makeObservable } from 'mobx';
 import {
     default as StructureVisualizer,
     ProteinScheme,
@@ -116,6 +116,11 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         _3dMol?: any
     ) {
         super();
+
+        makeObservable<
+            StructureVisualizer3D,
+            'props' | '_prevProps' | 'state' | '_prevState'
+        >(this);
 
         this._3dMol = _3dMol || $3Dmol;
         this._3dMolDiv = div;

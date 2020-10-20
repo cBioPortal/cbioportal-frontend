@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     ChartControls,
@@ -148,6 +148,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     constructor(props: IChartContainerProps) {
         super(props);
+
+        makeObservable<ChartContainer, 'selectedRowsKeys'>(this);
 
         this.chartType = this.props.chartType;
 

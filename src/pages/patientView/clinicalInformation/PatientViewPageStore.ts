@@ -19,7 +19,13 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import { computed, observable, action, runInAction } from 'mobx';
+import {
+    computed,
+    observable,
+    action,
+    runInAction,
+    makeObservable,
+} from 'mobx';
 import {
     getBrowserWindow,
     remoteData,
@@ -160,6 +166,7 @@ import {
 } from 'shared/lib/oql/AccessorsForOqlFilter';
 
 type PageMode = 'patient' | 'sample';
+type ResourceId = string;
 
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
     if (/TCGA/.test(patientId) === false) {
@@ -261,6 +268,10 @@ function transformClinicalInformationToStoreShape(
 
 export class PatientViewPageStore {
     constructor(private appStore: AppStore) {
+        makeObservable<
+            PatientViewPageStore,
+            '_patientId' | '_patientIdsInCohort'
+        >(this);
         labelMobxPromises(this);
         this.internalClient = internalClient;
     }
@@ -284,7 +295,7 @@ export class PatientViewPageStore {
 
     @observable _sampleId = '';
 
-    private openResourceTabMap = observable.map<boolean>();
+    private openResourceTabMap = observable.map<ResourceId, boolean>();
     @autobind
     public isResourceTabOpen(resourceId: string) {
         return !!this.openResourceTabMap.get(resourceId);

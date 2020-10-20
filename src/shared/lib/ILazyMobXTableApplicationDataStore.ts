@@ -1,5 +1,5 @@
 import { SortMetric } from './ISortMetric';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import { lazyMobXTableSort } from '../components/lazyMobXTable/LazyMobXTable';
 import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL } from 'shared/components/paginationControls/PaginationControls';
 
@@ -157,6 +157,10 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T>
     }
 
     constructor(private getData: () => T[]) {
+        makeObservable<
+            SimpleGetterLazyMobXTableApplicationDataStore<T>,
+            'dataFilter' | 'dataSelector'
+        >(this);
         this.filterString = '';
         this.dataHighlighter = () => false;
         this.dataSelector = () => false;

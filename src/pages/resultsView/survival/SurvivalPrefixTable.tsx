@@ -13,7 +13,7 @@ import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 import _ from 'lodash';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import AppConfig from 'appConfig';
 
 export interface ISurvivalPrefixTableProps {
@@ -178,6 +178,7 @@ export default class SurvivalPrefixTable extends React.Component<
 
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
+        makeObservable<SurvivalPrefixTable, 'columnVisibility'>(this);
         this.dataStore = new SurvivalPrefixTableStore(
             () => this.props.survivalPrefixes,
             this.props.getSelectedPrefix

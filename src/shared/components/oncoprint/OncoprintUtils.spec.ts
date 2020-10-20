@@ -140,7 +140,7 @@ describe('OncoprintUtils', () => {
             sequencedSampleKeysByGene: {},
             sequencedPatientKeysByGene: { BRCA1: [], PTEN: [], TP53: [] },
             selectedMolecularProfiles: [],
-            expansionIndexMap: observable.map<number[]>(),
+            expansionIndexMap: observable.map<string, number[]>(),
             hideGermlineMutations: false,
             oncoprint: {} as any,
         });
@@ -406,9 +406,12 @@ describe('OncoprintUtils', () => {
             })(queryData, trackIndex).key;
             const postExpandStoreProperties = {
                 ...preExpandStoreProperties,
-                expansionIndexMap: observable.shallowMap({
-                    [trackKey]: [0, 1],
-                } as IKeyValueMap<number[]>),
+                expansionIndexMap: observable.map<string, number[]>(
+                    {
+                        [trackKey]: [0, 1],
+                    } as IKeyValueMap<number[]>,
+                    { deep: false }
+                ),
             };
             // when
             const trackFunction = makeGeneticTrackWith({
@@ -427,7 +430,7 @@ describe('OncoprintUtils', () => {
             const trackIndex = MINIMAL_TRACK_INDEX + 8;
             const storeProperties = {
                 ...makeMinimal3Patient3GeneStoreProperties(),
-                expansionIndexMap: observable.map<number[]>({
+                expansionIndexMap: observable.map<string, number[]>({
                     UNRELATED_TRACK_1: [8, 9, 10],
                     [parentKey]: [3, trackIndex, 15],
                 }),

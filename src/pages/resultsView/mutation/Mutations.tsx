@@ -5,7 +5,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
@@ -55,6 +55,7 @@ export default class Mutations extends React.Component<
 
     constructor(props: IMutationsPageProps) {
         super(props);
+        makeObservable(this);
         this.handleTabChange.bind(this);
         this.userSelectionStore = new MutationMapperUserSelectionStore();
     }

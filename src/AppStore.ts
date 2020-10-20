@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import {
     addServiceErrorHandler,
     getBrowserWindow,
@@ -17,6 +17,7 @@ export type SiteError = {
 
 export class AppStore {
     constructor() {
+        makeObservable<AppStore, '_appReady'>(this);
         getBrowserWindow().me = this;
         addServiceErrorHandler((error: any) => {
             try {

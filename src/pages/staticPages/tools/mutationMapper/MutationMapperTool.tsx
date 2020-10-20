@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { Collapse } from 'react-collapse';
 import {
@@ -60,6 +60,8 @@ export default class MutationMapperTool extends React.Component<
 
     constructor(props: IMutationMapperToolProps) {
         super(props);
+
+        makeObservable(this);
 
         this.userSelectionStore = new MutationMapperUserSelectionStore();
         // set genomenexus url to grch38 instance if "show_mutation_mapper_tool_grch38" is true and choose "GRCh38", otherwise use default url

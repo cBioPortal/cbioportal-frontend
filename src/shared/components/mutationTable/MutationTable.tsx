@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import {
     default as LazyMobXTable,
@@ -254,6 +254,10 @@ export default class MutationTable<
 
     constructor(props: P) {
         super(props);
+        makeObservable<
+            MutationTable<P>,
+            '_columns' | 'orderedColumns' | 'columns'
+        >(this);
         this._columns = {};
         this.generateColumns();
     }

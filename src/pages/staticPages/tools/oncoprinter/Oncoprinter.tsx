@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { action, computed, IObservableObject, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import Oncoprint from '../../../../shared/components/oncoprint/Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -53,12 +53,14 @@ export default class Oncoprinter extends React.Component<
     @observable renderingComplete = true;
 
     private controlsHandlers: IOncoprintControlsHandlers;
-    private controlsState: IOncoprintControlsState & IObservableObject;
+    private controlsState: IOncoprintControlsState;
 
     @observable.ref public oncoprint: OncoprintJS;
 
     constructor(props: IOncoprinterProps) {
         super(props);
+
+        makeObservable<Oncoprinter, 'initializeOncoprint'>(this);
 
         (window as any).oncoprinter = this;
 

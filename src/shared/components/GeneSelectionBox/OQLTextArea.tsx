@@ -10,6 +10,7 @@ import {
     action,
     reaction,
     IReactionDisposer,
+    makeObservable,
 } from 'mobx';
 import { Gene } from 'cbioportal-ts-api-client';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -123,6 +124,15 @@ export default class OQLTextArea extends React.Component<
 
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
+        makeObservable<
+            OQLTextArea,
+            | '_geneQuery'
+            | 'geneQueryIsValid'
+            | 'queryToBeValidated'
+            | 'isFocused'
+            | 'skipGenesValidation'
+            | 'textAreaClasses'
+        >(this);
         this.geneQuery = this.props.inputGeneQuery || '';
         this.queryToBeValidated = this.geneQuery;
         if (!this.props.validateInputGeneQuery) {

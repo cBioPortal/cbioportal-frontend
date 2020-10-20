@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { If, Else, Then } from 'react-if';
 import TextTruncate from 'react-text-truncate';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 
 export interface ITextExpanderProps {
     text?: string | JSX.Element | null;
@@ -28,6 +28,8 @@ export default class TextExpander extends React.Component<
 
     constructor(props: ITextExpanderProps) {
         super(props);
+
+        makeObservable<TextExpander, 'isTextTruncated'>(this);
 
         this.toggleText = this.toggleText.bind(this);
     }

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import { Link } from 'react-router';
 
@@ -20,6 +20,7 @@ export class TestimonialStore {
     }
 
     constructor() {
+        makeObservable(this);
         this.testimonialIndex = 0;
         this.testimonials = [
             {

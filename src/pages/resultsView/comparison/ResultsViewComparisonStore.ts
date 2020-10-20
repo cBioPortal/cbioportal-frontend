@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import ComparisonStore, {
     OverlapStrategy,
@@ -42,6 +42,10 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         protected resultsViewStore: ResultsViewPageStore
     ) {
         super(appStore, resultsViewStore);
+        makeObservable<
+            ResultsViewComparisonStore,
+            '_currentTabId' | 'updateSelectedGroups' | 'saveAndGoToSession'
+        >(this);
     }
 
     @action public updateOverlapStrategy(strategy: OverlapStrategy) {

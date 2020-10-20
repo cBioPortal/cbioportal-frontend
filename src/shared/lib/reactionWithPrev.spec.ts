@@ -10,9 +10,9 @@ describe('reactionWithPrev', () => {
         let argumentIndex = observable(-1);
         let indexesWhereEffectCalled: { [index: number]: boolean } = {};
 
-        let dataFn = () => values[argumentIndex.get()];
+        let dataFn = () => values[argumentIndex];
         let effectFn = (data: number, prevData?: number) => {
-            if (argumentIndex.get() === values.length) {
+            if (argumentIndex === values.length) {
                 assert.isTrue(indexesWhereEffectCalled[0], '0');
                 assert.isTrue(indexesWhereEffectCalled[1], '1');
                 assert.isTrue(indexesWhereEffectCalled[2], '2');
@@ -23,22 +23,22 @@ describe('reactionWithPrev', () => {
                 assert.isTrue(indexesWhereEffectCalled[7], '7');
                 done();
             } else {
-                indexesWhereEffectCalled[argumentIndex.get()] = true;
-                assert.equal(data, values[argumentIndex.get()]);
-                if (argumentIndex.get() > 0) {
-                    assert.equal(prevData, values[argumentIndex.get() - 1]);
+                indexesWhereEffectCalled[argumentIndex] = true;
+                assert.equal(data, values[argumentIndex]);
+                if (argumentIndex > 0) {
+                    assert.equal(prevData, values[argumentIndex - 1]);
                 }
             }
         };
         dispose = reactionWithPrev<number>(dataFn, effectFn);
-        argumentIndex.set(0);
-        argumentIndex.set(1);
-        argumentIndex.set(2);
-        argumentIndex.set(3);
-        argumentIndex.set(4);
-        argumentIndex.set(5);
-        argumentIndex.set(6);
-        argumentIndex.set(7);
-        argumentIndex.set(8);
+        argumentIndex = 0;
+        argumentIndex = 1;
+        argumentIndex = 2;
+        argumentIndex = 3;
+        argumentIndex = 4;
+        argumentIndex = 5;
+        argumentIndex = 6;
+        argumentIndex = 7;
+        argumentIndex = 8;
     });
 });

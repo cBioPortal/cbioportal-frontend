@@ -9,7 +9,7 @@ import OncoprintJS, {
 } from 'oncoprintjs';
 import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { transition } from './DeltaUtils';
 import _ from 'lodash';
 import {
@@ -247,6 +247,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     constructor(props: IOncoprintProps) {
         super(props);
 
+        makeObservable(this);
+
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);
         this.refreshOncoprint = _.debounce(this.refreshOncoprint.bind(this), 0);
@@ -321,10 +323,6 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     componentWillReceiveProps(nextProps: IOncoprintProps) {
         this.refreshOncoprint(nextProps);
-    }
-
-    shouldComponentUpdate() {
-        return false;
     }
 
     componentDidMount() {

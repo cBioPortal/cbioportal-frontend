@@ -233,7 +233,8 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
             highlightedMutations.push(mouseOverMutation);
         }
         if (highlightedMutations.length > 0) {
-            return highlightedMutations.map(highlightedMutation => {
+            return (
+                <>{highlightedMutations.map(highlightedMutation => {
                 const points = this.mutationToDataPoints.get({
                     proteinChange: highlightedMutation.proteinChange,
                     hugoGeneSymbol: highlightedMutation.gene.hugoGeneSymbol,
@@ -287,7 +288,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                         {pointPaths}
                     </g>
                 );
-            });
+            })}</>);
         } else {
             return <g />;
         }

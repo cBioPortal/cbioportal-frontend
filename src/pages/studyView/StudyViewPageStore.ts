@@ -11,6 +11,7 @@ import {
     observable,
     reaction,
     toJS,
+    makeObservable,
 } from 'mobx';
 import {
     AndedPatientTreatmentFilters,
@@ -207,6 +208,11 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 
+type ChartUniqueKey = string;
+type ResourceId = string;
+type ComparisonGroupId = string;
+type AttributeId = string;
+
 export type ChartUserSetting = {
     id: string;
     name?: string;
@@ -330,6 +336,38 @@ export class StudyViewPageStore {
         private sessionServiceIsEnabled: boolean,
         private urlWrapper: StudyViewURLWrapper
     ) {
+        makeObservable<
+            StudyViewPageStore,
+            | '_comparisonConfirmationModal'
+            | '_comparisonGroupsChangeCount'
+            | 'initialFiltersQuery'
+            | '_genomicProfilesFilter'
+            | '_caseListsFilter'
+            | '_clinicalDataBinFilterSet'
+            | '_genomicDataBinFilterSet'
+            | '_geneFilterSet'
+            | '_chartVisibility'
+            | 'isInitialFilterState'
+            | 'columns'
+            | 'currentGridLayout'
+            | 'previousSettings'
+            | '_filterMutatedGenesTableByCancerGenes'
+            | '_filterFusionGenesTableByCancerGenes'
+            | '_filterCNAGenesTableByCancerGenes'
+            | '_customChartMap'
+            | '_customCharts'
+            | '_geneSpecificChartMap'
+            | '_geneSpecificCharts'
+            | '_customChartsSelectedCases'
+            | 'currentChartSettingsMap'
+            | '_defualtChartsDimension'
+            | '_defaultChartsType'
+            | '_defaultVisibleChartIds'
+            | '_defaultClinicalDataBinFilterSet'
+            | 'defaultChartSettingsMap'
+            | '_patientTreatmentsFilter'
+            | '_sampleTreatmentsFilters'
+        >(this);
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
         this.reactionDisposers.push(
@@ -349,8 +387,8 @@ export class StudyViewPageStore {
                 () => [
                     this.visibleAttributes,
                     this.columns,
-                    this.chartsDimension.toJS(),
-                    this.chartsType.toJS(),
+                    _.fromPairs(this.chartsDimension.toJSON()),
+                    _.fromPairs(this.chartsType.toJSON()),
                 ],
                 () => {
                     this.updateLayout();
@@ -446,7 +484,7 @@ export class StudyViewPageStore {
         }
     }
 
-    private openResourceTabMap = observable.map<boolean>();
+    private openResourceTabMap = observable.map<ResourceId, boolean>();
     @autobind
     public isResourceTabOpen(resourceId: string) {
         return !!this.openResourceTabMap.get(resourceId);
@@ -473,10 +511,14 @@ export class StudyViewPageStore {
     }
 
     // <comparison groups code>
-    private _selectedComparisonGroups = observable.shallowMap<boolean>();
-    private _comparisonGroupsMarkedForDeletion = observable.shallowMap<
+    private _selectedComparisonGroups = observable.map<
+        ComparisonGroupId,
         boolean
-    >();
+    >({}, { deep: false });
+    private _comparisonGroupsMarkedForDeletion = observable.map<
+        ComparisonGroupId,
+        boolean
+    >({}, { deep: false });
 
     @action public setComparisonGroupSelected(
         groupId: string,
@@ -649,9 +691,9 @@ export class StudyViewPageStore {
             }
 
             // group present in page session which are not saved to user account
-            const missingGroupIds = this._selectedComparisonGroups
-                .keys()
-                .filter(groupId => groupIdSet[groupId] === undefined);
+            const missingGroupIds = Array.from(
+                this._selectedComparisonGroups.keys()
+            ).filter(groupId => groupIdSet[groupId] === undefined);
 
             if (missingGroupIds.length > 0) {
                 const promises = [];
@@ -1241,9 +1283,10 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
-    private _clinicalDataFilterSet = observable.shallowMap<
+    private _clinicalDataFilterSet = observable.map<
+        AttributeId,
         ClinicalDataFilter
-    >();
+    >({}, { deep: false });
 
     @observable private _genomicProfilesFilter: string[][] = [];
     @observable private _caseListsFilter: string[][] = [];
@@ -1262,34 +1305,47 @@ export class StudyViewPageStore {
         this._caseListsFilter = p;
     }
 
-    private _customBinsFromScatterPlotSelectionSet = observable.shallowMap<
+    private _customBinsFromScatterPlotSelectionSet = observable.map<
+        ChartUniqueKey,
         number[]
-    >();
-    private _genomicDataIntervalFilterSet = observable.shallowMap<
+    >({}, { deep: false });
+    private _genomicDataIntervalFilterSet = observable.map<
+        ChartUniqueKey,
         GenomicDataFilter
-    >();
+    >({}, { deep: false });
 
     @observable private _clinicalDataBinFilterSet = observable.map<
+        ChartUniqueKey,
         ClinicalDataBinFilter
     >();
     @observable private _genomicDataBinFilterSet = observable.map<
+        ChartUniqueKey,
         GenomicDataBinFilter
     >();
 
-    @observable.ref private _geneFilterSet = observable.map<string[][]>();
+    @observable.ref private _geneFilterSet = observable.map<
+        string,
+        string[][]
+    >();
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
     // ChartContainer should be modified, instead of accepting a promise, it should accept data and loading state.
-    @observable private _chartVisibility = observable.map<boolean>();
+    @observable private _chartVisibility = observable.map<
+        ChartUniqueKey,
+        boolean
+    >();
 
     @observable geneQueryStr: string;
 
     @observable public geneQueries: SingleGeneQuery[] = [];
 
-    @observable public chartsDimension = observable.map<ChartDimension>();
+    @observable public chartsDimension = observable.map<
+        ChartUniqueKey,
+        ChartDimension
+    >();
 
-    @observable public chartsType = observable.map<ChartType>();
+    @observable public chartsType = observable.map<ChartUniqueKey, ChartType>();
 
     private newlyAddedCharts = observable.array<string>();
 
@@ -1530,7 +1586,7 @@ export class StudyViewPageStore {
         this.currentGridLayout = calculateLayout(
             this.visibleAttributes,
             this.columns,
-            this.chartsDimension.toJS(),
+            _.fromPairs(this.chartsDimension.toJSON()),
             this.useCurrentGridLayout ? this.currentGridLayout : [],
             this.currentFocusedChartByUser,
             this.currentFocusedChartByUserDimension
@@ -1586,10 +1642,11 @@ export class StudyViewPageStore {
     } = {};
 
     private _chartSampleIdentifiersFilterSet = observable.map<
+        ChartUniqueKey,
         SampleIdentifier[]
     >();
 
-    public customChartFilterSet = observable.map<string[]>();
+    public customChartFilterSet = observable.map<ChartUniqueKey, string[]>();
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
     @observable _filterComparisonGroups: StudyViewComparisonGroup[] = [];
@@ -1654,19 +1711,28 @@ export class StudyViewPageStore {
     }
 
     //used in saving custom added charts
-    @observable private _customChartMap = observable.shallowMap<CustomChart>();
-    @observable private _customCharts = observable.shallowMap<ChartMeta>();
+    @observable private _customChartMap = observable.map<
+        ChartUniqueKey,
+        CustomChart
+    >({}, { deep: false });
+    @observable private _customCharts = observable.map<
+        ChartUniqueKey,
+        ChartMeta
+    >({}, { deep: false });
 
     //used in saving gene specific charts
-    @observable private _geneSpecificChartMap = observable.shallowMap<
+    @observable private _geneSpecificChartMap = observable.map<
+        ChartUniqueKey,
         GenomicChart
-    >();
-    @observable private _geneSpecificCharts = observable.shallowMap<
+    >({}, { deep: false });
+    @observable private _geneSpecificCharts = observable.map<
+        ChartUniqueKey,
         ChartMeta
-    >();
-    @observable private _customChartsSelectedCases = observable.shallowMap<
+    >({}, { deep: false });
+    @observable private _customChartsSelectedCases = observable.map<
+        ChartUniqueKey,
         CustomChartIdentifierWithValue[]
-    >();
+    >({}, { deep: false });
 
     @autobind
     @action
@@ -2115,7 +2181,7 @@ export class StudyViewPageStore {
     }
 
     public newCustomChartUniqueKey(): string {
-        return `CUSTOM_FILTERS_${this._customCharts.keys().length}`;
+        return `CUSTOM_FILTERS_${this._customCharts.size}`;
     }
 
     public isCustomChart(uniqueKey: string): boolean {
@@ -2335,7 +2401,7 @@ export class StudyViewPageStore {
 
     @action addCharts(visibleChartIds: string[]) {
         visibleChartIds.forEach(chartId => {
-            if (!this._chartVisibility.keys().includes(chartId)) {
+            if (!this._chartVisibility.has(chartId)) {
                 this.newlyAddedCharts.push(chartId);
             }
         });
@@ -2343,7 +2409,7 @@ export class StudyViewPageStore {
     }
 
     @action updateChartsVisibility(visibleChartIds: string[]) {
-        _.each(this._chartVisibility.keys(), chartId => {
+        for (const chartId of this._chartVisibility.keys()) {
             if (
                 !_.includes(visibleChartIds, chartId) ||
                 !this._chartVisibility.get(chartId)
@@ -2352,20 +2418,20 @@ export class StudyViewPageStore {
                 // because adding chart back would insert in middle instead of appending at last
                 this.changeChartVisibility(chartId, false);
             }
-        });
-        _.each(visibleChartIds, uniqueKey => {
+        }
+        for (const uniqueKey of visibleChartIds) {
             if (this._chartVisibility.get(uniqueKey) === undefined) {
                 this.changeChartVisibility(uniqueKey, true);
             }
-        });
+        }
     }
 
     @computed get clinicalDataFilters() {
-        return this._clinicalDataFilterSet.values();
+        return Array.from(this._clinicalDataFilterSet.values());
     }
 
     @computed get geneFilters(): GeneFilter[] {
-        return _.map(this._geneFilterSet.entries(), ([key, value]) => {
+        return _.map(this._geneFilterSet.toJSON(), ([key, value]) => {
             return {
                 molecularProfileIds: getMolecularProfileIdsFromUniqueKey(key),
                 geneQueries: value,
@@ -2374,7 +2440,7 @@ export class StudyViewPageStore {
     }
 
     @computed get genomicDataIntervalFilters() {
-        return this._genomicDataIntervalFilterSet.values();
+        return Array.from(this._genomicDataIntervalFilterSet.values());
     }
 
     @computed
@@ -2422,7 +2488,9 @@ export class StudyViewPageStore {
             filters.patientTreatmentFilters = { filters: [] };
         }
 
-        let sampleIdentifiersFilterSets = this._chartSampleIdentifiersFilterSet.values();
+        let sampleIdentifiersFilterSets = Array.from(
+            this._chartSampleIdentifiersFilterSet.values()
+        );
 
         // nested array need to be spread for _.intersectionWith
         let _sampleIdentifiers: SampleIdentifier[] = _.intersectionWith(
@@ -2448,7 +2516,7 @@ export class StudyViewPageStore {
     get userSelections() {
         let sampleIdentifiersSet: {
             [id: string]: SampleIdentifier[];
-        } = this._chartSampleIdentifiersFilterSet.toJS();
+        } = _.fromPairs(this._chartSampleIdentifiersFilterSet.toJSON());
         return { ...this.filters, sampleIdentifiersSet };
     }
 
@@ -3791,8 +3859,11 @@ export class StudyViewPageStore {
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        let _chartMetaSet = this._customCharts.toJS();
-        _chartMetaSet = _.merge(_chartMetaSet, this._geneSpecificCharts.toJS());
+        let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
+        _chartMetaSet = _.merge(
+            _chartMetaSet,
+            _.fromPairs(this._geneSpecificCharts.toJSON())
+        );
 
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
@@ -3993,7 +4064,7 @@ export class StudyViewPageStore {
     @computed
     get visibleAttributes(): ChartMeta[] {
         return _.reduce(
-            this._chartVisibility.entries(),
+            Array.from(this._chartVisibility.entries()),
             (acc, [chartUniqueKey, visible]) => {
                 if (visible && this.chartMetaSet[chartUniqueKey]) {
                     let chartMeta = this.chartMetaSet[chartUniqueKey];
@@ -4092,11 +4163,11 @@ export class StudyViewPageStore {
             chartSettingsMap = getChartSettingsMap(
                 this.visibleAttributes,
                 this.columns,
-                this.chartsDimension.toJS(),
-                this.chartsType.toJS(),
-                this._customChartMap.toJS(),
-                this._geneSpecificChartMap.toJS(),
-                this._clinicalDataBinFilterSet.toJS(),
+                _.fromPairs(this.chartsDimension.toJSON()),
+                _.fromPairs(this.chartsType.toJSON()),
+                _.fromPairs(this._customChartMap.toJSON()),
+                _.fromPairs(this._geneSpecificChartMap.toJSON()),
+                _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterFusionGenesTableByCancerGenes,
                 this._filterCNAGenesTableByCancerGenes,
@@ -4172,11 +4243,16 @@ export class StudyViewPageStore {
     // had to create default variables for eachsince the default chart settings
     // depends on the number of columns (browser width)
     @observable private _defualtChartsDimension = observable.map<
+        ChartUniqueKey,
         ChartDimension
     >();
-    @observable private _defaultChartsType = observable.map<ChartType>();
+    @observable private _defaultChartsType = observable.map<
+        ChartUniqueKey,
+        ChartType
+    >();
     @observable private _defaultVisibleChartIds: string[] = [];
     @observable private _defaultClinicalDataBinFilterSet = observable.map<
+        ChartUniqueKey,
         ClinicalDataBinFilter
     >();
 
@@ -4202,11 +4278,11 @@ export class StudyViewPageStore {
                 chartUniqueKey => this.chartMetaSet[chartUniqueKey]
             ),
             this.columns,
-            this._defualtChartsDimension.toJS(),
-            this._defaultChartsType.toJS(),
+            _.fromPairs(this._defualtChartsDimension.toJSON()),
+            _.fromPairs(this._defaultChartsType.toJSON()),
             {},
             {},
-            this._defaultClinicalDataBinFilterSet.toJS()
+            _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
 
@@ -4428,14 +4504,16 @@ export class StudyViewPageStore {
         this.initializeClinicalDataBinCountCharts();
         this.initializeGeneSpecificCharts();
         this._defualtChartsDimension = observable.map(
-            this.chartsDimension.toJS()
+            _.fromPairs(this.chartsDimension.toJSON())
         );
-        this._defaultChartsType = observable.map(this.chartsType.toJS());
+        this._defaultChartsType = observable.map(
+            _.fromPairs(this.chartsType.toJSON())
+        );
         this._defaultVisibleChartIds = this.visibleAttributes.map(
             attribute => attribute.uniqueKey
         );
         this._defaultClinicalDataBinFilterSet = observable.map(
-            toJS(this._clinicalDataBinFilterSet)
+            _.fromPairs(this._clinicalDataBinFilterSet.toJSON())
         );
     }
 
@@ -6306,7 +6384,7 @@ export class StudyViewPageStore {
 
                 // Add all custom chart counts, and they should all get 100%
                 _.reduce(
-                    this._customCharts.keys(),
+                    Array.from(this._customCharts.keys()),
                     (acc, next) => {
                         acc[next] = this.selectedSamples.result.length;
                         return acc;
@@ -6323,7 +6401,7 @@ export class StudyViewPageStore {
                         .mapValues(datum => datum.count)
                         .value();
                     _.reduce(
-                        this._geneSpecificChartMap.keys(),
+                        Array.from(this._geneSpecificChartMap.keys()),
                         (acc, uniqueChartKey) => {
                             const genomicChart = this._geneSpecificChartMap.get(
                                 uniqueChartKey
@@ -6547,15 +6625,14 @@ export class StudyViewPageStore {
         invoke: async () => {
             let selectedSamples = [];
             if (
-                _.includes(
-                    this._chartSampleIdentifiersFilterSet.keys(),
+                this._chartSampleIdentifiersFilterSet.has(
                     SpecialChartsUniqueKeyEnum.CANCER_STUDIES
                 )
             ) {
                 selectedSamples = await getSamplesByExcludingFiltersOnChart(
                     SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
                     this.filters,
-                    this._chartSampleIdentifiersFilterSet.toJS(),
+                    _.fromPairs(this._chartSampleIdentifiersFilterSet.toJSON()),
                     this.queriedSampleIdentifiers.result,
                     this.queriedPhysicalStudyIds.result
                 );
@@ -6641,7 +6718,9 @@ export class StudyViewPageStore {
                                 selectedSamples = await getSamplesByExcludingFiltersOnChart(
                                     uniqueKey,
                                     this.filters,
-                                    this._chartSampleIdentifiersFilterSet.toJS(),
+                                    _.fromPairs(
+                                        this._chartSampleIdentifiersFilterSet.toJSON()
+                                    ),
                                     this.queriedSampleIdentifiers.result,
                                     this.queriedPhysicalStudyIds.result
                                 );

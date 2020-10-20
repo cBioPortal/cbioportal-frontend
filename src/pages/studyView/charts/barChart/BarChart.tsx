@@ -6,7 +6,7 @@ import {
     VictoryChart,
     VictorySelectionContainer,
 } from 'victory';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
 import { ClinicalDataBin, DataFilterValue } from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
@@ -70,6 +70,10 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
 
     constructor(props: IBarChartProps) {
         super(props);
+        makeObservable<
+            BarChart,
+            'mousePosition' | 'currentBarIndex' | 'toolTipModel'
+        >(this);
     }
 
     @autobind

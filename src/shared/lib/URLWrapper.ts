@@ -9,6 +9,7 @@ import {
     reaction,
     runInAction,
     toJS,
+    makeObservable,
 } from 'mobx';
 import ExtendedRouterStore, {
     getRemoteSession,
@@ -62,6 +63,10 @@ export default class URLWrapper<
         public sessionEnabled = false,
         public urlCharThresholdForSession = 1500
     ) {
+        makeObservable<
+            URLWrapper<QueryParamsType>,
+            'updateRoute' | 'syncAllProperties' | 'trySyncProperty'
+        >(this);
         this.properties = _.entries(this.propertiesMap).map(entry => ({
             name: entry[0],
             ...entry[1],

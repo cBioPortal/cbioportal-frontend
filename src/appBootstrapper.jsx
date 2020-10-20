@@ -29,7 +29,6 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { AppStore } from './AppStore';
 import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
-import mobx from 'mobx';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 
 superagentCache(superagent);
@@ -50,10 +49,6 @@ if (!window.hasOwnProperty('$')) {
 
 if (!window.hasOwnProperty('jQuery')) {
     window.jQuery = $;
-}
-
-if (!window.hasOwnProperty('mobx')) {
-    window.mobx = mobx;
 }
 
 // write browser name, version to brody tag

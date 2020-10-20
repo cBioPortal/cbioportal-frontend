@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import Slider from 'react-rangeslider';
 import { Popover } from 'react-bootstrap';
 import styles from './styles.module.scss';
@@ -277,6 +277,7 @@ export default class SurvivalChart
 
     constructor(props: ISurvivalChartProps) {
         super(props);
+        makeObservable(this);
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
     }

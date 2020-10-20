@@ -9,7 +9,7 @@ import {
     CancerStudy,
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import {
     parse_search_query,
     perform_search_single,
@@ -22,7 +22,9 @@ import memoize from 'memoize-weak-decorator';
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
 export default class StudyListLogic {
-    constructor(private readonly store: QueryStore) {}
+    constructor(private readonly store: QueryStore) {
+        makeObservable(this);
+    }
 
     @cached get map_node_filterByDepth() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();
@@ -193,7 +195,9 @@ export class FilteredCancerTreeView {
     constructor(
         private store: QueryStore,
         private filters: Pick<Map<CancerTreeNode, boolean>, 'get'>[]
-    ) {}
+    ) {
+        makeObservable(this);
+    }
 
     nodeFilter = (node: CancerTreeNode): boolean => {
         return this.filters.every(map => !!map.get(node));

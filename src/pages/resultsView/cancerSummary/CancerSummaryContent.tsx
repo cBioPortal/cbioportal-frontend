@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Checkbox, ButtonGroup, Radio } from 'react-bootstrap';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import Slider from 'react-rangeslider';
 import { ControlLabel, FormControl } from 'react-bootstrap';
@@ -155,6 +155,25 @@ export class CancerSummaryContent extends React.Component<
 
     constructor(props: ICancerSummaryContentProps) {
         super(props);
+        makeObservable<
+            CancerSummaryContent,
+            | 'tempAltCasesInputValue'
+            | 'tempTotalCasesInputValue'
+            | 'pngAnchor'
+            | 'pdf'
+            | 'showControls'
+            | 'hideGenomicAlterations'
+            | 'xAxis'
+            | 'viewCountsByCancerSubType'
+            | 'totalCasesMax'
+            | 'totalCasesMin'
+            | 'hasAlterations'
+            | 'totalCaseChanged'
+            | 'altCaseChanged'
+            | 'showStudyTooltipLinks'
+            | 'handleTotalInputKeyPress'
+            | 'initializeSliderValue'
+        >(this);
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
         this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(

@@ -12,6 +12,7 @@ import {
     action,
     reaction,
     IReactionDisposer,
+    makeObservable,
 } from 'mobx';
 import { Row } from 'react-bootstrap';
 
@@ -83,6 +84,13 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
     constructor(props: IResultsViewPathwayMapperProps) {
         super(props);
+        makeObservable<
+            ResultsViewPathwayMapper,
+            | 'selectedPathway'
+            | 'newGenesFromPathway'
+            | 'activeToasts'
+            | 'addGenomicData'
+        >(this);
         this.activeToasts = [];
         this.accumulatedValidGenes = {};
         this.accumulatedAlterationFrequencyDataForNonQueryGenes = [];

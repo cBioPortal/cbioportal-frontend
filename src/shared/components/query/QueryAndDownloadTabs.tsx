@@ -3,7 +3,7 @@ import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
 import QueryContainer from './QueryContainer';
 import { QueryStore } from './QueryStore';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import { MSKTab, MSKTabs } from '../MSKTabs/MSKTabs';
 import QuickSearch from './quickSearch/QuickSearch';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -35,6 +35,8 @@ export default class QueryAndDownloadTabs extends React.Component<
 > {
     constructor(props: IQueryAndDownloadTabsProps) {
         super(props);
+
+        makeObservable(this);
 
         if (
             props.showQuickSearchTab &&

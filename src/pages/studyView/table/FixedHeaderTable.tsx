@@ -13,7 +13,7 @@ import {
     TableHeaderProps,
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
-import { action, computed, observable, toJS } from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import styles from './tables.module.scss';
 import * as _ from 'lodash';
 import { Observer, observer } from 'mobx-react';
@@ -69,6 +69,7 @@ export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicat
 > {
     constructor(getData: () => any[], fixedTopRowsData: any[]) {
         super(getData);
+        makeObservable(this);
         this.fixedTopRowsData = fixedTopRowsData;
     }
 
@@ -114,6 +115,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     constructor(props: IFixedHeaderTableProps<T>) {
         super(props);
+        makeObservable<FixedHeaderTable<T>, '_sortBy' | '_sortDirection'>(this);
         this._sortBy = props.sortBy!;
         const sortByColumn = _.find(
             this.props.columns,

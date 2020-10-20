@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { remoteData } from 'cbioportal-frontend-commons';
 import onMobxPromise from './onMobxPromise';
-import { extras, IReactionDisposer, observable } from 'mobx';
+import { IReactionDisposer, observable } from 'mobx';
 
 describe('onMobxPromise', () => {
     it('executes the given callback with the result when the mobx promise completes', done => {
@@ -62,7 +62,7 @@ describe('onMobxPromise', () => {
         let promiseResultIncrementerDisposer: IReactionDisposer;
         let promise = remoteData({
             invoke: async () => {
-                lastInvokedPromiseResult = promiseResult.get();
+                lastInvokedPromiseResult = promiseResult;
                 return lastInvokedPromiseResult;
             },
         });
@@ -75,7 +75,7 @@ describe('onMobxPromise', () => {
                     'promise invoked with result = lastInvokedPromiseResult'
                 );
                 handlerInvokeCount += 1;
-                promiseResult.set(promiseResult.get() + 1);
+                promiseResult = promiseResult + 1;
             },
             5,
             () => {
@@ -87,7 +87,7 @@ describe('onMobxPromise', () => {
                             5,
                             'never invoked again'
                         );
-                        promiseResult.set(promiseResult.get() + 1);
+                        promiseResult = promiseResult + 1;
                     },
                     10,
                     () => {
@@ -104,7 +104,7 @@ describe('onMobxPromise', () => {
         let promiseResultIncrementerDisposer: IReactionDisposer;
         let promise = remoteData({
             invoke: async () => {
-                lastInvokedPromiseResult = promiseResult.get();
+                lastInvokedPromiseResult = promiseResult;
                 return lastInvokedPromiseResult;
             },
         });
@@ -115,7 +115,7 @@ describe('onMobxPromise', () => {
                 (result: number) => {
                     assert.equal(result, 0, 'promise invoked with result = 0');
                     handlerInvokeCount += 1;
-                    promiseResult.set(promiseResult.get() + 1);
+                    promiseResult = promiseResult + 1;
                 },
                 1,
                 () => {
@@ -127,7 +127,7 @@ describe('onMobxPromise', () => {
                                 1,
                                 'never invoked again'
                             );
-                            promiseResult.set(promiseResult.get() + 1);
+                            promiseResult = promiseResult + 1;
                         },
                         10,
                         () => {

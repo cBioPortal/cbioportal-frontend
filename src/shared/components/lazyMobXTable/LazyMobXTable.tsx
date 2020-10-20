@@ -6,6 +6,7 @@ import {
     IReactionDisposer,
     observable,
     reaction,
+    makeObservable,
 } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import './styles.scss';
@@ -733,6 +734,16 @@ export class LazyMobXTableStore<T> {
     }
 
     constructor(lazyMobXTableProps: LazyMobXTableProps<T>) {
+        makeObservable<
+            LazyMobXTableStore<T>,
+            | '_itemsLabel'
+            | '_itemsLabelPlural'
+            | 'onRowClick'
+            | 'onRowMouseEnter'
+            | 'onRowMouseLeave'
+            | '_columnVisibility'
+            | '_columnVisibilityOverride'
+        >(this);
         this.sortColumn = lazyMobXTableProps.initialSortColumn || '';
         this.sortAscending = lazyMobXTableProps.initialSortDirection !== 'desc'; // default ascending
         this.setProps(lazyMobXTableProps);
@@ -822,6 +833,7 @@ export default class LazyMobXTable<T> extends React.Component<
 
     constructor(props: LazyMobXTableProps<T>) {
         super(props);
+        makeObservable(this);
         this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {

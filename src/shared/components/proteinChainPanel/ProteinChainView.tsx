@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import HotspotSet from '../../lib/HotspotSet';
 import * as _ from 'lodash';
 import { SyntheticEvent } from 'react';
@@ -58,6 +58,7 @@ export default class ProteinChainView extends React.Component<
 
     constructor(props: ProteinChainViewProps) {
         super(props);
+        makeObservable<ProteinChainView, 'rowHeight' | 'rowPadding'>(this);
         this.onMouseOver = this.onMouseOver.bind(this);
         this.positionToX = this.positionToX.bind(this);
     }

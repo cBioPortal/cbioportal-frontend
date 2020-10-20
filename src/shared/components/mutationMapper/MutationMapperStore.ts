@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import MobxPromise, { cached, labelMobxPromises } from 'mobxpromise';
 
 import {
@@ -96,6 +96,11 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             getMutations,
             getTranscriptId
         );
+
+        makeObservable<
+            MutationMapperStore,
+            'mutationsGroupedByProteinImpactType'
+        >(this);
 
         const unnormalizedGetMutations = this.getMutations;
         this.getMutations = () =>

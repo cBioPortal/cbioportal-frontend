@@ -2,7 +2,7 @@ import autobind from 'autobind-decorator';
 import * as React from 'react';
 import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
@@ -36,6 +36,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
 > {
     constructor(props: IResultsViewMutationMapperProps) {
         super(props);
+        makeObservable(this);
     }
 
     @computed get mutationStatusFilter() {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Geneset, GenesetHierarchyInfo } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
-import { ObservableMap } from 'mobx/lib/mobx';
+import { ObservableMap } from 'mobx';
 
 export function getGenesetsFromHierarchy(
     hierarchyData: GenesetHierarchyInfo[]
@@ -30,7 +30,7 @@ export function getVolcanoPlotMinYValue(
 
 export function getVolcanoPlotData(
     genesetsData: Geneset[],
-    map_genesets_selected_volcano: ObservableMap<boolean>
+    map_genesets_selected_volcano: ObservableMap<string, boolean>
 ): { x: number; y: number; fill: string }[] | undefined {
     if (genesetsData.length > 0) {
         const volcanoPlotData = genesetsData.map(

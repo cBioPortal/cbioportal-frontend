@@ -7,7 +7,7 @@ import {
     VictoryLegend,
     VictoryPie,
 } from 'victory';
-import { action, computed, observable, toJS } from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     getFrequencyStr,
@@ -46,6 +46,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}>
 
     constructor(props: IPieChartProps) {
         super(props);
+        makeObservable(this);
     }
 
     @computed

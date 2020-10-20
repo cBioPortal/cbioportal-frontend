@@ -8,11 +8,11 @@ import { MobxPromise } from 'mobxpromise';
 import {
     action,
     computed,
-    IObservableObject,
     observable,
     ObservableMap,
     reaction,
     toJS,
+    makeObservable,
 } from 'mobx';
 import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
@@ -139,7 +139,7 @@ export interface IOncoprintControlsState {
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
-    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    selectedCustomDriverAnnotationTiers?: ObservableMap<string, boolean>;
     annotateCustomDriverBinary?: boolean;
 
     columnMode?: OncoprintAnalysisCaseType;
@@ -150,7 +150,7 @@ export interface IOncoprintControlsState {
 export interface IOncoprintControlsProps {
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
-    state: IOncoprintControlsState & IObservableObject;
+    state: IOncoprintControlsState;
     oncoprinterMode?: boolean;
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
@@ -222,6 +222,11 @@ export default class OncoprintControls extends React.Component<
 
     constructor(props: IOncoprintControlsProps) {
         super(props);
+
+        makeObservable<
+            OncoprintControls,
+            '_selectedGenericAssayEntityIds' | '_genericAssaySearchText'
+        >(this);
 
         this.getHeatmapMenu = this.getHeatmapMenu.bind(this);
         this.getClinicalTracksMenu = this.getClinicalTracksMenu.bind(this);

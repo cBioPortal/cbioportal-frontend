@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from '../FixedHeaderTable';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     Column,
@@ -77,6 +77,7 @@ export class SampleTreatmentsTable extends TreatmentsTable<
 
     constructor(props: SampleTreatmentsTableProps, context: any) {
         super(props, context);
+        makeObservable<SampleTreatmentsTable, 'sortBy'>(this);
         this.sortBy = this.props.defaultSortBy;
     }
 

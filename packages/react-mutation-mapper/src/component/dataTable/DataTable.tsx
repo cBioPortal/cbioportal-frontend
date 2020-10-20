@@ -296,7 +296,11 @@ export default class DataTable<T> extends React.Component<
     protected createExpanderResetReaction(dataStore: DataStore) {
         return reaction(
             () => [dataStore.selectionFilters, dataStore.dataFilters],
-            (filters: DataFilter[][], disposer: IReactionPublic) => {
+            (
+                filters: DataFilter[][],
+                prev: DataFilter[][],
+                disposer: IReactionPublic
+            ) => {
                 if (filters.length > 0) {
                     this.resetExpander();
                 }

@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import Immutable from 'seamless-immutable';
 import * as _ from 'lodash';
 import accumulatingDebounce from '../../../shared/lib/accumulatingDebounce';
@@ -40,6 +40,7 @@ export default class SampleGeneCache<
     private debouncedPopulate: (sampleId: string, entrezGeneId: number) => void;
 
     constructor(sampleIds: string[], ...dependencies: any[]) {
+        makeObservable<SampleGeneCache<T>, '_cache' | 'updateCache'>(this);
         this.dependencies = dependencies;
         this.initCache(sampleIds);
         this._pending = {};

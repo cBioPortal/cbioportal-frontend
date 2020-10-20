@@ -8,7 +8,7 @@ import {
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -40,6 +40,14 @@ export default class GroupComparisonStore extends ComparisonStore {
         private urlWrapper: GroupComparisonURLWrapper
     ) {
         super(appStore);
+
+        makeObservable<
+            GroupComparisonStore,
+            | '_currentTabId'
+            | 'sessionId'
+            | 'updateUnselectedGroups'
+            | 'saveAndGoToSession'
+        >(this);
 
         this.sessionId = sessionId;
     }

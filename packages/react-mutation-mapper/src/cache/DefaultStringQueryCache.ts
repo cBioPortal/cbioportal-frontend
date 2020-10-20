@@ -1,10 +1,10 @@
 import { action, observable } from 'mobx';
-
 import { CacheData, MobxCache } from 'cbioportal-utils';
+import _ from 'lodash';
 
 export abstract class DefaultStringQueryCache<D>
     implements MobxCache<D, string> {
-    protected _cache = observable.shallowMap<CacheData>();
+    protected _cache = observable.map<string, CacheData>({}, { deep: false });
 
     @action
     public get(query: string) {
@@ -26,6 +26,6 @@ export abstract class DefaultStringQueryCache<D>
     public abstract fetch(query: string): Promise<D>;
 
     public get cache() {
-        return this._cache.toJS();
+        return _.fromPairs(this._cache.toJSON());
     }
 }
