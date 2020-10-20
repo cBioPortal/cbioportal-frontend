@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { bind } from 'bind-decorator';
 import ifNotDefined from '../../lib/ifNotDefined';
 import { calculateBoxPlotModel } from '../../lib/boxPlotUtils';
@@ -132,6 +132,11 @@ export default class BoxScatterPlot<
     @observable private mousePosition = { x: 0, y: 0 };
 
     private scatterPlotTooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @bind
     private containerRef(container: HTMLDivElement) {
@@ -812,8 +817,7 @@ export default class BoxScatterPlot<
             });
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseMove(e: React.MouseEvent<any>) {
         if (this.boxPlotTooltipModel !== null) {
             this.mousePosition.x = e.pageX;

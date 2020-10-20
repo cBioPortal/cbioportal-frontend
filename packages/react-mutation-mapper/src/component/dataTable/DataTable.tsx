@@ -13,6 +13,7 @@ import {
     IReactionPublic,
     observable,
     reaction,
+    makeObservable,
 } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
@@ -122,6 +123,17 @@ export default class DataTable<T> extends React.Component<
 
     constructor(props: DataTableProps<T>) {
         super(props);
+
+        makeObservable<
+            DataTable<T>,
+            | '_columnVisibilityOverride'
+            | 'expanded'
+            | 'onSearch'
+            | 'onVisibilityToggle'
+            | 'updateColumnVisibility'
+            | 'onExpandedChange'
+            | 'resetExpander'
+        >(this);
 
         this.filterInputReaction = this.props.dataStore
             ? this.createFilterInputResetReaction(this.props.dataStore)
@@ -286,7 +298,11 @@ export default class DataTable<T> extends React.Component<
     protected createExpanderResetReaction(dataStore: DataStore) {
         return reaction(
             () => [dataStore.selectionFilters, dataStore.dataFilters],
-            (filters: DataFilter[][], disposer: IReactionPublic) => {
+            (
+                filters: DataFilter[][],
+                prev: DataFilter[][],
+                disposer: IReactionPublic
+            ) => {
                 if (filters.length > 0) {
                     this.resetExpander();
                 }

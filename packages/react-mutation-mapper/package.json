@@ -31,7 +31,7 @@
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
-    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0",
+    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0",
     "mobx-react": "^4.0.0 || ^5.0.0",
     "prop-types": "^15.5.4",
     "react": "^15.0.0 || ^16.0.0",
@@ -46,7 +46,7 @@
     "genome-nexus-ts-api-client": "^1.1.12",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
-    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
+    "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "oncokb-styles": "~0.1.2",
     "oncokb-ts-api-client": "^1.1.4",
     "react-collapse": "^4.0.3",

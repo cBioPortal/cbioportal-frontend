@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 import CBIOPORTAL_VICTORY_THEME from '../../theme/cBioPortalTheme';
 
@@ -21,6 +21,10 @@ export const TITLE_DX = -12;
 export const TITLE_DY = -5;
 
 export class GradientLegend extends React.Component<IGradientLegendProps> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<IGradientLegendProps> = {
         fontSize: 11,
         fontFamily: CBIOPORTAL_VICTORY_THEME.legend.style.labels.fontFamily,

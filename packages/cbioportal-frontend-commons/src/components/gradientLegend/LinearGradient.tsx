@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 export interface ILinearGradientProps {
     id: string;
@@ -8,6 +8,11 @@ export interface ILinearGradientProps {
 }
 
 export class LinearGradient extends React.Component<ILinearGradientProps> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed
     public get gradientStopPoints() {
         const gradientStopPoints = [];

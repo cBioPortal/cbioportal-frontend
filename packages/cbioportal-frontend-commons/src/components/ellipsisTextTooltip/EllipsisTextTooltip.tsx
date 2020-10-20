@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import styles from './EllipsisTextTooltip.module.scss';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
@@ -12,12 +12,15 @@ export default class EllipsisTextTooltip extends React.Component<
     { text: any; style?: any; hideTooltip?: boolean },
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable tooltipVisible = false;
 
     el: HTMLDivElement;
 
-    @autobind
-    @action
+    @action.bound
     onVisibleChange(isVisible: boolean) {
         // if shownWidth exist, using the shownWidth
         let shownWidth = $(this.el).innerWidth()!;

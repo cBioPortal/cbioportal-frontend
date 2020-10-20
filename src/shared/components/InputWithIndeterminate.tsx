@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { DetailedHTMLProps, InputHTMLAttributes } from 'react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 
 export interface IInputWithIndeterminateCheckboxProps
@@ -17,6 +17,10 @@ export default class InputWithIndeterminate extends React.Component<
     IInputWithIndeterminateCheckboxProps,
     {}
 > {
+    constructor(props: IInputWithIndeterminateCheckboxProps) {
+        super(props);
+        makeObservable(this);
+    }
     @observable.ref input: HTMLInputElement | null = null;
 
     @autobind

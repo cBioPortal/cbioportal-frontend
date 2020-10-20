@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { MobxCache } from 'cbioportal-utils';
 
 import MutationMapperStore from '../../model/MutationMapperStore';
@@ -30,6 +30,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
 
     constructor(props: TrackPanelProps) {
         super(props);
+        makeObservable(this);
     }
 
     @computed get proteinLength() {

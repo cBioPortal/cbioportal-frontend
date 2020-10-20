@@ -10,7 +10,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import SampleManager from '../SampleManager';
 import { IKeyedIconData, IIconData } from './GenomicOverviewUtils';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { observer } from 'mobx-react';
 
@@ -33,12 +33,16 @@ const noGenePanelMessage =
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
     @observable genePanelInTooltip: string = '';
 
+    constructor(props: TracksPropTypes) {
+        super(props);
+        makeObservable(this);
+    }
+
     componentDidMount() {
         this.drawTracks();
     }
 
-    @autobind
-    @action
+    @action.bound
     setGenePanelInTooltip(genePanelId: string) {
         this.genePanelInTooltip = genePanelId;
     }

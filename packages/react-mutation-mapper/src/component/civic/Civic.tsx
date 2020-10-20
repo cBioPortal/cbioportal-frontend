@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -66,6 +66,8 @@ export default class Civic extends React.Component<ICivicProps, {}> {
 
     constructor(props: ICivicProps) {
         super(props);
+
+        makeObservable(this);
 
         this.cardContent = this.cardContent.bind(this);
     }

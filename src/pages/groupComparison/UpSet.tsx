@@ -9,7 +9,7 @@ import {
     VictoryScatter,
     Bar,
 } from 'victory';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import * as _ from 'lodash';
 import {
     CBIOPORTAL_VICTORY_THEME,
@@ -74,6 +74,11 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     @observable.ref private tooltipModel: any | null = null;
     private mouseEvents: any = this.makeMouseEvents();
     @observable mousePosition = { x: 0, y: 0 };
+
+    constructor(props: IUpSetProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     @autobind
     private containerRef(container: HTMLDivElement) {

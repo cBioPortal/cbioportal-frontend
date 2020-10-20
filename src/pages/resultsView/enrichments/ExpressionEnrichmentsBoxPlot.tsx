@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
@@ -62,9 +62,13 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
     IExpressionEnrichmentsBoxPlotProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     static defaultProps: Partial<IExpressionEnrichmentsBoxPlotProps> = {};
 
-    @observable private svgContainer: SVGElement | null;
+    @observable private svgContainer: SVGElement | null = null;
 
     @autobind
     private getData() {

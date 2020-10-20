@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import UpSet from './UpSet';
 import { ComparisonGroup } from './GroupComparisonUtils';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import CreateGroupFromOverlap from './CreateGroupFromOverlap';
 import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
@@ -35,14 +35,17 @@ export default class OverlapUpset extends React.Component<
     @observable.ref sampleUpset: UpSet | null = null;
     @observable.ref patientUpset: UpSet | null = null;
 
-    @autobind
-    @action
+    constructor(props: IOverlapUpsetProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private changeSelectedSampleRegions(combinations: string[][]) {
         this.sampleSelection = combinations;
     }
 
-    @autobind
-    @action
+    @action.bound
     private changeSelectedPatientRegions(combinations: string[][]) {
         this.patientSelection = combinations;
     }
@@ -57,8 +60,7 @@ export default class OverlapUpset extends React.Component<
         this.patientUpset = upset;
     }
 
-    @autobind
-    @action
+    @action.bound
     private submitSampleOverlapGroup(
         group: SessionGroupData,
         saveToUser: boolean
@@ -67,8 +69,7 @@ export default class OverlapUpset extends React.Component<
         this.sampleSelection = [];
     }
 
-    @autobind
-    @action
+    @action.bound
     private submitPatientOverlapGroup(
         group: SessionGroupData,
         saveToUser: boolean

@@ -1,5 +1,5 @@
 import { DriverAnnotationSettings } from '../../../resultsView/ResultsViewPageStore';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import AppConfig from 'appConfig';
 import {
     annotateGeneticTrackData,
@@ -78,6 +78,7 @@ export default class OncoprinterStore {
     @observable customDriverWarningHidden: boolean;
 
     constructor() {
+        makeObservable(this);
         this.initialize();
     }
 

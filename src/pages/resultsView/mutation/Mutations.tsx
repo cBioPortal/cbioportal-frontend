@@ -5,7 +5,7 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
@@ -55,7 +55,7 @@ export default class Mutations extends React.Component<
 
     constructor(props: IMutationsPageProps) {
         super(props);
-        this.handleTabChange.bind(this);
+        makeObservable(this);
         this.userSelectionStore = new MutationMapperUserSelectionStore();
     }
 
@@ -149,6 +149,7 @@ export default class Mutations extends React.Component<
         return tabs;
     }
 
+    @autobind
     protected handleTabChange(id: string) {
         this.setSelectedGeneSymbol(id);
     }
@@ -241,8 +242,7 @@ export default class Mutations extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onTranscriptChange(transcriptId: string) {
         this.props.urlWrapper.updateURL({
             mutations_transcript_id: transcriptId,

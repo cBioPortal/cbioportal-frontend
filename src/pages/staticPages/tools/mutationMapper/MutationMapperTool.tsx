@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { Collapse } from 'react-collapse';
 import {
@@ -47,19 +47,23 @@ export default class MutationMapperTool extends React.Component<
 > {
     private userSelectionStore: MutationMapperUserSelectionStore;
 
-    @observable standaloneMutationMapperGeneTab: string | undefined;
+    @observable.ref standaloneMutationMapperGeneTab:
+        | string
+        | undefined = undefined;
     @observable dataFormatCollapsed = true;
-    @observable inputText: string | undefined;
+    @observable.ref inputText: string | undefined = undefined;
     @observable inputControlsVisible = true;
-    @observable inputFileContent: string | undefined;
+    @observable.ref inputFileContent: string | undefined = undefined;
     @observable showIncorrectInput = false;
-    @observable lastParsedInputContent: string | undefined;
+    @observable.ref lastParsedInputContent: string | undefined = undefined;
     @observable referenceGenomeSelection: string = REFERENCE_GENOME.grch37.NCBI;
 
     private store: MutationMapperToolStore = new MutationMapperToolStore();
 
     constructor(props: IMutationMapperToolProps) {
         super(props);
+
+        makeObservable(this);
 
         this.userSelectionStore = new MutationMapperUserSelectionStore();
         // set genomenexus url to grch38 instance if "show_mutation_mapper_tool_grch38" is true and choose "GRCh38", otherwise use default url
@@ -573,8 +577,7 @@ export default class MutationMapperTool extends React.Component<
         return tabs;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleFileSelect(e: any) {
         const reader = new FileReader();
         reader.addEventListener('loadend', this.fileLoadEndHandler);
@@ -588,8 +591,7 @@ export default class MutationMapperTool extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected fileLoadEndHandler(e: any) {
         if (e.srcElement && e.srcElement.result) {
             // update input file content
@@ -600,14 +602,12 @@ export default class MutationMapperTool extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleInputChange(e: any) {
         this.inputText = e.target.value;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleTabChange(id: string | undefined) {
         // update the hash if routing exits
         if (this.props.routing) {
@@ -621,8 +621,7 @@ export default class MutationMapperTool extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleModifyInput() {
         // clear previous critical errors
         this.store.clearCriticalErrors();
@@ -631,8 +630,7 @@ export default class MutationMapperTool extends React.Component<
         this.inputControlsVisible = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleVisualize() {
         // clear previous critical errors
         this.store.clearCriticalErrors();
@@ -646,14 +644,12 @@ export default class MutationMapperTool extends React.Component<
         this.inputControlsVisible = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleDataFormatToggle() {
         this.dataFormatCollapsed = !this.dataFormatCollapsed;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleLoadExamplePartiallyAnnotated() {
         if (this.referenceGenomeSelection === REFERENCE_GENOME.grch37.NCBI) {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleGrch37.txt');
@@ -662,8 +658,7 @@ export default class MutationMapperTool extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleLoadExampleGenomicCoordinates() {
         if (this.referenceGenomeSelection === REFERENCE_GENOME.grch37.NCBI) {
             this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGenomicCoordinatesOnlyGrch37.txt');
@@ -672,14 +667,12 @@ export default class MutationMapperTool extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleLoadExampleGeneAndProteinChange() {
         this.inputText = require('raw-loader!./resources/standaloneMutationDataExampleWithGeneAndProteinChangeOnly.txt');
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleReferenceGenomeSelectionChange(selection: string) {
         // store the reference genome selection to localStorage
         getBrowserWindow().localStorage.setItem('referenceGenomeId', selection);

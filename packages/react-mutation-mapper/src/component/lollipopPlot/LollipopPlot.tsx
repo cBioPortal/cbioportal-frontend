@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import {
     HitZoneConfig,
     defaultHitzoneConfig,
@@ -54,6 +54,11 @@ export default class LollipopPlot extends React.Component<
 
     constructor(props: LollipopPlotProps) {
         super(props);
+
+        makeObservable<
+            LollipopPlot,
+            'hitZoneConfig' | 'tooltipVisible' | 'hitZone'
+        >(this);
 
         this.handlers = {
             ref: (plot: LollipopPlotNoTooltip) => {

@@ -1,4 +1,4 @@
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import Immutable from 'seamless-immutable';
 
 export interface ICacheData<T> {
@@ -21,6 +21,7 @@ export default class SimpleCache<T, Query> {
     protected _pendingCache: ICache<T>;
 
     constructor() {
+        makeObservable<SimpleCache<T, Query>, '_cache' | 'putData'>(this);
         this._cache = Immutable.from<ICache<T>>({});
         this._pendingCache = {};
     }

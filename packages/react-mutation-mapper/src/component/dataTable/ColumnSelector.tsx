@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -29,6 +29,7 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}> {
 
     constructor(props: ColumnSelectorProps) {
         super(props);
+        makeObservable<ColumnSelector, 'onChange'>(this);
     }
 
     @computed
@@ -59,8 +60,7 @@ export class ColumnSelector extends React.Component<ColumnSelectorProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChange(values: { value: string }[]) {
         if (this.props.onColumnToggled) {
             this.props.onColumnToggled(values.map(o => o.value));

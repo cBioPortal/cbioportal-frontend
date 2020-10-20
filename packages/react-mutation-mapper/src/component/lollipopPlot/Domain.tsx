@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 
 import $ from 'jquery';
 
@@ -26,6 +26,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
 
     constructor(props: DomainProps) {
         super(props);
+        makeObservable<Domain, 'textElt' | 'isMounted' | 'displayText'>(this);
         this.state = {
             displayText: props.label || '',
         };

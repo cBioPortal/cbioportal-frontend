@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import AddChartByType from '../../studyView/addChartButton/addChartByType/AddChartByType';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import { serializeEvent } from '../../../shared/lib/tracking';
@@ -47,17 +47,20 @@ export default class AddClinicalTracks extends React.Component<
     IAddClinicalTrackProps,
     {}
 > {
+    constructor(props: IAddClinicalTrackProps) {
+        super(props);
+
+        makeObservable(this);
+    }
     @observable open = false;
     @observable tabId = Tab.CLINICAL;
 
-    @autobind
-    @action
+    @action.bound
     private updateTabId(newId: Tab) {
         this.tabId = newId;
     }
 
-    @autobind
-    @action
+    @action.bound
     private addAll(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
             _.union(
@@ -67,8 +70,7 @@ export default class AddClinicalTracks extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private clear(clinicalAttributeIds: string[]) {
         this.props.onChangeSelectedClinicalTracks(
             _.difference(
@@ -78,8 +80,7 @@ export default class AddClinicalTracks extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private toggleClinicalTrack(clinicalAttributeId: string) {
         this.props.onChangeSelectedClinicalTracks(
             toggleIncluded(
@@ -315,8 +316,7 @@ export default class AddClinicalTracks extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onDropdownChange(visible: boolean) {
         this.open = visible;
     }

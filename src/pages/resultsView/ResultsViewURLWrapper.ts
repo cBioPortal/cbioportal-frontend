@@ -1,6 +1,6 @@
 import URLWrapper from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     oldTabToNewTabRoute,
@@ -188,6 +188,7 @@ export default class ResultsViewURLWrapper extends URLWrapper<
                 ? parseInt(AppConfig.serverConfig.session_url_length_threshold)
                 : undefined
         );
+        makeObservable(this);
     }
 
     pathContext = '/results';

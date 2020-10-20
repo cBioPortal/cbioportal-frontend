@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Observer, observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     VictoryAxis,
@@ -53,8 +53,12 @@ export default class MiniFrequencyScatterChart extends React.Component<
     @observable private svgContainer: any;
     private dragging = false;
 
-    @autobind
-    @action
+    constructor(props: IMiniFrequencyScatterChartProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private svgRef(svgContainer: SVGElement | null) {
         this.svgContainer =
             svgContainer && svgContainer.children
@@ -173,7 +177,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
         );
     }
 
-    @autobind @action private onMouseOver(datum: any, x: number, y: number) {
+    @action.bound private onMouseOver(datum: any, x: number, y: number) {
         this.tooltipModel = {
             datum,
             x,
@@ -181,7 +185,7 @@ export default class MiniFrequencyScatterChart extends React.Component<
         };
     }
 
-    @autobind @action private onMouseOut() {
+    @action.bound private onMouseOut() {
         this.tooltipModel = null;
     }
 

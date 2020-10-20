@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import bind from 'bind-decorator';
 import classnames from 'classnames';
@@ -21,6 +21,10 @@ export default class WaterfallPlotTooltip extends React.Component<
     IWaterfallPlotTooltipProps,
     {}
 > {
+    constructor(props: IWaterfallPlotTooltipProps) {
+        super(props);
+        makeObservable(this);
+    }
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @bind

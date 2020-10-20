@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
@@ -9,16 +9,17 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 
 export class UserDataAccessToken {
-    @observable token: string;
-    @observable creationDate: string;
-    @observable expirationDate: string;
-    @observable username: string;
+    @observable.ref token: string;
+    @observable.ref creationDate: string;
+    @observable.ref expirationDate: string;
+    @observable.ref username: string;
     constructor(
         token: string,
         creationDate: string,
         expirationDate: string,
         username: string
     ) {
+        makeObservable(this);
         this.token = token;
         this.creationDate = creationDate;
         this.expirationDate = expirationDate;

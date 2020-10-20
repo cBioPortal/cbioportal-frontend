@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
 import * as _ from 'lodash';
@@ -27,6 +27,10 @@ export default class StudySummary extends React.Component<
     IStudySummaryProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable private showMoreDescription = false;
 
     @computed

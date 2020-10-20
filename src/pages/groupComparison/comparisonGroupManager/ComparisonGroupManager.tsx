@@ -2,7 +2,7 @@ import * as React from 'react';
 import { SyntheticEvent } from 'react';
 import { observer } from 'mobx-react';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     DUPLICATE_GROUP_NAME_MSG,
@@ -51,14 +51,17 @@ export default class ComparisonGroupManager extends React.Component<
     }
     @observable addSamplesTargetGroupId: string = '';
 
-    @autobind
-    @action
+    constructor(props: IComparisonGroupManagerProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private onChangeGroupNameFilter(e: SyntheticEvent<HTMLInputElement>) {
         this.groupNameFilter = (e.target as HTMLInputElement).value;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChangeInputGroupName(e: SyntheticEvent<HTMLInputElement>) {
         this._inputGroupName = (e.target as HTMLInputElement).value;
     }
@@ -77,41 +80,36 @@ export default class ComparisonGroupManager extends React.Component<
             ),
     });
 
-    @autobind
-    @action
+    @action.bound
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
         this._inputGroupName = getDefaultGroupName(
             this.props.store.filters,
-            this.props.store.customChartFilterSet.toJS(),
+            _.fromPairs(this.props.store.customChartFilterSet.toJSON()),
             this.props.store.clinicalAttributeIdToDataType.result!
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private cancelAddGroup() {
         this.addGroupPanelOpen = false;
         this._inputGroupName = '';
         this.addSamplesTargetGroupId = '';
     }
 
-    @autobind
-    @action
+    @action.bound
     private deleteGroup(group: StudyViewComparisonGroup) {
         this.props.store.toggleComparisonGroupMarkedForDeletion(group.uid);
     }
 
-    @autobind
-    @action
+    @action.bound
     private selectAllFiltered() {
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, true);
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private deselectAllFiltered() {
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, false);
@@ -309,8 +307,7 @@ export default class ComparisonGroupManager extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private async submitNewGroup() {
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import './styles.scss';
 
 interface IOqlStatusBannerProps {
@@ -19,6 +19,10 @@ export default class OqlStatusBanner extends React.Component<
     IOqlStatusBannerProps,
     {}
 > {
+    constructor(props: IOqlStatusBannerProps) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get toggleButton() {
         if (this.props.onToggle && !this.props.isUnaffected) {
             return (

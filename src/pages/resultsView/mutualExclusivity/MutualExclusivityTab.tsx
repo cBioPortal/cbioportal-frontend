@@ -4,7 +4,7 @@ import MutualExclusivityTable from './MutualExclusivityTable';
 import { observer } from 'mobx-react';
 import { Checkbox } from 'react-bootstrap';
 import styles from './styles.module.scss';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import DiscreteCNACache from '../../../shared/cache/DiscreteCNACache';
@@ -41,6 +41,7 @@ export default class MutualExclusivityTab extends React.Component<
 
     constructor(props: IMutualExclusivityTabProps) {
         super(props);
+        makeObservable(this);
         this.mutualExclusivityFilterChange = this.mutualExclusivityFilterChange.bind(
             this
         );

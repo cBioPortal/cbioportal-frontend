@@ -2,15 +2,25 @@ import * as React from 'react';
 import { ThreeBounce } from 'better-react-spinkit';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
-
+interface FrameLoaderProps {
+    url: string;
+    className?: string;
+    iframeId?: string;
+    height?: number;
+}
 @observer
 export default class IFrameLoader extends React.Component<
-    { url: string; className?: string; iframeId?: string; height?: number },
+    FrameLoaderProps,
     {}
 > {
     @observable iframeLoaded = false;
+
+    constructor(props: FrameLoaderProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     @autobind
     private onLoad() {

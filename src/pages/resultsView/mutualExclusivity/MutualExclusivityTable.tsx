@@ -5,7 +5,7 @@ import LazyMobXTable, {
 } from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { Badge } from 'react-bootstrap';
 import {
     formatPValue,
@@ -54,6 +54,7 @@ export default class MutualExclusivityTable extends React.Component<
 
     constructor(props: IMutualExclusivityTableProps) {
         super(props);
+        makeObservable(this);
         this._columns = {};
         this.generateColumns();
     }

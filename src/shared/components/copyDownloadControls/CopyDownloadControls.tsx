@@ -3,7 +3,7 @@ import { Modal, Button } from 'react-bootstrap';
 import { ThreeBounce } from 'better-react-spinkit';
 import { If } from 'react-if';
 import fileDownload from 'react-file-download';
-import { action, observable } from 'mobx';
+import { action, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 const Clipboard = require('clipboard');
 
@@ -52,6 +52,7 @@ export class CopyDownloadControls extends React.Component<
 
     constructor(props: IAsyncCopyDownloadControlsProps) {
         super(props);
+        makeObservable(this);
         this.handleDownload = this.handleDownload.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
         this.handleModalClose = this.handleModalClose.bind(this);

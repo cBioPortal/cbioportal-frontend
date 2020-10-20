@@ -7,7 +7,14 @@ import styles from './styles/styles.module.scss';
 import classNames from 'classnames';
 import StudyList from './studyList/StudyList';
 import { observer, Observer } from 'mobx-react';
-import { action, computed, expr, IReactionDisposer, reaction } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    reaction,
+    makeObservable,
+} from 'mobx';
+import { expr } from 'mobx-utils';
 import memoize from 'memoize-weak-decorator';
 import { If, Then, Else } from 'react-if';
 import { QueryStore } from './QueryStore';
@@ -61,6 +68,7 @@ export default class CancerStudySelector extends React.Component<
 
     constructor(props: ICancerStudySelectorProps) {
         super(props);
+        makeObservable(this);
         this.store = this.props.queryStore;
     }
 
@@ -133,14 +141,12 @@ export default class CancerStudySelector extends React.Component<
 
     private autosuggest: React.Component<any, any>;
 
-    @autobind
-    @action
+    @action.bound
     selectTCGAPanAtlas() {
         this.logic.mainView.selectAllMatchingStudies(PAN_CAN_SIGNATURE);
     }
 
-    @autobind
-    @action
+    @action.bound
     selectMatchingStudies(matches: string[]) {
         if (matches) {
             // if there is only one item and it has wildcard markers (*) then pass single string
