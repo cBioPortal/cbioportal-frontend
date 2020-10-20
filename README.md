@@ -62,7 +62,7 @@ To run unit/integration tests in watch mode
 yarn run test:watch
 ```
 
-To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
+To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before `.spec.`))
 ```
 yarn run test:watch -- --grep=#specName#
 ```
