@@ -37,3 +37,14 @@
         margin-left: 0px !important;
     }
 }
+
+.chartError {
+    position: absolute;
+}
+
+.chartInnerWrapper {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
