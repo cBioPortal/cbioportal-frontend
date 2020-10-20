@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { inject, Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import {
     CustomChart,
     StudyViewPageStore,
@@ -118,6 +118,8 @@ export default class StudyViewPage extends React.Component<
     constructor(props: IStudyViewPageProps) {
         super(props);
 
+        makeObservable(this);
+
         this.urlWrapper = new StudyViewURLWrapper(this.props.routing);
 
         this.store = new StudyViewPageStore(
@@ -226,16 +228,14 @@ export default class StudyViewPage extends React.Component<
 
     @observable showBookmarkModal = false;
 
-    @autobind
-    @action
+    @action.bound
     toggleBookmarkModal() {
         this.showBookmarkModal = !this.showBookmarkModal;
     }
 
     @observable shareLinkModal = false;
 
-    @autobind
-    @action
+    @action.bound
     toggleShareLinkModal() {
         this.shareLinkModal = !this.shareLinkModal;
         this.sharedGroups = [];
@@ -244,8 +244,7 @@ export default class StudyViewPage extends React.Component<
     private getShareBookmarkUrl: Promise<any> = Promise.resolve(null);
     private sharedGroups: StudyViewComparisonGroup[] = [];
 
-    @autobind
-    @action
+    @action.bound
     openShareUrlModal(groups: StudyViewComparisonGroup[]) {
         this.shareLinkModal = true;
         this.sharedGroups = groups;
@@ -264,8 +263,7 @@ export default class StudyViewPage extends React.Component<
         this.toggleBookmarkModal();
     }
 
-    @autobind
-    @action
+    @action.bound
     private openResource(resource: ResourceData) {
         // open tab
         this.store.setResourceTabOpen(resource.resourceId, true);
@@ -275,8 +273,7 @@ export default class StudyViewPage extends React.Component<
         this.urlWrapper.setResourceUrl(resource.url);
     }
 
-    @autobind
-    @action
+    @action.bound
     private closeResourceTab(tabId: string) {
         // close tab
         const resourceId = extractResourceIdFromTabId(tabId);

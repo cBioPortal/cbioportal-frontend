@@ -1,7 +1,7 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { Citations, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import classnames from 'classnames';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Else, If, Then } from 'react-if';
@@ -65,6 +65,10 @@ enum ActiveTabEnum {
 export default class OncoKbCardTreatmentContent extends React.Component<
     OncoKbCardTreatmentContentProps
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable activeTab: ActiveTabEnum = ActiveTabEnum.ONCOGENICITY;
 
     getOncogenicityContent() {
@@ -264,8 +268,7 @@ export default class OncoKbCardTreatmentContent extends React.Component<
         this.handleTabSelect(ActiveTabEnum.MUTATION_EFFECT);
     }
 
-    @autobind
-    @action
+    @action.bound
     handleTabSelect(tabName: ActiveTabEnum): void {
         this.activeTab = tabName;
     }

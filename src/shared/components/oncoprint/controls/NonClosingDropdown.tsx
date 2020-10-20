@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { DropdownButtonProps, DropdownButton } from 'react-bootstrap';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 
 @observer
 export default class NonClosingDropdown extends React.Component<
@@ -10,6 +10,11 @@ export default class NonClosingDropdown extends React.Component<
 > {
     private _forceOpen: boolean = false;
     @observable private open: boolean = false;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed private get onToggle() {
         return (newVal: boolean) => {

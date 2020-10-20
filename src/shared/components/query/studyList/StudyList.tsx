@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import FontAwesome from 'react-fontawesome';
 import LabeledCheckbox from '../../labeledCheckbox/LabeledCheckbox';
 import { observer, Observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import _ from 'lodash';
 import {
     getPubMedUrl,
@@ -429,6 +429,10 @@ export class CancerTreeCheckbox extends QueryStoreComponent<
     ICancerTreeCheckboxProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed.struct get checkboxProps() {
         return this.props.view.getCheckboxProps(this.props.node);
     }

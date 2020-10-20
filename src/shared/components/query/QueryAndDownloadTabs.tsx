@@ -3,7 +3,7 @@ import styles from './styles/styles.module.scss';
 import { observer } from 'mobx-react';
 import QueryContainer from './QueryContainer';
 import { QueryStore } from './QueryStore';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import { MSKTab, MSKTabs } from '../MSKTabs/MSKTabs';
 import QuickSearch from './quickSearch/QuickSearch';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -36,6 +36,8 @@ export default class QueryAndDownloadTabs extends React.Component<
     constructor(props: IQueryAndDownloadTabsProps) {
         super(props);
 
+        makeObservable(this);
+
         if (
             props.showQuickSearchTab &&
             getBrowserWindow().localStorage.getItem(QUICK_SEARCH_LS_KEY) ===
@@ -59,7 +61,7 @@ export default class QueryAndDownloadTabs extends React.Component<
 
     @observable.ref store: QueryStore;
 
-    @observable activeTabId: string;
+    @observable.ref activeTabId: string;
 
     public get quickSearchDefaulted() {
         return (
@@ -82,8 +84,7 @@ export default class QueryAndDownloadTabs extends React.Component<
         trackEvent({ category: 'quickSearch', action: 'quickSearchLoad' });
     }
 
-    @autobind
-    @action
+    @action.bound
     onSelectTab(tabId: string) {
         this.store.forDownloadTab = tabId === DOWNLOAD;
         this.activeTabId = tabId;

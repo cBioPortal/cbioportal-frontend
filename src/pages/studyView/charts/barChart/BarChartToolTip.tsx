@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import { formatRange } from 'pages/studyView/StudyViewUtils';
@@ -31,6 +31,10 @@ export default class BarChartToolTip extends React.Component<
     BarChartToolTipProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     /**
      * When the active bar is past the middle of the plot, render on the left side of the bar
      */

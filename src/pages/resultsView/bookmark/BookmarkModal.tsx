@@ -2,27 +2,28 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { Modal } from 'react-bootstrap';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { ShareUrls } from '../querySummary/ShareUI';
 import classNames from 'classnames';
 import autobind from 'autobind-decorator';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 var Clipboard = require('clipboard');
-
+interface IBookmarkModalProps {
+    onHide: () => void;
+    urlPromise: Promise<any>;
+    title: string;
+    description?: string;
+}
 @observer
-export class BookmarkModal extends React.Component<
-    {
-        onHide: () => void;
-        urlPromise: Promise<any>;
-        title: string;
-        description?: string;
-    },
-    {}
-> {
-    @observable
-    urlData: ShareUrls;
+export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
+    @observable urlData: ShareUrls | undefined = undefined;
 
     clipboards: any[] = [];
+
+    constructor(props: IBookmarkModalProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     componentDidMount() {
         // this is an $.ajax promise, not a real promise

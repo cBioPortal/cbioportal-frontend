@@ -2,7 +2,7 @@ import _ from 'lodash';
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import Timer = NodeJS.Timer;
 import {
     VictoryChart,
@@ -116,6 +116,11 @@ export default class WaterfallPlot<
     private mouseEvents: any = this.makeMouseEvents();
 
     @observable.ref private container: HTMLDivElement;
+
+    constructor(props: IWaterfallPlotProps<D>) {
+        super(props);
+        makeObservable(this);
+    }
 
     @bind
     private containerRef(container: HTMLDivElement) {

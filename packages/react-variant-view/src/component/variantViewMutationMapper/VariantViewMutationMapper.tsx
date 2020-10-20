@@ -1,5 +1,5 @@
 import { VariantAnnotationSummary } from 'genome-nexus-ts-api-client';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import {
     MutationMapper as ReactMutationMapper,
@@ -15,6 +15,12 @@ interface IVariantViewMutationMapperProps extends MutationMapperProps {
 class VariantViewMutationMapper extends ReactMutationMapper<
     IVariantViewMutationMapperProps
 > {
+    constructor(props: any) {
+        super(props);
+
+        makeObservable<VariantViewMutationMapper, 'geneWidth'>(this);
+    }
+
     protected get mutationTableComponent() {
         return null;
     }

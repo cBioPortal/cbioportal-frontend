@@ -3,7 +3,14 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
-import { action, computed, observable, reaction, runInAction } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    reaction,
+    runInAction,
+    makeObservable,
+} from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
@@ -110,6 +117,8 @@ export default class ResultsViewPage extends React.Component<
 
     constructor(props: IResultsViewPageProps) {
         super(props);
+
+        makeObservable(this);
 
         this.urlWrapper = new ResultsViewURLWrapper(props.routing);
 
@@ -513,15 +522,13 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     handleQuickOQLSubmission() {
         this.quickOQLQueryStore!.submit();
         this.showOQLEditor = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleOQLEditor() {
         this.showOQLEditor = !this.showOQLEditor;
     }

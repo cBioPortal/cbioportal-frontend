@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { GeneticEntity } from '../ResultsViewPageStore';
@@ -73,6 +73,11 @@ export default class CoExpressionPlot extends React.Component<
     ICoExpressionPlotProps,
     {}
 > {
+    constructor(props: ICoExpressionPlotProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @bind
     private getSvg() {
         return document.getElementById(SVG_ID) as SVGElement | null;

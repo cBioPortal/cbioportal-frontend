@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import Portal from 'react-overlays/lib/Portal';
@@ -23,6 +23,10 @@ export interface IScatterPlotTooltipProps {
 export default class ScatterPlotTooltip extends React.Component<
     IScatterPlotTooltipProps
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @autobind

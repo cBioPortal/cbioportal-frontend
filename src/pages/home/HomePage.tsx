@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, inject, Observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import Chart from 'chart.js';
 import AppConfig from 'appConfig';
 import 'react-select1/dist/react-select.css';
@@ -49,6 +49,7 @@ export default class HomePage extends React.Component<
 
     constructor(props: IResultsViewPageProps) {
         super(props);
+        makeObservable(this);
     }
 
     componentWillMount() {

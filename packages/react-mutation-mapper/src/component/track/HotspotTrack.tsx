@@ -10,7 +10,7 @@ import { Hotspot } from 'genome-nexus-ts-api-client';
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 import { HotspotFilterValue } from '../../filter/HotspotFilter';
 import { DataFilterType } from '../../model/DataFilter';
@@ -73,6 +73,10 @@ export default class HotspotTrack extends React.Component<
     HotspotTrackProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get hotspotSpecs(): TrackItemSpec[] {
         const filteredHotspotsByProteinPosStart = this.props.store
             .hotspotsByPosition;

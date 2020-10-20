@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     PatientTreatmentRow,
@@ -34,6 +34,11 @@ export abstract class TreatmentsTable<
     };
 
     abstract get preSelectedRowsKeys(): string[];
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed
     get flattenedFilters(): string[] {
@@ -90,8 +95,7 @@ export abstract class TreatmentsTable<
         return !!this.allSelectedRowsKeysSet[uniqueKey];
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleModal(panelName: string) {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
         if (!this.modalSettings.modalOpen) {
@@ -100,14 +104,12 @@ export abstract class TreatmentsTable<
         this.modalSettings.modalPanelName = panelName;
     }
 
-    @autobind
-    @action
+    @action.bound
     closeModal() {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
@@ -124,8 +126,7 @@ export abstract class TreatmentsTable<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     afterSelectingRows() {
         if (this.selectionType === SelectionOperatorEnum.UNION) {
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
@@ -139,8 +140,7 @@ export abstract class TreatmentsTable<
         this.props.onChangeSelectedRows([]);
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleSelectionOperator() {
         const selectionType = this._selectionType || this.selectionType;
         if (selectionType === SelectionOperatorEnum.INTERSECTION) {

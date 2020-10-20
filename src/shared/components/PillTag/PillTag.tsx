@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import { If } from 'react-if';
 import contrast from 'contrast';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 export interface IPillTagProps {
     content: string;
@@ -12,6 +12,11 @@ export interface IPillTagProps {
 }
 
 export class PillTag extends React.Component<IPillTagProps, {}> {
+    constructor(props: IPillTagProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed
     get contentColor() {
         let _contrast = contrast(this.props.backgroundColor);

@@ -12,7 +12,7 @@ import {
 import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import _ from 'lodash';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Column } from 'react-table';
@@ -60,7 +60,6 @@ export type DefaultMutationTableProps = {
     appendColumns?: boolean;
 } & DataTableProps<Partial<Mutation>>;
 
-@observer
 class DefaultMutationTableComponent extends DataTable<Partial<Mutation>> {}
 
 @observer
@@ -68,6 +67,10 @@ export default class DefaultMutationTable extends React.Component<
     DefaultMutationTableProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         initialSort: [{ column: MutationColumn.ANNOTATION }],
         appendColumns: true,

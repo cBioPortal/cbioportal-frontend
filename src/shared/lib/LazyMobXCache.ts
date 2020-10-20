@@ -1,6 +1,6 @@
 import Immutable from 'seamless-immutable'; // need to use immutables so mobX can observe the cache shallowly
 import accumulatingDebounce from './accumulatingDebounce';
-import { observable, action, reaction } from 'mobx';
+import { observable, action, reaction, makeObservable } from 'mobx';
 import { AccumulatingDebouncedFunction } from './accumulatingDebounce';
 
 export type CacheData<D, M = any> =
@@ -65,6 +65,8 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         ) => Promise<FetchResult<Data, Metadata>>,
         ...staticDependencies: any[]
     ) {
+        makeObservable(this);
+
         this.init();
         this.staticDependencies = staticDependencies;
         this.debouncedPopulate = accumulatingDebounce<
