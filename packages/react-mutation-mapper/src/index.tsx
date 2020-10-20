@@ -152,3 +152,4 @@ export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMuta
 export { default as DefaultMutationMapperDataStore } from './store/DefaultMutationMapperDataStore';
 export { default as DefaultMutationMapperFilterApplier } from './store/DefaultMutationMapperFilterApplier';
 export { default as DefaultMutationMapperStore } from './store/DefaultMutationMapperStore';
+export * from './component/oncokb/constants';
