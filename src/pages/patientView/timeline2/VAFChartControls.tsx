@@ -82,6 +82,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                     <input
                         type="checkbox"
                         checked={wrapperStore.onlyShowSelectedInVAFChart}
+                        data-test={'VAFOnlyHighlighted'}
                         onChange={() =>
                             wrapperStore.setOnlyShowSelectedInVAFChart(
                                 !wrapperStore.onlyShowSelectedInVAFChart

@@ -31,7 +31,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it('pvge show timeline', function() {
         browser.click('button[data-test="ToggleTimeline"]');
-        browser.waitForVisible('div#timeline');
+        browser.waitForVisible('div.tl-timeline-wrapper');
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             { hide: ['.qtip'] }
@@ -61,7 +61,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge only show highlighted in line chart', function() {
-        browser.click('input[data-test="TableShowOnlyHighlighted"]');
+        browser.click('input[data-test="VAFOnlyHighlighted"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
@@ -149,7 +149,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     describe('variant allele frequency plot controls', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(patientViewUrl);
-            $('.tl-timeline-svg').waitForVisible();
+            $('.tl-timeline-svg').waitForVisible(10000);
         });
 
         it('initalized with all options deselected', () => {
