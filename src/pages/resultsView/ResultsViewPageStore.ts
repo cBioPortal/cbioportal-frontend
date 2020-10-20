@@ -273,8 +273,10 @@ export enum SampleListCategoryType {
 }
 
 export enum GeneticEntityType {
-    'GENE' = 'gene',
-    'GENESET' = 'geneset',
+    'GENE' = 'GENE',
+    'GENESET' = 'GENESET',
+    'GENERIC_ASSAY' = 'GENERIC_ASSAY',
+    'PHOSPHOPROTEIN' = 'PHOSPHOPROTEIN',
 }
 
 export const SampleListCategoryTypeToFullId = {

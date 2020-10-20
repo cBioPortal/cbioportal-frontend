@@ -1493,7 +1493,7 @@ export class StudyViewPageStore {
         );
         //studyViewFilter can only have studyIds or sampleIdentifiers
         if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
-            delete studyViewFilter.studyIds;
+            delete (studyViewFilter as Partial<StudyViewFilter>).studyIds;
         }
 
         studyViewFilter.patientTreatmentFilters = { filters: [] };
@@ -2291,7 +2291,7 @@ export class StudyViewPageStore {
             if (bins.length > 0) {
                 newFilter.customBins = bins;
             } else {
-                delete newFilter.customBins;
+                delete (newFilter as Partial<ClinicalDataBinFilter>).customBins;
             }
             this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
         }
@@ -4945,9 +4945,11 @@ export class StudyViewPageStore {
                         studyViewFilter.sampleIdentifiers = sampleIdentifiersFromGenomicProfileFilter;
                         // only one of [studyIds, sampleIdentifiers] should present in studyViewFilter.
                         // sending both would throw error.
-                        delete studyViewFilter.studyIds;
+                        delete (studyViewFilter as Partial<StudyViewFilter>)
+                            .studyIds;
                     }
-                    delete studyViewFilter.genomicProfiles;
+                    delete (studyViewFilter as Partial<StudyViewFilter>)
+                        .genomicProfiles;
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
