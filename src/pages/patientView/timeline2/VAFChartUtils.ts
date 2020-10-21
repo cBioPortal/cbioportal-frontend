@@ -329,3 +329,31 @@ export function numLeadingDecimalZeros(y: number) {
     if (y == 0 || y >= 0.1) return 0;
     return numberOfLeadingDecimalZeros(y);
 }
+
+/**
+ * Try to return tick labels with fractional part just long enogh to disttinguish them.
+ * It tries up to 3th positions in fractional part. Otherwise return scientific representation of original numbers.
+ * Function returns distinct labels.
+ * If input contains duplicates function deduplicates and return less labels that amount of input numbers.
+ * @param nums array of ticks as numbers
+ */
+export function minimalDistinctTickStrings(nums: number[]): string[] {
+    const distinctNums = nums.filter((v, i, a) => a.indexOf(v) === i);
+
+    const fractionalNumbersToShow = distinctNums.map(num =>
+        Number.isInteger(num) ? 0 : numLeadingDecimalZeros(num) + 1
+    );
+
+    const fromPos = Math.min(...fractionalNumbersToShow);
+    const toPos = 3;
+
+    for (let pos = fromPos; pos <= toPos; pos++) {
+        const labels = distinctNums
+            .map(num => num.toFixed(pos))
+            .filter((v, i, a) => a.indexOf(v) === i);
+        if (labels.length === distinctNums.length) {
+            return labels;
+        }
+    }
+    return distinctNums.map(num => num.toExponential());
+}

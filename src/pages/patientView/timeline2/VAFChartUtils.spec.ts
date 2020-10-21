@@ -11,6 +11,7 @@ import {
     IPoint,
     numLeadingDecimalZeros,
     round10,
+    minimalDistinctTickStrings,
     yValueScaleFunction,
 } from './VAFChartUtils';
 import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
@@ -937,6 +938,36 @@ describe('VAFChartUtils', () => {
         });
         it('handles decimal larger than 0.1 correctly', () => {
             assert.equal(numLeadingDecimalZeros(0.1), 0);
+        });
+    });
+
+    describe('minimalDistinctTickStrings', () => {
+        it('works with empty array', () => {
+            assert.deepEqual(minimalDistinctTickStrings([]), []);
+        });
+        it('converts to string', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1]), ['1']);
+        });
+        it('deduplicate numbers', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1, 1]), ['1']);
+        });
+        it('shows equals digits in fractional part', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1, 1.1]), [
+                '1.0',
+                '1.1',
+            ]);
+        });
+        it('shows just enough numbers in fractional part to distinguish number', () => {
+            assert.deepEqual(
+                minimalDistinctTickStrings([0.01, 0.002, 0.0003]),
+                ['0.010', '0.002', '0.000']
+            );
+        });
+        it('falls back on the scientific notation of original numbers if 3 decimal digits are not enough to distinguish', () => {
+            assert.deepEqual(minimalDistinctTickStrings([0.0001, 0.000201]), [
+                '1e-4',
+                '2.01e-4',
+            ]);
         });
     });
 

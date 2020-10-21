@@ -33,6 +33,7 @@ import {
     IPoint,
     numLeadingDecimalZeros,
     yValueScaleFunction,
+    minimalDistinctTickStrings,
 } from './VAFChartUtils';
 import { VAFChartHeader } from './VAFChartHeader';
 import {
@@ -123,14 +124,18 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get ticks(): { label: string; value: number; offset: number }[] {
-        const tickmarkValues = getYAxisTickmarks(
+        let tickmarkValues = getYAxisTickmarks(
             this.minYTickmarkValue,
             this.maxYTickmarkValue
         );
-        const numDecimals = numLeadingDecimalZeros(this.minYTickmarkValue) + 1;
-        return _.map(tickmarkValues, (v: number) => {
+        const labels = minimalDistinctTickStrings(tickmarkValues);
+        const ticksHasDuplicates = tickmarkValues.length !== labels.length;
+        if (ticksHasDuplicates) {
+            tickmarkValues = labels.map(label => Number(label));
+        }
+        return _.map(tickmarkValues, (v: number, indx: number) => {
             return {
-                label: v.toFixed(numDecimals),
+                label: labels[indx],
                 value: v,
                 offset: this.scaleYValue(v),
             };
