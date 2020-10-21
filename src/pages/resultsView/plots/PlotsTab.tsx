@@ -4538,8 +4538,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         return (
             this.plotType.isComplete &&
             this.plotType.result !== PlotType.DiscreteVsDiscrete &&
-            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown) &&
-            (this.canColorByMutationData || this.canColorByCnaData)
+            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown)
         );
     }
 
