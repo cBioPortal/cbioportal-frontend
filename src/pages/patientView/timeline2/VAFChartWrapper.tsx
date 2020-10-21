@@ -35,7 +35,6 @@ import {
     yValueScaleFunction,
 } from './VAFChartUtils';
 import { VAFChartHeader } from './VAFChartHeader';
-import autobind from 'autobind-decorator';
 import {
     EllipsisTextTooltip,
     stringListToIndexSet,
@@ -94,8 +93,6 @@ export default class VAFChartWrapper extends React.Component<
         const wrapperStore = new TimelineWrapperStore();
 
         this.wrapperStore = new TimelineWrapperStore();
-
-        (window as any).store = this.store;
     }
 
     /** ticks dependencies **/
@@ -282,18 +279,15 @@ export default class VAFChartWrapper extends React.Component<
         );
     }
 
-    groupColor(sampleId: string) {
-        return this.wrapperStore.groupingByIsSelected &&
-            this.numGroupByGroups > 1
-            ? this.groupColorBySampleId(sampleId)
-            : 'rgb(0,0,0)';
-    }
-
-    @autobind
-    groupColorBySampleId(sampleId: string) {
-        return this.clinicalValueToColor[
-            this.sampleIdToClinicalValue[sampleId]
-        ];
+    @computed get groupColor() {
+        return (sampleId: string) => {
+            return this.wrapperStore.groupingByIsSelected &&
+                this.numGroupByGroups > 1
+                ? this.clinicalValueToColor[
+                      this.sampleIdToClinicalValue[sampleId]
+                  ]
+                : 'rgb(0,0,0)';
+        };
     }
 
     @computed get clinicalValueToColor() {
@@ -309,7 +303,6 @@ export default class VAFChartWrapper extends React.Component<
         return clinicalValueToColor;
     }
 
-    @autobind
     sampleIcons(sampleIds: string[]) {
         const sampleidsByXCoordinate = _.groupBy(
             sampleIds,
@@ -341,7 +334,6 @@ export default class VAFChartWrapper extends React.Component<
         return <g>{sampleIcons}</g>;
     }
 
-    @autobind
     groupByTrackLabel(groupIndex: number) {
         return (
             <EllipsisTextTooltip
@@ -356,7 +348,6 @@ export default class VAFChartWrapper extends React.Component<
         );
     }
 
-    @autobind
     groupColorByGroupIndex(groupIndex: number) {
         return this.wrapperStore.groupingByIsSelected &&
             this.numGroupByGroups > 1
