@@ -7,7 +7,7 @@ This repo contains the frontend code for cBioPortal which uses React, MobX and T
 | Branch name | [`master`](https://github.com/cBioPortal/cbioportal-frontend/tree/master) |  --|  [`rc`](https://github.com/cBioPortal/cbioportal-frontend/tree/rc) |
 | Description | All bug fixes and features not requiring database migrations go here. This code is either already in production or will be released this week | Next release that requires database migrations. Manual product review often takes place for this branch before release | Later releases with features that require database migrations. This is useful to allow merging in new features without affecting the upcoming release. Could be seen as a development branch, but note that only high quality pull requests are merged. That is the feature should be pretty much ready for release after merge. |
 | Test Status | [CircleCI master workflow](https://circleci.com/gh/cBioPortal/workflows/cbioportal-frontend/tree/master) | -- | [CircleCI rc workflow](https://circleci.com/gh/cBioPortal/workflows/cbioportal-frontend/tree/rc) |
-| Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.com/ | -- | https://rc--cbioportalfrontend.netlify.com |
+| Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.app/ | -- | https://rc--cbioportalfrontend.netlify.app |
 | Live instance backend | https://www.cbioportal.org / https://master.cbioportal.org | -- | https://rc.cbioportal.org |
 
 Note: you can always check the version of the live instance by checking the variable `window.FRONTEND_COMMIT` in the console.
@@ -62,7 +62,7 @@ To run unit/integration tests in watch mode
 yarn run test:watch
 ```
 
-To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
+To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before `.spec.`))
 ```
 yarn run test:watch -- --grep=#specName#
 ```
