@@ -6,7 +6,7 @@ import {
 export function getTranscriptConsequenceSummary(
     data: VariantAnnotationSummary | undefined
 ): TranscriptConsequenceSummary {
-    let transcriptConsequenceSummary: TranscriptConsequenceSummary = {
+    let transcriptConsequenceSummary = {
         aminoAcidAlt: '',
         aminoAcidRef: '',
         aminoAcids: '',
@@ -30,5 +30,5 @@ export function getTranscriptConsequenceSummary(
     if (data !== undefined && data.transcriptConsequenceSummary) {
         transcriptConsequenceSummary = data.transcriptConsequenceSummary;
     }
-    return transcriptConsequenceSummary;
+    return transcriptConsequenceSummary as TranscriptConsequenceSummary;
 }
