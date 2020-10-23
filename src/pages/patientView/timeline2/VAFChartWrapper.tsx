@@ -58,6 +58,7 @@ export interface IVAFChartWrapperProps {
     mutationProfileId: string;
     coverageInformation: CoverageInformation;
     headerWidth?: number;
+    timelineShowing?: boolean;
 }
 
 @observer
@@ -457,23 +458,24 @@ export default class VAFChartWrapper extends React.Component<
                         sampleManager={this.props.sampleManager}
                     />
                     <Timeline
-                        key={headerWidth}
-                        store={stores[0]}
-                        width={width}
-                        onClickDownload={() => downloadZippedTracks(data)}
+                        key={`this.props.headerWidth-${this.numGroupByGroups.toString()}-${
+                            this.wrapperStore.showSequentialMode
+                                ? 'seq'
+                                : 'noseq'
+                        }`}
                         store={this.store}
-                        width={this.props.width}
                         onClickDownload={() =>
                             downloadZippedTracks(this.props.data)
                         }
+                        width={this.props.width}
                         hideLabels={false}
                         hideXAxis={this.wrapperStore.showSequentialMode}
                         visibleTracks={[]}
                         customTracks={customTracks}
                         headerWidth={
-                            wrapperStore.groupByTracks.length
+                            this.numGroupByGroups > 0
                                 ? 150
-                                : headerWidth
+                                : this.props.headerWidth
                         }
                     />
                 </div>
