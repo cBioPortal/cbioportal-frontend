@@ -1,21 +1,9 @@
 import React from 'react';
 import { Observer, observer } from 'mobx-react';
-import { action, autorun, computed } from 'mobx';
+import { computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
-import { TimelineEvent, TimelineStore } from 'cbioportal-clinical-timeline';
-import SampleMarker from './SampleMarker';
-import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
-import { CoverageInformation } from '../../resultsView/ResultsViewPageStoreUtils';
-import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import {
-    ceil10,
-    computeRenderData,
-    floor10,
-    getYAxisTickmarks,
-    IPoint,
-    numLeadingDecimalZeros,
-} from './VAFChartUtils';
-import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
+import { Mutation } from 'cbioportal-ts-api-client';
+import { IPoint } from './VAFChartUtils';
 import _ from 'lodash';
 import { Popover } from 'react-bootstrap';
 import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
@@ -34,6 +22,23 @@ import {
 } from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import { GROUP_BY_NONE } from './VAFChartControls';
+
+export interface IColorPoint extends IPoint {
+    color: string;
+}
+
+type Datum = {
+    mutationStatus: MutationStatus | null;
+    sampleId: string;
+    vaf: number;
+};
+
+type TooltipModel = {
+    datum: Datum | null;
+    mutation: Mutation | null;
+    mouseEvent: React.MouseEvent<any> | null;
+    tooltipOnPoint: boolean;
+};
 import TimelineWrapperStore from './TimelineWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
@@ -41,14 +46,17 @@ import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 import './styles.scss';
 
 interface IVAFChartProps {
-    dataStore: PatientViewMutationsDataStore;
-    store: TimelineStore;
-    wrapperStore: TimelineWrapperStore;
-    sampleMetaData: ISampleMetaDeta;
-    samples: Sample[];
-    mutationProfileId: string;
-    coverageInformation: CoverageInformation;
-    sampleManager: SampleManager;
+    mouseOverMutation: Readonly<Mutation> | null;
+    onMutationMouseOver: (mutation: Mutation | null) => void;
+    selectedMutations: Readonly<Mutation[]>;
+    onMutationClick: (mutation: Mutation) => void;
+
+    onlyShowSelectedInVAFChart: boolean | undefined;
+
+    lineData: IColorPoint[][];
+
+    height: number;
+    width: number;
 }
 
 const HIGHLIGHT_LINE_STROKE_WIDTH = 6;
@@ -59,41 +67,39 @@ const VAFPoint: React.FunctionComponent<{
     x: number;
     y: number;
     color: string;
-    tooltipDatum: {
-        sampleId: string;
-        vaf: number;
-        mutationStatus: MutationStatus;
-    } | null;
+    datum: Datum | null;
     mutation: Mutation;
-    dataStore: PatientViewMutationsDataStore;
-    wrapperStore: TimelineWrapperStore;
+    onMutationClick: (mutation: Mutation) => void;
+    setTooltipModel(tooltipModel: TooltipModel): void;
 }> = function({
     x,
     y,
     color,
-    tooltipDatum,
+    datum,
     mutation,
-    dataStore,
-    wrapperStore,
+    onMutationClick,
+    setTooltipModel,
 }) {
     const onMouseOverEvent = (mouseEvent: any) => {
-        wrapperStore.setTooltipModel(tooltipDatum, mutation, mouseEvent, true);
-        dataStore.setMouseOverMutation(mutation);
+        setTooltipModel({ datum, mutation, mouseEvent, tooltipOnPoint: true });
     };
 
     const onMouseOutEvent = (mouseEvent: any) => {
-        wrapperStore.setTooltipModel(null, null, mouseEvent, true);
-        dataStore.setMouseOverMutation(null);
+        setTooltipModel({
+            datum: null,
+            mutation: null,
+            mouseEvent,
+            tooltipOnPoint: true,
+        });
     };
 
     const onMouseClickEvent = (mouseEvent: any) => {
-        dataStore.toggleSelectedMutation(mutation);
+        onMutationClick(mutation);
     };
 
     const onMouseMoveEvent = (mouseEvent: any) => {
         mouseEvent.persist();
-        wrapperStore.setTooltipModel(tooltipDatum, mutation, mouseEvent, true);
-        dataStore.setMouseOverMutation(mutation);
+        setTooltipModel({ datum, mutation, mouseEvent, tooltipOnPoint: true });
     };
 
     return (
@@ -126,43 +132,41 @@ const VAFPointConnector: React.FunctionComponent<{
     x2: number;
     y2: number;
     color: string;
-    tooltipDatum: {
-        sampleId: string;
-        vaf: number;
-        mutationStatus: MutationStatus;
-    } | null;
+    datum: Datum | null;
     mutation: Mutation;
-    dataStore: PatientViewMutationsDataStore;
-    wrapperStore: TimelineWrapperStore;
+    onMutationClick: (mutation: Mutation) => void;
+    setTooltipModel(tooltipModel: TooltipModel): void;
 }> = function({
     x1,
     y1,
     x2,
     y2,
     color,
-    tooltipDatum,
+    datum,
     mutation,
-    dataStore,
-    wrapperStore,
+    onMutationClick,
+    setTooltipModel,
 }) {
     const onMouseOverEvent = (mouseEvent: any) => {
-        wrapperStore.setTooltipModel(tooltipDatum, mutation, mouseEvent, false);
-        dataStore.setMouseOverMutation(mutation);
+        setTooltipModel({ datum, mutation, mouseEvent, tooltipOnPoint: true });
     };
 
     const onMouseOutEvent = (mouseEvent: any) => {
-        wrapperStore.setTooltipModel(null, null, mouseEvent, false);
-        dataStore.setMouseOverMutation(null);
+        setTooltipModel({
+            datum: null,
+            mutation: null,
+            mouseEvent,
+            tooltipOnPoint: false,
+        });
     };
 
     const onMouseClickEvent = (mouseEvent: any) => {
-        dataStore.toggleSelectedMutation(mutation);
+        onMutationClick(mutation);
     };
 
     const onMouseMoveEvent = (mouseEvent: any) => {
         mouseEvent.persist();
-        wrapperStore.setTooltipModel(tooltipDatum, mutation, mouseEvent, false);
-        dataStore.setMouseOverMutation(mutation);
+        setTooltipModel({ datum, mutation, mouseEvent, tooltipOnPoint: true });
     };
 
     return (
@@ -189,129 +193,15 @@ const VAFPointConnector: React.FunctionComponent<{
 
 @observer
 export default class VAFChart extends React.Component<IVAFChartProps, {}> {
-    @computed get sampleEvents() {
-        return this.props.store.allItems.filter(
-            event => event.event!.eventType === 'SPECIMEN'
-        );
-    }
+    @observable.ref private tooltipModel: TooltipModel;
 
     @computed get headerHeight() {
         return 20;
     }
 
-    @action
-    recalculateTotalHeight() {
-        let footerHeight: number = 0;
-        let yPosition = this.sampleIdToYPosition;
-        for (let index in yPosition) {
-            if (yPosition[index] > footerHeight)
-                footerHeight = yPosition[index];
-        }
-        footerHeight = footerHeight + 20;
-
-        this.props.wrapperStore.setVafChartHeight(
-            _.sum([this.props.wrapperStore.dataHeight, footerHeight])
-        );
-
-        return _.sum([this.props.wrapperStore.dataHeight, footerHeight]);
-    }
-
-    @computed get mutations() {
-        if (this.props.wrapperStore.onlyShowSelectedInVAFChart) {
-            return this.props.dataStore.allData.filter(m =>
-                this.props.dataStore.isMutationSelected(m[0])
-            );
-        } else {
-            return this.props.dataStore.allData;
-        }
-    }
-
-    @computed get renderData() {
-        return computeRenderData(
-            this.props.samples,
-            this.mutations,
-            this.props.sampleManager.sampleIdToIndexMap,
-            this.props.mutationProfileId,
-            this.props.coverageInformation,
-            this.props.wrapperStore.groupByOption!,
-            this.sampleIdToClinicalValue
-        );
-    }
-
-    @computed get minYValue() {
-        return _(this.renderData.lineData)
-            .flatten()
-            .map((d: IPoint) => d.y)
-            .min();
-    }
-
-    @computed get maxYValue() {
-        return _(this.renderData.lineData)
-            .flatten()
-            .map((d: IPoint) => d.y)
-            .max();
-    }
-
-    @computed get maxYTickmarkValue() {
-        if (
-            !this.props.wrapperStore.vafChartYAxisToDataRange ||
-            this.maxYValue === undefined
-        )
-            return 1;
-        return ceil10(
-            this.maxYValue,
-            -numLeadingDecimalZeros(this.maxYValue) - 1
-        );
-    }
-
-    @computed get minYTickmarkValue() {
-        if (
-            !this.props.wrapperStore.vafChartYAxisToDataRange ||
-            this.minYValue === undefined
-        )
-            return 0;
-        return floor10(
-            this.minYValue,
-            -numLeadingDecimalZeros(this.minYValue) - 1
-        );
-    }
-
-    @computed get ticks(): { label: string; value: number; offset: number }[] {
-        const yPadding = 10;
-        const tickmarkValues = getYAxisTickmarks(
-            this.minYTickmarkValue,
-            this.maxYTickmarkValue
-        );
-        const numDecimals = numLeadingDecimalZeros(this.minYTickmarkValue) + 1;
-        return _.map(tickmarkValues, (v: number) => {
-            return {
-                label: v.toFixed(numDecimals),
-                value: v,
-                offset: this.scaleYValue(v),
-            };
-        });
-    }
-
-    @computed get lineData() {
-        let scaledData: IPoint[][] = [];
-        this.renderData.lineData.map((dataPoints: IPoint[], index: number) => {
-            scaledData[index] = [];
-            dataPoints.map((dataPoint: IPoint, i: number) => {
-                scaledData[index].push({
-                    x: this.xPosition[dataPoint.sampleId],
-                    y: this.yPosition[dataPoint.y],
-                    sampleId: dataPoint.sampleId,
-                    mutation: dataPoint.mutation,
-                    mutationStatus: dataPoint.mutationStatus,
-                });
-            });
-        });
-        return scaledData;
-    }
-
     @computed get mutationToDataPoints() {
-        const map = new ComplexKeyMap<IPoint[]>();
-        for (const lineData of this.lineData) {
+        const map = new ComplexKeyMap<IColorPoint[]>();
+        for (const lineData of this.props.lineData) {
             map.set(
                 {
                     hugoGeneSymbol: lineData[0].mutation.gene.hugoGeneSymbol,
@@ -323,185 +213,18 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         return map;
     }
 
-    @computed get xPosition() {
-        let positionList: { [sampleId: string]: number } = {};
-        let sequentialDistance: number = 0;
-        let sequentialPadding: number = 20;
-        if (this.props.wrapperStore.showSequentialMode) {
-            sequentialDistance =
-                (this.props.store.pixelWidth - sequentialPadding * 2) /
-                (this.sampleEvents.length - 1);
-        }
-
-        this.sampleEvents.forEach((sample, i) => {
-            sample.event.attributes.forEach((attribute: any, i: number) => {
-                if (attribute.key === 'SAMPLE_ID') {
-                    positionList[attribute.value] = this.props.wrapperStore
-                        .showSequentialMode
-                        ? this.sampleIdOrder[attribute.value] *
-                              sequentialDistance +
-                          sequentialPadding
-                        : this.props.store.getPosition(sample)!.pixelLeft;
-                }
-            });
-        });
-        return positionList;
-    }
-
-    @computed get yPosition() {
-        let scaledY: { [originalY: number]: number } = {};
-        this.renderData.lineData.forEach((data: IPoint[], index: number) => {
-            data.forEach((d: IPoint, i: number) => {
-                scaledY[d.y] = this.scaleYValue(d.y);
-            });
-        });
-        return scaledY;
-    }
-
-    @computed get sampleGroups() {
-        let sampleGroups: { [groupIndex: number]: string[] } = {};
-        this.sampleEvents.forEach((sample, i) => {
-            sample.event.attributes.forEach((attribute: any, i: number) => {
-                if (attribute.key === 'SAMPLE_ID') {
-                    // check the group value of this sample id
-                    console.info(
-                        'Sample id ' +
-                            attribute.value +
-                            ' is in group ' +
-                            this.sampleIdToClinicalValue[attribute.value]
-                    );
-                    if (
-                        sampleGroups[
-                            this.clinicalValuesForGrouping.indexOf(
-                                this.sampleIdToClinicalValue[attribute.value]
-                            )
-                        ] == undefined
-                    )
-                        sampleGroups[
-                            this.clinicalValuesForGrouping.indexOf(
-                                this.sampleIdToClinicalValue[attribute.value]
-                            )
-                        ] = [];
-                    sampleGroups[
-                        this.clinicalValuesForGrouping.indexOf(
-                            this.sampleIdToClinicalValue[attribute.value]
-                        )
-                    ].push(attribute.value);
-                }
-            });
-        });
-        return sampleGroups;
-    }
-
-    // returns function for scaling svg y-axis coordinate system
-    @computed get scaleYValue() {
-        return yValueScaleFunction(
-            this.minYTickmarkValue,
-            this.maxYTickmarkValue,
-            this.props.wrapperStore.dataHeight,
-            this.props.wrapperStore.vafChartLogScale
-        );
-    }
-
-    @computed get sampleIdOrder() {
-        return stringListToIndexSet(
-            this.props.sampleManager.getSampleIdsInOrder()
-        );
-    }
-
-    @computed get clinicalValueToColor() {
-        console.info(this.sampleGroups);
-        let clinicalValueToColor: { [clinicalValue: string]: string } = {};
-        const uniqueColorGetter = makeUniqueColorGetter();
-        const map = clinicalValueToSamplesMap(
-            this.props.sampleManager.samples,
-            this.props.wrapperStore.groupByOption!
-        );
-        map.forEach((sampleList: string[], clinicalValue: any) => {
-            clinicalValueToColor[clinicalValue] = uniqueColorGetter();
-        });
-        return clinicalValueToColor;
-    }
-
-    @computed get clinicalValuesForGrouping() {
-        let clinicalValuesForGrouping: string[] = [];
-        const uniqueColorGetter = makeUniqueColorGetter();
-        const map = clinicalValueToSamplesMap(
-            this.props.sampleManager.samples,
-            this.props.wrapperStore.groupByOption!
-        );
-        map.forEach((sampleList: string[], clinicalValue: any) => {
-            clinicalValuesForGrouping.push(clinicalValue);
-        });
-        return clinicalValuesForGrouping;
-    }
-
-    @computed get sampleIdToClinicalValue() {
-        let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
-        if (this.groupingByIsSelected) {
-            this.props.sampleManager.samples.forEach((sample, i) => {
-                sampleIdToClinicalValue[
-                    sample.id
-                ] = SampleManager!.getClinicalAttributeInSample(
-                    sample,
-                    this.props.wrapperStore.groupByOption!
-                )!.value;
-            });
-        }
-        return sampleIdToClinicalValue;
-    }
-
-    @computed get groupingByIsSelected() {
-        return !(
-            this.props.wrapperStore.groupByOption == null ||
-            this.props.wrapperStore.groupByOption === GROUP_BY_NONE
-        );
-    }
-
-    @computed get numGroupByGroups() {
-        return this.groupingByIsSelected ? _.keys(this.sampleGroups).length : 0;
-    }
-
-    @computed get sampleIdToYPosition() {
-        // compute sample y position on the x-axis footer
-        let yStart = -5.5;
-        let yPositions: { [sampleId: string]: number } = {};
-        let xCount: number[] = [];
-        this.sampleEvents.map((event: TimelineEvent, i: number) => {
-            const sampleId = event.event!.attributes.find(
-                (att: any) => att.key === 'SAMPLE_ID'
-            );
-            const x = this.xPosition[sampleId.value];
-            xCount[x] = xCount[x] ? xCount[x] + 1 : 1;
-            yPositions[sampleId.value] = yStart + xCount[x] * 15;
-        });
-        return yPositions;
-    }
-
-    @computed get groupIndexToTrackHeight() {
-        return _.mapValues(this.sampleGroups, (sampleIds: string[]) => {
-            const yPositions = _(sampleIds)
-                .map((i: string) => this.sampleIdToYPosition[i])
-                .uniq()
-                .value();
-            return yPositions.length * 20; // FIXME do lookup height in TimelineLib
-        });
-    }
-
     @autobind
     private getHighlights() {
         const highlightedMutations = [];
-        if (!this.props.wrapperStore.onlyShowSelectedInVAFChart) {
+        if (!this.props.onlyShowSelectedInVAFChart) {
             // dont bold highlighted mutations if we're only showing highlighted mutations
-            highlightedMutations.push(
-                ...this.props.dataStore.selectedMutations
-            );
+            highlightedMutations.push(...this.props.selectedMutations);
         }
         // Using old functionality to get mouseOverMUtation from PatientsViewMutationDataStore
         // so highlighting a mutation in the VAF chart will highlight it also in the mutation table.
         // Also if multiple VAF charts are present in the page all will share the highlighting.
         // If this is not desired, comment the following line and uncomment the next.
-        const mouseOverMutation = this.props.dataStore.getMouseOverMutation();
+        const mouseOverMutation = this.props.mouseOverMutation;
         /*const mouseOverMutation = this.props.wrapperStore.tooltipModel
             ? this.props.wrapperStore.tooltipModel.mutation
             : null;*/
@@ -585,7 +308,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
 
     @autobind
     private getTooltipComponent() {
-        let mutationTooltip = this.props.wrapperStore.tooltipModel;
+        let mutationTooltip = this.tooltipModel;
         if (
             !mutationTooltip ||
             mutationTooltip.mouseEvent == null ||
@@ -626,72 +349,21 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         }
     }
 
-    @action
-    // Update store with groupBy sample tracks
-    setGroupByTracks(sampleGroups: { [index: number]: string[] }) {
-        const tracks: CustomTrackSpecification[] = [];
-        if (sampleGroups[-1] === undefined)
-            _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
-                const index = parseInt(key);
-                tracks.push({
-                    renderHeader: () => this.groupByTrackLabel(index),
-                    renderTrack: () => this.sampeIconsGroupByTrack(sampleIds),
-                    height: () => this.groupIndexToTrackHeight[index],
-                    labelForExport: this.clinicalValuesForGrouping[index],
-                });
-            });
-        this.props.wrapperStore.groupByTracks = tracks;
-    }
-
-    yAxisHeaderReaction = autorun(() => {
-        this.renderHeader(this.ticks);
-    });
-
-    groupByTracksReaction = autorun(() => {
-        this.setGroupByTracks(this.sampleGroups);
-    });
-
-    destroy() {
-        this.yAxisHeaderReaction();
-        this.groupByTracksReaction();
-    }
-
-    @action
-    renderHeader(ticks: { label: string; value: number; offset: number }[]) {
-        this.props.wrapperStore.vafPlotHeader = (store: TimelineStore) => (
-            <VAFChartHeader
-                ticks={ticks}
-                legendHeight={this.props.wrapperStore.vafChartHeight}
-            />
-        );
-    }
-
-    @computed get groupColor() {
-        return (sampleId: string) => {
-            return this.groupingByIsSelected && this.numGroupByGroups > 1
-                ? this.groupColorBySampleId(sampleId)
-                : 'rgb(0,0,0)';
-        };
-    }
-
     render() {
         return (
-            <svg
-                width={this.props.store.pixelWidth}
-                height={this.recalculateTotalHeight()}
-            >
-                {this.renderData.lineData.map(
-                    (data: IPoint[], index: number) => {
-                        return data.map((d: IPoint, i: number) => {
-                            let x1 = this.xPosition[d.sampleId],
+            <svg width={this.props.width} height={this.props.height}>
+                {this.props.lineData.map(
+                    (data: IColorPoint[], index: number) => {
+                        return data.map((d: IColorPoint, i: number) => {
+                            let x1 = d.x,
                                 x2;
-                            let y1 = this.yPosition[d.y],
+                            let y1 = d.y,
                                 y2;
 
-                            const nextPoint: IPoint = data[i + 1];
+                            const nextPoint: IColorPoint = data[i + 1];
                             if (nextPoint) {
-                                x2 = this.xPosition[nextPoint.sampleId];
-                                y2 = this.yPosition[nextPoint.y];
+                                x2 = nextPoint.x;
+                                y2 = nextPoint.y;
                             }
 
                             let tooltipDatum: {
@@ -704,7 +376,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                 vaf: d.y,
                             };
 
-                            const color = this.groupColor(d.sampleId);
+                            const color = d.color;
 
                             return (
                                 <g>
@@ -715,22 +387,34 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                                             x2={x2}
                                             y2={y2}
                                             color={color}
-                                            tooltipDatum={tooltipDatum}
+                                            datum={tooltipDatum}
                                             mutation={d.mutation}
-                                            dataStore={this.props.dataStore}
-                                            wrapperStore={
-                                                this.props.wrapperStore
+                                            onMutationClick={
+                                                this.props.onMutationClick
                                             }
+                                            setTooltipModel={model => {
+                                                this.tooltipModel = model;
+                                                this.props.onMutationMouseOver(
+                                                    model.mutation
+                                                );
+                                            }}
                                         />
                                     )}
                                     <VAFPoint
                                         x={x1}
                                         y={y1}
                                         color={color}
-                                        tooltipDatum={tooltipDatum}
+                                        datum={tooltipDatum}
                                         mutation={d.mutation}
-                                        dataStore={this.props.dataStore}
-                                        wrapperStore={this.props.wrapperStore}
+                                        onMutationClick={
+                                            this.props.onMutationClick
+                                        }
+                                        setTooltipModel={model => {
+                                            this.tooltipModel = model;
+                                            this.props.onMutationMouseOver(
+                                                model.mutation
+                                            );
+                                        }}
                                     />
                                 </g>
                             );
@@ -738,68 +422,9 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                     }
                 )}
 
-                {!this.groupingByIsSelected && this.sampleIcons()}
                 <Observer>{this.getHighlights}</Observer>
                 <Observer>{this.getTooltipComponent}</Observer>
             </svg>
-        );
-    }
-
-    @autobind
-    sampleIcons() {
-        const svg = (
-            <g transform={`translate(0,${this.props.wrapperStore.dataHeight})`}>
-                {this.sampleEvents.map((event: TimelineEvent, i: number) => {
-                    const sampleId = event.event!.attributes.find(
-                        (att: any) => att.key === 'SAMPLE_ID'
-                    );
-                    return this.sampleIcon(sampleId.value);
-                })}
-            </g>
-        );
-        return svg;
-    }
-
-    @autobind
-    sampeIconsGroupByTrack(sampleIds: string[]) {
-        return <g>{sampleIds.map(sampleId => this.sampleIcon(sampleId))}</g>;
-    }
-
-    @autobind
-    groupByTrackLabel(groupIndex: number) {
-        return (
-            <text style={{ color: this.groupColorByGroupIndex(groupIndex) }}>
-                {this.clinicalValuesForGrouping[groupIndex]}
-            </text>
-        );
-    }
-
-    @autobind
-    groupColorByGroupIndex(groupIndex: number) {
-        return this.groupingByIsSelected && this.numGroupByGroups > 1
-            ? this.clinicalValueToColor[
-                  this.clinicalValuesForGrouping[groupIndex]
-              ]
-            : 'rgb(0,0,0)';
-    }
-
-    @autobind
-    groupColorBySampleId(sampleId: string) {
-        return this.clinicalValueToColor[
-            this.sampleIdToClinicalValue[sampleId]
-        ];
-    }
-
-    @autobind
-    sampleIcon(sampleId: string) {
-        const x = this.xPosition[sampleId];
-        const y = this.sampleIdToYPosition[sampleId];
-        const color = this.props.sampleMetaData.color[sampleId] || '#333333';
-        const label = this.props.sampleMetaData.label[sampleId] || '-';
-        return (
-            <g transform={`translate(${x})`}>
-                <SampleMarker color={color} label={label} y={y} />
-            </g>
         );
     }
 }

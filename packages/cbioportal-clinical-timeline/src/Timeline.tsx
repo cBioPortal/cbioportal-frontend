@@ -232,7 +232,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
     let height =
-        (!hideXAxis ? TICK_AXIS_HEIGHT : 0) +
+        TICK_AXIS_HEIGHT +
         _.sumBy(tracks, t => {
             if (visibleTracks) {
                 return visibleTracks.includes(t.track.type) ? t.height : 0;
@@ -242,8 +242,6 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         }) +
         _.sumBy(customTracks || [], t => t.height(store)) +
         SCROLLBAR_PADDING;
-
-    console.log(headerWidth);
 
     const refs = {
         cursor: useRef(null),

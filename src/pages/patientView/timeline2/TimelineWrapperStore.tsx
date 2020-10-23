@@ -1,22 +1,7 @@
-import { action, observable } from 'mobx';
-import * as React from 'react';
-import { Mutation } from 'cbioportal-ts-api-client';
-import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
-import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
-import { TimelineStore } from 'cbioportal-clinical-timeline';
+import { action, computed, observable } from 'mobx';
 
 export default class TimelineWrapperStore {
-    // static dataHeight: number = 200;
-
     @observable groupByOption: string | null = null;
-
-    @observable.ref groupByTracks: CustomTrackSpecification[] = [];
-
-    @observable vafPlotHeader: (store: TimelineStore) => any = (
-        store: TimelineStore
-    ) => 'VAF';
-
-    @observable vafChartHeight: number = 240;
 
     @observable showSequentialMode: boolean | undefined = undefined;
 
@@ -31,27 +16,6 @@ export default class TimelineWrapperStore {
     @observable maxYAxisToDataRange: number = 0;
 
     @observable dataHeight: number = 200;
-
-    @observable.ref tooltipModel: {
-        datum: {
-            mutationStatus: MutationStatus | null;
-            sampleId: string;
-            vaf: number;
-        } | null;
-        mutation: Mutation | null;
-        mouseEvent: React.MouseEvent<any> | null;
-        tooltipOnPoint: boolean;
-    } = {
-        datum: null,
-        mutation: null,
-        mouseEvent: null,
-        tooltipOnPoint: false,
-    };
-
-    @action
-    setVafChartHeight(value: number) {
-        this.vafChartHeight = value;
-    }
 
     @action
     setGroupByOption(value: string) {
@@ -78,22 +42,7 @@ export default class TimelineWrapperStore {
         this.vafChartYAxisToDataRange = value;
     }
 
-    @action
-    public setTooltipModel(
-        datum: {
-            sampleId: string;
-            vaf: number;
-            mutationStatus: MutationStatus;
-        } | null,
-        mutation: Mutation | null,
-        mouseEvent: React.MouseEvent<any>,
-        tooltipOnPoint: boolean
-    ) {
-        this.tooltipModel = {
-            datum: datum,
-            mutation: mutation,
-            mouseEvent: mouseEvent,
-            tooltipOnPoint: tooltipOnPoint,
-        };
+    @computed get groupingByIsSelected() {
+        return !(this.groupByOption == null || this.groupByOption === 'None');
     }
 }
