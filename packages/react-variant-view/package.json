@@ -1,0 +1,70 @@
+{
+  "name": "react-variant-view",
+  "version": "0.1.0-beta.0",
+  "description": "cBioPortal Variant Viewer",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "jsnext:main": "dist/index.es.js",
+  "typings": "dist/index.d.ts",
+  "styles": "dist/styles.css",
+  "engines": {
+    "node": ">=8.12.0",
+    "yarn": ">=1.22.4"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "cBioPortal",
+  "license": "AGPL-3.0-or-later",
+  "repository": "cBioPortal/cbioportal-frontend",
+  "scripts": {
+    "build": "yarn run tcm && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=2048 yarn run rollup",
+    "start": "yarn run watch",
+    "watch": "concurrently \"yarn run tcm:watch\" \"yarn run rollup:watch\"",
+    "watchSSL": "yarn run watch",
+    "rollup": "rollup -c rollup.config.ts",
+    "rollup:watch": "yarn run rollup --watch",
+    "tcm": "tcm -p src/**/*.module.scss",
+    "tcm:watch": "yarn run tcm --watch",
+    "prepare": "yarn run build",
+    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test:watch": "yarn run test --watch"
+  },
+  "peerDependencies": {
+    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0",
+    "mobx-react": "^4.0.0 || ^5.0.0",
+    "prop-types": "^15.5.4",
+    "react": "^15.0.0 || ^16.0.0",
+    "react-dom": "^15.0.0 || ^16.0.0",
+    "bootstrap": "^3.0.0 || ^4.0.0"
+  },
+  "dependencies": {
+    "autobind-decorator": "^2.1.0",
+    "cbioportal-frontend-commons": "^0.3.9",
+    "cbioportal-utils": "^0.2.7",
+    "classnames": "^2.2.5",
+    "font-awesome": "^4.7.0",
+    "genome-nexus-ts-api-client": "^1.1.7",
+    "jquery": "^3.2.1",
+    "lodash": "^4.17.11",
+    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
+    "oncokb-styles": "~0.1.2",
+    "oncokb-ts-api-client": "^1.1.2",
+    "react-bootstrap": "^0.31.5",
+    "react-collapse": "4.0.3",
+    "react-if": "^2.1.0",
+    "react-motion": "^0.5.2",
+    "react-mutation-mapper": "^0.6.10",
+    "react-rangeslider": "^2.2.0",
+    "react-select": "^3.0.4",
+    "react-spinkit": "^3.0.0",
+    "react-table": "^6.10.0",
+    "seamless-immutable": "^7.1.4",
+    "superagent": "^3.8.3",
+    "typescript": "4.0.3"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^9.3.2",
+    "react-scripts-ts": "^3.1.0"
+  }
+}
