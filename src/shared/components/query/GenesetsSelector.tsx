@@ -175,7 +175,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                                 Select Gene Sets From Volcano Plot
                             </Modal.Title>
                         </Modal.Header>
-                        <Modal.Body>
+                        <Modal.Body style={{ height: '474px' }}>
                             <GenesetsVolcanoSelector
                                 initialSelection={this.store.genesetIds}
                                 data={this.store.volcanoPlotTableData.result}

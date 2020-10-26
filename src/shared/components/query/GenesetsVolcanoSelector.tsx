@@ -119,9 +119,14 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
         return (
             <div
                 className={styles.GenesetsVolcanoSelectorWindow}
-                style={{ height: '400px' }}
+                style={{
+                    height: '400px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'flex-end',
+                }}
             >
-                <div style={{ float: 'left' }} className="form-inline">
+                <div className="form-inline">
                     <label htmlFor="PercentileScoreCalculation">
                         Percentile for score calculation:
                     </label>
@@ -173,6 +178,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                             stroke: 'tomato',
                                             strokeWidth: 2,
                                         }}
+                                        responsive={false}
                                     />
                                 }
                             >
@@ -255,10 +261,9 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                 </div>
                 <div
                     style={{
-                        float: 'right',
-                        height: '356.5px',
-                        overflowY: 'scroll',
-                        width: '650px',
+                        height: '400px',
+                        overflowY: 'auto',
+                        width: '800px',
                     }}
                 >
                     <LoadingIndicator
