@@ -1,9 +1,13 @@
 import { getVariantAlleleFrequency } from '../../../shared/lib/MutationUtils';
-import { MutationStatus } from './PatientViewMutationsTabUtils';
+import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
 import _ from 'lodash';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
+import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
+import { numberOfLeadingDecimalZeros } from 'cbioportal-utils';
+
+const MIN_LOG_ARG = 0.001;
 
 export interface IPoint {
     x: number;
@@ -20,15 +24,45 @@ function isPointBasedOnRealVAF(d: { mutationStatus: MutationStatus }) {
     );
 }
 
+function splitMutationsBySampleGroup(
+    mutations: Mutation[][],
+    sampleGroup: { [s: string]: string }
+) {
+    let groupedMutation: { [s: string]: Mutation[] } = {};
+    let groupedMutations: Mutation[][] = [];
+
+    mutations.forEach((mutation, i) => {
+        groupedMutation = {};
+        mutation.forEach((sample, j) => {
+            if (groupedMutation[sampleGroup[sample.sampleId]] === undefined) {
+                groupedMutation[sampleGroup[sample.sampleId]] = [];
+            }
+            groupedMutation[sampleGroup[sample.sampleId]].push(sample);
+        });
+        for (const m in groupedMutation) {
+            groupedMutations.push(groupedMutation[m]);
+        }
+    });
+    return groupedMutations;
+}
+
 export function computeRenderData(
     samples: Sample[],
     mutations: Mutation[][],
     sampleIdIndex: { [sampleId: string]: number },
     mutationProfileId: string,
-    coverageInformation: CoverageInformation
+    coverageInformation: CoverageInformation,
+    groupByOption: string,
+    sampleIdToClinicalValue: { [sampleId: string]: string }
 ) {
     const grayPoints: IPoint[] = []; // points that are purely interpolated for rendering, dont have data of their own
     const lineData: IPoint[][] = [];
+
+    if (groupByOption && groupByOption != GROUP_BY_NONE)
+        mutations = splitMutationsBySampleGroup(
+            mutations,
+            sampleIdToClinicalValue
+        );
 
     for (const mergedMutation of mutations) {
         // determine data points in line for this mutation
@@ -178,4 +212,148 @@ export function computeRenderData(
         lineData,
         grayPoints,
     };
+}
+
+export function getYAxisTickmarks(
+    minY: number,
+    maxY: number,
+    numTicks: number = 6
+): number[] {
+    if (numTicks === 0) return [minY, maxY];
+    const tickmarkSize = (maxY - minY) / (numTicks - 1);
+    const tickMarks = [minY];
+    for (let i = 1; i < numTicks; i++) {
+        const rawValue = tickMarks[i - 1] + tickmarkSize;
+        tickMarks[i] = rawValue;
+    }
+    return tickMarks;
+}
+
+/**
+ * Decimal adjustment of a number.
+ * from: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/floor
+ * @param {String}  type  The type of adjustment.
+ * @param {Number}  value The number.
+ * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
+ * @returns {Number} The adjusted value.
+ */
+function decimalAdjust(
+    type: 'floor' | 'ceil' | 'round',
+    value: number,
+    exp: number
+) {
+    // If the exp is undefined or zero...
+    if (typeof exp === 'undefined' || +exp === 0) {
+        return Math[type](value);
+    }
+    value = +value;
+    exp = +exp;
+    // If the value is not a number or the exp is not an integer...
+    if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+        return NaN;
+    }
+    // Shift
+    let shiftStr = value.toString().split('e');
+    let shiftNum = Math[type](
+        +(shiftStr[0] + 'e' + (shiftStr[1] ? +shiftStr[1] - exp : -exp))
+    );
+    // Shift back
+    shiftStr = shiftNum.toString().split('e');
+    return +(shiftStr[0] + 'e' + (shiftStr[1] ? +shiftStr[1] + exp : exp));
+}
+
+// Convenience functions for decimal round, floor and ceil
+export function round10(value: number, exp: number) {
+    return decimalAdjust('round', value, exp);
+}
+export function floor10(value: number, exp: number) {
+    return decimalAdjust('floor', value, exp);
+}
+export function ceil10(value: number, exp: number) {
+    return decimalAdjust('ceil', value, exp);
+}
+
+export function yValueScaleFunction(
+    minTickmarkValue: number,
+    maxTickmarkValue: number,
+    plotRange: number,
+    log10Transform: boolean | undefined
+): (value: number) => number {
+    const yPadding = 10;
+
+    if (maxTickmarkValue !== undefined && minTickmarkValue !== undefined) {
+        // when truncating the range of values is distributed
+        // differently over the svg vertical space
+        const rangeMinusPadding = plotRange - yPadding * 2;
+
+        if (log10Transform) {
+            const logMinTickmark = Math.log10(
+                Math.max(MIN_LOG_ARG, minTickmarkValue)
+            );
+            const logMaxTickmark = Math.log10(
+                Math.max(MIN_LOG_ARG, maxTickmarkValue)
+            );
+            const valueRange = logMaxTickmark - logMinTickmark;
+            const linearTransformationScale = rangeMinusPadding / valueRange;
+
+            return (y: number) => {
+                const logY = Math.log10(Math.max(MIN_LOG_ARG, y));
+                // translate so that min tickmark represents the 0 line
+                const translatedY = logY - logMinTickmark;
+                return (
+                    plotRange -
+                    yPadding -
+                    translatedY * linearTransformationScale
+                );
+            };
+        } else {
+            const valueRange = maxTickmarkValue - minTickmarkValue;
+            const linearTransformationScale = rangeMinusPadding / valueRange;
+
+            return (y: number) => {
+                // translate so that min tickmark represents the 0 line
+                const translatedY = y - minTickmarkValue;
+                return (
+                    plotRange -
+                    yPadding -
+                    translatedY * linearTransformationScale
+                );
+            };
+        }
+    }
+    return (y: number) => y;
+}
+
+// Examples: 0 -> 0, 0.1 -> 0, 0.01 -> 1, 0.0001 -> 3
+export function numLeadingDecimalZeros(y: number) {
+    if (y == 0 || y >= 0.1) return 0;
+    return numberOfLeadingDecimalZeros(y);
+}
+
+/**
+ * Try to return tick labels with fractional part just long enogh to disttinguish them.
+ * It tries up to 3th positions in fractional part. Otherwise return scientific representation of original numbers.
+ * Function returns distinct labels.
+ * If input contains duplicates function deduplicates and return less labels that amount of input numbers.
+ * @param nums array of ticks as numbers
+ */
+export function minimalDistinctTickStrings(nums: number[]): string[] {
+    const distinctNums = nums.filter((v, i, a) => a.indexOf(v) === i);
+
+    const fractionalNumbersToShow = distinctNums.map(num =>
+        Number.isInteger(num) ? 0 : numLeadingDecimalZeros(num) + 1
+    );
+
+    const fromPos = Math.min(...fractionalNumbersToShow);
+    const toPos = 3;
+
+    for (let pos = fromPos; pos <= toPos; pos++) {
+        const labels = distinctNums
+            .map(num => num.toFixed(pos))
+            .filter((v, i, a) => a.indexOf(v) === i);
+        if (labels.length === distinctNums.length) {
+            return labels;
+        }
+    }
+    return distinctNums.map(num => num.toExponential());
 }

@@ -8,13 +8,11 @@ import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import SampleManager from '../SampleManager';
 import { IColumnVisibilityDef } from '../../../shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import VAFLineChart, { SHOW_ONLY_SELECTED_LABEL } from './VAFLineChart';
 import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import { Mutation, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import MutationOncoprint from './oncoprint/MutationOncoprint';
-import { DownloadControls } from 'cbioportal-frontend-commons';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import PatientViewMutationTable from './PatientViewMutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
@@ -22,9 +20,11 @@ import { isFusion } from '../../../shared/lib/MutationUtils';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
 import Timeline from '../timeline/Timeline';
+import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
+import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
 
 export interface IPatientViewMutationsTabProps {
-    store: PatientViewPageStore;
+    patientViewPageStore: PatientViewPageStore;
     urlWrapper: PatientViewUrlWrapper;
     mutationTableColumnVisibility?: { [columnId: string]: boolean };
     samples?: ClinicalDataBySampleId[];
@@ -90,7 +90,6 @@ export default class PatientViewMutationsTab extends React.Component<
             return currentParams;
         });
     }
-
     get vafLineChartZeroToOneYAxis() {
         const urlValue = this.props.urlWrapper.query.genomicEvolutionSettings
             .yAxisDataRangeInChart;
@@ -124,7 +123,7 @@ export default class PatientViewMutationsTab extends React.Component<
 
     @computed get mergedMutations() {
         // remove fusions
-        return this.props.store.mergedMutationDataIncludingUncalledFilteredByGene.filter(
+        return this.props.patientViewPageStore.mergedMutationDataIncludingUncalledFilteredByGene.filter(
             mutationArray => {
                 return !isFusion(mutationArray[0]);
             }
@@ -133,84 +132,41 @@ export default class PatientViewMutationsTab extends React.Component<
 
     readonly vafLineChart = MakeMobxView({
         await: () => [
-            this.props.store.coverageInformation,
-            this.props.store.samples,
-            this.props.store.mutationMolecularProfileId,
+            this.props.patientViewPageStore.coverageInformation,
+            this.props.patientViewPageStore.samples,
+            this.props.patientViewPageStore.mutationMolecularProfileId,
         ],
         renderPending: () => <LoadingIndicator isLoading={true} size="small" />,
         render: () => (
-            <div className="borderedChart" style={{ display: 'inline-block' }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 5,
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <LabeledCheckbox
-                            checked={this.dataStore.onlyShowSelectedInVAFChart}
-                            onChange={() =>
-                                this.dataStore.setOnlyShowSelectedInVAFChart(
-                                    !this.dataStore.onlyShowSelectedInVAFChart
-                                )
-                            }
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFOnlyHighlighted' }}
-                        >
-                            <span style={{ marginTop: -3 }}>
-                                {SHOW_ONLY_SELECTED_LABEL}
-                            </span>
-                        </LabeledCheckbox>
-                        <LabeledCheckbox
-                            checked={this.vafLineChartLogScale}
-                            onChange={() => {
-                                this.vafLineChartLogScale = !this
-                                    .vafLineChartLogScale;
-                            }}
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFLogScale' }}
-                        >
-                            <span style={{ marginTop: -3 }}>Log scale</span>
-                        </LabeledCheckbox>
-                        <LabeledCheckbox
-                            checked={!this.vafLineChartZeroToOneYAxis}
-                            onChange={() => {
-                                this.vafLineChartZeroToOneYAxis = !this
-                                    .vafLineChartZeroToOneYAxis;
-                            }}
-                            labelProps={{ style: { marginRight: 10 } }}
-                            inputProps={{ 'data-test': 'VAFDataRange' }}
-                        >
-                            <span style={{ marginTop: -3 }}>
-                                Set y-axis to data range
-                            </span>
-                        </LabeledCheckbox>
-                    </div>
-                    <DownloadControls
-                        filename="vafHeatmap"
-                        getSvg={() => this.vafLineChartSvg}
-                        buttons={['SVG', 'PNG', 'PDF']}
-                        type="button"
-                        dontFade
+            <>
+                {this.props.sampleManager && (
+                    <VAFChartWrapper
+                        key={`vafKey${WindowStore.size.width}-${this.showTimeline}`}
+                        dataStore={this.dataStore}
+                        caseMetaData={{
+                            color: this.props.sampleManager.sampleColors,
+                            label: this.props.sampleManager.sampleLabels,
+                            index: this.props.sampleManager.sampleIndex,
+                        }}
+                        data={
+                            this.props.patientViewPageStore.clinicalEvents
+                                .result
+                        }
+                        sampleManager={this.props.sampleManager}
+                        width={WindowStore.size.width}
+                        samples={this.props.patientViewPageStore.samples.result}
+                        mutationProfileId={
+                            this.props.patientViewPageStore
+                                .mutationMolecularProfileId.result!
+                        }
+                        coverageInformation={
+                            this.props.patientViewPageStore.coverageInformation
+                                .result
+                        }
+                        headerWidth={this.showTimeline ? 150 : 50}
                     />
-                </div>
-                <VAFLineChart
-                    dataStore={this.dataStore}
-                    samples={this.props.store.samples.result!}
-                    coverageInformation={
-                        this.props.store.coverageInformation.result!
-                    }
-                    mutationProfileId={
-                        this.props.store.mutationMolecularProfileId.result!
-                    }
-                    sampleManager={this.props.sampleManager}
-                    svgRef={this.vafLineChartSvgRef}
-                    logScale={this.vafLineChartLogScale}
-                    zeroToOneAxis={this.vafLineChartZeroToOneYAxis}
-                />
-            </div>
+                )}
+            </>
         ),
         showLastRenderWhenPending: true,
     });
@@ -234,17 +190,17 @@ export default class PatientViewMutationsTab extends React.Component<
 
     @autobind
     private onFilterGenesMutationTable(option: GeneFilterOption): void {
-        this.props.store.mutationTableGeneFilterOption = option;
+        this.props.patientViewPageStore.mutationTableGeneFilterOption = option;
     }
 
     readonly table = MakeMobxView({
         await: () => [
-            this.props.store.mutationData,
-            this.props.store.uncalledMutationData,
-            this.props.store.oncoKbAnnotatedGenes,
-            this.props.store.studyIdToStudy,
-            this.props.store.sampleToMutationGenePanelId,
-            this.props.store.genePanelIdToEntrezGeneIds,
+            this.props.patientViewPageStore.mutationData,
+            this.props.patientViewPageStore.uncalledMutationData,
+            this.props.patientViewPageStore.oncoKbAnnotatedGenes,
+            this.props.patientViewPageStore.studyIdToStudy,
+            this.props.patientViewPageStore.sampleToMutationGenePanelId,
+            this.props.patientViewPageStore.genePanelIdToEntrezGeneIds,
         ],
         renderPending: () => <LoadingIndicator isLoading={true} size="small" />,
         render: () => (
@@ -268,16 +224,20 @@ export default class PatientViewMutationsTab extends React.Component<
                 <PatientViewMutationTable
                     dataStore={this.dataStore}
                     showGeneFilterMenu={
-                        this.props.store.mutationTableShowGeneFilterMenu.result
+                        this.props.patientViewPageStore
+                            .mutationTableShowGeneFilterMenu.result
                     }
                     currentGeneFilter={
-                        this.props.store.mutationTableGeneFilterOption
+                        this.props.patientViewPageStore
+                            .mutationTableGeneFilterOption
                     }
                     onFilterGenes={this.onFilterGenesMutationTable}
                     onRowClick={this.onTableRowClick}
                     onRowMouseEnter={this.onTableRowMouseEnter}
                     onRowMouseLeave={this.onTableRowMouseLeave}
-                    studyIdToStudy={this.props.store.studyIdToStudy.result!}
+                    studyIdToStudy={
+                        this.props.patientViewPageStore.studyIdToStudy.result!
+                    }
                     sampleManager={this.props.sampleManager}
                     sampleIds={
                         this.props.sampleManager
@@ -285,42 +245,69 @@ export default class PatientViewMutationsTab extends React.Component<
                             : []
                     }
                     uniqueSampleKeyToTumorType={
-                        this.props.store.uniqueSampleKeyToTumorType
+                        this.props.patientViewPageStore
+                            .uniqueSampleKeyToTumorType
                     }
                     molecularProfileIdToMolecularProfile={
-                        this.props.store.molecularProfileIdToMolecularProfile
-                            .result
+                        this.props.patientViewPageStore
+                            .molecularProfileIdToMolecularProfile.result
                     }
-                    variantCountCache={this.props.store.variantCountCache}
+                    variantCountCache={
+                        this.props.patientViewPageStore.variantCountCache
+                    }
                     indexedVariantAnnotations={
-                        this.props.store.indexedVariantAnnotations
+                        this.props.patientViewPageStore
+                            .indexedVariantAnnotations
                     }
                     indexedMyVariantInfoAnnotations={
-                        this.props.store.indexedMyVariantInfoAnnotations
+                        this.props.patientViewPageStore
+                            .indexedMyVariantInfoAnnotations
                     }
-                    discreteCNACache={this.props.store.discreteCNACache}
-                    mrnaExprRankCache={this.props.store.mrnaExprRankCache}
-                    pubMedCache={this.props.store.pubMedCache}
-                    genomeNexusCache={this.props.store.genomeNexusCache}
+                    discreteCNACache={
+                        this.props.patientViewPageStore.discreteCNACache
+                    }
+                    mrnaExprRankCache={
+                        this.props.patientViewPageStore.mrnaExprRankCache
+                    }
+                    pubMedCache={this.props.patientViewPageStore.pubMedCache}
+                    genomeNexusCache={
+                        this.props.patientViewPageStore.genomeNexusCache
+                    }
                     mrnaExprRankMolecularProfileId={
-                        this.props.store.mrnaRankMolecularProfileId.result ||
-                        undefined
+                        this.props.patientViewPageStore
+                            .mrnaRankMolecularProfileId.result || undefined
                     }
                     discreteCNAMolecularProfileId={
-                        this.props.store.molecularProfileIdDiscrete.result
+                        this.props.patientViewPageStore
+                            .molecularProfileIdDiscrete.result
                     }
-                    downloadDataFetcher={this.props.store.downloadDataFetcher}
-                    mutSigData={this.props.store.mutSigData.result}
-                    myCancerGenomeData={this.props.store.myCancerGenomeData}
-                    hotspotData={this.props.store.indexedHotspotData}
-                    cosmicData={this.props.store.cosmicData.result}
-                    oncoKbData={this.props.store.oncoKbData}
-                    oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
+                    downloadDataFetcher={
+                        this.props.patientViewPageStore.downloadDataFetcher
+                    }
+                    mutSigData={
+                        this.props.patientViewPageStore.mutSigData.result
+                    }
+                    myCancerGenomeData={
+                        this.props.patientViewPageStore.myCancerGenomeData
+                    }
+                    hotspotData={
+                        this.props.patientViewPageStore.indexedHotspotData
+                    }
+                    cosmicData={
+                        this.props.patientViewPageStore.cosmicData.result
+                    }
+                    oncoKbData={this.props.patientViewPageStore.oncoKbData}
+                    oncoKbCancerGenes={
+                        this.props.patientViewPageStore.oncoKbCancerGenes
+                    }
                     usingPublicOncoKbInstance={
-                        this.props.store.usingPublicOncoKbInstance
+                        this.props.patientViewPageStore
+                            .usingPublicOncoKbInstance
                     }
-                    civicGenes={this.props.store.civicGenes}
-                    civicVariants={this.props.store.civicVariants}
+                    civicGenes={this.props.patientViewPageStore.civicGenes}
+                    civicVariants={
+                        this.props.patientViewPageStore.civicVariants
+                    }
                     userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
                     enableOncoKb={AppConfig.serverConfig.show_oncokb}
                     enableFunctionalImpact={
@@ -337,19 +324,24 @@ export default class PatientViewMutationsTab extends React.Component<
                             .onMutationTableColumnVisibilityToggled,
                     }}
                     sampleToGenePanelId={
-                        this.props.store.sampleToMutationGenePanelId.result!
+                        this.props.patientViewPageStore
+                            .sampleToMutationGenePanelId.result!
                     }
                     genePanelIdToEntrezGeneIds={
-                        this.props.store.genePanelIdToEntrezGeneIds.result!
+                        this.props.patientViewPageStore
+                            .genePanelIdToEntrezGeneIds.result!
                     }
                     generateGenomeNexusHgvsgUrl={
-                        this.props.store.generateGenomeNexusHgvsgUrl
+                        this.props.patientViewPageStore
+                            .generateGenomeNexusHgvsgUrl
                     }
                     sampleIdToClinicalDataMap={
-                        this.props.store.clinicalDataGroupedBySampleMap
+                        this.props.patientViewPageStore
+                            .clinicalDataGroupedBySampleMap
                     }
                     existsSomeMutationWithAscnProperty={
-                        this.props.store.existsSomeMutationWithAscnProperty
+                        this.props.patientViewPageStore
+                            .existsSomeMutationWithAscnProperty
                     }
                 />
             </div>
@@ -357,29 +349,21 @@ export default class PatientViewMutationsTab extends React.Component<
     });
 
     readonly timeline = MakeMobxView({
-        await: () => [this.props.store.clinicalEvents],
+        await: () => [this.props.patientViewPageStore.clinicalEvents],
         render: () => {
             if (
                 this.props.sampleManager !== null &&
-                this.props.store.clinicalEvents.result!.length > 0
+                this.props.patientViewPageStore.clinicalEvents.result!.length >
+                    0
             ) {
                 return (
                     <div
-                        className="borderedChart"
                         style={{
                             marginBottom: 20,
-                            padding: this.showTimeline ? 10 : 5,
-                            width: WindowStore.size.width - 50,
                         }}
                     >
                         <button
-                            className="btn btn-xs btn-default"
-                            style={{
-                                paddingTop: 0,
-                                paddingBottom: 0,
-                                marginLeft: this.showTimeline ? -5 : 0, // negative margins hardcoded in to make button not move when its clicked
-                                marginTop: this.showTimeline ? -10 : 0, // ^^
-                            }}
+                            className="btn btn-xs btn-default displayBlock"
                             onClick={this.toggleTimeline}
                             data-test="ToggleTimeline"
                         >
@@ -389,10 +373,36 @@ export default class PatientViewMutationsTab extends React.Component<
                         </button>
                         {this.showTimeline && (
                             <div style={{ marginTop: 10 }}>
-                                <Timeline
-                                    store={this.props.store}
-                                    width={WindowStore.size.width - 100}
+                                <TimelineWrapper
+                                    key={`tlkey-${WindowStore.size.width}-${this.showTimeline}1`}
+                                    dataStore={this.dataStore}
+                                    caseMetaData={{
+                                        color: this.props.sampleManager
+                                            .sampleColors,
+                                        label: this.props.sampleManager
+                                            .sampleLabels,
+                                        index: this.props.sampleManager
+                                            .sampleIndex,
+                                    }}
+                                    data={
+                                        this.props.patientViewPageStore
+                                            .clinicalEvents.result
+                                    }
                                     sampleManager={this.props.sampleManager}
+                                    width={WindowStore.size.width}
+                                    samples={
+                                        this.props.patientViewPageStore.samples
+                                            .result
+                                    }
+                                    mutationProfileId={
+                                        this.props.patientViewPageStore
+                                            .mutationMolecularProfileId.result!
+                                    }
+                                    // coverageInformation={
+                                    //     this.props.patientViewPageStore
+                                    //         .coverageInformation.result
+                                    // }
+                                    headerWidth={150}
                                 />
                             </div>
                         )}
@@ -411,7 +421,6 @@ export default class PatientViewMutationsTab extends React.Component<
         ),
         render: () => (
             <div data-test="GenomicEvolutionTab">
-                {this.timeline.component}
                 <MSKTabs
                     activeTabId={this.plotTab}
                     onTabClick={this.setPlotTab}
@@ -419,14 +428,21 @@ export default class PatientViewMutationsTab extends React.Component<
                     unmountOnHide={false}
                 >
                     <MSKTab id={PlotTab.LINE_CHART} linkText="Line Chart">
-                        <div style={{ paddingBottom: 10 }}>
+                        <div
+                            style={{
+                                paddingBottom: 10,
+                                width: WindowStore.size.width - 50,
+                            }}
+                        >
+                            {this.timeline.component}
+
                             {this.vafLineChart.component}
                         </div>
                     </MSKTab>
                     <MSKTab id={PlotTab.HEATMAP} linkText="Heatmap">
                         <div style={{ paddingBottom: 10 }}>
                             <MutationOncoprint
-                                store={this.props.store}
+                                store={this.props.patientViewPageStore}
                                 dataStore={this.dataStore}
                                 sampleManager={this.props.sampleManager}
                                 urlWrapper={this.props.urlWrapper}

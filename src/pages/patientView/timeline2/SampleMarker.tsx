@@ -37,7 +37,7 @@ export const MultipleSampleMarker: React.FunctionComponent<{
     const sortedSampleInfo = getSortedSampleInfo(colors, labels);
     const label = getNumberRangeLabel(sortedSampleInfo.map(p => p.label));
     const labelWidth = Math.ceil(getTextWidth(label, 'Arial', '10px'));
-    const rectPadding = 3;
+    const rectPadding = 4;
     const rectWidth = labelWidth + 2 * rectPadding;
     const rectHeight = 14;
     const clipPathId = `clipPath_${Math.random()}`;
