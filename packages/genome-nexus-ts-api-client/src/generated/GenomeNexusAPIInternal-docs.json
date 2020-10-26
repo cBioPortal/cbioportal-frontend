@@ -35,6 +35,10 @@
       "description": "Isoform Override Controller"
     },
     {
+      "name": "signal-query-controller",
+      "description": "Signal Query Controller"
+    },
+    {
       "name": "my-variant-info-controller",
       "description": "My Variant Info Controller"
     },
@@ -885,6 +889,49 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/SignalMutation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/signal/search/{keyword}": {
+      "get": {
+        "tags": [
+          "signal-query-controller"
+        ],
+        "summary": "Performs search by gene, protein change, variant or region.",
+        "operationId": "searchSignalByKeywordGETUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "path",
+            "description": "keyword. For example BRCA; 13:32906640-32906640; 13:g.32890665G>A",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Max number matching results to return",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SignalQuery"
               }
             }
           }
@@ -1960,6 +2007,44 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "SignalQuery": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "matchType": {
+          "type": "string",
+          "enum": [
+            "EXACT",
+            "STARTS_WITH",
+            "PARTIAL",
+            "NO_MATCH"
+          ]
+        },
+        "queryType": {
+          "type": "string",
+          "enum": [
+            "GENE",
+            "ALTERATION",
+            "VARIANT",
+            "REGION"
+          ]
+        },
+        "region": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
         }
       }
     },
