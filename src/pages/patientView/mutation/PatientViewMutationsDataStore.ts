@@ -18,12 +18,8 @@ function mutationIdKey(m: Mutation) {
 export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<
     Mutation[]
 > {
-    @observable.ref private mouseOverMutation: Readonly<Mutation> | null = null;
+    @observable mouseOverMutation: Readonly<Mutation> | null = null;
     private selectedMutationsMap = observable.map<Mutation>();
-
-    public getMouseOverMutation() {
-        return this.mouseOverMutation;
-    }
 
     public get onlyShowSelectedInTable() {
         return (

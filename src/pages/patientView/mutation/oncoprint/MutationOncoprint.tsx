@@ -227,7 +227,7 @@ export default class MutationOncoprint extends React.Component<
 
     // TODO: be able to highlight a track in mutation track mode
     @computed get highlightedMutationIds() {
-        const mutation = this.props.dataStore.getMouseOverMutation();
+        const mutation = this.props.dataStore.mouseOverMutation;
         const highlighted = this.props.dataStore.selectedMutations.slice();
         if (mutation) {
             highlighted.push(mutation);
