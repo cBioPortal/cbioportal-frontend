@@ -1,4 +1,5 @@
 var assert = require('assert');
+var selectReactSelectOption = require('../../../shared/specUtils');
 var expect = require('chai').expect;
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
@@ -10,15 +11,15 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
+const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`;
+
 describe('Patient View Genomic Evolution tab screenshot tests', function() {
     before(() => {
-        goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`
-        );
+        goToUrlAndSetLocalStorage(patientViewUrl);
         browser.waitForVisible('a.tabAnchor_lineChart', 10000);
         browser.click('a.tabAnchor_lineChart');
         browser.moveToObject('body', 0, 0);
-        browser.waitForVisible('svg[data-test="VAFLineChart"]', 5000);
+        browser.waitForVisible('[data-test=VAFChartWrapper]', 5000);
         waitForNetworkQuiet(10000);
     });
     it('pvge initial view with line chart', function() {
@@ -30,7 +31,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it('pvge show timeline', function() {
         browser.click('button[data-test="ToggleTimeline"]');
-        browser.waitForVisible('div#timeline');
+        browser.waitForVisible('div.tl-timeline-wrapper');
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             { hide: ['.qtip'] }
@@ -61,32 +62,24 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it('pvge only show highlighted in line chart', function() {
         browser.click('input[data-test="VAFOnlyHighlighted"]');
-        const res = browser.checkElement('svg[data-test="VAFLineChart"]', {
-            hide: ['.qtip'],
-        });
+        const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart log scale', function() {
         browser.click('input[data-test="VAFLogScale"]');
-        const res = browser.checkElement('svg[data-test="VAFLineChart"]', {
-            hide: ['.qtip'],
-        });
+        const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart with data range y axis', function() {
         browser.click('input[data-test="VAFDataRange"]');
-        const res = browser.checkElement('svg[data-test="VAFLineChart"]', {
-            hide: ['.qtip'],
-        });
+        const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge add a mutation to line chart', function() {
         browser.click(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(7)'
         );
-        const res = browser.checkElement('svg[data-test="VAFLineChart"]', {
-            hide: ['.qtip'],
-        });
+        const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge heatmap with two mutations selected from before', function() {
@@ -151,5 +144,82 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
             hide: ['.qtip', '.dropdown-menu'],
         });
         assertScreenShotMatch(res);
+    });
+
+    describe('variant allele frequency plot controls', () => {
+        beforeEach(() => {
+            goToUrlAndSetLocalStorage(patientViewUrl);
+            $('.tl-timeline-svg').waitForVisible(10000);
+        });
+
+        it('initalized with all options deselected', () => {
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('shows sequential mode', () => {
+            $('[data-test=TableShowSequentialMode]').click();
+            $('.tl-timeline-svg').waitForVisible();
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('shows selected mutations', () => {
+            // TODO
+            assert(false);
+        });
+
+        it('shows log scale', () => {
+            $('[data-test=VAFLogScale]').click();
+            $('.tl-timeline-svg').waitForVisible();
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('truncates y-axis to data range', () => {
+            $('[data-test=VAFLogScale]').click();
+            $('[data-test=VAFDataRange]').click();
+            $('.tl-timeline-svg').waitForVisible();
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('shows single groupBy clinical variable track', () => {
+            selectReactSelectOption(
+                $('div[data-test=VAFChartControls]'),
+                'Cancer Type'
+            );
+            $('text=GLIOMA').waitForVisible();
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
+
+        it('shows multiple groupBy clinical variable tracks', () => {
+            selectReactSelectOption(
+                $('div[data-test=VAFChartControls]'),
+                'Cancer Type Detailed'
+            );
+            $('text=ASTROCYTOMA').waitForVisible();
+            const res = checkElementWithMouseDisabled(
+                '[data-test=VAFChartWrapper]',
+                0
+            );
+            assertScreenShotMatch(res);
+        });
     });
 });

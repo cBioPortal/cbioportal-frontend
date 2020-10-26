@@ -33,6 +33,8 @@ export class TimelineStore {
     @observable.ref _data: TimelineTrackSpecification[];
     private collapsedTracks = observable.map();
 
+    public uniqueId = `tl-id-` + _.random(1, 10000);
+
     constructor(tracks: TimelineTrackSpecification[]) {
         this._data = tracks;
     }
@@ -58,6 +60,25 @@ export class TimelineStore {
 
     @autobind isTrackCollapsed(trackUid: string) {
         return this.collapsedTracks.has(trackUid);
+    }
+
+    @computed get sampleEvents() {
+        return this.allItems.filter(
+            event => event.event!.eventType === 'SPECIMEN'
+        );
+    }
+
+    @computed get sampleIds() {
+        const sampleIds: string[] = [];
+        this.sampleEvents.forEach((sample, i) => {
+            sample.event.attributes.forEach((attribute: any, i: number) => {
+                if (attribute.key === 'SAMPLE_ID') {
+                    sampleIds.push(attribute.value);
+                }
+            });
+        });
+
+        return sampleIds;
     }
 
     @computed get expandedTrims() {
@@ -275,7 +296,7 @@ export class TimelineStore {
         } else {
             this.zoomBounds = undefined;
         }
-        setTimeout(this.setScroll.bind(this), 10);
+        //setTimeout(this.setScroll.bind(this), 10);
     }
 
     @autobind
@@ -387,21 +408,4 @@ export class TimelineStore {
     }
 
     @observable hoveredTrackIndex: number | undefined;
-
-    setScroll() {
-        let pixelLeft = 0;
-
-        if (this.zoomBounds) {
-            const trimmedPos = this.getPosition({
-                start: this.zoomBounds!.start,
-                end: this.zoomBounds!.end,
-            });
-
-            if (trimmedPos) {
-                pixelLeft = trimmedPos.pixelLeft;
-            }
-        }
-        (document.getElementById('tl-timeline')!
-            .parentNode! as any).scrollLeft = pixelLeft;
-    }
 }
