@@ -4,6 +4,7 @@ import {
     GENETIC_TRACK_GROUP_INDEX,
     GeneticTrackSpec,
     IBaseHeatmapTrackDatum,
+    IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     IOncoprintProps,
@@ -657,6 +658,15 @@ function transitionTracks(
         )
         .value();
 
+    const genesetScoreProfileData = _.flatMap(
+        nextProps.genesetHeatmapTracks,
+        (o: IGenesetHeatmapTrackSpec) =>
+            _(o.data)
+                .filter((d: IGenesetHeatmapTrackDatum) => !d.na)
+                .map(d => d.profile_data)
+                .value()
+    );
+
     // find the max and min generic assay profile value in the next heatmap track group
     // max and min value is used to create a custom legend for the track group
     const genericAssayProfileMaxValues = _.mapValues(
@@ -671,6 +681,11 @@ function transitionTracks(
             return _.min(profile_data);
         }
     );
+
+    // find the max and min GSVA score value in the next heatmap track group
+    // max and min value is used to create a custom legend for the track group
+    const genesetScoreValueMax = _.max(genesetScoreProfileData) || undefined;
+    const genesetScoreValueMin = _.min(genesetScoreProfileData) || undefined;
 
     // Transition genetic tracks
     const prevGeneticTracks = _.keyBy(
@@ -747,6 +762,10 @@ function transitionTracks(
         (track: IGenesetHeatmapTrackSpec) => track.key
     );
     for (const track of nextProps.genesetHeatmapTracks) {
+        // add geneset layout/formatting information to the track specs
+        track.maxProfileValue = genesetScoreValueMax;
+        track.minProfileValue = genesetScoreValueMin;
+
         transitionGenesetHeatmapTrack(
             track,
             prevGenesetHeatmapTracks[track.key],
@@ -1254,7 +1273,7 @@ function transitionGenesetHeatmapTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const heatmapTrackParams = {
-            rule_set_params: getGenesetHeatmapTrackRuleSetParams(),
+            rule_set_params: getGenesetHeatmapTrackRuleSetParams(nextSpec),
             data: nextSpec.data,
             data_id_key: 'uid',
             has_column_spacing: false,

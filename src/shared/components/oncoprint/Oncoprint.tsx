@@ -178,6 +178,8 @@ export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     trackLinkUrl: string | undefined;
     expansionTrackList: IHeatmapTrackSpec[];
     expansionCallback: () => void;
+    maxProfileValue?: number;
+    minProfileValue?: number;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;
