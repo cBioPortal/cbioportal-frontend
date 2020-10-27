@@ -4,6 +4,28 @@ import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 import { prepareMutationalSignatureDataForTable } from './ClinicalInformationMutationalSignatureTable';
+import { IMutationalSignature } from 'shared/model/MutationalSignature';
+
+const sampleMutationalSignatureMeta = [
+    {
+        mutationalSignatureId: 'firstMutationalSignature',
+        name: 'Mutational Signature 1',
+        description: 'Mutational Signature 1',
+        url: 'url 1',
+        category: 'category 1',
+        confidenceStatement:
+            'Signature 1, the aging signature, is detected in this case.',
+    },
+    {
+        mutationalSignatureId: 'secondMutationalSignature',
+        name: 'Mutational Signature 2',
+        description: 'Mutational Signature 2',
+        url: 'url 2',
+        category: 'category 2',
+        confidenceStatement:
+            'Signature 2, the APOBEC signature, is detected in this case.  This signature often coccurs with signature 13, the other APOBEC signature',
+    },
+];
 
 const sampleMutationalSignatureData = [
     {
@@ -13,10 +35,12 @@ const sampleMutationalSignatureData = [
         uniquePatientKey: 'firstPatient',
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
+        version: 'v2',
         value: 1,
         confidence: 0.9,
         numberOfMutationsForSample: 20,
-    },
+        meta: sampleMutationalSignatureMeta[0],
+    } as IMutationalSignature,
     {
         sampleId: 'secondSample',
         uniqueSampleKey: 'secondSample',
@@ -24,10 +48,12 @@ const sampleMutationalSignatureData = [
         uniquePatientKey: 'firstPatient',
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
+        version: 'v2',
         value: 2,
         confidence: 0.8,
         numberOfMutationsForSample: 20,
-    },
+        meta: sampleMutationalSignatureMeta[0],
+    } as IMutationalSignature,
     {
         sampleId: 'firstSample',
         uniqueSampleKey: 'firstSample',
@@ -35,10 +61,12 @@ const sampleMutationalSignatureData = [
         uniquePatientKey: 'firstPatient',
         studyId: 'firstStudy',
         mutationalSignatureId: 'secondMutationalSignature',
+        version: 'v2',
         value: 3,
         confidence: 0.4,
         numberOfMutationsForSample: 20,
-    },
+        meta: sampleMutationalSignatureMeta[1],
+    } as IMutationalSignature,
 ];
 
 describe('ClinicalInformationMutationalSignatureTable', () => {
@@ -49,7 +77,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
 
         assert.deepEqual(result, [
             {
-                mutationalSignatureId: 'firstMutationalSignature',
+                name: 'Mutational Signature 1',
                 sampleValues: {
                     firstSample: {
                         value: 1,
@@ -62,7 +90,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                 },
             },
             {
-                mutationalSignatureId: 'secondMutationalSignature',
+                name: 'Mutational Signature 2',
                 sampleValues: {
                     firstSample: {
                         value: 3,
