@@ -417,11 +417,13 @@ export default class VAFChartWrapper extends React.Component<
         return _.sum([this.wrapperStore.dataHeight, footerHeight]);
     }
 
-    render() {
-        if (!this.store || !this.wrapperStore) return null;
-
+    @computed get customTracks() {
         const mouseOverMutation = this.props.dataStore.mouseOverMutation;
         const selectedMutations = this.props.dataStore.selectedMutations;
+        const lineData = this.scaledAndColoredLineData;
+        const height = this.vafChartHeight;
+        const headerWidth =
+            this.numGroupByGroups > 0 ? 150 : this.props.headerWidth;
 
         const vafPlotTrack = {
             renderHeader: (store: TimelineStore) => (
@@ -443,17 +445,21 @@ export default class VAFChartWrapper extends React.Component<
                     onlyShowSelectedInVAFChart={
                         this.wrapperStore.onlyShowSelectedInVAFChart
                     }
-                    lineData={this.scaledAndColoredLineData}
-                    height={this.vafChartHeight}
+                    lineData={lineData}
+                    height={height}
                     width={this.store.pixelWidth}
                 />
             ),
             disableHover: true,
-            height: (store: TimelineStore) => this.vafChartHeight,
+            height: (store: TimelineStore) => height,
             labelForExport: 'VAF',
         } as CustomTrackSpecification;
 
-        let customTracks = [vafPlotTrack].concat(this.sampleIconsTracks);
+        return [vafPlotTrack].concat(this.sampleIconsTracks);
+    }
+
+    render() {
+        if (!this.store || !this.wrapperStore) return null;
 
         return (
             <>
@@ -476,7 +482,7 @@ export default class VAFChartWrapper extends React.Component<
                         hideLabels={false}
                         hideXAxis={this.wrapperStore.showSequentialMode}
                         visibleTracks={[]}
-                        customTracks={customTracks}
+                        customTracks={this.customTracks}
                         headerWidth={
                             this.numGroupByGroups > 0
                                 ? 150
