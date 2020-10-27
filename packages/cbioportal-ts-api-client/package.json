@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-ts-api-client",
   "description": "cBioPortal API Client for TypeScript",
-  "version": "0.9.12",
+  "version": "0.9.13",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
