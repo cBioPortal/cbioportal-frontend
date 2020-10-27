@@ -87,11 +87,9 @@ import {
     OTHER_BIOMARKERS_CLINICAL_ATTR,
 } from 'shared/lib/StoreUtils';
 import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
-import {
-    OTHER_BIOMARKER_HUGO_SYMBOL,
-    OtherBiomarkersQueryType,
-} from 'react-mutation-mapper';
+import { OtherBiomarkersQueryType } from 'react-mutation-mapper';
 import { OtherBiomarkerAnnotation } from 'pages/patientView/oncokb/OtherBiomarkerAnnotation';
+import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -605,6 +603,12 @@ export default class PatientViewPage extends React.Component<
         }
     }
 
+    @autobind
+    @action
+    private onMutationalSignatureVersionChange(version: string) {
+        this.patientViewPageStore.setMutationalSignaturesVersion(version);
+    }
+
     public render() {
         const sampleManager = this.sampleManager;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
@@ -709,40 +713,14 @@ export default class PatientViewPage extends React.Component<
                                     this.toggleGenePanelModal,
                                     this.genePanelModal.isOpen
                                 )}
-                            </span>
-                            {this.patientViewPageStore
-                                .hasMutationalSignatureData.result === true && (
-                                <LoadingIndicator
-                                    isLoading={
-                                        this.patientViewPageStore
-                                            .mutationalSignatureData
-                                            .isPending &&
-                                        this.patientViewPageStore
-                                            .mutationalSignatureMetaData
-                                            .isPending
-                                    }
-                                />
-                            )}
-
-                            {this.patientViewPageStore
-                                .hasMutationalSignatureData.result === true &&
-                                this.patientViewPageStore
-                                    .clinicalDataGroupedBySample.isComplete &&
-                                this.patientViewPageStore
-                                    .mutationalSignatureData.isComplete &&
-                                this.patientViewPageStore
-                                    .mutationalSignatureMetaData.isComplete && (
-                                    <SignificantMutationalSignatures
-                                        data={
+                                {this.patientViewPageStore
+                                    .hasMutationalSignatureData.result && (
+                                    <LoadingIndicator
+                                        isLoading={
                                             this.patientViewPageStore
-                                                .mutationalSignatureData.result
+                                                .mutationalSignatureDataGroupByVersion
+                                                .isPending
                                         }
-                                        metadata={
-                                            this.patientViewPageStore
-                                                .mutationalSignatureMetaData
-                                                .result
-                                        }
-                                        uniqueSampleKey={sample.id}
                                     />
                                 )}
 
@@ -761,6 +739,25 @@ export default class PatientViewPage extends React.Component<
                                     )}
                                 </>
                             )}
+                                {this.patientViewPageStore
+                                    .hasMutationalSignatureData.result &&
+                                    this.patientViewPageStore
+                                        .mutationalSignatureDataGroupByVersion
+                                        .isComplete && (
+                                        <SignificantMutationalSignatures
+                                            data={
+                                                this.patientViewPageStore
+                                                    .mutationalSignatureDataGroupByVersion
+                                                    .result
+                                            }
+                                            sampleId={sample.id}
+                                            version={
+                                                this.patientViewPageStore
+                                                    .selectedMutationalSignatureVersion
+                                            }
+                                        />
+                                    )}
+                            </span>
                         </div>
                     );
                 }
@@ -1744,18 +1741,45 @@ export default class PatientViewPage extends React.Component<
                                     </MSKTab>
                                 )}
 
-                                {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
-                                {/*<div className="clearfix">*/}
-                                {/*<FeatureTitle title="Mutational Signatures" isLoading={ this.patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
-                                {/*<LoadingIndicator isLoading={this.patientViewPageStore.mutationalSignatureData.isPending}/>*/}
-                                {/*{*/}
-                                {/*(this.patientViewPageStore.clinicalDataGroupedBySample.isComplete && this.patientViewPageStore.mutationalSignatureData.isComplete) && (*/}
-                                {/*<ClinicalInformationMutationalSignatureTable data={this.patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>*/}
-                                {/*)*/}
-                                {/*}*/}
-                                {/*</div>*/}
-
-                                {/*</MSKTab>*/}
+                                {this.patientViewPageStore
+                                    .hasMutationalSignatureData.result && (
+                                    <MSKTab
+                                        key={8}
+                                        id="mutationalSignatures"
+                                        linkText="Mutational Signature Data"
+                                        hide={
+                                            this.patientViewPageStore
+                                                .mutationalSignatureMolecularProfiles
+                                                .isPending ||
+                                            _.isEmpty(
+                                                this.patientViewPageStore
+                                                    .mutationalSignatureDataGroupByVersion
+                                                    .result
+                                            )
+                                        }
+                                    >
+                                        <MutationalSignaturesContainer
+                                            data={
+                                                this.patientViewPageStore
+                                                    .mutationalSignatureDataGroupByVersion
+                                                    .result
+                                            }
+                                            profiles={
+                                                this.patientViewPageStore
+                                                    .mutationalSignatureMolecularProfiles
+                                                    .result
+                                            }
+                                            onVersionChange={
+                                                this
+                                                    .onMutationalSignatureVersionChange
+                                            }
+                                            version={
+                                                this.patientViewPageStore
+                                                    .selectedMutationalSignatureVersion
+                                            }
+                                        />
+                                    </MSKTab>
+                                )}
 
                                 {this.resourceTabs.component}
 

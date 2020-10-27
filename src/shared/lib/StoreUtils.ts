@@ -65,10 +65,6 @@ import { indexPdbAlignments } from 'shared/lib/PdbUtils';
 import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
-    IMutationalSignature,
-    IMutationalSignatureMeta,
-} from 'shared/model/MutationalSignature';
-import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
@@ -700,14 +696,6 @@ export async function fetchGenePanel(
         )
     );
     return _.keyBy(remoteData, genePanel => genePanel.genePanelId);
-}
-
-export function fetchMutationalSignatureData(): IMutationalSignature[] {
-    return require('../../../resources/samplemutsigdata.json');
-}
-
-export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[] {
-    return require('../../../resources/mutsigmetadata.json');
 }
 
 export async function fetchOncoKbCancerGenes(
