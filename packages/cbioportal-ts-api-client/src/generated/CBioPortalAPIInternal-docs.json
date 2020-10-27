@@ -3741,8 +3741,7 @@
           "type": "string",
           "enum": [
             "Pre",
-            "Post",
-            "Unknown"
+            "Post"
           ]
         },
         "treatment": {
