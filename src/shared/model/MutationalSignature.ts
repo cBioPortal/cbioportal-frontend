@@ -5,21 +5,18 @@ export interface IMutationalSignature {
     uniquePatientKey: string;
     studyId: string;
     mutationalSignatureId: string;
+    version: string;
     value: number;
     confidence: number;
     numberOfMutationsForSample: number;
+    meta: IMutationalSignatureMeta;
 }
 
 export interface IMutationalSignatureMeta {
     mutationalSignatureId: string;
+    name: string;
     description: string;
+    url: string;
+    category: string;
     confidenceStatement: string;
-}
-
-export interface ISignificantMutationalSignaturesForSample {
-    numberOfMutationsForSample: number;
-    confidenceStatement: string;
-    significantSignatures: {
-        [mutationalSignatureId: string]: number;
-    };
 }
