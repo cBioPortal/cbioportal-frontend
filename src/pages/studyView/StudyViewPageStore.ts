@@ -6925,7 +6925,7 @@ export class StudyViewPageStore {
     public readonly displayPatientTreatments = remoteData({
         invoke: () => {
             return defaultClient.getContainsTreatmentDataUsingPOST({
-                studyIds: this.studyIds,
+                studyIds: toJS(this.studyIds),
             });
         },
     });
@@ -6933,7 +6933,7 @@ export class StudyViewPageStore {
     public readonly displaySampleTreatments = remoteData({
         invoke: () => {
             return defaultClient.getContainsSampleTreatmentDataUsingPOST({
-                studyIds: this.studyIds,
+                studyIds: toJS(this.studyIds),
             });
         },
     });
