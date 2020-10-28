@@ -4,6 +4,7 @@ import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 import AppConfig from 'appConfig';
+import { IServerConfig } from 'config/IAppConfig';
 
 describe('url library', () => {
     before(() => {
@@ -13,7 +14,8 @@ describe('url library', () => {
     });
 
     after(() => {
-        delete AppConfig.serverConfig.genomenexus_url;
+        delete (AppConfig.serverConfig as Partial<IServerConfig>)
+            .genomenexus_url;
         delete AppConfig.apiRoot;
     });
 

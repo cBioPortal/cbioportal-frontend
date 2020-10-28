@@ -47,9 +47,13 @@ describe('ClonalColumnFormatter', () => {
                 minorCopyNumber: 1,
             },
         });
-        delete emptyMutation.alleleSpecificCopyNumber.clonal;
-        delete emptyMutation.alleleSpecificCopyNumber.ccfExpectedCopies;
-        delete emptyMutation.alleleSpecificCopyNumber;
+        delete (emptyMutation.alleleSpecificCopyNumber as Partial<
+            Mutation['alleleSpecificCopyNumber']
+        >).clonal;
+        delete (emptyMutation.alleleSpecificCopyNumber as Partial<
+            Mutation['alleleSpecificCopyNumber']
+        >).ccfExpectedCopies;
+        delete (emptyMutation as Partial<Mutation>).alleleSpecificCopyNumber;
         return emptyMutation;
     }
 

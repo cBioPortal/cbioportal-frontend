@@ -715,7 +715,7 @@ export type SampleMolecularIdentifier = {
 
 };
 export type SampleTreatmentFilter = {
-    'time': "Pre" | "Post" | "Unknown"
+    'time': "Pre" | "Post"
 
         'treatment': string
 
@@ -725,7 +725,7 @@ export type SampleTreatmentRow = {
 
         'samples': Array < ClinicalEventSample >
 
-        'time': "Pre" | "Post" | "Unknown"
+        'time': "Pre" | "Post"
 
         'treatment': string
 
@@ -8803,11 +8803,87 @@ export default class CBioPortalAPI {
         });
     };
     getContainsTreatmentDataUsingPOSTURL(parameters: {
-        'studyViewFilter': StudyViewFilter,
+        'studyIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/treatments/display';
+        let path = '/treatments/display-patient';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Should patient level treatments be displayed
+     * @method
+     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
+     * @param {} studyIds - List of Study IDs
+     */
+    getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/treatments/display-patient';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyIds'] !== undefined) {
+                body = parameters['studyIds'];
+            }
+
+            if (parameters['studyIds'] === undefined) {
+                reject(new Error('Missing required  parameter: studyIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Should patient level treatments be displayed
+     * @method
+     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
+     * @param {} studyIds - List of Study IDs
+     */
+    getContainsTreatmentDataUsingPOST(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < boolean > {
+        return this.getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    getContainsSampleTreatmentDataUsingPOSTURL(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/treatments/display-sample';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -8822,18 +8898,18 @@ export default class CBioPortalAPI {
     /**
      * Should sample level treatments be displayed
      * @method
-     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
-     * @param {} studyViewFilter - Study view filter
+     * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
+     * @param {} studyIds - List of Study IDs
      */
-    getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
-        'studyViewFilter': StudyViewFilter,
+    getContainsSampleTreatmentDataUsingPOSTWithHttpInfo(parameters: {
+        'studyIds': Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/treatments/display';
+        let path = '/treatments/display-sample';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -8842,12 +8918,12 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['studyViewFilter'] !== undefined) {
-                body = parameters['studyViewFilter'];
+            if (parameters['studyIds'] !== undefined) {
+                body = parameters['studyIds'];
             }
 
-            if (parameters['studyViewFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: studyViewFilter'));
+            if (parameters['studyIds'] === undefined) {
+                reject(new Error('Missing required  parameter: studyIds'));
                 return;
             }
 
@@ -8866,15 +8942,15 @@ export default class CBioPortalAPI {
     /**
      * Should sample level treatments be displayed
      * @method
-     * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
-     * @param {} studyViewFilter - Study view filter
+     * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
+     * @param {} studyIds - List of Study IDs
      */
-    getContainsTreatmentDataUsingPOST(parameters: {
-        'studyViewFilter': StudyViewFilter,
+    getContainsSampleTreatmentDataUsingPOST(parameters: {
+        'studyIds': Array < string > ,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
-        return this.getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.getContainsSampleTreatmentDataUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };

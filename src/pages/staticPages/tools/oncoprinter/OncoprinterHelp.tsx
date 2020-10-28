@@ -164,7 +164,9 @@ export const ClinicalFormatHelp = (
         <code>Age({ClinicalTrackDataType.NUMBER})</code>&#9;
         <code>Cancer_Type({ClinicalTrackDataType.STRING})</code>&#9;
         <code>Mutation_Count({ClinicalTrackDataType.LOG_NUMBER})</code>&#9;
-        <code>Mutation_Spectrum(C>A/C>G/C>T/T>A/T>C/T>G)</code>
+        <code>
+            Mutation_Spectrum(C{'>'}A/C{'>'}G/C{'>'}T/T{'>'}A/T{'>'}C/T{'>'}G)
+        </code>
         <br />
         Each following row gives the sample id, then the value for each clinical
         attribute, or the special value {ONCOPRINTER_VAL_NA} which indicates

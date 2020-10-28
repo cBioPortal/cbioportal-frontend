@@ -23,7 +23,7 @@ export function createQueryStore(
         // normalize this
         query.cancer_study_list =
             query.cancer_study_list || query.cancer_study_id;
-        delete query.cancer_study_id;
+        delete (query as Partial<CancerStudyQueryUrlParams>).cancer_study_id;
 
         // check if certain parameters should be reset
         if (currentQuery) {

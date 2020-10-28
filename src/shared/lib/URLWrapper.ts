@@ -31,9 +31,7 @@ export type Property<T, NestedObjectType = any> = {
     aliases?: string[];
 };
 
-export function needToLoadSession(
-    obj: Partial<ResultsViewURLWrapper>
-): boolean {
+export function needToLoadSession(obj: Partial<URLWrapper<any>>): boolean {
     return (
         obj.sessionId !== undefined &&
         obj.sessionId !== 'pending' &&
@@ -409,7 +407,7 @@ export default class URLWrapper<
         return getRemoteSession(this.sessionId);
     }
 
-    @computed get needToLoadSession() {
+    @computed get needToLoadSession(): boolean {
         // if we have a session id
         // it's NOT equal to pending
         // we either have NO session data or the existing session data is

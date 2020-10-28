@@ -12,7 +12,6 @@ export type CoExpressionWithEntityInfo = CoExpression & {
 };
 
 export type CoExpressionWithQ = CoExpressionWithEntityInfo & {
-    geneticEntityType: GeneticEntityType;
     qValue: number;
 };
 

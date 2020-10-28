@@ -1493,7 +1493,7 @@ export class StudyViewPageStore {
         );
         //studyViewFilter can only have studyIds or sampleIdentifiers
         if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
-            delete studyViewFilter.studyIds;
+            delete (studyViewFilter as Partial<StudyViewFilter>).studyIds;
         }
 
         studyViewFilter.patientTreatmentFilters = { filters: [] };
@@ -2291,7 +2291,7 @@ export class StudyViewPageStore {
             if (bins.length > 0) {
                 newFilter.customBins = bins;
             } else {
-                delete newFilter.customBins;
+                delete (newFilter as Partial<ClinicalDataBinFilter>).customBins;
             }
             this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
         }
@@ -3837,7 +3837,7 @@ export class StudyViewPageStore {
             _chartMetaSet
         );
 
-        if (this.displayTreatments.result) {
+        if (this.displaySampleTreatments.result) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -3850,7 +3850,9 @@ export class StudyViewPageStore {
                 description:
                     'List of treatments and the corresponding number of samples acquired before treatment or after/on treatment',
             };
+        }
 
+        if (this.displayPatientTreatments.result) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -4044,7 +4046,7 @@ export class StudyViewPageStore {
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalClinicalAttributesPrefix.isPending ||
-            this.displayTreatments.isPending;
+            this.displayPatientTreatments.isPending;
 
         if (
             this.clinicalAttributes.isComplete &&
@@ -4331,7 +4333,7 @@ export class StudyViewPageStore {
             }
         }
 
-        if (this.displayTreatments.result) {
+        if (this.displayPatientTreatments.result) {
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
                 true
@@ -4945,9 +4947,11 @@ export class StudyViewPageStore {
                         studyViewFilter.sampleIdentifiers = sampleIdentifiersFromGenomicProfileFilter;
                         // only one of [studyIds, sampleIdentifiers] should present in studyViewFilter.
                         // sending both would throw error.
-                        delete studyViewFilter.studyIds;
+                        delete (studyViewFilter as Partial<StudyViewFilter>)
+                            .studyIds;
                     }
-                    delete studyViewFilter.genomicProfiles;
+                    delete (studyViewFilter as Partial<StudyViewFilter>)
+                        .genomicProfiles;
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
@@ -6918,16 +6922,21 @@ export class StudyViewPageStore {
         },
     });
 
-    @computed
-    public get displayTreatments() {
-        return remoteData({
-            invoke: () => {
-                return defaultClient.getContainsTreatmentDataUsingPOST({
-                    studyViewFilter: this.initialFilters,
-                });
-            },
-        });
-    }
+    public readonly displayPatientTreatments = remoteData({
+        invoke: () => {
+            return defaultClient.getContainsTreatmentDataUsingPOST({
+                studyIds: this.studyIds,
+            });
+        },
+    });
+
+    public readonly displaySampleTreatments = remoteData({
+        invoke: () => {
+            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+                studyIds: this.studyIds,
+            });
+        },
+    });
 
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
