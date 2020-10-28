@@ -5108,12 +5108,12 @@
         "deprecated": false
       }
     },
-    "/treatments/display": {
+    "/treatments/display-patient": {
       "post": {
         "tags": [
           "Treatments"
         ],
-        "summary": "Should sample level treatments be displayed",
+        "summary": "Should patient level treatments be displayed",
         "operationId": "getContainsTreatmentDataUsingPOST",
         "consumes": [
           "application/json"
@@ -5124,11 +5124,52 @@
         "parameters": [
           {
             "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
+            "name": "studyIds",
+            "description": "List of Study IDs",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/treatments/display-sample": {
+      "post": {
+        "tags": [
+          "Treatments"
+        ],
+        "summary": "Should sample level treatments be displayed",
+        "operationId": "getContainsSampleTreatmentDataUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         ],
@@ -6854,8 +6895,7 @@
           "type": "string",
           "enum": [
             "Pre",
-            "Post",
-            "Unknown"
+            "Post"
           ]
         },
         "treatment": {
@@ -6881,8 +6921,7 @@
           "type": "string",
           "enum": [
             "Pre",
-            "Post",
-            "Unknown"
+            "Post"
           ]
         },
         "treatment": {
