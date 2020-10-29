@@ -69,6 +69,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                 <label className="checkbox-inline">
                     <input
                         type="checkbox"
+                        data-test={'VAFSequentialMode'}
                         checked={wrapperStore.showSequentialMode}
                         onChange={() =>
                             wrapperStore.setShowSequentialMode(
@@ -94,6 +95,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                 <label className="checkbox-inline">
                     <input
                         type="checkbox"
+                        data-test="VAFLogScale"
                         checked={wrapperStore.vafChartLogScale}
                         onChange={() => {
                             wrapperStore.setVafChartLogScale(
@@ -106,6 +108,7 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                 <label className="checkbox-inline">
                     <input
                         type="checkbox"
+                        data-test="VAFDataRange"
                         checked={wrapperStore.vafChartYAxisToDataRange}
                         onChange={() => {
                             wrapperStore.setVafChartYAxisToDataRange(
