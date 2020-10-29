@@ -60,6 +60,14 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         );
         assertScreenShotMatch(res);
     });
+
+    it('pvge switch to sequential mode', function() {
+        browser.click('input[data-test="VAFSequentialMode"]');
+        const res = browser.checkElement('[data-test=VAFChartWrapper]');
+        assertScreenShotMatch(res);
+        browser.click('input[data-test="VAFSequentialMode"]');
+    });
+
     it('pvge only show highlighted in line chart', function() {
         browser.click('input[data-test="VAFOnlyHighlighted"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
@@ -144,82 +152,5 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
             hide: ['.qtip', '.dropdown-menu'],
         });
         assertScreenShotMatch(res);
-    });
-
-    describe('variant allele frequency plot controls', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(patientViewUrl);
-            $('.tl-timeline-svg').waitForVisible(10000);
-        });
-
-        it('initalized with all options deselected', () => {
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('shows sequential mode', () => {
-            $('[data-test=TableShowSequentialMode]').click();
-            $('.tl-timeline-svg').waitForVisible();
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('shows selected mutations', () => {
-            // TODO
-            assert(false);
-        });
-
-        it('shows log scale', () => {
-            $('[data-test=VAFLogScale]').click();
-            $('.tl-timeline-svg').waitForVisible();
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('truncates y-axis to data range', () => {
-            $('[data-test=VAFLogScale]').click();
-            $('[data-test=VAFDataRange]').click();
-            $('.tl-timeline-svg').waitForVisible();
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('shows single groupBy clinical variable track', () => {
-            selectReactSelectOption(
-                $('div[data-test=VAFChartControls]'),
-                'Cancer Type'
-            );
-            $('text=GLIOMA').waitForVisible();
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
-
-        it('shows multiple groupBy clinical variable tracks', () => {
-            selectReactSelectOption(
-                $('div[data-test=VAFChartControls]'),
-                'Cancer Type Detailed'
-            );
-            $('text=ASTROCYTOMA').waitForVisible();
-            const res = checkElementWithMouseDisabled(
-                '[data-test=VAFChartWrapper]',
-                0
-            );
-            assertScreenShotMatch(res);
-        });
     });
 });
