@@ -246,33 +246,30 @@ export function getGenericAssayTrackRuleSetParams(
     let category_to_color: { [d: string]: string } | undefined;
 
     // - Legends for generic assay entities can be configured in two ways:
-    //      1. Larger values are `better` and appear at the right side of the legend (a.k.a. ASC sort order)
-    //      2. Smaller values are `better` and appeat at the right side of the legend (a.k.a. DESC sort order)
-    // - The pivot threshold denotes the compound concentration that is the arbitrary boundary between effective (in red)
-    // and ineffective (in blue) concentrations. Blue and red gradient to black color at the pivotThreshold value.
-    // - The most extreme value in the legend is should be the largest value in the current track group. It is passed in
-    //  along side other track specs (if possible)
-    // - When the most extreme value does not reach the pivotThreshold the pivotThreshold is used a most extreme value
+    //      1. Smaller values are `important` and darker blue (a.k.a. ASC sort order)
+    //      2. Larger values are `important` and darker blue (a.k.a. DESC sort order)
+    // - The pivot threshold denotes an arbitrary boundary between important (in red)
+    //   and unimportant (in blue) values. When a pivot threshold is defined blue
+    //   and red gradient to white at the pivotThreshold value.
+    // - The most extreme value in the legend is should be the largest value in the
+    //   current track group. It is passed in alongside other track specs (if possible).
+    // - When the most extreme value does not reach the pivotThreshold the pivotThreshold,
+    //   when defined, is included in the legend as the most extreme value.
 
     legend_label = trackSpec.legendLabel || `${trackSpec.molecularProfileName}`;
     const dataPoints = trackSpec.data;
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
 
-    const colorBetterDark = [0, 114, 178, 1] as [
+    const colorDarkBlue = [0, 114, 178, 1] as [number, number, number, number];
+    const colorLightBlue = [204, 236, 255, 1] as [
         number,
         number,
         number,
         number
     ];
-    const colorBetterLight = [204, 236, 255, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
-    const colorWorseDark = [213, 94, 0, 1] as [number, number, number, number];
-    const colorWorseLight = [255, 226, 204, 1] as [
+    const colorDarkRed = [213, 94, 0, 1] as [number, number, number, number];
+    const colorLightRed = [255, 226, 204, 1] as [
         number,
         number,
         number,
@@ -306,29 +303,24 @@ export function getGenericAssayTrackRuleSetParams(
         minValue = Math.min(minValue, pivotThreshold);
     }
 
-    const pivotOutsideValueRange =
-        pivotThreshold &&
-        (maxValue === pivotThreshold || minValue === pivotThreshold);
-
-    // when all observed values are negative or positive
-    // assume that 0 should be used in the legend
+    // When all observed values are negative or positive
+    // assume that 0 should be used in the legend.
     const rightBoundaryValue = Math.max(0, maxValue);
     const leftBoundaryValue = Math.min(0, minValue);
-    value_range = [leftBoundaryValue, rightBoundaryValue]; // larger concentrations are `better` (ASC)
+    value_range = [leftBoundaryValue, rightBoundaryValue]; // smaller concentrations are more `important` (ASC)
+    value_stop_points = [leftBoundaryValue, rightBoundaryValue];
 
-    // only include the pivotValue in the legend when covered by the current value_range
-    if (pivotThreshold === undefined || pivotOutsideValueRange) {
-        colors = [colorBetterDark, colorBetterLight];
-        value_stop_points = [leftBoundaryValue, rightBoundaryValue];
+    if (pivotThreshold === undefined || maxValue === pivotThreshold) {
+        // all values are smaller than pivot threshold
+        colors = [colorDarkBlue, colorLightBlue];
+    } else if (minValue === pivotThreshold) {
+        // all values are larger than pivot threshold
+        colors = [colorLightRed, colorDarkRed];
     } else {
-        colors = [
-            colorBetterDark,
-            colorBetterLight,
-            colorWorseLight,
-            colorWorseDark,
-        ];
+        // pivot threshold lies in the middle of al values
+        colors = [colorDarkBlue, colorLightBlue, colorLightRed, colorDarkRed];
         if (pivotThreshold <= leftBoundaryValue) {
-            // when data points do not bracket the pivotThreshold, make an artificial left boundary
+            // when data points do not bracket the pivotThreshold, add an artificial left boundary in the legend
             value_stop_points = [
                 pivotThreshold - (rightBoundaryValue - pivotThreshold),
                 pivotThreshold,
@@ -336,7 +328,7 @@ export function getGenericAssayTrackRuleSetParams(
                 rightBoundaryValue,
             ];
         } else if (pivotThreshold >= rightBoundaryValue) {
-            // when data points do not bracket the pivotThreshold, make an artificial right boundary
+            // when data points do not bracket the pivotThreshold, add an artificial right boundary in the legend
             value_stop_points = [
                 leftBoundaryValue,
                 pivotThreshold,
@@ -354,9 +346,8 @@ export function getGenericAssayTrackRuleSetParams(
     }
 
     if (sortOrder === 'DESC') {
-        // smaller concentrations are `better` (DESC)
-        value_range = _.reverse(value_range);
-        value_stop_points = _.reverse(value_stop_points);
+        // larger concentrations are more `important` (DESC)
+        colors = _.reverse(colors);
     }
 
     let counter = 0;
