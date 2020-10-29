@@ -921,11 +921,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     getMutationsByTranscriptId(
                         this.getMutations(),
                         t,
-                        this.indexedVariantAnnotations.result!,
-                        this.canonicalTranscript.result
-                            ? this.canonicalTranscript.result!.transcriptId ===
-                                  t
-                            : false
+                        this.indexedVariantAnnotations.result!
                     ),
                 ])
             );
