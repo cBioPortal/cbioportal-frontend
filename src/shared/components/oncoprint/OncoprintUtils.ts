@@ -253,8 +253,8 @@ export function getGenericAssayTrackRuleSetParams(
     //   and red gradient to white at the pivotThreshold value.
     // - The most extreme value in the legend is should be the largest value in the
     //   current track group. It is passed in alongside other track specs (if possible).
-    // - When the most extreme value does not reach the pivotThreshold the pivotThreshold,
-    //   when defined, is included in the legend as the most extreme value.
+    // - When the most extreme value does not reach the pivotThreshold (if defined),
+    //   the pivotThreshold is included in the legend as the most extreme value.
 
     legend_label = trackSpec.legendLabel || `${trackSpec.molecularProfileName}`;
     const dataPoints = trackSpec.data;
