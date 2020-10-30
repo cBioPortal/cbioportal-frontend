@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import BarGraph from '../barGraph/BarGraph';
 import { observer } from 'mobx-react';
 import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import Testimonials from '../testimonials/Testimonials';
@@ -8,7 +7,7 @@ import AppConfig from 'appConfig';
 import { QueryStore } from 'shared/components/query/QueryStore';
 import { Link } from 'react-router';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-import { redirectToStudyView } from '../../api/urls';
+import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
 
 interface IRightBarProps {
@@ -161,8 +160,21 @@ export default class RightBar extends React.Component<
         const installations_url = AppConfig.serverConfig.installation_map_url;
         return !installations_url ? null : (
             <div className="rightBarSection">
-                <h3>cBioPortal Installations</h3>
-                <a href="/installations" style={{ display: 'block' }}>
+                <h3 style={{ paddingBottom: 8 }}>
+                    Local Installations{' '}
+                    <a
+                        className={'btn btn-link btn-xs pull-right'}
+                        target={'_blank'}
+                        href={buildCBioPortalPageUrl('/visualize')}
+                    >
+                        Host your own
+                    </a>
+                </h3>
+                <a
+                    href={buildCBioPortalPageUrl('/installations')}
+                    target={'_blank'}
+                    style={{ display: 'block' }}
+                >
                     <iframe
                         frameBorder="0"
                         height={200}
@@ -172,11 +184,18 @@ export default class RightBar extends React.Component<
                         style={{ pointerEvents: 'none' }}
                     />
                 </a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSflQdN956q7Xh5caO8z8jIaF6uMLBkKrSxFvPi8OhNBWB247w/viewform">
+
+                <p>
                     Are you running a local instance of cBioPortal, public or
-                    private? Complete the survey here to add your installation
-                    to the map.
-                </a>
+                    private?{' '}
+                    <a
+                        target={'_blank'}
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSflQdN956q7Xh5caO8z8jIaF6uMLBkKrSxFvPi8OhNBWB247w/viewform"
+                    >
+                        Complete the survey here
+                    </a>{' '}
+                    to add your installation to the map.
+                </p>
             </div>
         );
     }
@@ -276,46 +295,45 @@ export default class RightBar extends React.Component<
         ) : null;
     }
 
-    public getDataSetsSection() {
-        return AppConfig.serverConfig.skin_right_nav_show_data_sets ? (
-            <div className="rightBarSection">
-                <h3>Cancer Studies</h3>
-                {this.studyStore.cancerStudies.isComplete &&
-                    this.studyStore.cancerTypes.isComplete && (
-                        <div>
-                            <p>
-                                The portal contains{' '}
-                                {this.studyStore.cancerStudies.result.length}{' '}
-                                cancer studies{' '}
-                                <Link to={'/datasets'}>(details)</Link>
-                            </p>
-
-                            <BarGraph
-                                data={this.CancerTypeDescendantStudies(
-                                    this.CancerTypeList()
-                                )}
-                                openStudy={studyId => {
-                                    redirectToStudyView(studyId);
-                                }}
-                            />
-                        </div>
-                    )}
-                {this.studyStore.cancerStudies.isPending && (
-                    <span style={{ textAlign: 'center' }}>
-                        <LoadingIndicator isLoading={true} small={true} />
-                    </span>
-                )}
-            </div>
-        ) : null;
-    }
+    // public getDataSetsSection() {
+    //     return AppConfig.serverConfig.skin_right_nav_show_data_sets ? (
+    //         <div className="rightBarSection">
+    //             <h3>Cancer Studies</h3>
+    //             {this.studyStore.cancerStudies.isComplete &&
+    //                 this.studyStore.cancerTypes.isComplete && (
+    //                     <div>
+    //                         <p>
+    //                             The portal contains{' '}
+    //                             {this.studyStore.cancerStudies.result.length}{' '}
+    //                             cancer studies{' '}
+    //                             <Link to={'/datasets'}>(details)</Link>
+    //                         </p>
+    //
+    //                         <BarGraph
+    //                             data={this.CancerTypeDescendantStudies(
+    //                                 this.CancerTypeList()
+    //                             )}
+    //                             openStudy={studyId => {
+    //                                 redirectToStudyView(studyId);
+    //                             }}
+    //                         />
+    //                     </div>
+    //                 )}
+    //             {this.studyStore.cancerStudies.isPending && (
+    //                 <span style={{ textAlign: 'center' }}>
+    //                     <LoadingIndicator isLoading={true} small={true} />
+    //                 </span>
+    //             )}
+    //         </div>
+    //     ) : null;
+    // }
 
     render() {
         return (
             <div>
                 {this.getWhatsNew()}
-                {this.getInstallationMap()}
-                {this.getDataSetsSection()}
                 {this.getExampleSection()}
+                {this.getInstallationMap()}
                 {this.getTestimonialsSection()}
             </div>
         );
