@@ -684,8 +684,8 @@ function transitionTracks(
 
     // find the max and min GSVA score value in the next heatmap track group
     // max and min value is used to create a custom legend for the track group
-    const genesetScoreValueMax = _.max(genesetScoreProfileData) || undefined;
-    const genesetScoreValueMin = _.min(genesetScoreProfileData) || undefined;
+    const genesetScoreValueMax = _.max(genesetScoreProfileData);
+    const genesetScoreValueMin = _.min(genesetScoreProfileData);
 
     // Transition genetic tracks
     const prevGeneticTracks = _.keyBy(
@@ -763,8 +763,10 @@ function transitionTracks(
     );
     for (const track of nextProps.genesetHeatmapTracks) {
         // add geneset layout/formatting information to the track specs
-        track.maxProfileValue = genesetScoreValueMax;
-        track.minProfileValue = genesetScoreValueMin;
+        track.maxProfileValue =
+            genesetScoreValueMax === null ? undefined : genesetScoreValueMax;
+        track.minProfileValue =
+            genesetScoreValueMin === null ? undefined : genesetScoreValueMin;
 
         transitionGenesetHeatmapTrack(
             track,
