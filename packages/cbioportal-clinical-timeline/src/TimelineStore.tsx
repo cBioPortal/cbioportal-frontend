@@ -63,8 +63,8 @@ export class TimelineStore {
     }
 
     @computed get sampleEvents() {
-        return this.allItems.filter(
-            event => event.event!.eventType === 'SPECIMEN'
+        return this.allItems.filter(event =>
+            /^SPECIMEN$|^SAMPLE ACQUISITION$/i.test(event.event!.eventType)
         );
     }
 
