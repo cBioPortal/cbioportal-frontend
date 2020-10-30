@@ -805,7 +805,7 @@ export async function fetchStructuralVariantOncoKbData(
                         datum.uniqueSampleKey,
                         uniqueSampleKeyToTumorType
                     ),
-                    datum.variantClass as any
+                    datum.variantClass.toUpperCase() as any
                 );
             }),
             datum => datum.id

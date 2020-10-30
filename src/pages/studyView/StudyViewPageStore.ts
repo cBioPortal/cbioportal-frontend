@@ -3327,7 +3327,7 @@ export class StudyViewPageStore {
                 getFilteredMolecularProfilesByAlterationType(
                     this.studyIdToMolecularProfiles.result,
                     AlterationTypeConstants.STRUCTURAL_VARIANT,
-                    [DataTypeConstants.SV, DataTypeConstants.FUSION]
+                    [DataTypeConstants.FUSION, DataTypeConstants.SV]
                 )
             );
         },

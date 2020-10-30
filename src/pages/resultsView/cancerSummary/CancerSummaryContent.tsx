@@ -36,6 +36,7 @@ export const AlterationTypeToDataTypeLabel: { [id: string]: string } = {
     expression: 'mRNA data',
     cna: 'CNA data',
     mutation: 'Mutation data',
+    structuralVariant: 'Structural variant data',
 };
 
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {
@@ -77,12 +78,14 @@ export interface IAlterationData {
         cna: number;
         expression: number;
         protein: number;
+        structuralVariant: number;
     };
     notProfiledSamplesCounts: {
         mutation: number;
         cna: number;
         expression: number;
         protein: number;
+        structuralVariant: number;
     };
 }
 

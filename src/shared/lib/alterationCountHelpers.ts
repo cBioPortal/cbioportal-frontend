@@ -119,6 +119,7 @@ export function countAlterationOccurences(
                 cna: 0,
                 expression: 0,
                 protein: 0,
+                structuralVariant: 0,
             };
 
             const notProfiledSamplesCounts = {
@@ -126,6 +127,7 @@ export function countAlterationOccurences(
                 cna: 0,
                 expression: 0,
                 protein: 0,
+                structuralVariant: 0,
             };
 
             const ret: IAlterationData = {
@@ -181,6 +183,12 @@ export function countAlterationOccurences(
                                 profiled
                                     ? profiledTypeCounts.mutation++
                                     : notProfiledSamplesCounts.mutation++;
+                                break;
+                            }
+                            case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+                                profiled
+                                    ? profiledTypeCounts.structuralVariant++
+                                    : notProfiledSamplesCounts.structuralVariant++;
                                 break;
                             }
                         }

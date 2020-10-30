@@ -386,7 +386,6 @@ export function buildDefaultOQLProfile(
         switch (type) {
             case AlterationTypeConstants.MUTATION_EXTENDED:
                 default_oql_uniq['MUT'] = true;
-                default_oql_uniq['FUSION'] = true;
                 break;
             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                 default_oql_uniq['AMP'] = true;
@@ -399,6 +398,9 @@ export function buildDefaultOQLProfile(
             case AlterationTypeConstants.PROTEIN_LEVEL:
                 default_oql_uniq['PROT>=' + rppaScoreThreshold] = true;
                 default_oql_uniq['PROT<=-' + rppaScoreThreshold] = true;
+                break;
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                default_oql_uniq['FUSION'] = true;
                 break;
         }
     }
@@ -629,6 +631,10 @@ export class ResultsViewPageStore {
 
     @computed
     get selectedMolecularProfileIds() {
+        //use profileFilter when both profileFilter and MolecularProfileIds are present in query
+        if (isNaN(parseInt(this.urlWrapper.query.profileFilter, 10))) {
+            return [];
+        }
         return getMolecularProfiles(this.urlWrapper.query);
     }
 
@@ -4681,18 +4687,13 @@ export class ResultsViewPageStore {
               structuralVariant: StructuralVariant
           ) => IndicatorQueryResp | undefined)
     >({
-        await: () => [
-            this.structuralVariantOncoKbDataForOncoprint,
-            this.uniqueSampleKeyToTumorType,
-        ],
+        await: () => [this.structuralVariantOncoKbDataForOncoprint],
         invoke: () => {
             const structuralVariantOncoKbDataForOncoprint = this
                 .structuralVariantOncoKbDataForOncoprint.result!;
             if (structuralVariantOncoKbDataForOncoprint instanceof Error) {
                 return Promise.resolve(new Error());
             } else {
-                const uniqueSampleKeyToTumorType = this
-                    .uniqueSampleKeyToTumorType.result!;
                 return Promise.resolve(
                     (structuralVariant: StructuralVariant) => {
                         const id = generateQueryStructuralVariantId(
@@ -4700,7 +4701,7 @@ export class ResultsViewPageStore {
                             structuralVariant.site2EntrezGeneId,
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
-                                uniqueSampleKeyToTumorType
+                                {}
                             )
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
