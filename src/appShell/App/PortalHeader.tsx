@@ -90,6 +90,14 @@ export default class PortalHeader extends React.Component<
                 hide: () =>
                     AppConfig.serverConfig.skin_show_about_tab === false,
             },
+
+            {
+                id: 'installation-map',
+                text: 'cBioPortal Installations',
+                address: '/installations',
+                internal: false,
+                hide: () => !AppConfig.serverConfig.installation_map_url,
+            },
         ];
     }
 

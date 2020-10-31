@@ -27,7 +27,6 @@ import {
     CaseAggregatedData,
     IQueriedCaseData,
     IQueriedMergedTrackCaseData,
-    GenericAssayTypeConstants,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -319,17 +318,7 @@ export function getGenericAssayTrackRuleSetParams(
 
     // only include the pivotValue in the legend when covered by the current value_range
     if (pivotThreshold === undefined || pivotOutsideValueRange) {
-        if (
-            trackSpec.genericAssayType ===
-            GenericAssayTypeConstants.TREATMENT_RESPONSE
-        ) {
-            // TODO: consider if we can merge this with other types
-            // color range from dark to light for TREATMENT_RESPONSE track
-            colors = [colorBetterDark, colorBetterLight];
-        } else {
-            // color should range from light to dark for other types
-            colors = [colorBetterLight, colorBetterDark];
-        }
+        colors = [colorBetterDark, colorBetterLight];
         value_stop_points = [leftBoundaryValue, rightBoundaryValue];
     } else {
         colors = [
