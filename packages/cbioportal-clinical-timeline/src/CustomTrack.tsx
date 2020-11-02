@@ -1,12 +1,14 @@
 import { TimelineStore } from './TimelineStore';
 import * as React from 'react';
 import { REMOVE_FOR_DOWNLOAD_CLASSNAME } from './lib/helpers';
+import classNames from 'classnames';
 
 export type CustomTrackSpecification = {
     renderHeader: (store: TimelineStore) => any; // any = react renderable, string or element or null or etc.
     renderTrack: (store: TimelineStore) => React.ReactElement<SVGGElement>;
     height: (store: TimelineStore) => number;
     labelForExport: string;
+    disableHover?: boolean;
 };
 
 export interface ICustomTrackProps {
@@ -15,6 +17,7 @@ export interface ICustomTrackProps {
     width: number;
     y: number;
     handleTrackHover: (e: React.MouseEvent<any>) => void;
+    disableHover?: boolean;
 }
 
 const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
@@ -23,10 +26,13 @@ const CustomTrack: React.FunctionComponent<ICustomTrackProps> = function({
     width,
     y,
     handleTrackHover,
+    disableHover,
 }: ICustomTrackProps) {
     return (
         <g
-            className={'tl-track'}
+            className={classNames('tl-track', {
+                'tl-hover-disabled': disableHover,
+            })}
             transform={`translate(0 ${y})`}
             onMouseEnter={handleTrackHover}
             onMouseLeave={handleTrackHover}

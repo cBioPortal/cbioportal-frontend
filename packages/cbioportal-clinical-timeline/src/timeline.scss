@@ -9,17 +9,8 @@ $borderColor: #ccc;
     .tl-timeline-reset-buttons {
         position: absolute;
         top: -25px;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        div {
-            margin-right: 10px;
-        }
-        div:last-child {
-            margin-right: 0px;
-        }
+        display: inline-block;
+        left: 50%;
     }
 }
 
@@ -83,6 +74,9 @@ $borderColor: #ccc;
 
 .tl-timeline-leftbar {
     .tl-timeline-tracklabels {
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
         font-size: 12px;
         text-transform: uppercase;
         > div {
@@ -148,4 +142,20 @@ $borderColor: #ccc;
 
 .timeline-label:last-of-type {
     display: none;
+}
+
+.tl-displaynone {
+    display: none;
+}
+
+.tl-hover-disabled {
+    background: none !important;
+
+    .tl-track-highlight {
+        display: none;
+    }
+}
+
+.tl-custom-track-header {
+    position: relative;
 }
