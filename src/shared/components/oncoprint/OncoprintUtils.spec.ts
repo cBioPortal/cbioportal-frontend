@@ -4,6 +4,10 @@ import {
     percentAltered,
     extractGenericAssaySelections,
     getGenericAssayTrackRuleSetParams,
+    legendColorDarkBlue,
+    legendColorLightBlue,
+    legendColorLightRed,
+    legendColorDarkRed,
 } from './OncoprintUtils';
 import { IKeyValueMap, observable } from 'mobx';
 import * as _ from 'lodash';
@@ -586,7 +590,7 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             genericAssayTracSpec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.equal(colors!.length, 2);
+        assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
         assert.deepEqual(value_range, [-100, 100]);
         assert.deepEqual(value_stop_points, [-100, 100]);
         assert.deepEqual(category_to_color, undefined);
@@ -605,10 +609,10 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             genericAssayTracSpec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.deepEqual(value_range, [-100, 100]);
+        assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
     });
 
-    it('DESC SortOrder reverses value range', () => {
+    it('DESC SortOrder reverses color range', () => {
         const spec = Object.assign({}, genericAssayTracSpec);
         spec.sortOrder = 'DESC';
 
@@ -621,24 +625,7 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.deepEqual(value_range, [100, -100]);
-    });
-
-    it('DESC SortOrder reverses value_range and value_stop_points', () => {
-        const spec = Object.assign({}, genericAssayTracSpec);
-        spec.sortOrder = 'DESC';
-
-        const {
-            value_range,
-            colors,
-            value_stop_points,
-            category_to_color,
-        } = getGenericAssayTrackRuleSetParams(
-            spec
-        ) as IGradientAndCategoricalRuleSetParams;
-
-        assert.deepEqual(value_range, [100, -100]);
-        assert.deepEqual(value_stop_points, [100, -100]);
+        assert.deepEqual(colors, [legendColorLightBlue, legendColorDarkBlue]);
     });
 
     it('PivotThreshold adds middle value and color param', () => {
@@ -654,7 +641,12 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.equal(colors!.length, 4);
+        assert.deepEqual(colors, [
+            legendColorDarkBlue,
+            legendColorLightBlue,
+            legendColorLightRed,
+            legendColorDarkRed,
+        ]);
         assert.deepEqual(value_range, [-100, 100]);
         assert.deepEqual(value_stop_points, [-100, 0, 0, 100]);
     });
@@ -672,7 +664,7 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.equal(colors!.length, 2);
+        assert.deepEqual(colors, [legendColorLightRed, legendColorDarkRed]);
         assert.deepEqual(value_range, [-200, 100]);
         assert.deepEqual(value_stop_points, [-200, 100]);
     });
@@ -690,7 +682,7 @@ describe('getGenericAssayTrackRuleSetParams', () => {
             spec
         ) as IGradientAndCategoricalRuleSetParams;
 
-        assert.equal(colors!.length, 2);
+        assert.deepEqual(colors, [legendColorDarkBlue, legendColorLightBlue]);
         assert.deepEqual(value_range, [-100, 200]);
         assert.deepEqual(value_stop_points, [-100, 200]);
     });

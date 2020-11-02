@@ -193,11 +193,7 @@ export function getHeatmapTrackRuleSetParams(
             value_range = [0, 1];
             legend_label = trackSpec.legendLabel || 'Methylation Heatmap';
             value_stop_points = [0, 0.35, 1];
-            colors = [
-                [0, 0, 255, 1],
-                [255, 255, 255, 1],
-                [255, 0, 0, 1],
-            ];
+            colors = [[0, 0, 255, 1], [255, 255, 255, 1], [255, 0, 0, 1]];
             break;
         case AlterationTypeConstants.MUTATION_EXTENDED:
             value_range = [0, 1];
@@ -205,20 +201,13 @@ export function getHeatmapTrackRuleSetParams(
             null_legend_label = 'Not mutated/no VAF data';
             na_legend_label = 'Not sequenced';
             value_stop_points = [0, 1];
-            colors = [
-                [241, 242, 181, 1],
-                [19, 80, 88, 1],
-            ];
+            colors = [[241, 242, 181, 1], [19, 80, 88, 1]];
             break;
         default:
             value_range = [-3, 3];
             legend_label = trackSpec.legendLabel || 'Expression Heatmap';
             value_stop_points = [-3, 0, 3];
-            colors = [
-                [0, 0, 255, 1],
-                [0, 0, 0, 1],
-                [255, 0, 0, 1],
-            ];
+            colors = [[0, 0, 255, 1], [0, 0, 0, 1], [255, 0, 0, 1]];
             break;
     }
 
@@ -235,6 +224,31 @@ export function getHeatmapTrackRuleSetParams(
         na_shapes: trackSpec.customNaShapes,
     };
 }
+
+export const legendColorDarkBlue = [0, 114, 178, 1] as [
+    number,
+    number,
+    number,
+    number
+];
+export const legendColorLightBlue = [204, 236, 255, 1] as [
+    number,
+    number,
+    number,
+    number
+];
+export const legendColorDarkRed = [213, 94, 0, 1] as [
+    number,
+    number,
+    number,
+    number
+];
+export const legendColorLightRed = [255, 226, 204, 1] as [
+    number,
+    number,
+    number,
+    number
+];
 
 export function getGenericAssayTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec
@@ -260,21 +274,6 @@ export function getGenericAssayTrackRuleSetParams(
     const dataPoints = trackSpec.data;
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
-
-    const colorDarkBlue = [0, 114, 178, 1] as [number, number, number, number];
-    const colorLightBlue = [204, 236, 255, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
-    const colorDarkRed = [213, 94, 0, 1] as [number, number, number, number];
-    const colorLightRed = [255, 226, 204, 1] as [
-        number,
-        number,
-        number,
-        number
-    ];
     const categoryColorOptions = [
         'rgba(240,228,66,1)',
         'rgba(0,158,115,1)',
@@ -312,13 +311,18 @@ export function getGenericAssayTrackRuleSetParams(
 
     if (pivotThreshold === undefined || maxValue === pivotThreshold) {
         // all values are smaller than pivot threshold
-        colors = [colorDarkBlue, colorLightBlue];
+        colors = [legendColorDarkBlue, legendColorLightBlue];
     } else if (minValue === pivotThreshold) {
         // all values are larger than pivot threshold
-        colors = [colorLightRed, colorDarkRed];
+        colors = [legendColorLightRed, legendColorDarkRed];
     } else {
         // pivot threshold lies in the middle of al values
-        colors = [colorDarkBlue, colorLightBlue, colorLightRed, colorDarkRed];
+        colors = [
+            legendColorDarkBlue,
+            legendColorLightBlue,
+            legendColorLightRed,
+            legendColorDarkRed,
+        ];
         if (pivotThreshold <= leftBoundaryValue) {
             // when data points do not bracket the pivotThreshold, add an artificial left boundary in the legend
             value_stop_points = [
@@ -727,14 +731,13 @@ export function makeGeneticTrackWith({
 
         if (caseData.mergedTrackOqlList) {
             const subTrackData = caseData.mergedTrackOqlList;
-            expansions = (
-                expansionIndexMap.get(trackKey) || []
-            ).map(expansionIndex =>
-                makeTrack(
-                    subTrackData[expansionIndex],
-                    expansionIndex,
-                    trackKey
-                )
+            expansions = (expansionIndexMap.get(trackKey) || []).map(
+                expansionIndex =>
+                    makeTrack(
+                        subTrackData[expansionIndex],
+                        expansionIndex,
+                        trackKey
+                    )
             );
         }
 
@@ -1109,11 +1112,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                             ('DESCRIPTION' in entity.genericEntityMetaProperties
                                 ? `${entityName} (${entity.genericEntityMetaProperties['DESCRIPTION']})`
                                 : entityName) +
-                            ` data from ${
-                                molecularProfileIdToMolecularProfile[
-                                    entry.molecularProfileId
-                                ].name
-                            }`;
+                            ` data from ${molecularProfileIdToMolecularProfile[entry.molecularProfileId].name}`;
 
                         return {
                             molecularProfileId: entry.molecularProfileId,
