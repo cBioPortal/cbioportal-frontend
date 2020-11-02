@@ -193,7 +193,11 @@ export function getHeatmapTrackRuleSetParams(
             value_range = [0, 1];
             legend_label = trackSpec.legendLabel || 'Methylation Heatmap';
             value_stop_points = [0, 0.35, 1];
-            colors = [[0, 0, 255, 1], [255, 255, 255, 1], [255, 0, 0, 1]];
+            colors = [
+                [0, 0, 255, 1],
+                [255, 255, 255, 1],
+                [255, 0, 0, 1],
+            ];
             break;
         case AlterationTypeConstants.MUTATION_EXTENDED:
             value_range = [0, 1];
@@ -201,13 +205,20 @@ export function getHeatmapTrackRuleSetParams(
             null_legend_label = 'Not mutated/no VAF data';
             na_legend_label = 'Not sequenced';
             value_stop_points = [0, 1];
-            colors = [[241, 242, 181, 1], [19, 80, 88, 1]];
+            colors = [
+                [241, 242, 181, 1],
+                [19, 80, 88, 1],
+            ];
             break;
         default:
             value_range = [-3, 3];
             legend_label = trackSpec.legendLabel || 'Expression Heatmap';
             value_stop_points = [-3, 0, 3];
-            colors = [[0, 0, 255, 1], [0, 0, 0, 1], [255, 0, 0, 1]];
+            colors = [
+                [0, 0, 255, 1],
+                [0, 0, 0, 1],
+                [255, 0, 0, 1],
+            ];
             break;
     }
 
@@ -731,13 +742,14 @@ export function makeGeneticTrackWith({
 
         if (caseData.mergedTrackOqlList) {
             const subTrackData = caseData.mergedTrackOqlList;
-            expansions = (expansionIndexMap.get(trackKey) || []).map(
-                expansionIndex =>
-                    makeTrack(
-                        subTrackData[expansionIndex],
-                        expansionIndex,
-                        trackKey
-                    )
+            expansions = (
+                expansionIndexMap.get(trackKey) || []
+            ).map(expansionIndex =>
+                makeTrack(
+                    subTrackData[expansionIndex],
+                    expansionIndex,
+                    trackKey
+                )
             );
         }
 
@@ -1112,7 +1124,11 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                             ('DESCRIPTION' in entity.genericEntityMetaProperties
                                 ? `${entityName} (${entity.genericEntityMetaProperties['DESCRIPTION']})`
                                 : entityName) +
-                            ` data from ${molecularProfileIdToMolecularProfile[entry.molecularProfileId].name}`;
+                            ` data from ${
+                                molecularProfileIdToMolecularProfile[
+                                    entry.molecularProfileId
+                                ].name
+                            }`;
 
                         return {
                             molecularProfileId: entry.molecularProfileId,
