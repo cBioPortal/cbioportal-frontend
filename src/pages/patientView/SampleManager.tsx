@@ -169,7 +169,11 @@ class SampleManager {
     sampleColors: { [s: string]: string };
     commonClinicalDataLegacyCleanAndDerived: { [s: string]: string };
 
-    constructor(public samples: Array<ClinicalDataBySampleId>, events?: any) {
+    constructor(
+        public samples: Array<ClinicalDataBySampleId>,
+        events?: ClinicalEvent[],
+        private sampleIdsInHeader?: string[]
+    ) {
         this.sampleIndex = {};
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};
@@ -279,6 +283,12 @@ class SampleManager {
         return _.find(sample.clinicalData, data => {
             return data.clinicalAttributeId === clinicalAttributeId;
         });
+    }
+
+    public isSampleVisibleInHeader(sampleId: string) {
+        return (
+            !this.sampleIdsInHeader || this.sampleIdsInHeader.includes(sampleId)
+        );
     }
 
     getComponentForSample(
