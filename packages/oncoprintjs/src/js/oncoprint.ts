@@ -1052,7 +1052,7 @@ export default class Oncoprint {
         this.incrementLastSortId();
         const thisSortId = this.lastSortId;
 
-        this.model.sort().then(function(x) {
+        this.model.sort().then(function(clusterSortResult) {
             // Make sure lastSortId is still the same as it was when we first called sort()
             // If not, then just skip updating.
             //
@@ -1065,10 +1065,10 @@ export default class Oncoprint {
             self.cell_view.sort(self.model);
             self.minimap_view.sort(self.model, self.cell_view);
 
-            if (x) {
+            if (clusterSortResult) {
                 self.setTrackGroupOrder(
-                    x.track_group_index,
-                    x.track_id_order,
+                    clusterSortResult.track_group_index,
+                    clusterSortResult.track_id_order,
                     true
                 );
             }

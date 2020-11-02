@@ -296,6 +296,7 @@ export default class OncoprintModel {
     private column_indexes_after_a_gap:CachedProperty<number[]>;
 
     private track_groups:TrackGroup[];
+    private unclustered_track_group_order?:TrackId[];
     private track_group_sort_priority:TrackGroupIndex[];
 
     constructor(params:InitParams) {
@@ -1074,6 +1075,14 @@ export default class OncoprintModel {
         return this.highlighted_ids.filter(uid=>(uid in visibleIds));
     }
 
+    public restoreClusteredTrackGroupOrder() {
+        if (this.sort_config.type === "cluster" && this.unclustered_track_group_order) {
+            const trackGroupIndex = this.sort_config.track_group_index;
+            this.setTrackGroupOrder(trackGroupIndex, this.unclustered_track_group_order);
+        }
+        this.unclustered_track_group_order = undefined;
+    }
+
     public setTrackGroupOrder(index:TrackGroupIndex, track_order:TrackId[]) {
         this.track_groups[index].tracks = track_order;
 
@@ -1169,12 +1178,21 @@ export default class OncoprintModel {
         params.target_group = ifndef(params.target_group, 0);
         this.ensureTrackGroupExists(params.target_group);
 
-        const group_array = this.track_groups[params.target_group].tracks;
-        const target_index = (params.expansion_of !== undefined
-                ? group_array.indexOf(this.getLastExpansion(params.expansion_of)) + 1
-                : group_array.length
-        );
-        group_array.splice(target_index, 0, track_id);
+        // add track to target group
+        const group_arrays = [this.track_groups[params.target_group].tracks];
+        if (this.sort_config.type === "cluster" &&
+            this.sort_config.track_group_index === params.target_group
+        ) {
+            // if target group is clustered, also add track to unclustered order
+            group_arrays.push(this.unclustered_track_group_order);
+        }
+        for (const group_array of group_arrays) {
+            const target_index = (params.expansion_of !== undefined
+                    ? group_array.indexOf(this.getLastExpansion(params.expansion_of)) + 1
+                    : group_array.length
+            );
+            group_array.splice(target_index, 0, track_id);
+        }
 
         if (params.expansion_of !== undefined) {
             if (!this.track_expansion_tracks.hasOwnProperty(params.expansion_of)) {
@@ -1296,6 +1314,10 @@ export default class OncoprintModel {
         const expansion_group = this.track_expansion_tracks[this.track_expansion_parent[track_id]];
         if (expansion_group) {
             expansion_group.splice(expansion_group.indexOf(track_id), 1);
+        }
+        // remove this track from unclustered order
+        if (this.unclustered_track_group_order && this.unclustered_track_group_order.indexOf(track_id) > -1) {
+            this.unclustered_track_group_order.splice(this.unclustered_track_group_order.indexOf(track_id), 1);
         }
         delete this.track_expansion_parent[track_id];
         this.track_tops.update();
@@ -1781,6 +1803,10 @@ export default class OncoprintModel {
                         self.track_expansion_tracks[track_id] || []
                     );
                 });
+                if (!self.unclustered_track_group_order) {
+                    // save pre-clustered order if it isn't already saved
+                    self.unclustered_track_group_order = track_ids;
+                }
                 def.resolve({
                     track_group_index: track_group_index,
                     track_id_order: full_track_id_order
@@ -1888,6 +1914,12 @@ export default class OncoprintModel {
     }
 
     public setSortConfig(params:SortConfig) {
+        if (this.sort_config.type === "cluster" &&
+            (params.type !== "cluster" || params.track_group_index !== this.sort_config.track_group_index)
+        ) {
+            // restore order of currently clustered track group if it will no longer be clustered
+            this.restoreClusteredTrackGroupOrder();
+        }
         this.sort_config = params;
     }
 
