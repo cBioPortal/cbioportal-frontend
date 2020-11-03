@@ -5,7 +5,6 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import _ from 'lodash';
 import { AlterationContainerType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';

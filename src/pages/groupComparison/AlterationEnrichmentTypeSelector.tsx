@@ -1,13 +1,9 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { IObservableObject, ObservableMap, observable, computed } from 'mobx';
+import { observable } from 'mobx';
 import autobind from 'autobind-decorator';
-import {
-    CanonicalMutationType,
-    truncateWithEllipsis,
-} from 'cbioportal-frontend-commons';
+import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import { Button } from 'react-bootstrap';
 import _ from 'lodash';
 import {
     CopyNumberEnrichmentEventType,

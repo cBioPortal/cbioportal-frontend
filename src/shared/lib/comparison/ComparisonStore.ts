@@ -2,6 +2,8 @@ import {
     ClinicalDataEnrichmentWithQ,
     ComparisonGroup,
     CopyNumberEnrichment,
+    EnrichmentAnalysisComparisonGroup,
+    getGroupsDownloadData,
     getNumSamples,
     getOverlapComputations,
     getSampleIdentifiers,
@@ -9,22 +11,21 @@ import {
     IOverlapComputations,
     isGroupEmpty,
     partitionCasesByGroupMembership,
-    EnrichmentAnalysisComparisonGroup,
-    getGroupsDownloadData,
 } from '../../../pages/groupComparison/GroupComparisonUtils';
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
-import { remoteData } from 'cbioportal-frontend-commons';
 import {
-    remoteData,
-    stringListToIndexSet,
     findFirstMostCommonElt,
+    remoteData,
 } from 'cbioportal-frontend-commons';
 import {
+    AlterationEnrichment,
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    Group,
     MolecularProfile,
+    MolecularProfileCasesGroupFilter,
     MolecularProfileFilter,
     ReferenceGenomeGene,
     Sample,
@@ -35,33 +36,25 @@ import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import {
     pickCopyNumberEnrichmentProfiles,
+    pickGenericAssayEnrichmentProfiles,
+    pickMethylationEnrichmentProfiles,
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
-    pickMethylationEnrichmentProfiles,
-    pickGenericAssayEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     makeEnrichmentDataPromise,
     makeEnrichmentDataPromiseWithoutProfile,
-} from '../../../pages/resultsView/ResultsViewPageStoreUtils';
-import {
-    makeEnrichmentDataPromise,
     makeGenericAssayEnrichmentDataPromise,
 } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
 import internalClient from '../../api/cbioportalInternalClientInstance';
 import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import {
-    getPatientSurvivals,
     getClinicalDataOfPatientSurvivalStatus,
+    getPatientSurvivals,
 } from 'pages/resultsView/SurvivalStoreHelper';
 import { getPatientIdentifiers } from 'pages/studyView/StudyViewUtils';
-import {
-    AlterationEnrichment,
-    Group,
-    MolecularProfileCasesGroupFilter,
-} from 'cbioportal-ts-api-client';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -81,6 +74,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'pages/resultsView/comparison/ComparisonTabUtils';
+
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
@@ -183,9 +177,8 @@ export default abstract class ComparisonStore {
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
-
     }
-W
+
     public destroy() {
         this.tabHasBeenShownReactionDisposer &&
             this.tabHasBeenShownReactionDisposer();
@@ -1618,7 +1611,7 @@ W
                                 ) {
                                     return internalClient.fetchGenericAssayEnrichmentsUsingPOST(
                                         {
-                                            enrichmentType: 'SAMPLE',
+                                            enrichmentScope: 'SAMPLE',
                                             groups: genericAssayEnrichmentDataRequestGroups,
                                         }
                                     );
