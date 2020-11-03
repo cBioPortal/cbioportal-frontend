@@ -452,11 +452,12 @@ export default class PatientViewPage extends React.Component<
     }
     @computed get sampleManager() {
         if (
-            this.patientViewPageStore.patientViewData.isComplete &&
+            this.patientViewPageStore.patientViewDataForAllSamplesForPatient
+                .isComplete &&
             this.patientViewPageStore.studyMetaData.isComplete
         ) {
-            const patientData = this.patientViewPageStore.patientViewData
-                .result;
+            const patientData = this.patientViewPageStore
+                .patientViewDataForAllSamplesForPatient.result;
 
             if (
                 this.patientViewPageStore.clinicalEvents.isComplete &&
@@ -464,10 +465,15 @@ export default class PatientViewPage extends React.Component<
             ) {
                 return new SampleManager(
                     patientData.samples!,
-                    this.patientViewPageStore.clinicalEvents.result
+                    this.patientViewPageStore.clinicalEvents.result,
+                    this.patientViewPageStore.sampleIds
                 );
             } else {
-                return new SampleManager(patientData.samples!);
+                return new SampleManager(
+                    patientData.samples!,
+                    undefined,
+                    this.patientViewPageStore.sampleIds
+                );
             }
         } else {
             return null;
@@ -592,6 +598,10 @@ export default class PatientViewPage extends React.Component<
             sampleHeader = _.map(
                 sampleManager!.samples,
                 (sample: ClinicalDataBySampleId) => {
+                    if (!sampleManager.isSampleVisibleInHeader(sample.id)) {
+                        return undefined;
+                    }
+
                     const isPDX: boolean =
                         sampleManager &&
                         sampleManager.clinicalDataLegacyCleanAndDerived &&
