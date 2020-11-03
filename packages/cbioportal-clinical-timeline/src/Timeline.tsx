@@ -21,34 +21,33 @@ import TrackHeader, {
     getTrackHeadersG,
 } from './TrackHeader';
 import TickAxis, { TICK_AXIS_COLOR, TICK_AXIS_HEIGHT } from './TickAxis';
-import { TickIntervalEnum } from './types';
+import { EventPosition, TickIntervalEnum, ZoomBounds } from './types';
 import './timeline.scss';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import CustomTrackHeader from './CustomTrackHeader';
+
+import classNames from 'classnames';
+import getSvg from './svg/getSvg';
 
 interface ITimelineProps {
     store: TimelineStore;
     onClickDownload: () => void;
     customTracks?: CustomTrackSpecification[];
     width: number;
+    hideLabels?: boolean;
+    visibleTracks?: string[];
+    hideXAxis?: boolean;
+    disableZoom?: boolean;
+    headerWidth?: number;
 }
 
-const getFocusedPoints = _.debounce(function(
-    point: number,
-    store: TimelineStore
+function handleMouseEvents(
+    e: any,
+    store: TimelineStore,
+    refs: any,
+    zoomDisabled: boolean = false
 ) {
-    const p = getPointInTrimmedSpaceFromScreenRead(point, store.ticks);
-
-    const focusedPoints = store.allItems.filter(event =>
-        intersect(p - 5, p + 5, event.start - 5, event.end + 5)
-    );
-
-    return focusedPoints;
-},
-100);
-
-function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
     const $timeline = jQuery(refs.timeline.current);
     const $zoomSelectBox = jQuery(refs.zoomSelectBox.current);
     const $zoomSelectBoxMask = jQuery(refs.zoomSelectBoxMask.current);
@@ -84,6 +83,14 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
                     } else {
                         store.setZoomBounds(myEnd, myStart);
                     }
+
+                    setTimeout(() => {
+                        setScroll(
+                            store.zoomBounds,
+                            refs.timelineViewPort.current,
+                            store.getPosition
+                        );
+                    }, 10);
                 }
 
                 store.dragging = undefined;
@@ -95,7 +102,9 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
             store.dragging = undefined;
             break;
         case 'mousedown':
-            store.dragging = { start: null, end: null };
+            if (!zoomDisabled) {
+                store.dragging = { start: null, end: null };
+            }
             break;
 
         case 'mousemove':
@@ -119,42 +128,16 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
                     width: Math.abs(store.dragging.end - store.dragging.start),
                 });
             } else {
-                //const point = (pos / $timeline.width()!) * store.absoluteWidth;
-
-                const width = $timeline.width()!;
-                const percStart = pos / width;
-                const startVal = percStart * store.absoluteWidth;
-                const myStart = getPointInTrimmedSpaceFromScreenRead(
-                    startVal,
-                    store.ticks
-                );
-
-                //getFocusedPoints(point, store);
-
-                const years = Math.floor(myStart / TickIntervalEnum.YEAR);
-                const months = Math.floor(
-                    (myStart - years * TickIntervalEnum.YEAR) /
-                        TickIntervalEnum.MONTH
-                );
-                const days = Math.floor(
-                    myStart -
-                        (years * TickIntervalEnum.YEAR +
-                            months * TickIntervalEnum.MONTH)
-                );
-
-                const yearText = years > 0 ? `${years}y` : '';
-                const monthText = months > 0 ? ` ${months}m` : '';
-                const dayText = days > 0 ? ` ${days}d` : '';
-
-                const label = `${yearText}${monthText}${dayText}`;
-
-                jQuery(refs.cursor.current).css({
-                    left:
-                        e.clientX -
-                        $timeline.offset()!.left +
-                        (jQuery(document).scrollLeft() || 0),
-                    display: 'block',
-                });
+                // if zooming is enabled and we're not dragging, show the zoom cursor
+                if (!zoomDisabled) {
+                    jQuery(refs.cursor.current).css({
+                        left:
+                            e.clientX -
+                            $timeline.offset()!.left +
+                            (jQuery(document).scrollLeft() || 0),
+                        display: 'block',
+                    });
+                }
             }
             break;
     }
@@ -162,8 +145,11 @@ function handleMouseEvents(e: any, store: TimelineStore, refs: any) {
 
 const hoverCallback = (
     e: React.MouseEvent<any>,
-    styleTag: MutableRefObject<null>
+    styleTag: MutableRefObject<null>,
+    uniqueId: string
 ) => {
+    // this is pretty hacky but turns out to be fastest way to handle hover behavior
+    // creating very smooth response as user moves mouse across timeline
     if (styleTag && styleTag.current) {
         switch (e.type) {
             case 'mouseenter':
@@ -173,12 +159,12 @@ const hoverCallback = (
                 );
                 if (trackIndex !== undefined) {
                     jQuery(styleTag.current!).text(`
-                    .tl-timeline-tracklabels > div:nth-child(${trackIndex +
+                    #${uniqueId} .tl-timeline-tracklabels > div:nth-child(${trackIndex +
                         1}) {
                         background:#F2F2F2;
                     }
                     
-                    .tl-timeline .tl-track:nth-child(${trackIndex +
+                     #${uniqueId} .tl-timeline .tl-track:nth-child(${trackIndex +
                         1}) rect.tl-track-highlight {
                         opacity: 1 !important;
                     }
@@ -244,17 +230,48 @@ function bindToDOMEvents(store: TimelineStore, refs: any) {
     };
 }
 
+function setScroll(
+    zoomBounds: ZoomBounds | undefined,
+    el: HTMLDivElement,
+    getPosition: (item: any) => EventPosition | undefined
+) {
+    let pixelLeft = 0;
+
+    if (zoomBounds) {
+        const trimmedPos = getPosition({
+            start: zoomBounds!.start,
+            end: zoomBounds!.end,
+        });
+
+        if (trimmedPos) {
+            pixelLeft = trimmedPos.pixelLeft;
+        }
+    }
+    el.scrollLeft = pixelLeft;
+}
+
 const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     store,
     customTracks,
     width,
+    hideLabels = false,
     onClickDownload,
+    visibleTracks,
+    hideXAxis,
+    headerWidth,
+    disableZoom,
 }: ITimelineProps) {
     const tracks = store.data;
     const SCROLLBAR_PADDING = 15;
     let height =
         TICK_AXIS_HEIGHT +
-        _.sumBy(tracks, t => t.height) +
+        _.sumBy(tracks, t => {
+            if (visibleTracks) {
+                return visibleTracks.includes(t.track.type) ? t.height : 0;
+            } else {
+                return t.height;
+            }
+        }) +
         _.sumBy(customTracks || [], t => t.height(store)) +
         SCROLLBAR_PADDING;
 
@@ -269,11 +286,12 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         cursorText: useRef(null),
         hoverStyleTag: useRef(null),
         timelineViewPort: useRef(null),
+        scrollPanel: useRef(null),
     };
 
     const memoizedHoverCallback = useCallback(
         (e: React.MouseEvent) => {
-            hoverCallback(e, refs.hoverStyleTag);
+            hoverCallback(e, refs.hoverStyleTag, store.uniqueId);
         },
         [refs.hoverStyleTag]
     );
@@ -291,7 +309,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
             store.headersWidth = jQuery(
                 refs.timelineHeadersArea.current!
             ).width()!;
-        }, 10);
+        }, 200);
 
         const cleanupDomEvents = bindToDOMEvents(store, refs);
 
@@ -307,8 +325,17 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
 
     const renderWidth = store.viewPortWidth ? store.viewPortWidth * myZoom : 0;
 
+    const filteredTracks =
+        visibleTracks === undefined
+            ? tracks
+            : tracks.filter(t => visibleTracks.includes(t.track.type));
+
     return (
-        <div ref={refs.wrapper} className={'tl-timeline-wrapper'}>
+        <div
+            ref={refs.wrapper}
+            className={'tl-timeline-wrapper'}
+            id={store.uniqueId}
+        >
             <div className={'tl-timeline-reset-buttons'}>
                 {store.zoomBounds && (
                     <div className={'tl-timeline-unzoom'}>
@@ -343,12 +370,15 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 >
                     <div
                         ref={refs.timelineHeadersArea}
-                        className={'tl-timeline-tracklabels'}
+                        className={classNames('tl-timeline-tracklabels', {
+                            'tl-displaynone': hideLabels,
+                        })}
                         style={{
-                            minWidth: store.headersWidth,
+                            width: headerWidth || 'auto',
+                            minWidth: headerWidth || store.headersWidth,
                         }}
                     >
-                        {tracks.map(track => {
+                        {filteredTracks.map(track => {
                             return (
                                 <TrackHeader
                                     store={store}
@@ -366,6 +396,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         store={store}
                                         specification={track}
                                         handleTrackHover={memoizedHoverCallback}
+                                        disableHover={track.disableHover}
                                     />
                                 );
                             })}
@@ -383,15 +414,24 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                     {store.viewPortWidth > 0 && store.ticks && (
                         <div
                             className={'tl-timeline'}
-                            id={'tl-timeline'}
-                            onMouseDown={e => handleMouseEvents(e, store, refs)}
-                            onMouseUp={e => handleMouseEvents(e, store, refs)}
-                            onMouseMove={e => handleMouseEvents(e, store, refs)}
+                            onMouseDown={e =>
+                                handleMouseEvents(e, store, refs, disableZoom)
+                            }
+                            onMouseUp={e =>
+                                handleMouseEvents(e, store, refs, disableZoom)
+                            }
+                            onMouseMove={e =>
+                                handleMouseEvents(e, store, refs, disableZoom)
+                            }
                             onMouseLeave={e =>
-                                handleMouseEvents(e, store, refs)
+                                handleMouseEvents(e, store, refs, disableZoom)
                             }
                         >
-                            <div ref={refs.cursor} className={'tl-cursor'}>
+                            <div
+                                ref={refs.cursor}
+                                style={{ height: height - SCROLLBAR_PADDING }}
+                                className={'tl-cursor'}
+                            >
                                 <div ref={refs.cursorText} />
                             </div>
                             <div
@@ -400,6 +440,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                             />
                             <div
                                 ref={refs.zoomSelectBox}
+                                style={{ height: height - SCROLLBAR_PADDING }}
                                 className={'tl-zoom-selectbox'}
                             />
 
@@ -415,11 +456,14 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                                         width={renderWidth}
                                         customTracks={customTracks}
                                         handleTrackHover={memoizedHoverCallback}
+                                        visibleTracks={visibleTracks}
                                     />
-                                    <TickAxis
-                                        store={store}
-                                        width={renderWidth}
-                                    />{' '}
+                                    {hideXAxis !== true && (
+                                        <TickAxis
+                                            store={store}
+                                            width={renderWidth}
+                                        />
+                                    )}
                                     {/*TickAxis needs to go on top so its not covered by tracks*/}
                                 </g>
                             </svg>
@@ -455,94 +499,5 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         </div>
     );
 });
-
-function getSvg(
-    store: TimelineStore,
-    timelineG: SVGGElement | null,
-    customTracks?: CustomTrackSpecification[]
-) {
-    if (!timelineG) {
-        return null;
-    }
-
-    const svg = (document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'svg'
-    ) as unknown) as SVGElement;
-    document.body.appendChild(svg); // add to body so that we can do getBBox calculations for layout
-
-    const everythingG = (document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'g'
-    ) as unknown) as SVGGElement;
-    svg.append(everythingG);
-
-    try {
-        // Add headers
-        const headersG = getTrackHeadersG(store, customTracks);
-        everythingG.appendChild(headersG);
-        const headersSize = headersG.getBBox();
-        const headersPadding = 10;
-
-        // Add separating line between headers and tracks
-        const separatingLine = (document.createElementNS(
-            'http://www.w3.org/2000/svg',
-            'line'
-        ) as unknown) as SVGLineElement;
-        separatingLine.setAttribute(
-            'x1',
-            `${headersSize.width + headersPadding}`
-        );
-        separatingLine.setAttribute(
-            'x2',
-            `${headersSize.width + headersPadding}`
-        );
-        separatingLine.setAttribute('y1', '0');
-        separatingLine.setAttribute(
-            'y2',
-            `${headersSize.y + headersSize.height}`
-        );
-        separatingLine.setAttribute(
-            'style',
-            `stroke-width:1; stroke:${TICK_AXIS_COLOR}`
-        );
-        everythingG.appendChild(separatingLine);
-
-        // Add tracks
-        // Clone node so we don't disrupt the UI
-        timelineG = timelineG.cloneNode(true) as SVGGElement;
-        everythingG.appendChild(timelineG);
-        // Move tracks over from labels
-        timelineG.setAttribute(
-            'transform',
-            `translate(${headersSize.width + headersPadding} 0)`
-        );
-
-        const everythingSize = everythingG.getBBox();
-
-        // Set svg size to include everything
-        svg.setAttribute('width', `${everythingSize.width}`);
-        svg.setAttribute('height', `${everythingSize.height}`);
-
-        // Finishing touches
-        // Filter out non-download elements
-        jQuery(svg)
-            .find(`.${REMOVE_FOR_DOWNLOAD_CLASSNAME}`)
-            .remove();
-
-        // Extend track header borders
-        jQuery(svg)
-            .find(`.${EXPORT_TRACK_HEADER_BORDER_CLASSNAME}`)
-            .each(function() {
-                this.setAttribute(
-                    'x2',
-                    `${headersSize.width + headersPadding}`
-                );
-            });
-    } finally {
-        document.body.removeChild(svg); // remove from body no matter what happens
-    }
-    return svg;
-}
 
 export default Timeline;

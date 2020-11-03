@@ -1,15 +1,24 @@
 import { assert } from 'chai';
 import { Mutation, Sample } from 'cbioportal-ts-api-client';
-import { MutationStatus } from './PatientViewMutationsTabUtils';
+import { MutationStatus } from '../mutation/PatientViewMutationsTabUtils';
 import { generateMutationIdByGeneAndProteinChangeAndEvent } from '../../../shared/lib/StoreUtils';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
-import { makeMutationHeatmapData } from './oncoprint/MutationOncoprintUtils';
-import { MutationOncoprintMode } from './oncoprint/MutationOncoprint';
-import { assertDeepEqualInAnyOrder } from '../../../shared/lib/SpecUtils';
-import { computeRenderData, IPoint } from './VAFLineChartUtils';
+import {
+    ceil10,
+    computeRenderData,
+    floor10,
+    getYAxisTickmarks,
+    IPoint,
+    numLeadingDecimalZeros,
+    round10,
+    minimalDistinctTickStrings,
+    yValueScaleFunction,
+} from './VAFChartUtils';
+import { GROUP_BY_NONE } from '../timeline2/VAFChartControls';
 import _ from 'lodash';
+import { assertDeepEqualInAnyOrder } from 'shared/lib/SpecUtils';
 
-describe('VAFLineChartUtils', () => {
+describe('VAFChartUtils', () => {
     describe('computeRenderData', () => {
         function roughlyDeepEqualPoints(
             actual: IPoint[],
@@ -160,7 +169,9 @@ describe('VAFLineChartUtils', () => {
                     [],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -199,7 +210,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -349,7 +362,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -482,7 +497,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -576,7 +593,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2, 3], [])
+                    makeCoverageInfo([1, 2, 3], []),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -699,7 +718,9 @@ describe('VAFLineChartUtils', () => {
                                 },
                             },
                         ]
-                    )
+                    ),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [
@@ -794,7 +815,9 @@ describe('VAFLineChartUtils', () => {
                     ],
                     sampleIdIndex,
                     'mutations',
-                    makeCoverageInfo([1, 2], [3])
+                    makeCoverageInfo([1, 2], [3]),
+                    GROUP_BY_NONE,
+                    {}
                 ),
                 {
                     grayPoints: [],
@@ -844,6 +867,129 @@ describe('VAFLineChartUtils', () => {
                     ],
                 }
             );
+        });
+    });
+
+    describe('getYAxisTickmarks', () => {
+        it('handles normal case', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, 6);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 2, 4, 6, 8, 10]);
+        });
+        it('handles zero length', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, 0);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 10]);
+        });
+        it('handles undefined length (defaults to 6)', () => {
+            const tickmarks = getYAxisTickmarks(0, 10, undefined);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 2, 4, 6, 8, 10]);
+        });
+        it('handles same minY and maxY', () => {
+            const tickmarks = getYAxisTickmarks(0, 0, 6);
+            assertDeepEqualInAnyOrder(tickmarks, [0, 0, 0, 0, 0, 0]);
+        });
+    });
+
+    describe('round10', () => {
+        it('rounds integer', () => {
+            assert.equal(round10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(round10(1.001, 0), 1);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(round10(1.0018, -3), 1.002);
+        });
+    });
+
+    describe('floor10', () => {
+        it('rounds integer', () => {
+            assert.equal(floor10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(floor10(1.001, 0), 1);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(floor10(1.0015, -3), 1.001);
+        });
+    });
+
+    describe('ceil10', () => {
+        it('rounds integer', () => {
+            assert.equal(ceil10(1, 0), 1);
+        });
+        it('rounds float to integer', () => {
+            assert.equal(ceil10(1.001, 0), 2);
+        });
+        it('rounds decimal place', () => {
+            assert.equal(ceil10(1.0013, -3), 1.002);
+        });
+    });
+
+    describe('numLeadingDecimalZeros', () => {
+        it('handles integer correctly', () => {
+            assert.equal(numLeadingDecimalZeros(1), 0);
+        });
+        it('handles decimal correctly', () => {
+            assert.equal(numLeadingDecimalZeros(0.001), 2);
+        });
+        it('handles decimal larger than 1 correctly', () => {
+            assert.equal(numLeadingDecimalZeros(1.001), 0);
+        });
+        it('handles decimal larger than 0.1 correctly', () => {
+            assert.equal(numLeadingDecimalZeros(0.1), 0);
+        });
+    });
+
+    describe('minimalDistinctTickStrings', () => {
+        it('works with empty array', () => {
+            assert.deepEqual(minimalDistinctTickStrings([]), []);
+        });
+        it('converts to string', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1]), ['1']);
+        });
+        it('deduplicate numbers', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1, 1]), ['1']);
+        });
+        it('shows equals digits in fractional part', () => {
+            assert.deepEqual(minimalDistinctTickStrings([1, 1.1]), [
+                '1.0',
+                '1.1',
+            ]);
+        });
+        it('shows just enough numbers in fractional part to distinguish number', () => {
+            assert.deepEqual(
+                minimalDistinctTickStrings([0.01, 0.002, 0.0003]),
+                ['0.010', '0.002', '0.000']
+            );
+        });
+        it('falls back on the scientific notation of original numbers if 3 decimal digits are not enough to distinguish', () => {
+            assert.deepEqual(minimalDistinctTickStrings([0.0001, 0.000201]), [
+                '1e-4',
+                '2.01e-4',
+            ]);
+        });
+    });
+
+    describe('yValueScaleFunction', () => {
+        it('handles linear scale, zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(0, 10, 120, false);
+            assert.equal(f(1), 120 - yPadding - 10);
+        });
+        it('handles linear scale, larger than zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(1, 9, 120, false);
+            assert.equal(f(1), 120 - yPadding - 0);
+        });
+        it('handles log10 scale, zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(0, 10, 120, true);
+            assert.equal(f(1), 120 - yPadding - 75);
+        });
+        it('handles log10 scale, larger than zero minY tickmark', () => {
+            const yPadding = 10;
+            const f = yValueScaleFunction(1, 9, 120, true);
+            assert.approximately(f(2), 120 - yPadding - 31.5, 0.1);
         });
     });
 });
