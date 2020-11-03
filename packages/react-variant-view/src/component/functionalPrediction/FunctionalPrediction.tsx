@@ -8,6 +8,7 @@ import { SHOW_MUTATION_ASSESSOR } from '../../util/Constants';
 import MutationAssessor from './MutationAssessor';
 import PolyPhen2 from './PolyPhen2';
 import Sift from './Sift';
+import Signal from './Signal';
 
 // Most of this component comes from cBioPortal-frontend
 
@@ -62,6 +63,7 @@ class FunctionalPrediction extends React.Component<IFunctionalPredictionProps> {
         const data = this.getData(this.props.variantAnnotation);
         return (
             <div>
+                <Signal variantAnnotation={this.props.variantAnnotation} />
                 <PolyPhen2
                     polyPhenScore={data.polyPhenScore}
                     polyPhenPrediction={data.polyPhenPrediction}

@@ -11,8 +11,10 @@ declare const styles: {
   readonly "oncokb": string;
   readonly "feature-table": string;
   readonly "data-source": string;
-  readonly "functional-group": string;
+  readonly "data-source-without-linkout": string;
+  readonly "feature-table-layout": string;
   readonly "data-with-link": string;
+  readonly "logo-image": string;
 };
 export = styles;
 

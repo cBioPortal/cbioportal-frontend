@@ -53,13 +53,7 @@ export default class MutationAssessor extends React.Component<
     private static mutationAssessorTooltipTable() {
         return (
             <div>
-                <Table
-                    table-border-top={true}
-                    striped={true}
-                    bordered={true}
-                    hover={true}
-                    sizes="sm"
-                >
+                <Table striped={true} bordered={true} hover={true} sizes="sm">
                     <thead>
                         <tr>
                             <th>Legend</th>
@@ -195,7 +189,7 @@ export default class MutationAssessor extends React.Component<
         }
 
         return (
-            <div className={featureTableStyle['functional-group']}>
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.mutationAssessorTooltip(
                         <a
