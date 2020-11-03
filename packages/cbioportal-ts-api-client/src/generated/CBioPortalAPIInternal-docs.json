@@ -4160,6 +4160,9 @@
     },
     "MolecularProfileCasesGroupAndAlterationTypeFilter": {
       "type": "object",
+      "required": [
+        "molecularProfileCasesGroupFilter"
+      ],
       "properties": {
         "alterationEventTypes": {
           "$ref": "#/definitions/AlterationEventTypeFilter"
