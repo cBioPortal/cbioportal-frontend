@@ -758,6 +758,22 @@ export class PatientViewPageStore {
         },
     });
 
+    readonly clinicalDataForAllSamplesForPatient = remoteData({
+        await: () => [this.allSamplesForPatient],
+        invoke: () => {
+            const identifiers = this.allSamplesForPatient.result.map(
+                sample => ({
+                    entityId: sample.sampleId,
+                    studyId: this.studyId,
+                })
+            );
+            const clinicalDataMultiStudyFilter = {
+                identifiers,
+            } as ClinicalDataMultiStudyFilter;
+            return fetchClinicalData(clinicalDataMultiStudyFilter);
+        },
+    });
+
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
@@ -844,6 +860,24 @@ export class PatientViewPageStore {
         },
         {}
     );
+
+    readonly patientViewDataForAllSamplesForPatient = remoteData<
+        ClinicalInformationData
+    >({
+        await: () => [
+            this.clinicalDataPatient,
+            this.allSamplesForPatient,
+            this.clinicalDataForAllSamplesForPatient,
+        ],
+        invoke: async () =>
+            transformClinicalInformationToStoreShape(
+                this.patientId,
+                this.studyId,
+                this.allSamplesForPatient.result!.map(s => s.sampleId),
+                this.clinicalDataPatient.result,
+                this.clinicalDataForAllSamplesForPatient.result!
+            ),
+    });
 
     readonly sequencedSampleIdsInStudy = remoteData(
         {
