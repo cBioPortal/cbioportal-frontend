@@ -8,7 +8,7 @@ import {
     IndicatorQueryTreatment,
 } from 'oncokb-ts-api-client';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { generateOncokbLink, ONCOKB_URL } from '../biologicalFunction/Oncokb';
+import { generateOncokbLink, ONCOKB_URL } from '../pathogenicity/Oncokb';
 
 interface ITherapeuticImplicationProps {
     oncokb: IndicatorQueryResp | undefined;
@@ -134,7 +134,7 @@ class TherapeuticImplication extends React.Component<
             oncokbUrl
         );
         return sensitiveDrugs || resistantDrugs ? (
-            <div className={featureTableStyle['functional-group']}>
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.oncokbTooltip(oncokbUrl)}
                 </div>
@@ -144,7 +144,7 @@ class TherapeuticImplication extends React.Component<
                 </div>
             </div>
         ) : (
-            <div className={featureTableStyle['functional-group']}>
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.oncokbTooltip(oncokbUrl)}
                 </div>

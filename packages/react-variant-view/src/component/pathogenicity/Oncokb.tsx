@@ -64,8 +64,8 @@ export const ONCOKB_URL = 'https://www.oncokb.org';
 
 @observer
 export default class Oncokb extends React.Component<IOncokbProps> {
-    public oncogenicity(oncokb: IndicatorQueryResp) {
-        if (oncokb.oncogenic && oncokb.oncogenic !== '') {
+    public oncogenicity(oncokb?: IndicatorQueryResp) {
+        if (oncokb && oncokb.oncogenic && oncokb.oncogenic !== '') {
             return oncokb.oncogenic;
         } else {
             return null;
@@ -103,8 +103,12 @@ export default class Oncokb extends React.Component<IOncokbProps> {
         );
     }
 
-    public mutationEffect(oncokb: IndicatorQueryResp) {
-        if (oncokb.mutationEffect && oncokb.mutationEffect.knownEffect !== '') {
+    public mutationEffect(oncokb?: IndicatorQueryResp) {
+        if (
+            oncokb &&
+            oncokb.mutationEffect &&
+            oncokb.mutationEffect.knownEffect !== ''
+        ) {
             return oncokb.mutationEffect.knownEffect;
         } else {
             return null;
@@ -113,8 +117,8 @@ export default class Oncokb extends React.Component<IOncokbProps> {
 
     public render() {
         const oncokbUrl = generateOncokbLink(ONCOKB_URL, this.props.oncokb);
-        return this.props.oncokb ? (
-            <div className={featureTableStyle['functional-group']}>
+        return (
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.oncokbTooltip(oncokbUrl)}
                 </div>
@@ -126,13 +130,6 @@ export default class Oncokb extends React.Component<IOncokbProps> {
                     )}
                 </div>
             </div>
-        ) : (
-            <div className={featureTableStyle['functional-group']}>
-                <div className={featureTableStyle['data-source']}>
-                    {this.oncokbTooltip(oncokbUrl)}
-                </div>
-                <div>N/A</div>
-            </div>
         );
     }
 
@@ -141,15 +138,13 @@ export default class Oncokb extends React.Component<IOncokbProps> {
         oncogenicity: string | null,
         oncokbUrl: string
     ) {
-        let biologicalFunctionData: string | null = null;
+        let biologicalFunctionData: string = 'N/A';
         if (mutationEffect && oncogenicity) {
             biologicalFunctionData = `${mutationEffect}, ${oncogenicity}`;
         } else if (mutationEffect) {
-            biologicalFunctionData = oncogenicity;
-        } else if (oncogenicity) {
             biologicalFunctionData = mutationEffect;
-        } else {
-            biologicalFunctionData = 'N/A';
+        } else if (oncogenicity) {
+            biologicalFunctionData = oncogenicity;
         }
         return (
             <a href={oncokbUrl} target="_blank" rel="noopener noreferrer">
