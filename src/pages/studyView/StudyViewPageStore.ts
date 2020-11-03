@@ -2,7 +2,6 @@ import * as _ from 'lodash';
 import AppConfig from 'appConfig';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
-import client from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
 import {
     action,
@@ -37,20 +36,16 @@ import {
     GenomicDataBin,
     GenomicDataBinFilter,
     GenomicDataFilter,
-    MolecularDataMultipleStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    MutationMultipleStudyFilter,
     NumericGeneMolecularData,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
-    PatientTreatmentRow,
     ResourceData,
     ResourceDefinition,
     Sample,
     SampleIdentifier,
-    SampleMolecularIdentifier,
     SampleTreatmentRow,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
@@ -187,15 +182,14 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import {
     toPatientTreatmentFilter,
     toSampleTreatmentFilter,
-    treatmentUniqueKey,
     treatmentComparisonGroupName,
+    treatmentUniqueKey,
 } from './table/treatments/treatmentsTableUtil';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import PromisePlus from 'shared/lib/PromisePlus';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
-import { REQUEST_ARG_ENUM } from 'shared/constants';
 import {
     createAlteredGeneComparisonSession,
     doesChartHaveComparisonGroupsLimit,

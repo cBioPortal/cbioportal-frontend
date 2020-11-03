@@ -6,8 +6,6 @@ import { MakeMobxView } from '../../../shared/components/MobxView';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import Overlap from '../../groupComparison/Overlap';
 import ClinicalData from '../../groupComparison/ClinicalData';
-import MutationEnrichments from '../../groupComparison/MutationEnrichments';
-import CopyNumberEnrichments from '../../groupComparison/CopyNumberEnrichments';
 import MRNAEnrichments from '../../groupComparison/MRNAEnrichments';
 import ProteinEnrichments from '../../groupComparison/ProteinEnrichments';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
