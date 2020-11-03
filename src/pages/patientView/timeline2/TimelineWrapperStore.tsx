@@ -3,7 +3,11 @@ import { action, computed, observable } from 'mobx';
 export default class TimelineWrapperStore {
     @observable groupByOption: string | null = null;
 
-    @observable showSequentialMode: boolean | undefined = undefined;
+    @observable _showSequentialMode: boolean | undefined = undefined;
+    @computed
+    get showSequentialMode() {
+        return this.isOnlySequentialModePossible || this._showSequentialMode;
+    }
 
     @observable onlyShowSelectedInVAFChart: boolean | undefined = undefined;
 
@@ -24,7 +28,7 @@ export default class TimelineWrapperStore {
 
     @action
     setShowSequentialMode(value: boolean) {
-        this.showSequentialMode = value;
+        this._showSequentialMode = value;
     }
 
     @action
@@ -45,4 +49,16 @@ export default class TimelineWrapperStore {
     @computed get groupingByIsSelected() {
         return !(this.groupByOption == null || this.groupByOption === 'None');
     }
+
+    @computed get isOnlySequentialModePossible() {
+        return !!(
+            this.options &&
+            this.options.isOnlySequentialModePossible &&
+            this.options.isOnlySequentialModePossible()
+        );
+    }
+
+    constructor(
+        private options?: { isOnlySequentialModePossible?: () => boolean }
+    ) {}
 }

@@ -66,19 +66,21 @@ const VAFChartControls: React.FunctionComponent<IVAFChartControlsProps> = observ
                     />
                 </label>
 
-                <label className="checkbox-inline">
-                    <input
-                        type="checkbox"
-                        data-test={'VAFSequentialMode'}
-                        checked={wrapperStore.showSequentialMode}
-                        onChange={() =>
-                            wrapperStore.setShowSequentialMode(
-                                !wrapperStore.showSequentialMode
-                            )
-                        }
-                    />{' '}
-                    Show samples in sequential mode
-                </label>
+                {!wrapperStore.isOnlySequentialModePossible && (
+                    <label className="checkbox-inline">
+                        <input
+                            type="checkbox"
+                            data-test={'VAFSequentialMode'}
+                            checked={wrapperStore.showSequentialMode}
+                            onChange={() =>
+                                wrapperStore.setShowSequentialMode(
+                                    !wrapperStore.showSequentialMode
+                                )
+                            }
+                        />{' '}
+                        Show samples in sequential mode
+                    </label>
+                )}
                 <label className="checkbox-inline">
                     <input
                         type="checkbox"
