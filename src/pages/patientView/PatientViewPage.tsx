@@ -1518,11 +1518,7 @@ export default class PatientViewPage extends React.Component<
                                     this.patientViewPageStore.sampleIds.length >
                                         1 &&
                                     this.patientViewPageStore
-                                        .existsSomeMutationWithVAFData &&
-                                    this.patientViewPageStore.clinicalEvents
-                                        .isComplete &&
-                                    this.patientViewPageStore.clinicalEvents
-                                        .result.length > 0 && (
+                                        .existsSomeMutationWithVAFData && (
                                         <MSKTab
                                             key={1}
                                             id="genomicEvolution"
