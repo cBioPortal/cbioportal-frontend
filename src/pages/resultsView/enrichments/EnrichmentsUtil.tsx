@@ -2,16 +2,14 @@ import * as React from 'react';
 import {
     AlterationEnrichment,
     GenomicEnrichment,
+    MolecularProfile,
 } from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
-import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
 import {
     ExpressionEnrichmentRow,
     GenericAssayEnrichmentRow,
 } from 'shared/model/EnrichmentRow';
-import { MolecularProfile } from 'cbioportal-ts-api-client';
-import { roundLogRatio, formatLogOddsRatio } from 'shared/lib/FormatUtils';
+import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import * as _ from 'lodash';
 import { AlterationTypeConstants } from '../ResultsViewPageStore';
 import { filterAndSortProfiles } from '../coExpression/CoExpressionTabUtils';

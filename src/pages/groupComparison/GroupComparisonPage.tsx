@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { inject, observer } from 'mobx-react';
 import GroupComparisonStore from './GroupComparisonStore';
-import MutationEnrichments from './MutationEnrichments';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Survival from './Survival';
 import Overlap from './Overlap';
-import CopyNumberEnrichments from './CopyNumberEnrichments';
 import MRNAEnrichments from './MRNAEnrichments';
 import ProteinEnrichments from './ProteinEnrichments';
 import { MakeMobxView } from '../../shared/components/MobxView';
@@ -21,7 +19,6 @@ import {
     IReactionDisposer,
     observable,
     reaction,
-    IObservableObject,
 } from 'mobx';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../AppStore';
@@ -29,9 +26,7 @@ import ClinicalData from './ClinicalData';
 import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
 import URL from 'url';
-import GroupComparisonURLWrapper, {
-    GroupComparisonURLQuery,
-} from './GroupComparisonURLWrapper';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
