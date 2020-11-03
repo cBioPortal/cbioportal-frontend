@@ -57,7 +57,6 @@
     "react-mutation-mapper": "^0.6.21",
     "react-rangeslider": "^2.2.0",
     "react-select": "^3.0.4",
-    "react-spinkit": "^3.0.0",
     "react-table": "^6.10.0",
     "seamless-immutable": "^7.1.4",
     "superagent": "^3.8.3",
