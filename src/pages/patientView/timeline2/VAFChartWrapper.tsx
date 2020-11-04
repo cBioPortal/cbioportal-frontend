@@ -1,6 +1,10 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { ClinicalEvent, Sample } from 'cbioportal-ts-api-client';
+import {
+    ClinicalEvent,
+    ClinicalEventData,
+    Sample,
+} from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import { VAFChartControls } from './VAFChartControls';
 import VAFChart, { IColorPoint } from 'pages/patientView/timeline2/VAFChart';
@@ -92,7 +96,9 @@ export default class VAFChartWrapper extends React.Component<
         // not sure if/why it needs to be out here
         this.store = new TimelineStore(trackSpecifications);
 
-        this.wrapperStore = new TimelineWrapperStore();
+        this.wrapperStore = new TimelineWrapperStore({
+            isOnlySequentialModePossible: () => this.props.data.length === 0,
+        });
     }
 
     /** ticks dependencies **/
@@ -244,7 +250,7 @@ export default class VAFChartWrapper extends React.Component<
         } else {
             tracks.push({
                 renderHeader: () => '',
-                renderTrack: () => this.sampleIcons(this.store.sampleIds),
+                renderTrack: () => this.sampleIcons(this.sampleIds),
                 height: () => 20,
                 labelForExport: 'VAF Samples',
             });
@@ -253,28 +259,35 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get xPosition() {
-        let positionList: { [sampleId: string]: number } = {};
         let sequentialDistance: number = 0;
         let sequentialPadding: number = 20;
+        let samplePosition: { [sampleId: string]: number };
         if (this.wrapperStore.showSequentialMode) {
+            // if in sequential mode, compute x coordinates using samples array,
+            //  since we may not have sample event data
             sequentialDistance =
                 (this.store.pixelWidth - sequentialPadding * 2) /
-                (this.store.sampleEvents.length - 1);
-        }
+                (this.props.samples.length - 1);
 
-        this.store.sampleEvents.forEach((sample, i) => {
-            sample.event.attributes.forEach((attribute: any, i: number) => {
-                if (attribute.key === 'SAMPLE_ID') {
-                    positionList[attribute.value] = this.wrapperStore
-                        .showSequentialMode
-                        ? this.sampleIdOrder[attribute.value] *
-                              sequentialDistance +
-                          sequentialPadding
-                        : this.store.getPosition(sample)!.pixelLeft;
-                }
-            });
-        });
-        return positionList;
+            samplePosition = this.props.samples.reduce((map, sample) => {
+                map[sample.sampleId] =
+                    this.sampleIdOrder[sample.sampleId] * sequentialDistance +
+                    sequentialPadding;
+                return map;
+            }, {} as { [sampleId: string]: number });
+        } else {
+            // if not in sequential mode, we use sample event data to compute position
+            samplePosition = this.store.sampleEvents.reduce((map, sample) => {
+                const sampleIdAttr = sample.event.attributes.find(
+                    (a: ClinicalEventData) => a.key === 'SAMPLE_ID'
+                );
+                map[sampleIdAttr.value] = this.store.getPosition(
+                    sample
+                )!.pixelLeft;
+                return map;
+            }, {} as { [sampleId: string]: number });
+        }
+        return samplePosition;
     }
 
     @computed get sampleIdOrder() {
@@ -367,9 +380,13 @@ export default class VAFChartWrapper extends React.Component<
             : 0;
     }
 
+    @computed get sampleIds() {
+        return this.props.samples.map(s => s.sampleId);
+    }
+
     @computed get sampleGroups() {
         let sampleGroups: { [groupIndex: number]: string[] } = {};
-        this.store.sampleIds.forEach((sampleId, i) => {
+        this.sampleIds.forEach((sampleId, i) => {
             // check the group value of this sample id
             console.info(
                 'Sample id ' +
