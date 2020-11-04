@@ -410,17 +410,6 @@ export default class FixedHeaderTable<T> extends React.Component<
                 )}
                 {this.props.showAddRemoveAllButton &&
                     this.getAddRemoveAllButton()}
-                {this.props.extraButtons &&
-                    this.props.extraButtons.map(btn => (
-                        <button
-                            className="btn btn-default btn-xs"
-                            onClick={btn.onClick}
-                            disabled={btn.isDisabled()}
-                        >
-                            {btn.content}
-                        </button>
-                    ))}
-
                 <If
                     condition={
                         this.props.showSetOperationsButton &&
@@ -458,6 +447,16 @@ export default class FixedHeaderTable<T> extends React.Component<
                         </If>
                     </div>
                 </If>
+                {this.props.extraButtons &&
+                    this.props.extraButtons.map(btn => (
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={btn.onClick}
+                            disabled={btn.isDisabled()}
+                        >
+                            {btn.content}
+                        </button>
+                    ))}
                 {this.props.showControlsAtTop && (
                     <input
                         placeholder={'Search...'}
