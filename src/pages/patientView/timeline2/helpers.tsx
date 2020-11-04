@@ -179,6 +179,16 @@ export function buildBaseConfig(
             {
                 trackTypeMatch: /LAB_TEST/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
+                    // Configure non-PSA tracks
+                    if (cat.tracks) {
+                        cat.tracks.forEach(track => {
+                            if (track.type !== 'PSA') {
+                                configureLABTESTSubTrack(track);
+                            }
+                        });
+                    }
+
+                    // Configure PSA track
                     const psaTrack = cat.tracks
                         ? cat.tracks.find(t => t.type === 'PSA')
                         : undefined;
@@ -186,41 +196,15 @@ export function buildBaseConfig(
                     if (psaTrack && psaTrack && psaTrack.items.length) {
                         psaTrack.trackType = TimelineTrackType.LINE_CHART;
                         psaTrack.getLineChartValue = (e: TimelineEvent) => {
-                            const val = getAttributeValue('VALUE', e);
+                            const val =
+                                getAttributeValue('VALUE', e) ||
+                                getAttributeValue('RESULT', e);
                             if (val === undefined) {
                                 return null;
                             } else {
                                 return parseFloat(val.replace(/^[<>]/gi, ''));
                             }
                         };
-
-                        const psaValues = psaTrack.items.map(event => {
-                            const val = getAttributeValue('VALUE', event);
-
-                            return val
-                                ? parseFloat(val.replace(/^[<>]/gi, ''))
-                                : undefined;
-                        });
-
-                        //console.log(psaValues.map(v => v.value));
-                        const max = _.max(psaValues);
-
-                        /*psaTrack.items.forEach(event => {
-                            event.render = () => {
-                                let perc =
-                                    getAttributeValue('VALUE', event) /
-                                    (max || 1)!;
-                                perc = perc > 0.2 ? perc : 0.2;
-                                return (
-                                    <circle
-                                        cx={0}
-                                        cy={TIMELINE_TRACK_HEIGHT / 2}
-                                        r={8 * perc}
-                                        fill={'#999999'}
-                                    />
-                                );
-                            };
-                        });*/
                     }
                 },
             },
@@ -479,4 +463,29 @@ function makeItems(eventData: ClinicalEvent[]) {
             event: e,
         };
     });
+}
+
+function getNumericalAttrVal(name: string, e: TimelineEvent) {
+    const val = getAttributeValue(name, e);
+    if (val === undefined) {
+        return null;
+    } else {
+        return parseFloat(val.replace(/^[<>]/gi, ''));
+    }
+}
+function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
+    if (track.items.length) {
+        const doAllEventsHaveNumericalValue = _.every(track.items, e => {
+            const val = getNumericalAttrVal('RESULT', e);
+            return !!(val && !isNaN(val));
+        });
+        if (doAllEventsHaveNumericalValue) {
+            track.trackType = TimelineTrackType.LINE_CHART;
+            track.getLineChartValue = e => getNumericalAttrVal('RESULT', e);
+        }
+        // recurse
+        if (track.tracks) {
+            track.tracks.forEach(configureLABTESTSubTrack);
+        }
+    }
 }
