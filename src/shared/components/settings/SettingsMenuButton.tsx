@@ -1,5 +1,5 @@
 import { DefaultTooltip, setArrowLeft } from 'cbioportal-frontend-commons';
-import SettingsMenu from './SettingsMenu';
+import SettingsMenuResultsView from './SettingsMenuResultsView';
 import * as React from 'react';
 import {
     IDriverSettingsProps,
@@ -56,7 +56,7 @@ export default class SettingsMenuButton extends React.Component<
 
     @computed get overlay() {
         return (
-            <SettingsMenu
+            <SettingsMenuResultsView
                 store={this.props.store}
                 resultsView={this.props.resultsView}
                 disabled={this.props.disabled}

@@ -40,7 +40,7 @@ import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
 import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinicalTracks';
-import DriverAnnotationControls from '../../driverAnnotations/DriverAnnotationControls';
+import DriverAnnotationControlsResulstView from '../../driverAnnotations/DriverAnnotationControls';
 import {
     IDriverAnnotationControlsState,
     IDriverAnnotationControlsHandlers,
@@ -1160,7 +1160,7 @@ export default class OncoprintControls extends React.Component<
                 <>
                     <h5>Annotate</h5>
                     <div style={{ marginLeft: 10 }}>
-                        <DriverAnnotationControls
+                        <DriverAnnotationControlsResulstView
                             state={this.props.state}
                             handlers={Object.assign(
                                 {

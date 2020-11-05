@@ -30,7 +30,7 @@ import {
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { getGAInstance } from '../../../shared/lib/tracking';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
-import SettingsMenu from '../../../shared/components/settings/SettingsMenu';
+import SettingsMenuResultsView from '../../../shared/components/settings/SettingsMenuResultsView';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';

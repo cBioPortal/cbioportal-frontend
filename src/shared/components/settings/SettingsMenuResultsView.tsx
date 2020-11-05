@@ -9,12 +9,10 @@ import {
     buildDriverAnnotationControlsState,
     IExclusionSettings,
 } from '../../driverAnnotation/DriverAnnotationSettings';
+import DriverAnnotationControlsResultsView from '../driverAnnotations/DriverAnnotationControlsResultsView';
 import InfoIcon from '../InfoIcon';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import get = Reflect.get;
-import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 
 enum EVENT_KEY {
     hidePutativePassengers = '0',
@@ -42,7 +40,7 @@ export interface IResultsPageSettings {
 }
 
 @observer
-export default class SettingsMenu extends React.Component<
+export default class SettingsMenuResultsView extends React.Component<
     IResultsPageSettings,
     {}
 > {
@@ -105,43 +103,33 @@ export default class SettingsMenu extends React.Component<
                 style={{ padding: 5 }}
             >
                 <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Filter Data
+                    Annotate Data
                 </h5>
                 <InfoIcon
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
                     style={{ color: 'rgb(54, 134, 194)' }}
                     tooltip={
                         <span>
-                            Filter the alterations that are counted in the
-                            Mutated Genes, CNA Genes and Fusion Genes tables.
-                            <br />
-                            Driver/passenger annotations are based on
-                            <b>
-                                {' ' +
-                                    getBrowserWindow().frontendConfig
-                                        .serverConfig
-                                        .oncoprint_custom_driver_annotation_binary_menu_label +
-                                    ' '}
-                            </b>
-                            data.
+                            Putative driver vs VUS setings apply to every tab
+                            except{' '}
+                            {boldedTabList(['Co-expression', 'CN Segments'])}
                         </span>
                     }
                 />
                 <div style={{ marginLeft: 10 }}>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="HideGermline"
-                                type="checkbox"
-                                value={EVENT_KEY.showGermlineMutations}
-                                checked={
-                                    !this.props.store.excludeGermlineMutations
-                                }
-                                onClick={this.onInputClick}
-                            />{' '}
-                            Include germline mutations
-                        </label>
-                    </div>
+                    <DriverAnnotationControlsResultsView
+                        state={this.driverSettingsState}
+                        handlers={this.driverSettingsHandlers}
+                        resultsView={this.props.resultsView}
+                    />
+                </div>
+
+                <hr />
+
+                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Filter Data
+                </h5>
+                <div style={{ marginLeft: 10 }}>
                     <div className="checkbox">
                         <label>
                             <input
@@ -149,7 +137,7 @@ export default class SettingsMenu extends React.Component<
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
                                 checked={
-                                    !this.props.store.driverAnnotationSettings
+                                    this.props.store.driverAnnotationSettings
                                         .excludeVUS
                                 }
                                 onClick={this.onInputClick}
@@ -157,15 +145,40 @@ export default class SettingsMenu extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            Include mutations and copy number alterations of
+                            Exclude mutations and copy number alterations of
                             unknown significance
                         </label>
                     </div>
-                    {!!this.driverSettingsState.customDriverAnnotationTiers && (
-                        <DriverAnnotationControls
-                            state={this.driverSettingsState}
-                            handlers={this.driverSettingsHandlers}
-                        />
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="HideGermline"
+                                type="checkbox"
+                                value={EVENT_KEY.showGermlineMutations}
+                                checked={
+                                    this.props.store.excludeGermlineMutations
+                                }
+                                onClick={this.onInputClick}
+                            />{' '}
+                            Exclude germline mutations
+                        </label>
+                    </div>
+                    {this.props.resultsView && (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideUnprofiled"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hideUnprofiledSamples}
+                                    checked={
+                                        this.props.store.hideUnprofiledSamples
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Exclude samples that are not profiled for all
+                                queried genes in all queried profiles
+                            </label>
+                        </div>
                     )}
                 </div>
             </div>
