@@ -288,7 +288,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                         this.canonicalTranscript.result
                             ? this.canonicalTranscript.result!.transcriptId ===
                                   t
-                            : false
+                            : false,
+                        true
                     ),
                 ])
             );
