@@ -4068,6 +4068,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.initialFilters.caseLists)) {
             pending = pending || this.caseListSampleCounts.isPending;
         }
+        pending = pending || this.selectedSamples.result.length === 0;
         return pending;
     }
 
