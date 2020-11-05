@@ -169,7 +169,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
 
-    installation_map_url: 'https://installationmap.netlify.app/',
+    installation_map_url: null,
 };
 
 export default ServerConfigDefaults;
