@@ -383,7 +383,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab scatter plot color by tumor type', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&session_id=5ed80b90e4b030a3bfd0c662&plots_coloring_selection=%7B%22selectedOption%22%3A%22undefined_%7B%5C%22displayName%5C%22%3A%5C%22Tumor%20Type%5C%22%2C%5C%22description%5C%22%3A%5C%22Tumor%20Type%5C%22%2C%5C%22datatype%5C%22%3A%5C%22STRING%5C%22%2C%5C%22patientAttribute%5C%22%3Afalse%2C%5C%22priority%5C%22%3A%5C%221%5C%22%2C%5C%22clinicalAttributeId%5C%22%3A%5C%22TUMOR_TYPE%5C%22%2C%5C%22studyId%5C%22%3A%5C%22ccle_broad_2019%5C%22%7D%22%7D&plots_horz_selection=%7B%22dataType%22%3A%22MRNA_EXPRESSION%22%2C%22selectedGeneOption%22%3A672%2C%22mutationCountBy%22%3A%22MutationType%22%2C%22logScale%22%3A%22false%22%7D&plots_vert_selection=%7B%22selectedGeneOption%22%3A672%2C%22dataType%22%3A%22TREATMENT_RESPONSE%22%2C%22selectedGenericAssayOption%22%3A%22Afatinib-1%22%2C%22selectedDataSourceOption%22%3A%22CCLE_drug_treatment_AUC%22%2C%22mutationCountBy%22%3A%22MutationType%22%2C%22logScale%22%3A%22false%22%7D&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
@@ -395,7 +395,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab box plot color by tumor type', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"displayName%5C"%3A%5C"Tumor%20Type%5C"%2C%5C"description%5C"%3A%5C"Tumor%20Type%5C"%2C%5C"datatype%5C"%3A%5C"STRING%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"priority%5C"%3A%5C"1%5C"%2C%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
@@ -407,7 +407,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab waterfall plot color by tumor type', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"displayName%5C"%3A%5C"Tumor%20Type%5C"%2C%5C"description%5C"%3A%5C"Tumor%20Type%5C"%2C%5C"datatype%5C"%3A%5C"STRING%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"priority%5C"%3A%5C"1%5C"%2C%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"TUMOR_TYPE%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
@@ -419,7 +419,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab scatter plot color by mutation count', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"displayName%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"description%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"datatype%5C"%3A%5C"NUMBER%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"priority%5C"%3A%5C"30%5C"%2C%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"selectedDataSourceOption"%3A"CCLE_drug_treatment_AUC"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
@@ -430,7 +430,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab box plot color by mutation count', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"displayName%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"description%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"datatype%5C"%3A%5C"NUMBER%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"priority%5C"%3A%5C"30%5C"%2C%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%2C"logScale"%3A"false"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%2C"logScale"%3A"false"%7D&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"MUTATION_EXTENDED"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
@@ -441,7 +441,7 @@ describe('plots tab screenshot tests', function() {
 
     it('plots tab waterfall plot color by mutation count', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"displayName%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"description%5C"%3A%5C"Mutation%20Count%5C"%2C%5C"datatype%5C"%3A%5C"NUMBER%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"priority%5C"%3A%5C"30%5C"%2C%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%2C"logScale"%3A"false"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
+            `${CBIOPORTAL_URL}/results/plots?Action=Submit&plots_coloring_selection=%7B"selectedOption"%3A"undefined_%7B%5C"clinicalAttributeId%5C"%3A%5C"MUTATION_COUNT%5C"%2C%5C"patientAttribute%5C"%3Afalse%2C%5C"studyId%5C"%3A%5C"ccle_broad_2019%5C"%7D"%2C"logScale"%3A"false"%7D&plots_horz_selection=%7B"dataType"%3A"none"%2C"selectedGeneOption"%3A672%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A672%2C"dataType"%3A"TREATMENT_RESPONSE"%2C"selectedGenericAssayOption"%3A"Afatinib-1"%2C"mutationCountBy"%3A"MutationType"%2C"logScale"%3A"false"%7D&session_id=5ed80b90e4b030a3bfd0c662&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
