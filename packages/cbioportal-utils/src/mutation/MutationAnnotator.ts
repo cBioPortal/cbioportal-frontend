@@ -113,7 +113,8 @@ export function getMutationByTranscriptId(
     mutation: Mutation,
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
-    isCanonicalTranscript: boolean
+    isCanonicalTranscript: boolean = false,
+    skipAnnotationForCanonicalTranscript: boolean = false
 ): Mutation | undefined {
     const genomicLocation = extractGenomicLocation(mutation);
     const variantAnnotation = genomicLocation
@@ -128,7 +129,8 @@ export function getMutationByTranscriptId(
             (tc: TranscriptConsequenceSummary) =>
                 tc.transcriptId === ensemblTranscriptId
         );
-    if (isCanonicalTranscript) {
+
+    if (isCanonicalTranscript && skipAnnotationForCanonicalTranscript) {
         return mutation;
     }
     if (
@@ -141,7 +143,8 @@ export function getMutationByTranscriptId(
             mutation,
             variantAnnotation.annotation_summary,
             transcriptConsequenceSummary,
-            isCanonicalTranscript
+            isCanonicalTranscript,
+            !skipAnnotationForCanonicalTranscript
         );
         // do not ignore mutations that don't have a protein change
         // include silent mutations
@@ -218,7 +221,8 @@ export function getMutationsByTranscriptId(
     mutations: Mutation[],
     ensemblTranscriptId: string,
     indexedVariantAnnotations: { [genomicLocation: string]: VariantAnnotation },
-    isCanonicalTranscript: boolean
+    isCanonicalTranscript?: boolean,
+    skipAnnotationForCanonicalTranscript: boolean = false
 ): Mutation[] {
     const fusionMutation = getFusionMutations(mutations);
     // only non-fusion mutations need to get mutation with transcript id
@@ -230,7 +234,8 @@ export function getMutationsByTranscriptId(
                     mutation,
                     ensemblTranscriptId,
                     indexedVariantAnnotations,
-                    isCanonicalTranscript
+                    isCanonicalTranscript,
+                    skipAnnotationForCanonicalTranscript
                 )
             )
         ),

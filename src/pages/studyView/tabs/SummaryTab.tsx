@@ -428,6 +428,9 @@ export class StudySummaryTab extends React.Component<
                     this.store.initialVisibleAttributesClinicalDataCountData,
                 ],
             },
+            {
+                label: 'Rendering',
+            },
         ];
     }
 
@@ -442,7 +445,7 @@ export class StudySummaryTab extends React.Component<
                     <ProgressIndicator
                         getItems={this.getProgressItems}
                         show={this.store.loadingInitialDataForSummaryTab}
-                        sequential={false}
+                        sequential={true}
                     />
                 </LoadingIndicator>
                 {this.store.invalidSampleIds.result.length > 0 &&
@@ -519,51 +522,46 @@ export class StudySummaryTab extends React.Component<
                     </div>
                 )}
 
-                {this.props.store.selectedSamples.result.length > 0 &&
-                    !this.store.loadingInitialDataForSummaryTab && (
-                        <div data-test="summary-tab-content">
-                            <div className={styles.studyViewFlexContainer}>
-                                {this.store.defaultVisibleAttributes
-                                    .isComplete && (
-                                    <ReactGridLayout
-                                        className="layout"
-                                        style={{
-                                            width: this.store.containerWidth,
-                                        }}
-                                        width={this.store.containerWidth}
-                                        cols={
-                                            this.store.studyViewPageLayoutProps
-                                                .cols
-                                        }
-                                        rowHeight={
-                                            this.store.studyViewPageLayoutProps
-                                                .grid.h
-                                        }
-                                        layout={
-                                            this.store.studyViewPageLayoutProps
-                                                .layout
-                                        }
-                                        margin={[
-                                            STUDY_VIEW_CONFIG.layout.gridMargin
-                                                .x,
-                                            STUDY_VIEW_CONFIG.layout.gridMargin
-                                                .y,
-                                        ]}
-                                        useCSSTransforms={false}
-                                        draggableHandle={`.${chartHeaderStyles.draggable}`}
-                                        onLayoutChange={
-                                            this.handlers.onLayoutChange
-                                        }
-                                        onResizeStop={this.onResize}
-                                    >
-                                        {this.store.visibleAttributes.map(
-                                            this.renderAttributeChart
-                                        )}
-                                    </ReactGridLayout>
-                                )}
-                            </div>
+                {!this.store.loadingInitialDataForSummaryTab && (
+                    <div data-test="summary-tab-content">
+                        <div className={styles.studyViewFlexContainer}>
+                            {this.store.defaultVisibleAttributes.isComplete && (
+                                <ReactGridLayout
+                                    className="layout"
+                                    style={{
+                                        width: this.store.containerWidth,
+                                    }}
+                                    width={this.store.containerWidth}
+                                    cols={
+                                        this.store.studyViewPageLayoutProps.cols
+                                    }
+                                    rowHeight={
+                                        this.store.studyViewPageLayoutProps.grid
+                                            .h
+                                    }
+                                    layout={
+                                        this.store.studyViewPageLayoutProps
+                                            .layout
+                                    }
+                                    margin={[
+                                        STUDY_VIEW_CONFIG.layout.gridMargin.x,
+                                        STUDY_VIEW_CONFIG.layout.gridMargin.y,
+                                    ]}
+                                    useCSSTransforms={false}
+                                    draggableHandle={`.${chartHeaderStyles.draggable}`}
+                                    onLayoutChange={
+                                        this.handlers.onLayoutChange
+                                    }
+                                    onResizeStop={this.onResize}
+                                >
+                                    {this.store.visibleAttributes.map(
+                                        this.renderAttributeChart
+                                    )}
+                                </ReactGridLayout>
+                            )}
                         </div>
-                    )}
+                    </div>
+                )}
                 {this.props.store.selectedSamples.isComplete &&
                     this.props.store.selectedSamples.result.length === 0 && (
                         <div className={styles.studyViewNoSamples}>
