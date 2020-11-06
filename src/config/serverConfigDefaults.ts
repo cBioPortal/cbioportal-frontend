@@ -167,7 +167,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
 
     saml_logout_local: false,
-    patient_view_use_legacy_timeline: false
+    patient_view_use_legacy_timeline: false,
 };
 
 export default ServerConfigDefaults;
