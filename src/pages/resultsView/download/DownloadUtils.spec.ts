@@ -577,7 +577,14 @@ describe('DownloadUtils', () => {
             const downloadData = generateMutationDownloadData(
                 sampleAlterationDataByGene,
                 samples,
-                genes
+                genes,
+                (uniqueSampleKey: string, study: string, gene: string) => {
+                    return !(
+                        uniqueSampleKey ===
+                            'VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ' &&
+                        gene === 'PTEN'
+                    );
+                }
             );
 
             const expectedResult = [
@@ -585,11 +592,11 @@ describe('DownloadUtils', () => {
                 [
                     'msk_impact_2017',
                     'P-0000378-T01-IM3',
-                    'NA',
-                    'NA',
+                    'WT',
+                    'WT',
                     'G598A [germline] EGFR-intragenic G239C',
                 ],
-                ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
+                ['skcm_tcga', 'TCGA-EE-A20C-06', 'NS', 'WT', 'WT'],
             ];
 
             assert.deepEqual(
@@ -617,13 +624,20 @@ describe('DownloadUtils', () => {
             const downloadData = generateDownloadData(
                 sampleAlterationDataByGene,
                 samples,
-                genes
+                genes,
+                (uniqueSampleKey: string, study: string, gene: string) => {
+                    return !(
+                        uniqueSampleKey ===
+                            'VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ' &&
+                        gene === 'EGFR'
+                    );
+                }
             );
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
                 ['msk_impact_2017', 'P-0000378-T01-IM3', 'NA', 'NA', 'NA'],
-                ['skcm_tcga', 'TCGA-EE-A20C-06', '2.4745', 'NA', 'NA'],
+                ['skcm_tcga', 'TCGA-EE-A20C-06', '2.4745', 'NA', 'NP'],
             ];
 
             assert.deepEqual(
@@ -649,13 +663,20 @@ describe('DownloadUtils', () => {
             const downloadData = generateDownloadData(
                 sampleAlterationDataByGene,
                 samples,
-                genes
+                genes,
+                (uniqueSampleKey: string, study: string, gene: string) => {
+                    return !(
+                        uniqueSampleKey ===
+                            'VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ' &&
+                        gene === 'TP53'
+                    );
+                }
             );
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
                 ['msk_impact_2017', 'P-0000378-T01-IM3', 'NA', 'NA', 'NA'],
-                ['skcm_tcga', 'TCGA-EE-A20C-06', '2.5406', 'NA', 'NA'],
+                ['skcm_tcga', 'TCGA-EE-A20C-06', '2.5406', 'NP', 'NA'],
             ];
 
             assert.deepEqual(
@@ -681,12 +702,19 @@ describe('DownloadUtils', () => {
             const downloadData = generateDownloadData(
                 sampleAlterationDataByGene,
                 samples,
-                genes
+                genes,
+                (uniqueSampleKey: string, study: string, gene: string) => {
+                    return !(
+                        uniqueSampleKey ===
+                            'UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3' &&
+                        gene !== 'PTEN'
+                    );
+                }
             );
 
             const expectedResult = [
                 ['STUDY_ID', 'SAMPLE_ID', 'PTEN', 'TP53', 'EGFR'],
-                ['msk_impact_2017', 'P-0000378-T01-IM3', 'NA', 'NA', 'NA'],
+                ['msk_impact_2017', 'P-0000378-T01-IM3', 'NA', 'NP', 'NP'],
                 ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', '-1', 'NA'],
             ];
 
