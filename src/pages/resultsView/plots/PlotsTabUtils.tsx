@@ -290,7 +290,8 @@ export function getColoringMenuOptionValue(
     option: Omit<ColoringMenuOmnibarOption, 'value'>
 ) {
     return `${option.info.entrezGeneId}_${JSON.stringify(
-        option.info.clinicalAttribute
+        option.info.clinicalAttribute,
+        ['clinicalAttributeId', 'patientAttribute', 'studyId']
     )}`;
 }
 
