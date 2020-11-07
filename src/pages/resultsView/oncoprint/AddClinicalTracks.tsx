@@ -19,6 +19,8 @@ import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { toggleIncluded } from '../../../shared/lib/ArrayUtils';
 import OncoprintDropdownCount from './OncoprintDropdownCount';
+import { ChartUserSetting } from 'pages/studyView/StudyViewPageStore';
+import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
 
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
@@ -37,6 +39,7 @@ export interface IAddClinicalTrackProps {
 enum Tab {
     CLINICAL = 'Clinical',
     GROUPS = 'Groups',
+    CUSTOM_CHARTS = 'Custom Charts',
 }
 
 @observer
@@ -94,6 +97,7 @@ export default class AddClinicalTracks extends React.Component<
         await: () => [
             this.props.store.clinicalAttributes,
             this.clinicalAttributeIdToAvailableFrequency,
+            this.props.store.clinicalAttributes_customCharts,
         ],
         invoke: () => {
             const uniqueAttributes = _.uniqBy(
@@ -103,17 +107,28 @@ export default class AddClinicalTracks extends React.Component<
             const availableFrequency = this
                 .clinicalAttributeIdToAvailableFrequency.result!;
             const sortedAttributes = {
-                clinical: [] as ClinicalAttribute[],
-                groups: [] as ClinicalAttribute[],
+                clinical: [] as ExtendedClinicalAttribute[],
+                groups: [] as ExtendedClinicalAttribute[],
+                customCharts: [] as ExtendedClinicalAttribute[],
             };
+
+            const customChartClinicalAttributeIds = _.keyBy(
+                this.props.store.clinicalAttributes_customCharts.result!,
+                a => a.clinicalAttributeId
+            );
+
             for (const attr of uniqueAttributes) {
                 if (clinicalAttributeIsINCOMPARISONGROUP(attr)) {
                     sortedAttributes.groups.push(attr);
+                } else if (
+                    attr.clinicalAttributeId in customChartClinicalAttributeIds
+                ) {
+                    sortedAttributes.customCharts.push(attr);
                 } else {
                     sortedAttributes.clinical.push(attr);
                 }
             }
-            sortedAttributes.clinical = _.sortBy<ClinicalAttribute>(
+            sortedAttributes.clinical = _.sortBy<ExtendedClinicalAttribute>(
                 sortedAttributes.clinical,
                 [
                     (x: ClinicalAttribute) => {
@@ -145,8 +160,13 @@ export default class AddClinicalTracks extends React.Component<
                 ]
             );
 
-            sortedAttributes.groups = _.sortBy<ClinicalAttribute>(
+            sortedAttributes.groups = _.sortBy<ExtendedClinicalAttribute>(
                 sortedAttributes.groups,
+                x => x.displayName.toLowerCase()
+            );
+
+            sortedAttributes.customCharts = _.sortBy<ExtendedClinicalAttribute>(
+                sortedAttributes.customCharts,
                 x => x.displayName.toLowerCase()
             );
 
@@ -214,16 +234,50 @@ export default class AddClinicalTracks extends React.Component<
         showLastRenderWhenPending: true,
     });
 
+    readonly addChartTracksMenu = MakeMobxView({
+        await: () => [this.options],
+        render: () => (
+            <AddChartByType
+                options={this.options.result!.customCharts}
+                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                onAddAll={this.addAll}
+                onClearAll={this.clear}
+                onToggleOption={this.toggleClinicalTrack}
+                optionsGivenInSortedOrder={true}
+                frequencyHeaderTooltip="% samples in group"
+            />
+        ),
+        renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
+        showLastRenderWhenPending: true,
+    });
+
     @autobind
     private getDropdown() {
-        if (this.options.isComplete && this.options.result!.groups.length > 0) {
+        const numberOfMenus = this.options.isComplete
+            ? _.sum(
+                  _.map(
+                      this.options.result!,
+                      (optionsList: any[]) => +(optionsList.length > 0)
+                  )
+              )
+            : 0;
+
+        if (numberOfMenus > 1) {
             return (
                 <MSKTabs
                     activeTabId={this.tabId}
                     onTabClick={this.updateTabId}
                     className="mainTabs oncoprintAddClinicalTracks"
                 >
-                    <MSKTab key={0} id={Tab.CLINICAL} linkText={Tab.CLINICAL}>
+                    <MSKTab
+                        key={0}
+                        id={Tab.CLINICAL}
+                        linkText={Tab.CLINICAL}
+                        hide={
+                            !this.options.isComplete ||
+                            this.options.result!.clinical.length === 0
+                        }
+                    >
                         {this.addClinicalTracksMenu.component}
                     </MSKTab>
                     <MSKTab
@@ -236,6 +290,17 @@ export default class AddClinicalTracks extends React.Component<
                         }
                     >
                         {this.addGroupTracksMenu.component}
+                    </MSKTab>
+                    <MSKTab
+                        key={2}
+                        id={Tab.CUSTOM_CHARTS}
+                        linkText={Tab.CUSTOM_CHARTS}
+                        hide={
+                            !this.options.isComplete ||
+                            this.options.result!.customCharts.length === 0
+                        }
+                    >
+                        {this.addChartTracksMenu.component}
                     </MSKTab>
                 </MSKTabs>
             );
