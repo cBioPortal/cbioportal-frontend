@@ -242,6 +242,8 @@ export default class CopyNumberTableWrapper extends React.Component<
             ),
             sortBy: (d: DiscreteCopyNumberData[]) =>
                 this.getCytobandForGene(d[0].gene.hugoGeneSymbol),
+            download: (d: DiscreteCopyNumberData[]) =>
+                this.getCytobandForGene(d[0].gene.hugoGeneSymbol),
             visible: true,
             order: 60,
         });
