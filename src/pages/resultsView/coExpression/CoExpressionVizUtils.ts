@@ -6,6 +6,7 @@ import {
 import { GenesetMolecularData } from 'cbioportal-ts-api-client';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { isSampleProfiled } from '../../../shared/lib/isSampleProfiled';
+import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
 
 const nonBreakingSpace = '\xa0';
 export function requestAllDataMessage(hugoGeneSymbol: string) {
@@ -14,7 +15,12 @@ export function requestAllDataMessage(hugoGeneSymbol: string) {
 
 function dispMut(mutations: Mutation[]) {
     return mutations
-        .map(mutation => mutation.proteinChange)
+        .map(
+            mutation =>
+                `${mutation.proteinChange}${
+                    !isNotGermlineMutation(mutation) ? ' [germline]' : ''
+                }`
+        )
         .filter(p => !!p)
         .join(', ');
 }
