@@ -1,5 +1,8 @@
 import _ from 'lodash';
 import { IAxisLogScaleParams } from 'pages/resultsView/plots/PlotsTabUtils';
+import { CoExpressionPlotData } from 'pages/resultsView/coExpression/CoExpressionPlot';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { GeneticEntity } from 'pages/resultsView/ResultsViewPageStore';
 
 export function getUniquePrecision(
     value: number,
@@ -35,4 +38,39 @@ export function axisLabel(
 
 export function isNotProfiled(d: { profiledX: boolean; profiledY: boolean }) {
     return !d.profiledX && !d.profiledY;
+}
+
+export function getDownloadData(
+    data: CoExpressionPlotData[],
+    entityX: GeneticEntity,
+    entityY: GeneticEntity,
+    molecularProfileX: MolecularProfile,
+    molecularProfileY: MolecularProfile,
+    showMutations: boolean
+) {
+    const firstRow = [
+        'Sample ID',
+        `${entityX.geneticEntityName} (${molecularProfileX.name})`,
+        `${entityY.geneticEntityName} (${molecularProfileY.name})`,
+    ];
+    if (showMutations) {
+        firstRow.push(
+            `${entityX.geneticEntityName} Mutations`,
+            `${entityY.geneticEntityName} Mutations`
+        );
+    }
+    const rows = [
+        firstRow,
+        ...data.map(d => {
+            const row = [d.sampleId, d.x, d.y];
+            if (showMutations) {
+                row.push(
+                    d.profiledX ? d.mutationsX || 'WT' : 'NS',
+                    d.profiledY ? d.mutationsY || 'WT' : 'NS'
+                );
+            }
+            return row;
+        }),
+    ];
+    return rows.map(row => row.join('\t')).join('\n');
 }
