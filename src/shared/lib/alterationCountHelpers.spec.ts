@@ -314,12 +314,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };
@@ -383,12 +385,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };
@@ -439,12 +443,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };

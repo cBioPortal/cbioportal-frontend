@@ -41,12 +41,14 @@ describe('CancerSummaryContent', () => {
                     cna: 0,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
                 notProfiledSamplesCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
             },
             'Colorectal Adenocarcinoma': {
@@ -72,12 +74,14 @@ describe('CancerSummaryContent', () => {
                     cna: 0,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
                 notProfiledSamplesCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
             },
             'Rectal Adenocarcinoma': {
@@ -103,12 +107,14 @@ describe('CancerSummaryContent', () => {
                     cna: 1,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
                 notProfiledSamplesCounts: {
                     mutation: 0,
                     cna: 0,
                     expression: 0,
                     protein: 0,
+                    structuralVariant: 0,
                 },
             },
         };

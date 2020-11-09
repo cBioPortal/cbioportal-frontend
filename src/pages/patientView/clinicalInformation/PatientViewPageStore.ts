@@ -375,7 +375,7 @@ export class PatientViewPageStore {
             const structuralVariantProfiles = getFilteredMolecularProfilesByAlterationType(
                 this.studyIdToMolecularProfiles.result,
                 AlterationTypeConstants.STRUCTURAL_VARIANT,
-                [DataTypeConstants.SV, DataTypeConstants.FUSION]
+                [DataTypeConstants.FUSION, DataTypeConstants.SV]
             );
             if (structuralVariantProfiles.length > 0) {
                 return structuralVariantProfiles[0];

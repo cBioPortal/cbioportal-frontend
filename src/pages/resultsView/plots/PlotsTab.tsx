@@ -778,20 +778,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                         isAlterationTypePresent(
                             dataTypeOptions,
                             !vertical,
-                            AlterationTypeConstants.STRUCTURAL_VARIANT
-                        )
-                    ) {
-                        // default for the horizontal axis is CNA, if one is available
-                        return AlterationTypeConstants.STRUCTURAL_VARIANT;
-                    } else if (
-                        isAlterationTypePresent(
-                            dataTypeOptions,
-                            !vertical,
                             AlterationTypeConstants.COPY_NUMBER_ALTERATION
                         )
                     ) {
                         // default for the horizontal axis is CNA, if one is available
                         return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+                    } else if (
+                        isAlterationTypePresent(
+                            dataTypeOptions,
+                            !vertical,
+                            AlterationTypeConstants.STRUCTURAL_VARIANT
+                        )
+                    ) {
+                        // default for the horizontal axis is Structural variant, if one is available
+                        return AlterationTypeConstants.STRUCTURAL_VARIANT;
                     } else {
                         // otherwise, just return the first option
                         return dataTypeOptions[0].value;
