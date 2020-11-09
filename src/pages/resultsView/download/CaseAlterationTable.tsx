@@ -17,10 +17,12 @@ import {
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
 import styles from './styles.module.scss';
+import proteinChangeStyles from 'shared/components/mutationTable/column/proteinChange.module.scss';
 import { getMultipleGeneResultKey } from '../ResultsViewPageStoreUtils';
 import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusivityUtil';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
+import { insertBetween } from 'shared/lib/ArrayUtils';
 
 export interface ISubAlteration {
     type: string;
@@ -30,7 +32,7 @@ export interface ISubAlteration {
 export interface IOqlData {
     geneSymbol: string;
     sequenced: boolean;
-    mutation: string[];
+    mutation: { proteinChange: string; isGermline: boolean }[];
     fusion: string[];
     cna: ISubAlteration[];
     mrnaExp: ISubAlteration[];
@@ -61,10 +63,28 @@ export interface ICaseAlterationTableProps {
 }
 
 export type PseudoOqlSummary = {
-    summaryContent: string;
+    summaryContent: any;
     summaryClass: any;
     summaryAlteredStatus: AlteredStatus;
 };
+
+type RenderGenerator<T> = {
+    label: string;
+    getAlterationData: (oqlData: IOqlData) => T;
+    isNotProfiled: (oqlData: IOqlData) => boolean;
+    getValues: (d: T) => any[];
+};
+
+function mutationMapper(alterationData: IOqlData['mutation']) {
+    return alterationData.map(d => (
+        <span>
+            <span>{d.proteinChange}</span>
+            {d.isGermline && (
+                <span className={proteinChangeStyles.germline}>Germline</span>
+            )}
+        </span>
+    ));
+}
 
 export function generateOqlValue(
     data: IOqlData,
@@ -72,10 +92,10 @@ export function generateOqlValue(
 ): PseudoOqlSummary | undefined {
     // helper functions to map the display value for different alteration types
     const stringMapper = (alterationData: (string | ISubAlteration)[]) =>
-        alterationData;
+        alterationData as string[];
     const subAlterationMapper = (alterationData: (string | ISubAlteration)[]) =>
         alterationData.map((alteration: ISubAlteration) => alteration.type);
-    let generator;
+    let generator: RenderGenerator<any> | undefined;
     let pseudoOqlSummary: PseudoOqlSummary | undefined = undefined;
 
     if (
@@ -95,7 +115,7 @@ export function generateOqlValue(
                 getAlterationData: (oqlData: IOqlData) => oqlData.mutation,
                 isNotProfiled: (oqlData: IOqlData) =>
                     oqlData.isMutationNotProfiled,
-                getValues: stringMapper,
+                getValues: mutationMapper,
             };
             break;
         case 'FUSION':
@@ -140,7 +160,10 @@ export function generateOqlValue(
         const alterationData = generator.getAlterationData(data);
         if (alterationData.length > 0) {
             pseudoOqlSummary = {
-                summaryContent: generator.getValues(alterationData).join(', '),
+                summaryContent: insertBetween<any>(
+                    ', ',
+                    generator.getValues(alterationData)
+                ),
                 summaryClass: styles.alterationSpan,
                 summaryAlteredStatus: AlteredStatus.ALTERED,
             };
@@ -217,10 +240,13 @@ export function getPseudoOqlSummaryByAlterationTypes(
     const alteredPseudoOqlSummaries = _.filter(pseudoOqlSummaries, summary =>
         summary ? summary.summaryAlteredStatus === AlteredStatus.ALTERED : false
     );
-    const alteredPseudoOqlSummaryContent = _.map(
-        alteredPseudoOqlSummaries,
-        (summary: PseudoOqlSummary) => summary.summaryContent
-    ).join(', ');
+    const alteredPseudoOqlSummaryContent = insertBetween<any>(
+        ', ',
+        _.map(
+            alteredPseudoOqlSummaries,
+            (summary: PseudoOqlSummary) => summary.summaryContent
+        )
+    );
     if (alteredPseudoOqlSummaries.length > 0) {
         return {
             summaryContent: alteredPseudoOqlSummaryContent,

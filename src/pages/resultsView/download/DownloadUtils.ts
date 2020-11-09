@@ -32,6 +32,7 @@ import {
     OQLLineFilterOutput,
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
+import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -47,7 +48,7 @@ export function generateOqlData(
         [molecularProfileId: string]: MolecularProfile;
     }
 ): IOqlData {
-    const proteinChanges: string[] = [];
+    const mutation: IOqlData['mutation'] = [];
     const fusions: string[] = [];
     const cnaAlterations: ISubAlteration[] = [];
     const proteinLevels: ISubAlteration[] = [];
@@ -92,7 +93,10 @@ export function generateOqlData(
                     fusions.push(alteration.proteinChange);
                     alterationTypes.push('FUSION');
                 } else {
-                    proteinChanges.push(alteration.proteinChange);
+                    mutation.push({
+                        proteinChange: alteration.proteinChange,
+                        isGermline: !isNotGermlineMutation(alteration),
+                    });
                     alterationTypes.push('MUT');
                 }
                 break;
@@ -110,7 +114,7 @@ export function generateOqlData(
                 ? geneAlterationDataByGene[datum.trackLabel].sequenced > 0
                 : true,
         geneSymbol: datum.trackLabel,
-        mutation: proteinChanges,
+        mutation,
         fusion: fusions,
         cna: cnaAlterations,
         mrnaExp: mrnaExpressions,
@@ -734,7 +738,9 @@ export function hasValidMutationData(sampleAlterationDataByGene: {
 }
 
 function extractMutationValue(alteration: ExtendedAlteration) {
-    return alteration.proteinChange;
+    return `${alteration.proteinChange}${
+        !isNotGermlineMutation(alteration) ? ' [germline]' : ''
+    }`;
 }
 
 export function decideMolecularProfileSortingOrder(
