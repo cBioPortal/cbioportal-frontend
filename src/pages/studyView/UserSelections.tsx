@@ -4,31 +4,28 @@ import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 import styles from './styles.module.scss';
 import {
-    DataFilterValue,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
+    DataFilterValue,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
 } from 'cbioportal-ts-api-client';
 import {
-    SpecialChartsUniqueKeyEnum,
-    DataType,
-    getUniqueKeyFromMolecularProfileIds,
-    ChartType,
-    getGenomicChartUniqueKey,
-} from 'pages/studyView/StudyViewUtils';
-import {
     ChartMeta,
+    ChartType,
+    DataType,
     getCNAColorByAlteration,
+    getGenomicChartUniqueKey,
     getPatientIdentifiers,
     getSelectedGroupNames,
+    getUniqueKeyFromMolecularProfileIds,
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
 } from 'pages/studyView/StudyViewUtils';
 import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
-import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
+import { ChartTypeEnum, STUDY_VIEW_CONFIG } from './StudyViewConfig';
 import {
     DEFAULT_NA_COLOR,
     MUT_COLOR_FUSION,
@@ -40,12 +37,10 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { accessibilityOverscanIndicesGetter } from 'react-virtualized';
 import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { toPatientTreatmentFilter } from './table/treatments/treatmentsTableUtil';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -393,7 +388,10 @@ export default class UserSelections extends React.Component<
                                             <GroupLogic
                                                 components={this.groupedGeneQueries(
                                                     queries,
-                                                    chartMeta
+                                                    chartMeta,
+                                                    geneFilter.excludeVUS,
+                                                    geneFilter.selectedTiers,
+                                                    geneFilter.excludeGermline
                                                 )}
                                                 operation="or"
                                                 group={queries.length > 1}
@@ -551,7 +549,10 @@ export default class UserSelections extends React.Component<
 
     private groupedGeneQueries(
         geneQueries: string[],
-        chartMeta: ChartMeta & { chartType: ChartType }
+        chartMeta: ChartMeta & { chartType: ChartType },
+        excludeVUS?: boolean,
+        selectedTiers?: string[],
+        excludeGermline?: boolean
     ): JSX.Element[] {
         return geneQueries.map(oql => {
             let color = DEFAULT_NA_COLOR;
@@ -579,12 +580,95 @@ export default class UserSelections extends React.Component<
                 <PillTag
                     content={displayGeneSymbol}
                     backgroundColor={color}
+                    infoSection={this.groupedGeneFilterIcons(
+                        excludeVUS,
+                        selectedTiers,
+                        excludeGermline
+                    )}
                     onDelete={() =>
                         this.props.removeGeneFilter(chartMeta.uniqueKey, oql)
                     }
                 />
             );
         });
+    }
+
+    private groupedGeneFilterIcons(
+        excludeVUS?: boolean,
+        selectedTiers?: string[],
+        excludeGermline?: boolean
+    ): JSX.Element {
+        const filterTextElements: string[] = [];
+        if (excludeVUS) {
+            filterTextElements.push('Variants of unknown significance');
+        }
+        if (excludeGermline) {
+            filterTextElements.push('Germline mutations');
+        }
+        return (
+            <div
+                data-test={'groupedGeneFilterIcons'}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    margin: '5px 8px 5px -3px',
+                }}
+            >
+                {(excludeVUS || excludeGermline) && (
+                    <DefaultTooltip
+                        mouseEnterDelay={0}
+                        placement="right"
+                        overlay={
+                            <div className={styles.tooltip}>
+                                Excluded:
+                                {filterTextElements.map(t => (
+                                    <span>
+                                        <br />
+                                        {t}
+                                    </span>
+                                ))}
+                            </div>
+                        }
+                    >
+                        <img
+                            height={11}
+                            width={11}
+                            style={{
+                                marginRight: '2px',
+                            }}
+                            src={require('../../rootImages/filter_icon_white_circle.svg')}
+                            alt="Selected driver tiers"
+                        />
+                    </DefaultTooltip>
+                )}
+                {selectedTiers && selectedTiers.length > 0 && (
+                    <DefaultTooltip
+                        mouseEnterDelay={0}
+                        placement="right"
+                        overlay={
+                            <div className={styles.tooltip}>
+                                Selected driver tiers:
+                                {selectedTiers!.map(t => (
+                                    <span>
+                                        <br />
+                                        {t}
+                                    </span>
+                                ))}
+                            </div>
+                        }
+                    >
+                        <img
+                            height={11}
+                            width={11}
+                            src={require('../../rootImages/driver_tiers_white_circle.svg')}
+                            alt="Selected driver tiers"
+                        />
+                    </DefaultTooltip>
+                )}
+            </div>
+        );
     }
 
     private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {

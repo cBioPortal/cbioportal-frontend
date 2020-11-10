@@ -18,6 +18,7 @@ declare const styles: {
   readonly "summary": string;
   readonly "summaryClearAllBtn": string;
   readonly "titleMeta": string;
+  readonly "tooltip": string;
   readonly "userSelections": string;
 };
 export = styles;

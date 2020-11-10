@@ -4,10 +4,12 @@ import styles from './styles.module.scss';
 import { If } from 'react-if';
 import contrast from 'contrast';
 import { computed } from 'mobx';
+import { JsxElement } from 'typescript';
 
 export interface IPillTagProps {
     content: string;
     backgroundColor: string;
+    infoSection?: JSX.Element;
     onDelete?: () => void;
 }
 
@@ -32,6 +34,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                 }}
             >
                 <span className={styles.content}>{this.props.content}</span>
+                {this.props.infoSection}
                 <If condition={_.isFunction(this.props.onDelete)}>
                     <span
                         data-test="pill-tag-delete"
