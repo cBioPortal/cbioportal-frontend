@@ -10,7 +10,7 @@ This repo contains the frontend code for cBioPortal which uses React, MobX and T
 | Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.app/ | -- | https://rc--cbioportalfrontend.netlify.app |
 | Live instance backend | https://www.cbioportal.org / https://master.cbioportal.org | -- | https://rc.cbioportal.org |
 
-Note: you can check the frontend version of the live instance by checking the variable `window.FRONTEND_COMMIT` in the console.
+Note: you can check the frontend version of the live instance by checking `window.FRONTEND_COMMIT` in the console.
 
 ## Run
 
