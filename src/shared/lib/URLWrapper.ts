@@ -73,10 +73,13 @@ export default class URLWrapper<
         // even if they are not represented in browser url at the moment
         // they need to be there so that they will observable in the future upon assignment
         for (const property of this.properties) {
-            let value: string | undefined | Object = (routing.location
-                .query as MapValues<QueryParamsType, string | undefined>)[
-                property.name
-            ];
+            let value:
+                | string
+                | undefined
+                | Object = (routing.query as MapValues<
+                QueryParamsType,
+                string | undefined
+            >)[property.name];
             if (_.isString(value) && property.doubleURIEncode) {
                 // @ts-ignore
                 value = decodeURIComponent(value);
@@ -105,10 +108,10 @@ export default class URLWrapper<
             () => {
                 // this is necessary to establish observation of properties
                 // at least in test context, it doesn't otherwise work
-                //const queryProps = _.mapValues(routing.location.query);
+                //const queryProps = _.mapValues(routing.query);
                 //const sessionProps = this._sessionData && this._sessionData.query && _.mapValues(this._sessionData.query);
                 return [
-                    routing.location.query,
+                    routing.query,
                     this._sessionData && this._sessionData.query,
                 ];
             },
@@ -141,7 +144,7 @@ export default class URLWrapper<
         this.routing.updateRoute(newParams, path, clear, replace);
         // immediately sync properties from URL and session
         this.syncAllProperties(
-            this.routing.location.query,
+            this.routing.query,
             this._sessionData &&
                 (this._sessionData.query as MapValues<
                     QueryParamsType,
@@ -388,9 +391,9 @@ export default class URLWrapper<
     }
 
     @computed public get sessionId() {
-        return this.routing.location.query.session_id === ''
+        return this.routing.query.session_id === ''
             ? undefined
-            : this.routing.location.query.session_id;
+            : this.routing.query.session_id;
     }
 
     @observable public _sessionData: PortalSession | undefined;
