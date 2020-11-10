@@ -6,8 +6,7 @@ import * as $ from 'jquery';
 import * as sinon from 'sinon';
 import * as mobx from 'mobx';
 import { syncHistoryWithStore, SynchronizedHistory } from 'mobx-react-router';
-import createMemoryHistory from 'react-router/lib/createMemoryHistory';
-import { MemoryHistory } from 'history';
+import { createBrowserHistory, MemoryHistory } from 'history';
 import { SinonStub } from 'sinon';
 import { sleep } from './TimeUtils';
 import { computed } from 'mobx';
@@ -22,10 +21,10 @@ describe('ExtendedRouterStore', () => {
 
     beforeEach(() => {
         routingStore = new ExtendedRouterStore();
-        history = syncHistoryWithStore(createMemoryHistory(), routingStore);
+        history = syncHistoryWithStore(createBrowserHistory(), routingStore);
         setServerConfig({ sessionServiceEnabled: true });
         routingStore.location.pathname = '/results';
-        routingStore.location.query = { param1: 1, param2: 2, param3: 3 };
+        routingStore.updateRoute({ param1: '1', param2: '2', param3: '3' });
     });
 
     afterEach(() => {
@@ -42,7 +41,7 @@ describe('ExtendedRouterStore', () => {
         );
 
         assert.deepEqual(
-            routingStore.location.query,
+            routingStore.query,
             { param3: 'cleared' },
             'removes param1'
         );
@@ -61,7 +60,7 @@ describe('ExtendedRouterStore', () => {
         );
 
         assert.deepEqual(
-            routingStore.location.query,
+            routingStore.query,
             {
                 param1: 'something1',
                 param2: 'something2',
@@ -79,7 +78,7 @@ describe('ExtendedRouterStore', () => {
         );
 
         assert.deepEqual(
-            routingStore.location.query,
+            routingStore.query,
             { param1: 'something1', param2: 'something2' },
             'removes undefined param'
         );
@@ -93,7 +92,7 @@ describe('ExtendedRouterStore', () => {
         );
 
         assert.deepEqual(
-            routingStore.location.query,
+            routingStore.query,
             { param1: 'something1' },
             'removes empty string prop'
         );

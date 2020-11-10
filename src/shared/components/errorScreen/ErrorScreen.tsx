@@ -22,12 +22,12 @@ export default class ErrorScreen extends React.Component<
     copyToClip: HTMLButtonElement | null;
 
     componentDidMount(): void {
-        new Clipboard(this.copyToClip, {
+        /*new Clipboard(this.copyToClip, {
             text: function() {
                 return JSON.stringify(this.errorLog);
             }.bind(this),
             container: this.copyToClip,
-        });
+        });*/
     }
 
     @computed get errorLog() {

@@ -169,7 +169,7 @@ export default class PatientViewPage extends React.Component<
         //TODO: this should be done by a module so that it can be reused on other pages
         reaction(
             () => [
-                props.routing.location.query,
+                props.routing.query,
                 props.routing.location.hash,
                 props.routing.location.pathname,
             ],

@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'mobx-react';
-import { Router, useRouterHistory } from 'react-router';
-import { createHistory } from 'history';
+import { Router, Switch } from 'react-router-dom';
+import { createHistory, createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
@@ -31,6 +31,7 @@ import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import mobx from 'mobx';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
+import Container from 'appShell/App/Container';
 
 superagentCache(superagent);
 
@@ -97,9 +98,10 @@ _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
 
-const history = useRouterHistory(createHistory)({
+const history = createBrowserHistory();
+/*useRouterHistory(createHistory)({
     basename: AppConfig.basePath || '',
-});
+});*/
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
@@ -152,7 +154,9 @@ let render = () => {
 
     ReactDOM.render(
         <Provider {...stores}>
-            <Router history={syncedHistory} routes={makeRoutes()}></Router>
+            <Router history={syncedHistory}>
+                <Container location={routingStore.location} />
+            </Router>
         </Provider>,
         rootNode
     );
