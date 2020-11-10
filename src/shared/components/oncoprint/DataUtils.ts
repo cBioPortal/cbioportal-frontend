@@ -291,17 +291,16 @@ export function makeGeneticTrackData(
                     p => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
-            let sampleData =
-                caseAggregatedAlterationData[sample.uniqueSampleKey];
-            if (sampleData) {
-                ret.push(
-                    fillGeneticTrackDatum(
-                        newDatum,
-                        geneSymbolArray.join(' / '),
-                        sampleData
-                    )
-                );
-            }
+            const sampleData =
+                caseAggregatedAlterationData[sample.uniqueSampleKey] || [];
+
+            ret.push(
+                fillGeneticTrackDatum(
+                    newDatum,
+                    geneSymbolArray.join(' / '),
+                    sampleData
+                )
+            );
         }
     } else {
         // case: Patients
@@ -338,18 +337,16 @@ export function makeGeneticTrackData(
                     p => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
-            let patientData =
-                caseAggregatedAlterationData[patient.uniquePatientKey];
+            const patientData =
+                caseAggregatedAlterationData[patient.uniquePatientKey] || [];
 
-            if (patientData) {
-                ret.push(
-                    fillGeneticTrackDatum(
-                        newDatum,
-                        geneSymbolArray.join(' / '),
-                        patientData
-                    )
-                );
-            }
+            ret.push(
+                fillGeneticTrackDatum(
+                    newDatum,
+                    geneSymbolArray.join(' / '),
+                    patientData
+                )
+            );
         }
     }
     return ret;
