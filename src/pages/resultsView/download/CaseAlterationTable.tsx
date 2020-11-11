@@ -75,20 +75,32 @@ type RenderGenerator<T> = {
     getValues: (d: T) => any[];
 };
 
-function mutationMapper(alterationData: IOqlData['mutation']) {
-    return alterationData.map(d => (
-        <span>
-            <span>{d.proteinChange}</span>
-            {d.isGermline && (
-                <span className={proteinChangeStyles.germline}>Germline</span>
-            )}
-        </span>
-    ));
+function mutationMapper(forDownload?: boolean) {
+    const renderMutation = (d: IOqlData['mutation'][0]) => {
+        if (forDownload) {
+            return `${d.proteinChange}${d.isGermline ? ' [germline]' : ''}`;
+        } else {
+            return (
+                <span>
+                    <span>{d.proteinChange}</span>
+                    {d.isGermline && (
+                        <span className={proteinChangeStyles.germline}>
+                            Germline
+                        </span>
+                    )}
+                </span>
+            );
+        }
+    };
+
+    return (alterationData: IOqlData['mutation']) =>
+        alterationData.map(renderMutation);
 }
 
 export function generateOqlValue(
     data: IOqlData,
-    alterationType: string
+    alterationType: string,
+    forDownload?: boolean
 ): PseudoOqlSummary | undefined {
     // helper functions to map the display value for different alteration types
     const stringMapper = (alterationData: (string | ISubAlteration)[]) =>
@@ -115,7 +127,7 @@ export function generateOqlValue(
                 getAlterationData: (oqlData: IOqlData) => oqlData.mutation,
                 isNotProfiled: (oqlData: IOqlData) =>
                     oqlData.isMutationNotProfiled,
-                getValues: mutationMapper,
+                getValues: mutationMapper(forDownload),
             };
             break;
         case 'FUSION':
@@ -159,11 +171,14 @@ export function generateOqlValue(
     if (generator) {
         const alterationData = generator.getAlterationData(data);
         if (alterationData.length > 0) {
+            const summaryContent = insertBetween<any>(
+                ', ',
+                generator.getValues(alterationData)
+            );
             pseudoOqlSummary = {
-                summaryContent: insertBetween<any>(
-                    ', ',
-                    generator.getValues(alterationData)
-                ),
+                summaryContent: forDownload
+                    ? summaryContent.join('')
+                    : summaryContent,
                 summaryClass: styles.alterationSpan,
                 summaryAlteredStatus: AlteredStatus.ALTERED,
             };
@@ -184,13 +199,18 @@ export function generateOqlValue(
 export function generatePseudoOqlSummary(
     oqlData: { [oqlLine: string]: IOqlData },
     oqlLine: string,
-    alterationType: string
+    alterationType: string,
+    forDownload?: boolean
 ): PseudoOqlSummary | undefined {
     if (!_.isEmpty(oqlData)) {
         const datum = oqlData[oqlLine];
 
         if (datum) {
-            return generateOqlValue(oqlData[oqlLine], alterationType);
+            return generateOqlValue(
+                oqlData[oqlLine],
+                alterationType,
+                forDownload
+            );
         }
     }
 
@@ -213,10 +233,11 @@ export function computeAlterationTypes(
 export function getPseudoOqlSummaryByAlterationTypes(
     oqlData: { [oqlLine: string]: IOqlData },
     oqlLine: string,
-    alterationTypes: string[]
+    alterationTypes: string[],
+    forDownload?: boolean
 ): PseudoOqlSummary {
     const pseudoOqlSummaries = _.map(alterationTypes, type =>
-        generatePseudoOqlSummary(oqlData, oqlLine, type)
+        generatePseudoOqlSummary(oqlData, oqlLine, type, forDownload)
     );
     // if not profiled in all profiles, then it is not profiled
     const notProfiledPseudoOqlSummaries = _.filter(
@@ -249,7 +270,9 @@ export function getPseudoOqlSummaryByAlterationTypes(
     );
     if (alteredPseudoOqlSummaries.length > 0) {
         return {
-            summaryContent: alteredPseudoOqlSummaryContent,
+            summaryContent: forDownload
+                ? alteredPseudoOqlSummaryContent.join('')
+                : alteredPseudoOqlSummaryContent,
             summaryClass: styles.alterationSpan,
             summaryAlteredStatus: AlteredStatus.ALTERED,
         };
@@ -362,7 +385,8 @@ export default class CaseAlterationTable extends React.Component<
                     getPseudoOqlSummaryByAlterationTypes(
                         data.oqlData,
                         trackLabel,
-                        this.props.trackAlterationTypesMap[trackLabel]
+                        this.props.trackAlterationTypesMap[trackLabel],
+                        true
                     )!.summaryContent,
                 sortBy: (data: ICaseAlteration) =>
                     getPseudoOqlSummaryByAlterationTypes(
@@ -420,7 +444,8 @@ export default class CaseAlterationTable extends React.Component<
                             generatePseudoOqlSummary(
                                 data.oqlDataByGene,
                                 gene,
-                                alterationType
+                                alterationType,
+                                true
                             )!.summaryContent,
                         sortBy: (data: ICaseAlteration) =>
                             generatePseudoOqlSummary(
