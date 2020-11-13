@@ -1,6 +1,6 @@
 declare const styles: {
-  readonly "genome-nexus-logo": string;
   readonly "hgvsg-data": string;
+  readonly "genome-nexus-logo": string;
 };
 export = styles;
 
