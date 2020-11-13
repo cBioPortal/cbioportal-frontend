@@ -205,6 +205,7 @@ import {
     getMutationData,
 } from 'pages/studyView/StudyViewComparisonUtils';
 import {
+    AlterationContainerType,
     CNA_AMP_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
@@ -3380,10 +3381,40 @@ export class StudyViewPageStore {
     });
 
     readonly filteredGenePanelData = remoteData({
-        await: () => [this.molecularProfiles, this.samples],
+        await: () => [
+            this.molecularProfiles,
+            this.samples,
+            this.structuralVariantProfiles,
+        ],
         invoke: async () => {
+            const filteredMolecularProfiles: MolecularProfile[] = [];
+            const structuralVariantMolecularProfiles: MolecularProfile[] = [];
+
+            //TODO: remove this block once fusion profiles data is fixed
+            //filter out structural variant/fusion profiles
+            this.molecularProfiles.result.forEach(molecularProfile => {
+                if (
+                    [
+                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                        AlterationTypeConstants.FUSION,
+                    ].includes(molecularProfile.molecularAlterationType)
+                ) {
+                    structuralVariantMolecularProfiles.push(molecularProfile);
+                } else {
+                    filteredMolecularProfiles.push(molecularProfile);
+                }
+            });
+
+            //Add appropriate structural variant/fusion profiles
+            this.structuralVariantProfiles.result.forEach(
+                structuralVariantProfile => {
+                    filteredMolecularProfiles.push(structuralVariantProfile);
+                }
+            );
+            //TODO: remove this block once fusion profiles data is fixed
+
             const studyMolecularProfilesSet = _.groupBy(
-                this.molecularProfiles.result,
+                filteredMolecularProfiles,
                 molecularProfile => molecularProfile.studyId
             );
 

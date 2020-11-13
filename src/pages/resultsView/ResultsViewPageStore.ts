@@ -101,6 +101,7 @@ import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter, {
     SimplifiedMutationType,
+    getSimplifiedMutationType,
 } from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     doesQueryContainMutationOQL,
@@ -3031,48 +3032,129 @@ export class ResultsViewPageStore {
             this.defaultOQLQuery,
             this.mutationsReportByGene,
             this.filteredSampleKeyToSample,
+            this.structuralVariantsReportByGene,
         ],
         invoke: () => {
-            return Promise.resolve(
-                _.mapValues(
-                    this.mutationsReportByGene.result!,
-                    (mutationGroups: FilteredAndAnnotatedMutationsReport) => {
-                        if (
-                            this.mutationsTabFilteringSettings.useOql &&
-                            this.queryContainsMutationOql
-                        ) {
-                            // use oql filtering in mutations tab only if query contains mutation oql
-                            mutationGroups = _.mapValues(
-                                mutationGroups,
-                                mutations =>
-                                    filterCBioPortalWebServiceData(
-                                        this.oqlText,
-                                        mutations,
-                                        new AccessorsForOqlFilter(
-                                            this.selectedMolecularProfiles.result!
-                                        ),
-                                        this.defaultOQLQuery.result!
-                                    )
-                            );
-                        }
-                        const filteredMutations = compileMutations(
+            const mutationsByGene = _.mapValues(
+                this.mutationsReportByGene.result!,
+                (mutationGroups: FilteredAndAnnotatedMutationsReport) => {
+                    if (
+                        this.mutationsTabFilteringSettings.useOql &&
+                        this.queryContainsMutationOql
+                    ) {
+                        // use oql filtering in mutations tab only if query contains mutation oql
+                        mutationGroups = _.mapValues(
                             mutationGroups,
-                            this.mutationsTabFilteringSettings.excludeVus,
-                            this.mutationsTabFilteringSettings.excludeGermline
+                            mutations =>
+                                filterCBioPortalWebServiceData(
+                                    this.oqlText,
+                                    mutations,
+                                    new AccessorsForOqlFilter(
+                                        this.selectedMolecularProfiles.result!
+                                    ),
+                                    this.defaultOQLQuery.result!
+                                )
                         );
-                        if (this.hideUnprofiledSamples) {
-                            // filter unprofiled samples
-                            const sampleMap = this.filteredSampleKeyToSample
-                                .result!;
-                            return filteredMutations.filter(
-                                m => m.uniqueSampleKey in sampleMap
-                            );
-                        } else {
-                            return filteredMutations;
-                        }
                     }
-                )
+                    const filteredMutations = compileMutations(
+                        mutationGroups,
+                        this.mutationsTabFilteringSettings.excludeVus,
+                        this.mutationsTabFilteringSettings.excludeGermline
+                    );
+                    if (this.hideUnprofiledSamples) {
+                        // filter unprofiled samples
+                        const sampleMap = this.filteredSampleKeyToSample
+                            .result!;
+                        return filteredMutations.filter(
+                            m => m.uniqueSampleKey in sampleMap
+                        );
+                    } else {
+                        return filteredMutations;
+                    }
+                }
             );
+
+            //TODO: remove once SV/Fusion tab is merged
+            _.forEach(
+                this.structuralVariantsReportByGene.result,
+                (structuralVariantsGroups, hugoGeneSymbol) => {
+                    if (mutationsByGene[hugoGeneSymbol] === undefined) {
+                        mutationsByGene[hugoGeneSymbol] = [];
+                    }
+
+                    if (
+                        this.mutationsTabFilteringSettings.useOql &&
+                        this.queryContainsMutationOql
+                    ) {
+                        // use oql filtering in mutations tab only if query contains mutation oql
+                        structuralVariantsGroups = _.mapValues(
+                            structuralVariantsGroups,
+                            structuralVariants =>
+                                filterCBioPortalWebServiceData(
+                                    this.oqlText,
+                                    structuralVariants,
+                                    new AccessorsForOqlFilter(
+                                        this.selectedMolecularProfiles.result!
+                                    ),
+                                    this.defaultOQLQuery.result!
+                                )
+                        );
+                    }
+                    let filteredStructuralVariants = compileStructuralVariants(
+                        structuralVariantsGroups,
+                        this.mutationsTabFilteringSettings.excludeVus,
+                        this.mutationsTabFilteringSettings.excludeGermline
+                    );
+                    if (this.hideUnprofiledSamples) {
+                        // filter unprofiled samples
+                        const sampleMap = this.filteredSampleKeyToSample
+                            .result!;
+                        filteredStructuralVariants = filteredStructuralVariants.filter(
+                            m => m.uniqueSampleKey in sampleMap
+                        );
+                    }
+
+                    filteredStructuralVariants.forEach(structuralVariant => {
+                        const mutation = {
+                            center: structuralVariant.center,
+                            chr: structuralVariant.site1Chromosome,
+                            entrezGeneId: structuralVariant.site1EntrezGeneId,
+                            keyword: structuralVariant.comments,
+                            molecularProfileId:
+                                structuralVariant.molecularProfileId,
+                            mutationType: structuralVariant.variantClass,
+                            ncbiBuild: structuralVariant.ncbiBuild,
+                            patientId: structuralVariant.patientId,
+                            proteinChange: structuralVariant.eventInfo,
+                            sampleId: structuralVariant.sampleId,
+                            startPosition: structuralVariant.site1Position,
+                            studyId: structuralVariant.studyId,
+                            uniquePatientKey:
+                                structuralVariant.uniquePatientKey,
+                            uniqueSampleKey: structuralVariant.uniqueSampleKey,
+                            variantType: structuralVariant.variantClass,
+                            gene: {
+                                entrezGeneId:
+                                    structuralVariant.site1EntrezGeneId,
+                                hugoGeneSymbol:
+                                    structuralVariant.site1HugoSymbol,
+                            },
+                            hugoGeneSymbol: structuralVariant.site1HugoSymbol,
+                            putativeDriver: structuralVariant.putativeDriver,
+                            oncoKbOncogenic: structuralVariant.oncoKbOncogenic,
+                            isHotspot: structuralVariant.isHotspot,
+                            simplifiedMutationType: getSimplifiedMutationType(
+                                structuralVariant.variantClass
+                            ),
+                        } as AnnotatedMutation;
+
+                        mutationsByGene[hugoGeneSymbol].push(mutation);
+                    });
+                }
+            );
+            //TODO: remove once SV/Fusion tab is merged
+
+            return Promise.resolve(mutationsByGene);
         },
     });
 

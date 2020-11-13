@@ -830,7 +830,7 @@ export default class DownloadTab extends React.Component<
 
     private structuralVariantDownloadControls(): JSX.Element {
         return this.downloadControlsRow(
-            'Structural (OQL is not in effect)',
+            'Structural Variants (OQL is not in effect)',
             this.handleStructuralVariantDownload,
             this.handleTransposedStructuralVariantDownload
         );
