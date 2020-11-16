@@ -163,17 +163,6 @@ export default class DataTable<T> extends React.Component<
     }
 
     @computed
-    get defaultPageSize() {
-        const initialItemsPerPage = this.props.initialItemsPerPage;
-
-        return this.tableData
-            ? this.tableData.length > initialItemsPerPage!
-                ? initialItemsPerPage
-                : this.tableData.length
-            : 1;
-    }
-
-    @computed
     get initialColumnDataStatus() {
         return getInitialColumnDataStatus(this.props.initialSortColumnData);
     }
@@ -258,7 +247,7 @@ export default class DataTable<T> extends React.Component<
                                 : undefined
                         }
                         defaultSorted={this.defaultSorted}
-                        defaultPageSize={this.defaultPageSize}
+                        defaultPageSize={this.props.initialItemsPerPage}
                         showPagination={this.showPagination}
                         className="-striped -highlight"
                         previousText="<"
@@ -268,7 +257,7 @@ export default class DataTable<T> extends React.Component<
                         onPageChange={this.resetExpander}
                         onPageSizeChange={this.resetExpander}
                         onSortedChange={this.resetExpander}
-                        minRows={0}
+                        minRows={1}
                         {...this.props.reactTableProps}
                     />
                 </div>
