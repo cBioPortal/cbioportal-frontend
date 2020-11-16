@@ -14,8 +14,10 @@ import SummaryWithRefs from './SummaryWithRefs';
 import mainStyles from './main.module.scss';
 import tabsStyles from './tabs.module.scss';
 import autobind from 'autobind-decorator';
+import { OTHER_BIOMARKER_HUGO_SYMBOL } from './constants';
 
 type OncoKbCardTreatmentContentProps = {
+    hugoSymbol: string;
     variant: string;
     oncogenicity: string;
     mutationEffect: string;
@@ -65,8 +67,49 @@ export default class OncoKbCardTreatmentContent extends React.Component<
 > {
     @observable activeTab: ActiveTabEnum = ActiveTabEnum.ONCOGENICITY;
 
+    getOncogenicityContent() {
+        return (
+            <>
+                <p>{this.props.geneSummary}</p>
+                <p>{this.props.variantSummary}</p>
+                {this.props.usingPublicOncoKbInstance ? (
+                    <p className={mainStyles.disclaimer}>
+                        Therapeutic levels are not available in this instance of
+                        cBioPortal.{' '}
+                        <DefaultTooltip
+                            overlayStyle={{
+                                maxWidth: 400,
+                            }}
+                            overlay={publicInstanceDisclaimerOverLay}
+                        >
+                            <i className={'fa fa-info-circle'}></i>
+                        </DefaultTooltip>
+                    </p>
+                ) : (
+                    <>
+                        <p>{this.props.tumorTypeSummary}</p>
+
+                        {this.props.treatments!.length > 0 && (
+                            <div
+                                style={{
+                                    marginTop: 10,
+                                }}
+                            >
+                                <OncoKbTreatmentTable
+                                    variant={this.props.variant || ''}
+                                    pmidData={this.props.pmidData!}
+                                    treatments={this.props.treatments!}
+                                />
+                            </div>
+                        )}
+                    </>
+                )}
+            </>
+        );
+    }
+
     // TODO we should replace the tabs with an actual ReactBootstrap Tab,
-    public render() {
+    getContentInTabs() {
         return (
             <div className={mainStyles['oncokb-card']} data-test="oncokb-card">
                 <div className={tabsStyles['tabs-wrapper']}>
@@ -135,50 +178,7 @@ export default class OncoKbCardTreatmentContent extends React.Component<
                                 className={classnames(tabsStyles['tab-pane'])}
                                 data-test={`${ActiveTabEnum.ONCOGENICITY}-pane`}
                             >
-                                <p>{this.props.geneSummary}</p>
-                                <p>{this.props.variantSummary}</p>
-                                {this.props.usingPublicOncoKbInstance ? (
-                                    <p className={mainStyles.disclaimer}>
-                                        Therapeutic levels are not available in
-                                        this instance of cBioPortal.{' '}
-                                        <DefaultTooltip
-                                            overlayStyle={{
-                                                maxWidth: 400,
-                                            }}
-                                            overlay={
-                                                publicInstanceDisclaimerOverLay
-                                            }
-                                        >
-                                            <i
-                                                className={'fa fa-info-circle'}
-                                            ></i>
-                                        </DefaultTooltip>
-                                    </p>
-                                ) : (
-                                    <>
-                                        <p>{this.props.tumorTypeSummary}</p>
-
-                                        {this.props.treatments!.length > 0 && (
-                                            <div
-                                                style={{
-                                                    marginTop: 10,
-                                                }}
-                                            >
-                                                <OncoKbTreatmentTable
-                                                    variant={
-                                                        this.props.variant || ''
-                                                    }
-                                                    pmidData={
-                                                        this.props.pmidData!
-                                                    }
-                                                    treatments={
-                                                        this.props.treatments!
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-                                    </>
-                                )}
+                                {this.getOncogenicityContent()}
                             </div>
                         </div>
                     )}
@@ -241,6 +241,16 @@ export default class OncoKbCardTreatmentContent extends React.Component<
                     )}
                 </div>
             </div>
+        );
+    }
+
+    public render() {
+        return this.props.hugoSymbol === OTHER_BIOMARKER_HUGO_SYMBOL ? (
+            <div style={{ marginLeft: 10 }}>
+                {this.getOncogenicityContent()}
+            </div>
+        ) : (
+            this.getContentInTabs()
         );
     }
 

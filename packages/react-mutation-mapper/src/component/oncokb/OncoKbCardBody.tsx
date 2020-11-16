@@ -39,6 +39,7 @@ export default class OncoKbCardBody extends React.Component<
             case OncoKbCardDataType.TX:
                 return (
                     <OncoKbCardTreatmentContent
+                        hugoSymbol={indicator.query.hugoSymbol}
                         variant={indicator.query.alteration}
                         oncogenicity={indicator.oncogenic}
                         mutationEffect={indicator.mutationEffect.knownEffect}
