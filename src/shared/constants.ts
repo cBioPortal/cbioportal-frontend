@@ -25,7 +25,12 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     CANCER_TYPE_DETAILED = 'CANCER_TYPE_DETAILED',
     ASCN_PURITY = 'ASCN_PURITY',
     ASCN_WGD = 'ASCN_WGD',
+    MSI_SCORE = 'MSI_SCORE',
+    TMB_SCORE = 'CVR_TMB_SCORE',
 }
+
+export const MSI_H_THRESHOLD = 10;
+export const TMB_H_THRESHOLD = 10;
 
 /* cbioportal api responses - clinical attribute fields and subfields */
 export const enum CLINICAL_ATTRIBUTE_FIELD_ENUM {
