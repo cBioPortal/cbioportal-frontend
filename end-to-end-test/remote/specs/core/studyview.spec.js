@@ -532,6 +532,15 @@ describe('study view lgg_tcga study tests', () => {
     });
 });
 
+describe('virtual study', () => {
+    it('loads a virtual study', () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=5dd408f0e4b0f7d2de7862a8`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
+        assertScreenShotMatch(checkElementWithMouseDisabled('#mainColumn'));
+    });
+});
+
 describe('multi studies', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=acc_tcga,lgg_tcga`;
