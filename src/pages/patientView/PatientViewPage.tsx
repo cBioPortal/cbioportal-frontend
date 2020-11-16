@@ -90,6 +90,7 @@ import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import { OtherBiomarkersQueryType } from 'react-mutation-mapper';
 import { OtherBiomarkerAnnotation } from 'pages/patientView/oncokb/OtherBiomarkerAnnotation';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
+import SampleSummaryList from './sampleHeader/SampleSummaryList';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -249,6 +250,8 @@ export default class PatientViewPage extends React.Component<
         return AppConfig.serverConfig.patient_view_use_legacy_timeline;
     }
 
+    @autobind
+    @action
     public handleSampleClick(
         id: string,
         e: React.MouseEvent<HTMLAnchorElement>
@@ -261,6 +264,8 @@ export default class PatientViewPage extends React.Component<
         // namely that href will open in a new window/tab
     }
 
+    @autobind
+    @action
     private handlePatientClick(id: string) {
         let values = id.split(':');
         if (values.length == 2) {
@@ -289,6 +294,16 @@ export default class PatientViewPage extends React.Component<
         } else {
             return 'loading';
         }
+    }
+
+    @computed get isSampleSummaryListLoading() {
+        return (
+            this.patientViewPageStore.studyMetaData.isPending ||
+            this.patientViewPageStore.hasMutationalSignatureData.isPending ||
+            this.patientViewPageStore.mutationalSignatureDataGroupByVersion
+                .isPending ||
+            this.patientViewPageStore.allSamplesForPatient.isPending
+        );
     }
 
     @computed get showWholeSlideViewerTab() {
@@ -555,35 +570,6 @@ export default class PatientViewPage extends React.Component<
         this.urlWrapper.setResourceUrl(resource.url);
     }
 
-    getOncoKbOtherBiomarkerAnnotationComponent(
-        type: OtherBiomarkersQueryType,
-        sampleId: string
-    ) {
-        const numericalData = getSampleNumericalClinicalDataValue(
-            this.patientViewPageStore.clinicalDataForSamples.result,
-            sampleId,
-            OTHER_BIOMARKERS_CLINICAL_ATTR[type]
-        );
-
-        return this.patientViewPageStore.getOtherBiomarkersOncoKbData.result[
-            sampleId
-        ][type] && numericalData !== undefined ? (
-            <span>
-                ,{' '}
-                <OtherBiomarkerAnnotation
-                    type={type}
-                    isPublicOncoKbInstance={
-                        this.patientViewPageStore.usingPublicOncoKbInstance
-                    }
-                    annotation={
-                        this.patientViewPageStore.getOtherBiomarkersOncoKbData
-                            .result[sampleId][type]
-                    }
-                />
-            </span>
-        ) : null;
-    }
-
     @autobind
     @action
     private closeResourceTab(tabId: string) {
@@ -611,7 +597,6 @@ export default class PatientViewPage extends React.Component<
 
     public render() {
         const sampleManager = this.sampleManager;
-        let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
 
@@ -631,164 +616,6 @@ export default class PatientViewPage extends React.Component<
             studyName = (
                 <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
             );
-        }
-
-        if (
-            this.patientViewPageStore.patientViewData.isComplete &&
-            this.patientViewPageStore.studyMetaData.isComplete &&
-            this.patientViewPageStore.clinicalEvents.isComplete &&
-            sampleManager !== null
-        ) {
-            sampleHeader = _.map(
-                sampleManager!.samples,
-                (sample: ClinicalDataBySampleId) => {
-                    if (!sampleManager.isSampleVisibleInHeader(sample.id)) {
-                        return undefined;
-                    }
-
-                    const isPDX: boolean =
-                        sampleManager &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived[
-                            sample.id
-                        ] &&
-                        sampleManager.clinicalDataLegacyCleanAndDerived[
-                            sample.id
-                        ].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft';
-
-                    return (
-                        <div className="patientSample">
-                            <span className="clinical-spans">
-                                {sampleManager!.getComponentForSample(
-                                    sample.id,
-                                    1,
-                                    '',
-                                    <span style={{ display: 'inline-flex' }}>
-                                        {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
-                                        <a
-                                            href={getSampleViewUrl(
-                                                this.patientViewPageStore
-                                                    .studyMetaData.result!
-                                                    .studyId,
-                                                sample.id
-                                            )}
-                                            target="_blank"
-                                            onClick={(
-                                                e: React.MouseEvent<
-                                                    HTMLAnchorElement
-                                                >
-                                            ) =>
-                                                this.handleSampleClick(
-                                                    sample.id,
-                                                    e
-                                                )
-                                            }
-                                        >
-                                            {SampleManager.getClinicalAttributeInSample(
-                                                sample,
-                                                'DISPLAY_SAMPLE_NAME'
-                                            )
-                                                ? `${
-                                                      SampleManager.getClinicalAttributeInSample(
-                                                          sample,
-                                                          'DISPLAY_SAMPLE_NAME'
-                                                      )!.value
-                                                  } (${sample.id})`
-                                                : sample.id}
-                                        </a>
-                                        {sampleManager &&
-                                            sampleManager
-                                                .clinicalDataLegacyCleanAndDerived[
-                                                sample.id
-                                            ] &&
-                                            getSpanElementsFromCleanData(
-                                                sampleManager
-                                                    .clinicalDataLegacyCleanAndDerived[
-                                                    sample.id
-                                                ]
-                                            )}
-                                    </span>,
-                                    this.toggleGenePanelModal,
-                                    this.genePanelModal.isOpen
-                                )}
-                                {this.patientViewPageStore
-                                    .hasMutationalSignatureData.result && (
-                                    <LoadingIndicator
-                                        isLoading={
-                                            this.patientViewPageStore
-                                                .mutationalSignatureDataGroupByVersion
-                                                .isPending
-                                        }
-                                    />
-                                )}
-
-                            {this.patientViewPageStore
-                                .getOtherBiomarkersOncoKbData.result[
-                                sample.id
-                            ] && (
-                                <>
-                                    {this.getOncoKbOtherBiomarkerAnnotationComponent(
-                                        OtherBiomarkersQueryType.MSIH,
-                                        sample.id
-                                    )}
-                                    {this.getOncoKbOtherBiomarkerAnnotationComponent(
-                                        OtherBiomarkersQueryType.TMBH,
-                                        sample.id
-                                    )}
-                                </>
-                            )}
-                                {this.patientViewPageStore
-                                    .hasMutationalSignatureData.result &&
-                                    this.patientViewPageStore
-                                        .mutationalSignatureDataGroupByVersion
-                                        .isComplete && (
-                                        <SignificantMutationalSignatures
-                                            data={
-                                                this.patientViewPageStore
-                                                    .mutationalSignatureDataGroupByVersion
-                                                    .result
-                                            }
-                                            sampleId={sample.id}
-                                            version={
-                                                this.patientViewPageStore
-                                                    .selectedMutationalSignatureVersion
-                                            }
-                                        />
-                                    )}
-                            </span>
-                        </div>
-                    );
-                }
-            );
-
-            if (
-                sampleHeader &&
-                sampleHeader.length > 0 &&
-                this.patientViewPageStore.pageMode === 'sample' &&
-                this.patientViewPageStore.patientId &&
-                this.patientViewPageStore.allSamplesForPatient &&
-                this.patientViewPageStore.allSamplesForPatient.result.length > 1
-            ) {
-                sampleHeader.push(
-                    <button
-                        className="btn btn-default btn-xs"
-                        onClick={() =>
-                            this.handlePatientClick(
-                                this.patientViewPageStore.patientId
-                            )
-                        }
-                    >
-                        Show all{' '}
-                        {
-                            this.patientViewPageStore.allSamplesForPatient
-                                .result.length
-                        }{' '}
-                        samples
-                    </button>
-                );
-            }
         }
 
         if (
@@ -932,7 +759,49 @@ export default class PatientViewPage extends React.Component<
                                             <td>Samples:</td>
                                             <td>
                                                 <div className="patientSamples">
-                                                    {sampleHeader}
+                                                    {sampleManager !== null && (
+                                                        <If
+                                                            condition={
+                                                                this
+                                                                    .isSampleSummaryListLoading
+                                                            }
+                                                        >
+                                                            <Then>
+                                                                <LoadingIndicator
+                                                                    isLoading={
+                                                                        true
+                                                                    }
+                                                                />
+                                                            </Then>
+                                                            <Else>
+                                                                <SampleSummaryList
+                                                                    sampleManager={
+                                                                        sampleManager
+                                                                    }
+                                                                    patientViewPageStore={
+                                                                        this
+                                                                            .patientViewPageStore
+                                                                    }
+                                                                    handleSampleClick={
+                                                                        this
+                                                                            .handleSampleClick
+                                                                    }
+                                                                    toggleGenePanelModal={
+                                                                        this
+                                                                            .toggleGenePanelModal
+                                                                    }
+                                                                    genePanelModal={
+                                                                        this
+                                                                            .genePanelModal
+                                                                    }
+                                                                    handlePatientClick={
+                                                                        this
+                                                                            .handlePatientClick
+                                                                    }
+                                                                />
+                                                            </Else>
+                                                        </If>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

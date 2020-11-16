@@ -451,24 +451,19 @@ export class PatientViewPageStore {
                 this.mutationalSignatureMolecularProfiles,
             ],
             invoke: () => {
-                let sampleMolecularIdentifiers: SampleMolecularIdentifier[] = [];
                 const mutationalSignatureMolecularProfileIds = this.mutationalSignatureMolecularProfiles.result.map(
                     profile => profile.molecularProfileId
                 );
                 if (mutationalSignatureMolecularProfileIds.length > 0) {
-                    _.forEach(
+                    const sampleMolecularIdentifiers = _.flatMap(
                         mutationalSignatureMolecularProfileIds,
                         mutationalSignatureMolecularProfileId => {
-                            const filters = _.map(
-                                this.samples.result,
-                                sample => {
-                                    return {
-                                        molecularProfileId: mutationalSignatureMolecularProfileId,
-                                        sampleId: sample.sampleId,
-                                    } as SampleMolecularIdentifier;
-                                }
-                            );
-                            sampleMolecularIdentifiers.push(...filters);
+                            return _.map(this.samples.result, sample => {
+                                return {
+                                    molecularProfileId: mutationalSignatureMolecularProfileId,
+                                    sampleId: sample.sampleId,
+                                } as SampleMolecularIdentifier;
+                            });
                         }
                     );
                     return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(

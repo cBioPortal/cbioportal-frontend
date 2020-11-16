@@ -6,7 +6,7 @@ import {
 import { IMutationalSignature } from '../../../shared/model/MutationalSignature';
 import '../../../shared/components/simpleTable/styles.scss';
 import {
-    progressBar,
+    SampleProgressBar,
     getSignificantMutationalSignatures,
     getColorByMutationalSignatureCategory,
 } from '../../../shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
@@ -85,12 +85,12 @@ export default class SignificantMutationalSignatures extends React.Component<
                                     {significantSignature.meta.name}
                                 </td>
                                 <td style={{ paddingTop: 3 }}>
-                                    {progressBar(
-                                        significantSignature.value.toString(),
-                                        getColorByMutationalSignatureCategory(
+                                    <SampleProgressBar
+                                        contribution={significantSignature.value.toString()}
+                                        color={getColorByMutationalSignatureCategory(
                                             significantSignature.meta.category
-                                        )
-                                    )}
+                                        )}
+                                    />
                                 </td>
                             </tr>
                         )
@@ -129,9 +129,9 @@ export default class SignificantMutationalSignatures extends React.Component<
         });
 
         return (
-            <span style={{ paddingLeft: 3, height: 20, width: 100 }}>
+            <span style={{ padding: '0px 13px', height: 20, width: 100 }}>
                 <ProgressBar
-                    style={{ height: 15, marginTop: 1.5, marginBottom: 0 }}
+                    style={{ height: 10, marginTop: 4, marginBottom: 0 }}
                 >
                     {stackedProgressBars}
                 </ProgressBar>

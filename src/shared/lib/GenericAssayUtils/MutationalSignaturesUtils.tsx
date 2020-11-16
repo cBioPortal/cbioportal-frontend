@@ -16,7 +16,7 @@ export enum MutationalSignatureStableIdKeyWord {
 
 export const MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD = 0.05;
 
-export const RESERVED_MUTATIONAL_SIGNATURERS_COLORS: {
+export const RESERVED_MUTATIONAL_SIGNATURE_COLORS: {
     [category: string]: string;
 } = {
     smoking: '#3366cc',
@@ -46,7 +46,7 @@ export const RESERVED_MUTATIONAL_SIGNATURERS_COLORS: {
 }; // Source: D3
 
 export function getColorByMutationalSignatureCategory(category: string) {
-    return RESERVED_MUTATIONAL_SIGNATURERS_COLORS[category.toLowerCase()];
+    return RESERVED_MUTATIONAL_SIGNATURE_COLORS[category.toLowerCase()];
 }
 
 export function getVersionOption(version: string) {
@@ -64,8 +64,16 @@ export function getVersionOptions(versions: string[]) {
     });
 }
 
-export function progressBar(confidence: string, color: string) {
-    let confidencePerc = Math.round(parseFloat(confidence) * 100);
+export type ISampleProgressBarProps = {
+    contribution: string;
+    color: string;
+};
+
+export const SampleProgressBar: React.FunctionComponent<ISampleProgressBarProps> = ({
+    contribution,
+    color,
+}) => {
+    let contributionPerc = Math.round(parseFloat(contribution) * 100);
 
     let progressBarClassName: string = 'progress-bar-info';
     let progressBarStyle: { [s: string]: string } = {
@@ -81,11 +89,11 @@ export function progressBar(confidence: string, color: string) {
                 data-test="progress-bar"
                 className={`progress-bar ${progressBarClassName}`}
                 role="progressbar"
-                aria-valuenow={confidencePerc}
+                aria-valuenow={contributionPerc}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 style={Object.assign(progressBarStyle, {
-                    width: `${confidencePerc}%`,
+                    width: `${contributionPerc}%`,
                 })}
             />
             <div
@@ -98,11 +106,11 @@ export function progressBar(confidence: string, color: string) {
                     textAlign: 'center',
                 }}
             >
-                {confidencePerc}%
+                {contributionPerc}%
             </div>
         </div>
     );
-}
+};
 
 export function getSignificantMutationalSignatures(
     mutationalSignatureData: IMutationalSignature[],
