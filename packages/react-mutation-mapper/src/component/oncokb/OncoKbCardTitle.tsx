@@ -1,5 +1,6 @@
 import * as React from 'react';
 import mainStyles from './main.module.scss';
+import { OTHER_BIOMARKER_HUGO_SYMBOL } from './constants';
 
 type OncoKbCardDefaultTitleProps = {
     hugoSymbol: string;
@@ -11,7 +12,7 @@ export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProp
     props: OncoKbCardDefaultTitleProps
 ) => {
     const titleContent = [];
-    if (props.hugoSymbol) {
+    if (props.hugoSymbol && props.hugoSymbol !== OTHER_BIOMARKER_HUGO_SYMBOL) {
         titleContent.push(props.hugoSymbol);
     }
     if (props.variant) {
