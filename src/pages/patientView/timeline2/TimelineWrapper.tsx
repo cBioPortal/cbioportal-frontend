@@ -3,7 +3,6 @@ import _ from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { Sample } from 'cbioportal-ts-api-client';
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
-import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
 
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
@@ -53,10 +52,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
         >(null);
 
         const [store, setStore] = useState<TimelineStore | null>(null);
-        const [
-            wrapperStore,
-            setWrapperStore,
-        ] = useState<TimelineWrapperStore | null>(null);
 
         useEffect(() => {
             var isGenieBpcStudy = window.location.href.includes('genie_bpc');
@@ -80,13 +75,9 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
             const store = new TimelineStore(trackSpecifications);
 
             setStore(store);
-
-            const wrapperStore = new TimelineWrapperStore();
-
-            setWrapperStore(wrapperStore);
         }, []);
 
-        if (store && wrapperStore) {
+        if (store) {
             return (
                 <>
                     <div>

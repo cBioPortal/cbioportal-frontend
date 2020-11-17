@@ -39,7 +39,7 @@ type TooltipModel = {
     mouseEvent: React.MouseEvent<any> | null;
     tooltipOnPoint: boolean;
 };
-import TimelineWrapperStore from './TimelineWrapperStore';
+import VAFChartWrapperStore from './VAFChartWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
