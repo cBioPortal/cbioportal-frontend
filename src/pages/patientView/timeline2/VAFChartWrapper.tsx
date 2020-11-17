@@ -8,7 +8,7 @@ import {
 import PatientViewMutationsDataStore from '../mutation/PatientViewMutationsDataStore';
 import { VAFChartControls } from './VAFChartControls';
 import VAFChart, { IColorPoint } from 'pages/patientView/timeline2/VAFChart';
-import TimelineWrapperStore from 'pages/patientView/timeline2/TimelineWrapperStore';
+import VAFChartWrapperStore from './VAFChartWrapperStore';
 import _ from 'lodash';
 import 'cbioportal-clinical-timeline/dist/styles.css';
 
@@ -54,6 +54,7 @@ export interface ISampleMetaDeta {
 }
 
 export interface IVAFChartWrapperProps {
+    wrapperStore: VAFChartWrapperStore;
     dataStore: PatientViewMutationsDataStore;
     data: ClinicalEvent[];
     caseMetaData: ISampleMetaDeta;
@@ -72,7 +73,7 @@ export default class VAFChartWrapper extends React.Component<
     {}
 > {
     store: TimelineStore;
-    wrapperStore: TimelineWrapperStore;
+    wrapperStore: VAFChartWrapperStore;
 
     constructor(props: IVAFChartWrapperProps) {
         super(props);
@@ -95,17 +96,13 @@ export default class VAFChartWrapper extends React.Component<
         // we can consider perhaps moving store into Timeline component
         // not sure if/why it needs to be out here
         this.store = new TimelineStore(trackSpecifications);
-
-        this.wrapperStore = new TimelineWrapperStore({
-            isOnlySequentialModePossible: () => this.props.data.length === 0,
-        });
     }
 
     /** ticks dependencies **/
 
     @computed get maxYTickmarkValue() {
         if (
-            !this.wrapperStore.vafChartYAxisToDataRange ||
+            !this.props.wrapperStore.vafChartYAxisToDataRange ||
             this.maxYValue === undefined
         )
             return 1;
@@ -117,7 +114,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get minYTickmarkValue() {
         if (
-            !this.wrapperStore.vafChartYAxisToDataRange ||
+            !this.props.wrapperStore.vafChartYAxisToDataRange ||
             this.minYValue === undefined
         )
             return 0;
@@ -161,13 +158,13 @@ export default class VAFChartWrapper extends React.Component<
         return yValueScaleFunction(
             this.minYTickmarkValue,
             this.maxYTickmarkValue,
-            this.wrapperStore.dataHeight,
-            this.wrapperStore.vafChartLogScale
+            this.props.wrapperStore.dataHeight,
+            this.props.wrapperStore.vafChartLogScale
         );
     }
 
     @computed get mutations() {
-        if (this.wrapperStore.onlyShowSelectedInVAFChart) {
+        if (this.props.wrapperStore.onlyShowSelectedInVAFChart) {
             return this.props.dataStore.allData.filter(m =>
                 this.props.dataStore.isMutationSelected(m[0])
             );
@@ -183,7 +180,7 @@ export default class VAFChartWrapper extends React.Component<
             this.props.sampleManager.sampleIdToIndexMap,
             this.props.mutationProfileId,
             this.props.coverageInformation,
-            this.wrapperStore.groupByOption!,
+            this.props.wrapperStore.groupByOption!,
             this.sampleIdToClinicalValue
         ).lineData;
     }
@@ -222,13 +219,13 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get sampleIdToClinicalValue() {
         let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
-        if (this.wrapperStore.groupingByIsSelected) {
+        if (this.props.wrapperStore.groupingByIsSelected) {
             this.props.sampleManager.samples.forEach((sample, i) => {
                 sampleIdToClinicalValue[
                     sample.id
                 ] = SampleManager!.getClinicalAttributeInSample(
                     sample,
-                    this.wrapperStore.groupByOption!
+                    this.props.wrapperStore.groupByOption!
                 )!.value;
             });
         }
@@ -237,7 +234,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get sampleIconsTracks() {
         const tracks: CustomTrackSpecification[] = [];
-        if (this.wrapperStore.groupingByIsSelected) {
+        if (this.props.wrapperStore.groupingByIsSelected) {
             _.forIn(this.sampleGroups, (sampleIds: string[], key: string) => {
                 const index = parseInt(key);
                 tracks.push({
@@ -262,7 +259,7 @@ export default class VAFChartWrapper extends React.Component<
         let sequentialDistance: number = 0;
         let sequentialPadding: number = 20;
         let samplePosition: { [sampleId: string]: number };
-        if (this.wrapperStore.showSequentialMode) {
+        if (this.props.wrapperStore.showSequentialMode) {
             // if in sequential mode, compute x coordinates using samples array,
             //  since we may not have sample event data
             sequentialDistance =
@@ -298,7 +295,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get groupColor() {
         return (sampleId: string) => {
-            return this.wrapperStore.groupingByIsSelected &&
+            return this.props.wrapperStore.groupingByIsSelected &&
                 this.numGroupByGroups > 1
                 ? this.clinicalValueToColor[
                       this.sampleIdToClinicalValue[sampleId]
@@ -312,7 +309,7 @@ export default class VAFChartWrapper extends React.Component<
         const uniqueColorGetter = makeUniqueColorGetter();
         const map = clinicalValueToSamplesMap(
             this.props.sampleManager.samples,
-            this.wrapperStore.groupByOption!
+            this.props.wrapperStore.groupByOption!
         );
         map.forEach((sampleList: string[], clinicalValue: any) => {
             clinicalValueToColor[clinicalValue] = uniqueColorGetter();
@@ -366,7 +363,7 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     groupColorByGroupIndex(groupIndex: number) {
-        return this.wrapperStore.groupingByIsSelected &&
+        return this.props.wrapperStore.groupingByIsSelected &&
             this.numGroupByGroups > 1
             ? this.clinicalValueToColor[
                   this.clinicalValuesForGrouping[groupIndex]
@@ -375,7 +372,7 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     @computed get numGroupByGroups() {
-        return this.wrapperStore.groupingByIsSelected
+        return this.props.wrapperStore.groupingByIsSelected
             ? _.keys(this.sampleGroups).length
             : 0;
     }
@@ -419,7 +416,7 @@ export default class VAFChartWrapper extends React.Component<
         let clinicalValuesForGrouping: string[] = [];
         const map = clinicalValueToSamplesMap(
             this.props.sampleManager.samples,
-            this.wrapperStore.groupByOption!
+            this.props.wrapperStore.groupByOption!
         );
         map.forEach((sampleList: string[], clinicalValue: any) => {
             clinicalValuesForGrouping.push(clinicalValue);
@@ -429,7 +426,7 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get vafChartHeight() {
         let footerHeight: number = 20;
-        return _.sum([this.wrapperStore.dataHeight, footerHeight]);
+        return _.sum([this.props.wrapperStore.dataHeight, footerHeight]);
     }
 
     @computed get customTracks() {
@@ -461,7 +458,7 @@ export default class VAFChartWrapper extends React.Component<
                             this.props.dataStore.toggleSelectedMutation(m)
                         }
                         onlyShowSelectedInVAFChart={
-                            this.wrapperStore.onlyShowSelectedInVAFChart
+                            this.props.wrapperStore.onlyShowSelectedInVAFChart
                         }
                         lineData={lineData}
                         height={height}
@@ -478,18 +475,18 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     render() {
-        if (!this.store || !this.wrapperStore) return null;
+        if (!this.store || !this.props.wrapperStore) return null;
 
         return (
             <>
                 <div style={{ marginTop: 20 }} data-test={'VAFChartWrapper'}>
                     <VAFChartControls
-                        wrapperStore={this.wrapperStore}
+                        wrapperStore={this.props.wrapperStore}
                         sampleManager={this.props.sampleManager}
                     />
                     <Timeline
                         key={`this.props.headerWidth-${this.numGroupByGroups.toString()}-${
-                            this.wrapperStore.showSequentialMode
+                            this.props.wrapperStore.showSequentialMode
                                 ? 'seq'
                                 : 'noseq'
                         }`}
@@ -499,7 +496,7 @@ export default class VAFChartWrapper extends React.Component<
                         }
                         width={this.props.width}
                         hideLabels={false}
-                        hideXAxis={this.wrapperStore.showSequentialMode}
+                        hideXAxis={this.props.wrapperStore.showSequentialMode}
                         visibleTracks={[]}
                         disableZoom={true}
                         customTracks={this.customTracks}
