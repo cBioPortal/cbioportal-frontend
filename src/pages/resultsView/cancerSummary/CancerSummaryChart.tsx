@@ -388,7 +388,10 @@ export class CancerSummaryChart extends React.Component<
     }
 
     private get leftPadding() {
-        return 50;
+        return Math.max(
+            50,
+            Math.max(...this.scatterData.map(datum => datum.y.length)) * 4
+        );
     }
 
     private get bottomPadding() {
