@@ -15,6 +15,12 @@ import {
     ReferenceGenomeGene,
     ResourceData,
     Sample,
+    SampleMolecularIdentifier,
+    GenericAssayDataFilter,
+    GenericAssayData,
+    GenericAssayMeta,
+    GenericAssayDataMultipleStudyFilter,
+    GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
@@ -67,8 +73,6 @@ import {
     fetchGenePanel,
     fetchGenePanelData,
     fetchGisticData,
-    fetchMutationalSignatureData,
-    fetchMutationalSignatureMetaData,
     fetchMutationData,
     fetchMutSigData,
     fetchOncoKbCancerGenes,
@@ -177,6 +181,15 @@ import {
     OtherBiomarkersQueryType,
     OTHER_BIOMARKER_NAME,
 } from 'react-mutation-mapper';
+import {
+    IMutationalSignature,
+    IMutationalSignatureMeta,
+} from 'shared/model/MutationalSignature';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    MutationalSignaturesVersion,
+    MutationalSignatureStableIdKeyWord,
+} from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 
 type PageMode = 'patient' | 'sample';
 
@@ -406,18 +419,265 @@ export class PatientViewPageStore {
 
     readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
-    readonly mutationalSignatureData = remoteData({
-        invoke: async () => fetchMutationalSignatureData(),
+    // get mutational signature molecular profile Ids (contribution and confidence)
+    readonly mutationalSignatureMolecularProfiles = remoteData<
+        MolecularProfile[]
+    >(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        (profile: MolecularProfile) => {
+                            if (profile.genericAssayType) {
+                                return (
+                                    profile.genericAssayType ===
+                                    GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
+                                );
+                            }
+                            return false;
+                        }
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly fetchAllMutationalSignatureData = remoteData(
+        {
+            await: () => [
+                this.samples,
+                this.mutationalSignatureMolecularProfiles,
+            ],
+            invoke: () => {
+                const mutationalSignatureMolecularProfileIds = this.mutationalSignatureMolecularProfiles.result.map(
+                    profile => profile.molecularProfileId
+                );
+                if (mutationalSignatureMolecularProfileIds.length > 0) {
+                    const sampleMolecularIdentifiers = _.flatMap(
+                        mutationalSignatureMolecularProfileIds,
+                        mutationalSignatureMolecularProfileId => {
+                            return _.map(this.samples.result, sample => {
+                                return {
+                                    molecularProfileId: mutationalSignatureMolecularProfileId,
+                                    sampleId: sample.sampleId,
+                                } as SampleMolecularIdentifier;
+                            });
+                        }
+                    );
+                    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                        {
+                            genericAssayDataMultipleStudyFilter: {
+                                sampleMolecularIdentifiers,
+                            } as GenericAssayDataMultipleStudyFilter,
+                        }
+                    );
+                }
+                return Promise.resolve([]);
+            },
+        },
+        []
+    );
+
+    readonly mutationalSignatureDataGroupByVersion = remoteData(
+        {
+            await: () => [
+                this.fetchAllMutationalSignatureData,
+                this.mutationData,
+                this.mutationalSignatureMetaGroupByStableId,
+            ],
+            invoke: () => {
+                const contributionData = this.fetchAllMutationalSignatureData.result.filter(
+                    data =>
+                        data.molecularProfileId.includes(
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord
+                        )
+                );
+                const confidenceData = this.fetchAllMutationalSignatureData.result.filter(
+                    data =>
+                        data.molecularProfileId.includes(
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord
+                        )
+                );
+                // we know mutational signatures data are coming in as a pair (contribution and confidence)
+                // we can always find the confidence data based on a key: uniqueSampleKey + id (split by '_', the last word of genericAssayStableId is id)
+                const confidenceDataMap = _.keyBy(
+                    confidenceData,
+                    data =>
+                        data.uniqueSampleKey +
+                        _.last(data.genericAssayStableId.split('_'))
+                );
+                const numMutationData = this.mutationData.result.length;
+
+                const result: IMutationalSignature[] = [];
+                // only loop the contribution data then find and fill in the paired confidence data
+                if (contributionData && contributionData.length > 0) {
+                    for (const contribution of contributionData) {
+                        let mutationalSignatureTableData: IMutationalSignature = {} as IMutationalSignature;
+                        mutationalSignatureTableData.mutationalSignatureId =
+                            contribution.genericAssayStableId;
+                        mutationalSignatureTableData.patientId =
+                            contribution.patientId;
+                        mutationalSignatureTableData.sampleId =
+                            contribution.sampleId;
+                        mutationalSignatureTableData.studyId =
+                            contribution.studyId;
+                        mutationalSignatureTableData.uniquePatientKey =
+                            contribution.uniquePatientKey;
+                        mutationalSignatureTableData.uniqueSampleKey =
+                            contribution.uniqueSampleKey;
+                        mutationalSignatureTableData.value = parseFloat(
+                            contribution.value
+                        );
+                        // fill in confidence data
+                        mutationalSignatureTableData.confidence = parseFloat(
+                            confidenceDataMap[
+                                contribution.uniqueSampleKey +
+                                    _.last(
+                                        contribution.genericAssayStableId.split(
+                                            '_'
+                                        )
+                                    )
+                            ].value
+                        );
+                        mutationalSignatureTableData.numberOfMutationsForSample = numMutationData;
+                        // split by '_' and use the last word of molecularProfileId as version info
+                        mutationalSignatureTableData.version = _.last(
+                            contribution.molecularProfileId.split('_')
+                        )!;
+                        mutationalSignatureTableData.meta = this.mutationalSignatureMetaGroupByStableId.result![
+                            contribution.genericAssayStableId
+                        ];
+                        result.push(mutationalSignatureTableData);
+                    }
+                }
+                return Promise.resolve(_.groupBy(result, data => data.version));
+            },
+        },
+        {}
+    );
+
+    // only fetch meta for contribution
+    // contribution and confidence are sharing the same meta, no need to fetch twice
+    readonly fetchAllMutationalSignatureContributionMetaData = remoteData({
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            const mutationalSignatureContributionStableIds = _.chain(
+                this.fetchAllMutationalSignatureData.result
+            )
+                .map((data: GenericAssayData) => data.stableId)
+                .uniq()
+                .filter(stableId =>
+                    stableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord
+                    )
+                )
+                .value();
+
+            return client.fetchGenericAssayMetaDataUsingPOST({
+                genericAssayMetaFilter: {
+                    genericAssayStableIds: mutationalSignatureContributionStableIds
+                        ? mutationalSignatureContributionStableIds
+                        : [],
+                } as GenericAssayMetaFilter,
+            });
+        },
     });
 
-    readonly mutationalSignatureMetaData = remoteData({
-        invoke: async () => fetchMutationalSignatureMetaData(),
+    readonly mutationalSignatureMeta = remoteData<IMutationalSignatureMeta[]>(
+        {
+            await: () => [this.fetchAllMutationalSignatureContributionMetaData],
+            invoke: () => {
+                return Promise.resolve(
+                    this.fetchAllMutationalSignatureContributionMetaData.result!.map(
+                        (metaData: GenericAssayMeta) => {
+                            let meta = {} as IMutationalSignatureMeta;
+                            const name: string =
+                                'NAME' in metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'NAME'
+                                      ]
+                                    : '';
+                            const description: string =
+                                'DESCRIPTION' in
+                                metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'DESCRIPTION'
+                                      ]
+                                    : 'No description';
+                            const url: string =
+                                'URL' in metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'URL'
+                                      ]
+                                    : 'No url';
+                            // TODO: should we add additional property 'CATEGORY' in data file
+                            // currently, category can be derived from name
+                            // name format: ENTITY_NAME (CATEGORY)
+                            // we can get category between '(' and ')'
+                            const category: string = name
+                                ? name.substring(
+                                      name.lastIndexOf('(') + 1,
+                                      name.lastIndexOf(')')
+                                  )
+                                : 'No category';
+                            const confidenceStatement: string =
+                                'DESCRIPTION' in
+                                metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'DESCRIPTION'
+                                      ]
+                                    : 'No confidence statement';
+                            meta.mutationalSignatureId = metaData.stableId;
+                            meta.name = name;
+                            meta.description = description;
+                            meta.url = url;
+                            meta.category = category;
+                            meta.confidenceStatement = confidenceStatement;
+                            return meta;
+                        }
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly mutationalSignatureMetaGroupByStableId = remoteData<{
+        [stableId: string]: IMutationalSignatureMeta;
+    }>({
+        await: () => [this.mutationalSignatureMeta],
+        invoke: () => {
+            return Promise.resolve(
+                _.keyBy(
+                    this.mutationalSignatureMeta.result,
+                    meta => meta.mutationalSignatureId
+                )
+            );
+        },
     });
 
     readonly hasMutationalSignatureData = remoteData({
-        invoke: async () => false,
-        default: false,
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            return Promise.resolve(
+                this.fetchAllMutationalSignatureData.result &&
+                    this.fetchAllMutationalSignatureData.result.length > 0
+            );
+        },
     });
+
+    // set version 2 of the mutational signature as default
+    @observable _selectedMutationalSignatureVersion: string =
+        MutationalSignaturesVersion.V2;
+    @computed get selectedMutationalSignatureVersion() {
+        return this._selectedMutationalSignatureVersion;
+    }
+    @action
+    setMutationalSignaturesVersion(version: string) {
+        this._selectedMutationalSignatureVersion = version;
+    }
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],

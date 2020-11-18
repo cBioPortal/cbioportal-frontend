@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { PlotsTabOption, PlotsTabDataSource } from './PlotsTab';
 import { generateQuickPlots, ButtonInfo, TypeSourcePair } from './QuickPlots';
-import { GenericAssayTypeConstants } from '../ResultsViewPageStore';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('Quick Plot Links in the Plots Tab', () => {
     describe('generateQuickplots', () => {
