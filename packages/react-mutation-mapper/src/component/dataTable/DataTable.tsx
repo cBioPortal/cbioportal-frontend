@@ -35,6 +35,11 @@ export enum ColumnSortDirection {
     DESC = 'desc',
 }
 
+export type ColumnSort = {
+    column: string;
+    sortDirection?: ColumnSortDirection;
+};
+
 export type DataTableProps<T> = {
     data?: T[];
     dataStore?: DataStore;
@@ -42,9 +47,8 @@ export type DataTableProps<T> = {
     className?: string;
     reactTableProps?: Partial<TableProps<T>>;
 
-    initialSortColumnData?: (RemoteData<any> | undefined)[];
-    initialSortColumn?: string;
-    initialSortDirection?: ColumnSortDirection;
+    initialSort?: ColumnSort[];
+    initialSortRemoteData?: (RemoteData<any> | undefined)[];
     initialItemsPerPage?: number;
 
     highlightColorLight?: string;
@@ -63,11 +67,11 @@ export type DataTableProps<T> = {
     columnSelectorProps?: ColumnSelectorProps;
 };
 
-export function getInitialColumnDataStatus(
-    initialSortColumnData?: (RemoteData<any> | undefined)[]
+export function getInitialSortDataStatus(
+    initialSortRemoteData?: (RemoteData<any> | undefined)[]
 ) {
-    return initialSortColumnData
-        ? getRemoteDataGroupStatus(..._.compact(initialSortColumnData))
+    return initialSortRemoteData
+        ? getRemoteDataGroupStatus(..._.compact(initialSortRemoteData))
         : 'complete';
 }
 
@@ -99,7 +103,6 @@ export default class DataTable<T> extends React.Component<
 > {
     public static defaultProps = {
         data: [],
-        initialSortDirection: ColumnSortDirection.DESC,
         initialItemsPerPage: 10,
         highlightColorLight: '#B0BED9',
         highlightColorDark: '#9FAFD1',
@@ -163,26 +166,24 @@ export default class DataTable<T> extends React.Component<
     }
 
     @computed
-    get initialColumnDataStatus() {
-        return getInitialColumnDataStatus(this.props.initialSortColumnData);
+    get initialSortDataStatus() {
+        return getInitialSortDataStatus(this.props.initialSortRemoteData);
     }
 
     @computed
     get defaultSorted() {
-        const { initialSortColumn, initialSortDirection } = this.props;
-
+        // we need to wait for the async data to complete,
+        // otherwise initial sort won't work
         if (
-            initialSortColumn === undefined ||
-            this.initialColumnDataStatus === 'pending'
+            this.props.initialSort === undefined ||
+            this.initialSortDataStatus === 'pending'
         ) {
             return undefined;
         } else {
-            return [
-                {
-                    id: initialSortColumn,
-                    desc: initialSortDirection === ColumnSortDirection.DESC,
-                },
-            ];
+            return this.props.initialSort.map(s => ({
+                id: s.column,
+                desc: s.sortDirection !== ColumnSortDirection.ASC, // default: DESC
+            }));
         }
     }
 
