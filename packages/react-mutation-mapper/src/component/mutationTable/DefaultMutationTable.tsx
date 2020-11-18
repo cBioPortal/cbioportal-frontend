@@ -65,7 +65,7 @@ export default class DefaultMutationTable extends React.Component<
     {}
 > {
     public static defaultProps = {
-        initialSortColumn: MutationColumn.ANNOTATION,
+        initialSort: [{ column: MutationColumn.ANNOTATION }],
         appendColumns: true,
     };
 
@@ -122,8 +122,8 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @computed
-    get initialSortColumnData() {
-        return this.props.initialSortColumnData || this.annotationColumnData;
+    get initialSortRemoteData() {
+        return this.props.initialSortRemoteData || this.annotationColumnData;
     }
 
     protected getDefaultColumnAccessor(columnKey: MutationColumn) {
@@ -229,7 +229,7 @@ export default class DefaultMutationTable extends React.Component<
             <DefaultMutationTableComponent
                 {...this.props}
                 columns={this.columns}
-                initialSortColumnData={this.initialSortColumnData}
+                initialSortRemoteData={this.initialSortRemoteData}
                 onSearch={this.onSearch}
                 className="default-mutation-table"
             />
