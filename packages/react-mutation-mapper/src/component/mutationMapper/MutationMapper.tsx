@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ReactNode } from 'react';
 import { TableProps } from 'react-table';
 
-import { MobxCache, Mutation } from 'cbioportal-utils';
+import { MobxCache, Mutation, RemoteData } from 'cbioportal-utils';
 
 import { DefaultPubMedCache } from '../../cache/DefaultPubMedCache';
 import { MutationAlignerCache } from '../../cache/MutationAlignerCache';
@@ -18,7 +18,7 @@ import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPl
 import DefaultMutationMapperStore from '../../store/DefaultMutationMapperStore';
 import { initDefaultTrackVisibility } from '../../util/TrackUtils';
 import { getDefaultWindowInstance } from '../../util/DefaultWindowInstance';
-import { ColumnSortDirection, DataTableColumn } from '../dataTable/DataTable';
+import { ColumnSort, DataTableColumn } from '../dataTable/DataTable';
 import DefaultMutationRateSummary, {
     MutationRate,
 } from './DefaultMutationRateSummary';
@@ -65,8 +65,8 @@ export type MutationMapperProps = {
     plotVizHeight?: number;
     customControls?: JSX.Element;
     mutationTable?: JSX.Element;
-    mutationTableInitialSortColumn?: string;
-    mutationTableInitialSortDirection?: ColumnSortDirection;
+    mutationTableInitialSort?: ColumnSort[];
+    mutationTableInitialSortRemoteData?: (RemoteData<any> | undefined)[];
     mutationRates?: MutationRate[];
     pubMedCache?: MobxCache;
     mutationAlignerCache?: MobxCache;
@@ -281,11 +281,9 @@ export default class MutationMapper<
                 <DefaultMutationTable
                     dataStore={this.store.dataStore}
                     columns={columns}
-                    initialSortColumn={
-                        this.props.mutationTableInitialSortColumn
-                    }
-                    initialSortDirection={
-                        this.props.mutationTableInitialSortDirection
+                    initialSort={this.props.mutationTableInitialSort}
+                    initialSortRemoteData={
+                        this.props.mutationTableInitialSortRemoteData
                     }
                     reactTableProps={this.props.customMutationTableProps}
                     hotspotData={this.store.indexedHotspotData}
