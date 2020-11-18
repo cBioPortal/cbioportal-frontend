@@ -1,11 +1,16 @@
 import { assert } from 'chai';
-import { GenePanelData, MolecularProfile } from 'cbioportal-ts-api-client';
+import {
+    GenePanelData,
+    MolecularProfile,
+    GenericAssayMeta,
+} from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     alterationTypeToProfiledForText,
     makeProfiledInClinicalAttributes,
 } from './ResultsViewOncoprintUtils';
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('ResultsViewOncoprintUtils', () => {
     describe('makeProfiledInClinicalAttributes', () => {
