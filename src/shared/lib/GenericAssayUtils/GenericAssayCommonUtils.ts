@@ -12,6 +12,11 @@ import { IDataQueryFilter } from '../StoreUtils';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
 
+export const GenericAssayTypeConstants: { [s: string]: string } = {
+    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
+    MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
+};
+
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
