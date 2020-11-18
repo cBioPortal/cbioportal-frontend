@@ -7,6 +7,7 @@ import {
     lazyMobXTableSort,
     default as LazyMobXTable,
     Column,
+    LazyMobXTableStore,
 } from './LazyMobXTable';
 import SimpleTable from '../simpleTable/SimpleTable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -396,6 +397,25 @@ describe('LazyMobXTable', () => {
 
     after(() => {
         clock.uninstall();
+    });
+
+    describe('downloadData', () => {
+        it('only displays columns with defined download functions', () => {
+            assert.deepEqual(
+                new LazyMobXTableStore({
+                    columns: columns,
+                    data: data,
+                }).downloadData,
+                [
+                    ['Name', 'Number', 'String', 'Initially invisible column'],
+                    ['0', '0', 'asdfj', '0HELLO123456'],
+                    ['1', '6', 'kdfjpo', '1HELLO123456'],
+                    ['2', 'null', 'null', '2HELLO123456'],
+                    ['3', '-1', 'zijxcpo', '3HELLO123456'],
+                    ['4', '90', 'zkzxc', '4HELLO123456'],
+                ]
+            );
+        });
     });
 
     describe('utils', () => {
@@ -2269,19 +2289,19 @@ describe('LazyMobXTable', () => {
                         any
                     >).getDownloadDataPromise()
                 ).text,
-                'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n'
+                'Name\tNumber\tString\tInitially invisible column\r\n'
             );
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async () => {
-            let table = mount(<Table columns={columns} data={[data[0]]} />);
+            let table = mount(<Table columns={columns} data={[datum0]} />);
             assert.deepEqual(
                 (
                     await (table.instance() as LazyMobXTable<
                         any
                     >).getDownloadDataPromise()
                 ).text,
-                'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
-                    '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n'
+                'Name\tNumber\tString\tInitially invisible column\r\n' +
+                    '0\t0\tasdfj\t0HELLO123456\r\n'
             );
         });
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", async () => {
@@ -2292,12 +2312,12 @@ describe('LazyMobXTable', () => {
                         any
                     >).getDownloadDataPromise()
                 ).text,
-                'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
-                    '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
-                    '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
-                    '2\tnull\tnull\t\t2HELLO123456\t\t\r\n' +
-                    '3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n' +
-                    '4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n'
+                'Name\tNumber\tString\tInitially invisible column\r\n' +
+                    '0\t0\tasdfj\t0HELLO123456\r\n' +
+                    '1\t6\tkdfjpo\t1HELLO123456\r\n' +
+                    '2\tnull\tnull\t2HELLO123456\r\n' +
+                    '3\t-1\tzijxcpo\t3HELLO123456\r\n' +
+                    '4\t90\tzkzxc\t4HELLO123456\r\n'
             );
         });
         it('gives data back in sorted order according to initially selected sort column and direction', async () => {
@@ -2316,12 +2336,12 @@ describe('LazyMobXTable', () => {
                         any
                     >).getDownloadDataPromise()
                 ).text,
-                'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
-                    '3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n' +
-                    '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
-                    '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
-                    '4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n' +
-                    '2\tnull\tnull\t\t2HELLO123456\t\t\r\n'
+                'Name\tNumber\tString\tInitially invisible column\r\n' +
+                    '3\t-1\tzijxcpo\t3HELLO123456\r\n' +
+                    '0\t0\tasdfj\t0HELLO123456\r\n' +
+                    '1\t6\tkdfjpo\t1HELLO123456\r\n' +
+                    '4\t90\tzkzxc\t4HELLO123456\r\n' +
+                    '2\tnull\tnull\t2HELLO123456\r\n'
             );
         });
 
@@ -2333,12 +2353,12 @@ describe('LazyMobXTable', () => {
                         any
                     >).getDownloadDataPromise()
                 ).text,
-                'Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n' +
-                    '0\t0\tasdfj\t\t0HELLO123456\t\t\r\n' +
-                    '1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n' +
-                    '2\tnull\tnull\t\t2HELLO123456\t\t\r\n' +
-                    '3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n' +
-                    '4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n'
+                'Name\tNumber\tString\tInitially invisible column\r\n' +
+                    '0\t0\tasdfj\t0HELLO123456\r\n' +
+                    '1\t6\tkdfjpo\t1HELLO123456\r\n' +
+                    '2\tnull\tnull\t2HELLO123456\r\n' +
+                    '3\t-1\tzijxcpo\t3HELLO123456\r\n' +
+                    '4\t90\tzkzxc\t4HELLO123456\r\n'
             );
         });
 
@@ -2347,10 +2367,12 @@ describe('LazyMobXTable', () => {
                 {
                     name: 'Myth',
                     render: (d: any) => <span />,
+                    download: (d: any) => '',
                 },
                 {
                     name: 'Science',
                     render: (d: any) => <span />,
+                    download: (d: any) => '',
                     headerDownload: (name: string) =>
                         `${name}: Ruining everything since 1543`,
                 },
