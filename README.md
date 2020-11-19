@@ -137,6 +137,13 @@ yarn global add webdriver-manager
 Run updater to get necessary binaries
 ```
 webdriver-manager update
+
+// ALTERNATIVE
+// Specify chrome version if your local chrome version is not up to date.
+// This ensures that chromedriver is compatible with your local chrome
+// If it's out of sync, tests will not run
+webdriver-manager update --versions.chrome=[e.g. 86.0.4240.198]
+
 ```
 Start the webdriver-manager
 ```
