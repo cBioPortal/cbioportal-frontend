@@ -27,3 +27,4 @@ yarn.lock
 .gitignore
 .kodiak.toml
 *.seg
+end-to-end-test/local/studies/**

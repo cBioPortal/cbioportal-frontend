@@ -243,8 +243,6 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
             } else {
                 downloadObject.data.push(downloadData);
             }
-        } else {
-            downloadObject.data.push('');
         }
     });
     return downloadObject;
@@ -338,14 +336,9 @@ export class LazyMobXTableStore<T> {
         const tableDownloadData: string[][] = [];
 
         // add header (including hidden columns)
-        tableDownloadData[0] = [];
-        this.columns.forEach((column: Column<T>) => {
-            tableDownloadData[0].push(
-                column.headerDownload
-                    ? column.headerDownload(column.name)
-                    : column.name
-            );
-        });
+        tableDownloadData[0] = this.columns
+            .filter(c => c.download)
+            .map(c => (c.headerDownload ? c.headerDownload(c.name) : c.name));
 
         // add rows (including hidden columns). The purpose of this part is to ensure that
         // if any element of rowData contains a column with multiple values, rowData is written as
@@ -787,7 +780,7 @@ export default class LazyMobXTable<T> extends React.Component<
                 // populate the cache instances with all available data for the lazy loaded columns
                 this.store.downloadDataFetcher
                     .fetchAndCacheAllLazyData()
-                    .then(allLazyData => {
+                    .then(() => {
                         // we don't use allData directly,
                         // we rely on the data cached by the download data fetcher
                         resolve({
@@ -872,7 +865,7 @@ export default class LazyMobXTable<T> extends React.Component<
         );
         this.pageToHighlightReaction = reaction(
             () => this.store.firstHighlightedRowIndex,
-            (index: number) => {
+            () => {
                 if (this.props.pageToHighlight) {
                     this.store.pageToRowIndex(
                         this.store.firstHighlightedRowIndex

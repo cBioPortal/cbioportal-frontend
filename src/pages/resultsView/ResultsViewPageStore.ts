@@ -248,10 +248,6 @@ export const AlterationTypeConstants = {
     MUTATION_UNCALLED: 'MUTATION_UNCALLED',
 };
 
-export const GenericAssayTypeConstants: { [s: string]: string } = {
-    TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
-};
-
 export const AlterationTypeDisplayConstants = {
     COPY_NUMBER_ALTERATION: 'CNA',
     MRNA_EXPRESSION: 'EXP',
@@ -4008,6 +4004,7 @@ export class ResultsViewPageStore {
         [profileIdSuffix: string]: GenericAssayData[];
     }>({
         await: () => [
+            this.samples,
             this.genericAssayProfilesGroupByProfileIdSuffix,
             this.genericAssayEntityStableIdsGroupByProfileIdSuffix,
         ],
