@@ -61,6 +61,7 @@ import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -723,7 +724,10 @@ export function getVirtualStudyDescription(
                 filterLines = filterLines.concat(
                     geneFilter.geneQueries
                         .map(geneQuery => {
-                            return geneQuery.join(', ').trim();
+                            const elements = _.map(geneQuery, q =>
+                                geneFilterQueryToOql(q)
+                            );
+                            return elements.join(', ').trim();
                         })
                         .map(line => '  - ' + line)
                 );
@@ -2785,4 +2789,37 @@ export function getMolecularProfileSamplesSet(
         },
         {}
     );
+}
+
+// FIXME add unit tests
+export function geneFilterQueryToOql(query: GeneFilterQuery): string {
+    return query.alterations.length > 0
+        ? `${query.hugoGeneSymbol}:${query.alterations.join(' ')}`
+        : query.hugoGeneSymbol;
+}
+
+// FIXME add unit tests
+export function geneFilterQueryFromOql(
+    oql: string,
+    excludeVUS?: boolean,
+    selectedTiers?: string[],
+    excludeGermline?: boolean
+): GeneFilterQuery {
+    const [part1, part2]: string[] = oql.split(':');
+    const alterations = part2 ? part2.trim().split(' ') : [];
+    const hugoGeneSymbol = part1.trim();
+    return {
+        hugoGeneSymbol,
+        entrezGeneId: 0,
+        alterations: alterations as (
+            | 'HOMDEL'
+            | 'AMP'
+            | 'GAIN'
+            | 'DIPLOID'
+            | 'HETLOSS'
+        )[],
+        excludeGermline: !!excludeGermline,
+        selectedTiers: selectedTiers || [],
+        excludeVUS: !!excludeVUS,
+    };
 }

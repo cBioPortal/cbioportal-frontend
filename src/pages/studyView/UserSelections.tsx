@@ -14,6 +14,7 @@ import {
     ChartMeta,
     ChartType,
     DataType,
+    geneFilterQueryToOql,
     getCNAColorByAlteration,
     getGenomicChartUniqueKey,
     getPatientIdentifiers,
@@ -38,9 +39,11 @@ import {
 } from '../groupComparison/GroupComparisonUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
+    GeneFilterQuery,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -388,10 +391,7 @@ export default class UserSelections extends React.Component<
                                             <GroupLogic
                                                 components={this.groupedGeneQueries(
                                                     queries,
-                                                    chartMeta,
-                                                    geneFilter.excludeVUS,
-                                                    geneFilter.selectedTiers,
-                                                    geneFilter.excludeGermline
+                                                    chartMeta
                                                 )}
                                                 operation="or"
                                                 group={queries.length > 1}
@@ -548,15 +548,12 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedGeneQueries(
-        geneQueries: string[],
-        chartMeta: ChartMeta & { chartType: ChartType },
-        excludeVUS?: boolean,
-        selectedTiers?: string[],
-        excludeGermline?: boolean
+        geneQueries: GeneFilterQuery[],
+        chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return geneQueries.map(oql => {
+        return geneQueries.map(geneQuery => {
             let color = DEFAULT_NA_COLOR;
-            let displayGeneSymbol = oql;
+            let displayGeneSymbol = geneQuery.hugoGeneSymbol;
             switch (chartMeta.chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     color = MUT_COLOR_MISSENSE;
@@ -565,10 +562,10 @@ export default class UserSelections extends React.Component<
                     color = MUT_COLOR_FUSION;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    const oqlParts = oql.trim().split(':');
-                    if (oqlParts.length === 2) {
-                        displayGeneSymbol = oqlParts[0];
-                        let tagColor = getCNAColorByAlteration(oqlParts[1]);
+                    if (geneQuery.alterations.length === 1) {
+                        let tagColor = getCNAColorByAlteration(
+                            geneQuery.alterations[0]
+                        );
                         if (tagColor) {
                             color = tagColor;
                         }
@@ -581,12 +578,33 @@ export default class UserSelections extends React.Component<
                     content={displayGeneSymbol}
                     backgroundColor={color}
                     infoSection={this.groupedGeneFilterIcons(
-                        excludeVUS,
-                        selectedTiers,
-                        excludeGermline
+                        geneQuery.excludeVUS,
+                        geneQuery.selectedTiers,
+                        geneQuery.excludeGermline
                     )}
                     onDelete={() =>
-                        this.props.removeGeneFilter(chartMeta.uniqueKey, oql)
+                        this.props.removeGeneFilter(
+                            chartMeta.uniqueKey,
+                            geneFilterQueryToOql(geneQuery)
+                        )
+                    }
+                />
+            );
+        });
+    }
+
+    private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
+        return genomicProfiles.map(profile => {
+            return (
+                <PillTag
+                    content={
+                        this.props.molecularProfileNameSet[profile] || profile
+                    }
+                    backgroundColor={
+                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                    }
+                    onDelete={() =>
+                        this.props.removeGenomicProfileFilter(profile)
                     }
                 />
             );
@@ -669,24 +687,6 @@ export default class UserSelections extends React.Component<
                 )}
             </div>
         );
-    }
-
-    private groupedGenomicProfiles(genomicProfiles: string[]): JSX.Element[] {
-        return genomicProfiles.map(profile => {
-            return (
-                <PillTag
-                    content={
-                        this.props.molecularProfileNameSet[profile] || profile
-                    }
-                    backgroundColor={
-                        STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
-                    }
-                    onDelete={() =>
-                        this.props.removeGenomicProfileFilter(profile)
-                    }
-                />
-            );
-        });
     }
 
     private groupedCaseLists(caseLists: string[]): JSX.Element[] {

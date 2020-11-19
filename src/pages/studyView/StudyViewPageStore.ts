@@ -71,6 +71,7 @@ import {
     ClinicalDataTypeEnum,
     convertGenomicDataBinsToClinicalDataBins,
     DataType,
+    geneFilterQueryFromOql,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
     getChartMetaDataType,
@@ -213,6 +214,7 @@ import {
     FilteredOutAlterations,
     subset,
 } from 'shared/lib/AlterationsUtils';
+import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export type ChartUserSetting = {
     id: string;
@@ -275,13 +277,6 @@ export type StudyViewURLQuery = {
     filterAttributeId?: string;
     filterValues?: string;
     sharedGroups?: string;
-};
-
-export type GeneFilterInternal = {
-    geneQueries: string[][];
-    excludeVUS: boolean;
-    selectedTiers: string[];
-    excludeGermline: boolean;
 };
 
 export type CustomGroup = {
@@ -1303,7 +1298,7 @@ export class StudyViewPageStore
     >();
 
     @observable.ref private _geneFilterSet = observable.map<
-        GeneFilterInternal
+        GeneFilterQuery[][]
     >();
 
     // TODO: make it computed
@@ -1370,15 +1365,7 @@ export class StudyViewPageStore
                 const key = getUniqueKeyFromMolecularProfileIds(
                     geneFilter.molecularProfileIds
                 );
-                this._geneFilterSet.set(
-                    key,
-                    _.pick(geneFilter, [
-                        'geneQueries',
-                        'excludeVUS',
-                        'selectedTiers',
-                        'excludeGermline',
-                    ]) as GeneFilterInternal
-                );
+                this._geneFilterSet.set(key, _.clone(geneFilter.geneQueries));
             });
         }
         if (
@@ -1989,19 +1976,21 @@ export class StudyViewPageStore
     @action
     addGeneFilters(chartMeta: ChartMeta, hugoGeneSymbols: string[][]) {
         trackStudyViewFilterEvent('geneFilter', this);
-        const geneFilterInternal = toJS(
-            this._geneFilterSet.get(chartMeta.uniqueKey)
-        ) || {
-            geneQueries: [] as string[][],
-            excludeVUS: !!this.driverAnnotationSettings.excludeVUS,
-            selectedTiers: this.selectedTiers || [],
-            excludeGermline: !!this.excludeGermlineMutations,
-        };
-        let geneQueries = geneFilterInternal.geneQueries.concat(
-            hugoGeneSymbols
+        let geneFilter =
+            toJS(this._geneFilterSet.get(chartMeta.uniqueKey)) || [];
+        // convert OQL gene queries to GeneFilterObjects accepted by the backend
+        const queries = _.map(hugoGeneSymbols, oqls =>
+            _.map(oqls, oql =>
+                geneFilterQueryFromOql(
+                    oql,
+                    this.driverAnnotationSettings.excludeVUS,
+                    this.selectedTiers,
+                    this.excludeGermlineMutations
+                )
+            )
         );
-        geneFilterInternal.geneQueries = geneQueries;
-        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilterInternal);
+        geneFilter = geneFilter.concat(queries);
+        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilter);
     }
 
     @autobind
@@ -2043,35 +2032,30 @@ export class StudyViewPageStore
     @autobind
     @action
     removeGeneFilter(chartUniqueKey: string, toBeRemoved: string) {
-        const geneFilterInternal = toJS(
-            this._geneFilterSet.get(chartUniqueKey)
-        );
-        if (!geneFilterInternal) {
-            console.log(
-                "ERROR: trying to remove geneQuery from undefined GeneFilter (using key '" +
-                    chartUniqueKey +
-                    "')"
-            );
-            return;
-        }
-        const geneQueries = _.reduce(
-            geneFilterInternal.geneQueries,
+        let geneFilters = toJS(this._geneFilterSet.get(chartUniqueKey)) || [];
+        geneFilters = _.reduce(
+            geneFilters,
             (acc, next) => {
-                const newGroup = next.filter(oql => oql !== toBeRemoved);
+                const [
+                    hugoGeneSymbol,
+                    alteration,
+                ]: string[] = toBeRemoved.split(':');
+                const newGroup = next.filter(
+                    geneFilterQuery =>
+                        geneFilterQuery.hugoGeneSymbol !== hugoGeneSymbol &&
+                        !_.includes(geneFilterQuery.alterations, alteration)
+                );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
                 }
                 return acc;
             },
-            [] as string[][]
+            [] as GeneFilterQuery[][]
         );
-        if (geneQueries.length === 0) {
+        if (geneFilters.length === 0) {
             this._geneFilterSet.delete(chartUniqueKey);
         } else {
-            this._geneFilterSet.set(chartUniqueKey, {
-                ...geneFilterInternal,
-                geneQueries,
-            });
+            this._geneFilterSet.set(chartUniqueKey, geneFilters);
         }
     }
 
@@ -2422,17 +2406,12 @@ export class StudyViewPageStore
     }
 
     @computed get geneFilters(): GeneFilter[] {
-        return _.map(
-            this._geneFilterSet.entries(),
-            ([key, geneFilterInternal]) => {
-                return {
-                    ...geneFilterInternal,
-                    molecularProfileIds: getMolecularProfileIdsFromUniqueKey(
-                        key
-                    ),
-                };
-            }
-        );
+        return _.map(this._geneFilterSet.entries(), ([key, value]) => {
+            return {
+                molecularProfileIds: getMolecularProfileIdsFromUniqueKey(key),
+                geneQueries: value,
+            };
+        });
     }
 
     @computed get genomicDataIntervalFilters() {
@@ -2514,8 +2493,15 @@ export class StudyViewPageStore
         return { ...this.filters, sampleIdentifiersSet };
     }
 
-    public getGeneFiltersByUniqueKey(uniqueKey: string) {
-        return toJS(this._geneFilterSet.get(uniqueKey)) || {};
+    public getGeneFiltersByUniqueKey(uniqueKey: string): string[][] {
+        const filters = _.map(this._geneFilterSet.get(uniqueKey), fs =>
+            _.map(fs, f =>
+                f.alterations.length > 0
+                    ? `${f.hugoGeneSymbol}:${f.alterations[0]}`
+                    : f.hugoGeneSymbol
+            )
+        );
+        return toJS(filters);
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string) {
@@ -5050,7 +5036,7 @@ export class StudyViewPageStore
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter,
+                    studyViewFilter: toJS(studyViewFilter),
                 });
             } else {
                 return Promise.resolve(this.samples.result);
