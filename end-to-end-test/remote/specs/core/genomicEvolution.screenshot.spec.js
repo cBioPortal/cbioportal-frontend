@@ -85,7 +85,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
     it('pvge add a mutation to line chart', function() {
         browser.click(
-            'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(7)'
+            'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
@@ -148,9 +148,11 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     it('pvge heatmap hide labels', function() {
         browser.click('input[data-test="HeatmapTranspose"]');
         browser.pause(2000); // give time to untranspose
+
         const res = checkElementWithMouseDisabled('div#MutationHeatmap', 0, {
             hide: ['.qtip', '.dropdown-menu'],
         });
+
         assertScreenShotMatch(res);
     });
 });
