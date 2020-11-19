@@ -73,6 +73,8 @@ describe('gsva feature', () => {
             vertDataSelect.$('.Select-arrow-zone').click();
             vertDataSelect.$('.Select-option=Gene Sets').click();
 
+            browser.pause(1000);
+
             var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
             assertScreenShotMatch(res);
         });
