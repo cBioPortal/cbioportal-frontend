@@ -277,6 +277,7 @@ describe('check the filters are working properly', () => {
         waitForNetworkQuiet(60000);
     });
     it('filter study from url', function() {
+        waitForNetworkQuiet(60000);
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
