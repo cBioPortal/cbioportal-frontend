@@ -161,7 +161,7 @@
     "genome-nexus-ts-api-client": "^1.1.9",
     "git-revision-webpack-plugin": "^3.0.3",
     "html-webpack-plugin": "3.2.0",
-    "igv": "github:cBioPortal/igv.js#660005f62fbb36538420f9ef1efc612722de1538",
+    "igv": "github:cBioPortal/igv.js#ccaeb7657200c8c1ceb276b53066d47804533418",
     "imports-loader": "^0.8.0",
     "jStat": "^1.7.0",
     "javascript-natural-sort": "^0.7.1",
