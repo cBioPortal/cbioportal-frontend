@@ -977,25 +977,25 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.HGVSC] = {
             name: 'HGVSc',
             render: (d: Mutation[]) =>
-                this.props.genomeNexusCache ? (
+                this.props.indexedVariantAnnotations ? (
                     HgvscColumnFormatter.renderFunction(
                         d,
-                        this.props.genomeNexusCache,
+                        this.props.indexedVariantAnnotations,
                         this.props.selectedTranscriptId
                     )
                 ) : (
-                    <span></span>
+                    <span />
                 ),
             download: (d: Mutation[]) =>
                 HgvscColumnFormatter.download(
                     d,
-                    this.props.genomeNexusCache as GenomeNexusCache,
+                    this.props.indexedVariantAnnotations,
                     this.props.selectedTranscriptId
                 ),
             sortBy: (d: Mutation[]) =>
                 HgvscColumnFormatter.getSortValue(
                     d,
-                    this.props.genomeNexusCache as GenomeNexusCache,
+                    this.props.indexedVariantAnnotations,
                     this.props.selectedTranscriptId
                 ),
             visible: false,

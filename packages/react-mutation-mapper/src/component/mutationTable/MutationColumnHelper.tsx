@@ -13,6 +13,8 @@ import { clinVarSortMethod } from '../column/ClinVar';
 import MutationType from '../column/MutationType';
 import MutationStatus from '../column/MutationStatus';
 import { dbsnpSortMethod } from '../column/Dbsnp';
+import { hgvscSortMethod } from '../column/Hgvsc';
+import { hgvsgSortMethod } from '../column/Hgvsg';
 
 export enum MutationColumn {
     PROTEIN_CHANGE = 'proteinChange',
@@ -24,6 +26,8 @@ export enum MutationColumn {
     END_POSITION = 'endPosition',
     REFERENCE_ALLELE = 'referenceAllele',
     VARIANT_ALLELE = 'variantAllele',
+    HGVSG = 'hgvsg',
+    HGVSC = 'hgvsc',
     GNOMAD = 'gnomad',
     CLINVAR = 'clinVarId',
     DBSNP = 'dbsnp',
@@ -39,6 +43,8 @@ export enum MutationColumnName {
     END_POSITION = 'End Pos',
     REFERENCE_ALLELE = 'Ref',
     VARIANT_ALLELE = 'Var',
+    HGVSG = 'HGVSg',
+    HGVSC = 'HGVSc',
     GNOMAD = 'gnomAD',
     CLINVAR = 'ClinVar ID',
     DBSNP = 'dbSNP',
@@ -130,6 +136,20 @@ export const MUTATION_COLUMN_HEADERS = {
                 </span>
             }
             overlay={<span>Variant Allele</span>}
+        />
+    ),
+    [MutationColumn.HGVSG]: (
+        <ColumnHeader
+            headerContent={
+                <span className="pull-left">{MutationColumnName.HGVSG}</span>
+            }
+        />
+    ),
+    [MutationColumn.HGVSC]: (
+        <ColumnHeader
+            headerContent={
+                <span className="pull-left">{MutationColumnName.HGVSC}</span>
+            }
         />
     ),
     [MutationColumn.GNOMAD]: (
@@ -281,6 +301,18 @@ export const MUTATION_COLUMNS_DEFINITION = {
         Header: MUTATION_COLUMN_HEADERS[MutationColumn.VARIANT_ALLELE],
         show: false,
     },
+    [MutationColumn.HGVSG]: {
+        id: MutationColumn.HGVSG,
+        name: MutationColumnName.HGVSG,
+        Header: MUTATION_COLUMN_HEADERS[MutationColumn.HGVSG],
+        sortMethod: hgvsgSortMethod,
+    },
+    [MutationColumn.HGVSC]: {
+        id: MutationColumn.HGVSC,
+        name: MutationColumnName.HGVSC,
+        Header: MUTATION_COLUMN_HEADERS[MutationColumn.HGVSC],
+        sortMethod: hgvscSortMethod,
+    },
     [MutationColumn.GNOMAD]: {
         id: MutationColumn.GNOMAD,
         name: MutationColumnName.GNOMAD,
@@ -292,12 +324,14 @@ export const MUTATION_COLUMNS_DEFINITION = {
         name: MutationColumnName.CLINVAR,
         Header: MUTATION_COLUMN_HEADERS[MutationColumn.CLINVAR],
         sortMethod: clinVarSortMethod,
+        show: false,
     },
     [MutationColumn.DBSNP]: {
         id: MutationColumn.DBSNP,
         name: MutationColumnName.DBSNP,
         Header: MUTATION_COLUMN_HEADERS[MutationColumn.DBSNP],
         sortMethod: dbsnpSortMethod,
+        show: false,
     },
 };
 
@@ -310,6 +344,8 @@ export const DEFAULT_MUTATION_COLUMNS = [
     MUTATION_COLUMNS_DEFINITION[MutationColumn.END_POSITION],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.REFERENCE_ALLELE],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.VARIANT_ALLELE],
+    MUTATION_COLUMNS_DEFINITION[MutationColumn.HGVSG],
+    MUTATION_COLUMNS_DEFINITION[MutationColumn.HGVSC],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.CLINVAR],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.GNOMAD],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.DBSNP],
