@@ -13,6 +13,7 @@ type IGVProps = {
     genome?: string;
     tracks?: TrackProps[];
     locus?: string | string[];
+    onLocusChange?: (str: string) => void;
     disableSearch?: boolean;
     isVisible?: boolean;
     onRenderingStart?: () => void;
@@ -59,6 +60,7 @@ export default class IntegrativeGenomicsViewer extends React.Component<
         const browserProps = {
             genome: this.props.genome,
             locus: this.props.locus,
+            onLocusChange: this.props.onLocusChange,
         };
 
         igv.createBrowser(this.igvDiv, browserProps).then((browser: any) => {

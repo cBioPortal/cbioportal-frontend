@@ -28,10 +28,16 @@ export default class CNSegments extends React.Component<
 > {
     @observable renderingComplete = false;
     @observable segmentTrackMaxHeight: number | undefined;
+    private lastSelectedLocus: string | undefined = undefined;
 
     constructor(props: { store: StudyViewPageStore }) {
         super(props);
         this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
+    }
+
+    @autobind
+    private updateLastSelectedLocus(str: string) {
+        this.lastSelectedLocus = str;
     }
 
     @computed get segmentTrackHeight() {
@@ -140,6 +146,8 @@ export default class CNSegments extends React.Component<
                             },
                         ]}
                         genome={this.genome}
+                        locus={this.lastSelectedLocus}
+                        onLocusChange={this.updateLastSelectedLocus}
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
                         isVisible={
