@@ -302,6 +302,7 @@ export default class MutationMapper<
                     indexedVariantAnnotations={
                         this.store.indexedVariantAnnotations
                     }
+                    selectedTranscriptId={this.store.selectedTranscript}
                     pubMedCache={this.pubMedCache}
                     info={this.mutationTableInfo}
                 />

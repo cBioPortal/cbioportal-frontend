@@ -39,6 +39,13 @@ export {
     download as myCancerGenomeDownload,
     sortValue as myCancerGenomeSortValue,
 } from './component/myCancerGenome/MyCancerGenome';
+export {
+    default as Hgvsc,
+    download as hgvscDownload,
+    sortValue as hgvscSortValue,
+} from './component/column/Hgvsc';
+export { default as Hgvsg } from './component/column/Hgvsg';
+export * from './component/column/HgvsHelper';
 export { default as MutationStatus } from './component/column/MutationStatus';
 export {
     default as ProteinChange,
