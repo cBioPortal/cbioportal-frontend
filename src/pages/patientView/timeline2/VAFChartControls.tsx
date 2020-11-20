@@ -5,10 +5,10 @@ import SampleManager, {
     clinicalAttributeListForSamples,
 } from '../SampleManager';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
-import TimelineWrapperStore from './TimelineWrapperStore';
+import VAFChartWrapperStore from './VAFChartWrapperStore';
 
 interface IVAFChartControlsProps {
-    wrapperStore: TimelineWrapperStore;
+    wrapperStore: VAFChartWrapperStore;
     sampleManager: SampleManager;
 }
 
