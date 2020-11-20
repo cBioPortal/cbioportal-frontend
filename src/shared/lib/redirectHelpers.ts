@@ -215,9 +215,7 @@ export function handleIndexDO() {
 export function handleEncodedRedirect() {
     const encodedURL = getBrowserWindow().routingStore.query[EncodedURLParam];
     const decodedURL = atob(encodedURL);
-    (getBrowserWindow().routingStore as ExtendedRouterStore).replace(
-        decodedURL
-    );
+    getBrowserWindow().location.href = decodedURL;
 }
 
 export function redirectTo(
