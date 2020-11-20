@@ -229,6 +229,10 @@ function waitForStudyViewSelectedInfo() {
     browser.pause(2000);
 }
 
+function waitForStudyView() {
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, 10000);
+}
+
 function getTextFromElement(element) {
     return browser
         .element(element)
@@ -442,6 +446,7 @@ module.exports = {
     toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
     removeAllStudyViewFilters: removeAllStudyViewFilters,
     waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
+    waitForStudyView: waitForStudyView,
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,

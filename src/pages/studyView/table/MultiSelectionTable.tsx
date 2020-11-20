@@ -343,6 +343,7 @@ export class MultiSelectionTable extends React.Component<
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
+                        data-test={'numberOfAlterationsText'}
                         style={{
                             flexDirection: 'row-reverse',
                             display: 'flex',
