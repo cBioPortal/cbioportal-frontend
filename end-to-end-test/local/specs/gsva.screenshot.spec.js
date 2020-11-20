@@ -64,7 +64,7 @@ describe('gsva feature', () => {
             waitForPlotsTab(20000);
         });
 
-        it('shows gsva profile data on horizontal and vertical axes', () => {
+        it.skip('shows gsva profile data on horizontal and vertical axes', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             horzDataSelect.$('.Select-arrow-zone').click();
             horzDataSelect.$('.Select-option=Gene Sets').click();
@@ -72,7 +72,6 @@ describe('gsva feature', () => {
             var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
             vertDataSelect.$('.Select-arrow-zone').click();
             vertDataSelect.$('.Select-option=Gene Sets').click();
-
             var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
             assertScreenShotMatch(res);
         });
