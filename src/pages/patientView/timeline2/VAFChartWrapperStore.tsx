@@ -1,6 +1,6 @@
 import { action, computed, observable } from 'mobx';
 
-export default class TimelineWrapperStore {
+export default class VAFChartWrapperStore {
     @observable groupByOption: string | null = null;
 
     @observable _showSequentialMode: boolean | undefined = undefined;
