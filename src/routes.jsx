@@ -229,7 +229,10 @@ var restoreRoute = inject('routing')(restoreRouteAfterRedirect);
 let getBlankPage = function(callback) {
     return props => {
         if (callback) {
-            useEffect(callback, []);
+            useEffect(() => {
+                callback();
+                // make sure that useEffect argument doesn't return anything
+            }, []);
         }
         return <div />;
     };
