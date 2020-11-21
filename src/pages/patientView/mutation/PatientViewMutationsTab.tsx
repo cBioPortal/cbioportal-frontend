@@ -22,6 +22,7 @@ import WindowStore from '../../../shared/components/window/WindowStore';
 import Timeline from '../timeline/Timeline';
 import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
+import VAFChartWrapperStore from '../timeline2/VAFChartWrapperStore';
 
 export interface IPatientViewMutationsTabProps {
     patientViewPageStore: PatientViewPageStore;
@@ -73,6 +74,10 @@ export default class PatientViewMutationsTab extends React.Component<
         this.showTimeline = !this.showTimeline;
     }
 
+    private vafChartWrapperStore = new VAFChartWrapperStore({
+        isOnlySequentialModePossible: () =>
+            this.props.patientViewPageStore.clinicalEvents.result.length === 0,
+    });
     private dataStore = new PatientViewMutationsDataStore(
         () => this.mergedMutations,
         this.props.urlWrapper
@@ -142,6 +147,7 @@ export default class PatientViewMutationsTab extends React.Component<
                 {this.props.sampleManager && (
                     <VAFChartWrapper
                         key={`vafKey${WindowStore.size.width}-${this.showTimeline}`}
+                        wrapperStore={this.vafChartWrapperStore}
                         dataStore={this.dataStore}
                         caseMetaData={{
                             color: this.props.sampleManager.sampleColors,

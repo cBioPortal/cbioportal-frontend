@@ -40,12 +40,18 @@ export function groupMutationsByProteinStartPos(
     return map;
 }
 
+// TODO workaround for cbioportal API mutation type,
+//  add a custom getChromosome(mutation: Mutation) function instead?
+function findChromosome(
+    mutation: Partial<Mutation & { chr?: string }>
+): string | undefined {
+    return mutation.chromosome || mutation.chr;
+}
+
 export function extractGenomicLocation(
-    mutation: Partial<Mutation & { chr: string }>
-) {
-    // TODO workaround for cbioportal API mutation type,
-    //  add a custom getChromosome(mutation: Mutation) function?
-    const chromosome = mutation.chromosome || mutation.chr;
+    mutation: Partial<Mutation & { chr?: string }>
+): GenomicLocation | undefined {
+    const chromosome = findChromosome(mutation);
 
     if (
         chromosome &&
@@ -64,6 +70,73 @@ export function extractGenomicLocation(
     } else {
         return undefined;
     }
+}
+
+export function generateHgvsgByMutation(
+    mutation: Partial<Mutation & { chr?: string }>
+): string | undefined {
+    if (hasValidGenomicLocation(mutation)) {
+        const chromosome = findChromosome(mutation);
+
+        // ins
+        if (mutation.referenceAllele === '-') {
+            return `${chromosome}:g.${mutation.startPosition}_${mutation.endPosition}ins${mutation.variantAllele}`;
+        }
+        // del
+        else if (mutation.variantAllele === '-') {
+            if (mutation.startPosition === mutation.endPosition) {
+                return `${chromosome}:g.${mutation.startPosition}del`;
+            }
+            return `${chromosome}:g.${mutation.startPosition}_${mutation.endPosition}del`;
+        }
+        // substitution
+        else if (
+            mutation.referenceAllele!.length === 1 &&
+            mutation.variantAllele!.length === 1
+        ) {
+            return `${chromosome}:g.${mutation.startPosition}${mutation.referenceAllele}>${mutation.variantAllele}`;
+        }
+        // delins
+        else if (
+            mutation.referenceAllele!.length === 1 &&
+            mutation.variantAllele!.length > 1
+        ) {
+            return `${chromosome}:g.${mutation.startPosition}delins${mutation.variantAllele}`;
+        }
+        // delins
+        // for cases mutation.referenceAllele.length > 1 && mutation.variantAllele.length >= 1
+        else {
+            return `${chromosome}:g.${mutation.startPosition}_${mutation.endPosition}delins${mutation.variantAllele}`;
+        }
+    }
+
+    return undefined;
+}
+
+export function hasValidGenomicLocation(
+    mutation: Partial<Mutation & { chr?: string }>
+): boolean {
+    if (
+        findChromosome(mutation) &&
+        mutation.startPosition &&
+        mutation.startPosition !== -1 &&
+        mutation.endPosition &&
+        mutation.endPosition !== -1 &&
+        mutation.referenceAllele &&
+        mutation.referenceAllele !== 'NA' &&
+        mutation.variantAllele &&
+        mutation.variantAllele !== 'NA'
+    ) {
+        if (
+            mutation.referenceAllele === '-' &&
+            mutation.variantAllele === '-'
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    return false;
 }
 
 export function genomicLocationString(genomicLocation: GenomicLocation) {

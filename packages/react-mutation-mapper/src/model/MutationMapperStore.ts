@@ -76,6 +76,7 @@ export interface MutationMapperStore {
     mutationsByTranscriptId: { [transcriptId: string]: Mutation[] };
     setSelectedTranscript?: (id: string | undefined) => void;
     getTranscriptId?: () => string | undefined;
+    selectedTranscript?: string | undefined;
 }
 
 export default MutationMapperStore;
