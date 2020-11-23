@@ -617,6 +617,10 @@ export class ResultsViewPageStore {
         return getMolecularProfiles(this.urlWrapper.query);
     }
 
+    public handleTabChange(id: string, replace?: boolean) {
+        this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
+    }
+
     @computed get tabId() {
         return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
     }
@@ -4172,15 +4176,15 @@ export class ResultsViewPageStore {
                             .genericAssayEntityStableIdsGroupByProfileIdSuffix
                             .result![profileIdSuffix];
 
-                        const sampleMolecularIdentifiers = _.flatten(
-                            _.map(molecularIds, molecularId =>
+                        const sampleMolecularIdentifiers = _.flatMap(
+                            molecularIds,
+                            molecularId =>
                                 _.map(this.samples.result, sample => {
                                     return {
                                         molecularProfileId: molecularId,
                                         sampleId: sample.sampleId,
                                     } as SampleMolecularIdentifier;
                                 })
-                            )
                         );
 
                         if (
