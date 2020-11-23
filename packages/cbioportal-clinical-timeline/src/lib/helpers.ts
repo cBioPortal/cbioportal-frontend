@@ -212,6 +212,21 @@ export function formatDate(dayCount: number) {
     return arr.join(', ');
 }
 
+function getAllDescendantData(
+    track: TimelineTrackSpecification,
+    accumulator: TimelineEvent[]
+) {
+    // add root items
+    accumulator.push(...track.items);
+    // recursively add items from nested tracks
+    if (track.tracks) {
+        for (const nestedTrack of track.tracks) {
+            getAllDescendantData(nestedTrack, accumulator);
+        }
+    }
+    return accumulator;
+}
+
 function flattenTrack(
     track: TimelineTrackSpecification,
     indent: number,
@@ -219,14 +234,22 @@ function flattenTrack(
 ): { track: TimelineTrackSpecification; indent: number; height: number }[] {
     const ret = [{ track, indent, height: getTrackHeight(track) }];
 
-    if (!isTrackCollapsed(track.uid) && track.tracks) {
-        // if track is not collapsed, then sort nested tracks and recurse
-        const sortedNestedTracks = sortNestedTracks(track.tracks);
-        ret.push(
-            ..._.flatMap(sortedNestedTracks, t =>
-                flattenTrack(t, indent + 17, isTrackCollapsed)
-            )
-        );
+    if (track.tracks) {
+        if (!isTrackCollapsed(track.uid)) {
+            // if track is not collapsed, then sort nested tracks and recurse
+            const sortedNestedTracks = sortNestedTracks(track.tracks);
+            ret.push(
+                ..._.flatMap(sortedNestedTracks, t =>
+                    flattenTrack(t, indent + 17, isTrackCollapsed)
+                )
+            );
+        } else {
+            // otherwise, put all nested data into root track
+            ret[0].track = {
+                ...track,
+                items: getAllDescendantData(track, []),
+            };
+        }
     }
 
     return ret;
