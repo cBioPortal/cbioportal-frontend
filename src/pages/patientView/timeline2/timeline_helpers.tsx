@@ -366,11 +366,15 @@ export function sortTracks(
                     )
                 );
             } else {
-                specs.push({
+                const trackSpec: Partial<TimelineTrackSpecification> = {
                     type: trackKey,
-                    items: makeItems(data),
                     uid: trackKey,
-                });
+                };
+                trackSpec.items = makeItems(
+                    data,
+                    trackSpec as TimelineTrackSpecification
+                );
+                specs.push(trackSpec as TimelineTrackSpecification);
             }
             return specs;
         },
@@ -433,11 +437,15 @@ function organizeDataIntoTracks(
                 return track;
             } else {
                 // If trackStructure is trivial, then just return a single track for this rootValue
-                return {
+                const trackSpec: Partial<TimelineTrackSpecification> = {
                     type: rootValue,
-                    items: makeItems(data),
                     uid: `${uid}.${rootValue}`,
                 };
+                trackSpec.items = makeItems(
+                    data,
+                    trackSpec as TimelineTrackSpecification
+                );
+                return trackSpec as TimelineTrackSpecification;
             }
         }
     );
@@ -453,7 +461,10 @@ function organizeDataIntoTracks(
     return track;
 }
 
-function makeItems(eventData: ClinicalEvent[]) {
+function makeItems(
+    eventData: ClinicalEvent[],
+    containingTrack: TimelineTrackSpecification
+) {
     return eventData.map((e: ClinicalEvent) => {
         return {
             end:
@@ -461,6 +472,7 @@ function makeItems(eventData: ClinicalEvent[]) {
                 e.startNumberOfDaysSinceDiagnosis,
             start: e.startNumberOfDaysSinceDiagnosis,
             event: e,
+            containingTrack,
         };
     });
 }
