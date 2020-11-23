@@ -271,6 +271,7 @@ export const DataTypeConstants = {
     MAF: 'MAF',
     LOGVALUE: 'LOG-VALUE',
     LOG2VALUE: 'LOG2-VALUE',
+    LIMITVALUE: 'LIMIT-VALUE',
 };
 
 export enum SampleListCategoryType {
