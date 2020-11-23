@@ -157,30 +157,44 @@ function getPointY(
 const POINT_RADIUS = 4;
 const POINT_COLOR = 'rgb(31, 119, 180)';
 
-export function renderPoint(
-    events: TimelineEvent[],
-    trackData: TimelineTrackSpecification,
-    y: number
-) {
-    // If there's specific render functions and multiple data,
-    //  we'll show that render in the tooltip.
+export function renderPoint(events: TimelineEvent[], y: number) {
     if (events.length === 1 && events[0].render) {
+        // If only one event, and theres an event-specific render function, show that.
         return events[0].render(events[0]);
-    } else if (trackData.renderEvents) {
-        return trackData.renderEvents(events);
     } else {
-        return (
-            <g>
-                {events.length > 1 ? (
-                    <>
-                        {renderSuperscript(events.length)}
-                        {renderStack(events.map(e => POINT_COLOR))}
-                    </>
-                ) : (
-                    <circle cx="0" cy={y} r={POINT_RADIUS} fill={POINT_COLOR} />
-                )}
-            </g>
-        );
+        // events.length > 1, multiple simultaneous events.
+
+        // When nested tracks are collapsed, we might see multiple events that are
+        //  from different tracks. So let's check if all these events actually come
+        //  from the same track
+        const allFromSameTrack =
+            _.uniq(events.map(e => e.containingTrack.uid)).length === 1;
+
+        if (allFromSameTrack && events[0].containingTrack.renderEvents) {
+            // If they are all from the same track and there is a track-specific multiple-event renderer,
+            //  use that.
+            return events[0].containingTrack.renderEvents(events);
+        } else {
+            // Otherwise, show a generic stack. (We'll show the point-specific
+            //  renders in the tooltip.)
+            return (
+                <g>
+                    {events.length > 1 ? (
+                        <>
+                            {renderSuperscript(events.length)}
+                            {renderStack(events.map(e => POINT_COLOR))}
+                        </>
+                    ) : (
+                        <circle
+                            cx="0"
+                            cy={y}
+                            r={POINT_RADIUS}
+                            fill={POINT_COLOR}
+                        />
+                    )}
+                </g>
+            );
+        }
     }
 }
 
@@ -245,7 +259,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                         trackValueRange
                     );
                     if (y !== null) {
-                        content = renderPoint(itemGroup, trackData, y);
+                        content = renderPoint(itemGroup, y);
                         linePoints.push({
                             x: position ? position.pixelLeft : 0,
                             y,
