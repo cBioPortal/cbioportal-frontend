@@ -72,6 +72,7 @@ import autobind from 'autobind-decorator';
 import FontAwesome from 'react-fontawesome';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { If, Then, Else } from 'react-if';
+import { ResultsViewTab } from '../ResultsViewPageHelpers';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -1013,8 +1014,17 @@ export default class DownloadTab extends React.Component<
                                 </a>
                             </Then>
                             <Else>
-                                Only entities selected in OncoPrint tab can be
-                                download at here. Please select entities first.
+                                Heatmap tracks added in the&nbsp;
+                                <a
+                                    onClick={() =>
+                                        this.props.store.handleTabChange(
+                                            ResultsViewTab.ONCOPRINT
+                                        )
+                                    }
+                                >
+                                    OncoPrint tab
+                                </a>
+                                &nbsp;can be downloaded here.
                             </Else>
                         </If>
                     </div>
