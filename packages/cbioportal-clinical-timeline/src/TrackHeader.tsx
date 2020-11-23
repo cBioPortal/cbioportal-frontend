@@ -36,38 +36,35 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                 style={{
                     paddingLeft,
                     height,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    position: 'relative',
                 }}
                 onMouseEnter={handleTrackHover}
                 onMouseLeave={handleTrackHover}
             >
-                <span
-                    style={{
-                        opacity: store.isTrackCollapsed(track.uid) ? 0.5 : 1,
-                    }}
-                >
+                <span>
                     <TruncatedText text={getTrackLabel(track)} maxLength={20} />
                 </span>
                 {store.enableCollapseTrack &&
                     track.tracks &&
                     track.tracks.length > 0 && (
-                        <button
+                        <div
                             onClick={collapseCallback}
-                            className={'btn btn-xs btn-default'}
                             style={{
-                                fontSize: 10,
+                                cursor: 'pointer',
+                                fontSize: 15,
                                 lineHeight: 0.5,
                                 padding: 3,
+                                right: 2,
+                                top: 0,
+                                position: 'absolute',
                             }}
                         >
                             {store.isTrackCollapsed(track.uid) ? (
-                                <i className={'fa fa-plus fa-sm'} />
+                                <i className={'fa fa-caret-right fa-sm'} />
                             ) : (
-                                <i className={'fa fa-minus fa-sm'} />
+                                <i className={'fa fa-caret-down fa-sm'} />
                             )}
-                        </button>
+                        </div>
                     )}
             </div>
         </>
