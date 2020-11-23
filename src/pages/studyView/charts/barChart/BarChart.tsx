@@ -8,7 +8,7 @@ import {
 } from 'victory';
 import { computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
-import { ClinicalDataBin, DataFilterValue } from 'cbioportal-ts-api-client';
+import { DataFilterValue } from 'cbioportal-ts-api-client';
 import { AbstractChart } from 'pages/studyView/charts/ChartContainer';
 import autobind from 'autobind-decorator';
 import BarChartAxisLabel from './BarChartAxisLabel';
@@ -19,6 +19,7 @@ import {
     generateCategoricalData,
     generateNumericalData,
     needAdditionShiftForLogScaleBarChart,
+    DataBin,
 } from '../../StudyViewUtils';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
@@ -31,17 +32,17 @@ import {
 } from 'cbioportal-frontend-commons';
 
 export interface IBarChartProps {
-    data: ClinicalDataBin[];
+    data: DataBin[];
     width: number;
     height: number;
     filters: DataFilterValue[];
-    onUserSelection: (dataBins: ClinicalDataBin[]) => void;
+    onUserSelection: (dataBins: DataBin[]) => void;
 }
 
 export type BarDatum = {
     x: number;
     y: number;
-    dataBin: ClinicalDataBin;
+    dataBin: DataBin;
 };
 
 function generateTheme() {
@@ -85,10 +86,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         this.props.onUserSelection(dataBins);
     }
 
-    private isDataBinSelected(
-        dataBin: ClinicalDataBin,
-        filters: DataFilterValue[]
-    ) {
+    private isDataBinSelected(dataBin: DataBin, filters: DataFilterValue[]) {
         return _.some(filters, filter => {
             let isFiltered = false;
             if (filter.start !== undefined && filter.end !== undefined) {
