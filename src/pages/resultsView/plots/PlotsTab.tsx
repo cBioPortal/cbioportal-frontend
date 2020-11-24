@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { toJS, action, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction, toJS } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -12,15 +12,21 @@ import Select from 'react-select';
 import _ from 'lodash';
 import {
     axisHasNegativeNumbers,
+    basicAppearance,
+    bothAxesNoMolecularProfile,
     boxPlotTooltip,
     CLIN_ATTR_DATA_TYPE,
     CNA_STROKE_WIDTH,
     dataTypeDisplayOrder,
     dataTypeToDisplayType,
+    deriveDisplayTextFromGenericAssayType,
     GENESET_DATA_TYPE,
+    getAxisDataOverlapSampleCount,
     getAxisLabel,
     getBoxPlotDownloadData,
+    getCategoryOptions,
     getCnaQueries,
+    getColoringMenuOptionValue,
     getLimitValues,
     getMutationQueries,
     getScatterPlotDownloadData,
@@ -35,6 +41,7 @@ import {
     IStringAxisData,
     IWaterfallPlotData,
     logScalePossible,
+    logScalePossibleForProfile,
     makeAxisDataPromise,
     makeAxisLogScaleFunction,
     makeBoxScatterPlotData,
@@ -42,6 +49,7 @@ import {
     makeScatterPlotData,
     makeScatterPlotPointAppearance,
     makeWaterfallPlotData,
+    maybeSetLogScale,
     PLOT_SIDELENGTH,
     scatterPlotLegendData,
     scatterPlotTooltip,
@@ -50,24 +58,15 @@ import {
     WATERFALLPLOT_BASE_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH,
     WATERFALLPLOT_SIDELENGTH_SAMPLE_MULTIPLICATION_FACTOR,
-    deriveDisplayTextFromGenericAssayType,
-    bothAxesNoMolecularProfile,
     waterfallPlotTooltip,
-    getColoringMenuOptionValue,
-    basicAppearance,
-    getAxisDataOverlapSampleCount,
-    getCategoryOptions,
-    maybeSetLogScale,
-    logScalePossibleForProfile,
 } from './PlotsTabUtils';
 import {
-    ClinicalAttribute,
-    GenericAssayMeta,
-    Gene,
-    ClinicalData,
     CancerStudy,
+    ClinicalAttribute,
+    ClinicalData,
+    Gene,
+    GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
-import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
 import TablePlot from 'shared/components/plots/TablePlot';
@@ -110,6 +109,7 @@ import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarn
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
+import Timer = NodeJS.Timer;
 
 enum EventKey {
     horz_logScale,

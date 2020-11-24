@@ -17,7 +17,6 @@ import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     GENETIC_TRACK_GROUP_INDEX,
-    GeneticTrackDatum_Data,
     GeneticTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
@@ -52,11 +51,7 @@ import _ from 'lodash';
 import onMobxPromise from 'shared/lib/onMobxPromise';
 import AppConfig from 'appConfig';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import OncoprintJS, {
-    TrackGroupHeader,
-    TrackGroupIndex,
-    TrackId,
-} from 'oncoprintjs';
+import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';

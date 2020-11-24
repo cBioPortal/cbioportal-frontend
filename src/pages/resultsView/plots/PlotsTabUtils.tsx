@@ -53,9 +53,9 @@ import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
     AlterationTypeConstants,
-    CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
+    CustomDriverNumericGeneMolecularData,
 } from '../ResultsViewPageStore';
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
@@ -70,16 +70,13 @@ import {
     getJitterForCase,
     LegendDataWithId,
 } from '../../../shared/components/plots/PlotUtils';
-import {
-    isSampleProfiled,
-    isSampleProfiledInMultiple,
-} from '../../../shared/lib/isSampleProfiled';
+import { isSampleProfiledInMultiple } from '../../../shared/lib/isSampleProfiled';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
-import { observable, ObservableMap } from 'mobx';
+import { ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
-import jStat from 'jStat';
+import * as jStat from 'jStat';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
