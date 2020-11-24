@@ -36,7 +36,7 @@ if (useExternalFrontend) {
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 8);
             clickCheckBox('Mutations');
-            clickCheckBox('Frameshift Deletion');
+            clickCheckBox('Frameshift Insertion');
             submit();
             $('[data-test=LazyMobXTable]').waitForVisible();
             rows = $$('[data-test=LazyMobXTable] tbody tr');
@@ -48,8 +48,7 @@ if (useExternalFrontend) {
             submit();
             $('[data-test=LazyMobXTable]').waitForVisible();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
-            clickCheckBox('Copy Number Alterations');
-            clickCheckBox('Amplification');
+            clickCheckBox('Deep Deletion');
             submit();
             $('[data-test=LazyMobXTable]').waitForVisible();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '7 (0.90%)');
