@@ -732,7 +732,11 @@ export default class ResultsViewPage extends React.Component<
         if (
             this.urlWrapper.isPendingSession ||
             this.urlWrapper.isLoadingSession ||
-            !this.resultsViewPageStore.studies.isComplete
+            this.resultsViewPageStore.studies.isPending ||
+            (this.resultsViewPageStore.studies.isComplete &&
+                this.resultsViewPageStore.studies.result.length > 0 &&
+                this.resultsViewPageStore.customDriverAnnotationReport
+                    .isPending)
         ) {
             return (
                 <LoadingIndicator isLoading={true} center={true} size={'big'} />

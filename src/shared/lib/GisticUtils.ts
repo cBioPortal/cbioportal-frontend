@@ -1,7 +1,7 @@
-import { Gistic } from 'cbioportal-ts-api-client';
+import { Gene, Gistic } from 'cbioportal-ts-api-client';
 
 export function getGeneSymbols(gistic?: Gistic) {
-    if (gistic) return gistic.genes.map(gene => gene.hugoGeneSymbol);
+    if (gistic) return gistic.genes.map((gene: Gene) => gene.hugoGeneSymbol);
     return [];
 }
 

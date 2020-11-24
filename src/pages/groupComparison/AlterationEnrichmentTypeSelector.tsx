@@ -20,7 +20,6 @@ export interface IAlterationEnrichmentTypeSelectorHandlers {
 }
 
 export interface IAlterationEnrichmentTypeSelectorProps {
-    // state: AlterationEnrichmentEventType[];
     handlers: IAlterationEnrichmentTypeSelectorHandlers;
 }
 

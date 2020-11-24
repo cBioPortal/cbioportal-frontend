@@ -40,6 +40,7 @@ import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from './AlterationEnrichmentTypeSelector';
 import { buildAlterationEnrichmentTypeSelectorHandlers } from 'pages/resultsView/comparison/ComparisonTabUtils';
+import { filteredOutAlterationsMessage } from 'shared/lib/AlterationsUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -122,9 +123,9 @@ export default class GroupComparisonPage extends React.Component<
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
-            this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
         ],
         render: () => {
+            const filteredOutAlterations = this.store.filteredOutAlterations;
             return (
                 <MSKTabs
                     unmountOnHide={false}
@@ -171,6 +172,26 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
+                            {filteredOutAlterations.notShownAlteredCases >
+                                0 && (
+                                <div
+                                    className="alert alert-info"
+                                    data-test="hidden-alterations-bar"
+                                    style={{ marginBottom: 6 }}
+                                >
+                                    <img
+                                        src={require('../../rootImages/funnel.svg')}
+                                        style={{
+                                            marginRight: 6,
+                                            width: 15,
+                                            marginTop: -2,
+                                        }}
+                                    />
+                                    {filteredOutAlterationsMessage(
+                                        filteredOutAlterations
+                                    )}
+                                </div>
+                            )}
                             <AlterationEnrichmentTypeSelector
                                 handlers={
                                     this

@@ -40,14 +40,17 @@ import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
 import AddClinicalTracks from '../../../../pages/resultsView/oncoprint/AddClinicalTracks';
-import DriverAnnotationControls, {
+import DriverAnnotationControls from '../../driverAnnotations/DriverAnnotationControls';
+import {
+    IDriverAnnotationControlsState,
     IDriverAnnotationControlsHandlers,
-} from '../../../../pages/resultsView/settings/DriverAnnotationControls';
+} from '../../../../shared/driverAnnotation/DriverAnnotationSettings';
 import OncoprintDropdownCount from 'pages/resultsView/oncoprint/OncoprintDropdownCount';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import Select from 'react-select';
 
-export interface IOncoprintControlsHandlers {
+export interface IOncoprintControlsHandlers
+    extends IDriverAnnotationControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
     onSelectShowUnalteredColumns: (unalteredColumnsShown: boolean) => void;
     onSelectShowWhitespaceBetweenColumns: (showWhitespace: boolean) => void;
@@ -58,19 +61,10 @@ export interface IOncoprintControlsHandlers {
     onSelectShowOqlInLabels?: (show: boolean) => void;
     onSelectShowMinimap: (showMinimap: boolean) => void;
     onSelectDistinguishMutationType: (distinguish: boolean) => void;
-    onSelectDistinguishDrivers: (distinguish: boolean) => void;
     onSelectDistinguishGermlineMutations: (distinguish: boolean) => void;
 
-    onSelectAnnotateOncoKb: (annotate: boolean) => void;
-    onSelectAnnotateHotspots?: (annotate: boolean) => void;
-    onSelectAnnotateCBioPortal: (annotate: boolean) => void;
-    onSelectAnnotateCOSMIC?: (annotate: boolean) => void;
     onSelectHidePutativePassengers: (hide: boolean) => void;
-    onChangeAnnotateCBioPortalInputValue: (value: string) => void;
     onSelectHideGermlineMutations: (hide: boolean) => void;
-    onChangeAnnotateCOSMICInputValue?: (value: string) => void;
-    onSelectCustomDriverAnnotationBinary?: (s: boolean) => void;
-    onSelectCustomDriverAnnotationTier?: (value: string, s: boolean) => void;
 
     onSelectSortByMutationType: (sort: boolean) => void;
     onSelectSortByDrivers: (sort: boolean) => void;
@@ -92,7 +86,8 @@ export interface IOncoprintControlsHandlers {
     onClickZoomIn: () => void;
     onClickZoomOut: () => void;
 }
-export interface IOncoprintControlsState {
+export interface IOncoprintControlsState
+    extends IDriverAnnotationControlsState {
     showUnalteredColumns: boolean;
     showWhitespaceBetweenColumns: boolean;
     showClinicalTrackLegends?: boolean;
@@ -100,23 +95,12 @@ export interface IOncoprintControlsState {
     showOqlInLabels?: boolean;
     showMinimap: boolean;
     distinguishMutationType: boolean;
-    distinguishDrivers: boolean;
     distinguishGermlineMutations: boolean;
     sortByMutationType: boolean;
     sortByDrivers: boolean;
     sortByCaseListDisabled: boolean;
-    annotateDriversOncoKb: boolean;
-    annotateDriversOncoKbError: boolean;
-    annotateDriversOncoKbDisabled: boolean;
-    annotateDriversHotspots?: boolean;
-    annotateDriversHotspotsError?: boolean;
-    annotateDriversHotspotsDisabled?: boolean;
-    annotateDriversCBioPortal: boolean;
-    annotateDriversCOSMIC?: boolean;
     hidePutativePassengers: boolean;
-    annotateCBioPortalInputValue: string;
     hideGermlineMutations: boolean;
-    annotateCOSMICInputValue?: string;
 
     sortMode?: SortMode;
     clinicalAttributesPromise?: MobxPromise<ExtendedClinicalAttribute[]>;
@@ -135,12 +119,6 @@ export interface IOncoprintControlsState {
     heatmapGeneInputValue?: string;
     hideHeatmapMenu?: boolean;
     ngchmButtonActive?: boolean;
-
-    customDriverAnnotationBinaryMenuLabel?: string;
-    customDriverAnnotationTiersMenuLabel?: string;
-    customDriverAnnotationTiers?: string[];
-    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
-    annotateCustomDriverBinary?: boolean;
 
     columnMode?: OncoprintAnalysisCaseType;
 
@@ -1259,7 +1237,7 @@ export default class OncoprintControls extends React.Component<
                             }}
                             className="btn btn-primary"
                             onClick={() => {
-                                store.resultsPageSettingsVisible = !store.resultsPageSettingsVisible;
+                                store.settingsMenuVisible = !store.settingsMenuVisible;
                             }}
                         >
                             <i className="fa fa-sliders" />

@@ -9,7 +9,7 @@ export function getGenesetsFromHierarchy(
     const array: Geneset[] = [];
     for (const node of hierarchyData) {
         if (_.has(node, 'genesets')) {
-            node.genesets.forEach(geneset => array.push(geneset));
+            node.genesets.forEach((geneset: Geneset) => array.push(geneset));
         }
     }
     return array;

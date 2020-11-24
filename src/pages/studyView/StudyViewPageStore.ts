@@ -28,6 +28,7 @@ import {
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
+    CustomDriverAnnotationReport,
     DataFilterValue,
     DensityPlotBin,
     Gene,
@@ -200,6 +201,18 @@ import {
     CNA_AMP_VALUE,
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IDriverSettingsProps,
+    IExclusionSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
+import {
+    computedFilteredOutAlterations,
+    FilteredOutAlterations,
+    subset,
+} from 'shared/lib/AlterationsUtils';
 
 export type ChartUserSetting = {
     id: string;
@@ -309,15 +322,30 @@ export type OncokbCancerGene = {
     isCancerGene: boolean;
 };
 
-export class StudyViewPageStore {
+export class StudyViewPageStore
+    implements
+        IDriverSettingsProps,
+        IExclusionSettings,
+        ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
     private chartToUsedColors: Map<string, Set<string>>;
 
     public studyViewQueryFilter: StudyViewURLQuery;
-
     @observable showComparisonGroupUI = false;
+    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable excludeGermlineMutations = false;
+    @observable settingsMenuVisible = false;
+
+    @observable filteredMutationAlteredCasesByGene = new Map<string, number>();
+    @observable totalMutationAlteredCasesByGene = new Map<string, number>();
+
+    @observable filteredFusionAlteredCasesByGene = new Map<string, number>();
+    @observable totalFusionAlteredCasesByGene = new Map<string, number>();
+
+    @observable filteredCnaAlteredCasesByGene = new Map<string, number>();
+    @observable totalCnaAlteredCasesByGene = new Map<string, number>();
 
     constructor(
         public appStore: AppStore,
@@ -385,6 +413,54 @@ export class StudyViewPageStore {
             )
         );
 
+        this.reactionDisposers.push(
+            reaction(
+                () => this.computedMutationAlteredCasesPerGene,
+                computedMutationAlteredCases => {
+                    this.filteredMutationAlteredCasesByGene = computedMutationAlteredCases;
+                    const gotMoreData = !subset(
+                        this.totalMutationAlteredCasesByGene,
+                        computedMutationAlteredCases
+                    );
+                    if (gotMoreData) {
+                        this.totalMutationAlteredCasesByGene = computedMutationAlteredCases;
+                    }
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
+                () => this.computedFusionAlteredCasesPerGene,
+                computedFusionAlteredCases => {
+                    this.filteredFusionAlteredCasesByGene = computedFusionAlteredCases;
+                    const gotMoreData = !subset(
+                        this.totalFusionAlteredCasesByGene,
+                        computedFusionAlteredCases
+                    );
+                    if (gotMoreData) {
+                        this.totalFusionAlteredCasesByGene = computedFusionAlteredCases;
+                    }
+                }
+            )
+        );
+
+        this.reactionDisposers.push(
+            reaction(
+                () => this.computedCnaAlteredCasesPerGene,
+                computedCnaAlteredCases => {
+                    this.filteredCnaAlteredCasesByGene = computedCnaAlteredCases;
+                    const gotMoreData = !subset(
+                        this.totalCnaAlteredCasesByGene,
+                        computedCnaAlteredCases
+                    );
+                    if (gotMoreData) {
+                        this.totalCnaAlteredCasesByGene = computedCnaAlteredCases;
+                    }
+                }
+            )
+        );
+
         // Include special charts into custom charts list
         SPECIAL_CHARTS.forEach(
             (chartMeta: ChartMetaWithDimensionAndChartType) => {
@@ -417,6 +493,9 @@ export class StudyViewPageStore {
                     }
                 }
             }
+        );
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
         );
     }
 
@@ -5072,8 +5151,14 @@ export class StudyViewPageStore {
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
+                const selectedTiers = this.selectedTiers;
+                const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                const excludeGermlineMutations = this.excludeGermlineMutations;
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
+                        selectedTiers: selectedTiers,
+                        excludeVus: excludeVus,
+                        excludeGermline: excludeGermlineMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5132,8 +5217,14 @@ export class StudyViewPageStore {
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+                const selectedTiers = this.selectedTiers;
+                const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                const excludeGermlineMutations = this.excludeGermlineMutations;
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
                     {
+                        selectedTiers: selectedTiers,
+                        excludeVus: excludeVus,
+                        excludeGermline: excludeGermlineMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5192,7 +5283,11 @@ export class StudyViewPageStore {
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
+                const selectedTiers = this.selectedTiers;
+                const excludeVus = this.driverAnnotationSettings.excludeVUS;
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
+                    selectedTiers: selectedTiers,
+                    excludeVus: excludeVus,
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 });
@@ -5261,6 +5356,34 @@ export class StudyViewPageStore {
                 });
         },
     });
+
+    @computed get selectedTiers() {
+        return this.customDriverAnnotationReport.result?.tiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
+    readonly customDriverAnnotationReport = remoteData<
+        CustomDriverAnnotationReport
+    >({
+        await: () => [this.molecularProfiles],
+        invoke: () => {
+            const molecularProfileIds = this.molecularProfiles.result.map(
+                molecularProfile => molecularProfile.molecularProfileId
+            );
+            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                { molecularProfileIds }
+            );
+        },
+    });
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (this.customDriverAnnotationReport.result.hasBinary ||
+                this.customDriverAnnotationReport.result.tiers.length > 0)
+        );
+    }
 
     readonly survivalPlots = remoteData<SurvivalType[]>({
         await: () => [
@@ -6056,6 +6179,59 @@ export class StudyViewPageStore {
             });
         },
     });
+
+    @computed get computedMutationAlteredCasesPerGene() {
+        return this.computeCasesCountsPerGene(
+            this.mutatedGeneTableRowData.result
+        );
+    }
+
+    @computed get computedFusionAlteredCasesPerGene() {
+        return this.computeCasesCountsPerGene(
+            this.fusionGeneTableRowData.result
+        );
+    }
+
+    @computed get computedCnaAlteredCasesPerGene() {
+        return this.computeCasesCountsPerGene(this.cnaGeneTableRowData.result);
+    }
+
+    computeCasesCountsPerGene(
+        rows: MultiSelectionTableRow[]
+    ): Map<string, number> {
+        const result: Map<string, number> = new Map();
+        if (rows && rows.length > 0) {
+            rows.filter(row => row.isCancerGene).forEach(row => {
+                const gene = row.label;
+                result.set(
+                    gene,
+                    row.numberOfAlteredCases + (result.get(gene) || 0)
+                );
+            });
+        }
+        return result;
+    }
+
+    @computed get filteredOutMutationAlterations(): FilteredOutAlterations {
+        return computedFilteredOutAlterations(
+            this.totalMutationAlteredCasesByGene,
+            this.filteredMutationAlteredCasesByGene
+        );
+    }
+
+    @computed get filteredOutFusionAlterations(): FilteredOutAlterations {
+        return computedFilteredOutAlterations(
+            this.totalFusionAlteredCasesByGene,
+            this.filteredFusionAlteredCasesByGene
+        );
+    }
+
+    @computed get filteredOutCnaAlterations(): FilteredOutAlterations {
+        return computedFilteredOutAlterations(
+            this.totalCnaAlteredCasesByGene,
+            this.filteredCnaAlteredCasesByGene
+        );
+    }
 
     readonly molecularProfileSampleCountSet = remoteData({
         await: () => [this.molecularProfileSampleCounts],

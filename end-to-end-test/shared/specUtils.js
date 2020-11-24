@@ -49,8 +49,8 @@ function getTextInOncoprintLegend() {
     return browser.getText('#oncoprintDiv .oncoprint-legend-div svg');
 }
 
-function setResultsPageSettingsMenuOpen(open) {
-    const button = 'button[data-test="GlobalSettingsButton"]';
+function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
+    const button = 'button[data-test="' + buttonId + '"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
     browser.waitForVisible(button);
     browser.waitUntil(
@@ -59,6 +59,7 @@ function setResultsPageSettingsMenuOpen(open) {
                 return true;
             } else {
                 browser.click(button);
+                $('[data-test=GlobalSettingsDropdown]').waitForVisible();
                 return false;
             }
         },
@@ -467,7 +468,7 @@ module.exports = {
     selectCheckedOption: selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements: getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
-    setResultsPageSettingsMenuOpen: setResultsPageSettingsMenuOpen,
+    setSettingsMenuOpen: setSettingsMenuOpen,
     setDropdownOpen: setDropdownOpen,
     postDataToUrl: postDataToUrl,
     getPortalUrlFromEnv: getPortalUrlFromEnv,

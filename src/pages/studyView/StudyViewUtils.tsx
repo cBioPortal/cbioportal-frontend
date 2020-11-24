@@ -1,28 +1,25 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
-import {
-    ClinicalDataCount,
-    SampleIdentifier,
-    StudyViewFilter,
-    ClinicalDataBinFilter,
-    DataFilterValue,
-    ClinicalDataBin,
-    GenomicDataBin,
-    GenomicDataCount,
-} from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalData,
+    ClinicalDataBin,
+    ClinicalDataBinFilter,
+    ClinicalDataCount,
+    ClinicalDataMultiStudyFilter,
+    DataFilterValue,
     Gene,
+    GenePanelData,
+    GenomicDataBin,
+    GenomicDataCount,
+    MolecularDataMultipleStudyFilter,
+    MolecularProfile,
+    NumericGeneMolecularData,
     PatientIdentifier,
     Sample,
-    ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    MolecularProfile,
-    GenePanelData,
-    MolecularDataMultipleStudyFilter,
-    NumericGeneMolecularData,
+    SampleIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
@@ -48,7 +45,6 @@ import MobxPromise from 'mobxpromise';
 import {
     getTextWidth,
     stringListToIndexSet,
-    stringListToSet,
 } from 'cbioportal-frontend-commons';
 import {
     CNA_COLOR_AMP,
@@ -58,19 +54,11 @@ import {
 } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
-import {
-    getGroupParameters,
-    getStudiesAttr,
-} from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
+import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
-import {
-    AlterationTypeConstants,
-    DataTypeConstants,
-} from 'pages/resultsView/ResultsViewPageStore';
-import { decideMolecularProfileSortingOrder } from 'pages/resultsView/download/DownloadUtils';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 

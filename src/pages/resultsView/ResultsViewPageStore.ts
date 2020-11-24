@@ -34,7 +34,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
-import { action, computed, observable, ObservableMap, reaction } from 'mobx';
+import { action, computed, observable, reaction } from 'mobx';
 import {
     getProteinPositionFromProteinChange,
     IHotspotIndex,
@@ -222,6 +222,13 @@ import {
     REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IDriverSettingsProps,
+    IExclusionSettings,
+} from '../../shared/driverAnnotation/DriverAnnotationSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -441,20 +448,6 @@ export function extendSamplesWithCancerType(
     return extendedSamples;
 }
 
-export type DriverAnnotationSettings = {
-    excludeVUS: boolean;
-    cbioportalCount: boolean;
-    cbioportalCountThreshold: number;
-    cosmicCount: boolean;
-    cosmicCountThreshold: number;
-    customBinary: boolean;
-    customTiersDefault: boolean;
-    driverTiers: ObservableMap<boolean>;
-    hotspots: boolean;
-    oncoKb: boolean;
-    driversAnnotated: boolean;
-};
-
 export type ModifyQueryParams = {
     selectedSampleListId: string;
     selectedSampleIds: string[];
@@ -464,7 +457,11 @@ export type ModifyQueryParams = {
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
-export class ResultsViewPageStore {
+export class ResultsViewPageStore
+    implements
+        IDriverSettingsProps,
+        IExclusionSettings,
+        ISettingsMenuButtonVisible {
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
         labelMobxPromises(this);
 
@@ -477,85 +474,15 @@ export class ResultsViewPageStore {
 
         const store = this;
 
-        this.driverAnnotationSettings = observable({
-            cbioportalCount: false,
-            cbioportalCountThreshold: 0,
-            cosmicCount: false,
-            cosmicCountThreshold: 0,
-            driverTiers: observable.map<boolean>(),
-
-            _hotspots: false,
-            _oncoKb: false,
-            _excludeVUS: false,
-            _customBinary: undefined,
-
-            set hotspots(val: boolean) {
-                this._hotspots = val;
-            },
-            get hotspots() {
-                return (
-                    !!AppConfig.serverConfig.show_hotspot &&
-                    this._hotspots &&
-                    !store.didHotspotFailInOncoprint
-                );
-            },
-            set oncoKb(val: boolean) {
-                this._oncoKb = val;
-            },
-            get oncoKb() {
-                return (
-                    AppConfig.serverConfig.show_oncokb &&
-                    this._oncoKb &&
-                    !store.didOncoKbFailInOncoprint
-                );
-            },
-            set excludeVUS(val: boolean) {
-                this._excludeVUS = val;
-            },
-            get excludeVUS() {
-                return this._excludeVUS && this.driversAnnotated;
-            },
-            get driversAnnotated() {
-                const anySelected =
-                    this.oncoKb ||
-                    this.hotspots ||
-                    this.cbioportalCount ||
-                    this.cosmicCount ||
-                    this.customBinary ||
-                    this.driverTiers
-                        .entries()
-                        .reduce(
-                            (
-                                oneSelected: boolean,
-                                nextEntry: [string, boolean]
-                            ) => {
-                                return oneSelected || nextEntry[1];
-                            },
-                            false
-                        );
-
-                return anySelected;
-            },
-
-            set customBinary(val: boolean) {
-                this._customBinary = val;
-            },
-            get customBinary() {
-                return this._customBinary === undefined
-                    ? AppConfig.serverConfig
-                          .oncoprint_custom_driver_annotation_binary_default
-                    : this._customBinary;
-            },
-            get customTiersDefault() {
-                return AppConfig.serverConfig
-                    .oncoprint_custom_driver_annotation_tiers_default;
-            },
-        });
-
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => store.didHotspotFailInOncoprint
+        );
         this.driverAnnotationsReactionDisposer = reaction(
             () => this.urlWrapper.query.cancer_study_list,
             () => {
-                this.initDriverAnnotationSettings();
+                this.driverAnnotationSettings = buildDriverAnnotationSettings(
+                    () => store.didHotspotFailInOncoprint
+                );
             },
             { fireImmediately: true }
         );
@@ -566,7 +493,6 @@ export class ResultsViewPageStore {
     }
 
     public urlWrapper: ResultsViewURLWrapper;
-
     public driverAnnotationsReactionDisposer: any;
 
     private mutationMapperStoreByGene: {
@@ -618,7 +544,7 @@ export class ResultsViewPageStore {
         return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
     }
 
-    @observable public resultsPageSettingsVisible = false;
+    @observable public settingsMenuVisible = false;
 
     @observable public checkingVirtualStudies = false;
 
@@ -674,6 +600,10 @@ export class ResultsViewPageStore {
         });
     }
 
+    public set excludeGermlineMutations(e: boolean) {
+        this.setExcludeGermlineMutations(e);
+    }
+
     @computed
     public get usePatientLevelEnrichments() {
         return this.urlWrapper.query.patient_enrichments === 'true';
@@ -696,6 +626,10 @@ export class ResultsViewPageStore {
         this.urlWrapper.updateURL({
             hide_unprofiled_samples: e.toString(),
         });
+    }
+
+    public set hideUnprofiledSamples(e: boolean) {
+        this.setHideUnprofiledSamples(e);
     }
 
     @computed get hugoGeneSymbols() {
@@ -727,20 +661,6 @@ export class ResultsViewPageStore {
         } else {
             return undefined;
         }
-    }
-
-    public initDriverAnnotationSettings() {
-        this.driverAnnotationSettings.cbioportalCount = false;
-        this.driverAnnotationSettings.cbioportalCountThreshold = 10;
-        this.driverAnnotationSettings.cosmicCount = false;
-        this.driverAnnotationSettings.cosmicCountThreshold = 10;
-        this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
-        (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig
-            .serverConfig.oncoprint_oncokb_default;
-        this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig
-            .oncoprint_hotspots_default;
-        (this.driverAnnotationSettings as any)._excludeVUS = !!AppConfig
-            .serverConfig.oncoprint_hide_vus_default;
     }
 
     private makeMutationsTabFilteringSettings() {
@@ -4381,13 +4301,16 @@ export class ResultsViewPageStore {
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
                 const isHotspotDriver =
+                    this.driverAnnotationSettings.hotspots &&
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
                 const cbioportalCountExceeded =
+                    this.driverAnnotationSettings.cbioportalCount &&
                     this.getCBioportalCount.isComplete &&
                     this.getCBioportalCount.result!(mutation) >=
                         this.driverAnnotationSettings.cbioportalCountThreshold;
                 const cosmicCountExceeded =
+                    this.driverAnnotationSettings.cosmicCount &&
                     this.getCosmicCount.isComplete &&
                     this.getCosmicCount.result!(mutation) >=
                         this.driverAnnotationSettings.cosmicCountThreshold;

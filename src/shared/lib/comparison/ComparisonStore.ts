@@ -30,7 +30,14 @@ import {
     ReferenceGenomeGene,
     Sample,
 } from 'cbioportal-ts-api-client';
-import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    observable,
+    reaction,
+} from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -74,6 +81,15 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'pages/resultsView/comparison/ComparisonTabUtils';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
+import {
+    computedFilteredOutAlterations,
+    FilteredOutAlterations,
+    subset,
+} from 'shared/lib/AlterationsUtils';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -83,6 +99,7 @@ export enum OverlapStrategy {
 export default abstract class ComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
+    private geneCountUpdatedReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
     selectedCopyNumberEnrichmentEventTypes: CopyNumberEnrichmentEventType[] = [
@@ -142,6 +159,11 @@ export default abstract class ComparisonStore {
         'other',
     ];
 
+    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable excludeGermlineMutations = false;
+    @observable filteredAlteredCasesByGene = new Map<string, number>();
+    @observable totalAlteredCasesByGene = new Map<string, number>();
+
     constructor(
         protected appStore: AppStore,
         protected resultsViewStore?: ResultsViewPageStore
@@ -176,12 +198,63 @@ export default abstract class ComparisonStore {
                     ) || this.showGenericAssayTab
                 );
             });
+            this.geneCountUpdatedReactionDisposer = reaction(
+                () => this.computedAlteredCasesPerGene,
+                computedAlteredCases => {
+                    this.filteredAlteredCasesByGene = computedAlteredCases;
+                    const gotMoreData = !subset(
+                        this.totalAlteredCasesByGene,
+                        computedAlteredCases
+                    );
+                    if (gotMoreData) {
+                        this.totalAlteredCasesByGene = computedAlteredCases;
+                    }
+                }
+            );
         }); // do this after timeout so that all subclasses have time to construct
+
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
+        );
     }
 
     public destroy() {
         this.tabHasBeenShownReactionDisposer &&
             this.tabHasBeenShownReactionDisposer();
+        this.geneCountUpdatedReactionDisposer &&
+            this.geneCountUpdatedReactionDisposer();
+    }
+
+    @computed get computedAlteredCasesPerGene() {
+        return this.computeCasesCountsPerGene(
+            this.alterationsEnrichmentData.result!
+        );
+    }
+
+    private computeCasesCountsPerGene(
+        enrichments: AlterationEnrichment[]
+    ): Map<string, number> {
+        const result: Map<string, number> = new Map();
+        if (enrichments && enrichments.length > 0) {
+            enrichments.forEach(enrichment => {
+                const gene = enrichment.hugoGeneSymbol;
+                result.set(
+                    enrichment.hugoGeneSymbol,
+                    enrichment.counts.reduce(
+                        (accu, count) => accu + count.alteredCount,
+                        0
+                    ) + (result.get(gene) || 0)
+                );
+            });
+        }
+        return result;
+    }
+
+    @computed get filteredOutAlterations(): FilteredOutAlterations {
+        return computedFilteredOutAlterations(
+            this.totalAlteredCasesByGene,
+            this.filteredAlteredCasesByGene
+        );
     }
 
     // < To be implemented in subclasses: >
@@ -922,6 +995,16 @@ export default abstract class ComparisonStore {
         },
     });
 
+    get allTiers(): string[] {
+        return [];
+    }
+
+    @computed get selectedTiers() {
+        return this.allTiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         storeForExcludingQueryGenes: this.resultsViewStore,
         await: () => [this.mutationEnrichmentDataRequestGroups],
@@ -933,7 +1016,13 @@ export default abstract class ComparisonStore {
                 this.mutationEnrichmentDataRequestGroups.result &&
                 this.mutationEnrichmentDataRequestGroups.result.length > 1
             ) {
+                const selectedTiers = this.selectedTiers;
+                const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                const excludeGermlineMutations = this.excludeGermlineMutations;
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
+                    selectedTiers: selectedTiers,
+                    excludeVus: excludeVus,
+                    excludeGermline: excludeGermlineMutations,
                     enrichmentScope: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
@@ -1209,7 +1298,14 @@ export default abstract class ComparisonStore {
                     (this.selectedMutationEnrichmentEventTypes.length > 0 ||
                         this.selectedCopyNumberEnrichmentEventTypes.length > 0)
                 ) {
+                    const selectedTiers = this.selectedTiers;
+                    const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                    const excludeGermlineMutations = this
+                        .excludeGermlineMutations;
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                        selectedTiers: selectedTiers,
+                        excludeVus: excludeVus,
+                        excludeGermline: excludeGermlineMutations,
                         enrichmentScope: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',

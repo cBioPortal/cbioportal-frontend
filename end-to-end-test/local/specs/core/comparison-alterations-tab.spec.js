@@ -34,13 +34,13 @@ if (useExternalFrontend) {
             submit();
             $('[data-test=LazyMobXTable]').waitForVisible();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
-            assert.strictEqual(rows.length, 13);
+            assert.strictEqual(rows.length, 8);
             clickCheckBox('Mutations');
-            clickCheckBox('Frameshift Deletion');
+            clickCheckBox('Frameshift Insertion');
             submit();
             $('[data-test=LazyMobXTable]').waitForVisible();
             rows = $$('[data-test=LazyMobXTable] tbody tr');
-            assert.strictEqual(rows.length, 1);
+            assert.strictEqual(rows.length, 2);
         });
 
         it('filters CNA types', function() {
