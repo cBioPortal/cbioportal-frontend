@@ -1,6 +1,6 @@
 import * as React from 'react';
 import AppConfig from 'appConfig';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { AppStore } from '../../../AppStore';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';

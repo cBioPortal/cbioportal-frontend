@@ -11,10 +11,8 @@ describe('restoreRouteAfterRedirect', () => {
     beforeEach(() => {
         stores = {
             routing: {
-                location: {
-                    query: {
-                        key: 'mooo',
-                    },
+                query: {
+                    key: 'mooo',
                 },
                 push: sinon.stub(),
                 updateRoute: () => {},
