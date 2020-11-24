@@ -117,7 +117,7 @@ export default class MutationMapperTool extends React.Component<
     @computed get activeTabId(): string | undefined {
         // use routing if available, if not fall back to the observable variable
         return this.props.routing
-            ? this.props.routing.location.query.standaloneMutationMapperGeneTab
+            ? this.props.routing.query.standaloneMutationMapperGeneTab
             : this.standaloneMutationMapperGeneTab;
     }
 

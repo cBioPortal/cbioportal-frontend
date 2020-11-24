@@ -27,6 +27,7 @@ import {
     GenieAgreement,
     shouldShowGenieWarning,
 } from 'appShell/App/usageAgreements/GenieAgreement';
+import makeRoutes from 'routes';
 
 interface IContainerProps {
     location: Location;
@@ -135,7 +136,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                     </Then>
                     <Else>
                         <div className="contentWrapper">
-                            {this.props.children}
+                            {makeRoutes(this.routingStore)}
                         </div>
                     </Else>
                 </If>

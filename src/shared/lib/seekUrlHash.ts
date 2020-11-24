@@ -23,12 +23,12 @@ export function seekUrlHash(id: string) {
     let pollInterval = 100;
     let interval = setInterval(() => {
         if (getElement(id)) {
+            // The browser won't scroll to the element if it
+            //  doesn't exist when the page first loads.
+            // So let's just keep checking if it loads and
+            //  scroll to it when it appears.
+            getElement(id)?.scrollIntoView();
             clearInterval(interval);
-            // this is a bit of a hack to get browser to
-            // scroll to element as it would if this problem
-            // didn't exist
-            getBrowserWindow().location.hash = '';
-            getBrowserWindow().location.hash = id;
         }
         // bail if we reach reasonable limit
         if (counter >= limit) {
