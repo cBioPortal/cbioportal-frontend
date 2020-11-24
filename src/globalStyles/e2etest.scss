@@ -29,4 +29,13 @@
     .local-dev-banner {
         display: none;
     }
+
+    #blockUIToDisableMouse {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        zindex: 999999999;
+    }
 }
