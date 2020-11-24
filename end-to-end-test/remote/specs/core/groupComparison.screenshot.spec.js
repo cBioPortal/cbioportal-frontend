@@ -207,9 +207,9 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page mutation enrichments tab several groups', function() {
-            browser.click('.tabAnchor_mutations');
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -224,7 +224,7 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
             browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -239,7 +239,7 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.click('[data-test="selectGenes"]');
@@ -309,7 +309,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page cna enrichments tab several groups', function() {
-            browser.click('.tabAnchor_cna');
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonCopyNumberEnrichments"]',
                 10000
@@ -322,7 +322,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page mrna enrichments tab several groups', function() {
-            browser.click('.tabAnchor_mrna');
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
@@ -380,10 +380,10 @@ describe('group comparison page screenshot tests', function() {
                 'button[data-test="groupSelectorButtonZNF517 mutant"]'
             );
             // go back to mutations tab
-            browser.waitForExist('.tabAnchor_mutations', 10000);
-            browser.click('.tabAnchor_mutations');
+            browser.waitForExist('.tabAnchor_alterations', 10000);
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -394,7 +394,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page cna enrichments tab two groups', function() {
-            browser.click('.tabAnchor_cna');
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonCopyNumberEnrichments"]',
                 10000

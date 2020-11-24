@@ -360,9 +360,9 @@ describe('Results Page', function() {
         it('should not be present in enrichments tab with simple query', function() {
             browser.click('a.tabAnchor_comparison');
             browser.waitForVisible(
-                '.comparisonTabSubTabs .tabAnchor_mutations'
+                '.comparisonTabSubTabs .tabAnchor_alterations'
             );
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -468,7 +468,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in mutations tab with explicit query', function() {
-            browser.click('a.tabAnchor_mutations');
+            browser.click('a.tabAnchor_alterations');
             browser.waitForVisible(
                 `${unaffectedBannerSelector}.mutations-oql-status-banner`,
                 10000
@@ -507,9 +507,9 @@ describe('Results Page', function() {
         it('should be present in enrichments tab with explicit query', function() {
             browser.click('a.tabAnchor_comparison');
             browser.waitForVisible(
-                '.comparisonTabSubTabs .tabAnchor_mutations'
+                '.comparisonTabSubTabs .tabAnchor_alterations'
             );
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
             browser.waitForVisible(
                 `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
