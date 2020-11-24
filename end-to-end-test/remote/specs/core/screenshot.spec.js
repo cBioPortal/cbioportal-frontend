@@ -114,9 +114,9 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+        browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
         browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
+            'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
@@ -129,7 +129,7 @@ function runResultsTestSuite(prefix, options = {}) {
             comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
         browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
+            'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
