@@ -912,14 +912,14 @@
           {
             "name": "keyword",
             "in": "path",
-            "description": "keyword. For example BRCA; 13:32906640-32906640; 13:g.32890665G>A",
+            "description": "keyword. For example BRCA; BRAF V600; 13:32906640-32906640; 13:g.32890665G>A",
             "required": true,
             "type": "string"
           },
           {
             "name": "limit",
             "in": "query",
-            "description": "Max number matching results to return",
+            "description": "Max number of matching results to return",
             "required": false,
             "type": "integer",
             "format": "int32"
@@ -2014,16 +2014,20 @@
       "type": "object",
       "properties": {
         "alteration": {
-          "type": "string"
+          "type": "string",
+          "description": "Matching Alteration (e.g: V600E)"
         },
         "description": {
-          "type": "string"
+          "type": "string",
+          "description": "Optional free-form text"
         },
         "hugoSymbol": {
-          "type": "string"
+          "type": "string",
+          "description": "Matching Hugo Gene Symbol (e.g: BRCA2, BRAF)"
         },
         "matchType": {
           "type": "string",
+          "description": "Match Type",
           "enum": [
             "EXACT",
             "STARTS_WITH",
@@ -2033,6 +2037,7 @@
         },
         "queryType": {
           "type": "string",
+          "description": "Query Type",
           "enum": [
             "GENE",
             "ALTERATION",
@@ -2041,10 +2046,12 @@
           ]
         },
         "region": {
-          "type": "string"
+          "type": "string",
+          "description": "Matching Region (e.g: 13:32968940-32968940)"
         },
         "variant": {
-          "type": "string"
+          "type": "string",
+          "description": "Matching HGVSG Variant (e.g: 17:g.37880220T>C)"
         }
       }
     },
