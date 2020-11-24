@@ -328,16 +328,10 @@ function checkElementWithTemporaryClass(
 
 function checkElementWithMouseDisabled(selector, pauseTime, options) {
     browser.execute(function() {
-        $("<div id='blockUIToDisableMouse'></div>")
-            .appendTo('body')
-            .css({
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                zIndex: 999999999,
-            });
+        const style = 'display:block !important;visibility:visible !important;';
+        $(`<div id='blockUIToDisableMouse' style='${style}'></div>`).appendTo(
+            'body'
+        );
     });
 
     const ret = checkElementWithTemporaryClass(
