@@ -143,7 +143,7 @@ export default class StudyViewPage extends React.Component<
             return;
         }
 
-        const query = props.routing.location.query;
+        const query = props.routing.query;
         const hash = props.routing.location.hash;
         // clear hash if any
         props.routing.location.hash = '';

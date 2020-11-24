@@ -15,7 +15,7 @@ export function restoreRouteAfterRedirect(injected: {
 }) {
     const win = getBrowserWindow();
 
-    const key = injected.routing.location.query.key;
+    const key = injected.routing.query.key;
     let restoreRoute = win.localStorage.getItem(key);
     if (restoreRoute) {
         restoreRoute = restoreRoute.replace(/^#/, '');
@@ -63,7 +63,7 @@ export function handleCaseDO() {
 
     const newParams: Partial<PatientViewUrlParams> = {};
 
-    const currentQuery = routingStore.location.query;
+    const currentQuery = routingStore.query;
 
     if (currentQuery.cancer_study_id) {
         newParams.studyId = currentQuery.cancer_study_id;
@@ -150,7 +150,7 @@ async function getCuratedNonRedundantStudyList() {
  */
 export async function handleLinkOut() {
     const routingStore: ExtendedRouterStore = getBrowserWindow().routingStore;
-    const currentQuery = routingStore.location.query;
+    const currentQuery = routingStore.query;
 
     const curatedList = await getCuratedNonRedundantStudyList();
 
@@ -188,10 +188,10 @@ export function handleIndexDO() {
 
         // ALL QUERIES NOW HAVE cancer_study_list. if we have a legacy cancer_study_id but not a cancer_study_list, copy it over
         if (
-            !getBrowserWindow().routingStore.location.query.cancer_study_list &&
-            getBrowserWindow().routingStore.location.query.cancer_study_id
+            !getBrowserWindow().routingStore.query.cancer_study_list &&
+            getBrowserWindow().routingStore.query.cancer_study_id
         ) {
-            data.cancer_study_list = getBrowserWindow().routingStore.location.query.cancer_study_id;
+            data.cancer_study_list = getBrowserWindow().routingStore.query.cancer_study_id;
             data.cancer_study_id = undefined;
         }
 
@@ -213,13 +213,9 @@ export function handleIndexDO() {
 }
 
 export function handleEncodedRedirect() {
-    const encodedURL = getBrowserWindow().routingStore.location.query[
-        EncodedURLParam
-    ];
+    const encodedURL = getBrowserWindow().routingStore.query[EncodedURLParam];
     const decodedURL = atob(encodedURL);
-    (getBrowserWindow().routingStore as ExtendedRouterStore).replace(
-        decodedURL
-    );
+    getBrowserWindow().location.href = decodedURL;
 }
 
 export function redirectTo(
