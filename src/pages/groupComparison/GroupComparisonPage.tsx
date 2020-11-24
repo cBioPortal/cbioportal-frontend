@@ -39,7 +39,8 @@ import AlterationsEnrichments from './AlterationsEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonTabUtils';
+import { buildAlterationEnrichmentTypeSelectorHandlers } from 'pages/resultsView/comparison/ComparisonTabUtils';
+import { filteredOutAlterationsMessage } from 'shared/lib/AlterationsUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -133,6 +134,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
         ],
         render: () => {
+            const filteredOutAlterations = this.store.filteredOutAlterations;
             return (
                 <MSKTabs
                     unmountOnHide={false}

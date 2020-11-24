@@ -85,6 +85,15 @@ import {
     cnaEventTypeSelectInit,
     mutationEventTypeSelectInit,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
+import {
+    computedFilteredOutAlterations,
+    FilteredOutAlterations,
+    subset,
+} from 'shared/lib/AlterationsUtils';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -94,11 +103,17 @@ export enum OverlapStrategy {
 export default abstract class ComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
+    private geneCountUpdatedReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
     public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
     @observable.ref
     public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
+
+    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable excludeGermlineMutations = false;
+    @observable filteredAlteredCasesByGene = new Map<string, number>();
+    @observable totalAlteredCasesByGene = new Map<string, number>();
 
     constructor(
         protected appStore: AppStore,
@@ -140,12 +155,63 @@ export default abstract class ComparisonStore {
                     ) || this.showAlterationsTab
                 );
             });
+            this.geneCountUpdatedReactionDisposer = reaction(
+                () => this.computedAlteredCasesPerGene,
+                computedAlteredCases => {
+                    this.filteredAlteredCasesByGene = computedAlteredCases;
+                    const gotMoreData = !subset(
+                        this.totalAlteredCasesByGene,
+                        computedAlteredCases
+                    );
+                    if (gotMoreData) {
+                        this.totalAlteredCasesByGene = computedAlteredCases;
+                    }
+                }
+            );
         }); // do this after timeout so that all subclasses have time to construct
+
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
+        );
     }
 
     public destroy() {
         this.tabHasBeenShownReactionDisposer &&
             this.tabHasBeenShownReactionDisposer();
+        this.geneCountUpdatedReactionDisposer &&
+            this.geneCountUpdatedReactionDisposer();
+    }
+
+    @computed get computedAlteredCasesPerGene() {
+        return this.computeCasesCountsPerGene(
+            this.alterationsEnrichmentData.result!
+        );
+    }
+
+    private computeCasesCountsPerGene(
+        enrichments: AlterationEnrichment[]
+    ): Map<string, number> {
+        const result: Map<string, number> = new Map();
+        if (enrichments && enrichments.length > 0) {
+            enrichments.forEach(enrichment => {
+                const gene = enrichment.hugoGeneSymbol;
+                result.set(
+                    enrichment.hugoGeneSymbol,
+                    enrichment.counts.reduce(
+                        (accu, count) => accu + count.alteredCount,
+                        0
+                    ) + (result.get(gene) || 0)
+                );
+            });
+        }
+        return result;
+    }
+
+    @computed get filteredOutAlterations(): FilteredOutAlterations {
+        return computedFilteredOutAlterations(
+            this.totalAlteredCasesByGene,
+            this.filteredAlteredCasesByGene
+        );
     }
 
     // < To be implemented in subclasses: >
@@ -839,6 +905,16 @@ export default abstract class ComparisonStore {
         },
     });
 
+    get allTiers(): string[] {
+        return [];
+    }
+
+    @computed get selectedTiers() {
+        return this.allTiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         storeForExcludingQueryGenes: this.resultsViewStore,
         await: () => [this.mutationEnrichmentDataRequestGroups],
@@ -850,7 +926,14 @@ export default abstract class ComparisonStore {
                 this.mutationEnrichmentDataRequestGroups.result &&
                 this.mutationEnrichmentDataRequestGroups.result.length > 1
             ) {
+                const selectedTiers = this.selectedTiers;
+                const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                const excludeGermlineMutations = this.excludeGermlineMutations;
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
+                    enrichmentType: this.usePatientLevelEnrichments
+                    selectedTiers: selectedTiers,
+                    excludeVus: excludeVus,
+                    excludeGermline: excludeGermlineMutations,
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
@@ -1130,7 +1213,14 @@ export default abstract class ComparisonStore {
                             .values()
                             .some())
                 ) {
+                    const selectedTiers = this.selectedTiers;
+                    const excludeVus = this.driverAnnotationSettings.excludeVUS;
+                    const excludeGermlineMutations = this
+                        .excludeGermlineMutations;
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                        selectedTiers: selectedTiers,
+                        excludeVus: excludeVus,
+                        excludeGermline: excludeGermlineMutations,
                         enrichmentType: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',

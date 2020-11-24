@@ -5,7 +5,6 @@ import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import * as _ from 'lodash';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export interface IStudyPageHeaderProps {
     store: StudyViewPageStore;

@@ -7,7 +7,13 @@ import {
 } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
+import {
+    CancerStudy,
+    CustomDriverAnnotationReport,
+    MolecularProfile,
+    MolecularProfileFilter,
+    SampleFilter,
+} from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -27,8 +33,15 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
+import {
+    IDriverSettingsProps,
+    IExclusionSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
-export default class GroupComparisonStore extends ComparisonStore {
+export default class GroupComparisonStore extends ComparisonStore
+    implements IDriverSettingsProps, IExclusionSettings {
     @observable private _currentTabId:
         | GroupComparisonTab
         | undefined = undefined;
@@ -373,11 +386,10 @@ export default class GroupComparisonStore extends ComparisonStore {
 
     readonly studies = remoteData(
         {
-            await: () => [this._session, this.allStudyIdToStudy],
+            await: () => [this.studyIds, this.allStudyIdToStudy],
             invoke: () => {
-                const studyIds = getStudyIds(this._session.result!.groups);
                 return Promise.resolve(
-                    studyIds.map(
+                    this.studyIds.result!.map(
                         studyId => this.allStudyIdToStudy.result![studyId]
                     )
                 );
@@ -385,4 +397,86 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
         []
     );
+
+    readonly studyIds = remoteData(
+        {
+            await: () => [this._session],
+            invoke: () => {
+                return Promise.resolve(
+                    getStudyIds(this._session.result!.groups)
+                );
+            },
+        },
+        []
+    );
+
+    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
+        {
+            await: () => [this.studyIds],
+            invoke: async () => {
+                return client.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: this.studyIds.result,
+                    } as MolecularProfileFilter,
+                });
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationProfileIds = remoteData<string[]>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                return _(this.molecularProfilesInStudies.result)
+                    .filter(
+                        (profile: MolecularProfile) =>
+                            // discrete CNA's
+                            (profile.molecularAlterationType ===
+                                AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                                profile.datatype === 'DISCRETE') ||
+                            // mutations
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.MUTATION_EXTENDED ||
+                            // structural variants
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT
+                    )
+                    .map(
+                        (profile: MolecularProfile) =>
+                            profile.molecularProfileId
+                    )
+                    .value();
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationReport = remoteData<
+        CustomDriverAnnotationReport
+    >({
+        await: () => [this.customDriverAnnotationProfileIds],
+        invoke: () => {
+            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                {
+                    molecularProfileIds: this.customDriverAnnotationProfileIds
+                        .result,
+                }
+            );
+        },
+    });
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (!!this.customDriverAnnotationReport.result!.hasBinary ||
+                this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
+    }
+
+    @computed get allTiers() {
+        return this.customDriverAnnotationReport.isComplete
+            ? this.customDriverAnnotationReport.result!.tiers
+            : [];
+    }
 }

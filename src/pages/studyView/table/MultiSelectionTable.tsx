@@ -66,6 +66,8 @@ export enum MultiSelectionTableColumnKey {
 export type MultiSelectionTableColumn = {
     columnKey: MultiSelectionTableColumnKey;
     columnWidthRatio?: number;
+    columnNote?: string;
+    columnTooltip?: JSX.Element;
 };
 
 export type MultiSelectionTableProps = {
@@ -144,10 +146,10 @@ export class MultiSelectionTable extends React.Component<
         } = {
             [MultiSelectionTableColumnKey.GENE]: {
                 name: columnKey,
-                headerRender: () => {
+                headerRender: columnName => {
                     return getGeneColumnHeaderRender(
                         cellMargin,
-                        columnKey,
+                        columnName,
                         this.props.cancerGeneFilterEnabled!,
                         this.isFilteredByCancerGeneList,
                         this.toggleCancerGeneFilter
@@ -183,14 +185,14 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
-                headerRender: () => {
+                headerRender: columnName => {
                     return (
                         <div
                             style={{ marginLeft: cellMargin }}
                             className={styles.displayFlex}
                             data-test="profile-column-header"
                         >
-                            {columnKey}
+                            {columnName}
                         </div>
                     );
                 },
@@ -216,14 +218,14 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.CASE_LIST]: {
                 name: columnKey,
-                headerRender: () => {
+                headerRender: columnName => {
                     return (
                         <div
                             style={{ marginLeft: cellMargin }}
                             className={styles.displayFlex}
                             data-test="profile-column-header"
                         >
-                            {columnKey}
+                            {columnName}
                         </div>
                     );
                 },
@@ -250,8 +252,12 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
-                headerRender: () => {
-                    return <div style={{ marginLeft: cellMargin }}>#</div>;
+                headerRender: columnName => {
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {columnName}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <LabeledCheckbox
@@ -270,7 +276,7 @@ export class MultiSelectionTable extends React.Component<
                             className: styles.autoMarginCheckbox,
                         }}
                     >
-                        <span>
+                        <span data-test={'numberOfAlteredCasesText'}>
                             {data.numberOfAlteredCases.toLocaleString()}
                         </span>
                     </LabeledCheckbox>
@@ -291,8 +297,12 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
-                headerRender: () => {
-                    return <div style={{ marginLeft: cellMargin }}>Freq</div>;
+                headerRender: columnName => {
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {columnName}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => {
                     return getFreqColumnRender(
@@ -324,8 +334,12 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: {
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
-                headerRender: () => {
-                    return <div style={{ marginLeft: cellMargin }}># Mut</div>;
+                headerRender: columnName => {
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {columnName}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -351,8 +365,8 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: {
                 name: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                 tooltip: <span>Total number of mutations</span>,
-                headerRender: () => {
-                    return <span># Fusion</span>;
+                headerRender: columnName => {
+                    return <span>{columnName}</span>;
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -580,13 +594,20 @@ export class MultiSelectionTable extends React.Component<
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column =>
-            this.getDefaultColumnDefinition(
+        return this.props.columns.map(column => {
+            const columnDefinition = this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
                 this.cellMargin[column.columnKey]
-            )
-        );
+            );
+            if (column.columnTooltip) {
+                columnDefinition.tooltip = column.columnTooltip;
+            }
+            if (column.columnNote) {
+                columnDefinition.name += ' ' + column.columnNote;
+            }
+            return columnDefinition;
+        });
     }
 
     @autobind

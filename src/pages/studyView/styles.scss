@@ -57,6 +57,10 @@ $selectHeightInner: $selectHeight - 2px;
     }
 }
 
+.no-checkbox {
+    padding-left: 0px !important;
+}
+
 [data-mfb-label]:after {
     background: rgba(0, 0, 0, 1) !important;
     color: white !important;
