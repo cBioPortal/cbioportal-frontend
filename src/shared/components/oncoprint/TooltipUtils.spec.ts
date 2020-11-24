@@ -17,6 +17,7 @@ import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
 import AppConfig from 'appConfig';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
+import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 
 describe('Oncoprint TooltipUtils', () => {
     describe('getCaseViewElt', () => {
@@ -239,7 +240,7 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation here',
                         }),
                     ],
@@ -249,7 +250,7 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation here',
                         }),
                     ],
@@ -318,15 +319,15 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 1',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 2',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: '3 annotation',
                         }),
                     ],
@@ -336,15 +337,15 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 1',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 2',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: '3 annotation',
                         }),
                     ],
@@ -456,7 +457,7 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Passenger',
+                            driverFilter: PUTATIVE_PASSENGER,
                             driverFilterAnnotation: 'paosidjp',
                         }),
                         makeMutation({
@@ -682,19 +683,19 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 1',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: 'annotation 2',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Driver',
+                            driverFilter: PUTATIVE_DRIVER,
                             driverFilterAnnotation: '3 annotation',
                         }),
                         makeMutation({
-                            driverFilter: 'Putative_Passenger',
+                            driverFilter: PUTATIVE_PASSENGER,
                             driverFilterAnnotation: 'paosidjp',
                         }),
                         makeMutation({
@@ -767,7 +768,7 @@ describe('Oncoprint TooltipUtils', () => {
                     study_id: '',
                     data: [
                         makeMutation({
-                            driverFilter: 'Putative_Passenger',
+                            driverFilter: PUTATIVE_PASSENGER,
                             driverFilterAnnotation: 'paosidjp',
                         }),
                         makeMutation({
