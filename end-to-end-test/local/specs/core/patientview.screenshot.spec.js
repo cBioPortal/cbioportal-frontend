@@ -120,6 +120,11 @@ describe('patient view page', function() {
             selectMutationalSignaturesVersion3();
             browser.waitForVisible('div.progress', 20000);
             browser.moveToObject('div.progress', 0, 0);
+
+            browser.waitForVisible(
+                'div[data-test="SignificantMutationalSignaturesTooltip"]'
+            );
+
             assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
 
