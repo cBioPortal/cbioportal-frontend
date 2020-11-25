@@ -5881,7 +5881,7 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/definitions/GeneFilterQuery"
             }
           }
         },
@@ -5893,6 +5893,44 @@
         }
       },
       "title": "GeneFilter"
+    },
+    "GeneFilterQuery": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "AMP",
+              "GAIN",
+              "DIPLOID",
+              "HETLOSS",
+              "HOMDEL"
+            ]
+          }
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "excludeGermline": {
+          "type": "boolean"
+        },
+        "excludeVUS": {
+          "type": "boolean"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "selectedTiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GeneFilterQuery"
     },
     "GenePanel": {
       "type": "object",

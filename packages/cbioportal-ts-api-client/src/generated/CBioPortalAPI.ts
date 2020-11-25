@@ -280,10 +280,24 @@ export type Gene = {
 
 };
 export type GeneFilter = {
-    'geneQueries': Array < Array < string >
+    'geneQueries': Array < Array < GeneFilterQuery >
         >
 
         'molecularProfileIds': Array < string >
+
+};
+export type GeneFilterQuery = {
+    'alterations': Array < "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL" >
+
+        'entrezGeneId': number
+
+        'excludeGermline': boolean
+
+        'excludeVUS': boolean
+
+        'hugoGeneSymbol': string
+
+        'selectedTiers': Array < string >
 
 };
 export type GenePanel = {
