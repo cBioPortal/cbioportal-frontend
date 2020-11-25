@@ -2368,8 +2368,8 @@ export default class GenomeNexusAPIInternal {
      * Performs search by gene, protein change, variant or region.
      * @method
      * @name GenomeNexusAPIInternal#searchSignalByKeywordGETUsingGET
-     * @param {string} keyword - keyword. For example BRCA; 13:32906640-32906640; 13:g.32890665G>A
-     * @param {integer} limit - Max number matching results to return
+     * @param {string} keyword - keyword. For example BRCA; BRAF V600; 13:32906640-32906640; 13:g.32890665G>A
+     * @param {integer} limit - Max number of matching results to return
      */
     searchSignalByKeywordGETUsingGETWithHttpInfo(parameters: {
         'keyword': string,
@@ -2416,8 +2416,8 @@ export default class GenomeNexusAPIInternal {
      * Performs search by gene, protein change, variant or region.
      * @method
      * @name GenomeNexusAPIInternal#searchSignalByKeywordGETUsingGET
-     * @param {string} keyword - keyword. For example BRCA; 13:32906640-32906640; 13:g.32890665G>A
-     * @param {integer} limit - Max number matching results to return
+     * @param {string} keyword - keyword. For example BRCA; BRAF V600; 13:32906640-32906640; 13:g.32890665G>A
+     * @param {integer} limit - Max number of matching results to return
      */
     searchSignalByKeywordGETUsingGET(parameters: {
             'keyword': string,
