@@ -101,6 +101,7 @@ export default class AlterationsEnrichments extends React.Component<
             let headerName = 'Alterations';
             return (
                 <div data-test="GroupComparisonAlterationEnrichments">
+                    {this.props.children}
                     <AlterationEnrichmentContainer
                         data={
                             this.props.store.alterationsEnrichmentData.result!
