@@ -6,7 +6,7 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 import sinon from 'sinon';
 import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOncoprint';
-import { createMemoryHistory } from 'react-router';
+import { createMemoryHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 

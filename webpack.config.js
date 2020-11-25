@@ -131,8 +131,9 @@ var config = {
 
     resolveLoader: {
         modules: [
-            path.resolve(__dirname, 'loaders'),
+            'node_modules',
             path.join(process.cwd(), 'node_modules'),
+            path.resolve(__dirname, 'loaders'),
         ],
     },
 

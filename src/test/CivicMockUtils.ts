@@ -117,6 +117,10 @@ export function getCnaData(): Array<DiscreteCopyNumberData> {
             studyId: 'STUDY1',
             uniquePatientKey: '',
             uniqueSampleKey: '',
+            driverFilter: '',
+            driverFilterAnnotation: '',
+            driverTiersFilter: '',
+            driverTiersFilterAnnotation: '',
         },
     ];
 }

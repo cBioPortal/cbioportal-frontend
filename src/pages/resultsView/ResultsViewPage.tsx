@@ -134,6 +134,7 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 
+    @autobind
     private handleTabChange(id: string, replace?: boolean) {
         this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
     }
@@ -534,7 +535,7 @@ export default class ResultsViewPage extends React.Component<
     private getTabHref(tabId: string) {
         return URL.format({
             pathname: tabId,
-            query: this.props.routing.location.query,
+            query: this.props.routing.query,
             hash: this.props.routing.location.hash,
         });
     }
@@ -700,8 +701,10 @@ export default class ResultsViewPage extends React.Component<
                                 {// we don't show the result tabs if we don't have valid query
                                 this.showTabs &&
                                     !this.resultsViewPageStore.genesInvalid &&
-                                    !this.resultsViewPageStore
-                                        .isQueryInvalid && (
+                                    !this.resultsViewPageStore.isQueryInvalid &&
+                                    this.resultsViewPageStore
+                                        .customDriverAnnotationReport
+                                        .isComplete && (
                                         <MSKTabs
                                             key={this.urlWrapper.hash}
                                             activeTabId={

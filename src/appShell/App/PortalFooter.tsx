@@ -4,7 +4,7 @@ import { If } from 'react-if';
 // tslint:disable-next-line:no-import-side-effect
 import './footer.scss';
 import _ from 'lodash';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
 

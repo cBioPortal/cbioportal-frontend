@@ -53,6 +53,7 @@ import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
     AlterationTypeConstants,
+    CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
 } from '../ResultsViewPageStore';
@@ -2348,7 +2349,7 @@ export function makeBoxScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: AnnotatedNumericGeneMolecularData[];
+        data: CustomDriverNumericGeneMolecularData[];
     },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
@@ -2395,7 +2396,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: AnnotatedNumericGeneMolecularData[];
+        data: CustomDriverNumericGeneMolecularData[];
     },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
@@ -2415,7 +2416,7 @@ export function makeScatterPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: AnnotatedNumericGeneMolecularData[];
+        data: CustomDriverNumericGeneMolecularData[];
     },
     selectedGeneForStyling?: Gene,
     clinicalData?: {
@@ -2629,7 +2630,7 @@ export function makeWaterfallPlotData(
     },
     copyNumberAlterations?: {
         molecularProfileIds: string[];
-        data: AnnotatedNumericGeneMolecularData[];
+        data: CustomDriverNumericGeneMolecularData[];
     },
     clinicalData?: {
         clinicalAttribute: ClinicalAttribute;
@@ -2641,7 +2642,7 @@ export function makeWaterfallPlotData(
     } = mutations ? _.groupBy(mutations.data, m => m.uniqueSampleKey) : {};
 
     const cnaMap: {
-        [uniqueSampleKey: string]: AnnotatedNumericGeneMolecularData[];
+        [uniqueSampleKey: string]: CustomDriverNumericGeneMolecularData[];
     } = copyNumberAlterations
         ? _.groupBy(copyNumberAlterations.data, d => d.uniqueSampleKey)
         : {};
@@ -2668,9 +2669,11 @@ export function makeWaterfallPlotData(
     for (const d of axisData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:
-            | AnnotatedNumericGeneMolecularData[]
+            | CustomDriverNumericGeneMolecularData[]
             | undefined = cnaMap[d.uniqueSampleKey];
-        let dispCna: AnnotatedNumericGeneMolecularData | undefined = undefined;
+        let dispCna:
+            | CustomDriverNumericGeneMolecularData
+            | undefined = undefined;
         let dispMutationType: OncoprintMutationType | undefined = undefined;
         const sampleMutations: AnnotatedMutation[] | undefined =
             mutationsMap[d.uniqueSampleKey];
@@ -2685,7 +2688,7 @@ export function makeWaterfallPlotData(
             // filter CNA's for the selected gene and return (a random) one with the highest value
             dispCna = _(sampleCopyNumberAlterations)
                 .filter(
-                    (d: AnnotatedNumericGeneMolecularData) =>
+                    (d: CustomDriverNumericGeneMolecularData) =>
                         d.entrezGeneId === selectedGene.entrezGeneId
                 )
                 .maxBy('value');

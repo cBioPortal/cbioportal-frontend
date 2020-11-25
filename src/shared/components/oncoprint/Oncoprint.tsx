@@ -13,8 +13,8 @@ import { computed } from 'mobx';
 import { transition } from './DeltaUtils';
 import _ from 'lodash';
 import {
+    CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
     ExtendedAlteration,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import './styles.scss';
@@ -79,7 +79,9 @@ export interface IGenericAssayHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
 }
 
 export type GeneticTrackDatum_Data = Pick<
-    ExtendedAlteration & AnnotatedMutation & AnnotatedNumericGeneMolecularData,
+    ExtendedAlteration &
+        AnnotatedMutation &
+        CustomDriverNumericGeneMolecularData,
     | 'hugoGeneSymbol'
     | 'molecularProfileAlterationType'
     | 'proteinChange'

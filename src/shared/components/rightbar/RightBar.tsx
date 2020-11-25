@@ -5,7 +5,7 @@ import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import Testimonials from '../testimonials/Testimonials';
 import AppConfig from 'appConfig';
 import { QueryStore } from 'shared/components/query/QueryStore';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';

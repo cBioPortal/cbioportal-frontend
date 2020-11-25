@@ -1261,10 +1261,6 @@ export default class ResultsViewOncoprint extends React.Component<
 
     // @computed
     public get oncoprintAnalysisCaseType() {
-        // return (
-        //     (this.routing.location.query as CancerStudyQueryUrlParams)
-        //         .show_samples === 'true'
-        // ) ? OncoprintAnalysisCaseType.SAMPLE : OncoprintAnalysisCaseType.PATIENT;
         return this.urlWrapper.query.show_samples === 'true'
             ? OncoprintAnalysisCaseType.SAMPLE
             : OncoprintAnalysisCaseType.PATIENT;
