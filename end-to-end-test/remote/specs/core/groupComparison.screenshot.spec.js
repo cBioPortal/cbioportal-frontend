@@ -212,6 +212,8 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
+            clickCheckBox('Copy Number Alterations');
+            submit();
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
@@ -309,11 +311,9 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page cna enrichments tab several groups', function() {
-            browser.click('.tabAnchor_alterations');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
-                10000
-            );
+            clickCheckBox('Mutations');
+            clickCheckBox('Copy Number Alterations');
+            submit();
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
@@ -322,7 +322,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page mrna enrichments tab several groups', function() {
-            browser.click('.tabAnchor_alterations');
+            browser.click('.tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
@@ -797,3 +797,14 @@ describe('group comparison page screenshot tests', function() {
         });
     });
 });
+
+var clickCheckBox = name => {
+    $('label=' + name)
+        .$('input')
+        .click();
+};
+
+var submit = () => {
+    $('[data-test=changeSortOrderButton]').click();
+    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+};

@@ -222,6 +222,8 @@ describe('results view comparison tab screenshot tests', function() {
         //         'div[data-test="GroupComparisonAlterationEnrichments"]',
         //         10000
         //     );
+        //     clickCheckBox('Copy Number Alterations');
+        //     submit();
         //     browser.moveToObject('body', 0, 0);
         //     var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
         //         hide: ['.qtip'],
@@ -758,3 +760,14 @@ describe('results view comparison tab screenshot tests', function() {
         });
     });
 });
+
+var clickCheckBox = name => {
+    $('label=' + name)
+        .$('input')
+        .click();
+};
+
+var submit = () => {
+    $('[data-test=changeSortOrderButton]').click();
+    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+};
