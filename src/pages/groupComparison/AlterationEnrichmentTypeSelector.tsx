@@ -367,7 +367,6 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         return (
             <div
                 style={{
-                    position: 'absolute',
                     zIndex: 2,
                     background: '#eee',
                     borderRadius: '4px',
@@ -688,6 +687,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div>
                     <button
                         className="btn btn-primary"
+                        style={{ width: '100%' }}
                         data-test="changeSortOrderButton"
                         type="button"
                         onClick={this.updateSelectedAlterations}
