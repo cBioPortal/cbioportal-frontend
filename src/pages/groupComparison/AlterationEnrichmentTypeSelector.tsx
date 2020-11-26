@@ -22,6 +22,7 @@ export interface IAlterationEnrichmentTypeSelectorHandlers {
 export interface IAlterationEnrichmentTypeSelectorProps {
     // state: AlterationEnrichmentEventType[];
     handlers: IAlterationEnrichmentTypeSelectorHandlers;
+    classNames?: string;
 }
 
 @observer
@@ -365,15 +366,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     render() {
         return (
-            <div
-                style={{
-                    zIndex: 2,
-                    background: '#eee',
-                    borderRadius: '4px',
-                    padding: '10px',
-                }}
-            >
-                <label>Select Alteration Types:</label>
+            <div className={this.props.classNames}>
+                <h5>Select Alteration Types</h5>
                 <div className="checkbox">
                     <label>
                         <input

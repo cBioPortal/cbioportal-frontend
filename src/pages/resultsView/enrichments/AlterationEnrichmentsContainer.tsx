@@ -455,17 +455,14 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 : 'auto',
                     }}
                 >
-                    <div
-                        className={styles.ChartsPanel}
-                        style={{
-                            width:
-                                this.props.containerType ===
-                                AlterationContainerType.ALTERATIONS
-                                    ? 197.64
-                                    : 0,
-                            height: this.plotHeight,
-                        }}
-                    ></div>
+                    {!(window as any).frontendConfig.serverConfig
+                        .skin_show_settings_menu && (
+                        <div
+                            className={
+                                styles.inlineAlterationTypeSelectorMenuDash
+                            }
+                        />
+                    )}
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(

@@ -17,6 +17,7 @@ declare const styles: {
   readonly "StableId": string;
   readonly "TableContainer": string;
   readonly "Tendency": string;
+  readonly "inlineAlterationTypeSelectorMenuDash": string;
 };
 export = styles;
 
