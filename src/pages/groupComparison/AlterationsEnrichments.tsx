@@ -63,7 +63,9 @@ export default class AlterationsEnrichments extends React.Component<
                         }
                         store={this.props.resultsViewStore}
                         comparisonStore={this.props.store}
-                    />
+                    >
+                        {this.props.children}
+                    </AlterationEnrichmentContainer>
                 </div>
             );
         },
