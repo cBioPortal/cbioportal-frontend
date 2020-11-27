@@ -100,7 +100,7 @@ export default class SettingsMenu extends React.Component<
                 data-test="GlobalSettingsDropdown"
                 className={classNames(
                     'cbioportal-frontend',
-                    styles.globalSettingsDropdown
+                    styles.annotationFilterDropdown
                 )}
                 style={{ padding: 5 }}
             >
