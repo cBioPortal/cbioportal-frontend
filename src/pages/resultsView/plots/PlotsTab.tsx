@@ -108,7 +108,11 @@ import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
-import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    makeGenericAssayOption,
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    getGenericAssayMetaPropertyOrDefault,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 
 enum EventKey {
@@ -3181,14 +3185,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             const entity = this.genericEntitiesGroupByEntityId.result![
                 selectedGenericAssayEntityId
             ];
-            genericAssayDescription =
-                'DESCRIPTION' in entity.genericEntityMetaProperties
-                    ? entity.genericEntityMetaProperties['DESCRIPTION']
-                    : '';
-            genericAssayUrl =
-                'URL' in entity.genericEntityMetaProperties
-                    ? entity.genericEntityMetaProperties['URL']
-                    : '';
+            genericAssayDescription = getGenericAssayMetaPropertyOrDefault(
+                entity,
+                COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+                ''
+            );
+            genericAssayUrl = getGenericAssayMetaPropertyOrDefault(
+                entity,
+                COMMON_GENERIC_ASSAY_PROPERTY.URL,
+                ''
+            );
         }
 
         // generic assay options
