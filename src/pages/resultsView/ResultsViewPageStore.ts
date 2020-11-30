@@ -12,6 +12,7 @@ import {
     DiscreteCopyNumberFilter,
     Gene,
     GenericAssayData,
+    GenericAssayDataMultipleStudyFilter,
     GenericAssayMeta,
     Geneset,
     GenesetDataFilterCriteria,
@@ -199,6 +200,8 @@ import {
     fetchGenericAssayDataByStableIdsAndMolecularIds,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
@@ -612,6 +615,10 @@ export class ResultsViewPageStore {
     @computed
     get selectedMolecularProfileIds() {
         return getMolecularProfiles(this.urlWrapper.query);
+    }
+
+    public handleTabChange(id: string, replace?: boolean) {
+        this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
     }
 
     @computed get tabId() {
@@ -1508,7 +1515,6 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter,
             this.genes,
             this.genesets,
-            this.genericAssayEntitiesGroupByGenericAssayType,
         ],
         invoke: async () => {
             const ret: MolecularProfile[] = [];
@@ -4055,10 +4061,13 @@ export class ResultsViewPageStore {
                         const linkMap: { [stableId: string]: string } = {};
                         genericAssayEntities.forEach(entity => {
                             // if entity meta contains reference url, add the link into map
-                            linkMap[entity.stableId] =
-                                'URL' in entity.genericEntityMetaProperties
-                                    ? entity.genericEntityMetaProperties['URL']
-                                    : '';
+                            linkMap[
+                                entity.stableId
+                            ] = getGenericAssayMetaPropertyOrDefault(
+                                entity,
+                                COMMON_GENERIC_ASSAY_PROPERTY.URL,
+                                ''
+                            );
                         });
                         return linkMap;
                     }
@@ -4066,6 +4075,24 @@ export class ResultsViewPageStore {
             } else {
                 return {};
             }
+        },
+    });
+
+    readonly genericAssayStableIdToMeta = remoteData<{
+        [genericAssayStableId: string]: GenericAssayMeta;
+    }>({
+        await: () => [this.genericAssayEntitiesGroupByMolecularProfileId],
+        invoke: () => {
+            return Promise.resolve(
+                _.chain(
+                    this.genericAssayEntitiesGroupByMolecularProfileId.result
+                )
+                    .values()
+                    .flatten()
+                    .uniqBy(meta => meta.stableId)
+                    .keyBy(meta => meta.stableId)
+                    .value()
+            );
         },
     });
 
@@ -4101,10 +4128,7 @@ export class ResultsViewPageStore {
     readonly genericAssayEntityStableIdsGroupByProfileIdSuffix = remoteData<{
         [profileIdSuffix: string]: string[];
     }>({
-        await: () => [
-            this.genericAssayEntitiesGroupByMolecularProfileId,
-            this.genericAssayProfilesGroupByProfileIdSuffix,
-        ],
+        await: () => [this.genericAssayProfilesGroupByProfileIdSuffix],
         invoke: () => {
             return Promise.resolve(
                 _.mapValues(
@@ -4114,12 +4138,13 @@ export class ResultsViewPageStore {
                             .map(
                                 profile =>
                                     this
-                                        .genericAssayEntitiesGroupByMolecularProfileId
-                                        .result![profile.molecularProfileId]
+                                        .selectedGenericAssayEntitiesGroupByMolecularProfileId[
+                                        profile.molecularProfileId
+                                    ]
                             )
                             .flatten()
-                            .map(entity => entity.stableId)
                             .uniq()
+                            .compact()
                             .value();
                     }
                 )
@@ -4151,14 +4176,36 @@ export class ResultsViewPageStore {
                             .genericAssayEntityStableIdsGroupByProfileIdSuffix
                             .result![profileIdSuffix];
 
-                        return fetchGenericAssayDataByStableIdsAndMolecularIds(
-                            stableIds,
-                            molecularIds
-                        ).then(genericAssayData => {
-                            genericAssayDataGroupByProfileIdSuffix[
-                                profileIdSuffix
-                            ] = genericAssayData;
-                        });
+                        const sampleMolecularIdentifiers = _.flatMap(
+                            molecularIds,
+                            molecularId =>
+                                _.map(this.samples.result, sample => {
+                                    return {
+                                        molecularProfileId: molecularId,
+                                        sampleId: sample.sampleId,
+                                    } as SampleMolecularIdentifier;
+                                })
+                        );
+
+                        if (
+                            !_.isEmpty(stableIds) &&
+                            !_.isEmpty(sampleMolecularIdentifiers)
+                        ) {
+                            return client
+                                .fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                                    {
+                                        genericAssayDataMultipleStudyFilter: {
+                                            genericAssayStableIds: stableIds,
+                                            sampleMolecularIdentifiers,
+                                        } as GenericAssayDataMultipleStudyFilter,
+                                    } as any
+                                )
+                                .then(genericAssayData => {
+                                    genericAssayDataGroupByProfileIdSuffix[
+                                        profileIdSuffix
+                                    ] = genericAssayData;
+                                });
+                        }
                     }
                 )
             );
