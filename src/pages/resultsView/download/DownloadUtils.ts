@@ -16,6 +16,7 @@ import {
     MolecularProfile,
     GenePanelData,
     GenericAssayData,
+    GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import {
     ICaseAlteration,
@@ -33,6 +34,10 @@ import {
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
+import {
+    getGenericAssayMetaPropertyOrDefault,
+    COMMON_GENERIC_ASSAY_PROPERTY,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -355,7 +360,8 @@ export function generateGenericAssayProfileData(
 export function generateGenericAssayProfileDownloadData(
     sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
     samples: Sample[] = [],
-    stableIds: string[] = []
+    stableIds: string[] = [],
+    stableIdToMetaMap: { [genericAssayStableId: string]: GenericAssayMeta }
 ): string[][] {
     if (_.isEmpty(sampleGenericAssayDataByStableId)) {
         return [];
@@ -373,7 +379,19 @@ export function generateGenericAssayProfileDownloadData(
         const downloadData: string[][] = [];
 
         // add headers
-        downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(stableIds));
+        // try to use "NAME" in the meta as header of each entity
+        // fall back to stableId if "NAME" not available
+        downloadData.push(
+            ['STUDY_ID', 'SAMPLE_ID'].concat(
+                _.map(stableIds, id =>
+                    getGenericAssayMetaPropertyOrDefault(
+                        stableIdToMetaMap[id],
+                        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                        id
+                    )
+                )
+            )
+        );
 
         // convert row data into a 2D array of strings
         _.keys(sampleIndex).forEach(sampleKey => {

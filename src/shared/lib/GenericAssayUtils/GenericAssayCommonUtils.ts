@@ -11,6 +11,11 @@ import _ from 'lodash';
 import { IDataQueryFilter } from '../StoreUtils';
 
 export const NOT_APPLICABLE_VALUE = 'NA';
+export const COMMON_GENERIC_ASSAY_PROPERTY = {
+    NAME: 'NAME',
+    DESCRIPTION: 'DESCRIPTION',
+    URL: 'URL',
+};
 
 export const GenericAssayTypeConstants: { [s: string]: string } = {
     TREATMENT_RESPONSE: 'TREATMENT_RESPONSE',
@@ -172,14 +177,14 @@ export function makeGenericAssayOption(
     // When not provided in the data file, these fields are assigned the
     // value of the entity_stable_id. The code below hides fields when
     // indentical to the entity_stable_id.
-    const name =
-        'NAME' in meta.genericEntityMetaProperties
-            ? meta.genericEntityMetaProperties['NAME']
-            : NOT_APPLICABLE_VALUE;
-    const description =
-        'DESCRIPTION' in meta.genericEntityMetaProperties
-            ? meta.genericEntityMetaProperties['DESCRIPTION']
-            : NOT_APPLICABLE_VALUE;
+    const name = getGenericAssayMetaPropertyOrDefault(
+        meta,
+        COMMON_GENERIC_ASSAY_PROPERTY.NAME
+    );
+    const description = getGenericAssayMetaPropertyOrDefault(
+        meta,
+        COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION
+    );
     const uniqueName = name !== meta.stableId;
     const uniqueDesc = description !== meta.stableId && description !== name;
     // set stableId as default label
@@ -198,14 +203,29 @@ export function makeGenericAssayOption(
         return {
             value: meta.stableId,
             label: label,
-            plotAxisLabel:
-                'NAME' in meta.genericEntityMetaProperties
-                    ? meta.genericEntityMetaProperties['NAME']
-                    : meta.stableId,
+            plotAxisLabel: getGenericAssayMetaPropertyOrDefault(
+                meta,
+                COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                meta.stableId
+            ),
         };
     }
     return {
         value: meta.stableId,
         label: label,
     };
+}
+
+export function getGenericAssayMetaPropertyOrDefault(
+    meta: GenericAssayMeta,
+    property: string,
+    defaultValue: string = NOT_APPLICABLE_VALUE
+): string {
+    if (property in meta.genericEntityMetaProperties) {
+        return (meta.genericEntityMetaProperties as {
+            [property: string]: string;
+        })[property];
+    } else {
+        return defaultValue;
+    }
 }

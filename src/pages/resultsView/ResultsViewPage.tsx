@@ -135,11 +135,6 @@ export default class ResultsViewPage extends React.Component<
     }
 
     @autobind
-    private handleTabChange(id: string, replace?: boolean) {
-        this.urlWrapper.updateURL({}, `results/${id}`, false, replace);
-    }
-
-    @autobind
     private customTabCallback(
         div: HTMLDivElement,
         tab: any,
@@ -712,7 +707,9 @@ export default class ResultsViewPage extends React.Component<
                                             }
                                             unmountOnHide={false}
                                             onTabClick={(id: string) =>
-                                                this.handleTabChange(id)
+                                                this.resultsViewPageStore.handleTabChange(
+                                                    id
+                                                )
                                             }
                                             className="mainTabs"
                                             getTabHref={this.getTabHref}
@@ -744,7 +741,10 @@ export default class ResultsViewPage extends React.Component<
             !this.resultsViewPageStore.tabId
         ) {
             setTimeout(() => {
-                this.handleTabChange(this.resultsViewPageStore.tabId, true);
+                this.resultsViewPageStore.handleTabChange(
+                    this.resultsViewPageStore.tabId,
+                    true
+                );
             });
             return null;
         } else {
