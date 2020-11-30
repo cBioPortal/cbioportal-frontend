@@ -5914,14 +5914,23 @@
           "type": "integer",
           "format": "int32"
         },
-        "excludeGermline": {
-          "type": "boolean"
-        },
-        "excludeVUS": {
-          "type": "boolean"
-        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
         },
         "selectedTiers": {
           "type": "array",

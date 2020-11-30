@@ -291,11 +291,17 @@ export type GeneFilterQuery = {
 
         'entrezGeneId': number
 
-        'excludeGermline': boolean
-
-        'excludeVUS': boolean
-
         'hugoGeneSymbol': string
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeVUS': boolean
 
         'selectedTiers': Array < string >
 
