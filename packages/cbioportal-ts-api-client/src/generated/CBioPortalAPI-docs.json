@@ -5929,6 +5929,9 @@
         "includeUnknownOncogenicity": {
           "type": "boolean"
         },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
         "includeVUS": {
           "type": "boolean"
         },

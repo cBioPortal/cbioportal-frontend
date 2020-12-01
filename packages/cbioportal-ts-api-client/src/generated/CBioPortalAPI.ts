@@ -301,6 +301,8 @@ export type GeneFilterQuery = {
 
         'includeUnknownOncogenicity': boolean
 
+        'includeUnknownStatus': boolean
+
         'includeVUS': boolean
 
         'selectedTiers': Array < string >
