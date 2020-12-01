@@ -595,8 +595,11 @@ export class ResultsViewPageStore
     }
 
     @computed
-    public get excludeGermlineMutations() {
-        return this.urlWrapper.query.exclude_germline_mutations === 'true';
+    public get includeGermlineMutations() {
+        return (
+            !!this.urlWrapper.query.exclude_germline_mutations ||
+            this.urlWrapper.query.exclude_germline_mutations === 'false'
+        );
     }
 
     @autobind
@@ -607,8 +610,13 @@ export class ResultsViewPageStore
         });
     }
 
-    public set excludeGermlineMutations(e: boolean) {
-        this.setExcludeGermlineMutations(e);
+    public set includeGermlineMutations(e: boolean) {
+        this.setExcludeGermlineMutations(!e);
+    }
+
+    // Somatic mutation filtering is not supported for Results View atm.
+    public get includeSomaticMutations() {
+        return true;
     }
 
     @computed
@@ -678,14 +686,14 @@ export class ResultsViewPageStore
             useOql: true,
             get excludeVus() {
                 if (_excludeVus.get() === undefined) {
-                    return self.driverAnnotationSettings.excludeVUS;
+                    return !self.driverAnnotationSettings.includeVUS;
                 } else {
                     return _excludeVus.get()!;
                 }
             },
             get excludeGermline() {
                 if (_excludeGermline.get() === undefined) {
-                    return self.excludeGermlineMutations;
+                    return self.includeGermlineMutations;
                 } else {
                     return _excludeGermline.get()!;
                 }
@@ -4203,8 +4211,8 @@ export class ResultsViewPageStore
         invoke: () => {
             const filteredMutations = compileMutations(
                 this._filteredAndAnnotatedMutationsReport.result!,
-                this.driverAnnotationSettings.excludeVUS,
-                this.excludeGermlineMutations
+                !this.driverAnnotationSettings.includeVUS,
+                this.includeGermlineMutations
             );
             const filteredSampleKeyToSample = this.filteredSampleKeyToSample
                 .result!;
@@ -4266,7 +4274,7 @@ export class ResultsViewPageStore
         invoke: () => {
             let data = this._filteredAndAnnotatedMolecularDataReport.result!
                 .data;
-            if (!this.driverAnnotationSettings.excludeVUS) {
+            if (this.driverAnnotationSettings.includeVUS) {
                 data = data.concat(
                     this._filteredAndAnnotatedMolecularDataReport.result!.vus
                 );

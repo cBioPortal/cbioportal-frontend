@@ -578,9 +578,12 @@ export default class UserSelections extends React.Component<
                     content={displayGeneSymbol}
                     backgroundColor={color}
                     infoSection={this.groupedGeneFilterIcons(
-                        geneQuery.excludeVUS,
+                        geneQuery.includeDriver,
+                        geneQuery.includeVUS,
+                        geneQuery.includeUnknownOncogenicity,
                         geneQuery.selectedTiers,
-                        geneQuery.excludeGermline
+                        geneQuery.includeGermline,
+                        geneQuery.includeSomatic
                     )}
                     onDelete={() =>
                         this.props.removeGeneFilter(
@@ -612,17 +615,26 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedGeneFilterIcons(
-        excludeVUS?: boolean,
+        includeDriver?: boolean,
+        includeVUS?: boolean,
+        includeUnknownOncogenicity?: boolean,
         selectedTiers?: string[],
-        excludeGermline?: boolean
+        includeGermline?: boolean,
+        includeSomatic?: boolean
     ): JSX.Element {
         const filterTextElements: string[] = [];
-        if (excludeVUS) {
-            filterTextElements.push('Variants of unknown significance');
-        }
-        if (excludeGermline) {
-            filterTextElements.push('Germline mutations');
-        }
+        if (includeDriver) filterTextElements.push('Drivers');
+        if (includeVUS) filterTextElements.push('Passengers');
+        if (includeUnknownOncogenicity)
+            filterTextElements.push('Unknown oncogenicity');
+        if (includeGermline) filterTextElements.push('Germline mutations');
+        if (includeSomatic) filterTextElements.push('Somatic mutations');
+        const hasFilter =
+            includeDriver ||
+            includeVUS ||
+            includeUnknownOncogenicity ||
+            includeGermline ||
+            includeSomatic;
         return (
             <div
                 data-test={'groupedGeneFilterIcons'}
@@ -634,7 +646,7 @@ export default class UserSelections extends React.Component<
                     margin: '5px 8px 5px -3px',
                 }}
             >
-                {(excludeVUS || excludeGermline) && (
+                {hasFilter && (
                     <DefaultTooltip
                         mouseEnterDelay={0}
                         placement="right"

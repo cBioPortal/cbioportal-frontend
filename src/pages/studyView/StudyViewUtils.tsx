@@ -2791,19 +2791,20 @@ export function getMolecularProfileSamplesSet(
     );
 }
 
-// FIXME add unit tests
 export function geneFilterQueryToOql(query: GeneFilterQuery): string {
     return query.alterations.length > 0
         ? `${query.hugoGeneSymbol}:${query.alterations.join(' ')}`
         : query.hugoGeneSymbol;
 }
 
-// FIXME add unit tests
 export function geneFilterQueryFromOql(
     oql: string,
-    excludeVUS?: boolean,
+    includeDriver?: boolean,
+    includeVUS?: boolean,
+    includeUnknownOncogenicity?: boolean,
     selectedTiers?: string[],
-    excludeGermline?: boolean
+    includeGermline?: boolean,
+    includeSomatic?: boolean
 ): GeneFilterQuery {
     const [part1, part2]: string[] = oql.split(':');
     const alterations = part2 ? part2.trim().split(' ') : [];
@@ -2818,8 +2819,11 @@ export function geneFilterQueryFromOql(
             | 'DIPLOID'
             | 'HETLOSS'
         )[],
-        excludeGermline: !!excludeGermline,
+        includeDriver: !!includeDriver,
+        includeVUS: !!includeVUS,
+        includeUnknownOncogenicity: !!includeUnknownOncogenicity,
         selectedTiers: selectedTiers || [],
-        excludeVUS: !!excludeVUS,
+        includeGermline: !!includeGermline,
+        includeSomatic: !!includeSomatic,
     };
 }

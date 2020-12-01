@@ -108,7 +108,7 @@ export default class Oncoprinter extends React.Component<
                     .cbioportalCount;
             },
             get hidePutativePassengers() {
-                return self.props.store.driverAnnotationSettings.excludeVUS;
+                return !self.props.store.driverAnnotationSettings.includeVUS;
             },
             get hideGermlineMutations() {
                 return self.props.store.hideGermlineMutations;
@@ -193,7 +193,7 @@ export default class Oncoprinter extends React.Component<
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.customBinary = false;
-                    this.props.store.driverAnnotationSettings.excludeVUS = false;
+                    this.props.store.driverAnnotationSettings.includeVUS = true;
                 } else {
                     if (
                         !this.controlsState.annotateDriversOncoKbDisabled &&
@@ -227,7 +227,7 @@ export default class Oncoprinter extends React.Component<
                 this.props.store.driverAnnotationSettings.customBinary = s;
             }),
             onSelectHidePutativePassengers: (s: boolean) => {
-                this.props.store.driverAnnotationSettings.excludeVUS = s;
+                this.props.store.driverAnnotationSettings.includeVUS = !s;
             },
             onSelectHideGermlineMutations: (s: boolean) => {
                 this.props.store.hideGermlineMutations = s;

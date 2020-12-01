@@ -547,7 +547,7 @@ export default class OncoprinterStore {
                 this.nonAnnotatedGeneticTrackData.result!,
                 this.annotationData.promisesMap,
                 this.annotationData.params,
-                this.driverAnnotationSettings.excludeVUS
+                !this.driverAnnotationSettings.includeVUS
             ),
     });
 

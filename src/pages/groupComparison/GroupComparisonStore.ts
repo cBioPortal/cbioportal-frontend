@@ -47,6 +47,10 @@ export default class GroupComparisonStore extends ComparisonStore
         | undefined = undefined;
     @observable private sessionId: string;
 
+    @observable includeGermlineMutations: boolean;
+    @observable includeSomaticMutations: boolean;
+    hideUnprofiledSamples: boolean | undefined;
+
     constructor(
         sessionId: string,
         appStore: AppStore,

@@ -64,16 +64,16 @@ export default class SettingsMenuResultsView extends React.Component<
     @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.hidePutativePassengers:
-                this.props.store.driverAnnotationSettings.excludeVUS = !this
-                    .props.store.driverAnnotationSettings.excludeVUS;
+                this.props.store.driverAnnotationSettings.includeVUS = !this
+                    .props.store.driverAnnotationSettings.includeVUS;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
                 this.props.store.hideUnprofiledSamples = !this.props.store
                     .hideUnprofiledSamples;
                 break;
             case EVENT_KEY.showGermlineMutations:
-                this.props.store.excludeGermlineMutations = !this.props.store
-                    .excludeGermlineMutations;
+                this.props.store.includeGermlineMutations = !this.props.store
+                    .includeGermlineMutations;
                 break;
         }
     }
@@ -137,8 +137,8 @@ export default class SettingsMenuResultsView extends React.Component<
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
                                 checked={
-                                    this.props.store.driverAnnotationSettings
-                                        .excludeVUS
+                                    !this.props.store.driverAnnotationSettings
+                                        .includeVUS
                                 }
                                 onClick={this.onInputClick}
                                 disabled={
@@ -156,7 +156,7 @@ export default class SettingsMenuResultsView extends React.Component<
                                 type="checkbox"
                                 value={EVENT_KEY.showGermlineMutations}
                                 checked={
-                                    this.props.store.excludeGermlineMutations
+                                    !this.props.store.includeGermlineMutations
                                 }
                                 onClick={this.onInputClick}
                             />{' '}

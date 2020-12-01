@@ -17,9 +17,12 @@ import get = Reflect.get;
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 
 enum EVENT_KEY {
-    hidePutativePassengers = '0',
-    showGermlineMutations = '1',
-    hideUnprofiledSamples = '1.1',
+    showPutativeDrivers = '0',
+    showPutativePassengers = '1',
+    showUnknownOncogenicity = '2',
+    showGermlineMutations = '3',
+    showSomaticMutations = '4',
+    hideUnprofiledSamples = '5',
 }
 
 function boldedTabList(tabs: string[]) {
@@ -65,17 +68,24 @@ export default class SettingsMenu extends React.Component<
 
     @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
-            case EVENT_KEY.hidePutativePassengers:
-                this.props.store.driverAnnotationSettings.excludeVUS = !this
-                    .props.store.driverAnnotationSettings.excludeVUS;
+            case EVENT_KEY.showPutativeDrivers:
+                this.props.store.driverAnnotationSettings.includeDriver = this.props.store.driverAnnotationSettings.includeDriver;
+                break;
+            case EVENT_KEY.showPutativePassengers:
+                this.props.store.driverAnnotationSettings.includeVUS = this.props.store.driverAnnotationSettings.includeVUS;
+                break;
+            case EVENT_KEY.showUnknownOncogenicity:
+                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = this.props.store.driverAnnotationSettings.includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
                 this.props.store.hideUnprofiledSamples = !this.props.store
                     .hideUnprofiledSamples;
                 break;
             case EVENT_KEY.showGermlineMutations:
-                this.props.store.excludeGermlineMutations = !this.props.store
-                    .excludeGermlineMutations;
+                this.props.store.includeGermlineMutations = this.props.store.includeGermlineMutations;
+                break;
+            case EVENT_KEY.showSomaticMutations:
+                this.props.store.includeSomaticMutations = this.props.store.includeSomaticMutations;
                 break;
         }
     }
@@ -131,11 +141,68 @@ export default class SettingsMenu extends React.Component<
                     <div className="checkbox">
                         <label>
                             <input
-                                data-test="HideGermline"
+                                data-test="ShowDriver"
+                                type="checkbox"
+                                value={EVENT_KEY.showPutativeDrivers}
+                                checked={
+                                    this.props.store.driverAnnotationSettings
+                                        .includeDriver
+                                }
+                                onClick={this.onInputClick}
+                                disabled={
+                                    !this.driverSettingsState.distinguishDrivers
+                                }
+                            />{' '}
+                            Include known oncogenic mutations and copy number
+                            alterations
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="ShowVUS"
+                                type="checkbox"
+                                value={EVENT_KEY.showPutativePassengers}
+                                checked={
+                                    this.props.store.driverAnnotationSettings
+                                        .includeVUS
+                                }
+                                onClick={this.onInputClick}
+                                disabled={
+                                    !this.driverSettingsState.distinguishDrivers
+                                }
+                            />{' '}
+                            Include known non-oncogenic mutations and copy
+                            number alterations
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="ShowUnknownOncogenicity"
+                                type="checkbox"
+                                value={EVENT_KEY.showUnknownOncogenicity}
+                                checked={
+                                    this.props.store.driverAnnotationSettings
+                                        .includeUnknownOncogenicity
+                                }
+                                onClick={this.onInputClick}
+                                disabled={
+                                    !this.driverSettingsState.distinguishDrivers
+                                }
+                            />{' '}
+                            Include mutations and copy number alterations of
+                            unknown oncogenicity
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="ShowGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.showGermlineMutations}
                                 checked={
-                                    !this.props.store.excludeGermlineMutations
+                                    this.props.store.includeGermlineMutations
                                 }
                                 onClick={this.onInputClick}
                             />{' '}
@@ -145,27 +212,33 @@ export default class SettingsMenu extends React.Component<
                     <div className="checkbox">
                         <label>
                             <input
-                                data-test="HideVUS"
+                                data-test="HideSomatic"
                                 type="checkbox"
-                                value={EVENT_KEY.hidePutativePassengers}
+                                value={EVENT_KEY.showSomaticMutations}
                                 checked={
-                                    !this.props.store.driverAnnotationSettings
-                                        .excludeVUS
+                                    this.props.store.includeSomaticMutations
                                 }
                                 onClick={this.onInputClick}
-                                disabled={
-                                    !this.driverSettingsState.distinguishDrivers
-                                }
                             />{' '}
-                            Include mutations and copy number alterations of
-                            unknown significance
+                            Include somatic mutations
                         </label>
                     </div>
-                    {!!this.driverSettingsState.customDriverAnnotationTiers && (
-                        <DriverAnnotationControls
-                            state={this.driverSettingsState}
-                            handlers={this.driverSettingsHandlers}
-                        />
+                    {this.props.resultsView && (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="HideUnprofiled"
+                                    type="checkbox"
+                                    value={EVENT_KEY.hideUnprofiledSamples}
+                                    checked={
+                                        this.props.store.hideUnprofiledSamples
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Exclude samples that are not profiled for all
+                                queried genes in all queried profiles
+                            </label>
+                        </div>
                     )}
                 </div>
             </div>

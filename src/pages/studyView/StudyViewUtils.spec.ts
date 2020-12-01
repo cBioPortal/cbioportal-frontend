@@ -3406,9 +3406,12 @@ describe('StudyViewUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     entrezGeneId: 0,
                     alterations: [],
-                    excludeGermline: false,
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
                     selectedTiers: [],
-                    excludeVUS: false,
+                    includeGermline: true,
+                    includeSomatic: true,
                 })
             );
         });
@@ -3419,9 +3422,12 @@ describe('StudyViewUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     entrezGeneId: 0,
                     alterations: ['AMP', 'HETLOSS'],
-                    excludeGermline: false,
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
                     selectedTiers: [],
-                    excludeVUS: false,
+                    includeGermline: true,
+                    includeSomatic: true,
                 })
             );
         });
@@ -3431,9 +3437,12 @@ describe('StudyViewUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     entrezGeneId: 0,
                     alterations: [],
-                    excludeGermline: false,
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
                     selectedTiers: [],
-                    excludeVUS: false,
+                    includeGermline: true,
+                    includeSomatic: true,
                 },
                 geneFilterQueryFromOql('BRCA1')
             );
@@ -3444,9 +3453,12 @@ describe('StudyViewUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     entrezGeneId: 0,
                     alterations: ['AMP', 'HETLOSS'],
-                    excludeGermline: false,
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
                     selectedTiers: [],
-                    excludeVUS: false,
+                    includeGermline: true,
+                    includeSomatic: true,
                 },
                 geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
             );

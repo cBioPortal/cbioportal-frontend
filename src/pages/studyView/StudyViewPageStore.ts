@@ -337,7 +337,8 @@ export class StudyViewPageStore
     public studyViewQueryFilter: StudyViewURLQuery;
     @observable showComparisonGroupUI = false;
     public driverAnnotationSettings: DriverAnnotationSettings;
-    @observable excludeGermlineMutations = false;
+    @observable includeGermlineMutations = false;
+    @observable includeSomaticMutations = false;
     @observable settingsMenuVisible = false;
     private totalMutationAlteredCasesByGene = new Map<string, number>();
     private totalFusionAlteredCasesByGene = new Map<string, number>();
@@ -1983,9 +1984,12 @@ export class StudyViewPageStore
             _.map(oqls, oql =>
                 geneFilterQueryFromOql(
                     oql,
-                    this.driverAnnotationSettings.excludeVUS,
+                    this.driverAnnotationSettings.includeDriver,
+                    this.driverAnnotationSettings.includeVUS,
+                    this.driverAnnotationSettings.includeUnknownOncogenicity,
                     this.selectedTiers,
-                    this.excludeGermlineMutations
+                    this.includeGermlineMutations,
+                    this.includeSomaticMutations
                 )
             )
         );
@@ -5171,14 +5175,22 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
+                const includeDriver = this.driverAnnotationSettings
+                    .includeDriver;
+                const includeVus = this.driverAnnotationSettings.includeVUS;
+                const includeUnknownOncogenicity = this.driverAnnotationSettings
+                    .includeUnknownOncogenicity;
                 const selectedTiers = this.selectedTiers;
-                const excludeVus = this.driverAnnotationSettings.excludeVUS;
-                const excludeGermlineMutations = this.excludeGermlineMutations;
+                const includeGermlineMutations = this.includeGermlineMutations;
+                const includeSomaticMutations = this.includeSomaticMutations;
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
+                        includeDriver,
+                        includeVus,
+                        includeUnknownOncogenicity,
                         selectedTiers: selectedTiers,
-                        excludeVus: excludeVus,
-                        excludeGermline: excludeGermlineMutations,
+                        includeGermline: includeGermlineMutations,
+                        includeSomatic: includeSomaticMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5237,14 +5249,21 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
+                const includeDriver = this.driverAnnotationSettings
+                    .includeDriver;
+                const includeVus = this.driverAnnotationSettings.includeVUS;
+                const includeUnknownOncogenicity = this.driverAnnotationSettings
+                    .includeUnknownOncogenicity;
                 const selectedTiers = this.selectedTiers;
-                const excludeVus = this.driverAnnotationSettings.excludeVUS;
-                const excludeGermlineMutations = this.excludeGermlineMutations;
+                const includeGermlineMutations = this.includeGermlineMutations;
+                const includeSomaticMutations = this.includeSomaticMutations;
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
                     {
+                        includeVus,
+                        includeUnknownOncogenicity,
                         selectedTiers: selectedTiers,
-                        excludeVus: excludeVus,
-                        excludeGermline: excludeGermlineMutations,
+                        includeGermline: includeGermlineMutations,
+                        includeSomatic: includeSomaticMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5303,11 +5322,15 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
+                const includeDriver = this.driverAnnotationSettings
+                    .includeDriver;
+                const includeVus = this.driverAnnotationSettings.includeVUS;
+                const includeUnknownOncogenicity = this.driverAnnotationSettings
+                    .includeUnknownOncogenicity;
                 const selectedTiers = this.selectedTiers;
-                const excludeVus = this.driverAnnotationSettings.excludeVUS;
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
-                    selectedTiers: selectedTiers,
-                    excludeVus: excludeVus,
+                    includeVus,
+                    selectedTiers,
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 });

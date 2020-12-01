@@ -111,7 +111,8 @@ export default abstract class ComparisonStore {
     public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
 
     public driverAnnotationSettings: DriverAnnotationSettings;
-    @observable excludeGermlineMutations = false;
+    @observable includeGermlineMutations = false;
+    @observable includeSomaticMutations = false;
     @observable filteredAlteredCasesByGene = new Map<string, number>();
     @observable totalAlteredCasesByGene = new Map<string, number>();
 
@@ -926,14 +927,21 @@ export default abstract class ComparisonStore {
                 this.mutationEnrichmentDataRequestGroups.result &&
                 this.mutationEnrichmentDataRequestGroups.result.length > 1
             ) {
+                const includeDriver = this.driverAnnotationSettings
+                    .includeDriver;
+                const includeVus = this.driverAnnotationSettings.includeVUS;
+                const includeUnknownOncogenicity = this.driverAnnotationSettings
+                    .includeUnknownOncogenicity;
                 const selectedTiers = this.selectedTiers;
-                const excludeVus = this.driverAnnotationSettings.excludeVUS;
-                const excludeGermlineMutations = this.excludeGermlineMutations;
+                const includeGermlineMutations = this.includeGermlineMutations;
+                const includeSomaticMutations = this.includeSomaticMutations;
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    enrichmentType: this.usePatientLevelEnrichments
+                    includeDriver,
+                    includeVus,
+                    includeUnknownOncogenicity,
                     selectedTiers: selectedTiers,
-                    excludeVus: excludeVus,
-                    excludeGermline: excludeGermlineMutations,
+                    includeGermline: includeGermlineMutations,
+                    includeSomatic: includeSomaticMutations,
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
@@ -1213,14 +1221,23 @@ export default abstract class ComparisonStore {
                             .values()
                             .some())
                 ) {
+                    const includeDriver = this.driverAnnotationSettings
+                        .includeDriver;
+                    const includeVus = this.driverAnnotationSettings.includeVUS;
+                    const includeUnknownOncogenicity = this
+                        .driverAnnotationSettings.includeUnknownOncogenicity;
                     const selectedTiers = this.selectedTiers;
-                    const excludeVus = this.driverAnnotationSettings.excludeVUS;
-                    const excludeGermlineMutations = this
-                        .excludeGermlineMutations;
+                    const includeGermlineMutations = this
+                        .includeGermlineMutations;
+                    const includeSomaticMutations = this
+                        .includeSomaticMutations;
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                        includeDriver,
+                        includeVus,
+                        includeUnknownOncogenicity,
                         selectedTiers: selectedTiers,
-                        excludeVus: excludeVus,
-                        excludeGermline: excludeGermlineMutations,
+                        includeGermline: includeGermlineMutations,
+                        includeSomatic: includeSomaticMutations,
                         enrichmentType: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',

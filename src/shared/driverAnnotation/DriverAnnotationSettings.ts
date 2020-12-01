@@ -10,12 +10,15 @@ export interface IDriverSettingsProps {
 }
 
 export interface IExclusionSettings {
-    excludeGermlineMutations: boolean;
+    includeGermlineMutations: boolean;
+    includeSomaticMutations: boolean;
     hideUnprofiledSamples?: boolean;
 }
 
 export interface DriverAnnotationSettings {
-    excludeVUS: boolean;
+    includeDriver: boolean;
+    includeVUS: boolean;
+    includeUnknownOncogenicity: boolean;
     cbioportalCount: boolean;
     cbioportalCountThreshold: number;
     cosmicCount: boolean;
@@ -82,7 +85,9 @@ export function buildDriverAnnotationSettings(
 
         _hotspots: false,
         _oncoKb: false,
-        _excludeVUS: false,
+        _includeDriver: true,
+        _includeVUS: true,
+        _includeUnknownOncogenicity: true,
         _customBinary: undefined,
 
         set hotspots(val: boolean) {
@@ -105,11 +110,17 @@ export function buildDriverAnnotationSettings(
                 !didOncoKbFailInOncoprint()
             );
         },
-        set excludeVUS(val: boolean) {
-            this._excludeVUS = val;
+        set includeDriver(val: boolean) {
+            this._includeDriver = val;
+        },
+        set includeVUS(val: boolean) {
+            this._includeVUS = val;
+        },
+        set includeUnknownOncogenicity(val: boolean) {
+            this._includeUnknownOncogenicity = val;
         },
         get excludeVUS() {
-            return this._excludeVUS && this.driversAnnotated;
+            return this._includeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
             const anySelected =
@@ -162,7 +173,9 @@ export function buildDriverAnnotationControlsHandlers(
                 driverAnnotationSettings.driverTiers.forEach((value, key) => {
                     driverAnnotationSettings.driverTiers.set(key, false);
                 });
-                driverAnnotationSettings.excludeVUS = false;
+                driverAnnotationSettings.includeDriver = true;
+                driverAnnotationSettings.includeVUS = true;
+                driverAnnotationSettings.includeUnknownOncogenicity = true;
             } else {
                 if (
                     !state.annotateDriversOncoKbDisabled &&
@@ -214,8 +227,14 @@ export function buildDriverAnnotationControlsHandlers(
                 driverAnnotationSettings.driverTiers.set(value, checked);
             }
         ),
-        onSelectHidePutativePassengers: (s: boolean) => {
-            driverAnnotationSettings.excludeVUS = s;
+        onSelectIncludePutativeDrivers: (s: boolean) => {
+            driverAnnotationSettings.includeDriver = s;
+        },
+        onSelectIncludePutativePassengers: (s: boolean) => {
+            driverAnnotationSettings.includeVUS = s;
+        },
+        onSelectIncludeUnknownOncogenicity: (s: boolean) => {
+            driverAnnotationSettings.includeUnknownOncogenicity = s;
         },
     };
     return handlers;
@@ -256,8 +275,14 @@ export function buildDriverAnnotationControlsState(
         get annotateDriversCOSMIC() {
             return driverAnnotationSettings.cosmicCount;
         },
-        get hidePutativePassengers() {
-            return driverAnnotationSettings.excludeVUS;
+        get includePutativeDrivers() {
+            return driverAnnotationSettings.includeDriver;
+        },
+        get includePutativePassengers() {
+            return driverAnnotationSettings.includeVUS;
+        },
+        get includePutativeUnknownOncogenicity() {
+            return driverAnnotationSettings.includeUnknownOncogenicity;
         },
         get annotateCBioPortalInputValue() {
             return driverAnnotationSettings.cbioportalCountThreshold + '';
