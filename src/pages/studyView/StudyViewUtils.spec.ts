@@ -3412,6 +3412,7 @@ describe('StudyViewUtils', () => {
                     selectedTiers: [],
                     includeGermline: true,
                     includeSomatic: true,
+                    includeUnknownStatus: true,
                 })
             );
         });
@@ -3428,6 +3429,7 @@ describe('StudyViewUtils', () => {
                     selectedTiers: [],
                     includeGermline: true,
                     includeSomatic: true,
+                    includeUnknownStatus: true,
                 })
             );
         });
@@ -3443,6 +3445,7 @@ describe('StudyViewUtils', () => {
                     selectedTiers: [],
                     includeGermline: true,
                     includeSomatic: true,
+                    includeUnknownStatus: true,
                 },
                 geneFilterQueryFromOql('BRCA1')
             );
@@ -3459,6 +3462,7 @@ describe('StudyViewUtils', () => {
                     selectedTiers: [],
                     includeGermline: true,
                     includeSomatic: true,
+                    includeUnknownStatus: true,
                 },
                 geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
             );

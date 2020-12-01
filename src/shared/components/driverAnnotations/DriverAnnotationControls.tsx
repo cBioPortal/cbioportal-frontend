@@ -63,48 +63,32 @@ export default class DriverAnnotationControls extends React.Component<
 
     render() {
         return (
-            <div style={{ marginLeft: '-20px' }}>
-                <div className="checkbox">
-                    <label>Include:</label>
-                    &nbsp;
-                    <img
-                        src={require('../../../rootImages/driver_tiers.png')}
-                        alt="driver tiers filter"
-                        style={{
-                            height: '15px',
-                            width: '15px',
-                            cursor: 'pointer',
-                            marginLeft: '5px',
-                        }}
-                    />
-                </div>
-                <div style={{ marginLeft: '40px' }}>
-                    {(this.props.state.customDriverAnnotationTiers || []).map(
-                        tier => (
-                            <div className="checkbox">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        value={tier}
-                                        checked={
-                                            !!(
-                                                this.props.state
-                                                    .selectedCustomDriverAnnotationTiers &&
-                                                this.props.state.selectedCustomDriverAnnotationTiers.get(
-                                                    tier
-                                                )
+            <div>
+                {(this.props.state.customDriverAnnotationTiers || []).map(
+                    tier => (
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    value={tier}
+                                    checked={
+                                        !!(
+                                            this.props.state
+                                                .selectedCustomDriverAnnotationTiers &&
+                                            this.props.state.selectedCustomDriverAnnotationTiers.get(
+                                                tier
                                             )
-                                        }
-                                        onClick={
-                                            this.onCustomDriverTierCheckboxClick
-                                        }
-                                    />{' '}
-                                    {tier}
-                                </label>
-                            </div>
-                        )
-                    )}
-                </div>
+                                        )
+                                    }
+                                    onClick={
+                                        this.onCustomDriverTierCheckboxClick
+                                    }
+                                />{' '}
+                                {tier}
+                            </label>
+                        </div>
+                    )
+                )}
             </div>
         );
     }

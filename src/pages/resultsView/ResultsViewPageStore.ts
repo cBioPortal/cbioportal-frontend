@@ -619,6 +619,11 @@ export class ResultsViewPageStore
         return true;
     }
 
+    // Unknown status mutation filtering is not supported for Results View atm.
+    public get includeUnknownStatusMutations() {
+        return true;
+    }
+
     @computed
     public get usePatientLevelEnrichments() {
         return this.urlWrapper.query.patient_enrichments === 'true';

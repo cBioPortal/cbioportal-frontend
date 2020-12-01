@@ -2,18 +2,17 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import {
-    IDriverSettingsProps,
-    IDriverAnnotationControlsHandlers,
-    IDriverAnnotationControlsState,
     buildDriverAnnotationControlsHandlers,
     buildDriverAnnotationControlsState,
+    IDriverAnnotationControlsHandlers,
+    IDriverAnnotationControlsState,
+    IDriverSettingsProps,
     IExclusionSettings,
 } from '../../driverAnnotation/DriverAnnotationSettings';
 import InfoIcon from '../InfoIcon';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
-import get = Reflect.get;
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 
 enum EVENT_KEY {
@@ -40,7 +39,6 @@ function boldedTabList(tabs: string[]) {
 
 export interface IResultsPageSettings {
     store: IDriverSettingsProps & IExclusionSettings;
-    resultsView?: boolean;
     disabled?: boolean;
 }
 
@@ -69,23 +67,29 @@ export default class SettingsMenu extends React.Component<
     @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.showPutativeDrivers:
-                this.props.store.driverAnnotationSettings.includeDriver = this.props.store.driverAnnotationSettings.includeDriver;
+                this.props.store.driverAnnotationSettings.includeDriver = !this
+                    .props.store.driverAnnotationSettings.includeDriver;
                 break;
             case EVENT_KEY.showPutativePassengers:
-                this.props.store.driverAnnotationSettings.includeVUS = this.props.store.driverAnnotationSettings.includeVUS;
+                this.props.store.driverAnnotationSettings.includeVUS = !this
+                    .props.store.driverAnnotationSettings.includeVUS;
                 break;
             case EVENT_KEY.showUnknownOncogenicity:
-                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = this.props.store.driverAnnotationSettings.includeUnknownOncogenicity;
+                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = !this
+                    .props.store.driverAnnotationSettings
+                    .includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
                 this.props.store.hideUnprofiledSamples = !this.props.store
                     .hideUnprofiledSamples;
                 break;
             case EVENT_KEY.showGermlineMutations:
-                this.props.store.includeGermlineMutations = this.props.store.includeGermlineMutations;
+                this.props.store.includeGermlineMutations = !this.props.store
+                    .includeGermlineMutations;
                 break;
             case EVENT_KEY.showSomaticMutations:
-                this.props.store.includeSomaticMutations = this.props.store.includeSomaticMutations;
+                this.props.store.includeSomaticMutations = !this.props.store
+                    .includeSomaticMutations;
                 break;
         }
     }
@@ -114,17 +118,57 @@ export default class SettingsMenu extends React.Component<
                 )}
                 style={{ padding: 5 }}
             >
+                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    Select alteration types included in the tables of{' '}
+                    <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
+                    <i>Fusion Genes</i>.
+                </span>
+                <h5 style={{ marginTop: '15px', marginBottom: 'auto' }}>
+                    By mutation status (mutations only)
+                </h5>
+                <InfoIcon
+                    divStyle={{ display: 'inline-block', marginLeft: 6 }}
+                    style={{ color: 'rgb(54, 134, 194)' }}
+                    tooltip={<span>PLACEHOLDER</span>}
+                />
+                <div style={{ marginLeft: 10 }}>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="ShowGermline"
+                                type="checkbox"
+                                value={EVENT_KEY.showGermlineMutations}
+                                checked={
+                                    this.props.store.includeGermlineMutations
+                                }
+                                onClick={this.onInputClick}
+                            />{' '}
+                            Germline
+                        </label>
+                    </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="HideSomatic"
+                                type="checkbox"
+                                value={EVENT_KEY.showSomaticMutations}
+                                checked={
+                                    this.props.store.includeSomaticMutations
+                                }
+                                onClick={this.onInputClick}
+                            />{' '}
+                            Somatic
+                        </label>
+                    </div>
+                </div>
                 <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Filter Data
+                    By custom driver annotation
                 </h5>
                 <InfoIcon
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
                     style={{ color: 'rgb(54, 134, 194)' }}
                     tooltip={
                         <span>
-                            Filter the alterations that are counted in the
-                            Mutated Genes, CNA Genes and Fusion Genes tables.
-                            <br />
                             Driver/passenger annotations are based on
                             <b>
                                 {' ' +
@@ -153,8 +197,7 @@ export default class SettingsMenu extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            Include known oncogenic mutations and copy number
-                            alterations
+                            Putative drivers
                         </label>
                     </div>
                     <div className="checkbox">
@@ -172,8 +215,7 @@ export default class SettingsMenu extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            Include known non-oncogenic mutations and copy
-                            number alterations
+                            Putative passengers
                         </label>
                     </div>
                     <div className="checkbox">
@@ -191,56 +233,31 @@ export default class SettingsMenu extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            Include mutations and copy number alterations of
-                            unknown oncogenicity
+                            {/*Unknown*/}
                         </label>
                     </div>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="ShowGermline"
-                                type="checkbox"
-                                value={EVENT_KEY.showGermlineMutations}
-                                checked={
-                                    this.props.store.includeGermlineMutations
-                                }
-                                onClick={this.onInputClick}
-                            />{' '}
-                            Include germline mutations
-                        </label>
-                    </div>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="HideSomatic"
-                                type="checkbox"
-                                value={EVENT_KEY.showSomaticMutations}
-                                checked={
-                                    this.props.store.includeSomaticMutations
-                                }
-                                onClick={this.onInputClick}
-                            />{' '}
-                            Include somatic mutations
-                        </label>
-                    </div>
-                    {this.props.resultsView && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideUnprofiled"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hideUnprofiledSamples}
-                                    checked={
-                                        this.props.store.hideUnprofiledSamples
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Exclude samples that are not profiled for all
-                                queried genes in all queried profiles
-                            </label>
-                        </div>
-                    )}
                 </div>
+                {!!this.driverSettingsState.customDriverAnnotationTiers && (
+                    <div>
+                        <h5 style={{ marginTop: '15px', marginBottom: 'auto' }}>
+                            By custom tier annotation
+                        </h5>
+                        <InfoIcon
+                            divStyle={{
+                                display: 'inline-block',
+                                marginLeft: 6,
+                            }}
+                            style={{ color: 'rgb(54, 134, 194)' }}
+                            tooltip={<span>PLACEHOLDER</span>}
+                        />
+                        <div style={{ marginLeft: 10 }}>
+                            <DriverAnnotationControls
+                                state={this.driverSettingsState}
+                                handlers={this.driverSettingsHandlers}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

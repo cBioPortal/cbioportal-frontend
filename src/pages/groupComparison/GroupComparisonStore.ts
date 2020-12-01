@@ -49,6 +49,7 @@ export default class GroupComparisonStore extends ComparisonStore
 
     @observable includeGermlineMutations: boolean;
     @observable includeSomaticMutations: boolean;
+    @observable includeUnknownStatusMutations: boolean;
     hideUnprofiledSamples: boolean | undefined;
 
     constructor(

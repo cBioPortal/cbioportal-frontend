@@ -12,6 +12,7 @@ export interface IDriverSettingsProps {
 export interface IExclusionSettings {
     includeGermlineMutations: boolean;
     includeSomaticMutations: boolean;
+    includeUnknownStatusMutations: boolean;
     hideUnprofiledSamples?: boolean;
 }
 
@@ -110,17 +111,23 @@ export function buildDriverAnnotationSettings(
                 !didOncoKbFailInOncoprint()
             );
         },
+        get includeDriver() {
+            return this._includeDriver;
+        },
         set includeDriver(val: boolean) {
             this._includeDriver = val;
+        },
+        get includeVUS() {
+            return this._includeVUS;
         },
         set includeVUS(val: boolean) {
             this._includeVUS = val;
         },
+        get includeUnknownOncogenicity() {
+            return this._includeUnknownOncogenicity;
+        },
         set includeUnknownOncogenicity(val: boolean) {
             this._includeUnknownOncogenicity = val;
-        },
-        get excludeVUS() {
-            return this._includeVUS && this.driversAnnotated;
         },
         get driversAnnotated() {
             const anySelected =

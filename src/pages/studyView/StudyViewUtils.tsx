@@ -2804,7 +2804,8 @@ export function geneFilterQueryFromOql(
     includeUnknownOncogenicity?: boolean,
     selectedTiers?: string[],
     includeGermline?: boolean,
-    includeSomatic?: boolean
+    includeSomatic?: boolean,
+    includeUnknownStatus?: boolean
 ): GeneFilterQuery {
     const [part1, part2]: string[] = oql.split(':');
     const alterations = part2 ? part2.trim().split(' ') : [];
@@ -2825,5 +2826,6 @@ export function geneFilterQueryFromOql(
         selectedTiers: selectedTiers || [],
         includeGermline: !!includeGermline,
         includeSomatic: !!includeSomatic,
+        includeUnknownStatus: !!includeUnknownStatus,
     };
 }

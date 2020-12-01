@@ -337,8 +337,9 @@ export class StudyViewPageStore
     public studyViewQueryFilter: StudyViewURLQuery;
     @observable showComparisonGroupUI = false;
     public driverAnnotationSettings: DriverAnnotationSettings;
-    @observable includeGermlineMutations = false;
-    @observable includeSomaticMutations = false;
+    @observable includeGermlineMutations = true;
+    @observable includeSomaticMutations = true;
+    @observable includeUnknownStatusMutations = true;
     @observable settingsMenuVisible = false;
     private totalMutationAlteredCasesByGene = new Map<string, number>();
     private totalFusionAlteredCasesByGene = new Map<string, number>();
@@ -5257,13 +5258,16 @@ export class StudyViewPageStore
                 const selectedTiers = this.selectedTiers;
                 const includeGermlineMutations = this.includeGermlineMutations;
                 const includeSomaticMutations = this.includeSomaticMutations;
+                const includeUnknownStatusMutations = this
+                    .includeUnknownStatusMutations;
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
                     {
                         includeVus,
                         includeUnknownOncogenicity,
                         selectedTiers: selectedTiers,
-                        includeGermline: includeGermlineMutations,
-                        includeSomatic: includeSomaticMutations,
+                        includeGermlineStatus: includeGermlineMutations,
+                        includeSomaticStatus: includeSomaticMutations,
+                        includeUnknownStatus: includeUnknownStatusMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5329,7 +5333,9 @@ export class StudyViewPageStore
                     .includeUnknownOncogenicity;
                 const selectedTiers = this.selectedTiers;
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
+                    includeDriver,
                     includeVus,
+                    includeUnknownOncogenicity,
                     selectedTiers,
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
