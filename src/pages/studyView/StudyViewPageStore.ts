@@ -1990,7 +1990,8 @@ export class StudyViewPageStore
                     this.driverAnnotationSettings.includeUnknownOncogenicity,
                     this.selectedTiers,
                     this.includeGermlineMutations,
-                    this.includeSomaticMutations
+                    this.includeSomaticMutations,
+                    this.includeUnknownStatusMutations
                 )
             )
         );
@@ -5184,6 +5185,8 @@ export class StudyViewPageStore
                 const selectedTiers = this.selectedTiers;
                 const includeGermlineMutations = this.includeGermlineMutations;
                 const includeSomaticMutations = this.includeSomaticMutations;
+                const includeUnknownStatusMutations = this
+                    .includeUnknownStatusMutations;
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
                         includeDriver,
@@ -5192,6 +5195,7 @@ export class StudyViewPageStore
                         selectedTiers: selectedTiers,
                         includeGermline: includeGermlineMutations,
                         includeSomatic: includeSomaticMutations,
+                        includeUnknownStatus: includeUnknownStatusMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
