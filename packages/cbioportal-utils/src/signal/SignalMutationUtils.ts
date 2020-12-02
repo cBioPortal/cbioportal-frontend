@@ -1,26 +1,25 @@
-// functions in this component come from signal
-
+import { CountByTumorType, SignalMutation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import {
-    ICountByTumorType,
-    IExtendedMutation,
-    IMutation,
-    ITumorTypeDecomposition,
-} from '../model/Mutation';
+    IExtendedSignalMutation,
+    ISignalTumorTypeDecomposition,
+} from '../model/SignalMutation';
 
-export function isGermlineMutation(mutation: IMutation) {
+export function isGermlineMutation(mutation: SignalMutation) {
     return mutation.mutationStatus.toLowerCase() === 'germline';
 }
 
-export function isSomaticMutation(mutation: IMutation) {
+export function isSomaticMutation(mutation: SignalMutation) {
     return mutation.mutationStatus.toLowerCase() === 'somatic';
 }
 
-export function isPathogenicMutation(mutation: IMutation) {
+export function isPathogenicMutation(mutation: SignalMutation) {
     return mutation.pathogenic === '1';
 }
 
-export function extendMutations(mutations: IMutation[]): IExtendedMutation[] {
+export function extendMutations(
+    mutations: SignalMutation[]
+): IExtendedSignalMutation[] {
     // filter out biallelic mutations, since their count is already included in germline mutations
     // we only use biallelic mutations to add frequency values and additional count fields
     return mutations.map(mutation => {
@@ -37,7 +36,7 @@ export function extendMutations(mutations: IMutation[]): IExtendedMutation[] {
                 ? calculateOverallFrequency(mutation.biallelicCountsByTumorType)
                 : null;
 
-        const tumorTypeDecomposition: ITumorTypeDecomposition[] = generateTumorTypeDecomposition(
+        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
             mutation.countsByTumorType,
             mutation.biallelicCountsByTumorType,
             mutation.qcPassCountsByTumorType
@@ -71,12 +70,12 @@ export function extendMutations(mutations: IMutation[]): IExtendedMutation[] {
 }
 
 export function generateTumorTypeDecomposition(
-    countsByTumorType: ICountByTumorType[],
-    biallelicCountsByTumorType?: ICountByTumorType[],
-    qcPassCountsByTumorType?: ICountByTumorType[]
+    countsByTumorType: CountByTumorType[],
+    biallelicCountsByTumorType?: CountByTumorType[],
+    qcPassCountsByTumorType?: CountByTumorType[]
 ) {
-    let biallelicTumorMap: { [tumorType: string]: ICountByTumorType };
-    let qcPassTumorMap: { [tumorType: string]: ICountByTumorType };
+    let biallelicTumorMap: { [tumorType: string]: CountByTumorType };
+    let qcPassTumorMap: { [tumorType: string]: CountByTumorType };
 
     if (biallelicCountsByTumorType && qcPassCountsByTumorType) {
         biallelicTumorMap = _.keyBy(biallelicCountsByTumorType, 'tumorType');
@@ -101,8 +100,8 @@ export function generateTumorTypeDecomposition(
 }
 
 export function calcBiallelicRatio(
-    biallelicCountByTumorType?: ICountByTumorType,
-    qcPassCountByTumorType?: ICountByTumorType
+    biallelicCountByTumorType?: CountByTumorType,
+    qcPassCountByTumorType?: CountByTumorType
 ) {
     const ratio =
         (biallelicCountByTumorType
@@ -113,14 +112,14 @@ export function calcBiallelicRatio(
     return _.isNaN(ratio) ? null : ratio;
 }
 
-function totalVariants(counts: ICountByTumorType[]) {
+function totalVariants(counts: CountByTumorType[]) {
     return (
         counts.map(c => c.variantCount).reduce((acc, curr) => acc + curr, 0) ||
         0
     );
 }
 
-function totalSamples(counts: ICountByTumorType[]) {
+function totalSamples(counts: CountByTumorType[]) {
     return (
         counts
             .map(c => c.tumorTypeCount)
@@ -128,13 +127,13 @@ function totalSamples(counts: ICountByTumorType[]) {
     );
 }
 
-export function calculateOverallFrequency(counts: ICountByTumorType[]) {
+export function calculateOverallFrequency(counts: CountByTumorType[]) {
     return totalVariants(counts) / totalSamples(counts);
 }
 
 export function calculateTotalVariantRatio(
-    counts1: ICountByTumorType[],
-    counts2: ICountByTumorType[]
+    counts1: CountByTumorType[],
+    counts2: CountByTumorType[]
 ) {
     return totalVariants(counts1) / totalVariants(counts2);
 }

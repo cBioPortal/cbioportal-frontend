@@ -14,3 +14,12 @@ export function formatPercentValue(rate: number, fractionDigits: number = 1) {
 export function numberOfLeadingDecimalZeros(value: number) {
     return -Math.floor(Math.log10(value) / Math.log10(10) + 1);
 }
+
+export function formatFrequencyValue(
+    value: number | null,
+    fractionDigits: number = 1
+) {
+    return value === null
+        ? '-'
+        : formatPercentValue(value * 100, fractionDigits);
+}

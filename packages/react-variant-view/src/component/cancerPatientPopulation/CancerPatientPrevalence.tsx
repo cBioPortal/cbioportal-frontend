@@ -10,7 +10,8 @@ import {
     extendMutations,
     isGermlineMutation,
     isSomaticMutation,
-} from '../../util/MutationDataUtils';
+    formatFrequencyValue,
+} from 'cbioportal-utils';
 import { Pathogenicity } from '../../util/Constants';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
 
@@ -48,16 +49,16 @@ class CancerPatientPopulation extends React.Component<
             this.props.variantAnnotation.signalAnnotation &&
             this.props.variantAnnotation.signalAnnotation.annotation.length > 0
         ) {
-            const signalMutaiton = extendMutations(
+            const signalMutation = extendMutations(
                 this.props.variantAnnotation.signalAnnotation.annotation
             );
-            _.forEach(signalMutaiton, mutation => {
+            _.forEach(signalMutation, mutation => {
                 if (isGermlineMutation(mutation)) {
                     contentMap.set(
                         Pathogenicity.GERMLINE,
                         this.percentageContent(
                             Pathogenicity.GERMLINE,
-                            this.fixDisplayValue(mutation.germlineFrequency)
+                            formatFrequencyValue(mutation.germlineFrequency)
                         )
                     );
 
@@ -68,7 +69,7 @@ class CancerPatientPopulation extends React.Component<
                             Pathogenicity.GERMLINE,
                             this.percentageContent(
                                 Pathogenicity.GERMLINE,
-                                this.fixDisplayValue(
+                                formatFrequencyValue(
                                     mutation.germlineFrequency
                                 ),
                                 <span>
@@ -101,7 +102,7 @@ class CancerPatientPopulation extends React.Component<
                                     </DefaultTooltip>
                                     {signalLogoInTable}
                                     {`: `}
-                                    {this.fixDisplayValue(
+                                    {formatFrequencyValue(
                                         mutation.ratioBiallelicPathogenic
                                     )}
                                     {`%)`}
@@ -114,7 +115,7 @@ class CancerPatientPopulation extends React.Component<
                         Pathogenicity.SOMATIC,
                         this.percentageContent(
                             Pathogenicity.SOMATIC,
-                            this.fixDisplayValue(mutation.somaticFrequency)
+                            formatFrequencyValue(mutation.somaticFrequency)
                         )
                     );
                 }
@@ -136,20 +137,6 @@ class CancerPatientPopulation extends React.Component<
             );
         }
         return content;
-    }
-
-    // duplicate of FrequencyCell.tsx mainContent()
-    private fixDisplayValue(value: number | null) {
-        const fractionDigits = 1;
-        const fixed =
-            value === null ? '-' : (value * 100).toFixed(fractionDigits);
-        let displayValue = fixed;
-
-        // if the actual value is not zero but the display value is like 0.00, then show instead < 0.01
-        if (value !== null && value !== 0 && Number(fixed) === 0) {
-            displayValue = `< ${1 / Math.pow(10, fractionDigits)}`;
-        }
-        return displayValue;
     }
 
     private percentageContent(

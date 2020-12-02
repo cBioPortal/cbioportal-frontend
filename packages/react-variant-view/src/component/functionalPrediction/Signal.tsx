@@ -6,14 +6,14 @@ import featureTableStyle from '../featureTable/FeatureTable.module.scss';
 import { computed } from 'mobx';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { IExtendedMutation } from '../../model/Mutation';
 import {
+    IExtendedSignalMutation,
     extendMutations,
     isGermlineMutation,
     isPathogenicMutation,
     isSomaticMutation,
-} from '../../util/MutationDataUtils';
-import { MutationStatusFilterValue } from '../../util/FilterUtils';
+    SignalMutationStatus,
+} from 'cbioportal-utils';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
 
 interface ISignalProps {
@@ -54,13 +54,13 @@ class Signal extends React.Component<ISignalProps> {
         );
     }
 
-    private mutationStatusAccessor(mutation: IExtendedMutation) {
+    private mutationStatusAccessor(mutation: IExtendedSignalMutation) {
         // don't return somatic
         if (isGermlineMutation(mutation)) {
             if (isPathogenicMutation(mutation)) {
-                return MutationStatusFilterValue.PATHOGENIC_GERMLINE;
+                return SignalMutationStatus.PATHOGENIC_GERMLINE;
             } else {
-                return MutationStatusFilterValue.BENIGN_GERMLINE;
+                return SignalMutationStatus.BENIGN_GERMLINE;
             }
         }
         return 'Unknown';

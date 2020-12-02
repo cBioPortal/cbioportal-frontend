@@ -33,7 +33,7 @@ interface IVcf {
 class GenralPopulationPrevalence extends React.Component<
     IGenralPopulationPrevalenceProps
 > {
-    @computed get indexHotspot() {
+    @computed get indexedHotspots() {
         const indexHotspot: IHotspotIndex = {};
         const genomicLocation = extractGenomicLocation(this.props.mutation);
         if (
@@ -248,11 +248,11 @@ class GenralPopulationPrevalence extends React.Component<
     private hotspotData() {
         const isCancerHotspot = isLinearClusterHotspot(
             this.props.mutation,
-            this.indexHotspot
+            this.indexedHotspots
         );
         const is3DCancerHotspot = is3dHotspot(
             this.props.mutation,
-            this.indexHotspot
+            this.indexedHotspots
         );
         if (isCancerHotspot || is3DCancerHotspot) {
             return (

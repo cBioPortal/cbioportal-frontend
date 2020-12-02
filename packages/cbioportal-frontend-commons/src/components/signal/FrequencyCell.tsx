@@ -1,10 +1,9 @@
-// this component comes from signal
-
 import { observer } from 'mobx-react';
 import Tooltip from 'rc-tooltip';
 import * as React from 'react';
 
 import 'rc-tooltip/assets/bootstrap_white.css';
+import { formatFrequencyValue } from 'cbioportal-utils';
 
 interface IFrequencyCellProps {
     frequency: number | null;
@@ -12,7 +11,9 @@ interface IFrequencyCellProps {
 }
 
 @observer
-class FrequencyCell extends React.Component<IFrequencyCellProps> {
+export default class FrequencyCell extends React.Component<
+    IFrequencyCellProps
+> {
     public render() {
         let content = this.mainContent();
 
@@ -34,25 +35,10 @@ class FrequencyCell extends React.Component<IFrequencyCellProps> {
     }
 
     private mainContent(): JSX.Element {
-        const fractionDigits = 1;
-        const fixed =
-            this.props.frequency === null
-                ? '-'
-                : (this.props.frequency * 100).toFixed(fractionDigits);
-
-        let displayValue = fixed;
-
-        // if the actual value is not zero but the display value is like 0.00, then show instead < 0.01
-        if (
-            this.props.frequency !== null &&
-            this.props.frequency !== 0 &&
-            Number(fixed) === 0
-        ) {
-            displayValue = `< ${1 / Math.pow(10, fractionDigits)}`;
-        }
-
-        return <span className="pull-right mr-1">{displayValue}</span>;
+        return (
+            <span className="pull-right mr-1">
+                {formatFrequencyValue(this.props.frequency)}
+            </span>
+        );
     }
 }
-
-export default FrequencyCell;
