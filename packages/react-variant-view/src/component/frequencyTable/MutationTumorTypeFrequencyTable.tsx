@@ -1,19 +1,16 @@
-// this component comes from signal
-
+import { FrequencyCell } from 'cbioportal-frontend-commons';
+import { ISignalTumorTypeDecomposition } from 'cbioportal-utils';
 import { computed } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { defaultSortMethod } from 'react-mutation-mapper';
 import ReactTable from 'react-table';
 
-import { ITumorTypeDecomposition } from '../../model/Mutation';
-import FrequencyCell from './FrequencyCell';
-
 import 'react-table/react-table.css';
 import './FrequencyTable.css';
 
 interface ITumorTypeFrequencyTableProps {
-    data: ITumorTypeDecomposition[];
+    data: ISignalTumorTypeDecomposition[];
 }
 
 function renderPercentage(cellProps: any) {
