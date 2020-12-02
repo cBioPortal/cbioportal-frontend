@@ -4,11 +4,13 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, observable } from 'mobx';
 import { SignalAnnotation } from 'genome-nexus-ts-api-client';
-import { ITumorTypeDecomposition } from '../../model/Mutation';
-import { generateTumorTypeDecomposition } from '../../util/MutationDataUtils';
-import MutationTumorTypeFrequencyTable from './MutationTumorTypeFrequencyTable';
+import {
+    ISignalTumorTypeDecomposition,
+    generateTumorTypeDecomposition,
+} from 'cbioportal-utils';
 import autobind from 'autobind-decorator';
 import { Pathogenicity } from '../../util/Constants';
+import MutationTumorTypeFrequencyTable from './MutationTumorTypeFrequencyTable';
 
 interface IFrequencyTableProps {
     signalAnnotation?: SignalAnnotation;
@@ -34,7 +36,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                 _.forEach(
                     this.props.signalAnnotation.annotation,
                     annotation => {
-                        const tumorTypeDecomposition: ITumorTypeDecomposition[] = generateTumorTypeDecomposition(
+                        const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
                             annotation.countsByTumorType,
                             annotation.biallelicCountsByTumorType,
                             annotation.qcPassCountsByTumorType
@@ -73,7 +75,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                 );
             } else {
                 const annotation = this.props.signalAnnotation.annotation[0];
-                const tumorTypeDecomposition: ITumorTypeDecomposition[] = generateTumorTypeDecomposition(
+                const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
                     annotation.countsByTumorType,
                     annotation.biallelicCountsByTumorType,
                     annotation.qcPassCountsByTumorType
@@ -108,7 +110,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
 
     private generateTabContent(
         mutationStatus: string,
-        tumorTypeDecomposition: ITumorTypeDecomposition[]
+        tumorTypeDecomposition: ISignalTumorTypeDecomposition[]
     ) {
         return (
             <div
