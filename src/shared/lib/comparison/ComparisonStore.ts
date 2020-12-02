@@ -1234,6 +1234,8 @@ export default abstract class ComparisonStore {
                         .includeGermlineMutations;
                     const includeSomaticMutations = this
                         .includeSomaticMutations;
+                    const includeUnknownStatusMutations = this
+                        .includeUnknownStatusMutations;
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
                         includeDriver,
                         includeVus,
@@ -1241,7 +1243,8 @@ export default abstract class ComparisonStore {
                         selectedTiers: selectedTiers,
                         includeGermline: includeGermlineMutations,
                         includeSomatic: includeSomaticMutations,
-                        enrichmentType: this.usePatientLevelEnrichments
+                        includeUnknownStatus: includeUnknownStatusMutations,
+                        enrichmentScope: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',
                         groupsAndAlterationTypes: {
