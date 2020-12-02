@@ -130,6 +130,8 @@ export interface IChartContainerProps {
     }>;
     sampleToAnalysisGroup?: MobxPromise<{ [uniqueSampleKey: string]: string }>;
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
+    mutationFilterActive?: boolean;
+    alterationFilterActive?: boolean;
 }
 
 @observer
@@ -482,19 +484,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     const geneColumn: MultiSelectionTableColumn = {
                         columnKey: MultiSelectionTableColumnKey.GENE,
                     };
-                    const filteredOutMutationAlterations = this.props.store
-                        .filteredOutMutationAlterations;
-                    if (
-                        filteredOutMutationAlterations.notShownAlteredCases > 0
-                    ) {
+                    if (this.props.store.mutationFilterActive) {
                         geneColumn.columnNote = '⚠️';
                         geneColumn.columnTooltip = (
                             <span data-test="hidden-mutation-alterations">
-                                {filteredOutAlterationsMessage(
-                                    filteredOutMutationAlterations,
-                                    'mutation',
-                                    'table'
-                                )}
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
                             </span>
                         );
                     }
@@ -558,17 +553,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     const geneColumn: MultiSelectionTableColumn = {
                         columnKey: MultiSelectionTableColumnKey.GENE,
                     };
-                    const filteredOutFusionAlterations = this.props.store
-                        .filteredOutFusionAlterations;
-                    if (filteredOutFusionAlterations.notShownAlteredCases > 0) {
+                    if (this.props.store.mutationFilterActive) {
                         geneColumn.columnNote = '⚠️';
                         geneColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
-                                {filteredOutAlterationsMessage(
-                                    filteredOutFusionAlterations,
-                                    'fusion',
-                                    'table'
-                                )}
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
                             </span>
                         );
                     }
@@ -629,17 +619,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         columnKey: MultiSelectionTableColumnKey.GENE,
                         columnWidthRatio: 0.24,
                     };
-                    const filteredOutCnaAlterations = this.props.store
-                        .filteredOutCnaAlterations;
-                    if (filteredOutCnaAlterations.notShownAlteredCases > 0) {
+                    if (this.props.store.alterationFilterActive) {
                         geneColumn.columnNote = '⚠️';
                         geneColumn.columnTooltip = (
                             <span data-test="hidden-cna-alterations">
-                                {filteredOutAlterationsMessage(
-                                    filteredOutCnaAlterations,
-                                    'copy number alteration',
-                                    'table'
-                                )}
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
                             </span>
                         );
                     }

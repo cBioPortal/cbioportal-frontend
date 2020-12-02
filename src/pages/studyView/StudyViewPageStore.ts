@@ -6239,73 +6239,6 @@ export class StudyViewPageStore
         },
     });
 
-    readonly filteredMutationAlteredCasesByGene = remoteData<
-        Map<string, number>
-    >({
-        await: () => [this.mutatedGeneTableRowData],
-        invoke: () => {
-            const rowData = this.mutatedGeneTableRowData.result!;
-            const alterationCountsByGene = this.computeCasesCountsPerGene(
-                rowData
-            );
-
-            // save count totals when the page first loads
-            const shouldInitTotalCounts = !subset(
-                this.totalMutationAlteredCasesByGene,
-                alterationCountsByGene
-            );
-            if (shouldInitTotalCounts) {
-                this.totalMutationAlteredCasesByGene = alterationCountsByGene;
-            }
-            return Promise.resolve(alterationCountsByGene);
-        },
-        default: new Map<string, number>(),
-    });
-
-    readonly filteredFusionAlteredCasesByGene = remoteData<Map<string, number>>(
-        {
-            await: () => [this.fusionGeneTableRowData],
-            invoke: () => {
-                const rowData = this.fusionGeneTableRowData.result!;
-                const alterationCountsByGene = this.computeCasesCountsPerGene(
-                    rowData
-                );
-
-                // save count totals when the page first loads
-                const shouldInitTotalCounts = !subset(
-                    this.totalFusionAlteredCasesByGene,
-                    alterationCountsByGene
-                );
-                if (shouldInitTotalCounts) {
-                    this.totalFusionAlteredCasesByGene = alterationCountsByGene;
-                }
-                return Promise.resolve(alterationCountsByGene);
-            },
-            default: new Map<string, number>(),
-        }
-    );
-
-    readonly filteredCnaAlteredCasesByGene = remoteData<Map<string, number>>({
-        await: () => [this.cnaGeneTableRowData],
-        invoke: () => {
-            const rowData = this.cnaGeneTableRowData.result!;
-            const alterationCountsByGene = this.computeCasesCountsPerGene(
-                rowData
-            );
-
-            // save count totals when the page first loads
-            const shouldInitTotalCounts = !subset(
-                this.totalCnaAlteredCasesByGene,
-                alterationCountsByGene
-            );
-            if (shouldInitTotalCounts) {
-                this.totalCnaAlteredCasesByGene = alterationCountsByGene;
-            }
-            return Promise.resolve(alterationCountsByGene);
-        },
-        default: new Map<string, number>(),
-    });
-
     computeCasesCountsPerGene(
         rows: MultiSelectionTableRow[]
     ): Map<string, number> {
@@ -6320,27 +6253,6 @@ export class StudyViewPageStore
             });
         }
         return result;
-    }
-
-    @computed get filteredOutMutationAlterations(): FilteredOutAlterations {
-        return computedFilteredOutAlterations(
-            this.totalMutationAlteredCasesByGene,
-            this.filteredMutationAlteredCasesByGene.result!
-        );
-    }
-
-    @computed get filteredOutFusionAlterations(): FilteredOutAlterations {
-        return computedFilteredOutAlterations(
-            this.totalFusionAlteredCasesByGene,
-            this.filteredFusionAlteredCasesByGene.result!
-        );
-    }
-
-    @computed get filteredOutCnaAlterations(): FilteredOutAlterations {
-        return computedFilteredOutAlterations(
-            this.totalCnaAlteredCasesByGene,
-            this.filteredCnaAlteredCasesByGene.result!
-        );
     }
 
     readonly molecularProfileSampleCountSet = remoteData({
@@ -7312,5 +7224,22 @@ export class StudyViewPageStore
             .filter(outerFilter => outerFilter.filters.length > 0);
 
         this.setPatientTreatmentFilters({ filters: updatedFilters });
+    }
+
+    @computed get mutationFilterActive() {
+        return (
+            this.alterationFilterActive ||
+            !this.includeGermlineMutations ||
+            !this.includeSomaticMutations ||
+            !this.includeUnknownStatusMutations
+        );
+    }
+
+    @computed get alterationFilterActive() {
+        return (
+            !this.driverAnnotationSettings.includeDriver ||
+            !this.driverAnnotationSettings.includeVUS ||
+            !this.driverAnnotationSettings.includeUnknownOncogenicity
+        );
     }
 }
