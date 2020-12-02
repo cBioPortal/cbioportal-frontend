@@ -1,5 +1,5 @@
-import React from 'react';
-import { Route, Redirect, IndexRoute } from 'react-router';
+import React, { useEffect } from 'react';
+import { Route, Redirect, Switch } from 'react-router-dom';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
 import {
@@ -25,26 +25,71 @@ import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 // which are invoked at run time by the routes
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
-import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
-import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
+const PatientViewPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/patientView/PatientViewPage'))
+);
+const ResultsViewPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/resultsView/ResultsViewPage'))
+);
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import GroupComparisonLoading from './pages/groupComparison/GroupComparisonLoading';
-import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/datasetView/DatasetPage';
-import Homepage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
-import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
-import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/mutationMapper/MutationMapperTool';
-import OncoprinterTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/oncoprinter/OncoprinterTool';
-import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/webAPI/WebAPIPage';
-import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab/RMatLAB';
-import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
-import Visualize from 'bundle-loader?lazy!babel-loader!./pages/staticPages/visualize/Visualize';
-import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus/AboutUs';
-import Software from 'bundle-loader?lazy!babel-loader!./pages/staticPages/software/Software';
-import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
-import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
-import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
-import GroupComparisonPage from 'bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage';
-import ErrorPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ErrorPage';
+const DatasetPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/datasetView/DatasetPage'))
+);
+const Homepage = SuspenseWrapper(
+    React.lazy(() => import('./pages/home/HomePage'))
+);
+const StudyViewPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/studyView/StudyViewPage'))
+);
+const MutationMapperTool = SuspenseWrapper(
+    React.lazy(() =>
+        import('./pages/staticPages/tools/mutationMapper/MutationMapperTool')
+    )
+);
+const OncoprinterTool = SuspenseWrapper(
+    React.lazy(() =>
+        import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
+    )
+);
+const WebAPIPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
+);
+const RMATLAB = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/rmatlab/RMatLAB'))
+);
+const Tutorials = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/tutorials/Tutorials'))
+);
+const Visualize = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/visualize/Visualize'))
+);
+const AboutUs = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/aboutus/AboutUs'))
+);
+const InstallationMap = SuspenseWrapper(
+    React.lazy(() =>
+        import('./pages/staticPages/installations/InstallationMap')
+    )
+);
+const Software = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/software/Software'))
+);
+const News = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/news/News'))
+);
+const FAQ = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/faq/FAQ'))
+);
+const OQL = SuspenseWrapper(
+    React.lazy(() => import('./pages/staticPages/oql/OQL'))
+);
+const GroupComparisonPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/groupComparison/GroupComparisonPage'))
+);
+const ErrorPage = SuspenseWrapper(
+    React.lazy(() => import('./pages/resultsView/ErrorPage'))
+);
 
 import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -64,6 +109,46 @@ import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+
+function SuspenseWrapper(Component) {
+    return props => (
+        <React.Suspense fallback={null}>
+            <Component {...props} />
+        </React.Suspense>
+    );
+}
+
+function LocationValidationWrapper(Component, validator) {
+    return props => {
+        if (
+            props.location &&
+            !(
+                validator(props.match.params) ||
+                customTabParamValidator(props.location)
+            )
+        ) {
+            return <ErrorPage {...props} />;
+        } else {
+            return <Component {...props} />;
+        }
+    };
+}
+
+function ScrollToTop(Component) {
+    return props => {
+        useEffect(() => {
+            $(document).scrollTop(0);
+        }, []);
+        return <Component {...props} />;
+    };
+}
+
+function GoToHashLink(Component) {
+    return props => {
+        useEffect(handleEnter, []);
+        return <Component {...props} />;
+    };
+}
 
 /**
  * Validates that the parameters either do not have
@@ -141,8 +226,16 @@ var defaultRoute = window.defaultRoute || '/home';
 
 var restoreRoute = inject('routing')(restoreRouteAfterRedirect);
 
-let getBlankPage = function() {
-    return <div />;
+let getBlankPage = function(callback) {
+    return props => {
+        if (callback) {
+            useEffect(() => {
+                callback();
+                // make sure that useEffect argument doesn't return anything
+            }, []);
+        }
+        return <div />;
+    };
 };
 
 /* when route changes, we want to:
@@ -168,248 +261,153 @@ function preloadImportantComponents() {
 }
 
 export const makeRoutes = routing => {
+    const homepage = Homepage;
     return (
-        <Route path="/" component={Container}>
-            <IndexRoute
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(
-                    Homepage,
-                    preloadImportantComponents
-                )}
-            />
-            <Route
-                path="/restore"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                component={restoreRoute}
-            />
+        <React.Suspense fallback={null}>
+            <Switch>
+                <Route exact path={'/'} component={ScrollToTop(Homepage)} />
+                <Route path="/restore" component={ScrollToTop(restoreRoute)} />
+                <Route
+                    path="/loading/comparison"
+                    component={ScrollToTop(GroupComparisonLoading)}
+                />
 
-            <Route
-                path="/loading/comparison"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                component={GroupComparisonLoading}
-            />
+                {/* Redirect legacy survival route directly to survival tab in comparison */}
+                <Route
+                    path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            { comparison_subtab: 'survival' },
+                            '/results/comparison'
+                        );
+                    })}
+                />
 
-            {/* Redirect legacy survival route directly to survival tab in comparison */}
-            <Route
-                path={`/results/${ResultsViewTab.SURVIVAL_REDIRECT}`}
-                onEnter={() => {
-                    redirectTo(
-                        { comparison_subtab: 'survival' },
-                        '/results/comparison'
-                    );
-                }}
-                component={getBlankPage()}
-            />
+                {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
+                <Route
+                    path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            {
+                                plots_horz_selection: JSON.stringify({
+                                    dataType: CLIN_ATTR_DATA_TYPE,
+                                    selectedDataSourceOption:
+                                        SpecialAttribute.StudyOfOrigin,
+                                }),
 
-            {/* Redirect legacy expression route directly to plots tab with mrna vs study */}
-            <Route
-                path={`/results/${ResultsViewTab.EXPRESSION_REDIRECT}`}
-                onEnter={() => {
-                    redirectTo(
-                        {
-                            plots_horz_selection: JSON.stringify({
-                                dataType: CLIN_ATTR_DATA_TYPE,
-                                selectedDataSourceOption:
-                                    SpecialAttribute.StudyOfOrigin,
-                            }),
+                                plots_vert_selection: JSON.stringify({
+                                    dataType:
+                                        AlterationTypeConstants.MRNA_EXPRESSION,
+                                    logScale: 'true',
+                                }),
+                            },
+                            `/results/${ResultsViewTab.PLOTS}`
+                        );
+                    })}
+                />
 
-                            plots_vert_selection: JSON.stringify({
-                                dataType:
-                                    AlterationTypeConstants.MRNA_EXPRESSION,
-                                logScale: 'true',
-                            }),
-                        },
-                        `/results/${ResultsViewTab.PLOTS}`
-                    );
-                }}
-                component={getBlankPage()}
-            />
+                {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
+                <Route
+                    path="/results/enrichments"
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            { comparison_subtab: 'mutations' },
+                            '/results/comparison'
+                        );
+                    })}
+                />
+                <Route
+                    path="/results/:tab?"
+                    component={LocationValidationWrapper(
+                        ResultsViewPage,
+                        tabParamValidator(ResultsViewTab)
+                    )}
+                />
+                <Route
+                    path={'/' + PagePath.Patient + '/:tab?'}
+                    component={ScrollToTop(
+                        LocationValidationWrapper(
+                            PatientViewPage,
+                            tabParamValidator(PatientViewPageTabs)
+                        )
+                    )}
+                />
+                <Route
+                    path={'/' + PagePath.Study + '/:tab?'}
+                    component={ScrollToTop(
+                        LocationValidationWrapper(
+                            StudyViewPage,
+                            tabParamValidator(StudyViewPageTabKeyEnum)
+                        )
+                    )}
+                />
+                <Route
+                    path="/comparison/:tab?"
+                    component={ScrollToTop(
+                        LocationValidationWrapper(
+                            GroupComparisonPage,
+                            comparisonTabParamValidator
+                        )
+                    )}
+                />
 
-            {/* Redirect legacy enrichments route directly to mutations tab in comparison */}
-            <Route
-                path="/results/enrichments"
-                onEnter={() => {
-                    redirectTo(
-                        { comparison_subtab: 'mutations' },
-                        '/results/comparison'
-                    );
-                }}
-                component={getBlankPage()}
-            />
+                <Route path="/mutation_mapper" component={MutationMapperTool} />
+                <Route path="/oncoprinter" component={OncoprinterTool} />
+                <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
+                <Route path="/rmatlab" component={ScrollToTop(RMATLAB)} />
+                <Route path="/datasets" component={ScrollToTop(DatasetPage)} />
+                <Route path="/tutorials" component={GoToHashLink(Tutorials)} />
+                <Route path="/installations" component={InstallationMap} />
+                <Route path="/visualize" component={ScrollToTop(Visualize)} />
+                <Route path="/about" component={ScrollToTop(AboutUs)} />
+                <Route path="/software" component={ScrollToTop(Software)} />
+                <Route path="/news" component={GoToHashLink(News)} />
+                <Route path="/faq" component={GoToHashLink(FAQ)} />
+                <Route path="/oql" component={GoToHashLink(OQL)} />
+                <Route
+                    path="/testimonials"
+                    component={ScrollToTop(TestimonialsPage)}
+                />
+                <Route path="/case.do" component={getBlankPage(handleCaseDO)} />
+                <Route
+                    path="/index.do"
+                    component={getBlankPage(handleIndexDO)}
+                />
+                <Route
+                    path="/study.do"
+                    component={getBlankPage(handleStudyDO)}
+                />
 
-            <Route
-                path="/results(/:tab)"
-                onEnter={() => {}}
-                getComponent={lazyLoadComponent(
-                    ResultsViewPage,
-                    null,
-                    tabParamValidator(ResultsViewTab)
-                )}
-            />
-            <Route
-                path={'/' + PagePath.Patient + '(/:tab)'}
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(
-                    PatientViewPage,
-                    null,
-                    tabParamValidator(PatientViewPageTabs)
-                )}
-            />
-            <Route
-                path={'/' + PagePath.Study + '(/:tab)'}
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(
-                    StudyViewPage,
-                    null,
-                    tabParamValidator(StudyViewPageTabKeyEnum)
-                )}
-            />
-            <Route
-                path="/comparison(/:tab)"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(
-                    GroupComparisonPage,
-                    null,
-                    comparisonTabParamValidator
-                )}
-            />
+                <Route path="/ln" component={getBlankPage(handleLinkOut)} />
+                <Route
+                    path="/link.do"
+                    component={getBlankPage(handleLinkOut)}
+                />
+                <Route
+                    path="/encodedRedirect"
+                    component={getBlankPage(handleEncodedRedirect)}
+                />
 
-            <Route
-                path="/mutation_mapper"
-                getComponent={lazyLoadComponent(MutationMapperTool)}
-            />
-            <Route
-                path="/oncoprinter"
-                getComponent={lazyLoadComponent(OncoprinterTool)}
-            />
-            <Route
-                path="/webAPI"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(WebAPIPage)}
-            />
-            <Route
-                path="/rmatlab"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(RMATLAB)}
-            />
-            <Route
-                path="/datasets"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(DatasetPage)}
-            />
-            <Route
-                path="/tutorials"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(Tutorials)}
-            />
-            <Route
-                path="/visualize"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(Visualize)}
-            />
-            <Route
-                path="/about"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(AboutUs)}
-            />
-            <Route
-                path="/software"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                getComponent={lazyLoadComponent(Software)}
-            />
-            <Route
-                path="/news"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(News)}
-            />
-            <Route
-                path="/faq"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(FAQ)}
-            />
-            <Route
-                path="/oql"
-                onEnter={handleEnter}
-                getComponent={lazyLoadComponent(OQL)}
-            />
-            <Route
-                path="/testimonials"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                component={TestimonialsPage}
-            />
-            <Route
-                path="/case.do"
-                onEnter={handleCaseDO}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/index.do"
-                onEnter={handleIndexDO}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/study.do"
-                onEnter={handleStudyDO}
-                component={getBlankPage()}
-            />
+                <Redirect
+                    path={'/mutation_mapper.jsp'}
+                    to={'/mutation_mapper'}
+                />
+                <Redirect path={'/data_sets.jsp'} to={'/datasets'} />
+                <Redirect path={'/oncoprinter.jsp'} to={'/oncoprinter'} />
+                <Redirect path={'/onco_query_lang_desc.jsp'} to={'/oql'} />
+                <Redirect path={'/tools.jsp'} to={'/visualize'} />
+                <Redirect path={'/tutorials.jsp'} to={'/tutorials'} />
+                <Redirect path={'/tutorial.jsp'} to={'/tutorials'} />
+                <Redirect path={'/cgds_r.jsp'} to={'/rmatlab'} />
 
-            <Route
-                path="/ln"
-                onEnter={handleLinkOut}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/link.do"
-                onEnter={handleLinkOut}
-                component={getBlankPage()}
-            />
-            <Route
-                path="/encodedRedirect"
-                onEnter={handleEncodedRedirect}
-                component={getBlankPage()}
-            />
-
-            <Redirect from={'/mutation_mapper.jsp'} to={'/mutation_mapper'} />
-            <Redirect from={'/data_sets.jsp'} to={'/datasets'} />
-            <Redirect from={'/oncoprinter.jsp'} to={'/oncoprinter'} />
-            <Redirect from={'/onco_query_lang_desc.jsp'} to={'/oql'} />
-            <Redirect from={'/tools.jsp'} to={'/visualize'} />
-            <Redirect from={'/tutorials.jsp'} to={'/tutorials'} />
-            <Redirect from={'/tutorial.jsp'} to={'/tutorials'} />
-            <Redirect from={'/cgds_r.jsp'} to={'/rmatlab'} />
-
-            <Route
-                path="*"
-                onEnter={() => {
-                    $(document).scrollTop(0);
-                }}
-                component={() => <PageNotFound />}
-            />
-        </Route>
+                <Route
+                    path="*"
+                    component={ScrollToTop(() => (
+                        <PageNotFound />
+                    ))}
+                />
+            </Switch>
+        </React.Suspense>
     );
 };
 

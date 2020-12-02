@@ -265,6 +265,7 @@ jobs:
           name: Generate checksum of data that populates the test database
           command: |
               $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+          no_output_timeout: 25m
       - restore_cache:
           keys:
           - v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
@@ -282,6 +283,7 @@ jobs:
               else \
                 ./setup_docker_containers.sh -p -e -d; \
               fi
+          no_output_timeout: 25m
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
@@ -384,6 +386,9 @@ workflows:
            - end_to_end_tests:
                requires:
                    - install
+           - end_to_end_tests_IE11:
+                requires:
+                    - install
            - end_to_end_tests_localdb:
                requires:
                    - install

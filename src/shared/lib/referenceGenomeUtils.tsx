@@ -12,6 +12,10 @@ export const REFERENCE_GENOME = {
         NCBI: 'GRCh38',
         UCSC: 'hg38',
     },
+    grcm38: {
+        NCBI: 'GRCm38',
+        UCSC: 'mm10',
+    },
 };
 
 export function isMixedReferenceGenome(studies: CancerStudy[]): boolean {
@@ -21,8 +25,11 @@ export function isMixedReferenceGenome(studies: CancerStudy[]): boolean {
     const isAllStudiesGRCh38 = _.every(studies, study => {
         return isGrch38(study.referenceGenome);
     });
+    const isAllStudiesGRCm38 = _.every(studies, study => {
+        return isGrcm38(study.referenceGenome);
+    });
     // return true if there are mixed studies
-    return !(isAllStudiesGRCh37 || isAllStudiesGRCh38);
+    return !(isAllStudiesGRCh37 || isAllStudiesGRCh38 || isAllStudiesGRCm38);
 }
 
 export function mixedReferenceGenomeWarning() {
@@ -63,6 +70,13 @@ export function isGrch38(genomeBuild: string) {
     );
 }
 
+export function isGrcm38(genomeBuild: string) {
+    return (
+        REFERENCE_GENOME.grcm38.NCBI.match(new RegExp(genomeBuild, 'i')) ||
+        REFERENCE_GENOME.grcm38.UCSC.match(new RegExp(genomeBuild, 'i'))
+    );
+}
+
 export function formatStudyReferenceGenome(genomeBuild: string) {
     if (isGrch37(genomeBuild)) {
         return (
@@ -71,6 +85,10 @@ export function formatStudyReferenceGenome(genomeBuild: string) {
     } else if (isGrch38(genomeBuild)) {
         return (
             REFERENCE_GENOME.grch38.NCBI + '/' + REFERENCE_GENOME.grch38.UCSC
+        );
+    } else if (isGrcm38(genomeBuild)) {
+        return (
+            REFERENCE_GENOME.grcm38.NCBI + '/' + REFERENCE_GENOME.grcm38.UCSC
         );
     }
 }

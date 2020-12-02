@@ -1,12 +1,17 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
-import { ClinicalData, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
+import {
+    ClinicalData,
+    ClinicalDataBySampleId,
+    ClinicalAttribute,
+} from 'cbioportal-ts-api-client';
 import { cleanAndDerive } from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
+import { computed } from 'mobx';
 
 // sort samples based on event, clinical data and id
 // 1. based on sample collection data (timeline event)
@@ -110,6 +115,52 @@ export function sortSamples(
     });
 }
 
+export function clinicalAttributeListForSamples(
+    samples: Array<ClinicalDataBySampleId>
+) {
+    let clinicalAttributes: { [id: string]: ClinicalAttribute } = {};
+    let output: { id: string; value: string }[] = [];
+    samples.forEach((sample, sampleIndex) => {
+        sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
+            if (
+                clinicalAttributes[clinicalData.clinicalAttributeId] ===
+                undefined
+            ) {
+                output.push({
+                    id: clinicalData.clinicalAttributeId,
+                    value: clinicalData.clinicalAttribute.displayName,
+                });
+                clinicalAttributes[clinicalData.clinicalAttributeId] =
+                    clinicalData.clinicalAttribute;
+            }
+        });
+    });
+    return output;
+}
+
+export function clinicalValueToSamplesMap(
+    samples: Array<ClinicalDataBySampleId>,
+    clinicalAttributeId: string
+) {
+    let clinicalAttributeSamplesMap = new Map();
+    if (clinicalAttributeId === undefined) return [];
+
+    samples.forEach((sample, sampleIndex) => {
+        sample.clinicalData.forEach((clinicalData, clinicalDataIndex) => {
+            if (clinicalData.clinicalAttributeId === clinicalAttributeId) {
+                let sampleList = clinicalAttributeSamplesMap.get(
+                    clinicalData.value
+                );
+                if (sampleList === undefined) sampleList = [];
+                sampleList.push(sample.id);
+
+                clinicalAttributeSamplesMap.set(clinicalData.value, sampleList);
+            }
+        });
+    });
+    return clinicalAttributeSamplesMap;
+}
+
 class SampleManager {
     sampleIndex: { [s: string]: number };
     sampleLabels: { [s: string]: string };
@@ -118,7 +169,11 @@ class SampleManager {
     sampleColors: { [s: string]: string };
     commonClinicalDataLegacyCleanAndDerived: { [s: string]: string };
 
-    constructor(public samples: Array<ClinicalDataBySampleId>, events?: any) {
+    constructor(
+        public samples: Array<ClinicalDataBySampleId>,
+        events?: ClinicalEvent[],
+        private sampleIdsInHeader?: string[]
+    ) {
         this.sampleIndex = {};
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};
@@ -230,6 +285,12 @@ class SampleManager {
         });
     }
 
+    public isSampleVisibleInHeader(sampleId: string) {
+        return (
+            !this.sampleIdsInHeader || this.sampleIdsInHeader.includes(sampleId)
+        );
+    }
+
     getComponentForSample(
         sampleId: string,
         fillOpacity: number = 1,
@@ -267,6 +328,14 @@ class SampleManager {
 
     getSampleIdsInOrder(): string[] {
         return this.samples.map((sample: ClinicalDataBySampleId) => sample.id);
+    }
+
+    @computed get sampleIdToIndexMap() {
+        let indexMap: { [sampleId: string]: number } = {};
+        this.samples.forEach((sample, index) => {
+            indexMap[sample.id] = index;
+        });
+        return indexMap;
     }
 
     getComponentsForSamples() {

@@ -8,7 +8,7 @@ const CBIOPORTAL_URL = 'http://localhost:3000';
 describe('Application in IE11', function() {
     it('renders query page study items', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        $('[data-test="StudySelect"]').waitForExist();
+        $('[data-test="StudySelect"]').waitForExist(30000);
     });
 
     // it('renders the oncoprint', function() {

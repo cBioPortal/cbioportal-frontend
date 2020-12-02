@@ -16,6 +16,7 @@ import {
     MolecularProfile,
     GenePanelData,
     GenericAssayData,
+    GenericAssayMeta,
 } from 'cbioportal-ts-api-client';
 import {
     ICaseAlteration,
@@ -32,6 +33,11 @@ import {
     OQLLineFilterOutput,
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
+import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
+import {
+    getGenericAssayMetaPropertyOrDefault,
+    COMMON_GENERIC_ASSAY_PROPERTY,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -47,8 +53,8 @@ export function generateOqlData(
         [molecularProfileId: string]: MolecularProfile;
     }
 ): IOqlData {
-    const proteinChanges: string[] = [];
-    const structuralVariants: string[] = [];
+    const mutation: IOqlData['mutation'] = [];
+    const structuralVariant: string[] = [];
     const cnaAlterations: ISubAlteration[] = [];
     const proteinLevels: ISubAlteration[] = [];
     const mrnaExpressions: ISubAlteration[] = [];
@@ -88,13 +94,15 @@ export function generateOqlData(
                 }
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
-                proteinChanges.push(alteration.proteinChange);
+                mutation.push({
+                    proteinChange: alteration.proteinChange,
+                    isGermline: !isNotGermlineMutation(alteration),
+                });
                 alterationTypes.push('MUT');
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                structuralVariants.push(alteration.eventInfo);
+                structuralVariant.push(alteration.eventInfo);
                 alterationTypes.push('FUSION');
-                break;
         }
     }
 
@@ -109,8 +117,8 @@ export function generateOqlData(
                 ? geneAlterationDataByGene[datum.trackLabel].sequenced > 0
                 : true,
         geneSymbol: datum.trackLabel,
-        mutation: proteinChanges,
-        structuralVariant: structuralVariants,
+        mutation,
+        structuralVariant,
         cna: cnaAlterations,
         mrnaExp: mrnaExpressions,
         proteinLevel: proteinLevels,
@@ -383,7 +391,8 @@ export function generateGenericAssayProfileData(
 export function generateGenericAssayProfileDownloadData(
     sampleGenericAssayDataByStableId: { [key: string]: GenericAssayData[] },
     samples: Sample[] = [],
-    stableIds: string[] = []
+    stableIds: string[] = [],
+    stableIdToMetaMap: { [genericAssayStableId: string]: GenericAssayMeta }
 ): string[][] {
     if (_.isEmpty(sampleGenericAssayDataByStableId)) {
         return [];
@@ -401,7 +410,19 @@ export function generateGenericAssayProfileDownloadData(
         const downloadData: string[][] = [];
 
         // add headers
-        downloadData.push(['STUDY_ID', 'SAMPLE_ID'].concat(stableIds));
+        // try to use "NAME" in the meta as header of each entity
+        // fall back to stableId if "NAME" not available
+        downloadData.push(
+            ['STUDY_ID', 'SAMPLE_ID'].concat(
+                _.map(stableIds, id =>
+                    getGenericAssayMetaPropertyOrDefault(
+                        stableIdToMetaMap[id],
+                        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                        id
+                    )
+                )
+            )
+        );
 
         // convert row data into a 2D array of strings
         _.keys(sampleIndex).forEach(sampleKey => {
@@ -766,7 +787,9 @@ export function hasValidMutationData(sampleAlterationDataByGene: {
 }
 
 function extractMutationValue(alteration: ExtendedAlteration) {
-    return alteration.proteinChange;
+    return `${alteration.proteinChange}${
+        !isNotGermlineMutation(alteration) ? ' [germline]' : ''
+    }`;
 }
 
 export function hasValidStructuralVariantData(sampleAlterationDataByGene: {

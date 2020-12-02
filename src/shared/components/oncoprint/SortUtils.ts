@@ -43,14 +43,34 @@ export function getGeneticTrackSortComparator(
     mandatory: TrackSortVector<GeneticTrackDatum>;
     isVector: true;
 } {
-    const cna_order = makeComparatorMetric([
-        'amp',
-        'homdel',
-        'gain',
-        'hetloss',
-        'diploid',
-        undefined,
-    ]);
+    const cna_order = (function() {
+        let _order: { [s: string]: number };
+        if (!sortByDrivers) {
+            _order = makeComparatorMetric([
+                'amp',
+                'homdel',
+                'gain',
+                'hetloss',
+                'diploid',
+                undefined,
+            ]);
+        } else {
+            _order = makeComparatorMetric([
+                [
+                    'amp_rec',
+                    'homdel_rec',
+                    'gain_rec',
+                    'hetloss_rec',
+                    'diploid_rec',
+                ],
+                ['amp', 'homdel', 'gain', 'hetloss', 'diploid'],
+                undefined,
+            ]);
+        }
+        return function(m: any) {
+            return _order[m];
+        };
+    })();
     const mut_order = (function() {
         let _order: { [s: string]: number };
         if (!sortByMutationType && !sortByDrivers) {
@@ -117,7 +137,7 @@ export function getGeneticTrackSortComparator(
         }
 
         // Next, CNA
-        vector.push(cna_order[d.disp_cna + '']);
+        vector.push(cna_order(d.disp_cna));
 
         // Next, mutation
         // Mutation type

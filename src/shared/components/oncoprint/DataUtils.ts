@@ -2,6 +2,7 @@ import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
     CaseAggregatedData,
+    CustomDriverNumericGeneMolecularData,
     ExtendedAlteration,
     AlterationTypeConstants,
 } from '../../../pages/resultsView/ResultsViewPageStore';
@@ -158,14 +159,18 @@ export function fillGeneticTrackDatum(
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-                const cnaEvent =
+                let oncoprintCnaType =
                     cnaDataToString[
-                        event.value as NumericGeneMolecularData['value']
+                        event.value as CustomDriverNumericGeneMolecularData['value']
                     ];
-                if (cnaEvent) {
+                if (oncoprintCnaType) {
+                    if (event.putativeDriver) {
+                        oncoprintCnaType += '_rec';
+                    }
                     // not diploid
-                    dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
-                    dispCnaCounts[cnaEvent] += 1;
+                    dispCnaCounts[oncoprintCnaType] =
+                        dispCnaCounts[oncoprintCnaType] || 0;
+                    dispCnaCounts[oncoprintCnaType] += 1;
                 }
                 break;
             case AlterationTypeConstants.MRNA_EXPRESSION:
@@ -287,17 +292,16 @@ export function makeGeneticTrackData(
                     p => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
-            let sampleData =
-                caseAggregatedAlterationData[sample.uniqueSampleKey];
-            if (sampleData) {
-                ret.push(
-                    fillGeneticTrackDatum(
-                        newDatum,
-                        geneSymbolArray.join(' / '),
-                        sampleData
-                    )
-                );
-            }
+            const sampleData =
+                caseAggregatedAlterationData[sample.uniqueSampleKey] || [];
+
+            ret.push(
+                fillGeneticTrackDatum(
+                    newDatum,
+                    geneSymbolArray.join(' / '),
+                    sampleData
+                )
+            );
         }
     } else {
         // case: Patients
@@ -334,18 +338,16 @@ export function makeGeneticTrackData(
                     p => !!_selectedMolecularProfiles[p.molecularProfileId]
                 ); // filter out coverage information about non-selected profiles
 
-            let patientData =
-                caseAggregatedAlterationData[patient.uniquePatientKey];
+            const patientData =
+                caseAggregatedAlterationData[patient.uniquePatientKey] || [];
 
-            if (patientData) {
-                ret.push(
-                    fillGeneticTrackDatum(
-                        newDatum,
-                        geneSymbolArray.join(' / '),
-                        patientData
-                    )
-                );
-            }
+            ret.push(
+                fillGeneticTrackDatum(
+                    newDatum,
+                    geneSymbolArray.join(' / '),
+                    patientData
+                )
+            );
         }
     }
     return ret;

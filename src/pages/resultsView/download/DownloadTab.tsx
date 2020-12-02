@@ -74,6 +74,8 @@ import { Alteration } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import FontAwesome from 'react-fontawesome';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import { If, Then, Else } from 'react-if';
+import { ResultsViewTab } from '../ResultsViewPageHelpers';
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -275,6 +277,7 @@ export default class DownloadTab extends React.Component<
             this.props.store.genericAssayEntityStableIdsGroupByProfileIdSuffix,
             this.props.store.genericAssayDataGroupByProfileIdSuffix,
             this.props.store.genericAssayProfilesGroupByProfileIdSuffix,
+            this.props.store.genericAssayStableIdToMeta,
         ],
         invoke: () => {
             const genericAssayProfileDataGroupByProfileIdSuffix = _.mapValues(
@@ -304,7 +307,8 @@ export default class DownloadTab extends React.Component<
                             this.props.store.samples.result!,
                             this.props.store
                                 .genericAssayEntityStableIdsGroupByProfileIdSuffix
-                                .result![profileIdSuffix]
+                                .result![profileIdSuffix],
+                            this.props.store.genericAssayStableIdToMeta.result!
                         );
                     }
                 )
@@ -665,9 +669,8 @@ export default class DownloadTab extends React.Component<
             this.props.store
                 .nonSelectedDownloadableMolecularProfilesGroupByName,
             this.props.store.studies,
-            this.props.store.selectedMolecularProfiles
-            // disable generic assay download for now
-            // this.props.store.genericAssayDataGroupByProfileIdSuffix
+            this.props.store.selectedMolecularProfiles,
+            this.props.store.genericAssayDataGroupByProfileIdSuffix
         );
 
         switch (status) {
@@ -754,17 +757,24 @@ export default class DownloadTab extends React.Component<
                                                 .nonSelectedDownloadableMolecularProfilesGroupByName
                                                 .result!
                                         )}
-                                    {/* disable generic assay download for now */}
-                                    {/* {!_.isEmpty(
-                                        this.props.store
-                                            .genericAssayProfilesGroupByProfileIdSuffix
-                                            .result
-                                    ) &&
+                                    {/* Generic Assay Download only available for single study */}
+                                    {this.props.store.studies.result!.length ===
+                                        1 &&
+                                        !_.isEmpty(
+                                            this.props.store
+                                                .genericAssayProfilesGroupByProfileIdSuffix
+                                                .result
+                                        ) &&
                                         this.genericAssayProfileDownloadRows(
                                             this.props.store
                                                 .genericAssayProfilesGroupByProfileIdSuffix
-                                                .result!
-                                        )} */}
+                                                .result!,
+                                            _.keys(
+                                                this.props.store
+                                                    .genericAssayDataGroupByProfileIdSuffix
+                                                    .result
+                                            )
+                                        )}
                                 </tbody>
                             </table>
                         </div>
@@ -969,7 +979,8 @@ export default class DownloadTab extends React.Component<
     private genericAssayProfileDownloadRows(
         genericAssayProfilesGroupByProfileIdSuffix: _.Dictionary<
             MolecularProfile[]
-        >
+        >,
+        selectedSuffix: string[]
     ) {
         const allProfileOptions = _.map(
             genericAssayProfilesGroupByProfileIdSuffix,
@@ -1010,35 +1021,56 @@ export default class DownloadTab extends React.Component<
                 </td>
                 <td>
                     <div>
-                        <a
-                            onClick={() =>
-                                this.handleGenericAssayProfileDownload(
-                                    option.name,
-                                    option.profileIdSuffix
-                                )
-                            }
+                        <If
+                            condition={selectedSuffix.includes(
+                                option.profileIdSuffix
+                            )}
                         >
-                            <i
-                                className="fa fa-cloud-download"
-                                style={{ marginRight: 5 }}
-                            />
-                            Tab Delimited Format
-                        </a>
-                        <span style={{ margin: '0px 10px' }}>|</span>
-                        <a
-                            onClick={() =>
-                                this.handleTransposedGenericAssayProfileDownload(
-                                    option.name,
-                                    option.profileIdSuffix
-                                )
-                            }
-                        >
-                            <i
-                                className="fa fa-cloud-download"
-                                style={{ marginRight: 5 }}
-                            />
-                            Transposed Matrix
-                        </a>
+                            <Then>
+                                <a
+                                    onClick={() =>
+                                        this.handleGenericAssayProfileDownload(
+                                            option.name,
+                                            option.profileIdSuffix
+                                        )
+                                    }
+                                >
+                                    <i
+                                        className="fa fa-cloud-download"
+                                        style={{ marginRight: 5 }}
+                                    />
+                                    Tab Delimited Format
+                                </a>
+                                <span style={{ margin: '0px 10px' }}>|</span>
+                                <a
+                                    onClick={() =>
+                                        this.handleTransposedGenericAssayProfileDownload(
+                                            option.name,
+                                            option.profileIdSuffix
+                                        )
+                                    }
+                                >
+                                    <i
+                                        className="fa fa-cloud-download"
+                                        style={{ marginRight: 5 }}
+                                    />
+                                    Transposed Matrix
+                                </a>
+                            </Then>
+                            <Else>
+                                Heatmap tracks added in the&nbsp;
+                                <a
+                                    onClick={() =>
+                                        this.props.store.handleTabChange(
+                                            ResultsViewTab.ONCOPRINT
+                                        )
+                                    }
+                                >
+                                    OncoPrint tab
+                                </a>
+                                &nbsp;can be downloaded here.
+                            </Else>
+                        </If>
                     </div>
                 </td>
             </tr>

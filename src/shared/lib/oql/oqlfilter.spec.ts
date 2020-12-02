@@ -19,8 +19,8 @@ import { assert } from 'chai';
 import sinon from 'sinon';
 import {
     AlterationTypeConstants,
+    CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
     AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 
@@ -33,7 +33,7 @@ import {
 const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     {
         __id: 4,
-        oncoKbOncogenic: 'oncogenic',
+        putativeDriver: true,
         sampleId: 'TCGA-02-0001-01',
         entrezGeneId: 672,
         value: 1,
@@ -52,7 +52,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     },
     {
         __id: 5,
-        oncoKbOncogenic: '',
+        putativeDriver: false,
         sampleId: 'TCGA-02-0001-01',
         entrezGeneId: 5728,
         value: 0,
@@ -71,7 +71,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     },
     {
         __id: 6,
-        oncoKbOncogenic: '',
+        putativeDriver: false,
         sampleId: 'TCGA-02-0001-01',
         entrezGeneId: 7157,
         value: -1,
@@ -90,10 +90,10 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     },
     {
         __id: 7,
-        oncoKbOncogenic: 'oncogenic',
+        putativeDriver: true,
         sampleId: 'TCGA-02-0003-01',
         entrezGeneId: 672,
-        value: 0,
+        value: -2,
         molecularProfileId: 'gbm_tcga_gistic',
         uniqueSampleKey: 'VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh',
         uniquePatientKey: 'VENHQS0wMi0wMDAzOmdibV90Y2dh',
@@ -109,7 +109,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     },
     {
         __id: 8,
-        oncoKbOncogenic: 'predicted Oncogenic',
+        putativeDriver: true,
         sampleId: 'TCGA-02-0003-01',
         entrezGeneId: 5728,
         value: -1,
@@ -128,7 +128,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
     },
     {
         __id: 9,
-        oncoKbOncogenic: 'Likely Oncogenic',
+        putativeDriver: true,
         sampleId: 'TCGA-02-0003-01',
         entrezGeneId: 7157,
         value: 0,
@@ -145,7 +145,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = ([
             length: 4576,
         },
     },
-] as any) as AnnotatedNumericGeneMolecularData[];
+] as any) as CustomDriverNumericGeneMolecularData[];
 // I believe these metadata to be all `new AccessorsForOqlFilter()` needs
 const DATA_PROFILE = {
     molecularAlterationType: 'COPY_NUMBER_ALTERATION',
@@ -497,7 +497,7 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [0, 1, 3, 3.1, 7, 8, 9]
+            [-1, 0, 1, 3, 3.1, 7, 8, 9]
         );
 
         filteredData = filterCBioPortalWebServiceData(

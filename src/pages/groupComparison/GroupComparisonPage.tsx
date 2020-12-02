@@ -90,7 +90,7 @@ export default class GroupComparisonPage extends React.Component<
     private getTabHref(tabId: string) {
         return URL.format({
             pathname: tabId,
-            query: this.props.routing.location.query,
+            query: this.props.routing.query,
             hash: this.props.routing.location.hash,
         });
     }

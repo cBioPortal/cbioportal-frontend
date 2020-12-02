@@ -26,4 +26,6 @@ yarn.lock
 .DS_Store
 .gitignore
 .kodiak.toml
+*properties
 *.seg
+end-to-end-test/local/studies/**

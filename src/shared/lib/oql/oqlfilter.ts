@@ -489,7 +489,8 @@ function isDatumWantedByAnyTypeWithModifiersCommand<T>(
             case 'DRIVER':
                 const cnaValue = accessors.cna(datum);
                 datumWanted =
-                    cnaValue !== 'gain' && // dont include gains or hetloss here
+                    cnaValue !== null && // dont include gains, hetloss or unmodified here
+                    cnaValue !== 'gain' &&
                     cnaValue !== 'hetloss' &&
                     isDatumWantedByOQLAlterationModifier(
                         modifier,

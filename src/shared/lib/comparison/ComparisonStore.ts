@@ -90,7 +90,7 @@ export enum OverlapStrategy {
     EXCLUDE = 'Exclude',
 }
 
-export default class ComparisonStore {
+export default abstract class ComparisonStore {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
@@ -171,6 +171,13 @@ export default class ComparisonStore {
     protected async saveAndGoToSession(newSession: Session) {
         throw new Error(`saveAndGoToSession must be implemented in subclass`);
     }
+    abstract _session: MobxPromise<Session>;
+    abstract _originalGroups: MobxPromise<ComparisonGroup[]>;
+    abstract overlapStrategy: OverlapStrategy;
+    abstract usePatientLevelEnrichments: boolean;
+    abstract samples: MobxPromise<Sample[]>;
+    abstract studies: MobxPromise<CancerStudy[]>;
+    // < / >
 
     public get isLoggedIn() {
         return this.appStore.isLoggedIn;
@@ -194,14 +201,6 @@ export default class ComparisonStore {
 
         this.saveAndGoToSession(newSession);
     }
-
-    readonly _session: MobxPromise<Session>; // must be implemented in subclasses
-    readonly _originalGroups: MobxPromise<ComparisonGroup[]>; // must be implemented in subclasses
-    public overlapStrategy: OverlapStrategy; // must be implemented in subclasses
-    public usePatientLevelEnrichments: boolean; // must be implemented in subclasses
-    readonly samples: MobxPromise<Sample[]>; // must be implemented in subclass
-    readonly studies: MobxPromise<CancerStudy[]>; // must be implemented in subclass
-    // < / >
 
     readonly origin = remoteData({
         // the studies that the comparison groups come from

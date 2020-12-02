@@ -327,13 +327,26 @@ function checkElementWithTemporaryClass(
 }
 
 function checkElementWithMouseDisabled(selector, pauseTime, options) {
-    return checkElementWithTemporaryClass(
+    browser.execute(function() {
+        const style = 'display:block !important;visibility:visible !important;';
+        $(`<div id='blockUIToDisableMouse' style='${style}'></div>`).appendTo(
+            'body'
+        );
+    });
+
+    const ret = checkElementWithTemporaryClass(
         selector,
         selector,
         'disablePointerEvents',
         pauseTime || 0,
         options
     );
+
+    browser.execute(function() {
+        $('#blockUIToDisableMouse').remove();
+    });
+
+    return ret;
 }
 
 function checkElementWithElementHidden(selector, selectorToHide, options) {

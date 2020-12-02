@@ -4,12 +4,10 @@ import {
     NONE_SELECTED_OPTION_STRING_VALUE,
     NONE_SELECTED_OPTION_LABEL,
 } from './PlotsTab';
-import {
-    AlterationTypeConstants,
-    GenericAssayTypeConstants,
-} from '../ResultsViewPageStore';
+import { AlterationTypeConstants } from '../ResultsViewPageStore';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { CLIN_ATTR_DATA_TYPE } from './PlotsTabUtils';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export type ButtonInfo = {
     selected: boolean;

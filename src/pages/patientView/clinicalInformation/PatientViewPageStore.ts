@@ -17,10 +17,15 @@ import {
     Sample,
     SampleMolecularIdentifier,
     StructuralVariantFilter,
+    GenericAssayData,
+    GenericAssayMeta,
+    GenericAssayDataMultipleStudyFilter,
+    GenericAssayMetaFilter,
 } from 'cbioportal-ts-api-client';
 import client from '../../../shared/api/cbioportalClientInstance';
 import internalClient from '../../../shared/api/cbioportalInternalClientInstance';
-import { computed, observable, action, runInAction } from 'mobx';
+import oncokbClient from '../../../shared/api/oncokbClientInstance';
+import { action, computed, observable, runInAction } from 'mobx';
 import {
     getBrowserWindow,
     remoteData,
@@ -42,6 +47,7 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
+    VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import {
     ONCOKB_DEFAULT_INFO,
@@ -55,54 +61,59 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import AppConfig from 'appConfig';
 import {
     concatMutationData,
+    evaluateDiscreteCNAPutativeDriverInfo,
+    evaluateMutationPutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
     fetchClinicalData,
     fetchClinicalDataForPatient,
     fetchCnaOncoKbData,
+    fetchCnaOncoKbDataForOncoprint,
     fetchCopyNumberData,
     fetchCopyNumberSegments,
     fetchCosmicData,
     fetchDiscreteCNAData,
     fetchGisticData,
-    fetchMutationalSignatureData,
-    fetchMutationalSignatureMetaData,
     fetchMutationData,
     fetchMutSigData,
     fetchOncoKbCancerGenes,
     fetchOncoKbData,
+    fetchOncoKbDataForOncoprint,
     fetchOncoKbInfo,
     fetchReferenceGenomeGenes,
     fetchSamplesForPatient,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    mapSampleIdToClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
+    filterAndAnnotateMolecularData,
+    filterAndAnnotateMutations,
+    findDiscreteMolecularProfile,
     findMolecularProfileIdDiscrete,
     findMrnaRankMolecularProfileId,
     findMutationMolecularProfile,
     findSamplesWithoutCancerTypeClinicalData,
     findUncalledMutationMolecularProfileId,
     generateUniqueSampleKeyToTumorTypeMap,
+    getGenomeNexusUrl,
+    getOtherBiomarkersQueryId,
+    getSampleClinicalDataMapByThreshold,
+    getSampleTumorTypeMap,
     groupBySampleId,
+    makeGetOncoKbCnaAnnotationForOncoprint,
+    makeGetOncoKbMutationAnnotationForOncoprint,
+    makeIsHotspotForOncoprint,
     makeStudyToCancerTypeMap,
+    mapSampleIdToClinicalData,
     mergeDiscreteCNAData,
     mergeMutations,
     mergeMutationsIncludingUncalled,
-    noGenePanelUsed,
     ONCOKB_DEFAULT,
-    getGenomeNexusUrl,
     generateStructuralVariantId,
     fetchStructuralVariantOncoKbData,
-    makeGetOncoKbMutationAnnotationForOncoprint,
-    makeGetOncoKbCnaAnnotationForOncoprint,
-    fetchOncoKbDataForOncoprint,
-    fetchCnaOncoKbDataForOncoprint,
-    makeIsHotspotForOncoprint,
-    findDiscreteMolecularProfile,
-    filterAndAnnotateMolecularData,
+    parseOtherBiomarkerQueryId,
+    tumorTypeResolver,
 } from 'shared/lib/StoreUtils';
 import {
-    CoverageInformation,
     computeGenePanelInformation,
+    CoverageInformation,
 } from 'shared/lib/GenePanelUtils';
 import {
     fetchCivicGenes,
@@ -110,8 +121,11 @@ import {
     fetchCnaCivicGenes,
 } from 'shared/lib/CivicUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    AnnotateMutationByProteinChangeQuery,
+    CancerGene,
+    IndicatorQueryResp,
+} from 'oncokb-ts-api-client';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import { getNavCaseIdsCache } from 'shared/lib/handleLongUrls';
 import {
@@ -127,10 +141,6 @@ import {
 import { groupTrialMatchesById } from '../trialMatch/TrialMatchTableUtils';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
-import {
-    filterAndAnnotateMutations,
-    getOncoKbOncogenic,
-} from '../../resultsView/ResultsViewPageStoreUtils';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 import { AppStore, SiteError } from 'AppStore';
 import { getGeneFilterDefault } from './PatientViewPageStoreUtil';
@@ -140,14 +150,14 @@ import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mut
 import SampleManager from '../SampleManager';
 import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/StudyViewUtils';
 import {
+    getMyCancerGenomeData,
+    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     ICivicGene,
     ICivicVariant,
     IHotspotIndex,
     IMyCancerGenomeData,
-    indexHotspotsData,
     IMyVariantInfoIndex,
-    getMyCancerGenomeData,
-    getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
+    indexHotspotsData,
     IOncoKbData,
 } from 'cbioportal-utils';
 import { makeGeneticTrackData } from 'shared/components/oncoprint/DataUtils';
@@ -156,12 +166,32 @@ import {
     AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     DataTypeConstants,
+    CustomDriverNumericGeneMolecularData,
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
     cna_profile_data_to_string,
     getMutationSubType,
     getSimplifiedMutationType,
 } from 'shared/lib/oql/AccessorsForOqlFilter';
+import {
+    CLINICAL_ATTRIBUTE_ID_ENUM,
+    MSI_H_THRESHOLD,
+    TMB_H_THRESHOLD,
+} from 'shared/constants';
+import {
+    OTHER_BIOMARKER_HUGO_SYMBOL,
+    OtherBiomarkersQueryType,
+    OTHER_BIOMARKER_NAME,
+} from 'react-mutation-mapper';
+import {
+    IMutationalSignature,
+    IMutationalSignatureMeta,
+} from 'shared/model/MutationalSignature';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    MutationalSignaturesVersion,
+    MutationalSignatureStableIdKeyWord,
+} from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 
 type PageMode = 'patient' | 'sample';
 
@@ -412,18 +442,265 @@ export class PatientViewPageStore {
 
     readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
-    readonly mutationalSignatureData = remoteData({
-        invoke: async () => fetchMutationalSignatureData(),
+    // get mutational signature molecular profile Ids (contribution and confidence)
+    readonly mutationalSignatureMolecularProfiles = remoteData<
+        MolecularProfile[]
+    >(
+        {
+            await: () => [this.molecularProfilesInStudy],
+            invoke: () => {
+                return Promise.resolve(
+                    this.molecularProfilesInStudy.result.filter(
+                        (profile: MolecularProfile) => {
+                            if (profile.genericAssayType) {
+                                return (
+                                    profile.genericAssayType ===
+                                    GenericAssayTypeConstants.MUTATIONAL_SIGNATURE
+                                );
+                            }
+                            return false;
+                        }
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly fetchAllMutationalSignatureData = remoteData(
+        {
+            await: () => [
+                this.samples,
+                this.mutationalSignatureMolecularProfiles,
+            ],
+            invoke: () => {
+                const mutationalSignatureMolecularProfileIds = this.mutationalSignatureMolecularProfiles.result.map(
+                    profile => profile.molecularProfileId
+                );
+                if (mutationalSignatureMolecularProfileIds.length > 0) {
+                    const sampleMolecularIdentifiers = _.flatMap(
+                        mutationalSignatureMolecularProfileIds,
+                        mutationalSignatureMolecularProfileId => {
+                            return _.map(this.samples.result, sample => {
+                                return {
+                                    molecularProfileId: mutationalSignatureMolecularProfileId,
+                                    sampleId: sample.sampleId,
+                                } as SampleMolecularIdentifier;
+                            });
+                        }
+                    );
+                    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                        {
+                            genericAssayDataMultipleStudyFilter: {
+                                sampleMolecularIdentifiers,
+                            } as GenericAssayDataMultipleStudyFilter,
+                        }
+                    );
+                }
+                return Promise.resolve([]);
+            },
+        },
+        []
+    );
+
+    readonly mutationalSignatureDataGroupByVersion = remoteData(
+        {
+            await: () => [
+                this.fetchAllMutationalSignatureData,
+                this.mutationData,
+                this.mutationalSignatureMetaGroupByStableId,
+            ],
+            invoke: () => {
+                const contributionData = this.fetchAllMutationalSignatureData.result.filter(
+                    data =>
+                        data.molecularProfileId.includes(
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord
+                        )
+                );
+                const confidenceData = this.fetchAllMutationalSignatureData.result.filter(
+                    data =>
+                        data.molecularProfileId.includes(
+                            MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord
+                        )
+                );
+                // we know mutational signatures data are coming in as a pair (contribution and confidence)
+                // we can always find the confidence data based on a key: uniqueSampleKey + id (split by '_', the last word of genericAssayStableId is id)
+                const confidenceDataMap = _.keyBy(
+                    confidenceData,
+                    data =>
+                        data.uniqueSampleKey +
+                        _.last(data.genericAssayStableId.split('_'))
+                );
+                const numMutationData = this.mutationData.result.length;
+
+                const result: IMutationalSignature[] = [];
+                // only loop the contribution data then find and fill in the paired confidence data
+                if (contributionData && contributionData.length > 0) {
+                    for (const contribution of contributionData) {
+                        let mutationalSignatureTableData: IMutationalSignature = {} as IMutationalSignature;
+                        mutationalSignatureTableData.mutationalSignatureId =
+                            contribution.genericAssayStableId;
+                        mutationalSignatureTableData.patientId =
+                            contribution.patientId;
+                        mutationalSignatureTableData.sampleId =
+                            contribution.sampleId;
+                        mutationalSignatureTableData.studyId =
+                            contribution.studyId;
+                        mutationalSignatureTableData.uniquePatientKey =
+                            contribution.uniquePatientKey;
+                        mutationalSignatureTableData.uniqueSampleKey =
+                            contribution.uniqueSampleKey;
+                        mutationalSignatureTableData.value = parseFloat(
+                            contribution.value
+                        );
+                        // fill in confidence data
+                        mutationalSignatureTableData.confidence = parseFloat(
+                            confidenceDataMap[
+                                contribution.uniqueSampleKey +
+                                    _.last(
+                                        contribution.genericAssayStableId.split(
+                                            '_'
+                                        )
+                                    )
+                            ].value
+                        );
+                        mutationalSignatureTableData.numberOfMutationsForSample = numMutationData;
+                        // split by '_' and use the last word of molecularProfileId as version info
+                        mutationalSignatureTableData.version = _.last(
+                            contribution.molecularProfileId.split('_')
+                        )!;
+                        mutationalSignatureTableData.meta = this.mutationalSignatureMetaGroupByStableId.result![
+                            contribution.genericAssayStableId
+                        ];
+                        result.push(mutationalSignatureTableData);
+                    }
+                }
+                return Promise.resolve(_.groupBy(result, data => data.version));
+            },
+        },
+        {}
+    );
+
+    // only fetch meta for contribution
+    // contribution and confidence are sharing the same meta, no need to fetch twice
+    readonly fetchAllMutationalSignatureContributionMetaData = remoteData({
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            const mutationalSignatureContributionStableIds = _.chain(
+                this.fetchAllMutationalSignatureData.result
+            )
+                .map((data: GenericAssayData) => data.stableId)
+                .uniq()
+                .filter(stableId =>
+                    stableId.includes(
+                        MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord
+                    )
+                )
+                .value();
+
+            return client.fetchGenericAssayMetaDataUsingPOST({
+                genericAssayMetaFilter: {
+                    genericAssayStableIds: mutationalSignatureContributionStableIds
+                        ? mutationalSignatureContributionStableIds
+                        : [],
+                } as GenericAssayMetaFilter,
+            });
+        },
     });
 
-    readonly mutationalSignatureMetaData = remoteData({
-        invoke: async () => fetchMutationalSignatureMetaData(),
+    readonly mutationalSignatureMeta = remoteData<IMutationalSignatureMeta[]>(
+        {
+            await: () => [this.fetchAllMutationalSignatureContributionMetaData],
+            invoke: () => {
+                return Promise.resolve(
+                    this.fetchAllMutationalSignatureContributionMetaData.result!.map(
+                        (metaData: GenericAssayMeta) => {
+                            let meta = {} as IMutationalSignatureMeta;
+                            const name: string =
+                                'NAME' in metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'NAME'
+                                      ]
+                                    : '';
+                            const description: string =
+                                'DESCRIPTION' in
+                                metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'DESCRIPTION'
+                                      ]
+                                    : 'No description';
+                            const url: string =
+                                'URL' in metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'URL'
+                                      ]
+                                    : 'No url';
+                            // TODO: should we add additional property 'CATEGORY' in data file
+                            // currently, category can be derived from name
+                            // name format: ENTITY_NAME (CATEGORY)
+                            // we can get category between '(' and ')'
+                            const category: string = name
+                                ? name.substring(
+                                      name.lastIndexOf('(') + 1,
+                                      name.lastIndexOf(')')
+                                  )
+                                : 'No category';
+                            const confidenceStatement: string =
+                                'DESCRIPTION' in
+                                metaData.genericEntityMetaProperties
+                                    ? metaData.genericEntityMetaProperties[
+                                          'DESCRIPTION'
+                                      ]
+                                    : 'No confidence statement';
+                            meta.mutationalSignatureId = metaData.stableId;
+                            meta.name = name;
+                            meta.description = description;
+                            meta.url = url;
+                            meta.category = category;
+                            meta.confidenceStatement = confidenceStatement;
+                            return meta;
+                        }
+                    )
+                );
+            },
+        },
+        []
+    );
+
+    readonly mutationalSignatureMetaGroupByStableId = remoteData<{
+        [stableId: string]: IMutationalSignatureMeta;
+    }>({
+        await: () => [this.mutationalSignatureMeta],
+        invoke: () => {
+            return Promise.resolve(
+                _.keyBy(
+                    this.mutationalSignatureMeta.result,
+                    meta => meta.mutationalSignatureId
+                )
+            );
+        },
     });
 
     readonly hasMutationalSignatureData = remoteData({
-        invoke: async () => false,
-        default: false,
+        await: () => [this.fetchAllMutationalSignatureData],
+        invoke: async () => {
+            return Promise.resolve(
+                this.fetchAllMutationalSignatureData.result &&
+                    this.fetchAllMutationalSignatureData.result.length > 0
+            );
+        },
     });
+
+    // set version 2 of the mutational signature as default
+    @observable _selectedMutationalSignatureVersion: string =
+        MutationalSignaturesVersion.V2;
+    @computed get selectedMutationalSignatureVersion() {
+        return this._selectedMutationalSignatureVersion;
+    }
+    @action
+    setMutationalSignaturesVersion(version: string) {
+        this._selectedMutationalSignatureVersion = version;
+    }
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
@@ -783,6 +1060,22 @@ export class PatientViewPageStore {
         },
     });
 
+    readonly clinicalDataForAllSamplesForPatient = remoteData({
+        await: () => [this.allSamplesForPatient],
+        invoke: () => {
+            const identifiers = this.allSamplesForPatient.result.map(
+                sample => ({
+                    entityId: sample.sampleId,
+                    studyId: this.studyId,
+                })
+            );
+            const clinicalDataMultiStudyFilter = {
+                identifiers,
+            } as ClinicalDataMultiStudyFilter;
+            return fetchClinicalData(clinicalDataMultiStudyFilter);
+        },
+    });
+
     readonly clinicalDataForSamples = remoteData(
         {
             await: () => [this.samples],
@@ -854,20 +1147,26 @@ export class PatientViewPageStore {
 
     public sampleManager = remoteData<SampleManager>({
         await: () => [
-            this.patientViewData,
+            this.patientViewDataForAllSamplesForPatient,
             this.studyMetaData,
             this.clinicalEvents,
         ],
         invoke: async () => {
-            const patientData = this.patientViewData.result;
+            const patientData = this.patientViewDataForAllSamplesForPatient
+                .result!;
 
             if (this.clinicalEvents.result.length > 0) {
                 return new SampleManager(
                     patientData.samples!,
-                    this.clinicalEvents.result
+                    this.clinicalEvents.result,
+                    this.sampleIds
                 );
             } else {
-                return new SampleManager(patientData.samples!);
+                return new SampleManager(
+                    patientData.samples!,
+                    undefined,
+                    this.sampleIds
+                );
             }
         },
     });
@@ -889,6 +1188,24 @@ export class PatientViewPageStore {
         },
         {}
     );
+
+    readonly patientViewDataForAllSamplesForPatient = remoteData<
+        ClinicalInformationData
+    >({
+        await: () => [
+            this.clinicalDataPatient,
+            this.allSamplesForPatient,
+            this.clinicalDataForAllSamplesForPatient,
+        ],
+        invoke: async () =>
+            transformClinicalInformationToStoreShape(
+                this.patientId,
+                this.studyId,
+                this.allSamplesForPatient.result!.map(s => s.sampleId),
+                this.clinicalDataPatient.result,
+                this.clinicalDataForAllSamplesForPatient.result!
+            ),
+    });
 
     readonly sequencedSampleIdsInStudy = remoteData(
         {
@@ -1652,11 +1969,44 @@ export class PatientViewPageStore {
         );
     }
 
+    readonly getDiscreteCNAPutativeDriverInfo = remoteData({
+        await: () => [this.getOncoKbCnaAnnotationForOncoprint],
+        invoke: () => {
+            return Promise.resolve(
+                (
+                    cnaDatum: CustomDriverNumericGeneMolecularData
+                ): {
+                    oncoKb: string;
+                    customDriverBinary: boolean;
+                } => {
+                    const getOncoKBAnnotationFunc = this
+                        .getOncoKbCnaAnnotationForOncoprint.result!;
+                    const oncoKbDatum:
+                        | IndicatorQueryResp
+                        | undefined
+                        | null
+                        | false =
+                        getOncoKBAnnotationFunc &&
+                        !(getOncoKBAnnotationFunc instanceof Error) &&
+                        getOncoKBAnnotationFunc(cnaDatum);
+
+                    // Note: custom driver annotations are part of the incoming datum
+                    return evaluateDiscreteCNAPutativeDriverInfo(
+                        cnaDatum,
+                        oncoKbDatum,
+                        false,
+                        undefined
+                    );
+                }
+            );
+        },
+    });
+
     @computed
     get annotatedExtendedAlterationData(): AnnotatedExtendedAlteration[] {
         const filteredAndAnnotatedMutations = filterAndAnnotateMutations(
             _.flatten(this.mergedMutationDataIncludingUncalledFilteredByGene),
-            this.getPutativeDriverInfo.result!,
+            this.getMutationPutativeDriverInfo.result!,
             this.entrezGeneIdToGene.result!
         );
 
@@ -1672,9 +2022,8 @@ export class PatientViewPageStore {
                 ...d,
                 value: d.alteration,
             })),
-            this.entrezGeneIdToGene,
-            this.getOncoKbCnaAnnotationForOncoprint,
-            this.molecularProfileIdToMolecularProfile
+            this.getDiscreteCNAPutativeDriverInfo.result!,
+            this.entrezGeneIdToGene
         );
 
         const cnaData = [
@@ -2061,14 +2410,13 @@ export class PatientViewPageStore {
             invoke: async () =>
                 fetchCnaOncoKbDataForOncoprint(
                     this.oncoKbAnnotatedGenes,
-                    this.molecularData,
-                    this.molecularProfileIdToMolecularProfile
+                    this.molecularData
                 ),
         },
         ONCOKB_DEFAULT
     );
 
-    readonly getPutativeDriverInfo = remoteData({
+    readonly getMutationPutativeDriverInfo = remoteData({
         await: () => [
             this.getOncoKbMutationAnnotationForOncoprint,
             this.isHotspotForOncoprint,
@@ -2095,23 +2443,28 @@ export class PatientViewPageStore {
                     ) &&
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
-                let oncoKb: string = '';
-                if (oncoKbDatum) {
-                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
-                }
-
-                const hotspots: boolean =
+                const isHotspotDriver =
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
+                const cbioportalCountExceeded = false;
+                const cosmicCountExceeded = false;
 
-                return {
-                    oncoKb,
-                    hotspots,
-                    // TODO support these too?
-                    cbioportalCount: false,
-                    cosmicCount: false,
-                    customDriverBinary: false,
-                };
+                // Note:
+                // - custom driver annotations are part of the incoming datum
+                // - cbio counts, cosmic and custom driver annnotations are
+                //   not used for driver evaluation
+                return evaluateMutationPutativeDriverInfo(
+                    mutation,
+                    oncoKbDatum,
+                    true,
+                    isHotspotDriver,
+                    false,
+                    cbioportalCountExceeded,
+                    false,
+                    cosmicCountExceeded,
+                    false,
+                    undefined
+                );
             });
         },
     });
@@ -2176,7 +2529,7 @@ export class PatientViewPageStore {
             this.mutationMolecularProfile,
             this.discreteMolecularProfile,
             this.coverageInformation,
-            this.getPutativeDriverInfo,
+            this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
         ],
@@ -2219,4 +2572,89 @@ export class PatientViewPageStore {
     @computed get genomeNexusInternalClient() {
         return new GenomeNexusAPIInternal(this.referenceGenomeBuild);
     }
+
+    @computed get sampleMsiHInfo() {
+        return getSampleClinicalDataMapByThreshold(
+            this.clinicalDataForSamples.result,
+            CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE,
+            MSI_H_THRESHOLD
+        );
+    }
+
+    @computed get sampleTmbHInfo() {
+        return getSampleClinicalDataMapByThreshold(
+            this.clinicalDataForSamples.result,
+            CLINICAL_ATTRIBUTE_ID_ENUM.TMB_SCORE,
+            TMB_H_THRESHOLD
+        );
+    }
+
+    getOtherBiomarkerQueries(
+        type: OtherBiomarkersQueryType,
+        sampleClinicalData: { [key: string]: ClinicalData }
+    ) {
+        return _.values(sampleClinicalData).map(clinical => {
+            return {
+                id: getOtherBiomarkersQueryId({
+                    sampleId: clinical.sampleId,
+                    type: type,
+                }),
+                alteration: OTHER_BIOMARKER_NAME[type],
+                gene: {
+                    hugoSymbol: OTHER_BIOMARKER_HUGO_SYMBOL,
+                },
+                tumorType: tumorTypeResolver(
+                    getSampleTumorTypeMap(
+                        this.clinicalDataForSamples.result,
+                        this.studyMetaData.result?.cancerType.name
+                    )
+                ),
+            } as AnnotateMutationByProteinChangeQuery;
+        });
+    }
+
+    @computed get otherBiomarkerQueries() {
+        const queries: AnnotateMutationByProteinChangeQuery[] = [];
+        if (_.keys(this.sampleMsiHInfo).length > 0) {
+            queries.push(
+                ...this.getOtherBiomarkerQueries(
+                    OtherBiomarkersQueryType.MSIH,
+                    this.sampleMsiHInfo
+                )
+            );
+        }
+        if (_.keys(this.sampleTmbHInfo).length > 0) {
+            queries.push(
+                ...this.getOtherBiomarkerQueries(
+                    OtherBiomarkersQueryType.TMBH,
+                    this.sampleTmbHInfo
+                )
+            );
+        }
+        return queries;
+    }
+
+    readonly getOtherBiomarkersOncoKbData = remoteData<{
+        [sampleId: string]: { [queryType: string]: IndicatorQueryResp };
+    }>({
+        invoke: async () => {
+            const allResult = await oncokbClient.annotateMutationsByProteinChangePostUsingPOST_1(
+                {
+                    body: this.otherBiomarkerQueries,
+                }
+            );
+
+            const updatedResult = allResult.map(resp => {
+                return {
+                    ...resp,
+                    ...parseOtherBiomarkerQueryId(resp.query.id),
+                };
+            });
+            return _.chain(updatedResult)
+                .groupBy(datum => datum.sampleId)
+                .mapValues(group => _.keyBy(group, groupItem => groupItem.type))
+                .value();
+        },
+        default: {},
+    });
 }

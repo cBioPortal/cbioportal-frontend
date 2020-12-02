@@ -21,6 +21,9 @@ import Annotation, { getAnnotationData } from '../column/Annotation';
 import ClinVar from '../column/ClinVar';
 import Dbsnp from '../column/Dbsnp';
 import Gnomad from '../column/Gnomad';
+import Hgvsc from '../column/Hgvsc';
+import Hgvsg from '../column/Hgvsg';
+import { getHgvscColumnData, getHgvsgColumnData } from '../column/HgvsHelper';
 import { getMyVariantInfoData } from '../column/MyVariantInfoHelper';
 import { MutationFilterValue } from '../../filter/MutationFilter';
 import { DataFilterType } from '../../model/DataFilter';
@@ -48,6 +51,7 @@ export type DefaultMutationTableProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
+    selectedTranscriptId?: string;
     enableCivic?: boolean;
     civicGenes?: RemoteData<ICivicGene | undefined>;
     civicVariants?: RemoteData<ICivicVariant | undefined>;
@@ -65,7 +69,7 @@ export default class DefaultMutationTable extends React.Component<
     {}
 > {
     public static defaultProps = {
-        initialSortColumn: MutationColumn.ANNOTATION,
+        initialSort: [{ column: MutationColumn.ANNOTATION }],
         appendColumns: true,
     };
 
@@ -84,6 +88,13 @@ export default class DefaultMutationTable extends React.Component<
         return getRemoteDataGroupStatus(
             ..._.compact(this.annotationColumnData)
         );
+    }
+
+    @computed
+    get hgvsgColumnDataStatus() {
+        return this.props.indexedVariantAnnotations
+            ? this.props.indexedVariantAnnotations.status
+            : 'complete';
     }
 
     @computed
@@ -122,14 +133,37 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @computed
-    get initialSortColumnData() {
-        return this.props.initialSortColumnData || this.annotationColumnData;
+    get hgvsgAccessor() {
+        return this.hgvsgColumnDataStatus === 'pending'
+            ? () => undefined
+            : (mutation: Mutation) => getHgvsgColumnData(mutation);
+    }
+
+    @computed
+    get hgvscAccessor() {
+        return this.hgvsgColumnDataStatus === 'pending'
+            ? () => undefined
+            : (mutation: Mutation) =>
+                  getHgvscColumnData(
+                      mutation,
+                      this.props.indexedVariantAnnotations,
+                      this.props.selectedTranscriptId
+                  );
+    }
+
+    @computed
+    get initialSortRemoteData() {
+        return this.props.initialSortRemoteData || this.annotationColumnData;
     }
 
     protected getDefaultColumnAccessor(columnKey: MutationColumn) {
         switch (columnKey) {
             case MutationColumn.ANNOTATION:
                 return this.annotationColumnAccessor;
+            case MutationColumn.HGVSG:
+                return this.hgvsgAccessor;
+            case MutationColumn.HGVSC:
+                return this.hgvscAccessor;
             case MutationColumn.GNOMAD:
                 return this.myVariantInfoAccessor;
             case MutationColumn.CLINVAR:
@@ -160,6 +194,18 @@ export default class DefaultMutationTable extends React.Component<
                         pubMedCache={this.props.pubMedCache}
                         civicGenes={this.props.civicGenes}
                         civicVariants={this.props.civicVariants}
+                    />
+                );
+            case MutationColumn.HGVSG:
+                return (column: any) => <Hgvsg mutation={column.original} />;
+            case MutationColumn.HGVSC:
+                return (column: any) => (
+                    <Hgvsc
+                        mutation={column.original}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
+                        }
+                        selectedTranscriptId={this.props.selectedTranscriptId}
                     />
                 );
             case MutationColumn.GNOMAD:
@@ -229,7 +275,7 @@ export default class DefaultMutationTable extends React.Component<
             <DefaultMutationTableComponent
                 {...this.props}
                 columns={this.columns}
-                initialSortColumnData={this.initialSortColumnData}
+                initialSortRemoteData={this.initialSortRemoteData}
                 onSearch={this.onSearch}
                 className="default-mutation-table"
             />

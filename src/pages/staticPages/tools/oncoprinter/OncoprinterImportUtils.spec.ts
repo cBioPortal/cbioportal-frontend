@@ -9,10 +9,10 @@ import {
     AlterationTypeConstants,
     DataTypeConstants,
 } from '../../../resultsView/ResultsViewPageStore';
-import { PUTATIVE_DRIVER } from '../../../../shared/constants';
 import { SpecialAttribute } from '../../../../shared/cache/ClinicalDataCache';
 import { ONCOPRINTER_VAL_NA } from './OncoprinterClinicalAndHeatmapUtils';
 import { IHeatmapTrackSpec } from '../../../../shared/components/oncoprint/Oncoprint';
+import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
 
 describe('OncoprinterImportUtils', () => {
     describe('generateUniqueLabel', () => {

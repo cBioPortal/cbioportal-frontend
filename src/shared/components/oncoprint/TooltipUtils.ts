@@ -18,9 +18,9 @@ import {
 import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
-    AnnotatedNumericGeneMolecularData,
     ExtendedAlteration,
     AlterationTypeConstants,
+    CustomDriverNumericGeneMolecularData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import _ from 'lodash';
 import { alterationTypeToProfiledForText } from './ResultsViewOncoprintUtils';
@@ -39,6 +39,7 @@ export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -515,7 +516,7 @@ export function makeGeneticTrackTooltip(
                         );
                     }
                     //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
-                    if (driver_filter && driver_filter === 'Putative_Driver') {
+                    if (driver_filter && driver_filter === PUTATIVE_DRIVER) {
                         ret.append(
                             `<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`
                         );
@@ -589,13 +590,29 @@ export function makeGeneticTrackTooltip(
     function listOfCNAToHTML(data: any[], multipleSamplesUnderMouse: boolean) {
         const countsMap = new ListIndexedMapOfCounts();
         for (const d of data) {
-            countsMap.increment(d.hugo_gene_symbol, d.cna, d.oncokb_oncogenic);
+            countsMap.increment(
+                d.hugo_gene_symbol,
+                d.cna,
+                d.oncokb_oncogenic,
+                d.driver_filter,
+                d.driver_filter_annotation,
+                d.driver_tiers_filter,
+                d.driver_tiers_filter_annotation
+            );
         }
         return countsMap
             .entries()
             .map(
                 ({
-                    key: [hugo_gene_symbol, cna, oncokb_oncogenic],
+                    key: [
+                        hugo_gene_symbol,
+                        cna,
+                        oncokb_oncogenic,
+                        driver_filter,
+                        driver_filter_annotation,
+                        driver_tiers_filter,
+                        driver_tiers_filter_annotation,
+                    ],
                     value: count,
                 }) => {
                     var ret = $('<span>').addClass('nobreak');
@@ -605,6 +622,18 @@ export function makeGeneticTrackTooltip(
                     if (oncokb_oncogenic) {
                         ret.append(
                             `<img src=${oncokbImg} title="${oncokb_oncogenic}" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_filter && driver_filter === PUTATIVE_DRIVER) {
+                        ret.append(
+                            `<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`
+                        );
+                    }
+                    //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
+                    if (driver_tiers_filter) {
+                        ret.append(
+                            `<img src="${customDriverTiersImg}" title="${driver_tiers_filter}: ${driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`
                         );
                     }
                     // finally, add the number of samples with this, if multipleSamplesUnderMouse
@@ -725,16 +754,23 @@ export function makeGeneticTrackTooltip(
                     case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                         if (
                             disp_cna.hasOwnProperty(
-                                datum.value as AnnotatedNumericGeneMolecularData['value']
+                                datum.value as CustomDriverNumericGeneMolecularData['value']
                             )
                         ) {
                             const tooltip_datum: any = {
                                 cna:
                                     disp_cna[
-                                        datum.value as AnnotatedNumericGeneMolecularData['value']
+                                        datum.value as CustomDriverNumericGeneMolecularData['value']
                                     ],
                                 hugo_gene_symbol: hugoGeneSymbol,
                             };
+                            tooltip_datum.driver_filter = datum.driverFilter;
+                            tooltip_datum.driver_filter_annotation =
+                                datum.driverFilterAnnotation;
+                            tooltip_datum.driver_tiers_filter =
+                                datum.driverTiersFilter;
+                            tooltip_datum.driver_tiers_filter_annotation =
+                                datum.driverTiersFilterAnnotation;
                             const oncokb_oncogenic = datum.oncoKbOncogenic;
                             if (oncokb_oncogenic) {
                                 tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;

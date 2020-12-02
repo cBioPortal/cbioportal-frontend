@@ -277,7 +277,7 @@ export default class DriverAnnotationControls extends React.Component<
                                     onClick={this.onInputClick}
                                     data-test="annotateCBioPortalCount"
                                 />
-                                cBioPortal >=
+                                cBioPortal {'>='}
                             </label>
                             <EditableSpan
                                 value={
@@ -306,7 +306,7 @@ export default class DriverAnnotationControls extends React.Component<
                                     onClick={this.onInputClick}
                                     data-test="annotateCOSMICCount"
                                 />
-                                COSMIC >=
+                                COSMIC {'>='}
                             </label>
                             <EditableSpan
                                 value={

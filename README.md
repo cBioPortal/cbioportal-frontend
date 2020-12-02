@@ -10,7 +10,7 @@ This repo contains the frontend code for cBioPortal which uses React, MobX and T
 | Live instance frontend | https://frontend.cbioportal.org / https://master--cbioportalfrontend.netlify.app/ | -- | https://rc--cbioportalfrontend.netlify.app |
 | Live instance backend | https://www.cbioportal.org / https://master.cbioportal.org | -- | https://rc.cbioportal.org |
 
-Note: you can always check the version of the live instance by checking the variable `window.FRONTEND_COMMIT` in the console.
+Note: you can check the frontend version of the live instance by checking `window.FRONTEND_COMMIT` in the console.
 
 ## Run
 
@@ -137,6 +137,13 @@ yarn global add webdriver-manager
 Run updater to get necessary binaries
 ```
 webdriver-manager update
+
+// ALTERNATIVE
+// Specify chrome version if your local chrome version is not up to date.
+// This ensures that chromedriver is compatible with your local chrome
+// If it's out of sync, tests will not run
+webdriver-manager update --versions.chrome=[e.g. 86.0.4240.198]
+
 ```
 Start the webdriver-manager
 ```

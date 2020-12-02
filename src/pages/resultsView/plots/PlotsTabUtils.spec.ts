@@ -23,7 +23,6 @@ import {
     AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
-    GenericAssayTypeConstants,
 } from '../ResultsViewPageStore';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
@@ -38,6 +37,7 @@ import {
 import AppConfig from 'appConfig';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import * as _ from 'lodash';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('PlotsTabUtils', () => {
     describe('makeClinicalAttributeOptions', () => {

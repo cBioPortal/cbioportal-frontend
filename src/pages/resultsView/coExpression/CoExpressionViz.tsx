@@ -434,7 +434,7 @@ export default class CoExpressionViz extends React.Component<
                     geneticEntityName: this.highlightedCoExpression
                         .geneticEntityName,
                     geneticEntityType: this.highlightedCoExpression
-                        .geneticEntityType,
+                        .geneticEntityType as GeneticEntityType,
                     geneticEntityId: this.highlightedCoExpression
                         .geneticEntityId,
                     cytoband: this.highlightedCoExpression.cytoband,

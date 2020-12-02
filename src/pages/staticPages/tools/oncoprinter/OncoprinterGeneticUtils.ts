@@ -7,7 +7,10 @@ import {
     GeneticTrackDatum_Data,
 } from '../../../../shared/components/oncoprint/Oncoprint';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
-import { AlterationTypeConstants } from '../../../resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    AnnotatedExtendedAlteration,
+} from '../../../resultsView/ResultsViewPageStore';
 import { cna_profile_data_to_string } from '../../../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     fillGeneticTrackDatum,
@@ -31,22 +34,20 @@ import {
 } from 'oncokb-ts-api-client';
 import {
     cancerTypeForOncoKb,
+    getOncoKbOncogenic,
     ONCOKB_DEFAULT,
+    PUTATIVE_DRIVER,
     queryOncoKbCopyNumberAlterationData,
     queryOncoKbData,
 } from '../../../../shared/lib/StoreUtils';
 import { default as oncokbClient } from '../../../../shared/api/oncokbClientInstance';
 import MobxPromise from 'mobxpromise';
-import { getOncoKbOncogenic } from '../../../resultsView/ResultsViewPageStoreUtils';
 import { mutationCountByPositionKey } from '../../../resultsView/mutationCountHelpers';
 import { getAlterationString } from '../../../../shared/lib/CopyNumberUtils';
 import { GERMLINE_REGEXP } from '../../../../shared/lib/MutationUtils';
 import { parseOQLQuery } from '../../../../shared/lib/oql/oqlfilter';
 import { Alteration, MUTCommand } from '../../../../shared/lib/oql/oql-parser';
-import {
-    MUTATION_STATUS_GERMLINE,
-    PUTATIVE_DRIVER,
-} from '../../../../shared/constants';
+import { MUTATION_STATUS_GERMLINE } from '../../../../shared/constants';
 
 export type OncoprinterGeneticTrackDatum = Pick<
     GeneticTrackDatum,
@@ -712,8 +713,10 @@ export function annotateGeneticTrackData(
             const newObj = _.clone(object);
             newObj.data = newObj.data.filter(d => {
                 // clear previous annotations
-                delete d.oncoKbOncogenic;
-                delete d.putativeDriver;
+                delete (d as Partial<OncoprinterGeneticTrackDatum_Data>)
+                    .oncoKbOncogenic;
+                delete (d as Partial<OncoprinterGeneticTrackDatum_Data>)
+                    .putativeDriver;
                 // annotate and filter out if necessary
                 switch (d.molecularProfileAlterationType) {
                     case AlterationTypeConstants.COPY_NUMBER_ALTERATION:

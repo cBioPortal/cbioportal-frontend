@@ -5,7 +5,7 @@ import ExtendedRouterStore, {
     PortalSession,
 } from 'shared/lib/ExtendedRouterStore';
 import sinon from 'sinon';
-import { createMemoryHistory } from 'react-router';
+import { createMemoryHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import memoize from 'memoize-weak-decorator';
 import URLWrapper, { needToLoadSession } from 'shared/lib/URLWrapper';
@@ -65,8 +65,10 @@ describe('URLWrapper', () => {
 
     beforeEach(() => {
         routingStore = new ExtendedRouterStore();
-        const memoryHistory = createMemoryHistory();
-        const history = syncHistoryWithStore(memoryHistory, routingStore);
+        const history = syncHistoryWithStore(
+            createMemoryHistory(),
+            routingStore
+        );
         wrapper = new ResultsViewURLWrapper(routingStore);
         routingStore.updateRoute({}, '/results');
     });
@@ -75,7 +77,7 @@ describe('URLWrapper', () => {
         const testWrapper = new TestURLWrapper2(routingStore);
         testWrapper.updateURL({ data: { d1: 'BRCA1 BRCA2', d2: 'hey' } });
         assert.equal(
-            routingStore.location.query.data,
+            routingStore.query.data,
             encodeURIComponent(
                 JSON.stringify({ d1: 'BRCA1 BRCA2', d2: 'hey' })
             ),
@@ -91,7 +93,7 @@ describe('URLWrapper', () => {
     it('handles doubleURIEncode properties correctly', () => {
         wrapper.updateURL({ gene_list: 'BRCA1 BRCA2' });
         assert.equal(
-            routingStore.location.query.gene_list,
+            routingStore.query.gene_list,
             encodeURIComponent('BRCA1 BRCA2'),
             'property is doubly encoded in URL (one layer of encoding is undone by the routingStore query access)'
         );
@@ -344,7 +346,7 @@ describe('URLWrapper', () => {
         assert.equal(testWrapper.sessionId, 'pending', 'pending session state');
 
         assert.isUndefined(
-            routingStore.location.query.data,
+            routingStore.query.data,
             'nested object session params NOT in url'
         );
 
@@ -398,7 +400,7 @@ describe('URLWrapper', () => {
         );
 
         assert.equal(
-            routingStore.location.query.clinicallist,
+            routingStore.query.clinicallist,
             'one,two,three',
             'non session params present in url'
         );
@@ -413,7 +415,7 @@ describe('URLWrapper', () => {
         );
 
         assert.isUndefined(
-            routingStore.location.query.case_ids,
+            routingStore.query.case_ids,
             'session params NOT in url'
         );
 
@@ -453,7 +455,7 @@ describe('URLWrapper', () => {
             );
 
             assert.equal(
-                routingStore.location.query.case_ids,
+                routingStore.query.case_ids,
                 '1231',
                 'update param from url'
             );
@@ -468,7 +470,7 @@ describe('URLWrapper', () => {
             });
 
             assert.isUndefined(
-                routingStore.location.query.case_ids,
+                routingStore.query.case_ids,
                 'case_ids no longer in url'
             );
 
@@ -483,12 +485,12 @@ describe('URLWrapper', () => {
                 case_ids: '2222',
             });
 
-            assert.isUndefined(routingStore.location.query.case_ids);
+            assert.isUndefined(routingStore.query.case_ids);
             assert.equal(wrapper.query.case_ids, '2222');
 
             setTimeout(() => {
                 assert.equal(wrapper.query.case_ids, '2222');
-                assert.isUndefined(routingStore.location.query.case_ids);
+                assert.isUndefined(routingStore.query.case_ids);
                 done();
             }, 50);
         }, 50);
@@ -512,13 +514,13 @@ describe('URLWrapper', () => {
         assert.isFalse(testWrapper.hasSessionId, 'does not have session id');
 
         assert.equal(
-            routingStore.location.query.name,
+            routingStore.query.name,
             'CDKN2A MDM2 MDM4 TP53',
             'puts session prop in url'
         );
 
         assert.equal(
-            routingStore.location.query.data,
+            routingStore.query.data,
             JSON.stringify({ d1: 'CDKN2A MDM2 MDM4 TP53', d2: 'def' }),
             'puts nested object session prop in url'
         );
@@ -674,7 +676,7 @@ describe('URLWrapper', () => {
                 'sets nested object session props on query after session load'
             );
             assert.equal(
-                routingStore.location.query.session_id,
+                routingStore.query.session_id,
                 '5dcae586e4b04a9c23e27e5f'
             );
 
@@ -917,7 +919,7 @@ describe('URLWrapper', () => {
             plots_horz_selection: getPlotsSelectionParam(''),
         });
         assert.equal(wrapper.query.case_ids, '12345');
-        assert.equal(routingStore.location.query.case_ids, '12345');
+        assert.equal(routingStore.query.case_ids, '12345');
         assert.deepEqual(
             toJS(wrapper.query.plots_horz_selection),
             getPlotsSelectionParam('')
@@ -925,9 +927,9 @@ describe('URLWrapper', () => {
 
         wrapper.updateURL({ cancer_study_list: 'somelist' }, undefined, true);
 
-        assert.isUndefined(routingStore.location.query.case_ids);
+        assert.isUndefined(routingStore.query.case_ids);
 
-        assert.isFalse('case_ids' in routingStore.location.query);
+        assert.isFalse('case_ids' in routingStore.query);
 
         assert.isUndefined(
             wrapper.query.case_ids,
@@ -939,14 +941,16 @@ describe('URLWrapper', () => {
             'clears nested object params to undefined'
         );
 
-        assert.equal(routingStore.location.query.cancer_study_list, 'somelist');
+        assert.equal(routingStore.query.cancer_study_list, 'somelist');
     });
 
     it('Populates wrapper query according to alias rules ON instantiation (fire immediately on reaction)', () => {
         routingStore = new ExtendedRouterStore();
 
-        const memoryHistory = createMemoryHistory();
-        const history = syncHistoryWithStore(memoryHistory, routingStore);
+        const history = syncHistoryWithStore(
+            createMemoryHistory(),
+            routingStore
+        );
 
         routingStore.updateRoute({
             gene_list: '12345',
@@ -995,7 +999,7 @@ describe('URLWrapper', () => {
         setTimeout(() => {
             assert.equal(wrapper.sessionId, 'sessionId2');
             assert.equal(wrapper.query.gene_list, '54321');
-            assert.equal(routingStore.location.query.session_id, 'sessionId2');
+            assert.equal(routingStore.query.session_id, 'sessionId2');
             done();
         }, 1000);
     });

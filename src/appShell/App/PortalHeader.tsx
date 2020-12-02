@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Link } from 'react-router';
+import { Link, NavLink } from 'react-router-dom';
 import AppConfig from 'appConfig';
 import { If, Then, Else } from 'react-if';
 import { openSocialAuthWindow } from '../../shared/lib/openSocialAuthWindow';
@@ -90,6 +90,14 @@ export default class PortalHeader extends React.Component<
                 hide: () =>
                     AppConfig.serverConfig.skin_show_about_tab === false,
             },
+
+            {
+                id: 'installation-map',
+                text: 'cBioPortal Installations',
+                address: '/installations',
+                internal: false,
+                hide: () => !AppConfig.serverConfig.installation_map_url,
+            },
         ];
     }
 
@@ -102,9 +110,9 @@ export default class PortalHeader extends React.Component<
             return (
                 <li>
                     {tab.internal ? (
-                        <Link activeClassName={'selected'} to={tab.address}>
+                        <NavLink activeClassName={'selected'} to={tab.address}>
                             {tab.text}
-                        </Link>
+                        </NavLink>
                     ) : (
                         <a href={tab.address}>{tab.text}</a>
                     )}

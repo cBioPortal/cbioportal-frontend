@@ -277,6 +277,7 @@ describe('check the filters are working properly', () => {
         waitForNetworkQuiet(60000);
     });
     it('filter study from url', function() {
+        waitForNetworkQuiet(60000);
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
@@ -419,8 +420,8 @@ describe('crc_msk_2017 study tests', () => {
         browser.waitForVisible(ADD_CHART_BUTTON, WAIT_FOR_VISIBLE_TIMEOUT);
         browser.click(ADD_CHART_BUTTON);
 
-        browser.waitForVisible(
-            "[data-test='chart-container-MSI_SCORE']",
+        browser.waitForExist(
+            "[data-test='chart-container-MSI_SCORE'] svg",
             WAIT_FOR_VISIBLE_TIMEOUT
         );
 
@@ -529,6 +530,16 @@ describe('study view lgg_tcga study tests', () => {
                 assertScreenShotMatch(res);
             });
         });
+    });
+});
+
+describe('virtual study', () => {
+    it('loads a virtual study', () => {
+        const url = `${CBIOPORTAL_URL}/study/summary?id=5dd408f0e4b0f7d2de7862a8`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
+        browser.pause(1000);
+        assertScreenShotMatch(checkElementWithMouseDisabled('#mainColumn'));
     });
 });
 

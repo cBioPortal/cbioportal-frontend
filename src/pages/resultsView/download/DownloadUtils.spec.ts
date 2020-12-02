@@ -146,7 +146,7 @@ describe('DownloadUtils', () => {
             },
             studyId: 'msk_impact_2017',
             center: 'NA',
-            mutationStatus: 'NA',
+            mutationStatus: 'Germline',
             validationStatus: 'NA',
             tumorAltCount: 425,
             tumorRefCount: 7757,
@@ -456,8 +456,11 @@ describe('DownloadUtils', () => {
             );
             assert.deepEqual(
                 oqlData.mutation,
-                ['G598A', 'G239C'],
-                'mutation data is correct for the sample with mutation and structural variant data'
+                [
+                    { proteinChange: 'G598A', isGermline: true },
+                    { proteinChange: 'G239C', isGermline: false },
+                ],
+                'mutation data is correct for the sample with mutation and fusion data'
             );
         });
     });
@@ -575,7 +578,7 @@ describe('DownloadUtils', () => {
                     'P-0000378-T01-IM3',
                     'NA',
                     'NA',
-                    'G598A G239C',
+                    'G598A [germline] EGFR-intragenic G239C',
                 ],
                 ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
             ];
@@ -849,7 +852,10 @@ describe('DownloadUtils', () => {
             );
             assert.deepEqual(
                 caseAlterationData[0].oqlData['EGFR'].mutation,
-                ['G598A', 'G239C'],
+                [
+                    { proteinChange: 'G598A', isGermline: true },
+                    { proteinChange: 'G239C', isGermline: false },
+                ],
                 'mutation data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3'
             );
             assert.deepEqual(

@@ -595,7 +595,7 @@ export type SampleIdentifier = {
 
 };
 export type SampleTreatmentFilter = {
-    'time': "Pre" | "Post" | "Unknown"
+    'time': "Pre" | "Post"
 
         'treatment': string
 
