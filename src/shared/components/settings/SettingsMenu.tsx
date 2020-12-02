@@ -14,6 +14,7 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
+import { computed } from 'mobx';
 
 enum EVENT_KEY {
     showPutativeDrivers = '0',
@@ -92,7 +93,23 @@ export default class SettingsMenu extends React.Component<
                 this.props.store.includeSomaticMutations = !this.props.store
                     .includeSomaticMutations;
                 break;
+            case EVENT_KEY.showUnknownStatusMutations:
+                this.props.store.includeUnknownStatusMutations = !this.props
+                    .store.includeUnknownStatusMutations;
+                break;
         }
+    }
+
+    @computed get disableTiersMenu() {
+        return (
+            this.props.store.driverAnnotationSettings.includeDriver &&
+            this.props.store.driverAnnotationSettings.includeVUS &&
+            this.props.store.driverAnnotationSettings
+                .includeUnknownOncogenicity &&
+            this.props.store.includeGermlineMutations &&
+            this.props.store.includeSomaticMutations &&
+            this.props.store.includeUnknownStatusMutations
+        );
     }
 
     render() {
@@ -282,6 +299,7 @@ export default class SettingsMenu extends React.Component<
                             <DriverAnnotationControls
                                 state={this.driverSettingsState}
                                 handlers={this.driverSettingsHandlers}
+                                disabled={this.disableTiersMenu}
                             />
                         </div>
                     </div>
