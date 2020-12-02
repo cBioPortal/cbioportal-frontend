@@ -21,7 +21,8 @@ enum EVENT_KEY {
     showUnknownOncogenicity = '2',
     showGermlineMutations = '3',
     showSomaticMutations = '4',
-    hideUnprofiledSamples = '5',
+    showUnknownStatusMutations = '5',
+    hideUnprofiledSamples = '6',
 }
 
 function boldedTabList(tabs: string[]) {
@@ -160,9 +161,24 @@ export default class SettingsMenu extends React.Component<
                             Somatic
                         </label>
                     </div>
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="ShowUnknown"
+                                type="checkbox"
+                                value={EVENT_KEY.showUnknownStatusMutations}
+                                checked={
+                                    this.props.store
+                                        .includeUnknownStatusMutations
+                                }
+                                onClick={this.onInputClick}
+                            />{' '}
+                            Unknown
+                        </label>
+                    </div>
                 </div>
                 <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    By custom driver annotation
+                    By driver annotation
                 </h5>
                 <InfoIcon
                     divStyle={{ display: 'inline-block', marginLeft: 6 }}
@@ -233,14 +249,14 @@ export default class SettingsMenu extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            {/*Unknown*/}
+                            Unknown
                         </label>
                     </div>
                 </div>
                 {!!this.driverSettingsState.customDriverAnnotationTiers && (
                     <div>
                         <h5 style={{ marginTop: '15px', marginBottom: 'auto' }}>
-                            By custom tier annotation
+                            By category
                         </h5>
                         <InfoIcon
                             divStyle={{
@@ -248,7 +264,19 @@ export default class SettingsMenu extends React.Component<
                                 marginLeft: 6,
                             }}
                             style={{ color: 'rgb(54, 134, 194)' }}
-                            tooltip={<span>PLACEHOLDER</span>}
+                            tooltip={
+                                <span>
+                                    Alteration categories are based on
+                                    <b>
+                                        {' ' +
+                                            getBrowserWindow().frontendConfig
+                                                .serverConfig
+                                                .oncoprint_custom_driver_annotation_binary_menu_label +
+                                            ' '}
+                                    </b>
+                                    tier annotations.
+                                </span>
+                            }
                         />
                         <div style={{ marginLeft: 10 }}>
                             <DriverAnnotationControls
