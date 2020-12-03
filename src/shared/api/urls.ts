@@ -324,7 +324,7 @@ export function getDarwinUrl(sampleIds: string[], caseId: string) {
 
 export function getStudyDownloadListUrl() {
     return buildCBioPortalAPIUrl(
-        'proxy/download.cbioportal.org/study_list.json'
+        'proxy/cbioportal-datahub.s3.amazonaws.com/study_list.json'
     );
 }
 
