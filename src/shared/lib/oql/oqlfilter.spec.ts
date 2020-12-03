@@ -497,7 +497,7 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [-1, 0, 1, 3, 3.1, 7, 8, 9]
+            [0, 1, 3, 3.1, 7, 8]
         );
 
         filteredData = filterCBioPortalWebServiceData(

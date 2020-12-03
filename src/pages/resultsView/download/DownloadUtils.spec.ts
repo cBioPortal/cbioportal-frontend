@@ -578,7 +578,7 @@ describe('DownloadUtils', () => {
                     'P-0000378-T01-IM3',
                     'NA',
                     'NA',
-                    'G598A [germline] EGFR-intragenic G239C',
+                    'G598A [germline] G239C',
                 ],
                 ['skcm_tcga', 'TCGA-EE-A20C-06', 'NA', 'NA', 'NA'],
             ];
