@@ -2432,7 +2432,7 @@ export class StudyViewPageStore {
             }) as any
         );
 
-        if (_sampleIdentifiers && _sampleIdentifiers.length > 0) {
+        if (!_.isEmpty(sampleIdentifiersFilterSets)) {
             filters.sampleIdentifiers = _sampleIdentifiers;
         } else {
             if (_.isEmpty(this.queriedSampleIdentifiers.result)) {
@@ -2585,13 +2585,18 @@ export class StudyViewPageStore {
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
         await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
-            return internalClient.fetchClinicalDataCountsUsingPOST({
-                clinicalDataCountFilter: {
-                    attributes: this.unfilteredAttrsForNonNumerical,
-                    studyViewFilter: this
-                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
-                } as ClinicalDataCountFilter,
-            });
+            //only invoke if there are filtered samples
+            if (this.hasFilteredSamples()) {
+                return internalClient.fetchClinicalDataCountsUsingPOST({
+                    clinicalDataCountFilter: {
+                        attributes: this.unfilteredAttrsForNonNumerical,
+                        studyViewFilter: this
+                            .studyViewFilterWithFilteredSampleIdentifiers
+                            .result!,
+                    } as ClinicalDataCountFilter,
+                });
+            }
+            return Promise.resolve([]);
         },
         onError: error => {},
         onResult: data => {
@@ -2611,13 +2616,19 @@ export class StudyViewPageStore {
     >({
         await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
-            return internalClient.fetchClinicalDataCountsUsingPOST({
-                clinicalDataCountFilter: {
-                    attributes: this.newlyAddedUnfilteredAttrsForNonNumerical,
-                    studyViewFilter: this
-                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
-                } as ClinicalDataCountFilter,
-            });
+            //only invoke if there are filtered samples
+            if (this.hasFilteredSamples()) {
+                return internalClient.fetchClinicalDataCountsUsingPOST({
+                    clinicalDataCountFilter: {
+                        attributes: this
+                            .newlyAddedUnfilteredAttrsForNonNumerical,
+                        studyViewFilter: this
+                            .studyViewFilterWithFilteredSampleIdentifiers
+                            .result!,
+                    } as ClinicalDataCountFilter,
+                });
+            }
+            return Promise.resolve([]);
         },
         default: [],
         onError: error => {},
@@ -2635,13 +2646,17 @@ export class StudyViewPageStore {
         ClinicalDataBin[]
     >({
         invoke: () => {
-            return internalClient.fetchClinicalDataBinCountsUsingPOST({
-                dataBinMethod: 'STATIC',
-                clinicalDataBinCountFilter: {
-                    attributes: this.newlyAddedUnfilteredAttrsForNumerical,
-                    studyViewFilter: this.filters,
-                } as ClinicalDataBinCountFilter,
-            });
+            // return empty if there are no sample identifiers or study ids in the filter
+            if (this.hasSampleIdentifiersInFilter()) {
+                return internalClient.fetchClinicalDataBinCountsUsingPOST({
+                    dataBinMethod: 'STATIC',
+                    clinicalDataBinCountFilter: {
+                        attributes: this.newlyAddedUnfilteredAttrsForNumerical,
+                        studyViewFilter: this.filters,
+                    } as ClinicalDataBinCountFilter,
+                });
+            }
+            return Promise.resolve([]);
         },
         default: [],
         onError: error => {},
@@ -2658,13 +2673,17 @@ export class StudyViewPageStore {
 
     readonly unfilteredClinicalDataBinCount = remoteData<ClinicalDataBin[]>({
         invoke: () => {
-            return internalClient.fetchClinicalDataBinCountsUsingPOST({
-                dataBinMethod: 'STATIC',
-                clinicalDataBinCountFilter: {
-                    attributes: this.unfilteredAttrsForNumerical,
-                    studyViewFilter: this.filters,
-                } as ClinicalDataBinCountFilter,
-            });
+            // return empty if there are no sample identifiers or study ids in the filter
+            if (this.hasSampleIdentifiersInFilter()) {
+                return internalClient.fetchClinicalDataBinCountsUsingPOST({
+                    dataBinMethod: 'STATIC',
+                    clinicalDataBinCountFilter: {
+                        attributes: this.unfilteredAttrsForNumerical,
+                        studyViewFilter: this.filters,
+                    } as ClinicalDataBinCountFilter,
+                });
+            }
+            return Promise.resolve([]);
         },
         onError: error => {},
         default: [],
@@ -2717,6 +2736,10 @@ export class StudyViewPageStore {
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
+                            // return empty if there are no sample identifiers or study ids in the filter
+                            if (!this.hasSampleIdentifiersInFilter()) {
+                                return [];
+                            }
                             result = await internalClient.fetchClinicalDataCountsUsingPOST(
                                 {
                                     clinicalDataCountFilter: {
@@ -2886,6 +2909,10 @@ export class StudyViewPageStore {
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
+                            // return empty if there are no sample identifiers or study ids in the filter
+                            if (!this.hasSampleIdentifiersInFilter()) {
+                                return [];
+                            }
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST(
                                 {
                                     dataBinMethod,
@@ -2923,7 +2950,7 @@ export class StudyViewPageStore {
             this.genomicChartPromises[chartMeta.uniqueKey] = remoteData<
                 ClinicalDataBin[]
             >({
-                await: () => [],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
                     const chartInfo = this._geneSpecificChartMap.get(
                         chartMeta.uniqueKey
@@ -2931,7 +2958,8 @@ export class StudyViewPageStore {
                     const attribute = this._genomicDataBinFilterSet.get(
                         chartMeta.uniqueKey
                     )!;
-                    if (chartInfo) {
+                    //only invoke if there are filtered samples
+                    if (chartInfo && this.hasFilteredSamples()) {
                         const genomicDataBins = await internalClient.fetchGenomicDataBinCountsUsingPOST(
                             {
                                 dataBinMethod: DataBinMethodConstants.STATIC,
@@ -2950,6 +2978,7 @@ export class StudyViewPageStore {
                                 },
                             }
                         );
+
                         return convertGenomicDataBinsToClinicalDataBins(
                             genomicDataBins
                         );
@@ -4925,6 +4954,9 @@ export class StudyViewPageStore {
         invoke: () => {
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
+                if (!this.hasSampleIdentifiersInFilter()) {
+                    return Promise.resolve([] as Sample[]);
+                }
                 const studyViewFilter = _.clone(this.filters);
                 // if genomicProfilesFilter is present there replace it with equivalent sample identifiers
                 // we do this to save lot of processing time and resources on the backend
@@ -4983,6 +5015,19 @@ export class StudyViewPageStore {
         },
         onError: error => {},
     });
+
+    @observable private hasFilteredSamples(): boolean {
+        return (
+            this.selectedSamples.isComplete &&
+            this.selectedSamples.result!.length > 0
+        );
+    }
+    @observable private hasSampleIdentifiersInFilter(): boolean {
+        return !(
+            _.isEmpty(this.filters.studyIds) &&
+            _.isEmpty(this.filters.sampleIdentifiers)
+        );
+    }
 
     @computed
     get selectedSamplesMap() {
@@ -5810,7 +5855,9 @@ export class StudyViewPageStore {
                     a =>
                         a.clinicalAttributeId ===
                         SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-                )
+                ) &&
+                this.studyViewFilterWithFilteredSampleIdentifiers.result!
+                    .sampleIdentifiers.length > 0
             ) {
                 const yAxisBinCount = MutationCountVsCnaYBinsMin;
                 const xAxisBinCount = 50;
@@ -6048,6 +6095,10 @@ export class StudyViewPageStore {
     readonly caseListSampleCounts = remoteData<MultiSelectionTableRow[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
+            // return empty if there are no filtered samples
+            if (!this.hasFilteredSamples()) {
+                return [];
+            }
             const counts = await internalClient.fetchCaseListCountsUsingPOST({
                 studyViewFilter: this.filters,
             });
@@ -6530,6 +6581,7 @@ export class StudyViewPageStore {
                         },
                         [] as SampleIdentifier[]
                     );
+
                     this._chartSampleIdentifiersFilterSet.set(
                         chartUniqueKey,
                         filteredSampleIdentifiers
@@ -6546,6 +6598,10 @@ export class StudyViewPageStore {
     readonly cancerStudiesData = remoteData<ClinicalDataCountSummary[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
+            // return empty if there are no filtered samples
+            if (!this.hasFilteredSamples()) {
+                return [];
+            }
             let selectedSamples = [];
             if (
                 _.includes(
@@ -6629,6 +6685,10 @@ export class StudyViewPageStore {
                     >({
                         await: () => [this.selectedSamples],
                         invoke: async () => {
+                            // return empty if there are no filtered samples
+                            if (!this.hasFilteredSamples()) {
+                                return [];
+                            }
                             let dataCountSet: {
                                 [id: string]: ClinicalDataCount;
                             } = {};
@@ -6916,10 +6976,13 @@ export class StudyViewPageStore {
             this.selectedSamples,
         ],
         invoke: () => {
-            return defaultClient.getAllSampleTreatmentsUsingPOST({
-                studyViewFilter: this
-                    .studyViewFilterWithFilteredSampleIdentifiers.result!,
-            });
+            if (this.hasFilteredSamples()) {
+                return defaultClient.getAllSampleTreatmentsUsingPOST({
+                    studyViewFilter: this
+                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
+                });
+            }
+            return Promise.resolve([]);
         },
     });
 
@@ -6949,10 +7012,13 @@ export class StudyViewPageStore {
             this.selectedSamples,
         ],
         invoke: () => {
-            return defaultClient.getAllPatientTreatmentsUsingPOST({
-                studyViewFilter: this
-                    .studyViewFilterWithFilteredSampleIdentifiers.result!,
-            });
+            if (this.hasFilteredSamples()) {
+                return defaultClient.getAllPatientTreatmentsUsingPOST({
+                    studyViewFilter: this
+                        .studyViewFilterWithFilteredSampleIdentifiers.result!,
+                });
+            }
+            return Promise.resolve([]);
         },
     });
 
