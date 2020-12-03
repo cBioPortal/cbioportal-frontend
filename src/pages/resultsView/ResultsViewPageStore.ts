@@ -470,9 +470,6 @@ export class ResultsViewPageStore
 
         this.urlWrapper = urlWrapper;
 
-        // addErrorHandler((error: any) => {
-        //     this.ajaxErrors.push(error);
-        // });
         this.getURL();
 
         const store = this;

@@ -336,7 +336,7 @@ export class StudyViewPageStore
 
     public studyViewQueryFilter: StudyViewURLQuery;
     @observable showComparisonGroupUI = false;
-    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable driverAnnotationSettings: DriverAnnotationSettings;
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
@@ -7227,19 +7227,23 @@ export class StudyViewPageStore
     }
 
     @computed get mutationFilterActive() {
+        // const numStatusFilterActive = [this.includeGermlineMutations, this.includeSomaticMutations,this.includeUnknownStatusMutations].filter(Boolean).length;
+        // const numDriverFilterActive = [this.driverAnnotationSettings.includeDriver, this.driverAnnotationSettings.includeVUS,this.driverAnnotationSettings.includeUnknownOncogenicity].filter(Boolean).length;
         return (
             this.alterationFilterActive ||
-            !this.includeGermlineMutations ||
-            !this.includeSomaticMutations ||
-            !this.includeUnknownStatusMutations
+            !(
+                this.includeGermlineMutations &&
+                this.includeSomaticMutations &&
+                this.includeUnknownStatusMutations
+            )
         );
     }
 
     @computed get alterationFilterActive() {
-        return (
-            !this.driverAnnotationSettings.includeDriver ||
-            !this.driverAnnotationSettings.includeVUS ||
-            !this.driverAnnotationSettings.includeUnknownOncogenicity
+        return !(
+            this.driverAnnotationSettings.includeDriver &&
+            this.driverAnnotationSettings.includeVUS &&
+            this.driverAnnotationSettings.includeUnknownOncogenicity
         );
     }
 }

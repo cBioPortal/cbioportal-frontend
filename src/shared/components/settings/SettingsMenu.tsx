@@ -14,7 +14,7 @@ import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
-import { computed } from 'mobx';
+import { computed, observable } from 'mobx';
 
 enum EVENT_KEY {
     showPutativeDrivers = '0',
@@ -24,6 +24,9 @@ enum EVENT_KEY {
     showSomaticMutations = '4',
     showUnknownStatusMutations = '5',
     hideUnprofiledSamples = '6',
+    toggleAllMutationStatus = '7',
+    toggleAllDriverAnnotation = '8',
+    toggleAllDriverTiers = '9',
 }
 
 function boldedTabList(tabs: string[]) {
@@ -51,6 +54,9 @@ export default class SettingsMenu extends React.Component<
 > {
     private driverSettingsState: IDriverAnnotationControlsState;
     private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
+    @observable _mutationStatusCheckboxToggle = true;
+    @observable _driverAnnotationsCheckboxToggle = true;
+    @observable _driverTiersCheckboxToggle = false;
 
     constructor(props: IResultsPageSettings) {
         super(props);
@@ -66,20 +72,36 @@ export default class SettingsMenu extends React.Component<
         );
     }
 
-    @autobind private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
+    @autobind
+    private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.showPutativeDrivers:
                 this.props.store.driverAnnotationSettings.includeDriver = !this
                     .props.store.driverAnnotationSettings.includeDriver;
+                this._driverAnnotationsCheckboxToggle =
+                    this.props.store.driverAnnotationSettings.includeDriver &&
+                    this.props.store.driverAnnotationSettings.includeVUS &&
+                    this.props.store.driverAnnotationSettings
+                        .includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.showPutativePassengers:
                 this.props.store.driverAnnotationSettings.includeVUS = !this
                     .props.store.driverAnnotationSettings.includeVUS;
+                this._driverAnnotationsCheckboxToggle =
+                    this.props.store.driverAnnotationSettings.includeDriver &&
+                    this.props.store.driverAnnotationSettings.includeVUS &&
+                    this.props.store.driverAnnotationSettings
+                        .includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.showUnknownOncogenicity:
                 this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = !this
                     .props.store.driverAnnotationSettings
                     .includeUnknownOncogenicity;
+                this._driverAnnotationsCheckboxToggle =
+                    this.props.store.driverAnnotationSettings.includeDriver &&
+                    this.props.store.driverAnnotationSettings.includeVUS &&
+                    this.props.store.driverAnnotationSettings
+                        .includeUnknownOncogenicity;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
                 this.props.store.hideUnprofiledSamples = !this.props.store
@@ -88,16 +110,89 @@ export default class SettingsMenu extends React.Component<
             case EVENT_KEY.showGermlineMutations:
                 this.props.store.includeGermlineMutations = !this.props.store
                     .includeGermlineMutations;
+                this._mutationStatusCheckboxToggle =
+                    this.props.store.includeSomaticMutations &&
+                    this.props.store.includeGermlineMutations &&
+                    this.props.store.includeUnknownStatusMutations;
                 break;
             case EVENT_KEY.showSomaticMutations:
                 this.props.store.includeSomaticMutations = !this.props.store
                     .includeSomaticMutations;
+                this._mutationStatusCheckboxToggle =
+                    this.props.store.includeSomaticMutations &&
+                    this.props.store.includeGermlineMutations &&
+                    this.props.store.includeUnknownStatusMutations;
                 break;
             case EVENT_KEY.showUnknownStatusMutations:
                 this.props.store.includeUnknownStatusMutations = !this.props
                     .store.includeUnknownStatusMutations;
+                this._mutationStatusCheckboxToggle =
+                    this.props.store.includeSomaticMutations &&
+                    this.props.store.includeGermlineMutations &&
+                    this.props.store.includeUnknownStatusMutations;
+                break;
+            case EVENT_KEY.toggleAllMutationStatus:
+                this.props.store.includeGermlineMutations = !this
+                    ._mutationStatusCheckboxToggle;
+                this.props.store.includeSomaticMutations = !this
+                    ._mutationStatusCheckboxToggle;
+                this.props.store.includeUnknownStatusMutations = !this
+                    ._mutationStatusCheckboxToggle;
+                this._mutationStatusCheckboxToggle = !this
+                    ._mutationStatusCheckboxToggle;
+                break;
+            case EVENT_KEY.toggleAllDriverAnnotation:
+                this.props.store.driverAnnotationSettings.includeDriver = !this
+                    ._driverAnnotationsCheckboxToggle;
+                this.props.store.driverAnnotationSettings.includeVUS = !this
+                    ._driverAnnotationsCheckboxToggle;
+                this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = !this
+                    ._driverAnnotationsCheckboxToggle;
+                this._driverAnnotationsCheckboxToggle = !this
+                    ._driverAnnotationsCheckboxToggle;
+                break;
+            case EVENT_KEY.toggleAllDriverTiers:
+                if (this.driverSettingsState.customDriverAnnotationTiers) {
+                    const value =
+                        this.driverSettingsState
+                            .allCustomDriverAnnotationTiersSelected &&
+                        this.driverSettingsState
+                            .allCustomDriverAnnotationTiersSelected!;
+                    this.driverSettingsState.customDriverAnnotationTiers.forEach(
+                        t =>
+                            this.driverSettingsHandlers
+                                .onSelectCustomDriverAnnotationTier &&
+                            this.driverSettingsHandlers.onSelectCustomDriverAnnotationTier(
+                                t,
+                                !value
+                            )
+                    );
+                }
                 break;
         }
+    }
+
+    @computed get selectedAllMutationStatusOptions() {
+        return (
+            this.props.store.includeSomaticMutations &&
+            this.props.store.includeGermlineMutations &&
+            this.props.store.includeUnknownStatusMutations
+        );
+    }
+
+    @computed get selectedAllDriverAnnotationOptions() {
+        return (
+            this.props.store.driverAnnotationSettings.includeDriver &&
+            this.props.store.driverAnnotationSettings.includeVUS &&
+            this.props.store.driverAnnotationSettings.includeUnknownOncogenicity
+        );
+    }
+
+    @computed get selectedAllTierOptions() {
+        return (
+            this.driverSettingsState.allCustomDriverAnnotationTiersSelected &&
+            this.driverSettingsState.allCustomDriverAnnotationTiersSelected!
+        );
     }
 
     @computed get disableTiersMenu() {
@@ -141,15 +236,23 @@ export default class SettingsMenu extends React.Component<
                     <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
                     <i>Fusion Genes</i>.
                 </span>
-                <h5 style={{ marginTop: '15px', marginBottom: 'auto' }}>
-                    By mutation status (mutations only)
-                </h5>
-                <InfoIcon
-                    divStyle={{ display: 'inline-block', marginLeft: 6 }}
-                    style={{ color: 'rgb(54, 134, 194)' }}
-                    tooltip={<span>PLACEHOLDER</span>}
-                />
-                <div style={{ marginLeft: 10 }}>
+                <div className={styles.headerSection}>
+                    <input
+                        className={styles.categoryCheckbox}
+                        data-test="ToggleAllMutationStatus"
+                        type="checkbox"
+                        value={EVENT_KEY.toggleAllMutationStatus}
+                        checked={this.selectedAllMutationStatusOptions}
+                        onClick={this.onInputClick}
+                    />
+                    <h5>By mutation status (mutations only)</h5>
+                    <InfoIcon
+                        divStyle={{ display: 'inline-block', marginLeft: 6 }}
+                        style={{ color: 'rgb(54, 134, 194)' }}
+                        tooltip={<span>PLACEHOLDER</span>}
+                    />
+                </div>
+                <div style={{ marginLeft: 20 }}>
                     <div className="checkbox">
                         <label>
                             <input
@@ -194,27 +297,35 @@ export default class SettingsMenu extends React.Component<
                         </label>
                     </div>
                 </div>
-                <h5 style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    By driver annotation
-                </h5>
-                <InfoIcon
-                    divStyle={{ display: 'inline-block', marginLeft: 6 }}
-                    style={{ color: 'rgb(54, 134, 194)' }}
-                    tooltip={
-                        <span>
-                            Driver/passenger annotations are based on
-                            <b>
-                                {' ' +
-                                    getBrowserWindow().frontendConfig
-                                        .serverConfig
-                                        .oncoprint_custom_driver_annotation_binary_menu_label +
-                                    ' '}
-                            </b>
-                            data.
-                        </span>
-                    }
-                />
-                <div style={{ marginLeft: 10 }}>
+                <div className={styles.headerSection}>
+                    <input
+                        className={styles.categoryCheckbox}
+                        data-test="ToggleAllDriverAnnotation"
+                        type="checkbox"
+                        value={EVENT_KEY.toggleAllDriverAnnotation}
+                        checked={this.selectedAllDriverAnnotationOptions}
+                        onClick={this.onInputClick}
+                    />
+                    <h5>By driver annotation</h5>
+                    <InfoIcon
+                        divStyle={{ display: 'inline-block', marginLeft: 6 }}
+                        style={{ color: 'rgb(54, 134, 194)' }}
+                        tooltip={
+                            <span>
+                                Driver/passenger annotations are based on
+                                <b>
+                                    {' ' +
+                                        getBrowserWindow().frontendConfig
+                                            .serverConfig
+                                            .oncoprint_custom_driver_annotation_binary_menu_label +
+                                        ' '}
+                                </b>
+                                data.
+                            </span>
+                        }
+                    />
+                </div>
+                <div style={{ marginLeft: 20 }}>
                     <div className="checkbox">
                         <label>
                             <input
@@ -272,30 +383,39 @@ export default class SettingsMenu extends React.Component<
                 </div>
                 {!!this.driverSettingsState.customDriverAnnotationTiers && (
                     <div>
-                        <h5 style={{ marginTop: '15px', marginBottom: 'auto' }}>
-                            By category
-                        </h5>
-                        <InfoIcon
-                            divStyle={{
-                                display: 'inline-block',
-                                marginLeft: 6,
-                            }}
-                            style={{ color: 'rgb(54, 134, 194)' }}
-                            tooltip={
-                                <span>
-                                    Alteration categories are based on
-                                    <b>
-                                        {' ' +
-                                            getBrowserWindow().frontendConfig
-                                                .serverConfig
-                                                .oncoprint_custom_driver_annotation_binary_menu_label +
-                                            ' '}
-                                    </b>
-                                    tier annotations.
-                                </span>
-                            }
-                        />
-                        <div style={{ marginLeft: 10 }}>
+                        <div className={styles.headerSection}>
+                            <input
+                                className={styles.categoryCheckbox}
+                                data-test="ToggleAllDriverTiers"
+                                type="checkbox"
+                                value={EVENT_KEY.toggleAllDriverTiers}
+                                checked={this.selectedAllTierOptions}
+                                disabled={this.disableTiersMenu}
+                                onClick={this.onInputClick}
+                            />
+                            <h5>By category</h5>
+                            <InfoIcon
+                                divStyle={{
+                                    display: 'inline-block',
+                                    marginLeft: 6,
+                                }}
+                                style={{ color: 'rgb(54, 134, 194)' }}
+                                tooltip={
+                                    <span>
+                                        Alteration categories are based on
+                                        <b>
+                                            {' ' +
+                                                getBrowserWindow()
+                                                    .frontendConfig.serverConfig
+                                                    .oncoprint_custom_driver_annotation_binary_menu_label +
+                                                ' '}
+                                        </b>
+                                        tier annotations.
+                                    </span>
+                                }
+                            />
+                        </div>
+                        <div style={{ marginLeft: 20 }}>
                             <DriverAnnotationControls
                                 state={this.driverSettingsState}
                                 handlers={this.driverSettingsHandlers}

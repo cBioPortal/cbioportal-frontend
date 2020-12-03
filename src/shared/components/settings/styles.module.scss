@@ -21,11 +21,20 @@
 
     h5 {
         display: inline-block;
+        margin: 0 0 0 0;
     }
     i.fa-info-circle {
         margin-left: 5px;
     }
     hr {
         border-top-color: #dddddd;
+    }
+    .categoryCheckbox {
+        margin: 0 9px 0 0 !important;
+    }
+    .headerSection {
+        display: flex;
+        align-items: center;
+        margin-top: 15px;
     }
 }

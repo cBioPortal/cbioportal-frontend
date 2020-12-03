@@ -1,6 +1,7 @@
 import { ObservableMap, action, observable } from 'mobx';
 import AppConfig from 'appConfig';
 import { MobxPromiseUnionType } from 'mobxpromise';
+import _ from 'lodash';
 
 export interface IDriverSettingsProps {
     driverAnnotationSettings: DriverAnnotationSettings;
@@ -53,6 +54,7 @@ export interface IDriverAnnotationControlsState {
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
     selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    allCustomDriverAnnotationTiersSelected?: boolean;
     annotateCustomDriverBinary?: boolean;
 }
 
@@ -339,6 +341,15 @@ export function buildDriverAnnotationControlsState(
         },
         get selectedCustomDriverAnnotationTiers() {
             return driverAnnotationSettings.driverTiers;
+        },
+        get allCustomDriverAnnotationTiersSelected(): boolean {
+            const options = Array.from(
+                this.selectedCustomDriverAnnotationTiers!.values()
+            ).filter(Boolean);
+            return (
+                this.customDriverAnnotationTiers &&
+                this.customDriverAnnotationTiers.length === options.length
+            );
         },
     });
 }
