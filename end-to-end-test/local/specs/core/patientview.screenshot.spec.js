@@ -78,7 +78,7 @@ describe('patient view page', function() {
         });
     });
 
-    describe('patient view mutational signatures', () => {
+    describe.only('patient view mutational signatures', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(genericAssayPatientViewUrl);
             waitForPatientView();
