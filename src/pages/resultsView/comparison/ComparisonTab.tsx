@@ -34,6 +34,7 @@ import AlterationEnrichmentTypeSelector, {
 import { buildAlterationEnrichmentTypeSelectorHandlers } from './ComparisonTabUtils';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
+import styles from 'pages/resultsView/comparison/styles.module.scss';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -181,17 +182,16 @@ export default class ComparisonTab extends React.Component<
                                     : ''
                             }
                         >
-                            <AlterationsEnrichments
-                                store={this.store}
-                                resultsViewStore={this.props.store}
-                            >
-                                <AlterationEnrichmentTypeSelector
-                                    handlers={
-                                        this
-                                            .alterationEnrichmentTypeSelectorHandlers!
-                                    }
-                                />
-                            </AlterationsEnrichments>
+                            {this.store.activeGroups.isComplete &&
+                                this.store.activeGroups.result!.length > 1 && (
+                                    <AlterationEnrichmentTypeSelector
+                                        handlers={
+                                            this
+                                                .alterationEnrichmentTypeSelectorHandlers!
+                                        }
+                                    />
+                                )}
+                            <AlterationsEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (

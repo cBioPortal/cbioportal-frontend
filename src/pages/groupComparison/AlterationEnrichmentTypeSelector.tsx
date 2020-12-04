@@ -366,12 +366,20 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     render() {
         return (
-            <div className={this.props.classNames}>
+            <div
+                style={{
+                    position: 'absolute',
+                    zIndex: 2,
+                    background: '#eee',
+                    borderRadius: '4px',
+                    padding: '10px',
+                }}
+            >
                 <h5>Select Alteration Types</h5>
                 <div className="checkbox">
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="CheckCopynumberAlterations"
                             type="checkbox"
                             value={'AllCopyNumberSelected'}
                             checked={
@@ -386,7 +394,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="DeepDeletion"
                             type="checkbox"
                             value={'HOMDEL'}
                             checked={this.currentSelectedCopyNumber.HOMDEL}
@@ -398,7 +406,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Amplification"
                             type="checkbox"
                             value={'AMP'}
                             checked={this.currentSelectedCopyNumber.AMP}
@@ -410,7 +418,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox">
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Mutations"
                             type="checkbox"
                             value={'AllMutationsSelected'}
                             checked={
@@ -492,7 +500,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Missense"
                             type="checkbox"
                             value={CanonicalMutationType.MISSENSE}
                             checked={this.currentSelectedMutations.missense}
@@ -504,7 +512,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="FrameshiftDeletion"
                             type="checkbox"
                             value={CanonicalMutationType.FRAME_SHIFT_INS}
                             checked={
@@ -518,7 +526,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="FrameshiftInsertion"
                             type="checkbox"
                             value={CanonicalMutationType.FRAME_SHIFT_DEL}
                             checked={
@@ -532,7 +540,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Frameshift"
                             type="checkbox"
                             value={CanonicalMutationType.FRAMESHIFT}
                             checked={this.currentSelectedMutations.frameshift}
@@ -544,7 +552,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Nonsense"
                             type="checkbox"
                             value={CanonicalMutationType.NONSENSE}
                             checked={this.currentSelectedMutations.nonsense}
@@ -556,7 +564,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Splice"
                             type="checkbox"
                             value={CanonicalMutationType.SPLICE_SITE}
                             checked={this.currentSelectedMutations.splice}
@@ -568,7 +576,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Nonstart"
                             type="checkbox"
                             value={CanonicalMutationType.NONSTART}
                             checked={
@@ -583,7 +591,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Nonstop"
                             type="checkbox"
                             value={CanonicalMutationType.NONSTOP}
                             checked={
@@ -597,7 +605,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="InframeDeletion"
                             type="checkbox"
                             value={CanonicalMutationType.IN_FRAME_DEL}
                             checked={this.currentSelectedMutations.in_frame_del}
@@ -609,7 +617,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="InframeInsertion"
                             type="checkbox"
                             value={CanonicalMutationType.IN_FRAME_INS}
                             checked={this.currentSelectedMutations.in_frame_ins}
@@ -633,7 +641,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Truncating"
                             type="checkbox"
                             value={CanonicalMutationType.TRUNCATING}
                             checked={this.currentSelectedMutations.truncating}
@@ -645,7 +653,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Fusion"
                             type="checkbox"
                             value={CanonicalMutationType.FUSION}
                             checked={this.currentSelectedMutations.fusion}
@@ -657,7 +665,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Silent"
                             type="checkbox"
                             value={CanonicalMutationType.SILENT}
                             checked={this.currentSelectedMutations.silent}
@@ -669,7 +677,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div className="checkbox" style={{ marginLeft: '20px' }}>
                     <label>
                         <input
-                            data-test="ColorByDriver"
+                            data-test="Other"
                             type="checkbox"
                             value={CanonicalMutationType.OTHER}
                             checked={this.currentSelectedMutations.other}
@@ -681,8 +689,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 <div>
                     <button
                         className="btn btn-primary"
-                        style={{ width: '100%' }}
-                        data-test="changeSortOrderButton"
+                        style={{ width: '100%', pointerEvents: 'all' }}
+                        data-test="buttonSelectAlterations"
                         type="button"
                         onClick={this.updateSelectedAlterations}
                     >

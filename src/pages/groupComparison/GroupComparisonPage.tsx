@@ -171,18 +171,13 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            <div>
-                                <AlterationEnrichmentTypeSelector
-                                    classNames={
-                                        styles.inlineAlterationTypeSelectorMenu
-                                    }
-                                    handlers={
-                                        this
-                                            .alterationEnrichmentTypeSelectorHandlers!
-                                    }
-                                />
-                                <AlterationsEnrichments store={this.store} />
-                            </div>
+                            <AlterationEnrichmentTypeSelector
+                                handlers={
+                                    this
+                                        .alterationEnrichmentTypeSelectorHandlers!
+                                }
+                            />
+                            <AlterationsEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (

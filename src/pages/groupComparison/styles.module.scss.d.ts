@@ -9,7 +9,6 @@ declare const styles: {
   readonly "groupLineItemActionButtons": string;
   readonly "groupRow": string;
   readonly "headerControls": string;
-  readonly "inlineAlterationTypeSelectorMenu": string;
   readonly "markedForDeletion": string;
   readonly "noGroupsMessage": string;
   readonly "sharedGroup": string;
