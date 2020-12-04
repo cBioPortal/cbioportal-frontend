@@ -323,9 +323,7 @@ export function getDarwinUrl(sampleIds: string[], caseId: string) {
 }
 
 export function getStudyDownloadListUrl() {
-    return buildCBioPortalAPIUrl(
-        'proxy/cbioportal-datahub.s3.amazonaws.com/study_list.json'
-    );
+    return 'https://cbioportal-datahub.s3.amazonaws.com/study_list.json';
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {
