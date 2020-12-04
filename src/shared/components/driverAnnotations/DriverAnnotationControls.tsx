@@ -16,7 +16,6 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 export interface IDriverAnnotationControlsProps {
     state: IDriverAnnotationControlsState;
     handlers: IDriverAnnotationControlsHandlers;
-    disabled?: boolean;
 }
 
 enum EVENT_KEY {
@@ -81,7 +80,6 @@ export default class DriverAnnotationControls extends React.Component<
                                             )
                                         )
                                     }
-                                    disabled={this.props.disabled}
                                     onClick={
                                         this.onCustomDriverTierCheckboxClick
                                     }

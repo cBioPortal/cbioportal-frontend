@@ -195,18 +195,6 @@ export default class SettingsMenu extends React.Component<
         );
     }
 
-    @computed get disableTiersMenu() {
-        return (
-            this.props.store.driverAnnotationSettings.includeDriver &&
-            this.props.store.driverAnnotationSettings.includeVUS &&
-            this.props.store.driverAnnotationSettings
-                .includeUnknownOncogenicity &&
-            this.props.store.includeGermlineMutations &&
-            this.props.store.includeSomaticMutations &&
-            this.props.store.includeUnknownStatusMutations
-        );
-    }
-
     render() {
         if (this.props.disabled) {
             return (
@@ -390,7 +378,6 @@ export default class SettingsMenu extends React.Component<
                                 type="checkbox"
                                 value={EVENT_KEY.toggleAllDriverTiers}
                                 checked={this.selectedAllTierOptions}
-                                disabled={this.disableTiersMenu}
                                 onClick={this.onInputClick}
                             />
                             <h5>By category</h5>
@@ -419,7 +406,6 @@ export default class SettingsMenu extends React.Component<
                             <DriverAnnotationControls
                                 state={this.driverSettingsState}
                                 handlers={this.driverSettingsHandlers}
-                                disabled={this.disableTiersMenu}
                             />
                         </div>
                     </div>
