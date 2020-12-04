@@ -2856,6 +2856,11 @@
   resolved "https://registry.yarnpkg.com/@types/numeral/-/numeral-0.0.22.tgz#86bef1f0a2d743afdc2ef3168d45f2905e1a0b93"
   integrity sha512-zUS7L52zNNVIKDf2/YiWUeFLiJPPZ03h9wVLDa04u4j5bTFc9OeACCg6piZBTwhPyWv3P7nKe4OWzQwU/FGHgQ==
 
+"@types/pako@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/pako/-/pako-1.0.1.tgz#33b237f3c9aff44d0f82fe63acffa4a365ef4a61"
+  integrity sha512-GdZbRSJ3Cv5fiwT6I0SQ3ckeN2PWNqxd26W9Z2fCK1tGrrasGy4puvNFtnddqH9UJFMQYXxEuuB7B8UK+LLwSg==
+
 "@types/pdfobject@2.0.5":
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/@types/pdfobject/-/pdfobject-2.0.5.tgz#96e3d3a6fc27ae9be96b2eaecbd26b036d8b020b"
@@ -16449,6 +16454,11 @@ pad-left@^1.0.2:
   integrity sha1-GeVzXqmDlaJs7carkm6tEPMQDUw=
   dependencies:
     repeat-string "^1.3.0"
+
+pako@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/pako/-/pako-2.0.2.tgz#8a72af7a93431ef22aa97e0d53b0acaa3c689220"
+  integrity sha512-9e8DRI3+dRLomCmMBAH30B2ejh+blwXr7VmMEx/pVFZlSDA7oyI8uKMhKXr8IrZpoxBF2YlxUvhqRXzTT1i0NA==
 
 pako@~1.0.2:
   version "1.0.11"
