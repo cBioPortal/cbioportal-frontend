@@ -38,9 +38,13 @@ describe('patient view page', function() {
             browser.waitForVisible('div.progress', 20000);
             browser.moveToObject('div.progress', 0, 0);
 
-            browser.waitForVisible(
-                'div[data-test="SignificantMutationalSignaturesTooltip"]'
-            );
+            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+        });
+
+        it('show tooltip for patient who has significant v3 significant signatures move', () => {
+            selectMutationalSignaturesVersion3();
+            browser.waitForVisible('div.progress', 20000);
+            browser.moveToObject('div.progress', 5, 5);
 
             assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
