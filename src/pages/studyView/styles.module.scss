@@ -121,3 +121,14 @@
 .tooltip {
     max-width: 300px;
 }
+
+$wide: 10px;
+$regular: 5px;
+
+.content {
+    margin: $regular $wide $regular 0;
+    font-size: smaller;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}

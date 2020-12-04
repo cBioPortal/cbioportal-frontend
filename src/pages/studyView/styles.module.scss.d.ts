@@ -2,6 +2,7 @@ declare const styles: {
   readonly "absolutePanel": string;
   readonly "actionButtons": string;
   readonly "bookmarkButton": string;
+  readonly "content": string;
   readonly "description": string;
   readonly "filterClinicalAttrName": string;
   readonly "mainTabs": string;

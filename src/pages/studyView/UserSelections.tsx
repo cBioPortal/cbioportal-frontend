@@ -583,7 +583,8 @@ export default class UserSelections extends React.Component<
                         geneQuery.includeUnknownOncogenicity,
                         geneQuery.selectedTiers,
                         geneQuery.includeGermline,
-                        geneQuery.includeSomatic
+                        geneQuery.includeSomatic,
+                        geneQuery.includeUnknownStatus
                     )}
                     onDelete={() =>
                         this.props.removeGeneFilter(
@@ -620,82 +621,70 @@ export default class UserSelections extends React.Component<
         includeUnknownOncogenicity?: boolean,
         selectedTiers?: string[],
         includeGermline?: boolean,
-        includeSomatic?: boolean
-    ): JSX.Element {
-        const filterTextElements: string[] = [];
-        if (includeDriver) filterTextElements.push('Drivers');
-        if (includeVUS) filterTextElements.push('Passengers');
-        if (includeUnknownOncogenicity)
-            filterTextElements.push('Unknown oncogenicity');
-        if (includeGermline) filterTextElements.push('Germline mutations');
-        if (includeSomatic) filterTextElements.push('Somatic mutations');
-        const hasFilter =
-            includeDriver ||
-            includeVUS ||
-            includeUnknownOncogenicity ||
-            includeGermline ||
-            includeSomatic;
+        includeSomatic?: boolean,
+        includeUnknownStatus?: boolean
+    ): JSX.Element | null {
+        const hasFilter = !(
+            includeDriver &&
+            includeVUS &&
+            includeUnknownOncogenicity &&
+            includeGermline &&
+            includeSomatic &&
+            includeUnknownStatus
+        );
+        if (!hasFilter) return null;
+        const driverFilterTextElements: string[] = [];
+        includeDriver && driverFilterTextElements.push('driver');
+        includeVUS && driverFilterTextElements.push('passenger');
+        includeUnknownOncogenicity && driverFilterTextElements.push('unknown');
+        const statusFilterTextElements: string[] = [];
+        includeGermline && statusFilterTextElements.push('germline');
+        includeSomatic && statusFilterTextElements.push('somatic');
+        includeUnknownStatus && statusFilterTextElements.push('unknown');
+        const driverFilterText = driverFilterTextElements.join(' or ');
+        const statusFilterText = statusFilterTextElements.join(' or ');
+        const tiersFilterText =
+            (selectedTiers &&
+                selectedTiers.length > 0 &&
+                selectedTiers.join(' or ')) ||
+            '';
         return (
             <div
                 data-test={'groupedGeneFilterIcons'}
-                style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    margin: '5px 8px 5px -3px',
-                }}
+                className={styles.content}
             >
-                {hasFilter && (
-                    <DefaultTooltip
-                        mouseEnterDelay={0}
-                        placement="right"
-                        overlay={
-                            <div className={styles.tooltip}>
-                                Excluded:
-                                {filterTextElements.map(t => (
-                                    <span>
-                                        <br />
-                                        {t}
-                                    </span>
-                                ))}
-                            </div>
-                        }
+                {driverFilterText && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                        }}
                     >
-                        <img
-                            height={11}
-                            width={11}
-                            style={{
-                                marginRight: '2px',
-                            }}
-                            src={require('../../rootImages/filter_icon_white_circle.svg')}
-                            alt="Selected driver tiers"
-                        />
-                    </DefaultTooltip>
+                        <span>annotation:</span>&nbsp;
+                        <span>{driverFilterText}</span>
+                    </div>
                 )}
-                {selectedTiers && selectedTiers.length > 0 && (
-                    <DefaultTooltip
-                        mouseEnterDelay={0}
-                        placement="right"
-                        overlay={
-                            <div className={styles.tooltip}>
-                                Selected driver tiers:
-                                {selectedTiers!.map(t => (
-                                    <span>
-                                        <br />
-                                        {t}
-                                    </span>
-                                ))}
-                            </div>
-                        }
+                {statusFilterText && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                        }}
                     >
-                        <img
-                            height={11}
-                            width={11}
-                            src={require('../../rootImages/driver_tiers_white_circle.svg')}
-                            alt="Selected driver tiers"
-                        />
-                    </DefaultTooltip>
+                        <span>status:</span>&nbsp;
+                        <span>{statusFilterText}</span>
+                    </div>
+                )}
+                {tiersFilterText && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                        }}
+                    >
+                        <span>category:</span>&nbsp;
+                        <span>{tiersFilterText}</span>
+                    </div>
                 )}
             </div>
         );

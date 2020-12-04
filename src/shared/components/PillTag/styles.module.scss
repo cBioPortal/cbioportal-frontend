@@ -15,6 +15,9 @@ $regular: 5px;
 }
 
 .delete {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     padding-left: $regular;
     margin: $regular $regular $regular 0;
     border-left: 1px dashed white;
