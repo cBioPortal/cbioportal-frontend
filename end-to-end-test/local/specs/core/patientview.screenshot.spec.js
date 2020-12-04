@@ -33,6 +33,18 @@ describe('patient view page', function() {
             assertScreenShotMatch(res);
         });
 
+        it('show tooltip for patient who has significant v3 significant signatures', () => {
+            selectMutationalSignaturesVersion3();
+            browser.waitForVisible('div.progress', 20000);
+            browser.moveToObject('div.progress', 0, 0);
+
+            browser.waitForVisible(
+                'div[data-test="SignificantMutationalSignaturesTooltip"]'
+            );
+
+            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
+        });
+
         it('show tooltip for patient who has significant v2 significant signatures', () => {
             browser.waitForVisible('div.progress', 20000);
             browser.moveToObject('div.progress', 0, 0);
@@ -56,18 +68,6 @@ describe('patient view page', function() {
             browser.waitForVisible('div.patientSamples', 20000);
             var res = browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
-        });
-
-        it('show tooltip for patient who has significant v3 significant signatures', () => {
-            selectMutationalSignaturesVersion3();
-            browser.waitForVisible('div.progress', 20000);
-            browser.moveToObject('div.progress', 0, 0);
-
-            browser.waitForVisible(
-                'div[data-test="SignificantMutationalSignaturesTooltip"]'
-            );
-
-            assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
 
         it('show mutational signatures table for patient who has significant v3 significant signatures', () => {
