@@ -1,11 +1,8 @@
 @import '../featureTable/FunctionalImpact.scss';
 
-.basic-info-container {
+.header-annotation-container {
     margin-top: 5px;
-    margin-bottom: 15px;
-    align-items: center;
-    color: red;
-    background-color: red;
+    flex: 1;
 }
 
 .data-pills {
@@ -70,7 +67,7 @@
     color: rgb(44, 62, 80);
 }
 
-.basic-info-pills {
+.header-annotation-pills {
     display: flex;
     flex-wrap: wrap;
     align-items: center;

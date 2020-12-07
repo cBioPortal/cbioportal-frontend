@@ -19,6 +19,9 @@ export * from './model/MyCancerGenome';
 export * from './model/MyVariantInfo';
 export * from './model/OncoKB';
 export * from './model/RemoteData';
+export * from './model/SignalMutation';
+export * from './model/SignalMutationStatus';
+export * from './model/SignalGeneFrequencySummary';
 
 export * from './mutation/MutationAnnotator';
 export * from './mutation/MutationUtils';
@@ -29,3 +32,5 @@ export * from './myCancerGenome/MyCancerGenomeUtils';
 export * from './oncokb/OncoKbUtils';
 
 export * from './promise/PromiseUtils';
+
+export * from './signal/SignalMutationUtils';
