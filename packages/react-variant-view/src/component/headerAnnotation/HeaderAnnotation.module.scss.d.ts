@@ -1,5 +1,5 @@
 declare const styles: {
-  readonly "basic-info-container": string;
+  readonly "header-annotation-container": string;
   readonly "data-pills": string;
   readonly "gene": string;
   readonly "default": string;
@@ -8,7 +8,7 @@ declare const styles: {
   readonly "oncogene": string;
   readonly "tsg": string;
   readonly "transcript-table-source": string;
-  readonly "basic-info-pills": string;
+  readonly "header-annotation-pills": string;
   readonly "missense-mutation": string;
   readonly "trunc-mutation": string;
   readonly "inframe-mutation": string;
