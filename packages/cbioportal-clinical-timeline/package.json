@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-clinical-timeline",
   "description": "cBioPortal Clinical Timeline",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -39,7 +39,7 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.3.16",
+    "cbioportal-frontend-commons": "^0.3.17",
     "lodash": "^4.17.11",
     "react-bootstrap": "^0.31.5",
     "react-overlays": "0.7.4",
