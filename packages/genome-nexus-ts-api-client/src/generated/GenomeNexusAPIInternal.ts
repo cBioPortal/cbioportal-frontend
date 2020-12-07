@@ -2347,9 +2347,11 @@ export default class GenomeNexusAPIInternal {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/signal/search/{keyword}';
+        let path = '/signal/search';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
 
-        path = path.replace('{keyword}', parameters['keyword'] + '');
         if (parameters['limit'] !== undefined) {
             queryParameters['limit'] = parameters['limit'];
         }
@@ -2380,7 +2382,7 @@ export default class GenomeNexusAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/signal/search/{keyword}';
+        let path = '/signal/search';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -2389,7 +2391,9 @@ export default class GenomeNexusAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{keyword}', parameters['keyword'] + '');
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
 
             if (parameters['keyword'] === undefined) {
                 reject(new Error('Missing required  parameter: keyword'));

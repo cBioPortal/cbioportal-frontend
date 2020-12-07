@@ -895,7 +895,7 @@
         }
       }
     },
-    "/signal/search/{keyword}": {
+    "/signal/search": {
       "get": {
         "tags": [
           "signal-query-controller"
@@ -911,7 +911,7 @@
         "parameters": [
           {
             "name": "keyword",
-            "in": "path",
+            "in": "query",
             "description": "keyword. For example BRCA; BRAF V600; 13:32906640-32906640; 13:g.32890665G>A",
             "required": true,
             "type": "string"
