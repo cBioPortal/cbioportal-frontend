@@ -21,12 +21,7 @@ class TranscriptTable extends React.Component<ITranscriptTableProps> {
             return (
                 <Collapse isOpened={this.props.isOpen}>
                     <div className="table-content" id="table-content">
-                        <Table
-                            responsive={true}
-                            striped={true}
-                            hover={true}
-                            sizes="sm"
-                        >
+                        <Table responsive={true} striped={true} hover={true}>
                             <thead>
                                 <tr>
                                     <th>#</th>

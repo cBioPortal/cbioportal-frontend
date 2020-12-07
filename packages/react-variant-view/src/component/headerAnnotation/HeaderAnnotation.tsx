@@ -17,7 +17,7 @@ import * as React from 'react';
 import { Button } from 'react-bootstrap';
 import { ANNOTATION_QUERY_FIELDS } from '../../util/Constants';
 import headerAnnotationStyle from './HeaderAnnotation.module.scss';
-import { generateOncokbLink, ONCOKB_URL } from '../biologicalFunction/Oncokb';
+import { generateOncokbLink, ONCOKB_URL } from '../pathogenicity/Oncokb';
 import TranscriptSummaryTable from './TranscriptSummaryTable';
 import oncokbLogo from '../../image/oncokb.png';
 
@@ -165,8 +165,16 @@ export default class HeaderAnnotation extends React.Component<
             });
 
             return (
-                <div className={'basic-info-container'}>
-                    <span className={headerAnnotationStyle['basic-info-pills']}>
+                <div
+                    className={
+                        headerAnnotationStyle['header-annotation-container']
+                    }
+                >
+                    <span
+                        className={
+                            headerAnnotationStyle['header-annotation-pills']
+                        }
+                    >
                         {headerAnnotationList}
                         {this.jsonButton()}
                         {haveTranscriptTable &&
@@ -355,9 +363,7 @@ export default class HeaderAnnotation extends React.Component<
                 <a
                     href={`https://www.genomenexus.org/annotation/${
                         this.props.variant
-                    }?isoformOverrideSource=uniprot?fields=${ANNOTATION_QUERY_FIELDS.join(
-                        ','
-                    )}`}
+                    }?fields=${ANNOTATION_QUERY_FIELDS.join(',')}`}
                     target="_blank"
                     style={{ paddingLeft: '8px', paddingRight: '8px' }}
                 >
@@ -402,6 +408,7 @@ export default class HeaderAnnotation extends React.Component<
                             </a>
                         </span>
                     }
+                    key={`${category}-${value}`}
                 >
                     <span
                         className={classNames(
@@ -432,6 +439,7 @@ export default class HeaderAnnotation extends React.Component<
                     ],
                     headerAnnotationStyle[`data-pills`]
                 )}
+                key={`${category}-${value}`}
             >
                 {value}
             </span>

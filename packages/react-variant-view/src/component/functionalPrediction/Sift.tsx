@@ -42,13 +42,7 @@ export default class Sift extends React.Component<ISiftProps, {}> {
     private static siftTooltipTable() {
         return (
             <div>
-                <Table
-                    table-border-top={true}
-                    striped={true}
-                    bordered={true}
-                    hover={true}
-                    sizes="sm"
-                >
+                <Table striped={true} bordered={true} hover={true} sizes="sm">
                     <thead>
                         <tr>
                             <th>Legend</th>
@@ -159,7 +153,7 @@ export default class Sift extends React.Component<ISiftProps, {}> {
         }
 
         return (
-            <div className={featureTableStyle['functional-group']}>
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.siftTooltip(
                         <a

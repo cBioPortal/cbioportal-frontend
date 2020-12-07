@@ -32,6 +32,7 @@ export {
 } from './components/TableCellStatus';
 export { default as VictorySelectionContainerWithLegend } from './components/victory/VictorySelectionContainerWithLegend';
 export { default as WindowWrapper } from './components/WindowWrapper';
+export { default as FrequencyCell } from './components/signal/FrequencyCell';
 
 export * from './api/remoteData';
 
