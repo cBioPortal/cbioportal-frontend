@@ -1,14 +1,12 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
+    ClinicalDataEnrichment,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-} from 'cbioportal-ts-api-client';
-import _ from 'lodash';
-import {
-    ClinicalDataEnrichment,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
+import _ from 'lodash';
 import { AlterationEnrichmentWithQ } from '../resultsView/enrichments/EnrichmentsUtil';
 import {
     GroupData,
@@ -26,10 +24,26 @@ import {
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
-import { DataType, geneFilterQueryToOql } from 'pages/studyView/StudyViewUtils';
+import {
+    DataType,
+    geneFilterQueryToOql,
+    getButtonNameWithDownPointer,
+} from 'pages/studyView/StudyViewUtils';
+import AlterationEnrichmentTypeSelector, {
+    IAlterationEnrichmentTypeSelectorHandlers,
+} from 'pages/groupComparison/AlterationEnrichmentTypeSelector';
+import styles from 'pages/groupComparison/styles.module.scss';
+import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import {
+    IDriverSettingsProps,
+    IExclusionSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -895,3 +909,74 @@ export function getGroupsDownloadData(
     }
     return lines.map(line => line.join('\t')).join('\n');
 }
+
+export function buildFilterMenu(
+    store: IDriverSettingsProps & IExclusionSettings,
+    handlers: IAlterationEnrichmentTypeSelectorHandlers,
+    headerElement?: JSX.Element
+): JSX.Element {
+    return (window as any).frontendConfig.serverConfig
+        .skin_show_settings_menu ? (
+        <div>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <AlterationEnrichmentTypeSelector
+                        classNames={styles.buttonAlterationTypeSelectorMenu}
+                        handlers={handlers}
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentTypeSelectorButton"
+                    className="btn btn-primary btn-sm"
+                    style={{ marginBottom: '10px' }}
+                >
+                    {getButtonNameWithDownPointer('Alteration Types')}
+                </button>
+            </DefaultTooltip>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <SettingsMenu
+                        store={store}
+                        infoElement={headerElement}
+                        disabled={
+                            !(
+                                store.customDriverAnnotationReport.isComplete &&
+                                (store.customDriverAnnotationReport.result
+                                    .hasBinary ||
+                                    store.customDriverAnnotationReport.result
+                                        .tiers.length > 0)
+                            )
+                        }
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentAnnotationsSelectorButton"
+                    style={{
+                        marginLeft: '10px',
+                        marginBottom: '10px',
+                    }}
+                    className="btn btn-primary btn-sm"
+                >
+                    {getButtonNameWithDownPointer('Annotations')}
+                </button>
+            </DefaultTooltip>
+        </div>
+    ) : (
+        <AlterationEnrichmentTypeSelector
+            classNames={styles.inlineAlterationTypeSelectorMenu}
+            handlers={handlers}
+        />
+    );
+}
+
+export const alterationMenuHeader: JSX.Element = (
+    <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+        Select alteration types included in the over-representation analysis.
+    </span>
+);

@@ -2829,3 +2829,10 @@ export function geneFilterQueryFromOql(
         includeUnknownStatus: !!includeUnknownStatus,
     };
 }
+
+export const alterationMenuHeader: JSX.Element = (
+    <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+        Select alteration types included in the tables of <i>Mutated Genes</i>,{' '}
+        <i>CNA Genes</i> and <i>Fusion Genes</i>.
+    </span>
+);

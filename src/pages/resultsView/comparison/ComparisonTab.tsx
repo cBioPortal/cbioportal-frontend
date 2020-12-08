@@ -34,6 +34,10 @@ import AlterationEnrichmentTypeSelector, {
 import { buildAlterationEnrichmentTypeSelectorHandlers } from '../../../shared/lib/comparison/ComparisonTabUtils';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
+import {
+    alterationMenuHeader,
+    buildFilterMenu,
+} from 'pages/groupComparison/GroupComparisonUtils';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
 
 export interface IComparisonTabProps {
@@ -191,25 +195,11 @@ export default class ComparisonTab extends React.Component<
                                     : ''
                             }
                         >
-                            {this.store.activeGroups.isComplete &&
-                                this.store.activeGroups.result!.length > 1 && (
-                                    <AlterationEnrichmentTypeSelector
-                                        store={this.store}
-                                        handlers={
-                                            this
-                                                .alterationEnrichmentTypeSelectorHandlers!
-                                        }
-                                        showMutations={
-                                            this.store.hasMutationEnrichmentData
-                                        }
-                                        showCnas={
-                                            this.store.hasCnaEnrichmentData
-                                        }
-                                        showFusions={
-                                            this.store.hasMutationEnrichmentData
-                                        }
-                                    />
-                                )}
+                            {buildFilterMenu(
+                                this.store,
+                                this.alterationEnrichmentTypeSelectorHandlers,
+                                alterationMenuHeader
+                            )}
                             <AlterationsEnrichments
                                 store={this.store}
                                 resultsViewStore={this.props.store}

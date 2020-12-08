@@ -43,7 +43,10 @@ import ComparisonGroupManager from '../groupComparison/comparisonGroupManager/Co
 import classNames from 'classnames';
 import AppConfig from 'appConfig';
 import { ServerConfigHelpers } from '../../config/config';
-import { getButtonNameWithDownPointer } from './StudyViewUtils';
+import {
+    alterationMenuHeader,
+    getButtonNameWithDownPointer,
+} from './StudyViewUtils';
 import { Alert, Modal } from 'react-bootstrap';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -758,6 +761,9 @@ export default class StudyViewPage extends React.Component<
                                                 overlay={
                                                     <SettingsMenu
                                                         store={this.store}
+                                                        infoElement={
+                                                            alterationMenuHeader
+                                                        }
                                                         disabled={
                                                             !this.store
                                                                 .hasCustomDriverAnnotations

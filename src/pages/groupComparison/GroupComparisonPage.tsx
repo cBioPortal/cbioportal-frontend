@@ -40,9 +40,10 @@ import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { buildAlterationEnrichmentTypeSelectorHandlers } from 'pages/resultsView/comparison/ComparisonTabUtils';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import SettingsMenu from 'shared/components/settings/SettingsMenu';
-import { getButtonNameWithDownPointer } from 'pages/studyView/StudyViewUtils';
+import {
+    alterationMenuHeader,
+    buildFilterMenu,
+} from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -223,7 +224,6 @@ export default class GroupComparisonPage extends React.Component<
             this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
         ],
         render: () => {
-            const filteredOutAlterations = this.store.filteredOutAlterations;
             return (
                 <MSKTabs
                     unmountOnHide={false}

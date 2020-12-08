@@ -42,14 +42,15 @@ function boldedTabList(tabs: string[]) {
     );
 }
 
-export interface IResultsPageSettings {
+export interface IAlterationFilterSettings {
     store: IDriverSettingsProps & IExclusionSettings;
+    infoElement?: JSX.Element | undefined;
     disabled?: boolean;
 }
 
 @observer
 export default class SettingsMenu extends React.Component<
-    IResultsPageSettings,
+    IAlterationFilterSettings,
     {}
 > {
     private driverSettingsState: IDriverAnnotationControlsState;
@@ -58,7 +59,7 @@ export default class SettingsMenu extends React.Component<
     @observable _driverAnnotationsCheckboxToggle = true;
     @observable _driverTiersCheckboxToggle = false;
 
-    constructor(props: IResultsPageSettings) {
+    constructor(props: IAlterationFilterSettings) {
         super(props);
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
@@ -219,11 +220,7 @@ export default class SettingsMenu extends React.Component<
                 )}
                 style={{ padding: 5 }}
             >
-                <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                    Select alteration types included in the tables of{' '}
-                    <i>Mutated Genes</i>, <i>CNA Genes</i> and{' '}
-                    <i>Fusion Genes</i>.
-                </span>
+                {this.props.infoElement && this.props.infoElement}
                 <div className={styles.headerSection}>
                     <input
                         className={styles.categoryCheckbox}
@@ -233,7 +230,7 @@ export default class SettingsMenu extends React.Component<
                         checked={this.selectedAllMutationStatusOptions}
                         onClick={this.onInputClick}
                     />
-                    <h5>By mutation status (mutations only)</h5>
+                    By mutation status (mutations only)
                     <InfoIcon
                         divStyle={{ display: 'inline-block', marginLeft: 6 }}
                         style={{ color: 'rgb(54, 134, 194)' }}
@@ -294,7 +291,7 @@ export default class SettingsMenu extends React.Component<
                         checked={this.selectedAllDriverAnnotationOptions}
                         onClick={this.onInputClick}
                     />
-                    <h5>By driver annotation</h5>
+                    By driver annotation
                     <InfoIcon
                         divStyle={{ display: 'inline-block', marginLeft: 6 }}
                         style={{ color: 'rgb(54, 134, 194)' }}
@@ -380,7 +377,7 @@ export default class SettingsMenu extends React.Component<
                                 checked={this.selectedAllTierOptions}
                                 onClick={this.onInputClick}
                             />
-                            <h5>By category</h5>
+                            By category
                             <InfoIcon
                                 divStyle={{
                                     display: 'inline-block',
