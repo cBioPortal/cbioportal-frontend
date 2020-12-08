@@ -32,7 +32,6 @@ export class VariantStore {
         invoke: async () => {
             return await this.genomeNexusClient.fetchVariantAnnotationGET({
                 variant: this.variant,
-                isoformOverrideSource: 'uniprot',
                 fields: ANNOTATION_QUERY_FIELDS,
             });
         },
