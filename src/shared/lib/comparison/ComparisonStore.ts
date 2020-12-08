@@ -23,6 +23,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    CustomDriverAnnotationReport,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -74,7 +75,10 @@ import {
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
-import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    ResultsViewPageStore,
+} from '../../../pages/resultsView/ResultsViewPageStore';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
@@ -88,25 +92,29 @@ import {
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
+    IDriverSettingsProps,
+    IExclusionSettings,
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
 import {
     computedFilteredOutAlterations,
     FilteredOutAlterations,
     subset,
 } from 'shared/lib/AlterationsUtils';
+import { CancerTypeWithVisibility } from 'shared/components/query/CancerStudyTreeData';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
 }
 
-export default abstract class ComparisonStore {
+export default abstract class ComparisonStore
+    implements IDriverSettingsProps, IExclusionSettings {
     private tabHasBeenShown = observable.map<boolean>();
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     private geneCountUpdatedReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
+    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit();
     @observable.ref
     public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
 
@@ -246,6 +254,7 @@ export default abstract class ComparisonStore {
     abstract usePatientLevelEnrichments: boolean;
     abstract samples: MobxPromise<Sample[]>;
     abstract studies: MobxPromise<CancerStudy[]>;
+    abstract studyIds: MobxPromise<string[]>;
     // < / >
 
     public get isLoggedIn() {
@@ -906,16 +915,6 @@ export default abstract class ComparisonStore {
             );
         },
     });
-
-    get allTiers(): string[] {
-        return [];
-    }
-
-    @computed get selectedTiers() {
-        return this.allTiers.filter(tier =>
-            this.driverAnnotationSettings.driverTiers.get(tier)
-        );
-    }
 
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         storeForExcludingQueryGenes: this.resultsViewStore,
@@ -2283,6 +2282,83 @@ export default abstract class ComparisonStore {
         });
     }
 
+    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
+        {
+            await: () => [this.studyIds],
+            invoke: async () => {
+                return client.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: this.studyIds.result,
+                    } as MolecularProfileFilter,
+                });
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationProfileIds = remoteData<string[]>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                return _(this.molecularProfilesInStudies.result)
+                    .filter(
+                        (profile: MolecularProfile) =>
+                            // discrete CNA's
+                            (profile.molecularAlterationType ===
+                                AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                                profile.datatype === 'DISCRETE') ||
+                            // mutations
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.MUTATION_EXTENDED ||
+                            // structural variants
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT
+                    )
+                    .map(
+                        (profile: MolecularProfile) =>
+                            profile.molecularProfileId
+                    )
+                    .value();
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationReport = remoteData<
+        CustomDriverAnnotationReport
+    >({
+        await: () => [this.customDriverAnnotationProfileIds],
+        invoke: () => {
+            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                {
+                    molecularProfileIds: this.customDriverAnnotationProfileIds
+                        .result,
+                }
+            );
+        },
+    });
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (!!this.customDriverAnnotationReport.result!.hasBinary ||
+                this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
+    }
+
+    @computed get selectedTiers() {
+        return this.allTiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
+    @computed get allTiers() {
+        return this.customDriverAnnotationReport.isComplete
+            ? this.customDriverAnnotationReport.result!.tiers
+            : [];
+    }
+
+
     @computed get hasMutationEnrichmentData(): boolean {
         return (
             this.mutationEnrichmentProfiles.isComplete &&
@@ -2301,4 +2377,5 @@ export default abstract class ComparisonStore {
     @computed get hasFusionEnrichmentData(): boolean {
         return this.hasMutationEnrichmentData;
     }
+
 }

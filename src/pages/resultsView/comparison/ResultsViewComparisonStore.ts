@@ -7,7 +7,10 @@ import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import { AppStore } from '../../../AppStore';
 import autobind from 'autobind-decorator';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { ResultsViewPageStore } from '../ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    ResultsViewPageStore,
+} from '../ResultsViewPageStore';
 import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import {
     ALTERED_COLOR,
@@ -29,7 +32,20 @@ import comparisonClient from '../../../shared/api/comparisonGroupClientInstance'
 import {
     ComparisonGroup,
     filterStudiesAttr,
+    getStudyIds,
 } from '../../groupComparison/GroupComparisonUtils';
+import {
+    IDriverAnnotationReport,
+    IDriverSettingsProps,
+    IExclusionSettings,
+} from 'shared/driverAnnotation/DriverAnnotationSettings';
+import MobxPromise, { MobxPromiseUnionType } from 'mobxpromise';
+import {
+    CancerStudy,
+    CustomDriverAnnotationReport,
+    MolecularProfile,
+} from 'cbioportal-ts-api-client';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -199,5 +215,61 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     public get studies() {
         return this.resultsViewStore.studies;
+    }
+
+    public get studyIds() {
+        return this.resultsViewStore.studyIds;
+    }
+
+    readonly customDriverAnnotationProfileIds = remoteData<string[]>(
+        {
+            await: () => [this.resultsViewStore.molecularProfilesInStudies],
+            invoke: async () => {
+                return _(
+                    this.resultsViewStore.molecularProfilesInStudies.result
+                )
+                    .filter(
+                        (profile: MolecularProfile) =>
+                            // discrete CNA's
+                            (profile.molecularAlterationType ===
+                                AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                                profile.datatype === 'DISCRETE') ||
+                            // mutations
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.MUTATION_EXTENDED ||
+                            // structural variants
+                            profile.molecularAlterationType ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT
+                    )
+                    .map(
+                        (profile: MolecularProfile) =>
+                            profile.molecularProfileId
+                    )
+                    .value();
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationReport = remoteData<
+        CustomDriverAnnotationReport
+    >({
+        await: () => [this.customDriverAnnotationProfileIds],
+        invoke: () => {
+            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                {
+                    molecularProfileIds: this.customDriverAnnotationProfileIds
+                        .result,
+                }
+            );
+        },
+    });
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (!!this.customDriverAnnotationReport.result!.hasBinary ||
+                this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
     }
 }
