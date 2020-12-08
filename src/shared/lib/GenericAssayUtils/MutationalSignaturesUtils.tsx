@@ -19,16 +19,14 @@ export const MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD = 0.05;
 export const RESERVED_MUTATIONAL_SIGNATURE_COLORS: {
     [category: string]: string;
 } = {
-    smoking: '#3366cc',
-    unknown: '#dc3912',
-    aflatoxin: '#0099c6',
-    hrd: '#66aa00',
-    tmz: '#b82e2e',
-    uv: '#316395',
-    ighv: '#994499',
-    apobec: '#22aa99',
-    age: '#6633cc',
-    pole: '#e67300',
+    smoking: '#b221e8',
+    hrd: '#f06b49',
+    tmz: '#076b82',
+    uv: '#ffec00',
+    apobec: '#8ed14b',
+    age: '#3b99d4',
+    aging: '#3b99d4',
+    pole: '#19413e',
     sequencing: '#651067',
     ber: '#5574a6',
     platinum: '#3b3eac',
@@ -36,14 +34,19 @@ export const RESERVED_MUTATIONAL_SIGNATURE_COLORS: {
     haloalkane: '#b91383',
     aid: '#f4359e',
     aza: '#9c5935',
-    'mmr/msi': '#8b0707',
     'aid/apobec': '#aaaa11',
-    'aristolochic acid': '#ff9900',
-    'defective mmr/msi': '#dd4477',
-    'defective dna mismatch repair': '#109618',
-    'tobacco chewing': '#990099',
     'pol-eta': '#16d620',
-}; // Source: D3
+    mmr: '#d92b45',
+    'mmr/msi': '#d92b45',
+    'defective mmr/msi': '#d92b45',
+    'defective dna mismatch repair': '#d92b45',
+    tabacco: '#50136d',
+    'tobacco chewing': '#50136d',
+    unknown: '#e8e8e8',
+    aflatoxin: '#e8e8e8',
+    ighv: '#e8e8e8',
+    'aristolochic acid': '#e8e8e8',
+};
 
 export function getColorByMutationalSignatureCategory(category: string) {
     return RESERVED_MUTATIONAL_SIGNATURE_COLORS[category.toLowerCase()];
