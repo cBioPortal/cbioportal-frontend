@@ -21,13 +21,20 @@ export default class ErrorScreen extends React.Component<
     {}
 > {
     @autobind
-    copyToClipRef(copyToClip: HTMLButtonElement | null) {
-        if (copyToClip) {
-            new Clipboard(copyToClip, {
+    copyToClipRef(copyToClipButton: HTMLButtonElement) {
+        this.copyToClipButton = copyToClipButton;
+    }
+
+    copyToClipButton: HTMLButtonElement | undefined = undefined;
+
+    componentDidMount() {
+        console.log('copytoclip', this.copyToClipButton);
+        if (this.copyToClipButton !== undefined) {
+            new Clipboard(this.copyToClipButton, {
                 text: function() {
                     return JSON.stringify(this.errorLog);
                 }.bind(this),
-                container: copyToClip,
+                container: this.copyToClipButton,
             });
         }
     }
