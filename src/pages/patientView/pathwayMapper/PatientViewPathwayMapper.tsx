@@ -139,8 +139,6 @@ export default class PatientViewPathwayMapper extends React.Component<
                             sampleIconData={this.sampleIconData}
                             tableComponent={this.renderTable}
                             patientView={true}
-                            // TODO PathwayMapper crashes if message banner is not provided, need to be fixed on PM side
-                            messageBanner={() => null}
                         />
                     </Row>
                 </div>

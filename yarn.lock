@@ -16753,9 +16753,9 @@ pathval@^1.1.0:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
   integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
 
-"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#43564adb53cafb9e1b1018c9d5aaf19ffc0d18e7":
+"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#a59a19a84215c346df04f9692924052519f15a11":
   version "2.0.3"
-  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/43564adb53cafb9e1b1018c9d5aaf19ffc0d18e7"
+  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/a59a19a84215c346df04f9692924052519f15a11"
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"
@@ -19056,7 +19056,7 @@ react-text-truncate@^0.9.0:
   dependencies:
     prop-types "^15.5.7"
 
-react-toastify@^5.3.1, react-toastify@^5.3.2:
+react-toastify@^5.3.1:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/react-toastify/-/react-toastify-5.5.0.tgz#f55de44f6b5e3ce3b13b69e5bb4427f2c9404822"
   integrity sha512-jsVme7jALIFGRyQsri/g4YTsRuaaGI70T6/ikjwZMB4mwTZaCWqj5NqxhGrRStKlJc5npXKKvKeqTiRGQl78LQ==
