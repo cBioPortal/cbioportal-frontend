@@ -187,6 +187,12 @@ export type GeneXref = {
         'version': string
 
 };
+export type GeneralPopulationStats = {
+    'counts': SignalPopulationStats
+
+        'frequencies': SignalPopulationStats
+
+};
 export type GenomicLocation = {
     'chromosome': string
 
@@ -265,6 +271,14 @@ export type Hotspot = {
         'tumorCount': number
 
         'type': string
+
+};
+export type HrdScore = {
+    'fractionLoh': number
+
+        'lst': number
+
+        'ntelomericAi': number
 
 };
 export type IntegerRange = {
@@ -418,7 +432,11 @@ export type SignalMutation = {
 
         'endPosition': number
 
+        'generalPopulationStats': GeneralPopulationStats
+
         'hugoGeneSymbol': string
+
+        'mskExperReview': boolean
 
         'mutationStatus': string
 
@@ -432,11 +450,27 @@ export type SignalMutation = {
 
         'startPosition': number
 
+        'statsByTumorType': Array < StatsByTumorType >
+
         'variantAllele': string
 
 };
 export type SignalMutationFilter = {
     'hugoSymbols': Array < string >
+
+};
+export type SignalPopulationStats = {
+    'afr': number
+
+        'asj': number
+
+        'asn': number
+
+        'eur': number
+
+        'impact': number
+
+        'oth': number
 
 };
 export type SignalQuery = {
@@ -457,6 +491,26 @@ export type SignalQuery = {
 };
 export type Snpeff = {
     'license': string
+
+};
+export type StatsByTumorType = {
+    'ageAtDx': number
+
+        'fBiallelic': number
+
+        'fCancerTypeCount': number
+
+        'hrdScore': HrdScore
+
+        'msiScore': number
+
+        'nCancerTypeCount': number
+
+        'nwithSig': number
+
+        'tmb': number
+
+        'tumorType': string
 
 };
 export type TranscriptConsequenceSummary = {
