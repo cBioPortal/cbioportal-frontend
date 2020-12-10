@@ -30,6 +30,7 @@ interface IPathwayMapperTableProps {
     data: IPathwayMapperTable[];
     selectedPathway: string;
     changePathway: (pathway: string) => void;
+    onSelectedPathwayChange?: () => void;
     initialSortColumn?: string;
     columnsOverride?: {
         [columnEnum: number]: Partial<PathwayMapperTableColumn>;
@@ -104,6 +105,9 @@ export default class PathwayMapperTable extends React.Component<
                         style={{ marginTop: 0, marginBottom: 0 }}
                         checked={this.props.selectedPathway === d.name}
                         onChange={(e: any) => {
+                            if (this.props.onSelectedPathwayChange) {
+                                this.props.onSelectedPathwayChange();
+                            }
                             this.props.changePathway(d.name);
                         }}
                     >
