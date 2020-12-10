@@ -1423,6 +1423,19 @@
         }
       }
     },
+    "GeneralPopulationStats": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "description": "Counts",
+          "$ref": "#/definitions/SignalPopulationStats"
+        },
+        "frequencies": {
+          "description": "Frequencies",
+          "$ref": "#/definitions/SignalPopulationStats"
+        }
+      }
+    },
     "GenomicLocation": {
       "type": "object",
       "required": [
@@ -1618,6 +1631,26 @@
         "type": {
           "type": "string",
           "description": "Hotspot type"
+        }
+      }
+    },
+    "HrdScore": {
+      "type": "object",
+      "properties": {
+        "fractionLoh": {
+          "type": "number",
+          "format": "double",
+          "description": "Median HRD Fraction LOH"
+        },
+        "lst": {
+          "type": "number",
+          "format": "double",
+          "description": "Median HRD LST"
+        },
+        "ntelomericAi": {
+          "type": "number",
+          "format": "double",
+          "description": "Median HRD ntelomeric AI"
         }
       }
     },
@@ -1960,9 +1993,18 @@
           "format": "int64",
           "description": "End Position"
         },
+        "generalPopulationStats": {
+          "description": "General Population Stats",
+          "$ref": "#/definitions/GeneralPopulationStats"
+        },
         "hugoGeneSymbol": {
           "type": "string",
           "description": "Hugo Gene Symbol"
+        },
+        "mskExperReview": {
+          "type": "boolean",
+          "example": false,
+          "description": "Msk Expert Review"
         },
         "mutationStatus": {
           "type": "string",
@@ -1992,6 +2034,13 @@
           "format": "int64",
           "description": "Start Position"
         },
+        "statsByTumorType": {
+          "type": "array",
+          "description": "Stats By Tumor Type",
+          "items": {
+            "$ref": "#/definitions/StatsByTumorType"
+          }
+        },
         "variantAllele": {
           "type": "string",
           "description": "Variant Allele"
@@ -2007,6 +2056,41 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "SignalPopulationStats": {
+      "type": "object",
+      "properties": {
+        "afr": {
+          "type": "number",
+          "format": "double",
+          "description": "African/African American"
+        },
+        "asj": {
+          "type": "number",
+          "format": "double",
+          "description": "Ashkenazi Jewish"
+        },
+        "asn": {
+          "type": "number",
+          "format": "double",
+          "description": "Asian"
+        },
+        "eur": {
+          "type": "number",
+          "format": "double",
+          "description": "European"
+        },
+        "impact": {
+          "type": "number",
+          "format": "double",
+          "description": "Impact"
+        },
+        "oth": {
+          "type": "number",
+          "format": "double",
+          "description": "Other"
         }
       }
     },
@@ -2061,6 +2145,53 @@
         "license": {
           "type": "string",
           "description": "license"
+        }
+      }
+    },
+    "StatsByTumorType": {
+      "type": "object",
+      "properties": {
+        "ageAtDx": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Median Age at Dx"
+        },
+        "fBiallelic": {
+          "type": "number",
+          "format": "double",
+          "description": "Frequency Of Biallelic"
+        },
+        "fCancerTypeCount": {
+          "type": "number",
+          "format": "double",
+          "description": "Frequency Of Cancer Type Count"
+        },
+        "hrdScore": {
+          "description": "Hrd Score",
+          "$ref": "#/definitions/HrdScore"
+        },
+        "msiScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Msi Score"
+        },
+        "nCancerTypeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number Of Cancer Type Count"
+        },
+        "nwithSig": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "tmb": {
+          "type": "number",
+          "format": "double",
+          "description": "Median TMB"
+        },
+        "tumorType": {
+          "type": "string",
+          "description": "Tumor Type"
         }
       }
     },
