@@ -303,6 +303,8 @@ export type GeneFilterQuery = {
 
         'includeUnknownStatus': boolean
 
+        'includeUnknownTier': boolean
+
         'includeVUS': boolean
 
         'selectedTiers': Array < string >

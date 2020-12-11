@@ -5932,6 +5932,9 @@
         "includeUnknownStatus": {
           "type": "boolean"
         },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
         "includeVUS": {
           "type": "boolean"
         },
