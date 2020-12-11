@@ -82,18 +82,20 @@ export function getGeneticTrackSortComparator(
         } else if (!sortByMutationType && sortByDrivers) {
             _order = makeComparatorMetric([
                 [
-                    'inframe_rec',
-                    'missense_rec',
-                    'promoter_rec',
                     'trunc_rec',
+                    'splice_rec',
+                    'inframe_rec',
+                    'promoter_rec',
+                    'missense_rec',
                     'other_rec',
                 ],
-                ['inframe', 'missense', 'promoter', 'trunc', 'other'],
+                ['trunc', 'splice', 'inframe', 'promoter', 'missense', 'other'],
                 undefined,
             ]);
         } else if (sortByMutationType && !sortByDrivers) {
             _order = makeComparatorMetric([
                 ['trunc', 'trunc_rec'],
+                ['splice', 'splice_rec'],
                 ['inframe', 'inframe_rec'],
                 ['promoter', 'promoter_rec'],
                 ['missense', 'missense_rec'],
@@ -105,11 +107,13 @@ export function getGeneticTrackSortComparator(
         } else if (sortByMutationType && sortByDrivers) {
             _order = makeComparatorMetric([
                 'trunc_rec',
+                'splice_rec',
                 'inframe_rec',
                 'promoter_rec',
                 'missense_rec',
                 'other_rec',
                 'trunc',
+                'splice',
                 'inframe',
                 'promoter',
                 'missense',
