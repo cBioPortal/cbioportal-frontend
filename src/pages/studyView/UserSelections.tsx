@@ -581,7 +581,10 @@ export default class UserSelections extends React.Component<
                         geneQuery.includeDriver,
                         geneQuery.includeVUS,
                         geneQuery.includeUnknownOncogenicity,
-                        geneQuery.selectedTiers,
+                        _(geneQuery.selectedTiers)
+                            .pickBy((isSelected, tier) => isSelected)
+                            .keys()
+                            .value(),
                         geneQuery.includeGermline,
                         geneQuery.includeSomatic,
                         geneQuery.includeUnknownStatus

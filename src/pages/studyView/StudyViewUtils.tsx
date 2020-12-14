@@ -2821,14 +2821,21 @@ export function geneFilterQueryFromOql(
             | 'DIPLOID'
             | 'HETLOSS'
         )[],
-        includeDriver: !!includeDriver,
-        includeVUS: !!includeVUS,
-        includeUnknownOncogenicity: !!includeUnknownOncogenicity,
-        selectedTiers: (selectedTiers as any) || {},
-        includeUnknownTier: !!includeUnknownTier,
-        includeGermline: !!includeGermline,
-        includeSomatic: !!includeSomatic,
-        includeUnknownStatus: !!includeUnknownStatus,
+        includeDriver: includeDriver === undefined ? true : includeDriver,
+        includeVUS: includeVUS === undefined ? true : includeVUS,
+        includeUnknownOncogenicity:
+            includeUnknownOncogenicity === undefined
+                ? true
+                : includeUnknownOncogenicity,
+        selectedTiers:
+            (selectedTiers as { [tier: string]: boolean }) ||
+            ({} as { [tier: string]: boolean }),
+        includeUnknownTier:
+            includeUnknownTier === undefined ? true : includeUnknownTier,
+        includeGermline: includeGermline === undefined ? true : includeGermline,
+        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
+        includeUnknownStatus:
+            includeUnknownStatus === undefined ? true : includeUnknownStatus,
     };
 }
 

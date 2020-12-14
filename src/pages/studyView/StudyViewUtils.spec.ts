@@ -189,7 +189,7 @@ describe('StudyViewUtils', () => {
             );
         });
         it('when filters are applied', () => {
-            let filter = {
+            let filter = ({
                 clinicalDataFilters: [
                     {
                         attributeId: 'attribute1',
@@ -251,7 +251,7 @@ describe('StudyViewUtils', () => {
                 genomicProfiles: [],
                 caseLists: [],
                 genericAssayDataFilters: [],
-            } as StudyViewFilterWithSampleIdentifierFilters;
+            } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -3409,7 +3409,7 @@ describe('StudyViewUtils', () => {
                     includeDriver: true,
                     includeVUS: true,
                     includeUnknownOncogenicity: true,
-                    selectedTiers: [],
+                    selectedTiers: {},
                     includeUnknownTier: true,
                     includeGermline: true,
                     includeSomatic: true,
@@ -3444,7 +3444,7 @@ describe('StudyViewUtils', () => {
                     includeDriver: true,
                     includeVUS: true,
                     includeUnknownOncogenicity: true,
-                    selectedTiers: [],
+                    selectedTiers: {},
                     includeUnknownTier: true,
                     includeGermline: true,
                     includeSomatic: true,
@@ -3462,7 +3462,7 @@ describe('StudyViewUtils', () => {
                     includeDriver: true,
                     includeVUS: true,
                     includeUnknownOncogenicity: true,
-                    selectedTiers: [],
+                    selectedTiers: {},
                     includeUnknownTier: true,
                     includeGermline: true,
                     includeSomatic: true,
