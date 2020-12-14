@@ -60,6 +60,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
+    buildSelectedTiersMap,
     calculateLayout,
     ChartDataCountSet,
     ChartMeta,
@@ -1988,7 +1989,7 @@ export class StudyViewPageStore
                     this.driverAnnotationSettings.includeDriver,
                     this.driverAnnotationSettings.includeVUS,
                     this.driverAnnotationSettings.includeUnknownOncogenicity,
-                    this.selectedTiers,
+                    this.selectedTiersMap,
                     this.includeGermlineMutations,
                     this.includeSomaticMutations,
                     this.includeUnknownStatusMutations
@@ -5055,7 +5056,7 @@ export class StudyViewPageStore
     readonly studyViewFilterWithFilteredSampleIdentifiers = remoteData<
         StudyViewFilter
     >({
-        await: () => [this.selectedSamples],
+        await: () => [this.selectedSamples, this.customDriverAnnotationReport],
         invoke: () => {
             const sampleIdentifiers = this.selectedSamples.result.map(
                 sample => {
@@ -5065,7 +5066,19 @@ export class StudyViewPageStore
                     } as SampleIdentifier;
                 }
             );
-            return Promise.resolve({ sampleIdentifiers } as any);
+            return Promise.resolve({
+                sampleIdentifiers,
+                includeDriver: this.driverAnnotationSettings.includeDriver,
+                includeVUS: this.driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity: this.driverAnnotationSettings
+                    .includeUnknownOncogenicity,
+                includeUnknownTier: this.driverAnnotationSettings
+                    .includeUnknownTier,
+                includeGermline: this.includeGermlineMutations,
+                includeSomatic: this.includeSomaticMutations,
+                includeUnknownStatus: this.includeUnknownStatusMutations,
+                selectedTiers: this.selectedTiersMap,
+            } as any);
         },
         onError: error => {},
     });
@@ -5177,25 +5190,8 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
-                const includeDriver = this.driverAnnotationSettings
-                    .includeDriver;
-                const includeVus = this.driverAnnotationSettings.includeVUS;
-                const includeUnknownOncogenicity = this.driverAnnotationSettings
-                    .includeUnknownOncogenicity;
-                const selectedTiers = this.selectedTiers;
-                const includeGermlineMutations = this.includeGermlineMutations;
-                const includeSomaticMutations = this.includeSomaticMutations;
-                const includeUnknownStatusMutations = this
-                    .includeUnknownStatusMutations;
-                let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
+                const mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
-                        includeDriver,
-                        includeVus,
-                        includeUnknownOncogenicity,
-                        selectedTiers: selectedTiers,
-                        includeGermline: includeGermlineMutations,
-                        includeSomatic: includeSomaticMutations,
-                        includeUnknownStatus: includeUnknownStatusMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5254,24 +5250,8 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.structuralVariantProfiles.result)) {
-                const includeDriver = this.driverAnnotationSettings
-                    .includeDriver;
-                const includeVus = this.driverAnnotationSettings.includeVUS;
-                const includeUnknownOncogenicity = this.driverAnnotationSettings
-                    .includeUnknownOncogenicity;
-                const selectedTiers = this.selectedTiers;
-                const includeGermlineMutations = this.includeGermlineMutations;
-                const includeSomaticMutations = this.includeSomaticMutations;
-                const includeUnknownStatusMutations = this
-                    .includeUnknownStatusMutations;
                 const fusionGenes = await internalClient.fetchFusionGenesUsingPOST(
                     {
-                        includeVus,
-                        includeUnknownOncogenicity,
-                        selectedTiers: selectedTiers,
-                        includeGermlineStatus: includeGermlineMutations,
-                        includeSomaticStatus: includeSomaticMutations,
-                        includeUnknownStatus: includeUnknownStatusMutations,
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
                             .result!,
@@ -5330,17 +5310,7 @@ export class StudyViewPageStore
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.cnaProfiles.result)) {
-                const includeDriver = this.driverAnnotationSettings
-                    .includeDriver;
-                const includeVus = this.driverAnnotationSettings.includeVUS;
-                const includeUnknownOncogenicity = this.driverAnnotationSettings
-                    .includeUnknownOncogenicity;
-                const selectedTiers = this.selectedTiers;
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
-                    includeDriver,
-                    includeVus,
-                    includeUnknownOncogenicity,
-                    selectedTiers,
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
                 });
@@ -5413,6 +5383,13 @@ export class StudyViewPageStore
     @computed get selectedTiers() {
         return this.customDriverAnnotationReport.result?.tiers.filter(tier =>
             this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
+    @computed get selectedTiersMap() {
+        return buildSelectedTiersMap(
+            this.selectedTiers || [],
+            this.customDriverAnnotationReport.result!.tiers
         );
     }
 

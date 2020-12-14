@@ -2802,7 +2802,8 @@ export function geneFilterQueryFromOql(
     includeDriver?: boolean,
     includeVUS?: boolean,
     includeUnknownOncogenicity?: boolean,
-    selectedTiers?: string[],
+    selectedTiers?: { [tier: string]: boolean },
+    includeUnknownTier?: boolean,
     includeGermline?: boolean,
     includeSomatic?: boolean,
     includeUnknownStatus?: boolean
@@ -2823,7 +2824,8 @@ export function geneFilterQueryFromOql(
         includeDriver: !!includeDriver,
         includeVUS: !!includeVUS,
         includeUnknownOncogenicity: !!includeUnknownOncogenicity,
-        selectedTiers: selectedTiers || [],
+        selectedTiers: (selectedTiers as any) || {},
+        includeUnknownTier: !!includeUnknownTier,
         includeGermline: !!includeGermline,
         includeSomatic: !!includeSomatic,
         includeUnknownStatus: !!includeUnknownStatus,
@@ -2836,3 +2838,13 @@ export const alterationMenuHeader: JSX.Element = (
         <i>CNA Genes</i> and <i>Fusion Genes</i>.
     </span>
 );
+
+export function buildSelectedTiersMap(
+    selectedTiers: string[],
+    allTiers: string[]
+) {
+    return _(allTiers)
+        .keyBy()
+        .mapValues((value, tier) => selectedTiers.includes(tier))
+        .value();
+}

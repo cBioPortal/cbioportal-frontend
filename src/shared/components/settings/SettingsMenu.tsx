@@ -23,10 +23,11 @@ enum EVENT_KEY {
     showGermlineMutations = '3',
     showSomaticMutations = '4',
     showUnknownStatusMutations = '5',
-    hideUnprofiledSamples = '6',
-    toggleAllMutationStatus = '7',
-    toggleAllDriverAnnotation = '8',
-    toggleAllDriverTiers = '9',
+    showUnknownTier = '6',
+    hideUnprofiledSamples = '7',
+    toggleAllMutationStatus = '8',
+    toggleAllDriverAnnotation = '9',
+    toggleAllDriverTiers = '10',
 }
 
 function boldedTabList(tabs: string[]) {
@@ -154,11 +155,12 @@ export default class SettingsMenu extends React.Component<
                 break;
             case EVENT_KEY.toggleAllDriverTiers:
                 if (this.driverSettingsState.customDriverAnnotationTiers) {
-                    const value =
+                    const value = !!(
                         this.driverSettingsState
                             .allCustomDriverAnnotationTiersSelected &&
-                        this.driverSettingsState
-                            .allCustomDriverAnnotationTiersSelected!;
+                        this.props.store.driverAnnotationSettings
+                            .includeUnknownTier
+                    );
                     this.driverSettingsState.customDriverAnnotationTiers.forEach(
                         t =>
                             this.driverSettingsHandlers
@@ -168,7 +170,20 @@ export default class SettingsMenu extends React.Component<
                                 !value
                             )
                     );
+                    this.props.store.driverAnnotationSettings.includeUnknownTier = !value;
                 }
+                break;
+            case EVENT_KEY.showUnknownTier:
+                if (this.driverSettingsState.customDriverAnnotationTiers) {
+                    this.props.store.driverAnnotationSettings.includeUnknownTier = !this
+                        .props.store.driverAnnotationSettings
+                        .includeUnknownTier;
+                }
+                this._driverTiersCheckboxToggle =
+                    !!this.driverSettingsState
+                        .allCustomDriverAnnotationTiersSelected &&
+                    this.props.store.driverAnnotationSettings
+                        .includeUnknownTier;
                 break;
         }
     }
@@ -190,9 +205,9 @@ export default class SettingsMenu extends React.Component<
     }
 
     @computed get selectedAllTierOptions() {
-        return (
+        return !!(
             this.driverSettingsState.allCustomDriverAnnotationTiersSelected &&
-            this.driverSettingsState.allCustomDriverAnnotationTiersSelected!
+            this.props.store.driverAnnotationSettings.includeUnknownTier
         );
     }
 
@@ -366,7 +381,7 @@ export default class SettingsMenu extends React.Component<
                         </label>
                     </div>
                 </div>
-                {!!this.driverSettingsState.customDriverAnnotationTiers && (
+                {this.driverSettingsState.customDriverAnnotationTiers && (
                     <div>
                         <div className={styles.headerSection}>
                             <input
@@ -404,6 +419,25 @@ export default class SettingsMenu extends React.Component<
                                 state={this.driverSettingsState}
                                 handlers={this.driverSettingsHandlers}
                             />
+                            <div
+                                className="checkbox"
+                                style={{ marginTop: '-5px' }}
+                            >
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        value={EVENT_KEY.showUnknownTier}
+                                        data-test="ShowUnknownTier"
+                                        checked={
+                                            this.props.store
+                                                .driverAnnotationSettings
+                                                .includeUnknownTier
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Unknown
+                                </label>
+                            </div>
                         </div>
                     </div>
                 )}

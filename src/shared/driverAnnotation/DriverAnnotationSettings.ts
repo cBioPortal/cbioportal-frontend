@@ -28,6 +28,7 @@ export interface DriverAnnotationSettings {
     customBinary: boolean;
     customTiersDefault: boolean;
     driverTiers: ObservableMap<boolean>;
+    includeUnknownTier: boolean;
     hotspots: boolean;
     oncoKb: boolean;
     driversAnnotated: boolean;
@@ -35,7 +36,6 @@ export interface DriverAnnotationSettings {
 
 export interface IDriverAnnotationControlsState {
     distinguishDrivers: boolean;
-
     annotateDriversOncoKbDisabled: boolean;
     annotateDriversOncoKbError: boolean;
     annotateDriversOncoKb: boolean;
@@ -92,6 +92,7 @@ export function buildDriverAnnotationSettings(
         _includeVUS: true,
         _includeUnknownOncogenicity: true,
         _customBinary: undefined,
+        _includeUnknownTier: false,
 
         set hotspots(val: boolean) {
             this._hotspots = val;
@@ -163,6 +164,12 @@ export function buildDriverAnnotationSettings(
         },
         get customTiersDefault() {
             return config.oncoprint_custom_driver_annotation_tiers_default;
+        },
+        get includeUnknownTier() {
+            return this._includeUnknownTier;
+        },
+        set includeUnknownTier(val: boolean) {
+            this._includeUnknownTier = val;
         },
     });
 }
@@ -244,6 +251,9 @@ export function buildDriverAnnotationControlsHandlers(
         },
         onSelectIncludeUnknownOncogenicity: (s: boolean) => {
             driverAnnotationSettings.includeUnknownOncogenicity = s;
+        },
+        onSelectIncludeUnknownTier: (s: boolean) => {
+            driverAnnotationSettings.includeUnknownTier = s;
         },
     };
     return handlers;
@@ -350,6 +360,9 @@ export function buildDriverAnnotationControlsState(
                 this.customDriverAnnotationTiers &&
                 this.customDriverAnnotationTiers.length === options.length
             );
+        },
+        get includeUnknownTier() {
+            return driverAnnotationSettings.includeUnknownTier;
         },
     });
 }
