@@ -207,18 +207,21 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             this.indexedVariantAnnotations.result &&
             !_.isEmpty(this.indexedVariantAnnotations.result)
         ) {
-            return getMutationsByTranscriptId(
-                this.getMutations(),
-                this.activeTranscript.result,
-                this.indexedVariantAnnotations.result,
-                this.canonicalTranscript.result
-                    ? this.canonicalTranscript.result.transcriptId ===
-                          this.activeTranscript.result
-                    : false
-            );
+            return this.getAnnotatedMutations(this.activeTranscript.result);
         } else {
             return this.getMutations();
         }
+    }
+
+    public getAnnotatedMutations(transcriptId: string): Mutation[] {
+        // by default annotate every mutation, no check for canonical transcript
+        return this.indexedVariantAnnotations.result
+            ? getMutationsByTranscriptId(
+                  this.getMutations(),
+                  transcriptId,
+                  this.indexedVariantAnnotations.result
+              )
+            : this.getMutations();
     }
 
     @computed
@@ -626,16 +629,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
                     );
                     // makes sure the annotations are actually of the form we are displaying (e.g. nonsynonymous)
                     return transcripts.filter(
-                        (t: string) =>
-                            getMutationsByTranscriptId(
-                                this.getMutations(),
-                                t,
-                                this.indexedVariantAnnotations.result!,
-                                this.canonicalTranscript.result
-                                    ? this.canonicalTranscript.result!
-                                          .transcriptId === t
-                                    : false
-                            ).length > 0
+                        t => this.getAnnotatedMutations(t).length > 0
                     );
                 } else {
                     return [];
@@ -918,11 +912,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
             return _.fromPairs(
                 this.transcriptsWithAnnotations.result.map((t: string) => [
                     t,
-                    getMutationsByTranscriptId(
-                        this.getMutations(),
-                        t,
-                        this.indexedVariantAnnotations.result!
-                    ),
+                    this.getAnnotatedMutations(t),
                 ])
             );
         } else {
