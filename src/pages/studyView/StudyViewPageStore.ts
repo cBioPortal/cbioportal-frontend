@@ -7204,23 +7204,49 @@ export class StudyViewPageStore
     }
 
     @computed get mutationFilterActive() {
-        // const numStatusFilterActive = [this.includeGermlineMutations, this.includeSomaticMutations,this.includeUnknownStatusMutations].filter(Boolean).length;
-        // const numDriverFilterActive = [this.driverAnnotationSettings.includeDriver, this.driverAnnotationSettings.includeVUS,this.driverAnnotationSettings.includeUnknownOncogenicity].filter(Boolean).length;
-        return (
-            this.alterationFilterActive ||
+        const statusOptionsUsed =
             !(
                 this.includeGermlineMutations &&
                 this.includeSomaticMutations &&
                 this.includeUnknownStatusMutations
-            )
-        );
+            ) &&
+            !(
+                !this.includeGermlineMutations &&
+                !this.includeSomaticMutations &&
+                !this.includeUnknownStatusMutations
+            );
+        return this.alterationFilterActive || statusOptionsUsed;
     }
 
     @computed get alterationFilterActive() {
-        return !(
-            this.driverAnnotationSettings.includeDriver &&
-            this.driverAnnotationSettings.includeVUS &&
-            this.driverAnnotationSettings.includeUnknownOncogenicity
-        );
+        const availableTiers =
+            this.customDriverAnnotationReport.result!.tiers || [];
+        const selectedTiers = _(
+            this.driverAnnotationSettings.driverTiers.entries()
+        )
+            .filter(([key, value]) => value)
+            .map(([key, value]) => key)
+            .value();
+        const tiersFilterOptionUsed =
+            !(
+                selectedTiers.length === 0 &&
+                !this.driverAnnotationSettings.includeUnknownTier
+            ) &&
+            !(
+                selectedTiers.length === availableTiers.length &&
+                this.driverAnnotationSettings.includeUnknownTier
+            );
+        const driverOptionsUsed =
+            !(
+                this.driverAnnotationSettings.includeDriver &&
+                this.driverAnnotationSettings.includeVUS &&
+                this.driverAnnotationSettings.includeUnknownOncogenicity
+            ) &&
+            !(
+                !this.driverAnnotationSettings.includeDriver &&
+                !this.driverAnnotationSettings.includeVUS &&
+                !this.driverAnnotationSettings.includeUnknownOncogenicity
+            );
+        return driverOptionsUsed || tiersFilterOptionUsed;
     }
 }
