@@ -5939,9 +5939,9 @@
           "type": "boolean"
         },
         "selectedTiers": {
-          "type": "array",
-          "items": {
-            "type": "string"
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
           }
         }
       },
@@ -7229,6 +7229,27 @@
             }
           }
         },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
         "patientTreatmentFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
@@ -7240,6 +7261,12 @@
         },
         "sampleTreatmentFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "selectedTiers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
         },
         "studyIds": {
           "type": "array",

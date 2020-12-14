@@ -307,7 +307,7 @@ export type GeneFilterQuery = {
 
         'includeVUS': boolean
 
-        'selectedTiers': Array < string >
+        'selectedTiers': {}
 
 };
 export type GenePanel = {
@@ -881,11 +881,27 @@ export type StudyViewFilter = {
         'genomicProfiles': Array < Array < string >
         >
 
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'selectedTiers': {}
 
         'studyIds': Array < string >
 
