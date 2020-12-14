@@ -481,12 +481,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 return () => {
-                    const geneColumn: MultiSelectionTableColumn = {
-                        columnKey: MultiSelectionTableColumnKey.GENE,
+                    const mutationCountColumn: MultiSelectionTableColumn = {
+                        columnKey:
+                            MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        geneColumn.columnNote = '⚠️';
-                        geneColumn.columnTooltip = (
+                        mutationCountColumn.columnNote = '⚠️';
+                        mutationCountColumn.columnTooltip = (
                             <span data-test="hidden-mutation-alterations">
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -529,11 +530,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.onChangeCancerGeneFilter!
                             }
                             columns={[
-                                geneColumn,
                                 {
                                     columnKey:
-                                        MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
+                                        MultiSelectionTableColumnKey.GENE,
                                 },
+                                mutationCountColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.NUMBER,
@@ -550,12 +551,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.FUSION_GENES_TABLE: {
                 return () => {
-                    const geneColumn: MultiSelectionTableColumn = {
-                        columnKey: MultiSelectionTableColumnKey.GENE,
+                    const fusionCountColumn: MultiSelectionTableColumn = {
+                        columnKey: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        geneColumn.columnNote = '⚠️';
-                        geneColumn.columnTooltip = (
+                        fusionCountColumn.columnNote = '⚠️';
+                        fusionCountColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -593,11 +594,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.onChangeCancerGeneFilter!
                             }
                             columns={[
-                                geneColumn,
                                 {
                                     columnKey:
-                                        MultiSelectionTableColumnKey.NUMBER_FUSIONS,
+                                        MultiSelectionTableColumnKey.GENE,
                                 },
+                                fusionCountColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.NUMBER,
@@ -615,13 +616,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
             case ChartTypeEnum.CNA_GENES_TABLE: {
                 return () => {
-                    const geneColumn: MultiSelectionTableColumn = {
-                        columnKey: MultiSelectionTableColumnKey.GENE,
-                        columnWidthRatio: 0.24,
+                    const cnaCountColumn: MultiSelectionTableColumn = {
+                        columnKey: MultiSelectionTableColumnKey.NUMBER,
+                        columnWidthRatio: 0.17,
                     };
                     if (this.props.store.alterationFilterActive) {
-                        geneColumn.columnNote = '⚠️';
-                        geneColumn.columnTooltip = (
+                        cnaCountColumn.columnNote = '⚠️';
+                        cnaCountColumn.columnTooltip = (
                             <span data-test="hidden-cna-alterations">
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
@@ -664,7 +665,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 this.props.onChangeCancerGeneFilter!
                             }
                             columns={[
-                                geneColumn,
+                                {
+                                    columnKey:
+                                        MultiSelectionTableColumnKey.GENE,
+                                    columnWidthRatio: 0.24,
+                                },
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.CYTOBAND,
@@ -674,11 +679,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     columnKey: MultiSelectionTableColumnKey.CNA,
                                     columnWidthRatio: 0.18,
                                 },
-                                {
-                                    columnKey:
-                                        MultiSelectionTableColumnKey.NUMBER,
-                                    columnWidthRatio: 0.17,
-                                },
+                                cnaCountColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.FREQ,
