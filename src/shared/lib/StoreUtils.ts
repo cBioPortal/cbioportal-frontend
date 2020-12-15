@@ -103,7 +103,7 @@ import {
     isNotGermlineMutation,
 } from 'shared/lib/MutationUtils';
 import { ObservableMap } from 'mobx';
-import { PharmacoDB } from 'shared/components/annotation/PharmacoDB';
+import PharmacoDB from 'shared/components/annotation/PharmacoDB';
 import { getPharmacoDBCnaView } from 'shared/lib/PharmacoDBUtils';
 import {
     IPharmacoDBCnaRequest,

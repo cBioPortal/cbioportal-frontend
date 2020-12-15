@@ -2,7 +2,9 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { Circle } from 'better-react-spinkit';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { errorIcon, loaderIcon } from 'react-mutation-mapper';
+
 import annotationStyles from './styles/annotation.module.scss';
 import { IPharmacoDBView } from 'shared/model/PharmacoDB.ts';
 import { observable } from 'mobx';
@@ -18,7 +20,7 @@ export function hideArrow(tooltipEl: any) {
 }
 
 @observer
-export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}> {
+export default class PharmacoDB extends React.Component<IPharmacoDBProps> {
     @observable tooltipDataLoadComplete: boolean = false;
 
     public static sortValue(
@@ -83,7 +85,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}> {
         */
 
         if (this.props.pharmacoDBStatus == 'error') {
-            pharmacoDBContent = this.errorIcon();
+            pharmacoDBContent = errorIcon('Error fetching PharmacoDB data');
         } else if (this.props.pharmacoDBEntry !== undefined) {
             if (
                 this.props.pharmacoDBEntry !== null &&
@@ -135,23 +137,6 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}> {
                 color="#aaa"
                 className="pull-left"
             />
-        );
-    }
-
-    public errorIcon() {
-        return (
-            <DefaultTooltip
-                overlay={<span>Error fetching pharmacoDB data</span>}
-                placement="right"
-                trigger={['hover', 'focus']}
-                destroyTooltipOnHide={true}
-            >
-                <span
-                    className={`${annotationStyles['annotation-item-error']}`}
-                >
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                </span>
-            </DefaultTooltip>
         );
     }
 

@@ -6,7 +6,6 @@ import {
     IPharmacoDBCnaRequest,
 } from 'shared/model/PharmacoDB.ts';
 import pharmacoDBClient from 'shared/api/PharmacoDBClientInstance';
-import { DiscreteCopyNumberData } from 'shared/api/generated/CBioPortalAPI';
 
 /**
  * Asynchronously return a map with PharmacoDB information from the oncoTreeCode, genes and CNA Viewdata given.
