@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import request from "superagent";
+import request, { on } from "superagent";
 import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
@@ -25,6 +25,9 @@ import {
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
+import {getPharmacoDBCnaView} from "shared/lib/PharmacoDBUtils";
+import {IPharmacoDBCnaRequest, IPharmacoDBViewList} from "shared/model/PharmacoDB.ts"; 
+
 import {Query, default as OncoKbAPI, Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
@@ -41,6 +44,7 @@ import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 import {stringListToIndexSet} from "./StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
+import PharmacoDB from 'shared/components/annotation/PharmacoDB';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -698,6 +702,51 @@ export async function fetchCivicVariants(civicGenes: ICivicGene,
     }
 
     return civicVariants;
+}
+
+/*
+PharmacoDB CNA View
+*/ 
+
+export async function fetchPharmacoDbCnaView(oncotreecode:MobxPromise<string>,
+                                             discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
+{
+    let otc:string = '';
+    
+    otc = oncotreecode.result || '';
+
+    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+         
+        let querySymbols: Array<IPharmacoDBCnaRequest> = [];
+        let alteration:string ='';
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            if(cna.alteration != 0){
+                switch (cna.alteration) {
+                    case -2:
+                        alteration ='DEEPDEL';
+                    break;
+                    case -1:
+                        alteration ='SHALLOWDEL';
+                    break;
+                    case 1:
+                        alteration ='GAIN';
+                    break;
+                    case 2:
+                        alteration ='AMP';
+                    break;
+                } 
+                const pharmacoDBCnaRequest:IPharmacoDBCnaRequest = {gene:cna.gene.hugoGeneSymbol,cna:alteration};
+                querySymbols.push(pharmacoDBCnaRequest);
+                alteration ='';
+            }
+        });
+    
+        let pharmacoDBViewList: IPharmacoDBViewList = (await getPharmacoDBCnaView(oncoTreeCode,querySymbols));
+    
+        return pharmacoDBViewList;
+    } else {
+        return {};
+    }
 }
 
 export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopyNumberFilter,
