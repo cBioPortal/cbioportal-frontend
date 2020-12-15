@@ -60,6 +60,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
+    annotationFilterActive,
     buildSelectedTiersMap,
     calculateLayout,
     ChartDataCountSet,
@@ -111,8 +112,10 @@ import {
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
     SpecialChartsUniqueKeyEnum,
+    statusFilterActive,
     StudyWithSamples,
     submitToPage,
+    tierFilterActive,
     updateSavedUserPreferenceChartIds,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
@@ -1990,6 +1993,7 @@ export class StudyViewPageStore
                     this.driverAnnotationSettings.includeVUS,
                     this.driverAnnotationSettings.includeUnknownOncogenicity,
                     this.selectedTiersMap,
+                    this.driverAnnotationSettings.includeUnknownTier,
                     this.includeGermlineMutations,
                     this.includeSomaticMutations,
                     this.includeUnknownStatusMutations
@@ -7204,49 +7208,27 @@ export class StudyViewPageStore
     }
 
     @computed get mutationFilterActive() {
-        const statusOptionsUsed =
-            !(
-                this.includeGermlineMutations &&
-                this.includeSomaticMutations &&
+        return (
+            this.alterationFilterActive ||
+            statusFilterActive(
+                this.includeGermlineMutations,
+                this.includeSomaticMutations,
                 this.includeUnknownStatusMutations
-            ) &&
-            !(
-                !this.includeGermlineMutations &&
-                !this.includeSomaticMutations &&
-                !this.includeUnknownStatusMutations
-            );
-        return this.alterationFilterActive || statusOptionsUsed;
+            )
+        );
     }
 
     @computed get alterationFilterActive() {
-        const availableTiers =
-            this.customDriverAnnotationReport.result!.tiers || [];
-        const selectedTiers = _(
-            this.driverAnnotationSettings.driverTiers.entries()
-        )
-            .filter(([key, value]) => value)
-            .map(([key, value]) => key)
-            .value();
-        const tiersFilterOptionUsed =
-            !(
-                selectedTiers.length === 0 &&
-                !this.driverAnnotationSettings.includeUnknownTier
-            ) &&
-            !(
-                selectedTiers.length === availableTiers.length &&
+        return (
+            tierFilterActive(
+                this.driverAnnotationSettings.driverTiers.toJS(),
                 this.driverAnnotationSettings.includeUnknownTier
-            );
-        const driverOptionsUsed =
-            !(
-                this.driverAnnotationSettings.includeDriver &&
-                this.driverAnnotationSettings.includeVUS &&
+            ) ||
+            annotationFilterActive(
+                this.driverAnnotationSettings.includeDriver,
+                this.driverAnnotationSettings.includeVUS,
                 this.driverAnnotationSettings.includeUnknownOncogenicity
-            ) &&
-            !(
-                !this.driverAnnotationSettings.includeDriver &&
-                !this.driverAnnotationSettings.includeVUS &&
-                !this.driverAnnotationSettings.includeUnknownOncogenicity
-            );
-        return driverOptionsUsed || tiersFilterOptionUsed;
+            )
+        );
     }
 }

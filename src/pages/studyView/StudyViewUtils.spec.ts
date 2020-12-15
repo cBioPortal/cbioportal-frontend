@@ -55,6 +55,9 @@ import {
     updateSavedUserPreferenceChartIds,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
+    annotationFilterActive,
+    tierFilterActive,
+    statusFilterActive,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataBin,
@@ -252,6 +255,23 @@ describe('StudyViewUtils', () => {
                 caseLists: [],
                 genericAssayDataFilters: [],
             } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
+            console.log(
+                getVirtualStudyDescription(
+                    '',
+                    studies as any,
+                    filter,
+                    {
+                        attribute1: 'attribute1 name',
+                        attribute2: 'attribute2 name',
+                        attribute3: 'attribute3 name',
+                        cancer_study_sequenced: ' Mutated Genes',
+                        cancer_study_fusion: 'Fusion Genes',
+                        cancer_study_cna: 'CNA Genes',
+                    },
+                    {} as any,
+                    {} as any
+                )
+            );
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -3470,6 +3490,46 @@ describe('StudyViewUtils', () => {
                 },
                 geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
             );
+        });
+    });
+
+    describe('annotationFilterActive', () => {
+        it('false when all excluded', () => {
+            assert.isFalse(annotationFilterActive(false, false, false));
+        });
+        it('false when all included', () => {
+            assert.isFalse(annotationFilterActive(true, true, true));
+        });
+
+        it('true when only single annotation type included', () => {
+            assert(annotationFilterActive(false, true, false));
+        });
+    });
+
+    describe('tierFilterActive', () => {
+        it('false when all tier types included', () => {
+            assert.isFalse(tierFilterActive({ tier1: true }, true));
+        });
+        it('false when all tier types excluded', () => {
+            assert.isFalse(tierFilterActive({ tier1: false }, false));
+        });
+        it('true when single tier not selected', () => {
+            assert(tierFilterActive({ tier1: true, tier2: false }, true));
+        });
+        it('true when unkown tier not selected', () => {
+            assert(tierFilterActive({ tier1: true, tier2: true }, false));
+        });
+    });
+
+    describe('statusFilterActive', () => {
+        it('false when all mutation status included', () => {
+            assert.isFalse(statusFilterActive(true, true, true));
+        });
+        it('false when all mutation status excluded', () => {
+            assert.isFalse(statusFilterActive(false, false, false));
+        });
+        it('false when single mutation status included', () => {
+            assert(statusFilterActive(false, true, false));
         });
     });
 });

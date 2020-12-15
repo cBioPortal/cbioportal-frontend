@@ -13,6 +13,7 @@ import {
 import {
     ChartMeta,
     ChartType,
+    createFilterIconText,
     DataType,
     geneFilterQueryToOql,
     getCNAColorByAlteration,
@@ -39,11 +40,10 @@ import {
 } from '../groupComparison/GroupComparisonUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
-    GeneFilterQuery,
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { GeneFilterQuery } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -577,17 +577,9 @@ export default class UserSelections extends React.Component<
                 <PillTag
                     content={displayGeneSymbol}
                     backgroundColor={color}
-                    infoSection={this.groupedGeneFilterIcons(
-                        geneQuery.includeDriver,
-                        geneQuery.includeVUS,
-                        geneQuery.includeUnknownOncogenicity,
-                        _(geneQuery.selectedTiers)
-                            .pickBy((isSelected, tier) => isSelected)
-                            .keys()
-                            .value(),
-                        geneQuery.includeGermline,
-                        geneQuery.includeSomatic,
-                        geneQuery.includeUnknownStatus
+                    infoSection={createFilterIconText(
+                        chartMeta.chartType,
+                        geneQuery
                     )}
                     onDelete={() =>
                         this.props.removeGeneFilter(
@@ -616,81 +608,6 @@ export default class UserSelections extends React.Component<
                 />
             );
         });
-    }
-
-    private groupedGeneFilterIcons(
-        includeDriver?: boolean,
-        includeVUS?: boolean,
-        includeUnknownOncogenicity?: boolean,
-        selectedTiers?: string[],
-        includeGermline?: boolean,
-        includeSomatic?: boolean,
-        includeUnknownStatus?: boolean
-    ): JSX.Element | null {
-        const hasFilter = !(
-            includeDriver &&
-            includeVUS &&
-            includeUnknownOncogenicity &&
-            includeGermline &&
-            includeSomatic &&
-            includeUnknownStatus
-        );
-        if (!hasFilter) return null;
-        const driverFilterTextElements: string[] = [];
-        includeDriver && driverFilterTextElements.push('driver');
-        includeVUS && driverFilterTextElements.push('passenger');
-        includeUnknownOncogenicity && driverFilterTextElements.push('unknown');
-        const statusFilterTextElements: string[] = [];
-        includeGermline && statusFilterTextElements.push('germline');
-        includeSomatic && statusFilterTextElements.push('somatic');
-        includeUnknownStatus && statusFilterTextElements.push('unknown');
-        const driverFilterText = driverFilterTextElements.join(' or ');
-        const statusFilterText = statusFilterTextElements.join(' or ');
-        const tiersFilterText =
-            (selectedTiers &&
-                selectedTiers.length > 0 &&
-                selectedTiers.join(' or ')) ||
-            '';
-        return (
-            <div
-                data-test={'groupedGeneFilterIcons'}
-                className={styles.content}
-            >
-                {driverFilterText && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <span>annotation:</span>&nbsp;
-                        <span>{driverFilterText}</span>
-                    </div>
-                )}
-                {statusFilterText && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <span>status:</span>&nbsp;
-                        <span>{statusFilterText}</span>
-                    </div>
-                )}
-                {tiersFilterText && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                        }}
-                    >
-                        <span>category:</span>&nbsp;
-                        <span>{tiersFilterText}</span>
-                    </div>
-                )}
-            </div>
-        );
     }
 
     private groupedCaseLists(caseLists: string[]): JSX.Element[] {
