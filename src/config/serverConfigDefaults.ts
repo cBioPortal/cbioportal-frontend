@@ -168,6 +168,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
+    enable_request_body_gzip_compression: false,
 };
 
 export default ServerConfigDefaults;
