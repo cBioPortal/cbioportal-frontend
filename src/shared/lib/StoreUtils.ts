@@ -103,6 +103,12 @@ import {
     isNotGermlineMutation,
 } from 'shared/lib/MutationUtils';
 import { ObservableMap } from 'mobx';
+import { PharmacoDB } from 'shared/components/annotation/PharmacoDB';
+import { getPharmacoDBCnaView } from 'shared/lib/PharmacoDBUtils';
+import {
+    IPharmacoDBCnaRequest,
+    IPharmacoDBViewList,
+} from 'shared/model/PharmacoDB.ts';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
@@ -947,6 +953,57 @@ export async function fetchDiscreteCNAData(
         );
     } else {
         return [];
+    }
+}
+
+/*
+PharmacoDB CNA View
+*/
+
+export async function fetchPharmacoDbCnaView(
+    oncotreecode: MobxPromise<string>,
+    discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
+) {
+    let otc: string = '';
+
+    otc = oncotreecode.result || '';
+
+    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+        let querySymbols: Array<IPharmacoDBCnaRequest> = [];
+        let alteration: string = '';
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            if (cna.alteration != 0) {
+                switch (cna.alteration) {
+                    case -2:
+                        alteration = 'DEEPDEL';
+                        break;
+                    case -1:
+                        alteration = 'SHALLOWDEL';
+                        break;
+                    case 1:
+                        alteration = 'GAIN';
+                        break;
+                    case 2:
+                        alteration = 'AMP';
+                        break;
+                }
+                const pharmacoDBCnaRequest: IPharmacoDBCnaRequest = {
+                    gene: cna.gene.hugoGeneSymbol,
+                    cna: alteration,
+                };
+                querySymbols.push(pharmacoDBCnaRequest);
+                alteration = '';
+            }
+        });
+
+        let pharmacoDBViewList: IPharmacoDBViewList = await getPharmacoDBCnaView(
+            oncoTreeCode,
+            querySymbols
+        );
+
+        return pharmacoDBViewList;
+    } else {
+        return {};
     }
 }
 
