@@ -734,7 +734,7 @@ export default class ResultsViewPage extends React.Component<
 
     public render() {
         if (
-            this.urlWrapper.isPendingSession ||
+            this.urlWrapper.isTemporarySessionPendingSave ||
             this.urlWrapper.isLoadingSession ||
             !this.resultsViewPageStore.studies.isComplete
         ) {
