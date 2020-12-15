@@ -6,7 +6,6 @@
 
 .ChartsPanel {
     display: flex;
-    justify-content: flex-start;
 
     > div {
         margin-right: $standardMargin;
@@ -138,6 +137,6 @@
 
 .inlineAlterationTypeSelectorMenuDash {
     height: 560px;
-    width: 196px;
+    min-width: 196px;
     margin-right: 0px;
 }
