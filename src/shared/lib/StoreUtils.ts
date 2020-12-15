@@ -997,7 +997,7 @@ export async function fetchPharmacoDbCnaView(
         });
 
         let pharmacoDBViewList: IPharmacoDBViewList = await getPharmacoDBCnaView(
-            oncoTreeCode,
+            otc,
             querySymbols
         );
 
