@@ -85,62 +85,66 @@ export default abstract class ComparisonStore {
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    selectedCopyNumberEnrichmentEventTypes: CopyNumberEnrichmentEventType[] = [
-        'HOMDEL',
-        'AMP',
-    ];
+    selectedCopyNumberEnrichmentEventTypes: {
+        [type: CopyNumberEnrichmentEventType]: boolean;
+    } = {
+        HOMDEL: true,
+        AMP: true,
+    };
     @observable.ref
-    selectedMutationEnrichmentEventTypes: MutationEnrichmentEventType[] = [
-        'missense_mutation',
-        'missense',
-        'missense_variant',
-        'frame_shift_ins',
-        'frame_shift_del',
-        'frameshift',
-        'frameshift_deletion',
-        'frameshift_insertion',
-        'de_novo_start_outofframe',
-        'frameshift_variant',
-        'nonsense_mutation',
-        'nonsense',
-        'stopgain_snv',
-        'stop_gained',
-        'splice_site',
-        'splice',
-        'splicing',
-        'splice_site_snp',
-        'splice_site_del',
-        'splice_site_indel',
-        'splice_region_variant',
-        'splice_region',
-        'translation_start_site',
-        'initiator_codon_variant',
-        'start_codon_snp',
-        'start_codon_del',
-        'nonstop_mutation',
-        'stop_lost',
-        'inframe_del',
-        'inframe_deletion',
-        'in_frame_del',
-        'in_frame_deletion',
-        'inframe_ins',
-        'inframe_insertion',
-        'in_frame_ins',
-        'in_frame_insertion',
-        'indel',
-        'nonframeshift_deletion',
-        'nonframeshift',
-        'nonframeshift_insertion',
-        'targeted_region',
-        'inframe',
-        'truncating',
-        'feature_truncation',
-        'fusion',
-        'silent',
-        'synonymous_variant',
-        'any',
-        'other',
-    ];
+    selectedMutationEnrichmentEventTypes: {
+        [type: MutationEnrichmentEventType]: boolean;
+    } = {
+        missense_mutation: true,
+        missense: true,
+        missense_variant: true,
+        frame_shift_ins: true,
+        frame_shift_del: true,
+        frameshift: true,
+        frameshift_deletion: true,
+        frameshift_insertion: true,
+        de_novo_start_outofframe: true,
+        frameshift_variant: true,
+        nonsense_mutation: true,
+        nonsense: true,
+        stopgain_snv: true,
+        stop_gained: true,
+        splice_site: true,
+        splice: true,
+        splicing: true,
+        splice_site_snp: true,
+        splice_site_del: true,
+        splice_site_indel: true,
+        splice_region_variant: true,
+        splice_region: true,
+        translation_start_site: true,
+        initiator_codon_variant: true,
+        start_codon_snp: true,
+        start_codon_del: true,
+        nonstop_mutation: true,
+        stop_lost: true,
+        inframe_del: true,
+        inframe_deletion: true,
+        in_frame_del: true,
+        in_frame_deletion: true,
+        inframe_ins: true,
+        inframe_insertion: true,
+        in_frame_ins: true,
+        in_frame_insertion: true,
+        indel: true,
+        nonframeshift_deletion: true,
+        nonframeshift: true,
+        nonframeshift_insertion: true,
+        targeted_region: true,
+        inframe: true,
+        truncating: true,
+        feature_truncation: true,
+        fusion: true,
+        silent: true,
+        synonymous_variant: true,
+        any: true,
+        other: true,
+    };
 
     constructor(
         protected appStore: AppStore,
@@ -643,7 +647,11 @@ export default abstract class ComparisonStore {
                 'other',
             ];
             //Only return Mutation profile if any mutation type is selected, otherwise return {}
-            if (this.selectedMutationEnrichmentEventTypes.length > 0) {
+            if (
+                _(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
                 // set default enrichmentProfileMap if not selected yet
                 if (_.isEmpty(this._mutationEnrichmentProfileMap)) {
                     const molecularProfilesbyStudyId = _.groupBy(
@@ -674,7 +682,11 @@ export default abstract class ComparisonStore {
                 'AMP',
             ];
             //Only return Copy Number profile if any copy number type is selected, otherwise return {}
-            if (this.selectedCopyNumberEnrichmentEventTypes.length > 0) {
+            if (
+                _(this.selectedCopyNumberEnrichmentEventTypes)
+                    .values()
+                    .some()
+            ) {
                 // set default enrichmentProfileMap if not selected yet
                 if (_.isEmpty(this._copyNumberEnrichmentProfileMap)) {
                     const molecularProfilesbyStudyId = _.groupBy(
@@ -1206,8 +1218,12 @@ export default abstract class ComparisonStore {
                     this.alterationsEnrichmentDataRequestGroups.result &&
                     this.alterationsEnrichmentDataRequestGroups.result.length >
                         1 &&
-                    (this.selectedMutationEnrichmentEventTypes.length > 0 ||
-                        this.selectedCopyNumberEnrichmentEventTypes.length > 0)
+                    (_(this.selectedMutationEnrichmentEventTypes)
+                        .values()
+                        .some() ||
+                        _(this.selectedCopyNumberEnrichmentEventTypes)
+                            .values()
+                            .some())
                 ) {
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
                         enrichmentScope: this.usePatientLevelEnrichments

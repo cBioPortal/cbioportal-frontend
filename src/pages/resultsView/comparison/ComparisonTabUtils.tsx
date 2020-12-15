@@ -1,5 +1,6 @@
 import { action } from 'mobx';
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import _ from 'lodash';
 
 export type CopyNumberEnrichmentEventType = 'HOMDEL' | 'AMP';
 
@@ -59,11 +60,19 @@ export function buildAlterationEnrichmentTypeSelectorHandlers(
 ) {
     const handlers = {
         updateSelectedMutations: action((s: MutationEnrichmentEventType[]) => {
-            self.selectedMutationEnrichmentEventTypes = s;
+            self.selectedMutationEnrichmentEventTypes = _.mapValues(
+                self.selectedMutationEnrichmentEventTypes,
+                (selected: boolean, type: MutationEnrichmentEventType) =>
+                    s.includes(type)
+            );
         }),
         updateSelectedCopyNumber: action(
             (s: CopyNumberEnrichmentEventType[]) => {
-                self.selectedCopyNumberEnrichmentEventTypes = s;
+                self.selectedCopyNumberEnrichmentEventTypes = _.mapValues(
+                    self.selectedCopyNumberEnrichmentEventTypes,
+                    (selected: boolean, type: CopyNumberEnrichmentEventType) =>
+                        s.includes(type)
+                );
             }
         ),
     };
