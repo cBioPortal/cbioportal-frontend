@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { action, computed, observable, toJS } from 'mobx';
 import autobind from 'autobind-decorator';
 import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
@@ -9,6 +9,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'pages/resultsView/comparison/ComparisonTabUtils';
+import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 
 export interface IAlterationEnrichmentTypeSelectorHandlers {
     updateSelectedMutations: (
@@ -20,8 +21,8 @@ export interface IAlterationEnrichmentTypeSelectorHandlers {
 }
 
 export interface IAlterationEnrichmentTypeSelectorProps {
-    // state: AlterationEnrichmentEventType[];
     handlers: IAlterationEnrichmentTypeSelectorHandlers;
+    store: ComparisonStore;
     classNames?: string;
 }
 
@@ -30,314 +31,221 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     IAlterationEnrichmentTypeSelectorProps,
     {}
 > {
-    public currentSelectedCopyNumber = observable({
-        HOMDEL: true,
-        AMP: true,
-    });
-    public currentSelectedMutations = observable({
-        missense_mutation: true,
-        missense: true,
-        missense_variant: true,
-        frame_shift_ins: true,
-        frame_shift_del: true,
-        frameshift: true,
-        frameshift_deletion: true,
-        frameshift_insertion: true,
-        de_novo_start_outofframe: true,
-        frameshift_variant: true,
-        nonsense_mutation: true,
-        nonsense: true,
-        stopgain_snv: true,
-        stop_gained: true,
-        splice_site: true,
-        splice: true,
-        splicing: true,
-        splice_site_snp: true,
-        splice_site_del: true,
-        splice_site_indel: true,
-        splice_region_variant: true,
-        splice_region: true,
-        translation_start_site: true,
-        initiator_codon_variant: true,
-        start_codon_snp: true,
-        start_codon_del: true,
-        nonstop_mutation: true,
-        stop_lost: true,
-        inframe_del: true,
-        inframe_deletion: true,
-        in_frame_del: true,
-        in_frame_deletion: true,
-        inframe_ins: true,
-        inframe_insertion: true,
-        in_frame_ins: true,
-        in_frame_insertion: true,
-        indel: true,
-        nonframeshift_deletion: true,
-        nonframeshift: true,
-        nonframeshift_insertion: true,
-        targeted_region: true,
-        inframe: true,
-        truncating: true,
-        feature_truncation: true,
-        fusion: true,
-        silent: true,
-        synonymous_variant: true,
-        any: true,
-        other: true,
-    });
+    private currentSelectedMutations: {
+        [key in MutationEnrichmentEventType]?: boolean;
+    };
+    private currentSelectedCopyNumber: {
+        [key in CopyNumberEnrichmentEventType]?: boolean;
+    };
 
-    public allCopyNumberSelected =
-        this.currentSelectedCopyNumber.HOMDEL &&
-        this.currentSelectedCopyNumber.AMP;
-
-    public updateAllCopyNumberSelected(value: boolean) {
-        this.allCopyNumberSelected = value;
-        this.currentSelectedCopyNumber.HOMDEL = value;
-        this.currentSelectedCopyNumber.AMP = value;
+    componentWillMount() {
+        this.currentSelectedMutations = observable(
+            toJS(this.props.store.selectedMutationEnrichmentEventTypes)
+        );
+        this.currentSelectedCopyNumber = observable(
+            toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
+        );
     }
 
-    public allMutationsSelected =
-        this.currentSelectedMutations.missense &&
-        this.currentSelectedMutations.missense_mutation &&
-        this.currentSelectedMutations.missense_variant &&
-        this.currentSelectedMutations.frame_shift_ins &&
-        this.currentSelectedMutations.frameshift_insertion &&
-        this.currentSelectedMutations.frame_shift_del &&
-        this.currentSelectedMutations.frameshift_deletion &&
-        this.currentSelectedMutations.frameshift &&
-        this.currentSelectedMutations.de_novo_start_outofframe &&
-        this.currentSelectedMutations.frameshift_variant &&
-        this.currentSelectedMutations.nonsense_mutation &&
-        this.currentSelectedMutations.nonsense &&
-        this.currentSelectedMutations.stopgain_snv &&
-        this.currentSelectedMutations.stop_gained &&
-        this.currentSelectedMutations.splice_site &&
-        this.currentSelectedMutations.splice &&
-        this.currentSelectedMutations.splicing &&
-        this.currentSelectedMutations.splice_site_snp &&
-        this.currentSelectedMutations.splice_site_del &&
-        this.currentSelectedMutations.splice_site_indel &&
-        this.currentSelectedMutations.splice_region &&
-        this.currentSelectedMutations.splice_region_variant &&
-        this.currentSelectedMutations.translation_start_site &&
-        this.currentSelectedMutations.initiator_codon_variant &&
-        this.currentSelectedMutations.start_codon_snp &&
-        this.currentSelectedMutations.start_codon_del &&
-        this.currentSelectedMutations.nonstop_mutation &&
-        this.currentSelectedMutations.stop_lost &&
-        this.currentSelectedMutations.inframe_del &&
-        this.currentSelectedMutations.inframe_deletion &&
-        this.currentSelectedMutations.in_frame_del &&
-        this.currentSelectedMutations.in_frame_deletion &&
-        this.currentSelectedMutations.indel &&
-        this.currentSelectedMutations.inframe_ins &&
-        this.currentSelectedMutations.inframe_insertion &&
-        this.currentSelectedMutations.in_frame_ins &&
-        this.currentSelectedMutations.in_frame_insertion &&
-        this.currentSelectedMutations.nonframeshift_deletion &&
-        this.currentSelectedMutations.nonframeshift &&
-        this.currentSelectedMutations.nonframeshift_insertion &&
-        this.currentSelectedMutations.inframe &&
-        this.currentSelectedMutations.truncating &&
-        this.currentSelectedMutations.feature_truncation &&
-        this.currentSelectedMutations.fusion &&
-        this.currentSelectedMutations.silent &&
-        this.currentSelectedMutations.synonymous_variant &&
-        this.currentSelectedMutations.targeted_region &&
-        this.currentSelectedMutations.any &&
-        this.currentSelectedMutations.other;
+    @computed get allCopyNumberSelected() {
+        return _(this.currentSelectedCopyNumber)
+            .values()
+            .every();
+    }
 
+    @computed get allMutationsSelected() {
+        return _(this.currentSelectedMutations)
+            .values()
+            .every();
+    }
+
+    @action
+    public updateAllCopyNumberSelected(value: boolean) {
+        _.mapValues(this.currentSelectedCopyNumber, () => value);
+    }
+
+    @action
     public updateAllMutationsSelected(value: boolean) {
-        this.allMutationsSelected = value;
-        this.currentSelectedMutations.missense = value;
-        this.currentSelectedMutations.missense_mutation = value;
-        this.currentSelectedMutations.missense_variant = value;
-        this.currentSelectedMutations.frame_shift_ins = value;
-        this.currentSelectedMutations.frameshift_insertion = value;
-        this.currentSelectedMutations.frame_shift_del = value;
-        this.currentSelectedMutations.frameshift_deletion = value;
-        this.currentSelectedMutations.frameshift = value;
-        this.currentSelectedMutations.de_novo_start_outofframe = value;
-        this.currentSelectedMutations.frameshift_variant = value;
-        this.currentSelectedMutations.nonsense_mutation = value;
-        this.currentSelectedMutations.nonsense = value;
-        this.currentSelectedMutations.stopgain_snv = value;
-        this.currentSelectedMutations.stop_gained = value;
-        this.currentSelectedMutations.splice_site = value;
-        this.currentSelectedMutations.splice = value;
-        this.currentSelectedMutations.splicing = value;
-        this.currentSelectedMutations.splice_site_snp = value;
-        this.currentSelectedMutations.splice_site_del = value;
-        this.currentSelectedMutations.splice_site_indel = value;
-        this.currentSelectedMutations.splice_region = value;
-        this.currentSelectedMutations.splice_region_variant = value;
-        this.currentSelectedMutations.translation_start_site = value;
-        this.currentSelectedMutations.initiator_codon_variant = value;
-        this.currentSelectedMutations.start_codon_snp = value;
-        this.currentSelectedMutations.start_codon_del = value;
-        this.currentSelectedMutations.nonstop_mutation = value;
-        this.currentSelectedMutations.stop_lost = value;
-        this.currentSelectedMutations.inframe_del = value;
-        this.currentSelectedMutations.inframe_deletion = value;
-        this.currentSelectedMutations.in_frame_del = value;
-        this.currentSelectedMutations.in_frame_deletion = value;
-        this.currentSelectedMutations.indel = value;
-        this.currentSelectedMutations.inframe_ins = value;
-        this.currentSelectedMutations.inframe_insertion = value;
-        this.currentSelectedMutations.in_frame_ins = value;
-        this.currentSelectedMutations.in_frame_insertion = value;
-        this.currentSelectedMutations.nonframeshift_deletion = value;
-        this.currentSelectedMutations.nonframeshift = value;
-        this.currentSelectedMutations.nonframeshift_insertion = value;
-        this.currentSelectedMutations.inframe = value;
-        this.currentSelectedMutations.truncating = value;
-        this.currentSelectedMutations.feature_truncation = value;
-        this.currentSelectedMutations.fusion = value;
-        this.currentSelectedMutations.silent = value;
-        this.currentSelectedMutations.synonymous_variant = value;
-        this.currentSelectedMutations.targeted_region = value;
-        this.currentSelectedMutations.any = value;
-        this.currentSelectedMutations.other = value;
+        _.mapValues(this.currentSelectedMutations, () => value);
     }
 
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case 'HOMDEL':
-                this.currentSelectedCopyNumber.HOMDEL = !this
-                    .currentSelectedCopyNumber.HOMDEL;
+                this.toggleSelectedCopyNumber(
+                    CopyNumberEnrichmentEventType.HOMDEL
+                );
                 break;
             case 'AMP':
-                this.currentSelectedCopyNumber.AMP = !this
-                    .currentSelectedCopyNumber.AMP;
+                this.toggleSelectedCopyNumber(
+                    CopyNumberEnrichmentEventType.AMP
+                );
                 break;
             case 'missense':
-                this.currentSelectedMutations.missense = !this
-                    .currentSelectedMutations.missense;
-                this.currentSelectedMutations.missense_mutation = !this
-                    .currentSelectedMutations.missense_mutation;
-                this.currentSelectedMutations.missense_variant = !this
-                    .currentSelectedMutations.missense_variant;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.missense
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.missense_mutation
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.missense_variant
+                );
                 break;
             case 'frame_shift_ins':
-                this.currentSelectedMutations.frame_shift_ins = !this
-                    .currentSelectedMutations.frame_shift_ins;
-                this.currentSelectedMutations.frameshift_insertion = !this
-                    .currentSelectedMutations.frameshift_insertion;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frame_shift_ins
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frameshift_insertion
+                );
                 break;
             case 'frame_shift_del':
-                this.currentSelectedMutations.frame_shift_del = !this
-                    .currentSelectedMutations.frame_shift_del;
-                this.currentSelectedMutations.frameshift_deletion = !this
-                    .currentSelectedMutations.frameshift_deletion;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frame_shift_del
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frameshift_deletion
+                );
                 break;
             case 'frameshift':
-                this.currentSelectedMutations.frameshift = !this
-                    .currentSelectedMutations.frameshift;
-                this.currentSelectedMutations.de_novo_start_outofframe = !this
-                    .currentSelectedMutations.de_novo_start_outofframe;
-                this.currentSelectedMutations.frameshift_variant = !this
-                    .currentSelectedMutations.frameshift_variant;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frameshift
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.de_novo_start_outofframe
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.frameshift_variant
+                );
                 break;
             case 'nonsense':
-                this.currentSelectedMutations.nonsense_mutation = !this
-                    .currentSelectedMutations.nonsense_mutation;
-                this.currentSelectedMutations.nonsense = !this
-                    .currentSelectedMutations.nonsense;
-                this.currentSelectedMutations.stopgain_snv = !this
-                    .currentSelectedMutations.stopgain_snv;
-                this.currentSelectedMutations.stop_gained = !this
-                    .currentSelectedMutations.stop_gained;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonsense_mutation
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonsense
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.stopgain_snv
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.stop_gained
+                );
                 break;
             case 'splice_site':
-                this.currentSelectedMutations.splice_site = !this
-                    .currentSelectedMutations.splice_site;
-                this.currentSelectedMutations.splice = !this
-                    .currentSelectedMutations.splice;
-                this.currentSelectedMutations.splicing = !this
-                    .currentSelectedMutations.splicing;
-                this.currentSelectedMutations.splice_site_snp = !this
-                    .currentSelectedMutations.splice_site_snp;
-                this.currentSelectedMutations.splice_site_del = !this
-                    .currentSelectedMutations.splice_site_del;
-                this.currentSelectedMutations.splice_site_indel = !this
-                    .currentSelectedMutations.splice_site_indel;
-                this.currentSelectedMutations.splice_region = !this
-                    .currentSelectedMutations.splice_region;
-                this.currentSelectedMutations.splice_region_variant = !this
-                    .currentSelectedMutations.splice_region_variant;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_site
+                );
+                this.toggleSelectedMutation(MutationEnrichmentEventType.splice);
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splicing
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_site_snp
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_site_del
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_site_indel
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_region
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.splice_region_variant
+                );
                 break;
             case 'nonstart':
-                this.currentSelectedMutations.translation_start_site = !this
-                    .currentSelectedMutations.translation_start_site;
-                this.currentSelectedMutations.initiator_codon_variant = !this
-                    .currentSelectedMutations.initiator_codon_variant;
-                this.currentSelectedMutations.start_codon_snp = !this
-                    .currentSelectedMutations.start_codon_snp;
-                this.currentSelectedMutations.start_codon_del = !this
-                    .currentSelectedMutations.start_codon_del;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.translation_start_site
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.initiator_codon_variant
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.start_codon_snp
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.start_codon_del
+                );
                 break;
             case 'nonstop':
-                this.currentSelectedMutations.nonstop_mutation = !this
-                    .currentSelectedMutations.nonstop_mutation;
-                this.currentSelectedMutations.stop_lost = !this
-                    .currentSelectedMutations.stop_lost;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonstop_mutation
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.stop_lost
+                );
                 break;
             case 'in_frame_del':
-                this.currentSelectedMutations.inframe_del = !this
-                    .currentSelectedMutations.inframe_del;
-                this.currentSelectedMutations.inframe_deletion = !this
-                    .currentSelectedMutations.inframe_deletion;
-                this.currentSelectedMutations.in_frame_del = !this
-                    .currentSelectedMutations.in_frame_del;
-                this.currentSelectedMutations.in_frame_deletion = !this
-                    .currentSelectedMutations.in_frame_deletion;
-                this.currentSelectedMutations.indel = !this
-                    .currentSelectedMutations.indel;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.inframe_del
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.inframe_deletion
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.in_frame_del
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.in_frame_deletion
+                );
+                this.toggleSelectedMutation(MutationEnrichmentEventType.indel);
                 break;
             case 'in_frame_ins':
-                this.currentSelectedMutations.inframe_ins = !this
-                    .currentSelectedMutations.inframe_ins;
-                this.currentSelectedMutations.inframe_insertion = !this
-                    .currentSelectedMutations.inframe_insertion;
-                this.currentSelectedMutations.in_frame_ins = !this
-                    .currentSelectedMutations.in_frame_ins;
-                this.currentSelectedMutations.in_frame_insertion = !this
-                    .currentSelectedMutations.in_frame_insertion;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.inframe_ins
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.inframe_insertion
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.in_frame_ins
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.in_frame_insertion
+                );
                 break;
             case 'inframe':
-                this.currentSelectedMutations.nonframeshift_deletion = !this
-                    .currentSelectedMutations.nonframeshift_deletion;
-                this.currentSelectedMutations.nonframeshift = !this
-                    .currentSelectedMutations.nonframeshift;
-                this.currentSelectedMutations.nonframeshift_insertion = !this
-                    .currentSelectedMutations.nonframeshift_insertion;
-                this.currentSelectedMutations.inframe = !this
-                    .currentSelectedMutations.inframe;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonframeshift_deletion
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonframeshift
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.nonframeshift_insertion
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.inframe
+                );
                 break;
             case 'truncating':
-                this.currentSelectedMutations.truncating = !this
-                    .currentSelectedMutations.truncating;
-                this.currentSelectedMutations.feature_truncation = !this
-                    .currentSelectedMutations.feature_truncation;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.truncating
+                );
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.feature_truncation
+                );
                 break;
             case 'fusion':
-                this.currentSelectedMutations.fusion = !this
-                    .currentSelectedMutations.fusion;
+                this.toggleSelectedMutation(MutationEnrichmentEventType.fusion);
                 break;
             case 'silent':
-                this.currentSelectedMutations.silent = !this
-                    .currentSelectedMutations.silent;
-                this.currentSelectedMutations.synonymous_variant = !this
-                    .currentSelectedMutations.synonymous_variant;
+                this.toggleSelectedMutation(MutationEnrichmentEventType.silent);
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.synonymous_variant
+                );
                 break;
             case 'other':
-                this.currentSelectedMutations.targeted_region = !this
-                    .currentSelectedMutations.targeted_region;
-                this.currentSelectedMutations.any = !this
-                    .currentSelectedMutations.any;
-                this.currentSelectedMutations.other = !this
-                    .currentSelectedMutations.other;
+                this.toggleSelectedMutation(
+                    MutationEnrichmentEventType.targeted_region
+                );
+                this.toggleSelectedMutation(MutationEnrichmentEventType.any);
+                this.toggleSelectedMutation(MutationEnrichmentEventType.other);
                 break;
             case 'AllCopyNumberSelected':
                 this.updateAllCopyNumberSelected(!this.allCopyNumberSelected);
@@ -348,14 +256,30 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         }
     }
 
+    private toggleSelectedMutation(type: MutationEnrichmentEventType) {
+        this.currentSelectedMutations[type] = !this.currentSelectedMutations[
+            type
+        ];
+    }
+
+    private toggleSelectedCopyNumber(type: CopyNumberEnrichmentEventType) {
+        this.currentSelectedCopyNumber[type] = !this.currentSelectedCopyNumber[
+            type
+        ];
+    }
+
     @autobind
     private updateSelectedAlterations(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>
     ) {
-        let selectedMutations = _.keys(_.pickBy(this.currentSelectedMutations));
-        let selectedCopyNumber = _.keys(
-            _.pickBy(this.currentSelectedCopyNumber)
-        );
+        const selectedMutations = _(this.currentSelectedMutations)
+            .pickBy()
+            .keys()
+            .value();
+        const selectedCopyNumber = _(this.currentSelectedCopyNumber)
+            .pickBy()
+            .keys()
+            .value();
         this.props.handlers.updateSelectedMutations(
             selectedMutations as MutationEnrichmentEventType[]
         );
@@ -382,10 +306,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                             data-test="CheckCopynumberAlterations"
                             type="checkbox"
                             value={'AllCopyNumberSelected'}
-                            checked={
-                                this.currentSelectedCopyNumber.HOMDEL &&
-                                this.currentSelectedCopyNumber.AMP
-                            }
+                            checked={this.allCopyNumberSelected}
                             onClick={this.onInputClick}
                         />{' '}
                         Copy Number Alterations
@@ -421,77 +342,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                             data-test="Mutations"
                             type="checkbox"
                             value={'AllMutationsSelected'}
-                            checked={
-                                this.currentSelectedMutations.missense &&
-                                this.currentSelectedMutations
-                                    .missense_mutation &&
-                                this.currentSelectedMutations
-                                    .missense_variant &&
-                                this.currentSelectedMutations.frame_shift_ins &&
-                                this.currentSelectedMutations
-                                    .frameshift_insertion &&
-                                this.currentSelectedMutations.frame_shift_del &&
-                                this.currentSelectedMutations
-                                    .frameshift_deletion &&
-                                this.currentSelectedMutations.frameshift &&
-                                this.currentSelectedMutations
-                                    .de_novo_start_outofframe &&
-                                this.currentSelectedMutations
-                                    .frameshift_variant &&
-                                this.currentSelectedMutations
-                                    .nonsense_mutation &&
-                                this.currentSelectedMutations.nonsense &&
-                                this.currentSelectedMutations.stopgain_snv &&
-                                this.currentSelectedMutations.stop_gained &&
-                                this.currentSelectedMutations.splice_site &&
-                                this.currentSelectedMutations.splice &&
-                                this.currentSelectedMutations.splicing &&
-                                this.currentSelectedMutations.splice_site_snp &&
-                                this.currentSelectedMutations.splice_site_del &&
-                                this.currentSelectedMutations
-                                    .splice_site_indel &&
-                                this.currentSelectedMutations.splice_region &&
-                                this.currentSelectedMutations
-                                    .splice_region_variant &&
-                                this.currentSelectedMutations
-                                    .translation_start_site &&
-                                this.currentSelectedMutations
-                                    .initiator_codon_variant &&
-                                this.currentSelectedMutations.start_codon_snp &&
-                                this.currentSelectedMutations.start_codon_del &&
-                                this.currentSelectedMutations
-                                    .nonstop_mutation &&
-                                this.currentSelectedMutations.stop_lost &&
-                                this.currentSelectedMutations.inframe_del &&
-                                this.currentSelectedMutations
-                                    .inframe_deletion &&
-                                this.currentSelectedMutations.in_frame_del &&
-                                this.currentSelectedMutations
-                                    .in_frame_deletion &&
-                                this.currentSelectedMutations.indel &&
-                                this.currentSelectedMutations.inframe_ins &&
-                                this.currentSelectedMutations
-                                    .inframe_insertion &&
-                                this.currentSelectedMutations.in_frame_ins &&
-                                this.currentSelectedMutations
-                                    .in_frame_insertion &&
-                                this.currentSelectedMutations
-                                    .nonframeshift_deletion &&
-                                this.currentSelectedMutations.nonframeshift &&
-                                this.currentSelectedMutations
-                                    .nonframeshift_insertion &&
-                                this.currentSelectedMutations.inframe &&
-                                this.currentSelectedMutations.truncating &&
-                                this.currentSelectedMutations
-                                    .feature_truncation &&
-                                this.currentSelectedMutations.fusion &&
-                                this.currentSelectedMutations.silent &&
-                                this.currentSelectedMutations
-                                    .synonymous_variant &&
-                                this.currentSelectedMutations.targeted_region &&
-                                this.currentSelectedMutations.any &&
-                                this.currentSelectedMutations.other
-                            }
+                            checked={this.allMutationsSelected}
                             onClick={this.onInputClick}
                         />{' '}
                         Mutations

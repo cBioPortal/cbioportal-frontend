@@ -172,6 +172,7 @@ export default class GroupComparisonPage extends React.Component<
                             }
                         >
                             <AlterationEnrichmentTypeSelector
+                                store={this.store}
                                 handlers={
                                     this
                                         .alterationEnrichmentTypeSelectorHandlers!
