@@ -185,6 +185,7 @@ export default class ComparisonTab extends React.Component<
                             {this.store.activeGroups.isComplete &&
                                 this.store.activeGroups.result!.length > 1 && (
                                     <AlterationEnrichmentTypeSelector
+                                        store={this.store}
                                         handlers={
                                             this
                                                 .alterationEnrichmentTypeSelectorHandlers!
