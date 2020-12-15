@@ -35,6 +35,7 @@ import { CivicAPI } from 'cbioportal-utils';
 import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
+import pako from 'pako';
 
 const config: any = (window as any).frontendConfig || { serverConfig: {} };
 
@@ -190,6 +191,73 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPI, [], /POST$/);
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
+
+    if (AppConfig.serverConfig.enable_request_body_gzip_compression) {
+        compressRequestBodies(
+            CBioPortalAPI,
+            [
+                '/mutations/fetch',
+                '/patients/fetch',
+                '/molecular-data/fetch',
+                '/clinical-data/fetch?clinicalDataType=SAMPLE',
+                '/gene-panel-data/fetch',
+                '/clinical-data/fetch?clinicalDataType=PATIENT',
+            ],
+            getCbioPortalApiUrl()
+        );
+    }
+}
+
+/**
+ * Compresses the request bodies of POST calls of urls that start with
+ * domain + urlToCompress, and adds the Content-Encoding header. To do this,
+ * it wraps the api client's request function.
+ * @param apiClient
+ * @param urlsToCompress
+ * @param domain
+ */
+function compressRequestBodies(
+    apiClient: any,
+    urlsToCompress: string[],
+    domain: string
+): void {
+    urlsToCompress = urlsToCompress.map(url => domain + url);
+
+    const oldRequestFunc = apiClient.prototype.request;
+
+    const newRequestFunc = (
+        method: string,
+        url: string,
+        body: any,
+        headers: any,
+        queryParameters: any,
+        form: any,
+        reject: any,
+        resolve: any,
+        errorHandlers: any[]
+    ) => {
+        if (
+            method === 'POST' &&
+            urlsToCompress.filter(match => url.startsWith(match)).length > 0
+        ) {
+            headers['Content-Encoding'] = 'gzip';
+            body = pako.gzip(JSON.stringify(body)).buffer;
+        }
+
+        oldRequestFunc(
+            method,
+            url,
+            body,
+            headers,
+            queryParameters,
+            form,
+            reject,
+            resolve,
+            errorHandlers
+        );
+    };
+
+    apiClient.prototype.request = newRequestFunc;
 }
 
 export function initializeConfiguration() {
