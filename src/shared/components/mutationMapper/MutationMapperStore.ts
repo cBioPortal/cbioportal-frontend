@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { computed } from 'mobx';
 import MobxPromise, { cached, labelMobxPromises } from 'mobxpromise';
 
@@ -29,7 +28,6 @@ import {
 } from 'shared/lib/StoreUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
-    EnsemblTranscript,
     VariantAnnotation,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
@@ -53,7 +51,7 @@ import {
 
 import { IMutationMapperConfig } from './MutationMapperConfig';
 import autobind from 'autobind-decorator';
-import { normalizeMutation, normalizeMutations } from './MutationMapperUtils';
+import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import {
     ONCOKB_DEFAULT_INFO,
@@ -119,6 +117,24 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             this.genomenexusInternalClient || defaultInternalGenomeNexusClient,
             oncoKBClient
         );
+    }
+
+    public getAnnotatedMutations(transcriptId: string): SimpleMutation[] {
+        // overriding the base method (DefaultMutationMapperStore.getAnnotatedMutations)
+        // to skip annotating mutations for canonical transcript.
+        // we want to use the values from database for canonical transcript
+        return this.indexedVariantAnnotations.result
+            ? getMutationsByTranscriptId(
+                  this.getMutations(),
+                  transcriptId,
+                  this.indexedVariantAnnotations.result,
+                  this.canonicalTranscript.result
+                      ? this.canonicalTranscript.result!.transcriptId ===
+                            transcriptId
+                      : false,
+                  true
+              )
+            : this.getMutations();
     }
 
     readonly oncoKbInfo: MobxPromise<OncoKBInfo> = remoteData(
@@ -259,43 +275,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         ];
 
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
-    }
-
-    @computed get transcriptsByTranscriptId(): {
-        [transcriptId: string]: EnsemblTranscript;
-    } {
-        return _.keyBy(
-            this.allTranscripts.result as EnsemblTranscript[],
-            transcript => transcript.transcriptId
-        );
-    }
-
-    @computed get mutationsByTranscriptId(): {
-        [transcriptId: string]: SimpleMutation[];
-    } {
-        if (
-            this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result &&
-            this.canonicalTranscript.isComplete
-        ) {
-            return _.fromPairs(
-                this.transcriptsWithAnnotations.result.map((t: string) => [
-                    t,
-                    getMutationsByTranscriptId(
-                        this.getMutations(),
-                        t,
-                        this.indexedVariantAnnotations.result!,
-                        this.canonicalTranscript.result
-                            ? this.canonicalTranscript.result!.transcriptId ===
-                                  t
-                            : false,
-                        true
-                    ),
-                ])
-            );
-        } else {
-            return {};
-        }
     }
 
     @computed get numberOfMutationsTotal(): number {
