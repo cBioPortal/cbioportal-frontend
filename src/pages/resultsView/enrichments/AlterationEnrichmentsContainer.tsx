@@ -455,14 +455,9 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 : 'auto',
                     }}
                 >
-                    {!(window as any).frontendConfig.serverConfig
-                        .skin_show_settings_menu && (
-                        <div
-                            className={
-                                styles.inlineAlterationTypeSelectorMenuDash
-                            }
-                        />
-                    )}
+                    <div
+                        className={styles.inlineAlterationTypeSelectorMenuDash}
+                    />
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(
