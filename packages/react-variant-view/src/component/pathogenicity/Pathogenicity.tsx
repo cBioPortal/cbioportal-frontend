@@ -29,6 +29,9 @@ class Pathogenicity extends React.Component<IPathogenicityProps> {
                         this.props.isCanonicalTranscriptSelected
                     }
                 />
+                <MSKExpertReview
+                    signalAnnotation={this.props.signalAnnotation}
+                />
             </div>
         );
     }

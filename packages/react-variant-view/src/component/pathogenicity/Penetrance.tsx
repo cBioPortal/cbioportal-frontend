@@ -31,20 +31,6 @@ class Penetrance extends React.Component<IPenetranceProps> {
         return 'N/A';
     }
 
-    @computed get penetranceContent() {
-        return (
-            <div className={featureTableStyle['feature-table-layout']}>
-                <div className={featureTableStyle['data-source']}>
-                    {this.penetranceTooltip()}
-                    {signalLogoInTable}
-                </div>
-                <div className={featureTableStyle['data-with-link']}>
-                    <div>{this.penetranceData}</div>
-                </div>
-            </div>
-        );
-    }
-
     private penetranceTooltip() {
         return (
             <DefaultTooltip
@@ -67,7 +53,17 @@ class Penetrance extends React.Component<IPenetranceProps> {
     }
 
     public render() {
-        return this.penetranceContent;
+        return (
+            <div className={featureTableStyle['feature-table-layout']}>
+                <div className={featureTableStyle['data-source']}>
+                    {this.penetranceTooltip()}
+                    {signalLogoInTable}
+                </div>
+                <div className={featureTableStyle['data-with-link']}>
+                    {this.penetranceData}
+                </div>
+            </div>
+        );
     }
 }
 
