@@ -33,3 +33,5 @@ export enum Pathogenicity {
 }
 
 export const SHOW_MUTATION_ASSESSOR = true;
+
+export const MskImpactFrequencyDigits = 3;

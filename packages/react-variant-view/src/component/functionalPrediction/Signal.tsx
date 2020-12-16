@@ -40,20 +40,6 @@ class Signal extends React.Component<ISignalProps> {
         return content.length > 0 ? content.join(', ') : 'N/A';
     }
 
-    @computed get mutationStatusContent() {
-        return (
-            <div className={featureTableStyle['feature-table-layout']}>
-                <div className={featureTableStyle['data-source']}>
-                    {this.penetranceTooltip()}
-                    {signalLogoInTable}
-                </div>
-                <div className={featureTableStyle['data-with-link']}>
-                    <div>{this.mutationStatusData}</div>
-                </div>
-            </div>
-        );
-    }
-
     private mutationStatusAccessor(mutation: IExtendedSignalMutation) {
         // don't return somatic
         if (isGermlineMutation(mutation)) {
@@ -87,7 +73,17 @@ class Signal extends React.Component<ISignalProps> {
     }
 
     public render() {
-        return this.mutationStatusContent;
+        return (
+            <div className={featureTableStyle['feature-table-layout']}>
+                <div className={featureTableStyle['data-source']}>
+                    {this.penetranceTooltip()}
+                    {signalLogoInTable}
+                </div>
+                <div className={featureTableStyle['data-with-link']}>
+                    {this.mutationStatusData}
+                </div>
+            </div>
+        );
     }
 }
 
