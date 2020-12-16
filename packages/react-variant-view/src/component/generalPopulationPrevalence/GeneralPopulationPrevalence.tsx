@@ -14,6 +14,7 @@ import {
     Mutation,
 } from 'cbioportal-utils';
 import { computed } from 'mobx';
+import MskImpact from './MskImpact';
 
 interface IGenralPopulationPrevalenceProps {
     myVariantInfo?: MyVariantInfo;
@@ -286,6 +287,11 @@ class GenralPopulationPrevalence extends React.Component<
                 {this.gnomad(this.props.myVariantInfo, this.props.chromosome)}
                 {this.dbsnp(this.props.myVariantInfo)}
                 {this.hotspot()}
+                <MskImpact
+                    signalAnnotation={
+                        this.props.variantAnnotation?.signalAnnotation
+                    }
+                />
             </div>
         );
     }

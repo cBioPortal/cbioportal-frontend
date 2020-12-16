@@ -37,9 +37,11 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                     this.props.signalAnnotation.annotation,
                     annotation => {
                         const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
+                            annotation.mutationStatus,
                             annotation.countsByTumorType,
                             annotation.biallelicCountsByTumorType,
-                            annotation.qcPassCountsByTumorType
+                            annotation.qcPassCountsByTumorType,
+                            annotation.statsByTumorType
                         );
                         const mutationStatus = annotation.mutationStatus;
                         // show germline table first
@@ -76,9 +78,11 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
             } else {
                 const annotation = this.props.signalAnnotation.annotation[0];
                 const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
+                    annotation.mutationStatus,
                     annotation.countsByTumorType,
                     annotation.biallelicCountsByTumorType,
-                    annotation.qcPassCountsByTumorType
+                    annotation.qcPassCountsByTumorType,
+                    annotation.statsByTumorType
                 );
                 return (
                     <MutationTumorTypeFrequencyTable
