@@ -24,7 +24,7 @@ import {
     buildBaseConfig,
     configureGenieTimeline,
     sortTracks,
-} from 'pages/patientView/timeline2/helpers';
+} from 'pages/patientView/timeline2/timeline_helpers';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
 import { computed } from 'mobx';
 import {
