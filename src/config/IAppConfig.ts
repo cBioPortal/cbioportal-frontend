@@ -52,6 +52,7 @@ export interface IServerConfig {
     "show_hotspot": boolean | undefined;
     "show_oncokb": boolean;
     "show_civic": boolean;
+    "show_pharmacodb": boolean;
     "show_genomenexus": boolean;
     "skin_documentation_about": string|null;
     "skin_documentation_baseurl": string|null;

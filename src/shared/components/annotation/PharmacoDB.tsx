@@ -33,33 +33,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
         return score;
     }
 
-    /*
-
-    public static download(pharmacoDBEntry:IPharmacoDBEntry | null | undefined): string
-    {
-        if (!pharmacoDBEntry) {
-            return "NA";
-        }
-
-        const variants = _.values(pharmacoDBEntry.variants);
-        const values: string[] = [];
-
-        if (variants && variants.length > 0 && variants[0].evidence)
-        {
-            _.toPairs(variants[0].evidence).forEach(pair => {
-                values.push(`${pair[0]}: ${pair[1]}`);
-            });
-        }
-
-        // TODO actually this indicates that we have an entry but the evidence is empty
-        if (values.length === 0) {
-            return "NA";
-        }
-
-        return values.join(", ");
-    }
-
-    */
+ 
 
     constructor(props: IPharmacoDBProps)
     {
@@ -77,12 +51,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
         const pharmacoDBImgWidth:number = 14;
         let pharmacoDBImgHeight:number = 14;
         let pharmacoDBImgSrc = require("./images/pharmacoDB-logo.png");
-        /*
-        if (!this.props.hasCivicVariants)
-        {
-            pharmacoDBImgSrc = require("./images/civic-logo-no-variants.png");
-        }
-        */
+
 
         if (this.props.pharmacoDBStatus == "error") {
             pharmacoDBContent = this.errorIcon();
@@ -154,15 +123,6 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
     {
         return (
             <div>This is the card content</div>
-            /*
-            <CivicCard
-                title={`CIViC Variants`}
-                geneName={pharmacoDBEntry.name}
-                geneDescription={pharmacoDBEntry.description}
-                geneUrl={pharmacoDBEntry.url}
-                variants={pharmacoDBEntry.variants}
-            />
-            */
         );
     }
 }

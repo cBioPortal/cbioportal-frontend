@@ -8,7 +8,7 @@ import {IPharmacoDBGeneDrugAssociationData, IPharmacoDBmRnaEntry, IPharmacoDBCna
 export default class PharmacoDBAPI {
     
     getCNAView(oncoTreeCode: string, geneName: string, cna: string): Promise<Array<IPharmacoDBView>> {
-        return request.get('http://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
+        return request.get('https://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({cna: cna})
         .query({requestData: 'false'})
@@ -19,7 +19,7 @@ export default class PharmacoDBAPI {
     }
     
     getCNACardData(oncoTreeCode: string, geneName: string, cna: string): Promise<IPharmacoDBCnaEntry> {
-        return request.get('http://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
+        return request.get('https://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({cna: cna})
         .query({requestData: 'true'})
@@ -33,7 +33,7 @@ export default class PharmacoDBAPI {
      * Returns a promise that resolves with the variants for the parameters given.
      */
     getmRNAView(oncoTreeCode: string, geneName: string, direction: number): Promise<Array<IPharmacoDBView>> {
-        return request.get('http://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
+        return request.get('https://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({direction: direction})
         .query({requestData: 'false'})
@@ -47,7 +47,7 @@ export default class PharmacoDBAPI {
      * Returns a promise that resolves with the variants for the parameters given.
      */
     getmRNACardData(oncoTreeCode: string, geneName: string, direction: number): Promise<IPharmacoDBmRnaEntry> {
-        return request.get('http://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
+        return request.get('https://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({direction: direction})
         .query({requestData: 'true'})

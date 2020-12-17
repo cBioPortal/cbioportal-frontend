@@ -44,7 +44,12 @@ export interface IPharmacoDBmRnaEntryDataWrapper {
     result?: IPharmacoDBmRnaEntry;
 }
 
-export interface IPharmacoDBViewDataWrapper {
+export interface IPharmacoDBViewListDataWrapper {
     status: MobXStatus;
-    result?: IPharmacoDBView;
+    result?: IPharmacoDBViewList;
+}
+
+export interface IPharmacoDBCnaEntryDataWrapper {
+    status: MobXStatus;
+    result?: IPharmacoDBCnaEntry;
 }
