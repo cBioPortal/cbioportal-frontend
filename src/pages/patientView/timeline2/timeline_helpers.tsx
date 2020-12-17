@@ -475,11 +475,7 @@ function getNumericalAttrVal(name: string, e: TimelineEvent) {
 }
 function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
     if (track.items.length) {
-        const doAllEventsHaveNumericalValue = _.every(track.items, e => {
-            const val = getNumericalAttrVal('RESULT', e);
-            return !!(val && !isNaN(val));
-        });
-        if (doAllEventsHaveNumericalValue) {
+        if (allResultValuesAreNumerical(track.items)) {
             track.trackType = TimelineTrackType.LINE_CHART;
             track.getLineChartValue = e => getNumericalAttrVal('RESULT', e);
         }
@@ -488,4 +484,11 @@ function configureLABTESTSubTrack(track: TimelineTrackSpecification) {
             track.tracks.forEach(configureLABTESTSubTrack);
         }
     }
+}
+
+export function allResultValuesAreNumerical(events: TimelineEvent[]) {
+    return _.every(events, e => {
+        const val = getNumericalAttrVal('RESULT', e);
+        return !!(val !== null && !isNaN(val));
+    });
 }
