@@ -56,6 +56,7 @@ export interface IServerConfig {
     show_hotspot: boolean | undefined;
     show_oncokb: boolean;
     show_civic: boolean;
+    show_pharmacodb: boolean;
     show_genomenexus: boolean;
     show_genomenexus_annotation_sources: string;
     show_pathway_mapper: boolean;

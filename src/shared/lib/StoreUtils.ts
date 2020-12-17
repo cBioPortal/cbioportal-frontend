@@ -961,12 +961,12 @@ PharmacoDB CNA View
 */
 
 export async function fetchPharmacoDbCnaView(
-    oncotreecode: MobxPromise<string>,
+    oncotreecode: string,
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
 ) {
     let otc: string = '';
 
-    otc = oncotreecode.result || '';
+    otc = oncotreecode;
 
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         let querySymbols: Array<IPharmacoDBCnaRequest> = [];
