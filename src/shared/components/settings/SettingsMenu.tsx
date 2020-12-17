@@ -47,6 +47,7 @@ export interface IAlterationFilterSettings {
     store: IDriverSettingsProps & IExclusionSettings;
     infoElement?: JSX.Element | undefined;
     disabled?: boolean;
+    showDriverAnnotationSection?: boolean;
 }
 
 @observer
@@ -297,102 +298,20 @@ export default class SettingsMenu extends React.Component<
                         </label>
                     </div>
                 </div>
-                <div className={styles.headerSection}>
-                    <input
-                        className={styles.categoryCheckbox}
-                        data-test="ToggleAllDriverAnnotation"
-                        type="checkbox"
-                        value={EVENT_KEY.toggleAllDriverAnnotation}
-                        checked={this.selectedAllDriverAnnotationOptions}
-                        onClick={this.onInputClick}
-                    />
-                    By driver annotation
-                    <InfoIcon
-                        divStyle={{ display: 'inline-block', marginLeft: 6 }}
-                        style={{ color: 'rgb(54, 134, 194)' }}
-                        tooltip={
-                            <span>
-                                Driver/passenger annotations are based on
-                                <b>
-                                    {' ' +
-                                        getBrowserWindow().frontendConfig
-                                            .serverConfig
-                                            .oncoprint_custom_driver_annotation_binary_menu_label +
-                                        ' '}
-                                </b>
-                                data.
-                            </span>
-                        }
-                    />
-                </div>
-                <div style={{ marginLeft: 20 }}>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="ShowDriver"
-                                type="checkbox"
-                                value={EVENT_KEY.showPutativeDrivers}
-                                checked={
-                                    this.props.store.driverAnnotationSettings
-                                        .includeDriver
-                                }
-                                onClick={this.onInputClick}
-                                disabled={
-                                    !this.driverSettingsState.distinguishDrivers
-                                }
-                            />{' '}
-                            Putative drivers
-                        </label>
-                    </div>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="ShowVUS"
-                                type="checkbox"
-                                value={EVENT_KEY.showPutativePassengers}
-                                checked={
-                                    this.props.store.driverAnnotationSettings
-                                        .includeVUS
-                                }
-                                onClick={this.onInputClick}
-                                disabled={
-                                    !this.driverSettingsState.distinguishDrivers
-                                }
-                            />{' '}
-                            Putative passengers
-                        </label>
-                    </div>
-                    <div className="checkbox">
-                        <label>
-                            <input
-                                data-test="ShowUnknownOncogenicity"
-                                type="checkbox"
-                                value={EVENT_KEY.showUnknownOncogenicity}
-                                checked={
-                                    this.props.store.driverAnnotationSettings
-                                        .includeUnknownOncogenicity
-                                }
-                                onClick={this.onInputClick}
-                                disabled={
-                                    !this.driverSettingsState.distinguishDrivers
-                                }
-                            />{' '}
-                            Unknown
-                        </label>
-                    </div>
-                </div>
-                {this.driverSettingsState.customDriverAnnotationTiers && (
+                {this.props.showDriverAnnotationSection && (
                     <div>
                         <div className={styles.headerSection}>
                             <input
                                 className={styles.categoryCheckbox}
-                                data-test="ToggleAllDriverTiers"
+                                data-test="ToggleAllDriverAnnotation"
                                 type="checkbox"
-                                value={EVENT_KEY.toggleAllDriverTiers}
-                                checked={this.selectedAllTierOptions}
+                                value={EVENT_KEY.toggleAllDriverAnnotation}
+                                checked={
+                                    this.selectedAllDriverAnnotationOptions
+                                }
                                 onClick={this.onInputClick}
                             />
-                            By category
+                            By driver annotation
                             <InfoIcon
                                 divStyle={{
                                     display: 'inline-block',
@@ -401,7 +320,8 @@ export default class SettingsMenu extends React.Component<
                                 style={{ color: 'rgb(54, 134, 194)' }}
                                 tooltip={
                                     <span>
-                                        Alteration categories are based on
+                                        Driver/passenger annotations are based
+                                        on
                                         <b>
                                             {' ' +
                                                 getBrowserWindow()
@@ -409,31 +329,70 @@ export default class SettingsMenu extends React.Component<
                                                     .oncoprint_custom_driver_annotation_binary_menu_label +
                                                 ' '}
                                         </b>
-                                        tier annotations.
+                                        data.
                                     </span>
                                 }
                             />
                         </div>
                         <div style={{ marginLeft: 20 }}>
-                            <DriverAnnotationControls
-                                state={this.driverSettingsState}
-                                handlers={this.driverSettingsHandlers}
-                            />
-                            <div
-                                className="checkbox"
-                                style={{ marginTop: '-5px' }}
-                            >
+                            <div className="checkbox">
                                 <label>
                                     <input
+                                        data-test="ShowDriver"
                                         type="checkbox"
-                                        value={EVENT_KEY.showUnknownTier}
-                                        data-test="ShowUnknownTier"
+                                        value={EVENT_KEY.showPutativeDrivers}
                                         checked={
                                             this.props.store
                                                 .driverAnnotationSettings
-                                                .includeUnknownTier
+                                                .includeDriver
                                         }
                                         onClick={this.onInputClick}
+                                        disabled={
+                                            !this.driverSettingsState
+                                                .distinguishDrivers
+                                        }
+                                    />{' '}
+                                    Putative drivers
+                                </label>
+                            </div>
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="ShowVUS"
+                                        type="checkbox"
+                                        value={EVENT_KEY.showPutativePassengers}
+                                        checked={
+                                            this.props.store
+                                                .driverAnnotationSettings
+                                                .includeVUS
+                                        }
+                                        onClick={this.onInputClick}
+                                        disabled={
+                                            !this.driverSettingsState
+                                                .distinguishDrivers
+                                        }
+                                    />{' '}
+                                    Putative passengers
+                                </label>
+                            </div>
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="ShowUnknownOncogenicity"
+                                        type="checkbox"
+                                        value={
+                                            EVENT_KEY.showUnknownOncogenicity
+                                        }
+                                        checked={
+                                            this.props.store
+                                                .driverAnnotationSettings
+                                                .includeUnknownOncogenicity
+                                        }
+                                        onClick={this.onInputClick}
+                                        disabled={
+                                            !this.driverSettingsState
+                                                .distinguishDrivers
+                                        }
                                     />{' '}
                                     Unknown
                                 </label>
@@ -441,6 +400,68 @@ export default class SettingsMenu extends React.Component<
                         </div>
                     </div>
                 )}
+                {this.props.showDriverAnnotationSection &&
+                    this.driverSettingsState.customDriverAnnotationTiers && (
+                        <div>
+                            <div className={styles.headerSection}>
+                                <input
+                                    className={styles.categoryCheckbox}
+                                    data-test="ToggleAllDriverTiers"
+                                    type="checkbox"
+                                    value={EVENT_KEY.toggleAllDriverTiers}
+                                    checked={this.selectedAllTierOptions}
+                                    onClick={this.onInputClick}
+                                />
+                                By category
+                                <InfoIcon
+                                    divStyle={{
+                                        display: 'inline-block',
+                                        marginLeft: 6,
+                                    }}
+                                    style={{ color: 'rgb(54, 134, 194)' }}
+                                    tooltip={
+                                        <span>
+                                            Alteration categories are based on
+                                            <b>
+                                                {' ' +
+                                                    getBrowserWindow()
+                                                        .frontendConfig
+                                                        .serverConfig
+                                                        .oncoprint_custom_driver_annotation_binary_menu_label +
+                                                    ' '}
+                                            </b>
+                                            tier annotations.
+                                        </span>
+                                    }
+                                />
+                            </div>
+                            <div style={{ marginLeft: 20 }}>
+                                <DriverAnnotationControls
+                                    state={this.driverSettingsState}
+                                    handlers={this.driverSettingsHandlers}
+                                />
+                                <div
+                                    className="checkbox"
+                                    style={{ marginTop: '-5px' }}
+                                >
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            value={EVENT_KEY.showUnknownTier}
+                                            data-test="ShowUnknownTier"
+                                            checked={
+                                                this.props.store
+                                                    .driverAnnotationSettings
+                                                    .includeUnknownTier
+                                            }
+                                            onClick={this.onInputClick}
+                                        />{' '}
+                                        Unknown
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    )}
             </div>
         );
     }

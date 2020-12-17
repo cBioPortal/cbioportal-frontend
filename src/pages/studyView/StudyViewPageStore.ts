@@ -28,7 +28,6 @@ import {
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
     CopyNumberSeg,
-    CustomDriverAnnotationReport,
     DataFilterValue,
     DensityPlotBin,
     Gene,
@@ -209,15 +208,11 @@ import {
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
+    IDriverAnnotationReport,
     IDriverSettingsProps,
     IExclusionSettings,
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
-import {
-    computedFilteredOutAlterations,
-    FilteredOutAlterations,
-    subset,
-} from 'shared/lib/AlterationsUtils';
 import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export type ChartUserSetting = {
@@ -5397,27 +5392,24 @@ export class StudyViewPageStore
         );
     }
 
-    readonly customDriverAnnotationReport = remoteData<
-        CustomDriverAnnotationReport
-    >({
-        await: () => [this.molecularProfiles],
-        invoke: () => {
-            const molecularProfileIds = this.molecularProfiles.result.map(
-                molecularProfile => molecularProfile.molecularProfileId
-            );
-            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
-                { molecularProfileIds }
-            );
-        },
-    });
-
-    @computed get hasCustomDriverAnnotations() {
-        return (
-            this.customDriverAnnotationReport.isComplete &&
-            (this.customDriverAnnotationReport.result.hasBinary ||
-                this.customDriverAnnotationReport.result.tiers.length > 0)
-        );
-    }
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.molecularProfiles],
+            invoke: async () => {
+                const molecularProfileIds = this.molecularProfiles.result.map(
+                    molecularProfile => molecularProfile.molecularProfileId
+                );
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    { molecularProfileIds }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+        }
+    );
 
     readonly survivalPlots = remoteData<SurvivalType[]>({
         await: () => [
@@ -7229,6 +7221,18 @@ export class StudyViewPageStore
                 this.driverAnnotationSettings.includeVUS,
                 this.driverAnnotationSettings.includeUnknownOncogenicity
             )
+        );
+    }
+
+    @computed get showDriverAnnotationMenuSection() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!
+                .hasCustomDriverAnnotations &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }
 }

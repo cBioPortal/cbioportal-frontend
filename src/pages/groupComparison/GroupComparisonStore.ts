@@ -7,13 +7,7 @@ import {
 } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import {
-    CancerStudy,
-    CustomDriverAnnotationReport,
-    MolecularProfile,
-    MolecularProfileFilter,
-    SampleFilter,
-} from 'cbioportal-ts-api-client';
+import { CancerStudy, SampleFilter } from 'cbioportal-ts-api-client';
 import { action, computed, observable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -33,12 +27,6 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
-import {
-    IDriverSettingsProps,
-    IExclusionSettings,
-} from 'shared/driverAnnotation/DriverAnnotationSettings';
-import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -408,4 +396,16 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
         []
     );
+
+    @computed get showDriverAnnotationMenuSection() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!
+                .hasCustomDriverAnnotations &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
 }

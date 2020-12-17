@@ -764,9 +764,9 @@ export default class StudyViewPage extends React.Component<
                                                         infoElement={
                                                             alterationMenuHeader
                                                         }
-                                                        disabled={
-                                                            !this.store
-                                                                .hasCustomDriverAnnotations
+                                                        showDriverAnnotationSection={
+                                                            this.store
+                                                                .showDriverAnnotationMenuSection
                                                         }
                                                     />
                                                 }

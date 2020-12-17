@@ -11,40 +11,18 @@ import {
     AlterationTypeConstants,
     ResultsViewPageStore,
 } from '../ResultsViewPageStore';
-import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import {
-    ALTERED_COLOR,
     ALTERED_GROUP_NAME,
-    getAlteredByOncoprintTrackGroups,
-    getAlteredVsUnalteredGroups,
-    completeSessionGroups,
     ResultsViewComparisonGroup,
-    UNALTERED_COLOR,
     UNALTERED_GROUP_NAME,
 } from './ResultsViewComparisonUtils';
 import _ from 'lodash';
 import ifNotDefined from '../../../shared/lib/ifNotDefined';
-import {
-    Session,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
+import { Session } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
-import {
-    ComparisonGroup,
-    filterStudiesAttr,
-    getStudyIds,
-} from '../../groupComparison/GroupComparisonUtils';
-import {
-    IDriverAnnotationReport,
-    IDriverSettingsProps,
-    IExclusionSettings,
-} from 'shared/driverAnnotation/DriverAnnotationSettings';
-import MobxPromise, { MobxPromiseUnionType } from 'mobxpromise';
-import {
-    CancerStudy,
-    CustomDriverAnnotationReport,
-    MolecularProfile,
-} from 'cbioportal-ts-api-client';
+import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
+import { IDriverAnnotationReport } from 'shared/driverAnnotation/DriverAnnotationSettings';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
@@ -251,19 +229,24 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         []
     );
 
-    readonly customDriverAnnotationReport = remoteData<
-        CustomDriverAnnotationReport
-    >({
-        await: () => [this.customDriverAnnotationProfileIds],
-        invoke: () => {
-            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
-                {
-                    molecularProfileIds: this.customDriverAnnotationProfileIds
-                        .result,
-                }
-            );
-        },
-    });
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.customDriverAnnotationProfileIds],
+            invoke: async () => {
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    {
+                        molecularProfileIds: this
+                            .customDriverAnnotationProfileIds.result,
+                    }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+        }
+    );
 
     @computed get hasCustomDriverAnnotations() {
         return (

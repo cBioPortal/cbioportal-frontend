@@ -228,6 +228,7 @@ import {
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
+    IDriverAnnotationReport,
     IDriverSettingsProps,
     IExclusionSettings,
 } from '../../shared/driverAnnotation/DriverAnnotationSettings';
@@ -4164,29 +4165,28 @@ export class ResultsViewPageStore
         },
     });
 
-    readonly customDriverAnnotationReport = remoteData<{
-        hasBinary: boolean;
-        tiers: string[];
-    }>({
-        await: () => [this.mutations, this.discreteCNAMolecularData],
-        invoke: () => {
-            return Promise.resolve(
-                computeCustomDriverAnnotationReport([
-                    ...this.mutations.result!,
-                    ...this.discreteCNAMolecularData.result!,
-                ])
-            );
-        },
-        onResult: result => {
-            initializeCustomDriverAnnotationSettings(
-                result!,
-                this.driverAnnotationSettings,
-                this.driverAnnotationSettings.customTiersDefault,
-                this.driverAnnotationSettings.oncoKb,
-                this.driverAnnotationSettings.hotspots
-            );
-        },
-    });
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.mutations, this.discreteCNAMolecularData],
+            invoke: () => {
+                return Promise.resolve(
+                    computeCustomDriverAnnotationReport([
+                        ...this.mutations.result!,
+                        ...this.discreteCNAMolecularData.result!,
+                    ])
+                );
+            },
+            onResult: result => {
+                initializeCustomDriverAnnotationSettings(
+                    result!,
+                    this.driverAnnotationSettings,
+                    this.driverAnnotationSettings.customTiersDefault,
+                    this.driverAnnotationSettings.oncoKb,
+                    this.driverAnnotationSettings.hotspots
+                );
+            },
+        }
+    );
 
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [

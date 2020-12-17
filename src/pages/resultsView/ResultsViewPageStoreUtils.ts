@@ -51,11 +51,7 @@ import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
-
-type CustomDriverAnnotationReport = {
-    hasBinary: boolean;
-    tiers: string[];
-};
+import { IDriverAnnotationReport } from 'shared/driverAnnotation/DriverAnnotationSettings';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -73,7 +69,7 @@ export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
 
 export function computeCustomDriverAnnotationReport(
     annotations: { driverFilter: string; driverTiersFilter: string }[]
-): CustomDriverAnnotationReport {
+): IDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap: { [tier: string]: boolean } = {};
     for (const annotation of annotations) {
@@ -85,6 +81,8 @@ export function computeCustomDriverAnnotationReport(
     return {
         hasBinary,
         tiers: Object.keys(tiersMap),
+        hasCustomDriverAnnotations:
+            hasBinary || Object.keys(tiersMap).length > 0,
     };
 }
 
@@ -97,7 +95,7 @@ export const DEFAULT_GENOME = 'hg19';
 
 export const initializeCustomDriverAnnotationSettings = action(
     (
-        report: CustomDriverAnnotationReport,
+        report: IDriverAnnotationReport,
         mutationAnnotationSettings: any,
         enableCustomTiers: boolean,
         enableOncoKb: boolean,

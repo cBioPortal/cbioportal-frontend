@@ -23,7 +23,6 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
-    CustomDriverAnnotationReport,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -92,6 +91,7 @@ import {
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
+    IDriverAnnotationReport,
     IDriverSettingsProps,
     IExclusionSettings,
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
@@ -100,7 +100,6 @@ import {
     FilteredOutAlterations,
     subset,
 } from 'shared/lib/AlterationsUtils';
-import { CancerTypeWithVisibility } from 'shared/components/query/CancerStudyTreeData';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -2324,19 +2323,24 @@ export default abstract class ComparisonStore
         []
     );
 
-    readonly customDriverAnnotationReport = remoteData<
-        CustomDriverAnnotationReport
-    >({
-        await: () => [this.customDriverAnnotationProfileIds],
-        invoke: () => {
-            return internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
-                {
-                    molecularProfileIds: this.customDriverAnnotationProfileIds
-                        .result,
-                }
-            );
-        },
-    });
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.customDriverAnnotationProfileIds],
+            invoke: async () => {
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    {
+                        molecularProfileIds: this
+                            .customDriverAnnotationProfileIds.result,
+                    }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+        }
+    );
 
     @computed get hasCustomDriverAnnotations() {
         return (

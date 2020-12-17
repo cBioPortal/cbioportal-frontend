@@ -44,6 +44,7 @@ import {
     IDriverSettingsProps,
     IExclusionSettings,
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
+import GroupComparisonStore from 'pages/groupComparison/GroupComparisonStore';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -911,7 +912,7 @@ export function getGroupsDownloadData(
 }
 
 export function buildFilterMenu(
-    store: IDriverSettingsProps & IExclusionSettings,
+    store: GroupComparisonStore,
     handlers: IAlterationEnrichmentTypeSelectorHandlers,
     headerElement?: JSX.Element
 ): JSX.Element {
@@ -943,14 +944,8 @@ export function buildFilterMenu(
                     <SettingsMenu
                         store={store}
                         infoElement={headerElement}
-                        disabled={
-                            !(
-                                store.customDriverAnnotationReport.isComplete &&
-                                (store.customDriverAnnotationReport.result
-                                    .hasBinary ||
-                                    store.customDriverAnnotationReport.result
-                                        .tiers.length > 0)
-                            )
+                        showDriverAnnotationSection={
+                            store.showDriverAnnotationMenuSection
                         }
                     />
                 }

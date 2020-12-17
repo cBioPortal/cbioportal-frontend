@@ -74,12 +74,17 @@ describe('ResultsViewPageStoreUtils', () => {
             assert.deepEqual(computeCustomDriverAnnotationReport([]), {
                 hasBinary: false,
                 tiers: [],
+                hasCustomDriverAnnotations: false,
             });
         });
         it('returns the right report for no annotations, one element', () => {
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([neitherMutation]),
-                { hasBinary: false, tiers: [] }
+                {
+                    hasBinary: false,
+                    tiers: [],
+                    hasCustomDriverAnnotations: false,
+                }
             );
         });
         it('returns the right report for no annotations, three elements', () => {
@@ -89,13 +94,17 @@ describe('ResultsViewPageStoreUtils', () => {
                     neitherMutation,
                     neitherMutation,
                 ]),
-                { hasBinary: false, tiers: [] }
+                {
+                    hasBinary: false,
+                    tiers: [],
+                    hasCustomDriverAnnotations: false,
+                }
             );
         });
         it('returns the right report for just binary annotations, one element', () => {
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([driverFilterMutation]),
-                { hasBinary: true, tiers: [] }
+                { hasBinary: true, tiers: [], hasCustomDriverAnnotations: true }
             );
         });
         it('returns the right report for just binary annotations, three elements', () => {
@@ -105,7 +114,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     driverFilterMutation,
                     driverFilterMutation,
                 ]),
-                { hasBinary: true, tiers: [] }
+                { hasBinary: true, tiers: [], hasCustomDriverAnnotations: true }
             );
         });
         it('returns the right report for just tiers annotations, one element', () => {
@@ -113,7 +122,11 @@ describe('ResultsViewPageStoreUtils', () => {
                 computeCustomDriverAnnotationReport([
                     driverTiersFilterMutation,
                 ]),
-                { hasBinary: false, tiers: ['T'] }
+                {
+                    hasBinary: false,
+                    tiers: ['T'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
         it('returns the right report for just tiers annotations, three elements', () => {
@@ -123,13 +136,21 @@ describe('ResultsViewPageStoreUtils', () => {
                     driverTiersFilterMutation,
                     neitherMutation,
                 ]),
-                { hasBinary: false, tiers: ['T'] }
+                {
+                    hasBinary: false,
+                    tiers: ['T'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
         it('returns the right report for binary and tier annotation in one element', () => {
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([bothMutation]),
-                { hasBinary: true, tiers: ['SDPOIFJP'] }
+                {
+                    hasBinary: true,
+                    tiers: ['SDPOIFJP'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
         it('returns the right report for binary and tier annotation, both present in three elements', () => {
@@ -139,7 +160,11 @@ describe('ResultsViewPageStoreUtils', () => {
                     neitherMutation,
                     bothMutation,
                 ]),
-                { hasBinary: true, tiers: ['SDPOIFJP'] }
+                {
+                    hasBinary: true,
+                    tiers: ['SDPOIFJP'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
         it('returns the right report for binary and tier annotation in different elements', () => {
@@ -148,7 +173,11 @@ describe('ResultsViewPageStoreUtils', () => {
                     driverTiersFilterMutation,
                     driverFilterMutation,
                 ]),
-                { hasBinary: true, tiers: ['T'] }
+                {
+                    hasBinary: true,
+                    tiers: ['T'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
         it('returns the right report for binary and tier annotation in different elements, including an element with no annotation', () => {
@@ -158,7 +187,11 @@ describe('ResultsViewPageStoreUtils', () => {
                     driverFilterMutation,
                     neitherMutation,
                 ]),
-                { hasBinary: true, tiers: ['T'] }
+                {
+                    hasBinary: true,
+                    tiers: ['T'],
+                    hasCustomDriverAnnotations: true,
+                }
             );
         });
     });
