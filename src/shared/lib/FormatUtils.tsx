@@ -61,8 +61,15 @@ export function toFixedWithThreshold(value: number, digits: number): string {
     return fixed;
 }
 
-export function getPercentage(proportion: number, digits: number = 1) {
-    return `${toFixedWithThreshold(100 * proportion, digits)}%`;
+export function getPercentage(proportion: number) {
+    const perc = 100 * proportion;
+    if (perc === 0) {
+        return '0%';
+    } else if (perc < 1) {
+        return `<1%`;
+    } else {
+        return `${Math.round(perc)}%`;
+    }
 }
 
 export function formatSignificanceValueWithStyle(value: number): JSX.Element {

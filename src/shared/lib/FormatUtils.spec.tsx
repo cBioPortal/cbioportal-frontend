@@ -6,6 +6,7 @@ import {
     formatSignificanceValueWithStyle,
     roundLogRatio,
     toFixedWithoutTrailingZeros,
+    getPercentage,
 } from 'shared/lib/FormatUtils';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -73,6 +74,27 @@ describe('#formatSignificanceValueWithStyle()', () => {
                 <span>0.0300</span>
             </b>
         );
+    });
+});
+
+describe('#getPercentage', () => {
+    it('gets less than 1', () => {
+        assert.equal(getPercentage(0.004), '<1%');
+    });
+    it('gets zero perc', () => {
+        assert.equal(getPercentage(0), '0%');
+    });
+    it('gets 1%', () => {
+        assert.equal(getPercentage(0.01), '1%');
+    });
+    it('rounds down 52.4', () => {
+        assert.equal(getPercentage(0.524), '52%');
+    });
+    it('rounds up 52.6', () => {
+        assert.equal(getPercentage(0.526), '53%');
+    });
+    it('handles more than 100%', () => {
+        assert.equal(getPercentage(1.526), '153%');
     });
 });
 
