@@ -47,8 +47,7 @@ export function getAlterationSummary(
 ) {
     const prefix = `Queried gene${numGenes !== 1 ? 's are' : ' is'} altered in`;
     const sampleSummaryPrefix = `${numAlteredSamples} (${getPercentage(
-        numAlteredSamples / numSamples,
-        0
+        numAlteredSamples / numSamples
     )}) of queried`;
     if (numSamples !== numPatients) {
         // note that by the pigeonhole principle, its not possible to have same number of samples and patients and
@@ -63,8 +62,7 @@ export function getAlterationSummary(
                         <td>
                             &#8226;&nbsp;
                             {`${numAlteredPatients} (${getPercentage(
-                                numAlteredPatients / numPatients,
-                                0
+                                numAlteredPatients / numPatients
                             )}) of queried patients`}
                         </td>
                     </tr>
