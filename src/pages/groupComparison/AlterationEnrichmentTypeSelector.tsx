@@ -61,12 +61,22 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @action
     public updateAllCopyNumberSelected(value: boolean) {
-        _.mapValues(this.currentSelectedCopyNumber, () => value);
+        _.keys(this.currentSelectedCopyNumber).forEach(
+            type =>
+                (this.currentSelectedCopyNumber[
+                    type as CopyNumberEnrichmentEventType
+                ] = value)
+        );
     }
 
     @action
     public updateAllMutationsSelected(value: boolean) {
-        _.mapValues(this.currentSelectedMutations, () => value);
+        _.keys(this.currentSelectedMutations).forEach(
+            type =>
+                (this.currentSelectedMutations[
+                    type as MutationEnrichmentEventType
+                ] = value)
+        );
     }
 
     @autobind
