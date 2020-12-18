@@ -19,7 +19,7 @@ import {
     buildBaseConfig,
     configureGenieTimeline,
     sortTracks,
-} from 'pages/patientView/timeline2/helpers';
+} from 'pages/patientView/timeline2/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
 
 export interface ISampleMetaDeta {
