@@ -467,7 +467,7 @@ describe('Results Page', function() {
                 browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`)
             );
         });
-        it('should be present in mutations tab with explicit query', function() {
+        it('should be present in alterations tab with explicit query', function() {
             browser.click('a.tabAnchor_alterations');
             browser.waitForVisible(
                 `${unaffectedBannerSelector}.mutations-oql-status-banner`,
