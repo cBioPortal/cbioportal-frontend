@@ -214,8 +214,8 @@ describe('group comparison page screenshot tests', function() {
                     'div[data-test="GroupComparisonAlterationEnrichments"]',
                     10000
                 );
-                clickCheckBox('Copy Number Alterations');
-                submit();
+                clickTypeSelectorCheckBox('Copy Number Alterations');
+                submitEnrichmentRequest();
                 browser.moveToObject('body', 0, 0);
                 var res = browser.checkElement(
                     '.msk-tab:not(.hiddenByPosition)',
@@ -373,9 +373,9 @@ describe('group comparison page screenshot tests', function() {
         it.omit(
             'group comparison page cna enrichments tab several groups',
             function() {
-                clickCheckBox('Mutations');
-                clickCheckBox('Copy Number Alterations');
-                submit();
+                clickTypeSelectorCheckBox('Mutations');
+                clickTypeSelectorCheckBox('Copy Number Alterations');
+                submitEnrichmentRequest();
                 browser.moveToObject('body', 0, 0);
                 var res = browser.checkElement(
                     '.msk-tab:not(.hiddenByPosition)',
@@ -864,13 +864,13 @@ describe('group comparison page screenshot tests', function() {
     });
 });
 
-var clickCheckBox = name => {
+var clickTypeSelectorCheckBox = name => {
     $('label=' + name)
         .$('input')
         .click();
 };
 
-var submit = () => {
+var submitEnrichmentRequest = () => {
     $('[data-test=changeSortOrderButton]').click();
     browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
 };
