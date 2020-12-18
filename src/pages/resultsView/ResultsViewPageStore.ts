@@ -2855,6 +2855,26 @@ export class ResultsViewPageStore {
         },
     });
 
+    readonly studyToSelectedMolecularProfilesMap = remoteData<{
+        [studyId: string]: {
+            [molecularAlterationType: string]: MolecularProfile;
+        };
+    }>({
+        await: () => [this.selectedMolecularProfiles],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    _.groupBy(
+                        this.selectedMolecularProfiles.result!,
+                        p => p.studyId
+                    ),
+                    profiles =>
+                        _.keyBy(profiles, p => p.molecularAlterationType)
+                )
+            );
+        },
+    });
+
     readonly discreteCopyNumberAlterations = remoteData<
         DiscreteCopyNumberData[]
     >({

@@ -34,6 +34,8 @@ import {
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
+import { coverageInformation } from 'pages/resultsView/expression/expressionHelpers.sample';
+import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import {
     getGenericAssayMetaPropertyOrDefault,
     COMMON_GENERIC_ASSAY_PROPERTY,
@@ -43,6 +45,7 @@ export interface IDownloadFileRow {
     studyId: string;
     patientId: string;
     sampleId: string;
+    uniqueSampleKey: string;
     alterationData: { [gene: string]: string[] };
 }
 
@@ -239,14 +242,23 @@ export function generateMutationData(
 export function generateMutationDownloadData(
     sampleAlterationDataByGene: { [key: string]: ExtendedAlteration[] },
     samples: Sample[] = [],
-    genes: Gene[] = []
+    genes: Gene[] = [],
+    isSampleProfiledFunc: (
+        uniqueSampleKey: string,
+        studyId: string,
+        hugoGeneSymbol: string
+    ) => boolean
 ): string[][] {
     return sampleAlterationDataByGene
         ? generateDownloadData(
               sampleAlterationDataByGene,
               samples,
               genes,
-              extractMutationValue
+              isSampleProfiledFunc,
+              extractMutationValue,
+              undefined,
+              'WT',
+              'NS'
           )
         : [];
 }
@@ -327,7 +339,12 @@ export function generateOtherMolecularProfileDownloadData(
     genes: Gene[] = []
 ): string[][] {
     return sampleAlterationDataByGene
-        ? generateDownloadData(sampleAlterationDataByGene, samples, genes)
+        ? generateDownloadData(
+              sampleAlterationDataByGene,
+              samples,
+              genes,
+              () => true // dont deal with labeling not profiled
+          )
         : [];
 }
 
@@ -454,6 +471,7 @@ export function generateDownloadFileRows(
         const row: IDownloadFileRow = rows[sampleKey] || {
             studyId: sample.studyId,
             sampleId: sample.sampleId,
+            uniqueSampleKey: sample.uniqueSampleKey,
             patientId: sample.patientId,
             alterationData: {},
         };
@@ -518,12 +536,45 @@ export function generateGenericAssayRowsByUniqueSampleKey(
     return rows;
 }
 
+export function makeIsSampleProfiledFunction(
+    alterationType: string,
+    studyIdToMolecularProfilesMap: {
+        [studyId: string]: { [altType: string]: MolecularProfile };
+    },
+    coverageInformation: CoverageInformation
+) {
+    return (
+        uniqueSampleKey: string,
+        studyId: string,
+        hugoGeneSymbol: string
+    ) => {
+        const profile = studyIdToMolecularProfilesMap[studyId][alterationType];
+        if (profile) {
+            return isSampleProfiled(
+                uniqueSampleKey,
+                profile.molecularProfileId,
+                hugoGeneSymbol,
+                coverageInformation
+            );
+        } else {
+            return false;
+        }
+    };
+}
+
 export function generateDownloadData(
     sampleAlterationDataByGene: { [key: string]: ExtendedAlteration[] },
     samples: Sample[] = [],
     genes: Gene[] = [],
+    isSampleProfiledFunc: (
+        uniqueSampleKey: string,
+        studyId: string,
+        hugoGeneSymbol: string
+    ) => boolean,
     extractValue?: (alteration: ExtendedAlteration) => string,
-    formatData?: (data: string[]) => string
+    formatData?: (data: string[]) => string,
+    notAlteredString = 'NA',
+    notProfiledString = 'NP'
 ) {
     const geneSymbols = genes.map(gene => gene.hugoGeneSymbol);
 
@@ -554,10 +605,23 @@ export function generateDownloadData(
         row.push(rowData.sampleId);
 
         geneSymbols.forEach(gene => {
-            const formattedValue = formatData
-                ? formatData(rowData.alterationData[gene]) // if provided format with the custom data formatter
-                : rowData.alterationData[gene].join(' ') || 'NA'; // else, default format: space delimited join
-
+            let formattedValue: string;
+            if (
+                !isSampleProfiledFunc(
+                    rowData.uniqueSampleKey,
+                    rowData.studyId,
+                    gene
+                )
+            ) {
+                formattedValue = notProfiledString;
+            } else {
+                if (formatData) {
+                    formattedValue = formatData(rowData.alterationData[gene]); // if provided format with the custom data formatter
+                } else {
+                    formattedValue = rowData.alterationData[gene].join(' ');
+                }
+                formattedValue = formattedValue || notAlteredString; // else, default format: space delimited join
+            }
             row.push(formattedValue);
         });
 
