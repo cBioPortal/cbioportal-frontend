@@ -179,6 +179,12 @@ export default abstract class ComparisonStore {
                         GroupComparisonTab.GENERIC_ASSAY_PREFIX
                     ) || this.showGenericAssayTab
                 );
+                this.tabHasBeenShown.set(
+                    GroupComparisonTab.ALTERATIONS,
+                    !!this.tabHasBeenShown.get(
+                        GroupComparisonTab.ALTERATIONS
+                    ) || this.showAlterationsTab
+                );
             });
         }); // do this after timeout so that all subclasses have time to construct
     }
