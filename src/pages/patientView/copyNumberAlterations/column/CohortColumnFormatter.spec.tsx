@@ -143,11 +143,11 @@ describe('CohortColumnFormatter', () => {
     it('generates the tooltip text properly', () => {
         assert.equal(
             tooltips[0].text(),
-            '61 samples (61.0%) in this study have deleted BRCA2'
+            '61 samples (61%) in this study have deleted BRCA2'
         );
         assert.equal(
             tooltips[1].text(),
-            '1 sample (0.5%) in this study has amplified SMURF2'
+            '1 sample (<1%) in this study has amplified SMURF2'
         );
     });
 
