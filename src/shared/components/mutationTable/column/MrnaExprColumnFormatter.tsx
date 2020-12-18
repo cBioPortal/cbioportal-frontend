@@ -133,8 +133,24 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
+    public static getDownloadData(
+        d: { sampleId: string; entrezGeneId: number }[],
+        cache: MrnaExprRankCache
+    ) {
+        const cacheDatum = MrnaExprColumnFormatter.getData(d, cache);
+        if (
+            cacheDatum &&
+            cacheDatum.status === 'complete' &&
+            cacheDatum.data !== null
+        ) {
+            return cacheDatum.data.percentile.toString();
+        } else {
+            return 'N/A';
+        }
+    }
+
     protected static getData(
-        data: Mutation[],
+        data: { sampleId: string; entrezGeneId: number }[],
         cache: MrnaExprRankCache
     ): MrnaExprRankCacheDataType | null {
         if (data.length === 0) {

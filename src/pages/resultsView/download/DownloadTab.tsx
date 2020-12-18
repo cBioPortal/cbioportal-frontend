@@ -47,6 +47,7 @@ import {
     generateOtherMolecularProfileDownloadData,
     generateGenericAssayProfileData,
     generateGenericAssayProfileDownloadData,
+    makeIsSampleProfiledFunction,
 } from './DownloadUtils';
 
 import styles from './styles.module.scss';
@@ -175,13 +176,21 @@ export default class DownloadTab extends React.Component<
             this.mutationData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateMutationDownloadData(
                     this.mutationData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.MUTATION_EXTENDED,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -250,6 +259,7 @@ export default class DownloadTab extends React.Component<
             this.allOtherMolecularProfileDataGroupByProfileName,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
         ],
         invoke: () =>
             Promise.resolve(
@@ -328,13 +338,21 @@ export default class DownloadTab extends React.Component<
             this.mrnaData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.mrnaData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -354,13 +372,21 @@ export default class DownloadTab extends React.Component<
             this.proteinData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.proteinData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -380,13 +406,21 @@ export default class DownloadTab extends React.Component<
             this.cnaData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.cnaData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
