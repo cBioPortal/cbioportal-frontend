@@ -397,28 +397,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
         );
     }
 
-    get plotHeight() {
-        if (
-            this.props.containerType === AlterationContainerType.ALTERATIONS &&
-            this.props.comparisonStore!.overlapComputations.isComplete
-        ) {
-            const selectionInfo = this.props.comparisonStore!
-                .overlapComputations.result!;
-            if (
-                (!selectionInfo.totalSampleOverlap &&
-                    !selectionInfo.totalPatientOverlap) ||
-                (this.props.patientLevelEnrichments === false &&
-                    !selectionInfo.totalSampleOverlap) ||
-                (this.props.patientLevelEnrichments === true &&
-                    !selectionInfo.totalPatientOverlap)
-            ) {
-                return 554;
-            }
-            return 470;
-        }
-        return 0;
-    }
-
     public render() {
         if (this.props.data.length === 0) {
             return (
