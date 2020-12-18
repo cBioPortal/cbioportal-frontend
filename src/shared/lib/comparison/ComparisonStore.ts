@@ -2342,11 +2342,15 @@ export default abstract class ComparisonStore
         }
     );
 
-    @computed get hasCustomDriverAnnotations() {
+    @computed get showDriverAnnotationMenuSection() {
         return (
             this.customDriverAnnotationReport.isComplete &&
-            (!!this.customDriverAnnotationReport.result!.hasBinary ||
-                this.customDriverAnnotationReport.result!.tiers.length > 0)
+            this.customDriverAnnotationReport.result!
+                .hasCustomDriverAnnotations &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }
 

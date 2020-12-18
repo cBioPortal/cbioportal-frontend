@@ -912,9 +912,10 @@ export function getGroupsDownloadData(
 }
 
 export function buildFilterMenu(
-    store: GroupComparisonStore,
+    store: ComparisonStore,
     handlers: IAlterationEnrichmentTypeSelectorHandlers,
-    headerElement?: JSX.Element
+    headerElement?: JSX.Element,
+    showDriverAnnotationMenuSection?: boolean
 ): JSX.Element {
     return (window as any).frontendConfig.serverConfig
         .skin_show_settings_menu ? (
@@ -945,7 +946,7 @@ export function buildFilterMenu(
                         store={store}
                         infoElement={headerElement}
                         showDriverAnnotationSection={
-                            store.showDriverAnnotationMenuSection
+                            showDriverAnnotationMenuSection
                         }
                     />
                 }

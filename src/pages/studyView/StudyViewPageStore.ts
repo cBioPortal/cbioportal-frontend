@@ -214,6 +214,7 @@ import {
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
 import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import * as React from 'react';
 
 export type ChartUserSetting = {
     id: string;

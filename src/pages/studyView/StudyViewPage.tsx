@@ -761,9 +761,10 @@ export default class StudyViewPage extends React.Component<
                                                 overlay={
                                                     <SettingsMenu
                                                         store={this.store}
-                                                        infoElement={
-                                                            alterationMenuHeader
-                                                        }
+                                                        infoElement={alterationMenuHeader(
+                                                            this.store
+                                                                .showDriverAnnotationMenuSection
+                                                        )}
                                                         showDriverAnnotationSection={
                                                             this.store
                                                                 .showDriverAnnotationMenuSection
