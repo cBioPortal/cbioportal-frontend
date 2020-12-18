@@ -1,0 +1,65 @@
+import {
+    CopyNumberEnrichmentEventType,
+    MutationEnrichmentEventType,
+} from 'pages/resultsView/comparison/ComparisonTabUtils';
+
+export const cnaEventTypeSelectInit: {
+    [key in CopyNumberEnrichmentEventType]?: boolean;
+} = {
+    [CopyNumberEnrichmentEventType.HOMDEL]: true,
+    [CopyNumberEnrichmentEventType.AMP]: true,
+};
+
+export const mutationEventTypeSelectInit: {
+    [key in MutationEnrichmentEventType]?: boolean;
+} = {
+    [MutationEnrichmentEventType.missense_mutation]: true,
+    [MutationEnrichmentEventType.missense]: true,
+    [MutationEnrichmentEventType.missense_variant]: true,
+    [MutationEnrichmentEventType.frame_shift_ins]: true,
+    [MutationEnrichmentEventType.frame_shift_del]: true,
+    [MutationEnrichmentEventType.frameshift]: true,
+    [MutationEnrichmentEventType.frameshift_deletion]: true,
+    [MutationEnrichmentEventType.frameshift_insertion]: true,
+    [MutationEnrichmentEventType.de_novo_start_outofframe]: true,
+    [MutationEnrichmentEventType.frameshift_variant]: true,
+    [MutationEnrichmentEventType.nonsense_mutation]: true,
+    [MutationEnrichmentEventType.nonsense]: true,
+    [MutationEnrichmentEventType.stopgain_snv]: true,
+    [MutationEnrichmentEventType.stop_gained]: true,
+    [MutationEnrichmentEventType.splice_site]: true,
+    [MutationEnrichmentEventType.splice]: true,
+    [MutationEnrichmentEventType.splicing]: true,
+    [MutationEnrichmentEventType.splice_site_snp]: true,
+    [MutationEnrichmentEventType.splice_site_del]: true,
+    [MutationEnrichmentEventType.splice_site_indel]: true,
+    [MutationEnrichmentEventType.splice_region_variant]: true,
+    [MutationEnrichmentEventType.splice_region]: true,
+    [MutationEnrichmentEventType.translation_start_site]: true,
+    [MutationEnrichmentEventType.initiator_codon_variant]: true,
+    [MutationEnrichmentEventType.start_codon_snp]: true,
+    [MutationEnrichmentEventType.start_codon_del]: true,
+    [MutationEnrichmentEventType.nonstop_mutation]: true,
+    [MutationEnrichmentEventType.stop_lost]: true,
+    [MutationEnrichmentEventType.inframe_del]: true,
+    [MutationEnrichmentEventType.inframe_deletion]: true,
+    [MutationEnrichmentEventType.in_frame_del]: true,
+    [MutationEnrichmentEventType.in_frame_deletion]: true,
+    [MutationEnrichmentEventType.inframe_ins]: true,
+    [MutationEnrichmentEventType.inframe_insertion]: true,
+    [MutationEnrichmentEventType.in_frame_ins]: true,
+    [MutationEnrichmentEventType.in_frame_insertion]: true,
+    [MutationEnrichmentEventType.indel]: true,
+    [MutationEnrichmentEventType.nonframeshift_deletion]: true,
+    [MutationEnrichmentEventType.nonframeshift]: true,
+    [MutationEnrichmentEventType.nonframeshift_insertion]: true,
+    [MutationEnrichmentEventType.targeted_region]: true,
+    [MutationEnrichmentEventType.inframe]: true,
+    [MutationEnrichmentEventType.truncating]: true,
+    [MutationEnrichmentEventType.feature_truncation]: true,
+    [MutationEnrichmentEventType.fusion]: true,
+    [MutationEnrichmentEventType.silent]: true,
+    [MutationEnrichmentEventType.synonymous_variant]: true,
+    [MutationEnrichmentEventType.any]: true,
+    [MutationEnrichmentEventType.other]: true,
+};
