@@ -173,6 +173,24 @@ export default class CohortColumnFormatter {
         }
     }
 
+    public static getDownloadValue(
+        data: DiscreteCopyNumberData[],
+        copyNumberCountCache: CopyNumberCountCache
+    ) {
+        const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(
+            data,
+            copyNumberCountCache
+        );
+        if (copyNumberCount && copyNumberCount.data) {
+            const proportion =
+                copyNumberCount.data.numberOfSamplesWithAlterationInGene /
+                copyNumberCount.data.numberOfSamples;
+            return getPercentage(proportion);
+        } else {
+            return 'N/A';
+        }
+    }
+
     private static getCopyNumberCount(
         data: DiscreteCopyNumberData[],
         copyNumberCountCache: CopyNumberCountCache

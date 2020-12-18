@@ -11,7 +11,7 @@ export class StudyDataDownloadLink extends React.Component<
                 className="dataset-table-download-link"
                 style={{ display: 'block' }}
                 href={
-                    'http://download.cbioportal.org/' +
+                    'https://cbioportal-datahub.s3.amazonaws.com/' +
                     this.props.studyId +
                     '.tar.gz'
                 }

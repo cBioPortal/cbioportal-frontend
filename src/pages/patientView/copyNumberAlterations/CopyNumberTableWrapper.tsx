@@ -31,6 +31,7 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
+import { getPercentage } from 'shared/lib/FormatUtils';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -270,6 +271,16 @@ export default class CopyNumberTableWrapper extends React.Component<
                     return 0;
                 }
             },
+            download: (d: DiscreteCopyNumberData[]) => {
+                if (this.props.copyNumberCountCache) {
+                    return CohortColumnFormatter.getDownloadValue(
+                        d,
+                        this.props.copyNumberCountCache
+                    );
+                } else {
+                    return 'N/A';
+                }
+            },
             tooltip: <span>Alteration frequency in cohort</span>,
             defaultSortDirection: 'desc',
             order: 80,
@@ -287,6 +298,16 @@ export default class CopyNumberTableWrapper extends React.Component<
                     ) : (
                         <span />
                     ),
+                download: (d: DiscreteCopyNumberData[]) => {
+                    if (this.props.mrnaExprRankCache) {
+                        return MrnaExprColumnFormatter.getDownloadData(
+                            d,
+                            this.props.mrnaExprRankCache
+                        );
+                    } else {
+                        return 'N/A';
+                    }
+                },
                 order: 70,
             });
         }
