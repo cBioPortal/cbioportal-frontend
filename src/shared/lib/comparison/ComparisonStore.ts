@@ -601,57 +601,6 @@ export default abstract class ComparisonStore {
     readonly selectedStudyMutationEnrichmentProfileMap = remoteData({
         await: () => [this.mutationEnrichmentProfiles],
         invoke: () => {
-            const mutationTypes: MutationEnrichmentEventType[] = [
-                MutationEnrichmentEventType.missense_mutation,
-                MutationEnrichmentEventType.missense,
-                MutationEnrichmentEventType.missense_variant,
-                MutationEnrichmentEventType.frame_shift_ins,
-                MutationEnrichmentEventType.frame_shift_del,
-                MutationEnrichmentEventType.frameshift,
-                MutationEnrichmentEventType.frameshift_deletion,
-                MutationEnrichmentEventType.frameshift_insertion,
-                MutationEnrichmentEventType.de_novo_start_outofframe,
-                MutationEnrichmentEventType.frameshift_variant,
-                MutationEnrichmentEventType.nonsense_mutation,
-                MutationEnrichmentEventType.nonsense,
-                MutationEnrichmentEventType.stopgain_snv,
-                MutationEnrichmentEventType.stop_gained,
-                MutationEnrichmentEventType.splice_site,
-                MutationEnrichmentEventType.splice,
-                MutationEnrichmentEventType.splicing,
-                MutationEnrichmentEventType.splice_site_snp,
-                MutationEnrichmentEventType.splice_site_del,
-                MutationEnrichmentEventType.splice_site_indel,
-                MutationEnrichmentEventType.splice_region_variant,
-                MutationEnrichmentEventType.splice_region,
-                MutationEnrichmentEventType.translation_start_site,
-                MutationEnrichmentEventType.initiator_codon_variant,
-                MutationEnrichmentEventType.start_codon_snp,
-                MutationEnrichmentEventType.start_codon_del,
-                MutationEnrichmentEventType.nonstop_mutation,
-                MutationEnrichmentEventType.stop_lost,
-                MutationEnrichmentEventType.inframe_del,
-                MutationEnrichmentEventType.inframe_deletion,
-                MutationEnrichmentEventType.in_frame_del,
-                MutationEnrichmentEventType.in_frame_deletion,
-                MutationEnrichmentEventType.inframe_ins,
-                MutationEnrichmentEventType.inframe_insertion,
-                MutationEnrichmentEventType.in_frame_ins,
-                MutationEnrichmentEventType.in_frame_insertion,
-                MutationEnrichmentEventType.indel,
-                MutationEnrichmentEventType.nonframeshift_deletion,
-                MutationEnrichmentEventType.nonframeshift,
-                MutationEnrichmentEventType.nonframeshift_insertion,
-                MutationEnrichmentEventType.targeted_region,
-                MutationEnrichmentEventType.inframe,
-                MutationEnrichmentEventType.truncating,
-                MutationEnrichmentEventType.feature_truncation,
-                MutationEnrichmentEventType.fusion,
-                MutationEnrichmentEventType.silent,
-                MutationEnrichmentEventType.synonymous_variant,
-                MutationEnrichmentEventType.any,
-                MutationEnrichmentEventType.other,
-            ];
             //Only return Mutation profile if any mutation type is selected, otherwise return {}
             if (
                 _(this.selectedMutationEnrichmentEventTypes)
@@ -683,10 +632,6 @@ export default abstract class ComparisonStore {
     readonly selectedStudyCopyNumberEnrichmentProfileMap = remoteData({
         await: () => [this.copyNumberEnrichmentProfiles],
         invoke: () => {
-            const copyNumberTypes: CopyNumberEnrichmentEventType[] = [
-                CopyNumberEnrichmentEventType.HOMDEL,
-                CopyNumberEnrichmentEventType.AMP,
-            ];
             //Only return Copy Number profile if any copy number type is selected, otherwise return {}
             if (
                 _(this.selectedCopyNumberEnrichmentEventTypes)
