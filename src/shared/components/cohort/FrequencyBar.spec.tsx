@@ -86,7 +86,7 @@ describe('FrequencyBar', () => {
 
         assert.equal(
             rootSvg.find('text').text(),
-            '43.0%',
+            '43%',
             'percentage text should reflect only the first value in the count array'
         );
 
