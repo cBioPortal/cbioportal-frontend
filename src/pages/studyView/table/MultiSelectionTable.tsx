@@ -45,7 +45,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
     numberOfAlteredCases: number;
     numberOfProfiledCases: number;
     qValue: number;
-    numberOfAlterations: number;
+    totalCount: number;
     alteration?: number;
     cytoband?: string;
     uniqueKey: string;
@@ -335,19 +335,16 @@ export class MultiSelectionTable extends React.Component<
                             marginRight: cellMargin,
                         }}
                     >
-                        {data.numberOfAlterations.toLocaleString()}
+                        {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: MultiSelectionTableRow) =>
-                    data.numberOfAlterations,
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
                     data: MultiSelectionTableRow,
                     filterString: string
                 ) => {
-                    return _.toString(data.numberOfAlterations).includes(
-                        filterString
-                    );
+                    return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
@@ -365,19 +362,16 @@ export class MultiSelectionTable extends React.Component<
                             marginRight: cellMargin,
                         }}
                     >
-                        {data.numberOfAlterations.toLocaleString()}
+                        {data.totalCount.toLocaleString()}
                     </span>
                 ),
-                sortBy: (data: MultiSelectionTableRow) =>
-                    data.numberOfAlterations,
+                sortBy: (data: MultiSelectionTableRow) => data.totalCount,
                 defaultSortDirection: 'desc' as 'desc',
                 filter: (
                     data: MultiSelectionTableRow,
                     filterString: string
                 ) => {
-                    return _.toString(data.numberOfAlterations).includes(
-                        filterString
-                    );
+                    return _.toString(data.totalCount).includes(filterString);
                 },
                 width: columnWidth,
             },
@@ -491,7 +485,7 @@ export class MultiSelectionTable extends React.Component<
 
     @computed
     get maxNumberTotalCount() {
-        return _.max(this.tableData.map(item => item.numberOfAlterations));
+        return _.max(this.tableData.map(item => item.totalCount));
     }
 
     @computed

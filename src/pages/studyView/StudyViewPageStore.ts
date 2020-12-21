@@ -5656,7 +5656,7 @@ export class StudyViewPageStore {
                         record.qValue === undefined
                             ? ''
                             : getQValue(record.qValue),
-                        record.numberOfAlterations,
+                        record.totalCount,
                         record.numberOfAlteredCases,
                         record.numberOfProfiledCases,
                         getFrequencyStr(
@@ -5699,7 +5699,7 @@ export class StudyViewPageStore {
                 (record: MultiSelectionTableRow) => {
                     const rowData = [
                         record.label,
-                        record.numberOfAlterations,
+                        record.totalCount,
                         record.numberOfAlteredCases,
                         record.numberOfProfiledCases,
                         getFrequencyStr(
