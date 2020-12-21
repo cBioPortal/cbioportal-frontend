@@ -192,7 +192,10 @@ export default class ComparisonTab extends React.Component<
                                         }
                                     />
                                 )}
-                            <AlterationsEnrichments store={this.store} />
+                            <AlterationsEnrichments
+                                store={this.store}
+                                resultsViewStore={this.props.store}
+                            />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
