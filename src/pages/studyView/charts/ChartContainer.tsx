@@ -290,51 +290,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     .result! as ClinicalDataCountSummary[],
                             }
                         );
-                    const values = this.props.promise
-                        .result! as ClinicalDataCountSummary[];
-                    if (
-                        doesChartHaveComparisonGroupsLimit(
-                            this.props.chartMeta
-                        ) &&
-                        values.length > MAX_GROUPS_IN_SESSION
-                    ) {
-                        this.props.setComparisonConfirmationModal(hideModal => {
-                            return (
-                                <Modal
-                                    show={true}
-                                    onHide={() => {}}
-                                    backdrop="static"
-                                >
-                                    <Modal.Body>
-                                        Group comparisons are limited to 20
-                                        groups. Click OK to compare the 20
-                                        largest groups in this chart. Or, select
-                                        up to 20 specific groups in the chart to
-                                        compare.
-                                    </Modal.Body>
-                                    <Modal.Footer>
-                                        <button
-                                            className="btn btn-md btn-primary"
-                                            onClick={() => {
-                                                openComparison();
-                                                hideModal();
-                                            }}
-                                        >
-                                            OK
-                                        </button>
-                                        <button
-                                            className="btn btn-md btn-default"
-                                            onClick={hideModal}
-                                        >
-                                            Cancel
-                                        </button>
-                                    </Modal.Footer>
-                                </Modal>
-                            );
-                        });
-                    } else {
-                        openComparison();
-                    }
+                    openComparison();
                     break;
                 default:
                     this.props.store.openComparisonPage(
