@@ -41,7 +41,7 @@ export default class AlterationsEnrichments extends React.Component<
             this.props.store.studies,
         ],
         render: () => {
-            let headerName = 'Alterations';
+            let headerName = 'Mutations/Fusions/CNAs';
             return (
                 <div data-test="GroupComparisonAlterationEnrichments">
                     <AlterationEnrichmentContainer

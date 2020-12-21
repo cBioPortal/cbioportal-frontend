@@ -175,7 +175,7 @@ export default class ComparisonTab extends React.Component<
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={ResultsViewComparisonSubTab.ALTERATIONS}
-                            linkText="Alterations"
+                            linkText="Mutations/Fusions/CNAs"
                             anchorClassName={
                                 this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
