@@ -851,7 +851,7 @@ export default abstract class ComparisonStore {
                 this.mutationEnrichmentDataRequestGroups.result.length > 1
             ) {
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    enrichmentScope: this.usePatientLevelEnrichments
+                    enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
                     groups: this.mutationEnrichmentDataRequestGroups.result!,
@@ -1131,7 +1131,7 @@ export default abstract class ComparisonStore {
                             .some())
                 ) {
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
-                        enrichmentScope: this.usePatientLevelEnrichments
+                        enrichmentType: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',
                         groupsAndAlterationTypes: {
@@ -1158,7 +1158,7 @@ export default abstract class ComparisonStore {
     ): Promise<AlterationEnrichment[]> {
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,
-            enrichmentScope: this.usePatientLevelEnrichments
+            enrichmentType: this.usePatientLevelEnrichments
                 ? 'PATIENT'
                 : 'SAMPLE',
             groups,
@@ -1241,7 +1241,7 @@ export default abstract class ComparisonStore {
                 this.mrnaEnrichmentDataRequestGroups.result.length > 1
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
-                    enrichmentScope: 'SAMPLE',
+                    enrichmentType: 'SAMPLE',
                     groups: this.mrnaEnrichmentDataRequestGroups.result!,
                 });
             } else {
@@ -1326,7 +1326,7 @@ export default abstract class ComparisonStore {
                 this.proteinEnrichmentDataRequestGroups.result.length > 1
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
-                    enrichmentScope: 'SAMPLE',
+                    enrichmentType: 'SAMPLE',
                     groups: this.proteinEnrichmentDataRequestGroups.result!,
                 });
             } else {
@@ -1410,7 +1410,7 @@ export default abstract class ComparisonStore {
                 this.methylationEnrichmentDataRequestGroups.result.length > 1
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
-                    enrichmentScope: 'SAMPLE',
+                    enrichmentType: 'SAMPLE',
                     groups: this.methylationEnrichmentDataRequestGroups.result!,
                 });
             } else {
@@ -1532,7 +1532,7 @@ export default abstract class ComparisonStore {
                                 ) {
                                     return internalClient.fetchGenericAssayEnrichmentsUsingPOST(
                                         {
-                                            enrichmentScope: 'SAMPLE',
+                                            enrichmentType: 'SAMPLE',
                                             groups: genericAssayEnrichmentDataRequestGroups,
                                         }
                                     );
