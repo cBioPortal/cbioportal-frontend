@@ -164,7 +164,7 @@ export default class GroupComparisonPage extends React.Component<
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={GroupComparisonTab.ALTERATIONS}
-                            linkText="Alterations"
+                            linkText="Mutations/Fusions/CNAs"
                             anchorClassName={
                                 this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
