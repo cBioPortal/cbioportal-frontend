@@ -9,6 +9,7 @@ import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 import { makeObservable } from 'mobx';
 import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
+import AppConfig from 'appConfig';
 
 export interface IAlterationEnrichmentsProps {
     store: ComparisonStore;
@@ -34,6 +35,9 @@ export default class AlterationEnrichments extends React.Component<
         true
     );
 
+    private useInlineTypeSelectorMenu = !AppConfig.serverConfig
+        .skin_show_settings_menu;
+
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
             this.props.store.alterationsEnrichmentData,
@@ -46,23 +50,30 @@ export default class AlterationEnrichments extends React.Component<
         render: () => {
             let headerName = GENOMIC_ALTERATIONS_TAB_NAME;
             return (
-                <AlterationEnrichmentContainer
-                    data={this.props.store.alterationsEnrichmentData.result!}
-                    groups={
-                        this.props.store.alterationsEnrichmentAnalysisGroups
-                            .result
-                    }
-                    alteredVsUnalteredMode={false}
-                    headerName={headerName}
-                    patientLevelEnrichments={
-                        this.props.store.usePatientLevelEnrichments
-                    }
-                    onSetPatientLevelEnrichments={
-                        this.props.store.setUsePatientLevelEnrichments
-                    }
-                    store={this.props.resultsViewStore}
-                    comparisonStore={this.props.store}
-                />
+                <div data-test="GroupComparisonAlterationEnrichments">
+                    <AlterationEnrichmentContainer
+                        data={
+                            this.props.store.alterationsEnrichmentData.result!
+                        }
+                        groups={
+                            this.props.store.alterationsEnrichmentAnalysisGroups
+                                .result
+                        }
+                        alteredVsUnalteredMode={false}
+                        headerName={headerName}
+                        patientLevelEnrichments={
+                            this.props.store.usePatientLevelEnrichments
+                        }
+                        onSetPatientLevelEnrichments={
+                            this.props.store.setUsePatientLevelEnrichments
+                        }
+                        store={this.props.resultsViewStore}
+                        comparisonStore={this.props.store}
+                        dashToRight={this.useInlineTypeSelectorMenu}
+                    >
+                        {this.props.children}
+                    </AlterationEnrichmentContainer>
+                </div>
             );
         },
         renderPending: () => (

@@ -17,6 +17,7 @@ if (useExternalFrontend) {
     describe('comparison alterations tab', function() {
         beforeEach(() => {
             loadAlterationsTab();
+            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
         });
 
         it('shows basic counts', function() {
@@ -40,6 +41,7 @@ if (useExternalFrontend) {
             $('[data-test=LazyMobXTable]').waitForVisible();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 8, 'table has 8 rows');
+            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
@@ -53,6 +55,7 @@ if (useExternalFrontend) {
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
+            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
             clickAlterationTypeCheckBox('Deletion');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
@@ -65,7 +68,7 @@ if (useExternalFrontend) {
 // Multiple loading attempts are needed in some cases to show the
 // enrichment panels and make the tests pass reliably.
 var loadAlterationsTab = () => {
-    var timeIntervals = [3000, 4000, 5000, 5000, 10000];
+    var timeIntervals = [3000, 4000, 5000, 5000, 10000, 30000, 100000];
     for (const timeInterval of timeIntervals) {
         goToUrlAndSetLocalStorage(resultsViewComparisonTab, true);
         browser.pause(timeInterval);
