@@ -49,6 +49,7 @@ import {
     StudyViewFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
+    AlterationFilter,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -214,11 +215,18 @@ import {
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
-
 type ChartUniqueKey = string;
 type ResourceId = string;
 type ComparisonGroupId = string;
 type AttributeId = string;
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IAnnotationFilteringSettings,
+    IDriverAnnotationReport,
+} from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
+import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export type ChartUserSetting = {
     id: string;
@@ -326,13 +334,19 @@ export type OncokbCancerGene = {
     isCancerGene: boolean;
 };
 
-export class StudyViewPageStore {
+export class StudyViewPageStore
+    implements IAnnotationFilteringSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
     private chartToUsedColors: Map<string, Set<string>>;
 
     public studyViewQueryFilter: StudyViewURLQuery;
+    @observable driverAnnotationSettings: DriverAnnotationSettings;
+    @observable includeGermlineMutations = true;
+    @observable includeSomaticMutations = true;
+    @observable includeUnknownStatusMutations = true;
+    @observable settingsMenuVisible = false;
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
@@ -488,6 +502,9 @@ export class StudyViewPageStore {
                     this.chartsDimension.set(uniqueKey, chartMeta.dimension);
                 }
             }
+        );
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
         );
     }
 
@@ -1568,6 +1585,9 @@ export class StudyViewPageStore {
     >();
 
     @observable.ref private _geneFilterSet = observable.map<
+        GeneFilterQuery[][]
+    >();
+    @observable.ref private _geneFilterSet = observable.map<
         string,
         string[][]
     >();
@@ -2380,11 +2400,26 @@ export class StudyViewPageStore {
     @action.bound
     addGeneFilters(chartMeta: ChartMeta, hugoGeneSymbols: string[][]): void {
         trackStudyViewFilterEvent('geneFilter', this);
-        let geneFilters =
+        let geneFilter =
             toJS(this._geneFilterSet.get(chartMeta.uniqueKey)) || [];
-        geneFilters = geneFilters.concat(hugoGeneSymbols);
-
-        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilters);
+        // convert OQL gene queries to GeneFilterObjects accepted by the backend
+        const queries = _.map(hugoGeneSymbols, oqls =>
+            _.map(oqls, oql =>
+                geneFilterQueryFromOql(
+                    oql,
+                    this.driverAnnotationSettings.includeDriver,
+                    this.driverAnnotationSettings.includeVUS,
+                    this.driverAnnotationSettings.includeUnknownOncogenicity,
+                    this.selectedTiersMap,
+                    this.driverAnnotationSettings.includeUnknownTier,
+                    this.includeGermlineMutations,
+                    this.includeSomaticMutations,
+                    this.includeUnknownStatusMutations
+                )
+            )
+        );
+        geneFilter = geneFilter.concat(queries);
+        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilter);
     }
 
     @action.bound
@@ -2447,13 +2482,21 @@ export class StudyViewPageStore {
         geneFilters = _.reduce(
             geneFilters,
             (acc, next) => {
-                const newGroup = next.filter(oql => oql !== toBeRemoved);
+                const [
+                    hugoGeneSymbol,
+                    alteration,
+                ]: string[] = toBeRemoved.split(':');
+                const newGroup = next.filter(
+                    geneFilterQuery =>
+                        geneFilterQuery.hugoGeneSymbol !== hugoGeneSymbol &&
+                        !_.includes(geneFilterQuery.alterations, alteration)
+                );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
                 }
                 return acc;
             },
-            [] as string[][]
+            [] as GeneFilterQuery[][]
         );
         if (geneFilters.length === 0) {
             this._geneFilterSet.delete(chartUniqueKey);
@@ -2997,7 +3040,10 @@ export class StudyViewPageStore {
     }
 
     public getGeneFiltersByUniqueKey(uniqueKey: string): string[][] {
-        return toJS(this._geneFilterSet.get(uniqueKey)) || [];
+        const filters = _.map(this._geneFilterSet.get(uniqueKey), filterSet =>
+            _.map(filterSet, geneFilterQueryToOql)
+        );
+        return toJS(filters);
     }
 
     public getClinicalDataFiltersByUniqueKey(
@@ -6125,7 +6171,7 @@ export class StudyViewPageStore {
                 }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter,
+                    studyViewFilter: toJS(studyViewFilter),
                 });
             } else {
                 return Promise.resolve(this.samples.result);
@@ -6145,7 +6191,7 @@ export class StudyViewPageStore {
     readonly studyViewFilterWithFilteredSampleIdentifiers = remoteData<
         StudyViewFilter
     >({
-        await: () => [this.selectedSamples],
+        await: () => [this.selectedSamples, this.customDriverAnnotationReport],
         invoke: () => {
             const sampleIdentifiers = this.selectedSamples.result.map(
                 sample => {
@@ -6155,7 +6201,22 @@ export class StudyViewPageStore {
                     } as SampleIdentifier;
                 }
             );
-            return Promise.resolve({ sampleIdentifiers } as any);
+            const alterationFilter = {
+                includeDriver: this.driverAnnotationSettings.includeDriver,
+                includeVUS: this.driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity: this.driverAnnotationSettings
+                    .includeUnknownOncogenicity,
+                includeUnknownTier: this.driverAnnotationSettings
+                    .includeUnknownTier,
+                includeGermline: this.includeGermlineMutations,
+                includeSomatic: this.includeSomaticMutations,
+                includeUnknownStatus: this.includeUnknownStatusMutations,
+                tiersBooleanMap: this.selectedTiersMap,
+            } as AlterationFilter;
+            return Promise.resolve({
+                sampleIdentifiers,
+                alterationFilter,
+            } as StudyViewFilter);
         },
         onError: () => {},
     });
@@ -6268,7 +6329,7 @@ export class StudyViewPageStore {
                   ],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result)) {
-                let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
+                const mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
                         studyViewFilter: this
                             .studyViewFilterWithFilteredSampleIdentifiers
@@ -6457,6 +6518,38 @@ export class StudyViewPageStore {
                 });
         },
     });
+
+    @computed get selectedTiers() {
+        return this.customDriverAnnotationReport.result?.tiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
+    @computed get selectedTiersMap() {
+        return buildSelectedTiersMap(
+            this.selectedTiers || [],
+            this.customDriverAnnotationReport.result!.tiers
+        );
+    }
+
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.molecularProfiles],
+            invoke: async () => {
+                const molecularProfileIds = this.molecularProfiles.result.map(
+                    molecularProfile => molecularProfile.molecularProfileId
+                );
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    { molecularProfileIds }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+        }
+    );
 
     readonly survivalPlots = remoteData<SurvivalType[]>({
         await: () => [
@@ -8158,5 +8251,58 @@ export class StudyViewPageStore {
             .filter(outerFilter => outerFilter.filters.length > 0);
 
         this.setPatientTreatmentFilters({ filters: updatedFilters });
+    }
+
+    @computed get isGlobalMutationFilterActive(): boolean {
+        return this.isGlobalAlterationFilterActive || this.isStatusFilterActive;
+    }
+
+    @computed get isGlobalAlterationFilterActive(): boolean {
+        return this.isTiersFilterActive || this.isAnnotationsFilterActive;
+    }
+
+    @computed get isTiersFilterActive(): boolean {
+        return tierFilterActive(
+            this.driverAnnotationSettings.driverTiers.toJS(),
+            this.driverAnnotationSettings.includeUnknownTier
+        );
+    }
+
+    @computed get isAnnotationsFilterActive(): boolean {
+        return annotationFilterActive(
+            this.driverAnnotationSettings.includeDriver,
+            this.driverAnnotationSettings.includeVUS,
+            this.driverAnnotationSettings.includeUnknownOncogenicity
+        );
+    }
+
+    @computed get isStatusFilterActive(): boolean {
+        return statusFilterActive(
+            this.includeGermlineMutations,
+            this.includeSomaticMutations,
+            this.includeUnknownStatusMutations
+        );
+    }
+
+    @computed get doShowDriverAnnotationSectionInGlobalMenu(): boolean {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.hasBinary &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get doShowTierAnnotationSectionInGlobalMenu(): boolean {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.tiers.length > 0 &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
     }
 }

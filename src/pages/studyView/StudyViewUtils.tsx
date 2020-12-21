@@ -10,6 +10,7 @@ import {
     GenomicDataCount,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayData,
+    GeneFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
@@ -65,6 +66,7 @@ import {
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
 import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
+import { observer } from 'mobx-react';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -754,7 +756,10 @@ export function getVirtualStudyDescription(
                 filterLines = filterLines.concat(
                     geneFilter.geneQueries
                         .map(geneQuery => {
-                            return geneQuery.join(', ').trim();
+                            return geneQuery
+                                .map(geneFilterQueryToOql)
+                                .join(', ')
+                                .trim();
                         })
                         .map(line => '  - ' + line)
                 );
@@ -2958,6 +2963,241 @@ export function getMolecularProfileSamplesSet(
             return acc;
         },
         {}
+    );
+}
+
+export function geneFilterQueryToOql(query: GeneFilterQuery): string {
+    return query.alterations.length > 0
+        ? `${query.hugoGeneSymbol}:${query.alterations.join(' ')}`
+        : query.hugoGeneSymbol;
+}
+
+export function geneFilterQueryFromOql(
+    oql: string,
+    includeDriver?: boolean,
+    includeVUS?: boolean,
+    includeUnknownOncogenicity?: boolean,
+    selectedTiers?: { [tier: string]: boolean },
+    includeUnknownTier?: boolean,
+    includeGermline?: boolean,
+    includeSomatic?: boolean,
+    includeUnknownStatus?: boolean
+): GeneFilterQuery {
+    const [part1, part2]: string[] = oql.split(':');
+    const alterations = part2 ? part2.trim().split(' ') : [];
+    const hugoGeneSymbol = part1.trim();
+    return {
+        hugoGeneSymbol,
+        entrezGeneId: 0,
+        alterations: alterations as (
+            | 'HOMDEL'
+            | 'AMP'
+            | 'GAIN'
+            | 'DIPLOID'
+            | 'HETLOSS'
+        )[],
+        includeDriver: includeDriver === undefined ? true : includeDriver,
+        includeVUS: includeVUS === undefined ? true : includeVUS,
+        includeUnknownOncogenicity:
+            includeUnknownOncogenicity === undefined
+                ? true
+                : includeUnknownOncogenicity,
+        tiersBooleanMap: selectedTiers || ({} as { [tier: string]: boolean }),
+        includeUnknownTier:
+            includeUnknownTier === undefined ? true : includeUnknownTier,
+        includeGermline: includeGermline === undefined ? true : includeGermline,
+        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
+        includeUnknownStatus:
+            includeUnknownStatus === undefined ? true : includeUnknownStatus,
+    };
+}
+
+const AlterationMenuHeader: React.FunctionComponent<{
+    includeCnaTable: boolean;
+}> = observer(({ includeCnaTable }) => {
+    if (includeCnaTable) {
+        return (
+            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                Select the types of alterations to count in the{' '}
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
+                tables.
+            </span>
+        );
+    } else {
+        return (
+            <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                Select the types of alterations to count in the{' '}
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
+                tables.
+            </span>
+        );
+    }
+});
+
+export function buildSelectedTiersMap(
+    selectedTiers: string[],
+    allTiers: string[]
+) {
+    return _(allTiers)
+        .keyBy()
+        .mapValues((value, tier) => selectedTiers.includes(tier))
+        .value();
+}
+
+export const FilterIconMessage: React.FunctionComponent<{
+    chartType: ChartType;
+    geneFilterQuery: GeneFilterQuery;
+}> = observer(({ chartType, geneFilterQuery }) => {
+    const annotationFilterIsActive = annotationFilterActive(
+        geneFilterQuery.includeDriver,
+        geneFilterQuery.includeVUS,
+        geneFilterQuery.includeUnknownOncogenicity
+    );
+    const tierFilterIsActive = tierFilterActive(
+        geneFilterQuery.tiersBooleanMap,
+        geneFilterQuery.includeUnknownTier
+    );
+    const statusFilterIsActive = statusFilterActive(
+        geneFilterQuery.includeGermline,
+        geneFilterQuery.includeSomatic,
+        geneFilterQuery.includeUnknownStatus
+    );
+    const isMutationType =
+        chartType === ChartTypeEnum.MUTATED_GENES_TABLE ||
+        chartType === ChartTypeEnum.FUSION_GENES_TABLE;
+    if (
+        !annotationFilterIsActive &&
+        !tierFilterIsActive &&
+        (!statusFilterIsActive || !isMutationType)
+    )
+        return null;
+
+    const driverFilterTextElements: string[] = [];
+    if (annotationFilterIsActive) {
+        geneFilterQuery.includeDriver &&
+            driverFilterTextElements.push('driver');
+        geneFilterQuery.includeVUS &&
+            driverFilterTextElements.push('passenger');
+        geneFilterQuery.includeUnknownOncogenicity &&
+            driverFilterTextElements.push('unknown');
+    }
+
+    const statusFilterTextElements: string[] = [];
+    if (statusFilterIsActive && isMutationType) {
+        geneFilterQuery.includeGermline &&
+            statusFilterTextElements.push('germline');
+        geneFilterQuery.includeSomatic &&
+            statusFilterTextElements.push('somatic');
+        geneFilterQuery.includeUnknownStatus &&
+            statusFilterTextElements.push('unknown');
+    }
+
+    const tierNames = tierFilterIsActive
+        ? _(geneFilterQuery.tiersBooleanMap)
+              .pickBy()
+              .keys()
+              .value()
+        : [];
+    if (tierFilterIsActive && geneFilterQuery.includeUnknownTier)
+        tierNames.push('unknown');
+
+    let driverFilterText = '';
+    if (driverFilterTextElements.length === 1)
+        driverFilterText = driverFilterTextElements[0];
+    else if (driverFilterTextElements.length > 1)
+        driverFilterText =
+            driverFilterTextElements.slice(0, -1).join(', ') +
+            ' or ' +
+            driverFilterTextElements.slice(-1);
+
+    let statusFilterText = '';
+    if (statusFilterTextElements.length === 1)
+        statusFilterText = statusFilterTextElements[0];
+    else if (statusFilterTextElements.length > 1)
+        statusFilterText =
+            statusFilterTextElements.slice(0, -1).join(', ') +
+            ' or ' +
+            statusFilterTextElements.slice(-1);
+
+    let tierFilterText = '';
+    if (tierNames.length === 1) tierFilterText = tierNames[0];
+    else if (tierNames.length > 1)
+        tierFilterText =
+            tierNames.slice(0, -1).join(', ') + ' or ' + tierNames.slice(-1);
+
+    return (
+        <div data-test={'groupedGeneFilterIcons'} className={styles.content}>
+            {driverFilterText && (
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <span>annotation:</span>&nbsp;
+                    <span>{driverFilterText}</span>
+                </div>
+            )}
+            {statusFilterText && (
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <span>status:</span>&nbsp;
+                    <span>{statusFilterText}</span>
+                </div>
+            )}
+            {tierFilterText && (
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                    }}
+                >
+                    <span>category:</span>&nbsp;
+                    <span>{tierFilterText}</span>
+                </div>
+            )}
+        </div>
+    );
+});
+
+export function tierFilterActive(
+    tiersMap: { [tier: string]: boolean },
+    includeUnknownTier: boolean
+): boolean {
+    const availableTiers = _.keys(tiersMap);
+    const selectedTiers = _(tiersMap)
+        .pickBy()
+        .keys()
+        .value();
+    return (
+        !(selectedTiers.length === 0 && !includeUnknownTier) &&
+        !(selectedTiers.length === availableTiers.length && includeUnknownTier)
+    );
+}
+
+export function annotationFilterActive(
+    includeDriver: boolean,
+    includeVUS: boolean,
+    includeUnknownOncogenicity: boolean
+): boolean {
+    return (
+        !(includeDriver && includeVUS && includeUnknownOncogenicity) &&
+        !(!includeDriver && !includeVUS && !includeUnknownOncogenicity)
+    );
+}
+
+export function statusFilterActive(
+    includeGermline: boolean,
+    includeSomatic: boolean,
+    includeUnknownStatus: boolean
+): boolean {
+    return (
+        !(includeGermline && includeSomatic && includeUnknownStatus) &&
+        !(!includeGermline && !includeSomatic && !includeUnknownStatus)
     );
 }
 

@@ -8,7 +8,7 @@ export * from './lib/helpers';
 
 export * from './types';
 
-export * from './configureTracks';
+export { ITrackEventConfig, configureTracks } from './configureTracks';
 
 export { renderStack } from './svg/renderStack';
 export { renderSuperscript } from './TimelineTrack';

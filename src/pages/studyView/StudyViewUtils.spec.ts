@@ -56,6 +56,11 @@ import {
     getNonZeroUniqueBins,
     DataBin,
     getPatientIdentifiers,
+    geneFilterQueryFromOql,
+    geneFilterQueryToOql,
+    annotationFilterActive,
+    tierFilterActive,
+    statusFilterActive,
 } from 'pages/studyView/StudyViewUtils';
 import {
     Sample,
@@ -189,7 +194,7 @@ describe('StudyViewUtils', () => {
             );
         });
         it('when filters are applied', () => {
-            let filter = {
+            let filter = ({
                 clinicalDataFilters: [
                     {
                         attributeId: 'attribute1',
@@ -215,15 +220,15 @@ describe('StudyViewUtils', () => {
                 genomicDataFilters: [],
                 geneFilters: [
                     {
-                        geneQueries: [['GENE1']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE1')]],
                         molecularProfileIds: ['cancer_study_sequenced'],
                     },
                     {
-                        geneQueries: [['GENE1']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE1')]],
                         molecularProfileIds: ['cancer_study_fusion'],
                     },
                     {
-                        geneQueries: [['GENE2:HOMDEL']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE2:HOMDEL')]],
                         molecularProfileIds: ['cancer_study_cna'],
                     },
                 ],
@@ -252,8 +257,7 @@ describe('StudyViewUtils', () => {
                 caseLists: [],
                 genericAssayDataFilters: [],
                 customDataFilters: [],
-            } as StudyViewFilterWithSampleIdentifierFilters;
-
+            } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -3397,6 +3401,121 @@ describe('StudyViewUtils', () => {
                     { ...chartSetting2, id: 'SAMPLE_TYPE' },
                 ]
             );
+        });
+    });
+
+    describe('geneFilterQuery and OQL conversion', () => {
+        it('converts simple gene filter to OQL', () => {
+            assert.strictEqual(
+                'BRCA1',
+                geneFilterQueryToOql({
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: [],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                })
+            );
+        });
+        it('adds CNA alterations to OQL', () => {
+            assert.strictEqual(
+                'BRCA1:AMP HETLOSS',
+                geneFilterQueryToOql({
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: ['AMP', 'HETLOSS'],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: [],
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                })
+            );
+        });
+        it('creates simple gene filter from OQL', () => {
+            assert.deepEqual(
+                {
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: [],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                },
+                geneFilterQueryFromOql('BRCA1')
+            );
+        });
+        it('creates simple gene filter with CNA alterations from OQL', () => {
+            assert.deepEqual(
+                {
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: ['AMP', 'HETLOSS'],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                },
+                geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
+            );
+        });
+    });
+
+    describe('annotationFilterActive', () => {
+        it('false when all excluded', () => {
+            assert.isFalse(annotationFilterActive(false, false, false));
+        });
+        it('false when all included', () => {
+            assert.isFalse(annotationFilterActive(true, true, true));
+        });
+
+        it('true when only single annotation type included', () => {
+            assert(annotationFilterActive(false, true, false));
+        });
+    });
+
+    describe('tierFilterActive', () => {
+        it('false when all tier types included', () => {
+            assert.isFalse(tierFilterActive({ tier1: true }, true));
+        });
+        it('false when all tier types excluded', () => {
+            assert.isFalse(tierFilterActive({ tier1: false }, false));
+        });
+        it('true when single tier not selected', () => {
+            assert(tierFilterActive({ tier1: true, tier2: false }, true));
+        });
+        it('true when unkown tier not selected', () => {
+            assert(tierFilterActive({ tier1: true, tier2: true }, false));
+        });
+    });
+
+    describe('statusFilterActive', () => {
+        it('false when all mutation status included', () => {
+            assert.isFalse(statusFilterActive(true, true, true));
+        });
+        it('false when all mutation status excluded', () => {
+            assert.isFalse(statusFilterActive(false, false, false));
+        });
+        it('false when single mutation status included', () => {
+            assert(statusFilterActive(false, true, false));
         });
     });
 

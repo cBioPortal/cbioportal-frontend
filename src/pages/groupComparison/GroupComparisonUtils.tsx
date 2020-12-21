@@ -1,14 +1,12 @@
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {
+    ClinicalDataEnrichment,
     PatientIdentifier,
     Sample,
     SampleIdentifier,
-} from 'cbioportal-ts-api-client';
-import _ from 'lodash';
-import {
-    ClinicalDataEnrichment,
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
+import _ from 'lodash';
 import { AlterationEnrichmentWithQ } from '../resultsView/enrichments/EnrichmentsUtil';
 import {
     GroupData,
@@ -26,10 +24,25 @@ import {
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    getBrowserWindow,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
-import { DataType } from 'pages/studyView/StudyViewUtils';
+import {
+    DataType,
+    geneFilterQueryToOql,
+    getButtonNameWithDownPointer,
+} from 'pages/studyView/StudyViewUtils';
+import styles from 'pages/groupComparison/styles.module.scss';
+import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import AlterationEnrichmentTypeSelector, {
+    IAlterationEnrichmentTypeSelectorHandlers,
+} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import { observer } from 'mobx-react';
+import AppConfig from 'appConfig';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -549,6 +562,7 @@ export function getDefaultGroupName(
 
     const geneFilters = _.chain(filters.geneFilters || [])
         .flatMapDeep(geneFilter => geneFilter.geneQueries)
+        .map(geneQuery => geneFilterQueryToOql(geneQuery))
         .value();
 
     const caseListsFilters = _.chain(filters.caseLists || [])
@@ -920,3 +934,115 @@ export function getStatisticalCautionInfo() {
         </div>
     );
 }
+
+export const AlterationFilterMenuSection: React.FunctionComponent<{
+    store: ComparisonStore;
+    handlers: IAlterationEnrichmentTypeSelectorHandlers;
+}> = observer(({ store, handlers }) => {
+    return (
+        <div>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <AlterationEnrichmentTypeSelector
+                        classNames={styles.buttonAlterationTypeSelectorMenu}
+                        store={store}
+                        handlers={handlers}
+                        showMutations={store.hasMutationEnrichmentData}
+                        showCnas={store.hasCnaEnrichmentData}
+                        showFusions={store.hasMutationEnrichmentData}
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentTypeSelectorButton"
+                    className="btn btn-primary btn-sm"
+                    style={{ marginBottom: '10px' }}
+                >
+                    {getButtonNameWithDownPointer('Alteration Types')}
+                </button>
+            </DefaultTooltip>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <SettingsMenu
+                        store={store}
+                        infoElement={
+                            <AlterationMenuHeader
+                                studyHasMutations={
+                                    store.hasMutationEnrichmentData
+                                }
+                                studyHasFusions={store.hasFusionEnrichmentData}
+                                studyHasCnas={store.hasCnaEnrichmentData}
+                                showDriverSection={
+                                    store.showDriverAnnotationMenuSection
+                                }
+                                showTiersSection={
+                                    store.showTierAnnotationMenuSection
+                                }
+                            />
+                        }
+                        customDriverSourceName={
+                            AppConfig.serverConfig
+                                .oncoprint_custom_driver_annotation_binary_menu_label ||
+                            'undefined'
+                        }
+                        showDriverAnnotationSection={
+                            store.showDriverAnnotationMenuSection
+                        }
+                        showTierAnnotationSection={
+                            store.showTierAnnotationMenuSection
+                        }
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentAnnotationsSelectorButton"
+                    style={{
+                        marginLeft: '10px',
+                        marginBottom: '10px',
+                    }}
+                    className="btn btn-primary btn-sm"
+                >
+                    {getButtonNameWithDownPointer('Annotations')}
+                </button>
+            </DefaultTooltip>
+        </div>
+    );
+});
+
+const AlterationMenuHeader: React.FunctionComponent<{
+    studyHasMutations: boolean;
+    studyHasFusions: boolean;
+    studyHasCnas: boolean;
+    showDriverSection: boolean;
+    showTiersSection: boolean;
+}> = observer(
+    ({
+        studyHasMutations,
+        studyHasFusions,
+        studyHasCnas,
+        showDriverSection,
+        showTiersSection,
+    }) => {
+        const sections = [];
+        studyHasMutations && sections.push('mutations');
+        studyHasFusions &&
+            (showDriverSection || showTiersSection) &&
+            sections.push('fusions');
+        studyHasCnas &&
+            (showDriverSection || showTiersSection) &&
+            sections.push('copy number alterations');
+        let text = sections.join(' and ');
+        if (sections.length === 3)
+            text = sections[0] + ', ' + sections[1] + ' and ' + sections[2];
+        return (
+            <span>
+                Select filters for {text} included in the over-representation
+                analysis.
+            </span>
+        );
+    }
+);

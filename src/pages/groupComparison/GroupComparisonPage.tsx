@@ -184,26 +184,35 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            {this.store.activeGroups.isComplete &&
-                                this.store.activeGroups.result.length > 1 && (
-                                    <AlterationEnrichmentTypeSelector
-                                        store={this.store}
-                                        handlers={
-                                            this
-                                                .alterationEnrichmentTypeSelectorHandlers!
-                                        }
-                                        showMutations={
-                                            this.store.hasMutationEnrichmentData
-                                        }
-                                        showCnas={
-                                            this.store.hasCnaEnrichmentData
-                                        }
-                                        showFusions={
-                                            this.store.hasFusionEnrichmentData
-                                        }
-                                    />
-                                )}
-                            <AlterationEnrichments store={this.store} />
+                            {(AppConfig.serverConfig
+                                .skin_show_settings_menu && (
+                                <AlterationFilterMenuSection
+                                    store={this.store}
+                                    handlers={
+                                        this
+                                            .alterationEnrichmentTypeSelectorHandlers
+                                    }
+                                />
+                            )) || (
+                                <AlterationEnrichmentTypeSelector
+                                    classNames={
+                                        styles.inlineAlterationTypeSelectorMenu
+                                    }
+                                    store={this.store}
+                                    handlers={
+                                        this
+                                            .alterationEnrichmentTypeSelectorHandlers
+                                    }
+                                    showMutations={
+                                        this.store.hasMutationEnrichmentData
+                                    }
+                                    showCnas={this.store.hasCnaEnrichmentData}
+                                    showFusions={
+                                        this.store.hasMutationEnrichmentData
+                                    }
+                                />
+                            )}
+                            <AlterationsEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (

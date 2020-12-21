@@ -94,7 +94,7 @@ export enum OverlapStrategy {
     EXCLUDE = 'Exclude',
 }
 
-export default abstract class ComparisonStore {
+export default abstract class ComparisonStore implements IAnnotationFilteringSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
@@ -107,6 +107,11 @@ export default abstract class ComparisonStore {
     public selectedMutationEnrichmentEventTypes: {
         [key in MutationEnrichmentEventType]?: boolean;
     } = {};
+
+    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable includeGermlineMutations = true;
+    @observable includeSomaticMutations = true;
+    @observable includeUnknownStatusMutations = true;
 
     constructor(
         protected appStore: AppStore,
@@ -159,6 +164,10 @@ export default abstract class ComparisonStore {
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
+
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => false
+        );
     }
 
     public destroy() {
@@ -1938,6 +1947,107 @@ export default abstract class ComparisonStore {
                 }
             );
         });
+    }
+
+    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
+        {
+            await: () => [this.studyIds],
+            invoke: async () => {
+                return client.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: this.studyIds.result,
+                    } as MolecularProfileFilter,
+                });
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationProfiles = remoteData<MolecularProfile[]>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                return _.filter(
+                    this.molecularProfilesInStudies.result,
+                    (molecularProfile: MolecularProfile) =>
+                        // discrete CNA's
+                        (molecularProfile.molecularAlterationType ===
+                            AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                            molecularProfile.datatype ===
+                                DataTypeConstants.DISCRETE) ||
+                        // mutations
+                        molecularProfile.molecularAlterationType ===
+                            AlterationTypeConstants.MUTATION_EXTENDED ||
+                        // structural variants
+                        molecularProfile.molecularAlterationType ===
+                            AlterationTypeConstants.STRUCTURAL_VARIANT
+                );
+            },
+        },
+        []
+    );
+
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.customDriverAnnotationProfiles],
+            invoke: async () => {
+                const molecularProfileIds = _.map(
+                    this.customDriverAnnotationProfiles.result,
+                    (p: MolecularProfile) => p.molecularProfileId
+                );
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    {
+                        molecularProfileIds,
+                    }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+        }
+    );
+
+    @computed get showDriverAnnotationMenuSection() {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.hasBinary &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get showTierAnnotationMenuSection() {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.tiers.length > 0 &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get selectedTiers() {
+        return this.allTiers.filter(tier =>
+            this.driverAnnotationSettings.driverTiers.get(tier)
+        );
+    }
+
+    @computed get allTiers() {
+        return this.customDriverAnnotationReport.isComplete
+            ? this.customDriverAnnotationReport.result!.tiers
+            : [];
+    }
+
+    @computed get selectedTiersMap() {
+        return buildSelectedTiersMap(
+            this.selectedTiers || [],
+            this.customDriverAnnotationReport.result!.tiers
+        );
     }
 
     @computed get hasMutationEnrichmentData(): boolean {

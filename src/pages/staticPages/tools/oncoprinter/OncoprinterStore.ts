@@ -1,5 +1,8 @@
-import { DriverAnnotationSettings } from '../../../resultsView/ResultsViewPageStore';
-import { action, computed, observable, makeObservable } from 'mobx';
+import {
+    DriverAnnotationSettings,
+    buildDriverAnnotationSettings,
+} from '../../../../shared/alterationFiltering/AnnotationFilteringSettings';
+import { action, computed, observable } from 'mobx';
 import AppConfig from 'appConfig';
 import {
     annotateGeneticTrackData,
@@ -10,7 +13,6 @@ import {
     getGeneticOncoprintData,
     getSampleGeneticTrackData,
     getSampleIds,
-    initDriverAnnotationSettings,
     isAltered,
     isType2,
     OncoprinterGeneticInputLine,
@@ -41,17 +43,6 @@ import {
     parseHeatmapInput,
 } from './OncoprinterClinicalAndHeatmapUtils';
 
-export type OncoprinterDriverAnnotationSettings = Pick<
-    DriverAnnotationSettings,
-    | 'excludeVUS'
-    | 'customBinary'
-    | 'hotspots'
-    | 'cbioportalCount'
-    | 'cbioportalCountThreshold'
-    | 'oncoKb'
-    | 'driversAnnotated'
->;
-
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
     return `${l.chromosome}_${l.startPosition}_${l.endPosition}_${l.referenceAllele}_${l.variantAllele}`;
@@ -69,7 +60,7 @@ export default class OncoprinterStore {
 
     @observable.ref _inputSampleIdOrder: string | undefined = undefined;
     @observable.ref _geneOrder: string | undefined = undefined;
-    @observable driverAnnotationSettings: OncoprinterDriverAnnotationSettings;
+    @observable driverAnnotationSettings: DriverAnnotationSettings;
     @observable.ref _geneticDataInput: string | undefined = undefined;
     @observable.ref _clinicalDataInput: string | undefined = undefined;
     @observable.ref _heatmapDataInput: string | undefined = undefined;
@@ -83,7 +74,14 @@ export default class OncoprinterStore {
     }
 
     private initialize() {
-        this.driverAnnotationSettings = initDriverAnnotationSettings(this);
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => this.didOncoKbFail
+        );
+        if (this.existCustomDrivers != null) {
+            this.driverAnnotationSettings.customBinary = this.existCustomDrivers;
+            this.driverAnnotationSettings.oncoKb = false;
+        }
+        //TODO Add reaction to hide the warning when some checkboxes selected
         this.customDriverWarningHidden = false;
     }
 
@@ -550,7 +548,7 @@ export default class OncoprinterStore {
                 this.nonAnnotatedGeneticTrackData.result!,
                 this.annotationData.promisesMap,
                 this.annotationData.params,
-                this.driverAnnotationSettings.excludeVUS
+                !this.driverAnnotationSettings.includeVUS
             ),
     });
 

@@ -393,4 +393,12 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
         []
     );
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (!!this.customDriverAnnotationReport.result!.hasBinary ||
+                this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
+    }
 }

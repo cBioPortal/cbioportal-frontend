@@ -11,6 +11,8 @@ import {
     SampleTreatmentFilter,
 } from 'cbioportal-ts-api-client';
 import {
+    ChartMeta,
+    ChartType,
     DataType,
     getUniqueKeyFromMolecularProfileIds,
     ChartType,
@@ -30,6 +32,12 @@ import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
 import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
+import { ChartTypeEnum, STUDY_VIEW_CONFIG } from './StudyViewConfig';
+import {
+    DEFAULT_NA_COLOR,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_MISSENSE,
+} from 'shared/lib/Colors';
 import {
     caseCounts,
     getSampleIdentifiers,
@@ -45,6 +53,7 @@ import {
     MUT_COLOR_FUSION,
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
+import { GeneFilterQuery } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -625,12 +634,12 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedGeneQueries(
-        geneQueries: string[],
+        geneQueries: GeneFilterQuery[],
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return geneQueries.map(oql => {
+        return geneQueries.map(geneQuery => {
             let color = DEFAULT_NA_COLOR;
-            let displayGeneSymbol = oql;
+            let displayGeneSymbol = geneQuery.hugoGeneSymbol;
             switch (chartMeta.chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     color = MUT_COLOR_MISSENSE;
@@ -639,10 +648,10 @@ export default class UserSelections extends React.Component<
                     color = MUT_COLOR_FUSION;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    const oqlParts = oql.trim().split(':');
-                    if (oqlParts.length === 2) {
-                        displayGeneSymbol = oqlParts[0];
-                        let tagColor = getCNAColorByAlteration(oqlParts[1]);
+                    if (geneQuery.alterations.length === 1) {
+                        let tagColor = getCNAColorByAlteration(
+                            geneQuery.alterations[0]
+                        );
                         if (tagColor) {
                             color = tagColor;
                         }
@@ -654,8 +663,17 @@ export default class UserSelections extends React.Component<
                 <PillTag
                     content={displayGeneSymbol}
                     backgroundColor={color}
+                    infoSection={
+                        <FilterIconMessage
+                            chartType={chartMeta.chartType}
+                            geneFilterQuery={geneQuery}
+                        />
+                    }
                     onDelete={() =>
-                        this.props.removeGeneFilter(chartMeta.uniqueKey, oql)
+                        this.props.removeGeneFilter(
+                            chartMeta.uniqueKey,
+                            geneFilterQueryToOql(geneQuery)
+                        )
                     }
                 />
             );

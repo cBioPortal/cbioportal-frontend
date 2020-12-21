@@ -7,29 +7,24 @@ import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import { AppStore } from '../../../AppStore';
 import autobind from 'autobind-decorator';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
-import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
 import {
-    ALTERED_COLOR,
+    AlterationTypeConstants,
+    DataTypeConstants,
+    ResultsViewPageStore,
+} from '../ResultsViewPageStore';
+import {
     ALTERED_GROUP_NAME,
-    getAlteredByOncoprintTrackGroups,
-    getAlteredVsUnalteredGroups,
-    completeSessionGroups,
     ResultsViewComparisonGroup,
-    UNALTERED_COLOR,
     UNALTERED_GROUP_NAME,
 } from './ResultsViewComparisonUtils';
 import _ from 'lodash';
 import ifNotDefined from '../../../shared/lib/ifNotDefined';
-import {
-    Session,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
+import { Session } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
-import {
-    ComparisonGroup,
-    filterStudiesAttr,
-} from '../../groupComparison/GroupComparisonUtils';
+import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
+import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     @observable private _currentTabId:
@@ -196,5 +191,9 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     public get studies() {
         return this.resultsViewStore.studies;
+    }
+
+    public get studyIds() {
+        return this.resultsViewStore.studyIds;
     }
 }

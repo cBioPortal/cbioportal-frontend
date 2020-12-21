@@ -48,5 +48,6 @@ export {
     GenomicDataBinCountFilter,
     GenomicDataBinFilter,
     GenomicDataFilter,
+    CustomDriverAnnotationReport,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';

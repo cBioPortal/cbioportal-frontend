@@ -65,6 +65,7 @@ import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { CustomChart } from 'shared/api/sessionServiceAPI';
 import { parse } from 'query-string';
+import SettingsMenu from 'shared/components/settings/SettingsMenu';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -116,6 +117,7 @@ export default class StudyViewPage extends React.Component<
     @observable private toolbarLeft: number = 0;
 
     @observable showCustomSelectTooltip = false;
+    @observable showAlterationFilterTooltip = false;
     @observable private showReturnToDefaultChartListModal: boolean = false;
 
     constructor(props: IStudyViewPageProps) {
@@ -778,6 +780,57 @@ export default class StudyViewPage extends React.Component<
                                                     </button>
                                                 </DefaultTooltip>
                                             </>
+                                        )}
+                                        {AppConfig.serverConfig
+                                            .skin_show_settings_menu && (
+                                            <DefaultTooltip
+                                                trigger={['click']}
+                                                placement={'bottomLeft'}
+                                                overlay={
+                                                    <SettingsMenu
+                                                        store={this.store}
+                                                        infoElement={alterationMenuHeader(
+                                                            this.store
+                                                                .doShowDriverAnnotationSectionInGlobalMenu ||
+                                                                this.store
+                                                                    .doShowTierAnnotationSectionInGlobalMenu
+                                                        )}
+                                                        customDriverSourceName={
+                                                            getBrowserWindow()
+                                                                .frontendConfig
+                                                                .serverConfig
+                                                                .oncoprint_custom_driver_annotation_binary_menu_label
+                                                        }
+                                                        showDriverAnnotationSection={
+                                                            this.store
+                                                                .doShowDriverAnnotationSectionInGlobalMenu
+                                                        }
+                                                        showTierAnnotationSection={
+                                                            this.store
+                                                                .doShowTierAnnotationSectionInGlobalMenu
+                                                        }
+                                                    />
+                                                }
+                                                visible={
+                                                    this
+                                                        .showAlterationFilterTooltip
+                                                }
+                                                onVisibleChange={visible => {
+                                                    this.showAlterationFilterTooltip = !!visible;
+                                                }}
+                                            >
+                                                <button
+                                                    data-test="AlterationFilterButton"
+                                                    style={{
+                                                        marginLeft: '10px',
+                                                    }}
+                                                    className="btn btn-primary btn-sm"
+                                                >
+                                                    {getButtonNameWithDownPointer(
+                                                        'Alteration Filter'
+                                                    )}
+                                                </button>
+                                            </DefaultTooltip>
                                         )}
                                         {this.enableAddChartInTabs.includes(
                                             this.store.currentTab

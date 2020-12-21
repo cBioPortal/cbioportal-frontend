@@ -22,10 +22,10 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
-    getFreqColumnRender,
-    getGeneColumnHeaderRender,
-    getTooltip,
     FreqColumnTypeEnum,
+    getCancerGeneToggledOverlay,
+    getFreqColumnRender,
+    getTooltip,
     SelectionOperatorEnum,
 } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
@@ -33,11 +33,12 @@ import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
 import MobxPromise from 'mobxpromise';
 import {
+    EllipsisTextTooltip,
     stringListToIndexSet,
     stringListToSet,
-    EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
+import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -66,6 +67,7 @@ export enum MultiSelectionTableColumnKey {
 export type MultiSelectionTableColumn = {
     columnKey: MultiSelectionTableColumnKey;
     columnWidthRatio?: number;
+    columnTooltip?: JSX.Element;
 };
 
 export type MultiSelectionTableProps = {
@@ -86,6 +88,8 @@ export type MultiSelectionTableProps = {
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
+    alterationFilterEnabled?: boolean;
+    filterAlterations?: boolean;
     defaultSortBy: MultiSelectionTableColumnKey;
     columns: MultiSelectionTableColumn[];
 };
@@ -146,12 +150,17 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.GENE]: {
                 name: columnKey,
                 headerRender: () => {
-                    return getGeneColumnHeaderRender(
-                        cellMargin,
-                        columnKey,
-                        this.props.cancerGeneFilterEnabled!,
-                        this.isFilteredByCancerGeneList,
-                        this.toggleCancerGeneFilter
+                    return (
+                        <TableHeaderCellFilterIcon
+                            cellMargin={cellMargin}
+                            dataTest="gene-column-header"
+                            className={styles.displayFlex}
+                            showFilter={!!this.props.cancerGeneFilterEnabled!}
+                            isFiltered={!!this.isFilteredByCancerGeneList}
+                            onClickCallback={this.toggleCancerGeneFilter}
+                        >
+                            <span>{columnKey}</span>
+                        </TableHeaderCellFilterIcon>
                     );
                 },
                 render: (data: MultiSelectionTableRow) => {
@@ -252,7 +261,17 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
                 headerRender: () => {
-                    return <div style={{ marginLeft: cellMargin }}>#</div>;
+                    return (
+                        <TableHeaderCellFilterIcon
+                            cellMargin={cellMargin}
+                            dataTest="number-column-header"
+                            className={styles.displayFlex}
+                            showFilter={!!this.props.alterationFilterEnabled}
+                            isFiltered={!!this.props.filterAlterations}
+                        >
+                            <span>{columnKey}</span>
+                        </TableHeaderCellFilterIcon>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <LabeledCheckbox
@@ -271,7 +290,7 @@ export class MultiSelectionTable extends React.Component<
                             className: styles.autoMarginCheckbox,
                         }}
                     >
-                        <span>
+                        <span data-test={'numberOfAlteredCasesText'}>
                             {data.numberOfAlteredCases.toLocaleString()}
                         </span>
                     </LabeledCheckbox>
@@ -330,6 +349,7 @@ export class MultiSelectionTable extends React.Component<
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
+                        data-test={'numberOfAlterations'}
                         style={{
                             flexDirection: 'row-reverse',
                             display: 'flex',
@@ -357,6 +377,7 @@ export class MultiSelectionTable extends React.Component<
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
+                        data-test={'numberOfAlterations'}
                         style={{
                             flexDirection: 'row-reverse',
                             display: 'flex',
@@ -386,6 +407,7 @@ export class MultiSelectionTable extends React.Component<
                 ),
                 render: (data: MultiSelectionTableRow) => (
                     <span
+                        data-test={'cnaCell'}
                         style={{
                             color: getCNAColorByAlteration(
                                 getCNAByAlteration(data.alteration!)
@@ -581,13 +603,17 @@ export class MultiSelectionTable extends React.Component<
 
     @computed
     get tableColumns() {
-        return this.props.columns.map(column =>
-            this.getDefaultColumnDefinition(
+        return this.props.columns.map(column => {
+            const columnDefinition = this.getDefaultColumnDefinition(
                 column.columnKey,
                 this.columnsWidth[column.columnKey],
                 this.cellMargin[column.columnKey]
-            )
-        );
+            );
+            if (column.columnTooltip) {
+                columnDefinition.tooltip = column.columnTooltip;
+            }
+            return columnDefinition;
+        });
     }
 
     @action.bound

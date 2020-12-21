@@ -32,6 +32,7 @@ import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import AppConfig from 'appConfig';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -274,6 +275,9 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled =
+                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
             case ChartTypeEnum.FUSION_GENES_TABLE: {
@@ -295,6 +299,9 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterFusionGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateFusionGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled =
+                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {
@@ -316,6 +323,9 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled =
+                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.isGlobalAlterationFilterActive;
                 break;
             }
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
