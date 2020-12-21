@@ -16,6 +16,10 @@
   },
   "tags": [
     {
+      "name": "Alteration Enrichments",
+      "description": " "
+    },
+    {
       "name": "Clinical Data Enrichments",
       "description": " "
     },
@@ -97,6 +101,57 @@
     }
   ],
   "paths": {
+    "/alteration-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Alteration Enrichments"
+        ],
+        "summary": "Fetch alteration enrichments in molecular profiles",
+        "operationId": "fetchAlterationEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groupsAndAlterationTypes",
+            "description": "List of groups containing sample identifiers and list of Alteration Types",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileCasesGroupAndAlterationTypeFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/clinical-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -850,6 +905,156 @@
         "deprecated": false
       }
     },
+    "/data-access-token/oauth2": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "head": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingHEAD",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "options": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingOPTIONS",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "patch": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPATCH",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/data-access-tokens": {
       "get": {
         "tags": [
@@ -1195,7 +1400,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MutationCountByGene"
+                "$ref": "#/definitions/AlterationCountByGene"
               }
             }
           }
@@ -2064,7 +2269,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MutationCountByGene"
+                "$ref": "#/definitions/AlterationCountByGene"
               }
             }
           }
@@ -2396,6 +2601,40 @@
     }
   },
   "definitions": {
+    "AlterationCountByGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "AlterationCountByGene"
+    },
     "AlterationEnrichment": {
       "type": "object",
       "required": [
@@ -2425,6 +2664,24 @@
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "AlterationEventTypeFilter": {
+      "type": "object",
+      "properties": {
+        "copyNumberAlterationEventTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "mutationEventTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "AlterationEventTypeFilter"
     },
     "AndedPatientTreatmentFilters": {
       "type": "object",
@@ -3436,6 +3693,24 @@
       },
       "title": "MolecularProfileCaseIdentifier"
     },
+    "MolecularProfileCasesGroupAndAlterationTypeFilter": {
+      "type": "object",
+      "required": [
+        "molecularProfileCasesGroupFilter"
+      ],
+      "properties": {
+        "alterationEventTypes": {
+          "$ref": "#/definitions/AlterationEventTypeFilter"
+        },
+        "molecularProfileCasesGroupFilter": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+          }
+        }
+      },
+      "title": "MolecularProfileCasesGroupAndAlterationTypeFilter"
+    },
     "MolecularProfileCasesGroupFilter": {
       "type": "object",
       "properties": {
@@ -3532,40 +3807,6 @@
         }
       },
       "title": "MutSig"
-    },
-    "MutationCountByGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "matchingGenePanelIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "numberOfAlteredCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfProfiledCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "qValue": {
-          "type": "number"
-        },
-        "totalCount": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "MutationCountByGene"
     },
     "MutationSpectrum": {
       "type": "object",
