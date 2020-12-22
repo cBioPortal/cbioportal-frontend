@@ -315,7 +315,7 @@ export class StudySummaryTab extends React.Component<
                     ? this.store.survivalDescriptions.result![
                           chartMeta.uniqueKey.substring(
                               0,
-                              chartMeta.uniqueKey.indexOf('_SURVIVAL')
+                              chartMeta.uniqueKey.lastIndexOf('_SURVIVAL')
                           )
                       ][0]
                     : undefined;
