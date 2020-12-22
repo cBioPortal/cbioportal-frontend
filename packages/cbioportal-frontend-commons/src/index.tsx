@@ -33,7 +33,8 @@ export {
 export { default as VictorySelectionContainerWithLegend } from './components/victory/VictorySelectionContainerWithLegend';
 export { default as WindowWrapper } from './components/WindowWrapper';
 export { default as FrequencyCell } from './components/signal/FrequencyCell';
-
+export { default as MutationTumorTypeFrequencyTable } from './components/signal/MutationTumorTypeFrequencyTable';
+export * from './components/signal/SignalHelper';
 export * from './api/remoteData';
 
 export * from './lib/ColumnVisibilityResolver';
