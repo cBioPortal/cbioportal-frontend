@@ -91,6 +91,14 @@ export default class GroupComparisonPage extends React.Component<
         (window as any).groupComparisonPage = this;
     }
 
+    @computed get alterationEnrichmentTabName() {
+        const nameElements = [];
+        this.store.hasMutationEnrichmentData && nameElements.push('Mutations');
+        this.store.hasFusionEnrichmentData && nameElements.push('Fusions');
+        this.store.hasCnaEnrichmentData && nameElements.push('CNAs');
+        return nameElements.join('/');
+    }
+
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
@@ -164,7 +172,7 @@ export default class GroupComparisonPage extends React.Component<
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={GroupComparisonTab.ALTERATIONS}
-                            linkText="Mutations/Fusions/CNAs"
+                            linkText={this.alterationEnrichmentTabName}
                             anchorClassName={
                                 this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
