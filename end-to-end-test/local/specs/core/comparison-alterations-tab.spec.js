@@ -12,21 +12,36 @@ var waitForNetworkQuiet = require('../../../shared/specUtils')
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const resultsViewComparisonTab = `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=BRCA1%2520BRCA2&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize&comparison_subtab=alterations`;
-const mutationTypeCheckboxRefs = [
-    'Missense',
+
+const inframeCheckboxRefs = ['InFrame', 'InframeDeletion', 'InframeInsertion'];
+
+const frameshiftCheckboxRefs = [
+    'Frameshift',
     'FrameshiftDeletion',
     'FrameshiftInsertion',
-    'Frameshift',
+];
+
+const truncatingCheckboxRefs = [
+    'Truncating',
+    ...frameshiftCheckboxRefs,
     'Nonsense',
     'Splice',
     'Nonstart',
     'Nonstop',
-    'InframeDeletion',
-    'InframeInsertion',
-    'ColorByDriver',
-    'Truncating',
-    'Fusion',
-    'Silent',
+];
+
+const structvarCheckboxRefs = ['Fusion'];
+
+const cnaCheckboxRefs = [
+    'CheckCopynumberAlterations',
+    'DeepDeletion',
+    'Amplification',
+];
+
+const mutationTypeCheckboxRefs = [
+    'Missense',
+    ...inframeCheckboxRefs,
+    ...truncatingCheckboxRefs,
     'Other',
 ];
 
@@ -36,20 +51,19 @@ if (useExternalFrontend) {
             loadAlterationsTab();
         });
 
+        // -+=+ CNA +=+-
         it('unchecks all CNA types using the CNA master checkbox', function() {
             clickAlterationTypeCheckBox('Copy Number Alterations');
             assert(
-                !$('input[data-test=DeepDeletion]').isSelected(),
-                'unchecks Deep Deletion checkbox'
-            );
-            assert(
-                !$('input[data-test=Amplification]').isSelected(),
-                'unchecks Amplification checkbox'
+                cnaCheckboxRefs.every(
+                    ref => !$('input[data-test=' + ref + ']').isSelected()
+                ),
+                'unchecks all CNA checkboxes'
             );
         });
 
         it('unchecks the master CNA checkbox when one CNA type is unchecked', function() {
-            clickAlterationTypeCheckBox('Deep Deletion');
+            clickAlterationTypeCheckBox('Deletion');
             assert(
                 !$('input[data-test=CheckCopynumberAlterations]').isSelected(),
                 'unchecks master Copy Number Alterations checkbox'
@@ -57,56 +71,166 @@ if (useExternalFrontend) {
         });
 
         it('checks all CNA types using the master CNA checkbox', function() {
-            clickAlterationTypeCheckBox('Deep Deletion');
+            clickAlterationTypeCheckBox('Deletion');
             clickAlterationTypeCheckBox('Copy Number Alterations');
             assert(
-                $('input[data-test=DeepDeletion]').isSelected(),
-                'checks Deep Deletion checkbox'
-            );
-            assert(
-                $('input[data-test=Amplification]').isSelected(),
-                'checks Amplification checkbox'
+                cnaCheckboxRefs.every(ref =>
+                    $('input[data-test=' + ref + ']').isSelected()
+                ),
+                'checks all CNA checkboxes'
             );
         });
 
         it('checks the master CNA checkbox when all CNA types are checked', function() {
-            clickAlterationTypeCheckBox('Deep Deletion');
+            clickAlterationTypeCheckBox('Deletion');
             assert(
                 !$('input[data-test=CheckCopynumberAlterations]').isSelected()
             );
-            clickAlterationTypeCheckBox('Deep Deletion');
+            clickAlterationTypeCheckBox('Deletion');
             assert(
                 $('input[data-test=CheckCopynumberAlterations]').isSelected()
             );
         });
 
+        // -+=+ INFRAME MUTATION +=+-
+        it('unchecks all inframe mutation types using the inframe mutation master checkbox', function() {
+            clickAlterationTypeCheckBox('Inframe');
+            assert(
+                inframeCheckboxRefs.every(
+                    ref => !$('input[data-test=' + ref + ']').isSelected()
+                ),
+                'unchecks all inframe mutation checkboxes'
+            );
+        });
+
+        it('unchecks the master inframe mutation checkbox when one inframe mutation type is unchecked', function() {
+            clickAlterationTypeCheckBox('Inframe Insertion');
+            assert(
+                !$('input[data-test=InFrame]').isSelected(),
+                'unchecks master inframe mutation checkbox'
+            );
+        });
+
+        it('checks all inframe mutation types using the master inframe mutation checkbox', function() {
+            clickAlterationTypeCheckBox('Inframe Insertion');
+            clickAlterationTypeCheckBox('Inframe');
+            assert(
+                inframeCheckboxRefs.every(ref =>
+                    $('input[data-test=' + ref + ']').isSelected()
+                ),
+                'checks all inframe mutation checkboxes'
+            );
+        });
+
+        it('checks the master inframe mutation checkbox when all inframe mutation types are checked', function() {
+            clickAlterationTypeCheckBox('Inframe Insertion');
+            assert(!$('input[data-test=InFrame]').isSelected());
+            clickAlterationTypeCheckBox('Inframe Insertion');
+            assert($('input[data-test=InFrame]').isSelected());
+        });
+
+        // -+=+ FRAMESHIFT MUTATION +=+-
+        it('unchecks all frameshift mutation types using the frameshift mutation master checkbox', function() {
+            clickAlterationTypeCheckBox('Frameshift');
+            assert(
+                frameshiftCheckboxRefs.every(
+                    ref => !$('input[data-test=' + ref + ']').isSelected()
+                ),
+                'unchecks all frameshift mutation checkboxes'
+            );
+        });
+
+        it('unchecks the master frameshift mutation checkbox when one frameshift mutation type is unchecked', function() {
+            clickAlterationTypeCheckBox('Frameshift Insertion');
+            assert(
+                !$('input[data-test=Frameshift]').isSelected(),
+                'unchecks master frameshift mutation checkbox'
+            );
+        });
+
+        it('checks all frameshift mutation types using the master frameshift mutation checkbox', function() {
+            clickAlterationTypeCheckBox('Frameshift Insertion');
+            clickAlterationTypeCheckBox('Frameshift');
+            assert(
+                frameshiftCheckboxRefs.every(ref =>
+                    $('input[data-test=' + ref + ']').isSelected()
+                ),
+                'checks all frameshift mutation checkboxes'
+            );
+        });
+
+        it('checks the master frameshift mutation checkbox when all frameshift mutation types are checked', function() {
+            clickAlterationTypeCheckBox('Frameshift Insertion');
+            assert(!$('input[data-test=Frameshift]').isSelected());
+            clickAlterationTypeCheckBox('Frameshift Insertion');
+            assert($('input[data-test=Frameshift]').isSelected());
+        });
+
+        // -+=+ TRUNCATING MUTATION +=+-
+        it('unchecks all truncating mutation types using the truncating mutation master checkbox', function() {
+            clickAlterationTypeCheckBox('Truncating');
+            assert(
+                truncatingCheckboxRefs.every(
+                    ref => !$('input[data-test=' + ref + ']').isSelected()
+                ),
+                'unchecks all truncating mutation checkboxes'
+            );
+        });
+
+        it('unchecks the master truncating mutation checkbox when one truncating mutation type is unchecked', function() {
+            clickAlterationTypeCheckBox('Nonsense');
+            assert(
+                !$('input[data-test=Truncating]').isSelected(),
+                'unchecks master truncating mutation checkbox'
+            );
+        });
+
+        it('checks all truncating mutation types using the master truncating mutation checkbox', function() {
+            clickAlterationTypeCheckBox('Nonsense');
+            clickAlterationTypeCheckBox('Truncating');
+            assert(
+                truncatingCheckboxRefs.every(ref =>
+                    $('input[data-test=' + ref + ']').isSelected()
+                ),
+                'checks all truncating mutation checkboxes'
+            );
+        });
+
+        it('checks the master truncating mutation checkbox when all truncating mutation types are checked', function() {
+            clickAlterationTypeCheckBox('Nonsense');
+            assert(!$('input[data-test=Truncating]').isSelected());
+            clickAlterationTypeCheckBox('Nonsense');
+            assert($('input[data-test=Truncating]').isSelected());
+        });
+
+        // -+=+ MUTATION +=+-
         it('unchecks all mutation types using the mutation master checkbox', function() {
             clickAlterationTypeCheckBox('Mutations');
-            mutationTypeCheckboxRefs.forEach(typeSelect => {
-                assert(
-                    !$('input[data-test=' + typeSelect + ']').isSelected(),
-                    'unchecks ' + typeSelect + ' checkbox'
-                );
-            });
+            assert(
+                mutationTypeCheckboxRefs.every(
+                    ref => !$('input[data-test=' + ref + ']').isSelected()
+                ),
+                'unchecks all mutation checkboxes'
+            );
         });
 
         it('unchecks the master mutation checkbox when one mutation type is unchecked', function() {
             clickAlterationTypeCheckBox('Missense');
             assert(
                 !$('input[data-test=Mutations]').isSelected(),
-                'unchecks master Mutations checkbox'
+                'unchecks master mutation checkbox'
             );
         });
 
-        it('checks all mutation using the master mutation checkbox', function() {
+        it('checks all mutation types using the master mutation checkbox', function() {
             clickAlterationTypeCheckBox('Missense');
             clickAlterationTypeCheckBox('Mutations');
-            mutationTypeCheckboxRefs.forEach(typeSelect => {
-                assert(
-                    $('input[data-test=' + typeSelect + ']').isSelected(),
-                    'checks ' + typeSelect + ' checkbox'
-                );
-            });
+            assert(
+                mutationTypeCheckboxRefs.every(ref =>
+                    $('input[data-test=' + ref + ']').isSelected()
+                ),
+                'checks all mutation checkboxes'
+            );
         });
 
         it('checks the master mutation checkbox when all mutation types are checked', function() {
@@ -130,16 +254,17 @@ if (useExternalFrontend) {
 
         it('filters mutation types', function() {
             clickAlterationTypeCheckBox('Copy Number Alterations');
+            clickAlterationTypeCheckBox('Structural variants / Fusions');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
-            assert.strictEqual(rows.length, 8);
+            assert.strictEqual(rows.length, 8, 'table has 8 rows');
             clickAlterationTypeCheckBox('Mutations');
-            clickAlterationTypeCheckBox('Frameshift Insertion');
+            clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             rows = $$('[data-test=LazyMobXTable] tbody tr');
-            assert.strictEqual(rows.length, 2);
+            assert.strictEqual(rows.length, 2, 'table has 2 rows');
         });
 
         it('filters CNA types', function() {
@@ -147,7 +272,7 @@ if (useExternalFrontend) {
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
-            clickAlterationTypeCheckBox('Deep Deletion');
+            clickAlterationTypeCheckBox('Deletion');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '7 (0.90%)');
