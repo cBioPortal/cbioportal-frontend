@@ -59,4 +59,5 @@ export const enum GENOME_NEXUS_ARG_FIELD_ENUM {
     HOTSPOTS = 'hotspots',
     MUTATION_ASSESSOR = 'mutation_assessor',
     MY_VARIANT_INFO = 'my_variant_info',
+    SIGNAL = 'signal',
 }

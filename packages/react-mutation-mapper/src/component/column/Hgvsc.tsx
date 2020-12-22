@@ -2,7 +2,7 @@ import * as React from 'react';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { Mutation, RemoteData } from 'cbioportal-utils';
 
-import { defaultSortMethod } from '../../util/ReactTableUtils';
+import { defaultSortMethod } from 'cbioportal-utils';
 import { getHgvscColumnData } from './HgvsHelper';
 
 type HgvscProps = {

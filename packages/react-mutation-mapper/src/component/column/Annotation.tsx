@@ -20,7 +20,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { getIndicatorData } from '../../util/OncoKbUtils';
-import { defaultArraySortMethod } from '../../util/ReactTableUtils';
+import { defaultArraySortMethod } from 'cbioportal-utils';
 import Civic, { sortValue as civicSortValue } from '../civic/Civic';
 import MyCancerGenome, {
     sortValue as myCancerGenomeSortValue,

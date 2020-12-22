@@ -13,10 +13,7 @@ import {
     mergeAlterations,
     normalizeLevel,
 } from '../../util/OncoKbUtils';
-import {
-    defaultArraySortMethod,
-    defaultSortMethod,
-} from '../../util/ReactTableUtils';
+import { defaultArraySortMethod, defaultSortMethod } from 'cbioportal-utils';
 import OncoKbHelper from './OncoKbHelper';
 import ReferenceList from './ReferenceList';
 import SummaryWithRefs from './SummaryWithRefs';
