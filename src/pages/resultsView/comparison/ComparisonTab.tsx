@@ -30,8 +30,8 @@ import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments
 import AlterationsEnrichments from 'pages/groupComparison/AlterationsEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
-} from 'pages/groupComparison/AlterationEnrichmentTypeSelector';
-import { buildAlterationEnrichmentTypeSelectorHandlers } from './ComparisonTabUtils';
+} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import { buildAlterationEnrichmentTypeSelectorHandlers } from '../../../shared/lib/comparison/ComparisonTabUtils';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
 import styles from 'pages/resultsView/comparison/styles.module.scss';

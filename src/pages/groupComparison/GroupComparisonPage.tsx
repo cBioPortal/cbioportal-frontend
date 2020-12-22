@@ -38,8 +38,8 @@ import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/P
 import AlterationsEnrichments from './AlterationsEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
-} from './AlterationEnrichmentTypeSelector';
-import { buildAlterationEnrichmentTypeSelectorHandlers } from 'pages/resultsView/comparison/ComparisonTabUtils';
+} from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonTabUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;

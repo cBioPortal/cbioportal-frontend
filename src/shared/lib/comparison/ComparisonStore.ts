@@ -80,7 +80,7 @@ import onMobxPromise from '../onMobxPromise';
 import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
-} from 'pages/resultsView/comparison/ComparisonTabUtils';
+} from 'shared/lib/comparison/ComparisonTabUtils';
 import {
     cnaEventTypeSelectInit,
     mutationEventTypeSelectInit,
@@ -98,7 +98,7 @@ export default abstract class ComparisonStore {
     @observable.ref
     public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
     @observable.ref
-    public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit;
+    public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
 
     constructor(
         protected appStore: AppStore,
