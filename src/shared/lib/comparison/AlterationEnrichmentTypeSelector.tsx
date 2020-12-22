@@ -40,6 +40,9 @@ export interface IAlterationEnrichmentTypeSelectorHandlers {
 export interface IAlterationEnrichmentTypeSelectorProps {
     handlers: IAlterationEnrichmentTypeSelectorHandlers;
     store: ComparisonStore;
+    showMutations?: boolean;
+    showFusions?: boolean;
+    showCnas?: boolean;
     classNames?: string;
 }
 
@@ -298,232 +301,291 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 }}
             >
                 <h5>Select Alteration Types</h5>
-                <div className="checkbox">
-                    <label>
-                        <input
-                            data-test="Mutations"
-                            type="checkbox"
-                            value={checkbox.mutations}
-                            checked={this.allMutationsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        <b>Mutations</b>
-                    </label>
-                </div>
 
-                {/*-+=+ MISSENSE +-+-*/}
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="Missense"
-                            type="checkbox"
-                            value={checkbox.missense}
-                            checked={this.allMissenseSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Missense
-                    </label>
-                </div>
+                {this.props.showMutations && (
+                    <div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="Mutations"
+                                    type="checkbox"
+                                    value={checkbox.mutations}
+                                    checked={this.allMutationsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                <b>Mutations</b>
+                            </label>
+                        </div>
 
-                {/*-+=+ INFRAME +-+-*/}
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="InFrame"
-                            type="checkbox"
-                            value={checkbox.inframe}
-                            checked={this.allInframeSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Inframe
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="InframeInsertion"
-                            type="checkbox"
-                            value={checkbox.inframeinsertion}
-                            checked={this.allInframeInsertionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Inframe Insertion
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="InframeDeletion"
-                            type="checkbox"
-                            value={checkbox.inframedeletion}
-                            checked={this.allInframeDeletionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Inframe Deletion
-                    </label>
-                </div>
+                        {/*-+=+ MISSENSE +-+-*/}
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Missense"
+                                    type="checkbox"
+                                    value={checkbox.missense}
+                                    checked={this.allMissenseSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Missense
+                            </label>
+                        </div>
 
-                {/*-+=+ TRUNCATING +-+-*/}
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="Truncating"
-                            type="checkbox"
-                            value={checkbox.truncating}
-                            checked={this.allTruncationsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Truncating
-                    </label>
-                </div>
+                        {/*-+=+ INFRAME +-+-*/}
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="InFrame"
+                                    type="checkbox"
+                                    value={checkbox.inframe}
+                                    checked={this.allInframeSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Inframe
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="InframeInsertion"
+                                    type="checkbox"
+                                    value={checkbox.inframeinsertion}
+                                    checked={this.allInframeInsertionsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Inframe Insertion
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="InframeDeletion"
+                                    type="checkbox"
+                                    value={checkbox.inframedeletion}
+                                    checked={this.allInframeDeletionsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Inframe Deletion
+                            </label>
+                        </div>
 
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="Nonsense"
-                            type="checkbox"
-                            value={checkbox.nonsense}
-                            checked={this.allNonsenseSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Nonsense
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="Frameshift"
-                            type="checkbox"
-                            value={checkbox.frameshift}
-                            checked={this.allFrameshiftSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Frameshift
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '60px' }}>
-                    <label>
-                        <input
-                            data-test="FrameshiftInsertion"
-                            type="checkbox"
-                            value={checkbox.frameshiftinsertion}
-                            checked={this.allFrameshiftInsertionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Frameshift Insertion
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '60px' }}>
-                    <label>
-                        <input
-                            data-test="FrameshiftDeletion"
-                            type="checkbox"
-                            value={checkbox.frameshiftdeletion}
-                            checked={this.allFrameshiftDeletionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Frameshift Deletion
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="Nonstart"
-                            type="checkbox"
-                            value={checkbox.nonstart}
-                            checked={this.allNonStartSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Nonstart
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="Nonstop"
-                            type="checkbox"
-                            value={checkbox.nonstop}
-                            checked={this.allNonStopSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Nonstop
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '40px' }}>
-                    <label>
-                        <input
-                            data-test="Splice"
-                            type="checkbox"
-                            value={checkbox.splice}
-                            checked={this.allSpliceSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Splice
-                    </label>
-                </div>
+                        {/*-+=+ TRUNCATING +-+-*/}
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Truncating"
+                                    type="checkbox"
+                                    value={checkbox.truncating}
+                                    checked={this.allTruncationsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Truncating
+                            </label>
+                        </div>
 
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="Other"
-                            type="checkbox"
-                            value={checkbox.other}
-                            checked={this.allOtherSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Other
-                    </label>
-                </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Nonsense"
+                                    type="checkbox"
+                                    value={checkbox.nonsense}
+                                    checked={this.allNonsenseSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Nonsense
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Frameshift"
+                                    type="checkbox"
+                                    value={checkbox.frameshift}
+                                    checked={this.allFrameshiftSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Frameshift
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '60px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="FrameshiftInsertion"
+                                    type="checkbox"
+                                    value={checkbox.frameshiftinsertion}
+                                    checked={
+                                        this.allFrameshiftInsertionsSelected
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Frameshift Insertion
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '60px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="FrameshiftDeletion"
+                                    type="checkbox"
+                                    value={checkbox.frameshiftdeletion}
+                                    checked={
+                                        this.allFrameshiftDeletionsSelected
+                                    }
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Frameshift Deletion
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Nonstart"
+                                    type="checkbox"
+                                    value={checkbox.nonstart}
+                                    checked={this.allNonStartSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Nonstart
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Nonstop"
+                                    type="checkbox"
+                                    value={checkbox.nonstop}
+                                    checked={this.allNonStopSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Nonstop
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '40px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Splice"
+                                    type="checkbox"
+                                    value={checkbox.splice}
+                                    checked={this.allSpliceSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Splice
+                            </label>
+                        </div>
 
-                <div className="checkbox">
-                    <label>
-                        <input
-                            data-test="Fusion"
-                            type="checkbox"
-                            value={checkbox.structvar}
-                            checked={this.allFusionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        <b>Structural variants / Fusions</b>
-                    </label>
-                </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Other"
+                                    type="checkbox"
+                                    value={checkbox.other}
+                                    checked={this.allOtherSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Other
+                            </label>
+                        </div>
+                    </div>
+                )}
+                {this.props.showFusions && (
+                    <div className="checkbox">
+                        <label>
+                            <input
+                                data-test="Fusion"
+                                type="checkbox"
+                                value={checkbox.structvar}
+                                checked={this.allFusionsSelected}
+                                onClick={this.onInputClick}
+                            />{' '}
+                            <b>Structural variants / Fusions</b>
+                        </label>
+                    </div>
+                )}
 
-                <div className="checkbox">
-                    <label>
-                        <input
-                            data-test="CheckCopynumberAlterations"
-                            type="checkbox"
-                            value={checkbox.cna}
-                            checked={this.allCopyNumberSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        <b>Copy Number Alterations</b>
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="Amplification"
-                            type="checkbox"
-                            value={checkbox.amplification}
-                            checked={this.allAmplificationsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Amplification
-                    </label>
-                </div>
-                <div className="checkbox" style={{ marginLeft: '20px' }}>
-                    <label>
-                        <input
-                            data-test="DeepDeletion"
-                            type="checkbox"
-                            value={checkbox.deletion}
-                            checked={this.allDeletionsSelected}
-                            onClick={this.onInputClick}
-                        />{' '}
-                        Deletion
-                    </label>
-                </div>
+                {this.props.showCnas && (
+                    <div>
+                        <div className="checkbox">
+                            <label>
+                                <input
+                                    data-test="CheckCopynumberAlterations"
+                                    type="checkbox"
+                                    value={checkbox.cna}
+                                    checked={this.allCopyNumberSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                <b>Copy Number Alterations</b>
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="Amplification"
+                                    type="checkbox"
+                                    value={checkbox.amplification}
+                                    checked={this.allAmplificationsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Amplification
+                            </label>
+                        </div>
+                        <div
+                            className="checkbox"
+                            style={{ marginLeft: '20px' }}
+                        >
+                            <label>
+                                <input
+                                    data-test="DeepDeletion"
+                                    type="checkbox"
+                                    value={checkbox.deletion}
+                                    checked={this.allDeletionsSelected}
+                                    onClick={this.onInputClick}
+                                />{' '}
+                                Deletion
+                            </label>
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <button

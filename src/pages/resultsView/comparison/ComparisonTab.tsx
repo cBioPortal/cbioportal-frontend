@@ -190,6 +190,15 @@ export default class ComparisonTab extends React.Component<
                                             this
                                                 .alterationEnrichmentTypeSelectorHandlers!
                                         }
+                                        showMutations={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                        showCnas={
+                                            this.store.hasCnaEnrichmentData
+                                        }
+                                        showFusions={
+                                            this.store.hasMutationEnrichmentData
+                                        }
                                     />
                                 )}
                             <AlterationsEnrichments

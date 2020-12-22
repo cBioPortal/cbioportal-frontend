@@ -2169,4 +2169,23 @@ export default abstract class ComparisonStore {
             );
         });
     }
+
+    @computed get hasMutationEnrichmentData(): boolean {
+        return (
+            this.mutationEnrichmentProfiles.isComplete &&
+            this.mutationEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    @computed get hasCnaEnrichmentData(): boolean {
+        return (
+            this.copyNumberEnrichmentProfiles.isComplete &&
+            this.copyNumberEnrichmentProfiles.result!.length > 0
+        );
+    }
+
+    // TODO refactor when fusions have been reworked in cBioPortal backend
+    @computed get hasFusionEnrichmentData(): boolean {
+        return this.hasMutationEnrichmentData;
+    }
 }
