@@ -49,6 +49,7 @@ import {
     filterAndAnnotateMutations,
     getOncoKbOncogenic,
 } from 'shared/lib/StoreUtils';
+import oql_parser, { SingleGeneQuery } from '../../shared/lib/oql/oql-parser';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {
@@ -227,16 +228,9 @@ describe('ResultsViewPageStoreUtils', () => {
             const queryLine: OQLLineFilterOutput<object> = {
                 gene: 'GENE400',
                 oql_line: 'GENE400: EXP>=2;',
-                parsed_oql_line: {
-                    gene: 'GENE400',
-                    alterations: [
-                        {
-                            alteration_type: 'exp',
-                            constr_rel: '>=',
-                            constr_val: 2,
-                        },
-                    ],
-                },
+                parsed_oql_line: oql_parser.parse(
+                    'GENE400: EXP>=2'
+                )![0] as SingleGeneQuery,
                 data: [],
             };
             // when
@@ -279,31 +273,17 @@ describe('ResultsViewPageStoreUtils', () => {
                         oql_line: 'GENE1000: EXP<-3;',
                         gene: 'GENE1000',
                         data: [],
-                        parsed_oql_line: {
-                            gene: 'GENE1000',
-                            alterations: [
-                                {
-                                    alteration_type: 'exp',
-                                    constr_rel: '<',
-                                    constr_val: -3,
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'GENE1000: EXP<-3;'
+                        )![0] as SingleGeneQuery,
                     },
                     {
                         oql_line: 'GENE1001: EXP<-3;',
                         gene: 'GENE1001',
                         data: [],
-                        parsed_oql_line: {
-                            gene: 'GENE1001',
-                            alterations: [
-                                {
-                                    alteration_type: 'exp',
-                                    constr_rel: '<',
-                                    constr_val: -3,
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'GENE1001: EXP<-3;'
+                        )![0] as SingleGeneQuery,
                     },
                 ],
             };
@@ -368,31 +348,17 @@ describe('ResultsViewPageStoreUtils', () => {
                         oql_line: 'GENE1000: EXP>2.5;',
                         gene: 'GENE1000',
                         data: [],
-                        parsed_oql_line: {
-                            gene: 'GENE1000',
-                            alterations: [
-                                {
-                                    alteration_type: 'exp',
-                                    constr_rel: '>',
-                                    constr_val: 2.5,
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'GENE1000: EXP>2.5;'
+                        )![0] as SingleGeneQuery,
                     },
                     {
                         oql_line: 'GENE1001: EXP>2.5;',
                         gene: 'GENE1001',
                         data: [],
-                        parsed_oql_line: {
-                            gene: 'GENE1001',
-                            alterations: [
-                                {
-                                    alteration_type: 'exp',
-                                    constr_rel: '>',
-                                    constr_val: 2.5,
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'GENE1001: EXP>2.5;'
+                        )![0] as SingleGeneQuery,
                     },
                 ],
             };
@@ -968,6 +934,10 @@ describe('ResultsViewPageStoreUtils', () => {
     });
 });
 
+const defaultOqlAlterations = (oql_parser.parse(
+    'DUMMYGENE: MUT FUSION'
+)![0] as SingleGeneQuery).alterations;
+
 describe('getSampleAlteredMap', () => {
     const filteredAlterationData = [
         {
@@ -980,18 +950,9 @@ describe('getSampleAlteredMap', () => {
                 list: [
                     {
                         gene: 'KRAS',
-                        parsed_oql_line: {
-                            gene: 'KRAS',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'KRAS: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'KRAS: MUT FUSION;',
                         data: [
                             {
@@ -1007,18 +968,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     {
                         gene: 'NRAS',
-                        parsed_oql_line: {
-                            gene: 'NRAS',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'NRAS: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'NRAS: MUT FUSION;',
                         data: [],
                     },
@@ -1032,18 +984,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     oql: {
                         gene: 'KRAS',
-                        parsed_oql_line: {
-                            gene: 'KRAS',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'KRAS: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'KRAS: MUT FUSION;',
                         data: [
                             {
@@ -1065,18 +1008,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     oql: {
                         gene: 'NRAS',
-                        parsed_oql_line: {
-                            gene: 'NRAS',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'NRAS: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'NRAS: MUT FUSION;',
                         data: [],
                     },
@@ -1092,18 +1026,9 @@ describe('getSampleAlteredMap', () => {
                 list: [
                     {
                         gene: 'SMAD4',
-                        parsed_oql_line: {
-                            gene: 'SMAD4',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'SMAD4: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'SMAD4: MUT FUSION;',
                         data: [
                             {
@@ -1122,18 +1047,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     {
                         gene: 'RAN',
-                        parsed_oql_line: {
-                            gene: 'RAN',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'RAN: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'RAN: MUT FUSION;',
                         data: [],
                     },
@@ -1147,18 +1063,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     oql: {
                         gene: 'SMAD4',
-                        parsed_oql_line: {
-                            gene: 'SMAD4',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'SMAD4: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'SMAD4: MUT FUSION;',
                         data: [
                             {
@@ -1183,18 +1090,9 @@ describe('getSampleAlteredMap', () => {
                     },
                     oql: {
                         gene: 'RAN',
-                        parsed_oql_line: {
-                            gene: 'RAN',
-                            alterations: [
-                                {
-                                    alteration_type: 'mut',
-                                    info: {},
-                                },
-                                {
-                                    alteration_type: 'fusion',
-                                },
-                            ],
-                        },
+                        parsed_oql_line: oql_parser.parse(
+                            'RAN: MUT FUSION;'
+                        )![0] as SingleGeneQuery,
                         oql_line: 'RAN: MUT FUSION;',
                         data: [],
                     },
@@ -1208,15 +1106,9 @@ describe('getSampleAlteredMap', () => {
             },
             oql: {
                 gene: 'SMAD4',
-                parsed_oql_line: {
-                    gene: 'SMAD4',
-                    alterations: [
-                        {
-                            alteration_type: 'mut',
-                            info: {},
-                        },
-                    ],
-                },
+                parsed_oql_line: oql_parser.parse(
+                    'SMAD4: MUT;'
+                )![0] as SingleGeneQuery,
                 oql_line: 'SMAD4: MUT;',
                 data: [
                     {
@@ -1240,18 +1132,9 @@ describe('getSampleAlteredMap', () => {
             },
             oql: {
                 gene: 'KRAS',
-                parsed_oql_line: {
-                    gene: 'KRAS',
-                    alterations: [
-                        {
-                            alteration_type: 'mut',
-                            info: {},
-                        },
-                        {
-                            alteration_type: 'fusion',
-                        },
-                    ],
-                },
+                parsed_oql_line: oql_parser.parse(
+                    'KRAS: MUT FUSION;'
+                )![0] as SingleGeneQuery,
                 oql_line: 'KRAS: MUT FUSION;',
                 data: [
                     {
@@ -1980,7 +1863,8 @@ describe('getSampleAlteredMap', () => {
             oqlQuery,
             coverageInformation,
             molecularProfileIds,
-            studyToMolecularProfiles
+            studyToMolecularProfiles,
+            defaultOqlAlterations
         );
         const expectedResult = {
             RAS: [
@@ -2053,7 +1937,8 @@ describe('getSampleAlteredMap', () => {
             oqlQuery,
             coverageInformationWithUnprofiledSamples,
             molecularProfileIds,
-            studyToMolecularProfiles
+            studyToMolecularProfiles,
+            defaultOqlAlterations
         );
         const expectedResult = {
             RAS: [
@@ -2121,7 +2006,8 @@ describe('getSampleAlteredMap', () => {
             oqlQuery,
             coverageInformationWithUnprofiledSamples,
             unprofiledMolecularProfileIds,
-            studyToMolecularProfiles
+            studyToMolecularProfiles,
+            defaultOqlAlterations
         );
         const expectedResult = {
             RAS: [
@@ -2149,14 +2035,13 @@ describe('getSingleGeneResultKey', () => {
         let arg1 = '["RAS" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS';
         let arg2 = {
             gene: 'SMAD4',
-            parsed_oql_line: {
-                gene: 'SMAD4',
-                alterations: [],
-            },
+            parsed_oql_line: oql_parser.parse(
+                'SMAD4: MUT;'
+            )![0] as SingleGeneQuery,
             oql_line: 'SMAD4: MUT;',
             data: [],
         } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
-        const ret = getSingleGeneResultKey(arg0, arg1, arg2);
+        const ret = getSingleGeneResultKey(arg0, arg1, arg2, false);
         const expectedResult = 'SMAD4: MUT';
 
         assert.equal(
@@ -2171,14 +2056,18 @@ describe('getSingleGeneResultKey', () => {
         let arg1 = '["RAS" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS';
         let arg2 = {
             gene: 'KRAS',
-            parsed_oql_line: {
-                gene: 'KRAS',
-                alterations: [],
-            },
+            parsed_oql_line: oql_parser.parse(
+                'KRAS: MUT FUSION;'
+            )![0] as SingleGeneQuery,
             oql_line: 'KRAS: MUT FUSION;',
             data: [],
         } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
-        const ret = getSingleGeneResultKey(arg0, arg1, arg2);
+        const ret = getSingleGeneResultKey(
+            arg0,
+            arg1,
+            arg2,
+            defaultOqlAlterations
+        );
         const expectedResult = 'KRAS';
 
         assert.equal(
@@ -2196,19 +2085,13 @@ describe('getMultipleGeneResultKey', () => {
             list: [
                 {
                     gene: 'KRAS',
-                    parsed_oql_line: {
-                        gene: 'KRAS',
-                        alterations: [],
-                    },
+                    parsed_oql_line: oql_parser.parse('KRAS: MUT FUSION')![0],
                     oql_line: 'KRAS: MUT FUSION;',
                     data: [],
                 },
                 {
                     gene: 'NRAS',
-                    parsed_oql_line: {
-                        gene: 'NRAS',
-                        alterations: [],
-                    },
+                    parsed_oql_line: oql_parser.parse('NRAS: MUT FUSION')![0],
                     oql_line: 'NRAS: MUT FUSION;',
                     data: [],
                 },
@@ -2229,19 +2112,13 @@ describe('getMultipleGeneResultKey', () => {
             list: [
                 {
                     gene: 'SMAD4',
-                    parsed_oql_line: {
-                        gene: 'SMAD4',
-                        alterations: [],
-                    },
+                    parsed_oql_line: oql_parser.parse('SMAD: MUT FUSION')![0],
                     oql_line: 'SMAD4: MUT FUSION;',
                     data: [],
                 },
                 {
                     gene: 'RAN',
-                    parsed_oql_line: {
-                        gene: 'RAN',
-                        alterations: [],
-                    },
+                    parsed_oql_line: oql_parser.parse('RAN: MUT FUSION')![0],
                     oql_line: 'RAN: MUT FUSION;',
                     data: [],
                 },
