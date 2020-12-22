@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
@@ -49,6 +49,7 @@ export default class ComparisonTab extends React.Component<
 > {
     @observable.ref private store: ResultsViewComparisonStore;
     private alterationEnrichmentTypeSelectorHandlers: IAlterationEnrichmentTypeSelectorHandlers;
+
     constructor(props: IComparisonTabProps) {
         super(props);
         (window as any).comparisonTab = this;
@@ -113,6 +114,14 @@ export default class ComparisonTab extends React.Component<
         },
     });
 
+    @computed get alterationEnrichmentTabName() {
+        const nameElements = [];
+        this.store.hasMutationEnrichmentData && nameElements.push('Mutations');
+        this.store.hasFusionEnrichmentData && nameElements.push('Fusions');
+        this.store.hasCnaEnrichmentData && nameElements.push('CNAs');
+        return nameElements.join('/');
+    }
+
     @autobind
     @action
     public onOverlapStrategySelect(option: any) {
@@ -175,7 +184,7 @@ export default class ComparisonTab extends React.Component<
                     {this.store.showAlterationsTab && (
                         <MSKTab
                             id={ResultsViewComparisonSubTab.ALTERATIONS}
-                            linkText="Mutations/Fusions/CNAs"
+                            linkText={this.alterationEnrichmentTabName}
                             anchorClassName={
                                 this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
