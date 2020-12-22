@@ -1,4 +1,8 @@
-import { CountByTumorType, SignalMutation } from 'genome-nexus-ts-api-client';
+import {
+    CountByTumorType,
+    SignalMutation,
+    StatsByTumorType,
+} from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import {
     IExtendedSignalMutation,
@@ -37,9 +41,11 @@ export function extendMutations(
                 : null;
 
         const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
+            mutation.mutationStatus,
             mutation.countsByTumorType,
             mutation.biallelicCountsByTumorType,
-            mutation.qcPassCountsByTumorType
+            mutation.qcPassCountsByTumorType,
+            mutation.statsByTumorType
         );
 
         return {
@@ -70,16 +76,29 @@ export function extendMutations(
 }
 
 export function generateTumorTypeDecomposition(
+    mutationStatus: string,
     countsByTumorType: CountByTumorType[],
     biallelicCountsByTumorType?: CountByTumorType[],
-    qcPassCountsByTumorType?: CountByTumorType[]
+    qcPassCountsByTumorType?: CountByTumorType[],
+    statsByTumorType?: StatsByTumorType[]
 ) {
     let biallelicTumorMap: { [tumorType: string]: CountByTumorType };
     let qcPassTumorMap: { [tumorType: string]: CountByTumorType };
+    let statsTumorMap: { [tumorType: string]: StatsByTumorType };
 
     if (biallelicCountsByTumorType && qcPassCountsByTumorType) {
-        biallelicTumorMap = _.keyBy(biallelicCountsByTumorType, 'tumorType');
-        qcPassTumorMap = _.keyBy(qcPassCountsByTumorType, 'tumorType');
+        biallelicTumorMap = _.keyBy(
+            biallelicCountsByTumorType,
+            item => item.tumorType
+        );
+        qcPassTumorMap = _.keyBy(
+            qcPassCountsByTumorType,
+            item => item.tumorType
+        );
+    }
+
+    if (statsByTumorType) {
+        statsTumorMap = _.keyBy(statsByTumorType, item => item.tumorType);
     }
 
     return countsByTumorType.map(counts => ({
@@ -96,6 +115,45 @@ export function generateTumorTypeDecomposition(
             biallelicTumorMap && biallelicTumorMap[counts.tumorType]
                 ? biallelicTumorMap[counts.tumorType].variantCount
                 : 0,
+        ageAtDx:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].ageAtDx
+                : null,
+        fCancerTypeCount:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].fCancerTypeCount
+                : null,
+        fractionLoh:
+            statsTumorMap &&
+            statsTumorMap[counts.tumorType] &&
+            statsTumorMap[counts.tumorType].hrdScore
+                ? statsTumorMap[counts.tumorType].hrdScore.fractionLoh
+                : null,
+        lst:
+            statsTumorMap &&
+            statsTumorMap[counts.tumorType] &&
+            statsTumorMap[counts.tumorType].hrdScore
+                ? statsTumorMap[counts.tumorType].hrdScore.lst
+                : null,
+        ntelomericAi:
+            statsTumorMap &&
+            statsTumorMap[counts.tumorType] &&
+            statsTumorMap[counts.tumorType].hrdScore
+                ? statsTumorMap[counts.tumorType].hrdScore.ntelomericAi
+                : null,
+        msiScore:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].msiScore
+                : null,
+        nCancerTypeCount:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].nCancerTypeCount
+                : null,
+        tmb:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].tmb
+                : null,
+        mutationStatus: mutationStatus,
     }));
 }
 
@@ -112,14 +170,14 @@ export function calcBiallelicRatio(
     return _.isNaN(ratio) ? null : ratio;
 }
 
-function totalVariants(counts: CountByTumorType[]) {
+export function totalVariants(counts: CountByTumorType[]) {
     return (
         counts.map(c => c.variantCount).reduce((acc, curr) => acc + curr, 0) ||
         0
     );
 }
 
-function totalSamples(counts: CountByTumorType[]) {
+export function totalSamples(counts: CountByTumorType[]) {
     return (
         counts
             .map(c => c.tumorTypeCount)

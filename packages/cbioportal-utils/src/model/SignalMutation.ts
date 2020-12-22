@@ -4,6 +4,15 @@ export interface ISignalTumorTypeDecomposition extends CountByTumorType {
     frequency: number | null;
     biallelicRatio: number | null;
     biallelicVariantCount: number;
+    fractionLoh: number | null;
+    lst: number | null;
+    ntelomericAi: number | null;
+    mutationStatus: string;
+    ageAtDx: number | null;
+    fCancerTypeCount: number | null;
+    msiScore: number | null;
+    nCancerTypeCount: number | null;
+    tmb: number | null;
 }
 
 export interface IExtendedSignalMutation extends SignalMutation {
