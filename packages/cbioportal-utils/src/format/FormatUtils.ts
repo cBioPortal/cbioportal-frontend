@@ -23,3 +23,22 @@ export function formatFrequencyValue(
         ? '-'
         : formatPercentValue(value * 100, fractionDigits);
 }
+
+export function formatNumberValueInSignificantDigits(
+    value: number | null,
+    significantDigits?: number
+) {
+    if (value === 0) {
+        return 0;
+    } else if (value === null) {
+        return null;
+    } else if (significantDigits) {
+        return Number(
+            value.toLocaleString(undefined, {
+                maximumSignificantDigits: significantDigits,
+            })
+        );
+    } else {
+        return value;
+    }
+}

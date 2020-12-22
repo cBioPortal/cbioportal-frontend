@@ -68,6 +68,7 @@ import GnomadColumnFormatter from './column/GnomadColumnFormatter';
 import ClinVarColumnFormatter from './column/ClinVarColumnFormatter';
 import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
+import SignalColumnFormatter from './column/SignalColumnFormatter';
 import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
 import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
@@ -132,6 +133,7 @@ export interface IMutationTableProps {
     sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
 }
 import MobxPromise from 'mobxpromise';
+import AppConfig from 'appConfig';
 
 export enum MutationTableColumnType {
     STUDY,
@@ -176,6 +178,7 @@ export enum MutationTableColumnType {
     SELECTED,
     DBSNP,
     GENE_PANEL,
+    SIGNAL,
 }
 
 type MutationTableColumn = Column<Mutation[]> & {
@@ -1119,6 +1122,40 @@ export default class MutationTable<
             defaultSortDirection: 'desc',
             visible: false,
             align: 'right',
+        };
+        this._columns[MutationTableColumnType.SIGNAL] = {
+            name: 'SIGNAL',
+            render: (d: Mutation[]) =>
+                SignalColumnFormatter.renderFunction(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
+            sortBy: (d: Mutation[]) =>
+                SignalColumnFormatter.getSortValue(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
+            download: (d: Mutation[]) =>
+                SignalColumnFormatter.download(
+                    d,
+                    this.props.indexedVariantAnnotations
+                ),
+            tooltip: (
+                <span
+                    style={{
+                        maxWidth: 370,
+                        display: 'block',
+                        textAlign: 'left',
+                    }}
+                >
+                    Prevalence of germline mutations in cancer patients from{' '}
+                    <a href="https://www.signaldb.org/" target="_blank">
+                        SIGNAL
+                    </a>
+                </span>
+            ),
+            visible: false,
+            shouldExclude: () => !AppConfig.serverConfig.show_signal,
         };
     }
 

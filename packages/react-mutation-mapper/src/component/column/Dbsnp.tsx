@@ -4,7 +4,7 @@ import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { defaultSortMethod } from '../../util/ReactTableUtils';
+import { defaultSortMethod } from 'cbioportal-utils';
 import DbsnpId from '../dbsnp/DbsnpId';
 import {
     MyVariantInfoProps,
