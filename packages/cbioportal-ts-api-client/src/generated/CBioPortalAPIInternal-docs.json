@@ -36,6 +36,10 @@
       "description": " "
     },
     {
+      "name": "Custom driver annotations",
+      "description": " "
+    },
+    {
       "name": "Data Access Tokens",
       "description": " "
     },
@@ -438,6 +442,14 @@
         ],
         "parameters": [
           {
+            "name": "annotationSourceFilter",
+            "in": "query",
+            "description": "VUS and germline filters to be applied to the data",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
             "name": "copyNumberEventType",
             "in": "query",
             "description": "Type of the copy number event",
@@ -474,6 +486,49 @@
                 "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
               }
             }
+          },
+          {
+            "name": "includeDriver",
+            "in": "query",
+            "description": "includeDriver",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "includeUnknownOncogenicity",
+            "in": "query",
+            "description": "includeUnknownOncogenicity",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "includeUnknownTier",
+            "in": "query",
+            "description": "includeUnknownTier",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeVUS",
+            "in": "query",
+            "description": "includeVUS",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
+            "name": "selectedTiers",
+            "in": "query",
+            "description": "selectedTiers",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           }
         ],
         "responses": {
@@ -525,6 +580,43 @@
               "items": {
                 "$ref": "#/definitions/CosmicMutation"
               }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/custom-driver-annotation-report/fetch": {
+      "post": {
+        "tags": [
+          "Custom driver annotations"
+        ],
+        "summary": "Return availability of custom driver annotations for molecular profiles",
+        "operationId": "fetchAlterationDriverAnnotationReportUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileIds",
+            "in": "query",
+            "description": "molecularProfileIds",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/CustomDriverAnnotationReport"
             }
           }
         },
@@ -2292,6 +2384,14 @@
         ],
         "parameters": [
           {
+            "name": "annotationSourceFilter",
+            "in": "query",
+            "description": "VUS and germline filters to be applied to the data",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
             "name": "enrichmentType",
             "in": "query",
             "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
@@ -2315,6 +2415,73 @@
                 "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
               }
             }
+          },
+          {
+            "name": "includeDriver",
+            "in": "query",
+            "description": "includeDriver",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeGermlineStatus",
+            "in": "query",
+            "description": "includeGermlineStatus",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeSomaticStatus",
+            "in": "query",
+            "description": "includeSomaticStatus",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeUnknownOncogenicity",
+            "in": "query",
+            "description": "includeUnknownOncogenicity",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeUnknownStatus",
+            "in": "query",
+            "description": "includeUnknownStatus",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeUnknownTier",
+            "in": "query",
+            "description": "includeUnknownTier",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "includeVUS",
+            "in": "query",
+            "description": "includeVUS",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          },
+          {
+            "name": "selectedTiers",
+            "in": "query",
+            "description": "selectedTiers",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           }
         ],
         "responses": {
@@ -2674,7 +2841,34 @@
             "type": "boolean"
           }
         },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
         "mutationEventTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "selectedTiers": {
           "type": "object",
           "additionalProperties": {
             "type": "boolean"
@@ -3038,6 +3232,21 @@
       },
       "title": "CountSummary"
     },
+    "CustomDriverAnnotationReport": {
+      "type": "object",
+      "properties": {
+        "hasBinary": {
+          "type": "boolean"
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "CustomDriverAnnotationReport"
+    },
     "DataAccessToken": {
       "type": "object",
       "properties": {
@@ -3109,7 +3318,7 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/definitions/GeneFilterQuery"
             }
           }
         },
@@ -3121,6 +3330,59 @@
         }
       },
       "title": "GeneFilter"
+    },
+    "GeneFilterQuery": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "AMP",
+              "GAIN",
+              "DIPLOID",
+              "HETLOSS",
+              "HOMDEL"
+            ]
+          }
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "selectedTiers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "GeneFilterQuery"
     },
     "GenericAssayDataBin": {
       "type": "object",
@@ -4045,6 +4307,27 @@
             }
           }
         },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
         "patientTreatmentFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
@@ -4056,6 +4339,12 @@
         },
         "sampleTreatmentFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "selectedTiers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
         },
         "studyIds": {
           "type": "array",

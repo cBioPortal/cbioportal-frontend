@@ -32,7 +32,23 @@ export type AlterationEnrichment = {
 export type AlterationEventTypeFilter = {
     'copyNumberAlterationEventTypes': {}
 
-    'mutationEventTypes': {}
+    'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'mutationEventTypes': {}
+
+        'selectedTiers': {}
 
 };
 export type AndedPatientTreatmentFilters = {
@@ -189,6 +205,12 @@ export type CountSummary = {
         'profiledCount': number
 
 };
+export type CustomDriverAnnotationReport = {
+    'hasBinary': boolean
+
+        'tiers': Array < string >
+
+};
 export type DataAccessToken = {
     'creation': string
 
@@ -235,11 +257,21 @@ export type GeneFilterQuery = {
 
         'entrezGeneId': number
 
-        'excludeGermline': boolean
-
-        'excludeVUS': boolean
-
         'hugoGeneSymbol': string
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
 
         'selectedTiers': {}
 
@@ -1347,19 +1379,49 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
+        'annotationSourceFilter' ? : string,
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
+            'includeDriver' ? : boolean,
+            'includeUnknownOncogenicity' ? : boolean,
+            'includeUnknownTier' ? : boolean,
+            'includeVus' ? : boolean,
+            'selectedTiers' ? : Array < string > ,
             $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/copy-number-enrichments/fetch';
+        if (parameters['annotationSourceFilter'] !== undefined) {
+            queryParameters['annotationSourceFilter'] = parameters['annotationSourceFilter'];
+        }
+
         if (parameters['copyNumberEventType'] !== undefined) {
             queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
         }
 
         if (parameters['enrichmentType'] !== undefined) {
             queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters['includeDriver'] !== undefined) {
+            queryParameters['includeDriver'] = parameters['includeDriver'];
+        }
+
+        if (parameters['includeUnknownOncogenicity'] !== undefined) {
+            queryParameters['includeUnknownOncogenicity'] = parameters['includeUnknownOncogenicity'];
+        }
+
+        if (parameters['includeUnknownTier'] !== undefined) {
+            queryParameters['includeUnknownTier'] = parameters['includeUnknownTier'];
+        }
+
+        if (parameters['includeVus'] !== undefined) {
+            queryParameters['includeVUS'] = parameters['includeVus'];
+        }
+
+        if (parameters['selectedTiers'] !== undefined) {
+            queryParameters['selectedTiers'] = parameters['selectedTiers'];
         }
 
         if (parameters.$queryParameters) {
@@ -1376,14 +1438,26 @@ export default class CBioPortalAPIInternal {
      * Fetch copy number enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
+     * @param {string} annotationSourceFilter - VUS and germline filters to be applied to the data
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} groups - List of groups containing sample identifiers
+     * @param {boolean} includeDriver - includeDriver
+     * @param {boolean} includeUnknownOncogenicity - includeUnknownOncogenicity
+     * @param {boolean} includeUnknownTier - includeUnknownTier
+     * @param {boolean} includeVus - includeVUS
+     * @param {array} selectedTiers - selectedTiers
      */
     fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
+        'annotationSourceFilter' ? : string,
         'copyNumberEventType' ? : "HOMDEL" | "AMP",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
+            'includeDriver' ? : boolean,
+            'includeUnknownOncogenicity' ? : boolean,
+            'includeUnknownTier' ? : boolean,
+            'includeVus' ? : boolean,
+            'selectedTiers' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -1398,6 +1472,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['annotationSourceFilter'] !== undefined) {
+                queryParameters['annotationSourceFilter'] = parameters['annotationSourceFilter'];
+            }
 
             if (parameters['copyNumberEventType'] !== undefined) {
                 queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
@@ -1416,6 +1494,26 @@ export default class CBioPortalAPIInternal {
                 return;
             }
 
+            if (parameters['includeDriver'] !== undefined) {
+                queryParameters['includeDriver'] = parameters['includeDriver'];
+            }
+
+            if (parameters['includeUnknownOncogenicity'] !== undefined) {
+                queryParameters['includeUnknownOncogenicity'] = parameters['includeUnknownOncogenicity'];
+            }
+
+            if (parameters['includeUnknownTier'] !== undefined) {
+                queryParameters['includeUnknownTier'] = parameters['includeUnknownTier'];
+            }
+
+            if (parameters['includeVus'] !== undefined) {
+                queryParameters['includeVUS'] = parameters['includeVus'];
+            }
+
+            if (parameters['selectedTiers'] !== undefined) {
+                queryParameters['selectedTiers'] = parameters['selectedTiers'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -1432,14 +1530,26 @@ export default class CBioPortalAPIInternal {
      * Fetch copy number enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
+     * @param {string} annotationSourceFilter - VUS and germline filters to be applied to the data
      * @param {string} copyNumberEventType - Type of the copy number event
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} groups - List of groups containing sample identifiers
+     * @param {boolean} includeDriver - includeDriver
+     * @param {boolean} includeUnknownOncogenicity - includeUnknownOncogenicity
+     * @param {boolean} includeUnknownTier - includeUnknownTier
+     * @param {boolean} includeVus - includeVUS
+     * @param {array} selectedTiers - selectedTiers
      */
     fetchCopyNumberEnrichmentsUsingPOST(parameters: {
+            'annotationSourceFilter' ? : string,
             'copyNumberEventType' ? : "HOMDEL" | "AMP",
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
+                'includeDriver' ? : boolean,
+                'includeUnknownOncogenicity' ? : boolean,
+                'includeUnknownTier' ? : boolean,
+                'includeVus' ? : boolean,
+                'selectedTiers' ? : Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >
@@ -1525,6 +1635,85 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchAlterationDriverAnnotationReportUsingPOSTURL(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-driver-annotation-report/fetch';
+        if (parameters['molecularProfileIds'] !== undefined) {
+            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Return availability of custom driver annotations for molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
+     * @param {array} molecularProfileIds - molecularProfileIds
+     */
+    fetchAlterationDriverAnnotationReportUsingPOSTWithHttpInfo(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-driver-annotation-report/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['molecularProfileIds'] !== undefined) {
+                queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+            }
+
+            if (parameters['molecularProfileIds'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Return availability of custom driver annotations for molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
+     * @param {array} molecularProfileIds - molecularProfileIds
+     */
+    fetchAlterationDriverAnnotationReportUsingPOST(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < CustomDriverAnnotationReport > {
+        return this.fetchAlterationDriverAnnotationReportUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     downloadDataAccessTokenUsingGETURL(parameters: {
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
@@ -5252,14 +5441,59 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchMutationEnrichmentsUsingPOSTURL(parameters: {
+        'annotationSourceFilter' ? : string,
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
+            'includeDriver' ? : boolean,
+            'includeGermlineStatus' ? : boolean,
+            'includeSomaticStatus' ? : boolean,
+            'includeUnknownOncogenicity' ? : boolean,
+            'includeUnknownStatus' ? : boolean,
+            'includeUnknownTier' ? : boolean,
+            'includeVus' ? : boolean,
+            'selectedTiers' ? : Array < string > ,
             $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/mutation-enrichments/fetch';
+        if (parameters['annotationSourceFilter'] !== undefined) {
+            queryParameters['annotationSourceFilter'] = parameters['annotationSourceFilter'];
+        }
+
         if (parameters['enrichmentType'] !== undefined) {
             queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters['includeDriver'] !== undefined) {
+            queryParameters['includeDriver'] = parameters['includeDriver'];
+        }
+
+        if (parameters['includeGermlineStatus'] !== undefined) {
+            queryParameters['includeGermlineStatus'] = parameters['includeGermlineStatus'];
+        }
+
+        if (parameters['includeSomaticStatus'] !== undefined) {
+            queryParameters['includeSomaticStatus'] = parameters['includeSomaticStatus'];
+        }
+
+        if (parameters['includeUnknownOncogenicity'] !== undefined) {
+            queryParameters['includeUnknownOncogenicity'] = parameters['includeUnknownOncogenicity'];
+        }
+
+        if (parameters['includeUnknownStatus'] !== undefined) {
+            queryParameters['includeUnknownStatus'] = parameters['includeUnknownStatus'];
+        }
+
+        if (parameters['includeUnknownTier'] !== undefined) {
+            queryParameters['includeUnknownTier'] = parameters['includeUnknownTier'];
+        }
+
+        if (parameters['includeVus'] !== undefined) {
+            queryParameters['includeVUS'] = parameters['includeVus'];
+        }
+
+        if (parameters['selectedTiers'] !== undefined) {
+            queryParameters['selectedTiers'] = parameters['selectedTiers'];
         }
 
         if (parameters.$queryParameters) {
@@ -5276,12 +5510,30 @@ export default class CBioPortalAPIInternal {
      * Fetch mutation enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
+     * @param {string} annotationSourceFilter - VUS and germline filters to be applied to the data
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} groups - List of groups containing sample identifiers
+     * @param {boolean} includeDriver - includeDriver
+     * @param {boolean} includeGermlineStatus - includeGermlineStatus
+     * @param {boolean} includeSomaticStatus - includeSomaticStatus
+     * @param {boolean} includeUnknownOncogenicity - includeUnknownOncogenicity
+     * @param {boolean} includeUnknownStatus - includeUnknownStatus
+     * @param {boolean} includeUnknownTier - includeUnknownTier
+     * @param {boolean} includeVus - includeVUS
+     * @param {array} selectedTiers - selectedTiers
      */
     fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
+        'annotationSourceFilter' ? : string,
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
+            'includeDriver' ? : boolean,
+            'includeGermlineStatus' ? : boolean,
+            'includeSomaticStatus' ? : boolean,
+            'includeUnknownOncogenicity' ? : boolean,
+            'includeUnknownStatus' ? : boolean,
+            'includeUnknownTier' ? : boolean,
+            'includeVus' ? : boolean,
+            'selectedTiers' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -5297,6 +5549,10 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
+            if (parameters['annotationSourceFilter'] !== undefined) {
+                queryParameters['annotationSourceFilter'] = parameters['annotationSourceFilter'];
+            }
+
             if (parameters['enrichmentType'] !== undefined) {
                 queryParameters['enrichmentType'] = parameters['enrichmentType'];
             }
@@ -5308,6 +5564,38 @@ export default class CBioPortalAPIInternal {
             if (parameters['groups'] === undefined) {
                 reject(new Error('Missing required  parameter: groups'));
                 return;
+            }
+
+            if (parameters['includeDriver'] !== undefined) {
+                queryParameters['includeDriver'] = parameters['includeDriver'];
+            }
+
+            if (parameters['includeGermlineStatus'] !== undefined) {
+                queryParameters['includeGermlineStatus'] = parameters['includeGermlineStatus'];
+            }
+
+            if (parameters['includeSomaticStatus'] !== undefined) {
+                queryParameters['includeSomaticStatus'] = parameters['includeSomaticStatus'];
+            }
+
+            if (parameters['includeUnknownOncogenicity'] !== undefined) {
+                queryParameters['includeUnknownOncogenicity'] = parameters['includeUnknownOncogenicity'];
+            }
+
+            if (parameters['includeUnknownStatus'] !== undefined) {
+                queryParameters['includeUnknownStatus'] = parameters['includeUnknownStatus'];
+            }
+
+            if (parameters['includeUnknownTier'] !== undefined) {
+                queryParameters['includeUnknownTier'] = parameters['includeUnknownTier'];
+            }
+
+            if (parameters['includeVus'] !== undefined) {
+                queryParameters['includeVUS'] = parameters['includeVus'];
+            }
+
+            if (parameters['selectedTiers'] !== undefined) {
+                queryParameters['selectedTiers'] = parameters['selectedTiers'];
             }
 
             if (parameters.$queryParameters) {
@@ -5326,12 +5614,30 @@ export default class CBioPortalAPIInternal {
      * Fetch mutation enrichments in a molecular profile
      * @method
      * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
+     * @param {string} annotationSourceFilter - VUS and germline filters to be applied to the data
      * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
      * @param {} groups - List of groups containing sample identifiers
+     * @param {boolean} includeDriver - includeDriver
+     * @param {boolean} includeGermlineStatus - includeGermlineStatus
+     * @param {boolean} includeSomaticStatus - includeSomaticStatus
+     * @param {boolean} includeUnknownOncogenicity - includeUnknownOncogenicity
+     * @param {boolean} includeUnknownStatus - includeUnknownStatus
+     * @param {boolean} includeUnknownTier - includeUnknownTier
+     * @param {boolean} includeVus - includeVUS
+     * @param {array} selectedTiers - selectedTiers
      */
     fetchMutationEnrichmentsUsingPOST(parameters: {
+            'annotationSourceFilter' ? : string,
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
+                'includeDriver' ? : boolean,
+                'includeGermlineStatus' ? : boolean,
+                'includeSomaticStatus' ? : boolean,
+                'includeUnknownOncogenicity' ? : boolean,
+                'includeUnknownStatus' ? : boolean,
+                'includeUnknownTier' ? : boolean,
+                'includeVus' ? : boolean,
+                'selectedTiers' ? : Array < string > ,
                 $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AlterationEnrichment >
