@@ -486,11 +486,31 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        mutationCountColumn.columnNote = '⚠️';
+                        mutationCountColumn.customHeaderRender = (
+                            columnName,
+                            instance
+                        ) => {
+                            return (
+                                <div>
+                                    <span style={{ position: 'relative' }}>
+                                        <i
+                                            className="fa fa-filter"
+                                            style={{
+                                                position: 'absolute',
+                                                left: '-15px',
+                                            }}
+                                        />
+                                    </span>
+                                    {columnName}
+                                </div>
+                            );
+                        };
                         mutationCountColumn.columnTooltip = (
                             <span data-test="hidden-mutation-alterations">
-                                This table is filtered based on selections in
-                                the <i>Alteration Filter</i> menu.
+                                Total number of mutations
+                                <br />
+                                Filtered based on selections in the{' '}
+                                <i>Alteration Filter</i> menu.
                             </span>
                         );
                     }
@@ -555,9 +575,29 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         columnKey: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        fusionCountColumn.columnNote = '⚠️';
+                        fusionCountColumn.customHeaderRender = (
+                            columnName,
+                            instance
+                        ) => {
+                            return (
+                                <div>
+                                    <span style={{ position: 'relative' }}>
+                                        <i
+                                            className="fa fa-filter"
+                                            style={{
+                                                position: 'absolute',
+                                                left: '-15px',
+                                            }}
+                                        />
+                                    </span>
+                                    {columnName}
+                                </div>
+                            );
+                        };
                         fusionCountColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
+                                Total number of fusions
+                                <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
                             </span>
@@ -621,9 +661,30 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         columnWidthRatio: 0.17,
                     };
                     if (this.props.store.alterationFilterActive) {
-                        cnaCountColumn.columnNote = '⚠️';
+                        cnaCountColumn.customHeaderRender = (
+                            columnName,
+                            instance
+                        ) => {
+                            return (
+                                <div>
+                                    <span style={{ position: 'relative' }}>
+                                        <i
+                                            className="fa fa-filter"
+                                            style={{
+                                                position: 'absolute',
+                                                left: '-15px',
+                                            }}
+                                        />
+                                    </span>
+                                    {columnName}
+                                </div>
+                            );
+                        };
                         cnaCountColumn.columnTooltip = (
-                            <span data-test="hidden-cna-alterations">
+                            <span data-test="hidden-fusion-alterations">
+                                Number of samples with one or more copy number
+                                alterations
+                                <br />
                                 This table is filtered based on selections in
                                 the <i>Alteration Filter</i> menu.
                             </span>

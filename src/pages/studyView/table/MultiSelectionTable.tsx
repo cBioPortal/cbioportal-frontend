@@ -68,6 +68,10 @@ export type MultiSelectionTableColumn = {
     columnWidthRatio?: number;
     columnNote?: string;
     columnTooltip?: JSX.Element;
+    customHeaderRender?: (
+        columnname: string,
+        instance: MultiSelectionTable
+    ) => JSX.Element;
 };
 
 export type MultiSelectionTableProps = {
@@ -253,9 +257,16 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
                 headerRender: columnName => {
+                    const override = _.find(
+                        this.props.columns,
+                        c => c.columnKey === MultiSelectionTableColumnKey.NUMBER
+                    );
+                    const overrideFn = override && override.customHeaderRender;
                     return (
                         <div style={{ marginLeft: cellMargin }}>
-                            {columnName}
+                            {overrideFn
+                                ? overrideFn(columnName, this)
+                                : columnName}
                         </div>
                     );
                 },
@@ -335,9 +346,18 @@ export class MultiSelectionTable extends React.Component<
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: columnName => {
+                    const override = _.find(
+                        this.props.columns,
+                        c =>
+                            c.columnKey ===
+                            MultiSelectionTableColumnKey.NUMBER_MUTATIONS
+                    );
+                    const overrideFn = override && override.customHeaderRender;
                     return (
                         <div style={{ marginLeft: cellMargin }}>
-                            {columnName}
+                            {overrideFn
+                                ? overrideFn(columnName, this)
+                                : columnName}
                         </div>
                     );
                 },
@@ -367,7 +387,20 @@ export class MultiSelectionTable extends React.Component<
                 name: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                 tooltip: <span>Total number of mutations</span>,
                 headerRender: columnName => {
-                    return <span>{columnName}</span>;
+                    const override = _.find(
+                        this.props.columns,
+                        c =>
+                            c.columnKey ===
+                            MultiSelectionTableColumnKey.NUMBER_FUSIONS
+                    );
+                    const overrideFn = override && override.customHeaderRender;
+                    return (
+                        <div style={{ marginLeft: cellMargin }}>
+                            {overrideFn
+                                ? overrideFn(columnName, this)
+                                : columnName}
+                        </div>
+                    );
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -607,6 +640,11 @@ export class MultiSelectionTable extends React.Component<
             if (column.columnNote) {
                 columnDefinition.name += ' ' + column.columnNote;
             }
+            // if (column.customHeaderRender) {
+            //     columnDefinition.headerRender = (columnName) => {
+            //         return column.customHeaderRender!(columnName, this);
+            //     }
+            // }
             return columnDefinition;
         });
     }
