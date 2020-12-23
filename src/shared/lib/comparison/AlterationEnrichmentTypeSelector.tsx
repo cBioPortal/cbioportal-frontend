@@ -535,7 +535,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                 checked={this.allFusionsSelected}
                                 onClick={this.onInputClick}
                             />{' '}
-                            <b>Structural variants / Fusions</b>
+                            <b>Structural Variants / Fusions</b>
                         </label>
                     </div>
                 )}
