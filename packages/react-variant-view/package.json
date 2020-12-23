@@ -1,6 +1,6 @@
 {
   "name": "react-variant-view",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "cBioPortal Variant Viewer",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.3.19",
-    "cbioportal-utils": "^0.2.16",
+    "cbioportal-frontend-commons": "^0.3.20",
+    "cbioportal-utils": "^0.2.17",
     "classnames": "^2.2.5",
     "font-awesome": "^4.7.0",
     "genome-nexus-ts-api-client": "^1.1.12",
@@ -54,7 +54,7 @@
     "react-collapse": "4.0.3",
     "react-if": "^2.1.0",
     "react-motion": "^0.5.2",
-    "react-mutation-mapper": "^0.6.24",
+    "react-mutation-mapper": "^0.6.25",
     "react-rangeslider": "^2.2.0",
     "react-select": "^3.0.4",
     "react-table": "^6.10.0",
