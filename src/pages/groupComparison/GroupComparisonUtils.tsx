@@ -35,16 +35,11 @@ import {
     geneFilterQueryToOql,
     getButtonNameWithDownPointer,
 } from 'pages/studyView/StudyViewUtils';
-import AlterationEnrichmentTypeSelector, {
-    IAlterationEnrichmentTypeSelectorHandlers,
-} from 'pages/groupComparison/AlterationEnrichmentTypeSelector';
 import styles from 'pages/groupComparison/styles.module.scss';
 import SettingsMenu from 'shared/components/settings/SettingsMenu';
-import {
-    IDriverSettingsProps,
-    IExclusionSettings,
-} from 'shared/driverAnnotation/DriverAnnotationSettings';
-import GroupComparisonStore from 'pages/groupComparison/GroupComparisonStore';
+import AlterationEnrichmentTypeSelector, {
+    IAlterationEnrichmentTypeSelectorHandlers,
+} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -926,7 +921,11 @@ export function buildFilterMenu(
                 overlay={
                     <AlterationEnrichmentTypeSelector
                         classNames={styles.buttonAlterationTypeSelectorMenu}
+                        store={this.store}
                         handlers={handlers}
+                        showMutations={this.store.hasMutationEnrichmentData}
+                        showCnas={this.store.hasCnaEnrichmentData}
+                        showFusions={this.store.hasMutationEnrichmentData}
                     />
                 }
             >
@@ -966,7 +965,11 @@ export function buildFilterMenu(
     ) : (
         <AlterationEnrichmentTypeSelector
             classNames={styles.inlineAlterationTypeSelectorMenu}
+            store={this.store}
             handlers={handlers}
+            showMutations={this.store.hasMutationEnrichmentData}
+            showCnas={this.store.hasCnaEnrichmentData}
+            showFusions={this.store.hasMutationEnrichmentData}
         />
     );
 }

@@ -34,9 +34,9 @@ import {
     action,
     autorun,
     computed,
-    IObservableObject,
     IReactionDisposer,
     observable,
+    reaction,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -81,10 +81,6 @@ import {
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    CopyNumberEnrichmentEventType,
-    MutationEnrichmentEventType,
-} from 'shared/lib/comparison/ComparisonTabUtils';
-import {
     cnaEventTypeSelectInit,
     mutationEventTypeSelectInit,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
@@ -113,7 +109,7 @@ export default abstract class ComparisonStore
     private geneCountUpdatedReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit();
+    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
     @observable.ref
     public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
 
@@ -1224,25 +1220,18 @@ export default abstract class ComparisonStore
                 ) {
                     const includeDriver = this.driverAnnotationSettings
                         .includeDriver;
-                    const includeVus = this.driverAnnotationSettings.includeVUS;
+                    const includeVUS = this.driverAnnotationSettings.includeVUS;
                     const includeUnknownOncogenicity = this
                         .driverAnnotationSettings.includeUnknownOncogenicity;
                     const selectedTiers = this.selectedTiers;
-                    const includeGermlineMutations = this
-                        .includeGermlineMutations;
-                    const includeSomaticMutations = this
-                        .includeSomaticMutations;
-                    const includeUnknownStatusMutations = this
+                    const includeUnknownTier = this.driverAnnotationSettings
+                        .includeUnknownTier;
+                    const includeGermline = this.includeGermlineMutations;
+                    const includeSomatic = this.includeSomaticMutations;
+                    const includeUnknownStatus = this
                         .includeUnknownStatusMutations;
                     return internalClient.fetchAlterationEnrichmentsUsingPOST({
-                        includeDriver,
-                        includeVus,
-                        includeUnknownOncogenicity,
-                        selectedTiers: selectedTiers,
-                        includeGermline: includeGermlineMutations,
-                        includeSomatic: includeSomaticMutations,
-                        includeUnknownStatus: includeUnknownStatusMutations,
-                        enrichmentScope: this.usePatientLevelEnrichments
+                        enrichmentType: this.usePatientLevelEnrichments
                             ? 'PATIENT'
                             : 'SAMPLE',
                         groupsAndAlterationTypes: {
@@ -1253,6 +1242,14 @@ export default abstract class ComparisonStore
                                     .selectedCopyNumberEnrichmentEventTypes,
                                 mutationEventTypes: this
                                     .selectedMutationEnrichmentEventTypes,
+                                includeDriver,
+                                includeVUS,
+                                includeUnknownOncogenicity,
+                                selectedTiers,
+                                includeUnknownTier,
+                                includeGermline,
+                                includeSomatic,
+                                includeUnknownStatus,
                             },
                         },
                     });
@@ -2366,7 +2363,6 @@ export default abstract class ComparisonStore
             : [];
     }
 
-
     @computed get hasMutationEnrichmentData(): boolean {
         return (
             this.mutationEnrichmentProfiles.isComplete &&
@@ -2385,5 +2381,4 @@ export default abstract class ComparisonStore
     @computed get hasFusionEnrichmentData(): boolean {
         return this.hasMutationEnrichmentData;
     }
-
 }

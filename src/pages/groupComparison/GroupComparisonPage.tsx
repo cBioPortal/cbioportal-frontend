@@ -39,11 +39,10 @@ import AlterationsEnrichments from './AlterationsEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import { buildAlterationEnrichmentTypeSelectorHandlers } from 'pages/resultsView/comparison/ComparisonTabUtils';
-import {
-    alterationMenuHeader,
-    buildFilterMenu,
-} from 'pages/groupComparison/GroupComparisonUtils';
+import { getButtonNameWithDownPointer } from 'pages/studyView/StudyViewUtils';
+import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonTabUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -135,16 +134,11 @@ export default class GroupComparisonPage extends React.Component<
                         <AlterationEnrichmentTypeSelector
                             store={this.store}
                             handlers={
-                                this
-                                    .alterationEnrichmentTypeSelectorHandlers!
+                                this.alterationEnrichmentTypeSelectorHandlers!
                             }
-                            showMutations={
-                                this.store.hasMutationEnrichmentData
-                            }
+                            showMutations={this.store.hasMutationEnrichmentData}
                             showCnas={this.store.hasCnaEnrichmentData}
-                            showFusions={
-                                this.store.hasMutationEnrichmentData
-                            }
+                            showFusions={this.store.hasMutationEnrichmentData}
                         />
                     }
                 >
@@ -183,17 +177,10 @@ export default class GroupComparisonPage extends React.Component<
             <div>
                 <AlterationEnrichmentTypeSelector
                     store={this.store}
-                    handlers={
-                        this
-                            .alterationEnrichmentTypeSelectorHandlers!
-                    }
-                    showMutations={
-                        this.store.hasMutationEnrichmentData
-                    }
+                    handlers={this.alterationEnrichmentTypeSelectorHandlers!}
+                    showMutations={this.store.hasMutationEnrichmentData}
                     showCnas={this.store.hasCnaEnrichmentData}
-                    showFusions={
-                        this.store.hasMutationEnrichmentData
-                    }
+                    showFusions={this.store.hasMutationEnrichmentData}
                 />
                 <AlterationsEnrichments store={this.store} />
             </div>

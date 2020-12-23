@@ -408,4 +408,12 @@ export default class GroupComparisonStore extends ComparisonStore {
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }
+
+    @computed get hasCustomDriverAnnotations() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            (!!this.customDriverAnnotationReport.result!.hasBinary ||
+                this.customDriverAnnotationReport.result!.tiers.length > 0)
+        );
+    }
 }
