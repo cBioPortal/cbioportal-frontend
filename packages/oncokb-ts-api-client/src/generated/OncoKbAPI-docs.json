@@ -87,7 +87,7 @@
           {
             "name": "tumorType",
             "in": "query",
-            "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
           },
@@ -193,7 +193,7 @@
           {
             "name": "tumorType",
             "in": "query",
-            "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
           },
@@ -299,7 +299,7 @@
           {
             "name": "tumorType",
             "in": "query",
-            "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
           },
@@ -454,7 +454,7 @@
           {
             "name": "tumorType",
             "in": "query",
-            "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
           },
@@ -607,7 +607,7 @@
           {
             "name": "tumorType",
             "in": "query",
-            "description": "OncoTree(http://oncotree.mskcc.org) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
+            "description": "OncoTree(http://oncotree.info) tumor type name. The field supports OncoTree Code, OncoTree Name and OncoTree Main type. Example: Melanoma",
             "required": false,
             "type": "string"
           },
