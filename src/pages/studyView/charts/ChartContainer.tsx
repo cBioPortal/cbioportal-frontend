@@ -11,7 +11,11 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import { ClinicalDataBin, StudyViewFilter } from 'cbioportal-ts-api-client';
+import {
+    ClinicalDataBin,
+    GenePanel,
+    StudyViewFilter,
+} from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -31,10 +35,8 @@ import {
     getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin,
-    SpecialChartsUniqueKeyEnum,
     NumericalGroupComparisonType,
 } from '../StudyViewUtils';
-import { GenePanel } from 'cbioportal-ts-api-client';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
 import {
@@ -48,30 +50,28 @@ import { MAX_GROUPS_IN_SESSION } from '../../groupComparison/GroupComparisonUtil
 import { Modal } from 'react-bootstrap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
-import Timer = NodeJS.Timer;
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    MultiSelectionTableColumnKey,
     MultiSelectionTable,
     MultiSelectionTableColumn,
+    MultiSelectionTableColumnKey,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
-import { Dimensions } from 'react-virtualized';
 import {
     SampleTreatmentsTable,
     SampleTreatmentsTableColumnKey,
 } from '../table/treatments/SampleTreatmentsTable';
 import { TreatmentTableType } from '../table/treatments/treatmentsTableUtil';
 import {
-    PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
+    PatientTreatmentsTableColumnKey,
 } from '../table/treatments/PatientTreatmentsTable';
 import {
     doesChartHaveComparisonGroupsLimit,
     getComparisonParamsForTable,
 } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
-import { filteredOutAlterationsMessage } from 'shared/lib/AlterationsUtils';
+import Timer = NodeJS.Timer;
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -123,6 +123,8 @@ export interface IChartContainerProps {
     isNewlyAdded: (uniqueKey: string) => boolean;
     cancerGeneFilterEnabled: boolean;
     filterByCancerGenes?: boolean;
+    alterationFilterEnabled: boolean;
+    filterAlterations?: boolean;
     onChangeCancerGeneFilter?: (filtered: boolean) => void;
     analysisGroupsSettings: StudyViewPageStore['analysisGroupsSettings'];
     patientToAnalysisGroup?: MobxPromise<{
@@ -481,36 +483,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 return () => {
-                    const mutationCountColumn: MultiSelectionTableColumn = {
-                        columnKey:
-                            MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
+                    const numColumn: MultiSelectionTableColumn = {
+                        columnKey: MultiSelectionTableColumnKey.NUMBER,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        mutationCountColumn.customHeaderRender = (
-                            columnName,
-                            instance
-                        ) => {
-                            return (
-                                <div>
-                                    <span style={{ position: 'relative' }}>
-                                        <i
-                                            className="fa fa-filter"
-                                            style={{
-                                                position: 'absolute',
-                                                left: '-15px',
-                                            }}
-                                        />
-                                    </span>
-                                    {columnName}
-                                </div>
-                            );
-                        };
-                        mutationCountColumn.columnTooltip = (
+                        numColumn.columnTooltip = (
                             <span data-test="hidden-mutation-alterations">
                                 Total number of mutations
                                 <br />
-                                Filtered based on selections in the{' '}
-                                <i>Alteration Filter</i> menu.
+                                This table is filtered based on selections in
+                                the <i>Alteration Filter</i> menu.
                             </span>
                         );
                     }
@@ -549,16 +531,20 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            alterationFilterEnabled={
+                                this.props.alterationFilterEnabled
+                            }
+                            filterAlterations={this.props.filterAlterations}
                             columns={[
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.GENE,
                                 },
-                                mutationCountColumn,
                                 {
                                     columnKey:
-                                        MultiSelectionTableColumnKey.NUMBER,
+                                        MultiSelectionTableColumnKey.NUMBER_MUTATIONS,
                                 },
+                                numColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.FREQ,
@@ -571,30 +557,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.FUSION_GENES_TABLE: {
                 return () => {
-                    const fusionCountColumn: MultiSelectionTableColumn = {
-                        columnKey: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
+                    const numColumn: MultiSelectionTableColumn = {
+                        columnKey: MultiSelectionTableColumnKey.NUMBER,
                     };
                     if (this.props.store.mutationFilterActive) {
-                        fusionCountColumn.customHeaderRender = (
-                            columnName,
-                            instance
-                        ) => {
-                            return (
-                                <div>
-                                    <span style={{ position: 'relative' }}>
-                                        <i
-                                            className="fa fa-filter"
-                                            style={{
-                                                position: 'absolute',
-                                                left: '-15px',
-                                            }}
-                                        />
-                                    </span>
-                                    {columnName}
-                                </div>
-                            );
-                        };
-                        fusionCountColumn.columnTooltip = (
+                        numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
                                 Total number of fusions
                                 <br />
@@ -633,16 +600,20 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            alterationFilterEnabled={
+                                this.props.alterationFilterEnabled
+                            }
+                            filterAlterations={this.props.filterAlterations}
                             columns={[
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.GENE,
                                 },
-                                fusionCountColumn,
                                 {
                                     columnKey:
-                                        MultiSelectionTableColumnKey.NUMBER,
+                                        MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                                 },
+                                numColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.FREQ,
@@ -656,31 +627,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
             case ChartTypeEnum.CNA_GENES_TABLE: {
                 return () => {
-                    const cnaCountColumn: MultiSelectionTableColumn = {
+                    const numColumn: MultiSelectionTableColumn = {
                         columnKey: MultiSelectionTableColumnKey.NUMBER,
                         columnWidthRatio: 0.17,
                     };
                     if (this.props.store.alterationFilterActive) {
-                        cnaCountColumn.customHeaderRender = (
-                            columnName,
-                            instance
-                        ) => {
-                            return (
-                                <div>
-                                    <span style={{ position: 'relative' }}>
-                                        <i
-                                            className="fa fa-filter"
-                                            style={{
-                                                position: 'absolute',
-                                                left: '-15px',
-                                            }}
-                                        />
-                                    </span>
-                                    {columnName}
-                                </div>
-                            );
-                        };
-                        cnaCountColumn.columnTooltip = (
+                        numColumn.columnTooltip = (
                             <span data-test="hidden-fusion-alterations">
                                 Number of samples with one or more copy number
                                 alterations
@@ -725,6 +677,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeCancerGeneFilter={
                                 this.props.onChangeCancerGeneFilter!
                             }
+                            alterationFilterEnabled={
+                                this.props.alterationFilterEnabled
+                            }
+                            filterAlterations={this.props.filterAlterations}
                             columns={[
                                 {
                                     columnKey:
@@ -740,7 +696,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                     columnKey: MultiSelectionTableColumnKey.CNA,
                                     columnWidthRatio: 0.18,
                                 },
-                                cnaCountColumn,
+                                numColumn,
                                 {
                                     columnKey:
                                         MultiSelectionTableColumnKey.FREQ,

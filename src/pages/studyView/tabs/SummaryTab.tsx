@@ -243,6 +243,8 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled = (window as any).frontendConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.mutationFilterActive;
                 break;
             }
             case ChartTypeEnum.FUSION_GENES_TABLE: {
@@ -264,6 +266,8 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterFusionGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateFusionGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled = (window as any).frontendConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.mutationFilterActive;
                 break;
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {
@@ -285,6 +289,8 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
+                props.alterationFilterEnabled = (window as any).frontendConfig.serverConfig.skin_show_settings_menu;
+                props.filterAlterations = this.store.alterationFilterActive;
                 break;
             }
             case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {

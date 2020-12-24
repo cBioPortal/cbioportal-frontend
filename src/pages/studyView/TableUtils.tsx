@@ -1,19 +1,15 @@
 import * as React from 'react';
+import { CSSProperties } from 'react';
 import {
     getOncoKBCancerGeneListLinkout,
     getOncoKBReferenceInfo,
 } from './oncokb/OncoKBUtils';
-import styles from './table/tables.module.scss';
-import classnames from 'classnames';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { ICON_FILTER_OFF, ICON_FILTER_ON } from 'shared/lib/Colors';
 import {
-    getFrequencyStr,
     getCNAByAlteration,
+    getFrequencyStr,
 } from 'pages/studyView/StudyViewUtils';
 import { GenePanelList } from 'pages/studyView/table/StudyViewGenePanelModal';
-import { CSSProperties } from 'react';
-import * as _ from 'lodash';
 
 export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
     return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
@@ -21,42 +17,6 @@ export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
 
 export function getGeneFromUniqueKey(key: string) {
     return key.split(':')[0];
-}
-
-export function getGeneColumnHeaderRender(
-    cellMargin: number,
-    headerName: string,
-    cancerGeneListFilterEnabled: boolean,
-    isFilteredByCancerGeneList: boolean,
-    cancerGeneIconToggle: (event: any) => void
-) {
-    return (
-        <div
-            style={{ marginLeft: cellMargin }}
-            className={styles.displayFlex}
-            data-test="gene-column-header"
-        >
-            {cancerGeneListFilterEnabled && (
-                <DefaultTooltip
-                    mouseEnterDelay={0}
-                    placement="top"
-                    overlay={getCancerGeneToggledOverlay(
-                        isFilteredByCancerGeneList
-                    )}
-                >
-                    <div
-                        onClick={cancerGeneIconToggle}
-                        className={styles.displayFlex}
-                    >
-                        {getCancerGeneFilterToggleIcon(
-                            isFilteredByCancerGeneList
-                        )}
-                    </div>
-                </DefaultTooltip>
-            )}
-            {headerName}
-        </div>
-    );
 }
 
 export function getGeneColumnCellOverlaySimple(
@@ -105,24 +65,6 @@ export function getCancerGeneToggledOverlay(cancerGeneFilterEnabled: boolean) {
             </span>
         );
     }
-}
-
-export function getCancerGeneFilterToggleIcon(
-    isFilteredByCancerGeneList: boolean
-) {
-    return (
-        <span
-            data-test="cancer-gene-filter"
-            className={classnames(styles.cancerGeneIcon, styles.displayFlex)}
-            style={{
-                color: isFilteredByCancerGeneList
-                    ? ICON_FILTER_ON
-                    : ICON_FILTER_OFF,
-            }}
-        >
-            <i className="fa fa-filter"></i>
-        </span>
-    );
 }
 
 export enum FreqColumnTypeEnum {

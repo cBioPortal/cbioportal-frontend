@@ -22,10 +22,10 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
-    getFreqColumnRender,
-    getGeneColumnHeaderRender,
-    getTooltip,
     FreqColumnTypeEnum,
+    getCancerGeneToggledOverlay,
+    getFreqColumnRender,
+    getTooltip,
     SelectionOperatorEnum,
 } from 'pages/studyView/TableUtils';
 import { GeneCell } from 'pages/studyView/table/GeneCell';
@@ -33,11 +33,12 @@ import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
 import styles from 'pages/studyView/table/tables.module.scss';
 import MobxPromise from 'mobxpromise';
 import {
+    EllipsisTextTooltip,
     stringListToIndexSet,
     stringListToSet,
-    EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
+import { FilterIconHeader } from 'pages/studyView/table/FilterIconHeader';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
     label: string;
@@ -66,12 +67,7 @@ export enum MultiSelectionTableColumnKey {
 export type MultiSelectionTableColumn = {
     columnKey: MultiSelectionTableColumnKey;
     columnWidthRatio?: number;
-    columnNote?: string;
     columnTooltip?: JSX.Element;
-    customHeaderRender?: (
-        columnname: string,
-        instance: MultiSelectionTable
-    ) => JSX.Element;
 };
 
 export type MultiSelectionTableProps = {
@@ -92,6 +88,8 @@ export type MultiSelectionTableProps = {
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
+    alterationFilterEnabled?: boolean;
+    filterAlterations?: boolean;
     defaultSortBy: MultiSelectionTableColumnKey;
     columns: MultiSelectionTableColumn[];
 };
@@ -150,13 +148,18 @@ export class MultiSelectionTable extends React.Component<
         } = {
             [MultiSelectionTableColumnKey.GENE]: {
                 name: columnKey,
-                headerRender: columnName => {
-                    return getGeneColumnHeaderRender(
-                        cellMargin,
-                        columnName,
-                        this.props.cancerGeneFilterEnabled!,
-                        this.isFilteredByCancerGeneList,
-                        this.toggleCancerGeneFilter
+                headerRender: () => {
+                    return (
+                        <FilterIconHeader
+                            cellMargin={cellMargin}
+                            dataTest="gene-column-header"
+                            className={styles.displayFlex}
+                            showFilter={!!this.props.cancerGeneFilterEnabled!}
+                            isFiltered={!!this.isFilteredByCancerGeneList}
+                            onClickCallback={this.toggleCancerGeneFilter}
+                        >
+                            <span>{columnKey}</span>
+                        </FilterIconHeader>
                     );
                 },
                 render: (data: MultiSelectionTableRow) => {
@@ -189,14 +192,14 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
                 name: columnKey,
-                headerRender: columnName => {
+                headerRender: () => {
                     return (
                         <div
                             style={{ marginLeft: cellMargin }}
                             className={styles.displayFlex}
                             data-test="profile-column-header"
                         >
-                            {columnName}
+                            {columnKey}
                         </div>
                     );
                 },
@@ -222,14 +225,14 @@ export class MultiSelectionTable extends React.Component<
             },
             [MultiSelectionTableColumnKey.CASE_LIST]: {
                 name: columnKey,
-                headerRender: columnName => {
+                headerRender: () => {
                     return (
                         <div
                             style={{ marginLeft: cellMargin }}
                             className={styles.displayFlex}
                             data-test="profile-column-header"
                         >
-                            {columnName}
+                            {columnKey}
                         </div>
                     );
                 },
@@ -256,18 +259,17 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, false)}</span>,
-                headerRender: columnName => {
-                    const override = _.find(
-                        this.props.columns,
-                        c => c.columnKey === MultiSelectionTableColumnKey.NUMBER
-                    );
-                    const overrideFn = override && override.customHeaderRender;
+                headerRender: () => {
                     return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {overrideFn
-                                ? overrideFn(columnName, this)
-                                : columnName}
-                        </div>
+                        <FilterIconHeader
+                            cellMargin={cellMargin}
+                            dataTest="number-column-header"
+                            className={styles.displayFlex}
+                            showFilter={!!this.props.alterationFilterEnabled}
+                            isFiltered={!!this.props.filterAlterations}
+                        >
+                            <span>{columnKey}</span>
+                        </FilterIconHeader>
                     );
                 },
                 render: (data: MultiSelectionTableRow) => (
@@ -308,12 +310,8 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.FREQ]: {
                 name: columnKey,
                 tooltip: <span>{getTooltip(this.props.tableType, true)}</span>,
-                headerRender: columnName => {
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {columnName}
-                        </div>
-                    );
+                headerRender: () => {
+                    return <div style={{ marginLeft: cellMargin }}>Freq</div>;
                 },
                 render: (data: MultiSelectionTableRow) => {
                     return getFreqColumnRender(
@@ -345,25 +343,11 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: {
                 name: columnKey,
                 tooltip: <span>Total number of mutations</span>,
-                headerRender: columnName => {
-                    const override = _.find(
-                        this.props.columns,
-                        c =>
-                            c.columnKey ===
-                            MultiSelectionTableColumnKey.NUMBER_MUTATIONS
-                    );
-                    const overrideFn = override && override.customHeaderRender;
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {overrideFn
-                                ? overrideFn(columnName, this)
-                                : columnName}
-                        </div>
-                    );
+                headerRender: () => {
+                    return <div style={{ marginLeft: cellMargin }}># Mut</div>;
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
-                        data-test={'numberOfAlterationsText'}
                         style={{
                             flexDirection: 'row-reverse',
                             display: 'flex',
@@ -386,21 +370,8 @@ export class MultiSelectionTable extends React.Component<
             [MultiSelectionTableColumnKey.NUMBER_FUSIONS]: {
                 name: MultiSelectionTableColumnKey.NUMBER_FUSIONS,
                 tooltip: <span>Total number of mutations</span>,
-                headerRender: columnName => {
-                    const override = _.find(
-                        this.props.columns,
-                        c =>
-                            c.columnKey ===
-                            MultiSelectionTableColumnKey.NUMBER_FUSIONS
-                    );
-                    const overrideFn = override && override.customHeaderRender;
-                    return (
-                        <div style={{ marginLeft: cellMargin }}>
-                            {overrideFn
-                                ? overrideFn(columnName, this)
-                                : columnName}
-                        </div>
-                    );
+                headerRender: () => {
+                    return <span># Fusion</span>;
                 },
                 render: (data: MultiSelectionTableRow) => (
                     <span
@@ -637,14 +608,6 @@ export class MultiSelectionTable extends React.Component<
             if (column.columnTooltip) {
                 columnDefinition.tooltip = column.columnTooltip;
             }
-            if (column.columnNote) {
-                columnDefinition.name += ' ' + column.columnNote;
-            }
-            // if (column.customHeaderRender) {
-            //     columnDefinition.headerRender = (columnName) => {
-            //         return column.customHeaderRender!(columnName, this);
-            //     }
-            // }
             return columnDefinition;
         });
     }
