@@ -6,6 +6,7 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import {IPharmacoDBView} from "shared/model/PharmacoDB.ts";
 import {observable} from "mobx";
+import  PharmacoDBCard from "./PharmacoDBCard";
 
 export interface IPharmacoDBProps { 
     pharmacoDBEntry: IPharmacoDBView | null | undefined;
@@ -26,7 +27,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
     {
         let score: number = 0;
 
-        if (pharmacoDBEntry) {
+        if (pharmacoDBEntry && pharmacoDBEntry.dataAvailable) {
             score = 1;
         }
 
@@ -58,7 +59,8 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
         }
         else if (this.props.pharmacoDBEntry !== undefined)
         {
-            if (this.props.pharmacoDBEntry !== null && this.props.pharmacoDBStatus == "complete")
+            if (this.props.pharmacoDBEntry !== null && this.props.pharmacoDBStatus == "complete"
+                    && this.props.pharmacoDBEntry.dataAvailable)
             {
                 pharmacoDBContent = (
                     <span className={`${annotationStyles["annotation-item"]}`}>
@@ -121,8 +123,16 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
 
     private cardContent(pharmacoDBEntry: IPharmacoDBView): JSX.Element
     {
+
+        let status:string = 'amp';
+        let oncoTreeCode:string = 'LUCA';
+        let direction:string = 'up';
+        let geneName:string = pharmacoDBEntry.gene;
+        let contentURL :string = "https://cbioapi.pharmacodb.ca/v1/genes/cna/" + oncoTreeCode + "?gene=" + pharmacoDBEntry.gene
+        + "&cna=" + status + "&retrieveData=true" ;
         return (
-            <div>This is the card content</div>
+            <div><a href={contentURL}>PharmacoDB API</a></div>
         );
+
     }
 }

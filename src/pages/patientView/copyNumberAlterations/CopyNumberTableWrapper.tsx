@@ -18,6 +18,7 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import { IPharmacoDBCnaEntry, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -32,10 +33,12 @@ type ICopyNumberTableWrapperProps = {
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
+    cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error;
     enableOncoKb?:boolean;
     enableCivic?:boolean;
+    enablePharmacoDB?:boolean;
     pubMedCache?:PubMedCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
@@ -54,7 +57,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
     public static defaultProps = {
         enableOncoKb: true,
-        enableCivic: false
+        enableCivic: false,
+        enablePharmacoDB: true
     };
 
     render() {
@@ -106,6 +110,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 civicGenes: this.props.cnaCivicGenes,
                 civicVariants: this.props.cnaCivicVariants,
                 enableCivic: this.props.enableCivic as boolean,
+                cnaPharmacoDBViewListDW: this.props.cnaPharmacoDBViewListDW,
+                enablePharmacoDB: this.props.enablePharmacoDB as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false,
                 userEmailAddress: this.props.userEmailAddress,
@@ -113,7 +119,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
+                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaPharmacoDBViewListDW);
             },
             order: 50
         });

@@ -16,12 +16,16 @@ import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUti
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
+import { IPharmacoDBCnaEntry, IPharmacoDBView, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
+import PharmacoDB from 'shared/components/annotation/PharmacoDB';
+
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
     enableMyCancerGenome: boolean;
     enableHotspot: boolean;
     enableCivic: boolean;
+    enablePharmacoDB?: boolean;
     hotspotData?: IHotspotDataWrapper;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
@@ -31,6 +35,7 @@ export interface IAnnotationColumnProps {
     userEmailAddress?:string;
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
+    cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
     studyIdToStudy?: {[studyId:string]:CancerStudy};
 }
 
@@ -45,6 +50,8 @@ export interface IAnnotation {
     civicEntry?: ICivicEntry | null;
     civicStatus: "pending" | "error" | "complete";
     hasCivicVariants: boolean;
+    pharmacoDBView?: IPharmacoDBView| null;
+    pharmacoDBStatus: "pending" | "error" | "complete";
     hugoGeneSymbol:string;
 }
 
@@ -63,6 +70,7 @@ export default class AnnotationColumnFormatter
             is3dHotspot: false,
             hotspotStatus: "complete",
             hasCivicVariants: true,
+            pharmacoDBStatus: "complete",
             hugoGeneSymbol: '',
             civicStatus: "complete"
         };
@@ -331,6 +339,12 @@ export default class AnnotationColumnFormatter
                         civicEntry={annotation.civicEntry}
                         civicStatus={annotation.civicStatus}
                         hasCivicVariants={annotation.hasCivicVariants}
+                    />
+                </If>
+                <If condition={columnProps.enablePharmacoDB || false}>
+                    <PharmacoDB
+                        pharmacoDBEntry={annotation.pharmacoDBView}
+                        pharmacoDBStatus={annotation.pharmacoDBStatus}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>

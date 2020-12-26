@@ -8,6 +8,7 @@ export interface IPharmacoDBGeneDrugAssociationData {
 
 export interface IPharmacoDBCnaRequest
 {
+    oncotreecode: string,
     gene: string;
     cna: string;
 }

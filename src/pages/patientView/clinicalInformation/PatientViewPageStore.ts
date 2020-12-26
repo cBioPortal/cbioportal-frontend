@@ -27,6 +27,7 @@ import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {IPharmacoDBViewList} from "shared/model/PharmacoDB";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
@@ -40,6 +41,7 @@ import {
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
+    fetchPharmacoDbCnaView,generateUniqueSampleKeyToOncoTreeCodeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
 } from "shared/lib/StoreUtils";
@@ -632,6 +634,17 @@ export class PatientViewPageStore {
         }
     }, ONCOKB_DEFAULT);
 
+    readonly cnaPharmacoDBViewList = remoteData<IPharmacoDBViewList | undefined>({
+        await: () => [
+            this.discreteCNAData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => AppConfig.serverConfig.show_pharmacodb ? fetchPharmacoDbCnaView(this.uniqueSampleKeyToOncoTreeCode,this.discreteCNAData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, undefined);
+
     readonly cnaCivicGenes = remoteData<ICivicGene | undefined>({
         await: () => [
             this.discreteCNAData,
@@ -693,6 +706,10 @@ export class PatientViewPageStore {
         return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.samplesWithoutCancerTypeClinicalData);
+    }
+
+    @computed get uniqueSampleKeyToOncoTreeCode(): {[sampleId: string]: string} {
+        return generateUniqueSampleKeyToOncoTreeCodeMap(this.clinicalDataForSamples);
     }
 
     @action("SetSampleId") setSampleId(newId: string) {
