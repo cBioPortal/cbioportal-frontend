@@ -2851,10 +2851,8 @@ export function geneFilterQueryFromOql(
     };
 }
 
-export function alterationMenuHeader(
-    showDriverAnnotationMenuSection: boolean
-): JSX.Element {
-    if (showDriverAnnotationMenuSection) {
+export function alterationMenuHeader(inlcudeCnaTable: boolean): JSX.Element {
+    if (inlcudeCnaTable) {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select alteration types included in the tables of{' '}
