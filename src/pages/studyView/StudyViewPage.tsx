@@ -763,11 +763,17 @@ export default class StudyViewPage extends React.Component<
                                                         store={this.store}
                                                         infoElement={alterationMenuHeader(
                                                             this.store
-                                                                .showDriverAnnotationMenuSection
+                                                                .showDriverAnnotationMenuSection ||
+                                                                this.store
+                                                                    .showTierAnnotationMenuSection
                                                         )}
                                                         showDriverAnnotationSection={
                                                             this.store
                                                                 .showDriverAnnotationMenuSection
+                                                        }
+                                                        showTierAnnotationSection={
+                                                            this.store
+                                                                .showTierAnnotationMenuSection
                                                         }
                                                     />
                                                 }

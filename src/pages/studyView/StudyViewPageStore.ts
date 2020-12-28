@@ -30,7 +30,6 @@ import {
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
-    Gene,
     GeneFilter,
     GenePanel,
     GenomicDataBin,
@@ -214,7 +213,6 @@ import {
 } from 'shared/driverAnnotation/DriverAnnotationSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
 import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import * as React from 'react';
 
 export type ChartUserSetting = {
     id: string;
@@ -7228,8 +7226,18 @@ export class StudyViewPageStore
     @computed get showDriverAnnotationMenuSection() {
         return (
             this.customDriverAnnotationReport.isComplete &&
-            this.customDriverAnnotationReport.result!
-                .hasCustomDriverAnnotations &&
+            this.customDriverAnnotationReport.result!.hasBinary &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get showTierAnnotationMenuSection() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.tiers.length > 0 &&
             (window as any).frontendConfig.serverConfig
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
             (window as any).frontendConfig.serverConfig

@@ -37,6 +37,7 @@ import {
     IReactionDisposer,
     observable,
     reaction,
+    toJS,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -61,7 +62,10 @@ import {
     getClinicalDataOfPatientSurvivalStatus,
     getPatientSurvivals,
 } from 'pages/resultsView/SurvivalStoreHelper';
-import { getPatientIdentifiers } from 'pages/studyView/StudyViewUtils';
+import {
+    buildSelectedTiersMap,
+    getPatientIdentifiers,
+} from 'pages/studyView/StudyViewUtils';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -1223,7 +1227,7 @@ export default abstract class ComparisonStore
                     const includeVUS = this.driverAnnotationSettings.includeVUS;
                     const includeUnknownOncogenicity = this
                         .driverAnnotationSettings.includeUnknownOncogenicity;
-                    const selectedTiers = this.selectedTiers;
+                    const selectedTiers = this.selectedTiersMap;
                     const includeUnknownTier = this.driverAnnotationSettings
                         .includeUnknownTier;
                     const includeGermline = this.includeGermlineMutations;
@@ -2342,8 +2346,18 @@ export default abstract class ComparisonStore
     @computed get showDriverAnnotationMenuSection() {
         return (
             this.customDriverAnnotationReport.isComplete &&
-            this.customDriverAnnotationReport.result!
-                .hasCustomDriverAnnotations &&
+            this.customDriverAnnotationReport.result!.hasBinary &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            (window as any).frontendConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get showTierAnnotationMenuSection() {
+        return (
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.tiers.length > 0 &&
             (window as any).frontendConfig.serverConfig
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
             (window as any).frontendConfig.serverConfig
@@ -2361,6 +2375,13 @@ export default abstract class ComparisonStore
         return this.customDriverAnnotationReport.isComplete
             ? this.customDriverAnnotationReport.result!.tiers
             : [];
+    }
+
+    @computed get selectedTiersMap() {
+        return buildSelectedTiersMap(
+            this.selectedTiers || [],
+            this.customDriverAnnotationReport.result!.tiers
+        );
     }
 
     @computed get hasMutationEnrichmentData(): boolean {

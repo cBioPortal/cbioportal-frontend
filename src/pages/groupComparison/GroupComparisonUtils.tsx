@@ -909,8 +909,7 @@ export function getGroupsDownloadData(
 export function buildFilterMenu(
     store: ComparisonStore,
     handlers: IAlterationEnrichmentTypeSelectorHandlers,
-    headerElement?: JSX.Element,
-    showDriverAnnotationMenuSection?: boolean
+    headerElement?: JSX.Element
 ): JSX.Element {
     return (window as any).frontendConfig.serverConfig
         .skin_show_settings_menu ? (
@@ -921,11 +920,11 @@ export function buildFilterMenu(
                 overlay={
                     <AlterationEnrichmentTypeSelector
                         classNames={styles.buttonAlterationTypeSelectorMenu}
-                        store={this.store}
+                        store={store}
                         handlers={handlers}
-                        showMutations={this.store.hasMutationEnrichmentData}
-                        showCnas={this.store.hasCnaEnrichmentData}
-                        showFusions={this.store.hasMutationEnrichmentData}
+                        showMutations={store.hasMutationEnrichmentData}
+                        showCnas={store.hasCnaEnrichmentData}
+                        showFusions={store.hasMutationEnrichmentData}
                     />
                 }
             >
@@ -945,7 +944,10 @@ export function buildFilterMenu(
                         store={store}
                         infoElement={headerElement}
                         showDriverAnnotationSection={
-                            showDriverAnnotationMenuSection
+                            store.showDriverAnnotationMenuSection
+                        }
+                        showTierAnnotationSection={
+                            store.showTierAnnotationMenuSection
                         }
                     />
                 }
@@ -965,11 +967,11 @@ export function buildFilterMenu(
     ) : (
         <AlterationEnrichmentTypeSelector
             classNames={styles.inlineAlterationTypeSelectorMenu}
-            store={this.store}
+            store={store}
             handlers={handlers}
-            showMutations={this.store.hasMutationEnrichmentData}
-            showCnas={this.store.hasCnaEnrichmentData}
-            showFusions={this.store.hasMutationEnrichmentData}
+            showMutations={store.hasMutationEnrichmentData}
+            showCnas={store.hasCnaEnrichmentData}
+            showFusions={store.hasMutationEnrichmentData}
         />
     );
 }

@@ -48,6 +48,7 @@ export interface IAlterationFilterSettings {
     infoElement?: JSX.Element | undefined;
     disabled?: boolean;
     showDriverAnnotationSection?: boolean;
+    showTierAnnotationSection?: boolean;
 }
 
 @observer
@@ -400,68 +401,66 @@ export default class SettingsMenu extends React.Component<
                         </div>
                     </div>
                 )}
-                {this.props.showDriverAnnotationSection &&
-                    this.driverSettingsState.customDriverAnnotationTiers && (
-                        <div>
-                            <div className={styles.headerSection}>
-                                <input
-                                    className={styles.categoryCheckbox}
-                                    data-test="ToggleAllDriverTiers"
-                                    type="checkbox"
-                                    value={EVENT_KEY.toggleAllDriverTiers}
-                                    checked={this.selectedAllTierOptions}
-                                    onClick={this.onInputClick}
-                                />
-                                By category
-                                <InfoIcon
-                                    divStyle={{
-                                        display: 'inline-block',
-                                        marginLeft: 6,
-                                    }}
-                                    style={{ color: 'rgb(54, 134, 194)' }}
-                                    tooltip={
-                                        <span>
-                                            Alteration categories are based on
-                                            <b>
-                                                {' ' +
-                                                    getBrowserWindow()
-                                                        .frontendConfig
-                                                        .serverConfig
-                                                        .oncoprint_custom_driver_annotation_binary_menu_label +
-                                                    ' '}
-                                            </b>
-                                            tier annotations.
-                                        </span>
-                                    }
-                                />
-                            </div>
-                            <div style={{ marginLeft: 20 }}>
-                                <DriverAnnotationControls
-                                    state={this.driverSettingsState}
-                                    handlers={this.driverSettingsHandlers}
-                                />
-                                <div
-                                    className="checkbox"
-                                    style={{ marginTop: '-5px' }}
-                                >
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.showUnknownTier}
-                                            data-test="ShowUnknownTier"
-                                            checked={
-                                                this.props.store
-                                                    .driverAnnotationSettings
-                                                    .includeUnknownTier
-                                            }
-                                            onClick={this.onInputClick}
-                                        />{' '}
-                                        Unknown
-                                    </label>
-                                </div>
+                {this.props.showTierAnnotationSection && (
+                    <div>
+                        <div className={styles.headerSection}>
+                            <input
+                                className={styles.categoryCheckbox}
+                                data-test="ToggleAllDriverTiers"
+                                type="checkbox"
+                                value={EVENT_KEY.toggleAllDriverTiers}
+                                checked={this.selectedAllTierOptions}
+                                onClick={this.onInputClick}
+                            />
+                            By category
+                            <InfoIcon
+                                divStyle={{
+                                    display: 'inline-block',
+                                    marginLeft: 6,
+                                }}
+                                style={{ color: 'rgb(54, 134, 194)' }}
+                                tooltip={
+                                    <span>
+                                        Alteration categories are based on
+                                        <b>
+                                            {' ' +
+                                                getBrowserWindow()
+                                                    .frontendConfig.serverConfig
+                                                    .oncoprint_custom_driver_annotation_binary_menu_label +
+                                                ' '}
+                                        </b>
+                                        tier annotations.
+                                    </span>
+                                }
+                            />
+                        </div>
+                        <div style={{ marginLeft: 20 }}>
+                            <DriverAnnotationControls
+                                state={this.driverSettingsState}
+                                handlers={this.driverSettingsHandlers}
+                            />
+                            <div
+                                className="checkbox"
+                                style={{ marginTop: '-5px' }}
+                            >
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        value={EVENT_KEY.showUnknownTier}
+                                        data-test="ShowUnknownTier"
+                                        checked={
+                                            this.props.store
+                                                .driverAnnotationSettings
+                                                .includeUnknownTier
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Unknown
+                                </label>
                             </div>
                         </div>
-                    )}
+                    </div>
+                )}
             </div>
         );
     }
