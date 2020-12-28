@@ -74,7 +74,6 @@ describe('ResultsViewPageStoreUtils', () => {
             assert.deepEqual(computeCustomDriverAnnotationReport([]), {
                 hasBinary: false,
                 tiers: [],
-                hasCustomDriverAnnotations: false,
             });
         });
         it('returns the right report for no annotations, one element', () => {
@@ -83,7 +82,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: false,
                     tiers: [],
-                    hasCustomDriverAnnotations: false,
                 }
             );
         });
@@ -97,14 +95,13 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: false,
                     tiers: [],
-                    hasCustomDriverAnnotations: false,
                 }
             );
         });
         it('returns the right report for just binary annotations, one element', () => {
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([driverFilterMutation]),
-                { hasBinary: true, tiers: [], hasCustomDriverAnnotations: true }
+                { hasBinary: true, tiers: [] }
             );
         });
         it('returns the right report for just binary annotations, three elements', () => {
@@ -114,7 +111,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     driverFilterMutation,
                     driverFilterMutation,
                 ]),
-                { hasBinary: true, tiers: [], hasCustomDriverAnnotations: true }
+                { hasBinary: true, tiers: [] }
             );
         });
         it('returns the right report for just tiers annotations, one element', () => {
@@ -125,7 +122,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: false,
                     tiers: ['T'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });
@@ -139,7 +135,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: false,
                     tiers: ['T'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });
@@ -149,7 +144,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: true,
                     tiers: ['SDPOIFJP'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });
@@ -163,7 +157,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: true,
                     tiers: ['SDPOIFJP'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });
@@ -176,7 +169,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: true,
                     tiers: ['T'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });
@@ -190,7 +182,6 @@ describe('ResultsViewPageStoreUtils', () => {
                 {
                     hasBinary: true,
                     tiers: ['T'],
-                    hasCustomDriverAnnotations: true,
                 }
             );
         });

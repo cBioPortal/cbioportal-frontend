@@ -81,8 +81,6 @@ export function computeCustomDriverAnnotationReport(
     return {
         hasBinary,
         tiers: Object.keys(tiersMap),
-        hasCustomDriverAnnotations:
-            hasBinary || Object.keys(tiersMap).length > 0,
     };
 }
 

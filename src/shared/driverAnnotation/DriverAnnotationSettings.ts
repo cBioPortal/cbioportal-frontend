@@ -73,7 +73,6 @@ export interface IDriverAnnotationControlsHandlers {
 export interface IDriverAnnotationReport {
     hasBinary: boolean;
     tiers: string[];
-    hasCustomDriverAnnotations: boolean;
 }
 
 export function buildDriverAnnotationSettings(
