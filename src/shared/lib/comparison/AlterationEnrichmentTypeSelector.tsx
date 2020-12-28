@@ -291,15 +291,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     render() {
         return (
-            <div
-                style={{
-                    position: 'absolute',
-                    zIndex: 2,
-                    background: '#eee',
-                    borderRadius: '4px',
-                    padding: '10px',
-                }}
-            >
+            <div className={this.props.classNames}>
                 <h5>Select Alteration Types</h5>
 
                 {this.props.showMutations && (
