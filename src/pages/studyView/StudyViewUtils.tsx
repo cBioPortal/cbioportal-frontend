@@ -2855,15 +2855,17 @@ export function alterationMenuHeader(inlcudeCnaTable: boolean): JSX.Element {
     if (inlcudeCnaTable) {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select alteration types included in the tables of{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>.
+                Select the types of alterations to count in the{' '}
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
+                tables.
             </span>
         );
     } else {
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-                Select alteration types included in the tables of{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>.
+                Select the types of alterations to count in the{' '}
+                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
+                tables.
             </span>
         );
     }

@@ -237,7 +237,7 @@ export default class SettingsMenu extends React.Component<
                 )}
                 style={{ padding: 5 }}
             >
-                {this.props.infoElement && this.props.infoElement}
+                {!!this.props.infoElement && this.props.infoElement}
                 <div className={styles.headerSection}>
                     <input
                         className={styles.categoryCheckbox}
@@ -247,11 +247,19 @@ export default class SettingsMenu extends React.Component<
                         checked={this.selectedAllMutationStatusOptions}
                         onClick={this.onInputClick}
                     />
-                    By mutation status (mutations only)
+                    Germline/Somatic status (mutations only)
                     <InfoIcon
                         divStyle={{ display: 'inline-block', marginLeft: 6 }}
                         style={{ color: 'rgb(54, 134, 194)' }}
-                        tooltip={<span>PLACEHOLDER</span>}
+                        tooltip={
+                            <span>
+                                Germline/somatic annotations are based on data
+                                provided during study load.
+                                <br />
+                                For most studies <i>Unknown</i> status refers to
+                                somatic mutations.
+                            </span>
+                        }
                     />
                 </div>
                 <div style={{ marginLeft: 20 }}>
@@ -312,7 +320,7 @@ export default class SettingsMenu extends React.Component<
                                 }
                                 onClick={this.onInputClick}
                             />
-                            By driver annotation
+                            Driver Annotation
                             <InfoIcon
                                 divStyle={{
                                     display: 'inline-block',
@@ -412,7 +420,7 @@ export default class SettingsMenu extends React.Component<
                                 checked={this.selectedAllTierOptions}
                                 onClick={this.onInputClick}
                             />
-                            By category
+                            Categorical Annotation
                             <InfoIcon
                                 divStyle={{
                                     display: 'inline-block',

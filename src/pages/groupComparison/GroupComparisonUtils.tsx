@@ -942,7 +942,13 @@ export function buildFilterMenu(
                 overlay={
                     <SettingsMenu
                         store={store}
-                        infoElement={headerElement}
+                        infoElement={alterationMenuHeader(
+                            store.hasMutationEnrichmentData,
+                            store.hasFusionEnrichmentData,
+                            store.hasCnaEnrichmentData,
+                            store.showDriverAnnotationMenuSection,
+                            store.showTierAnnotationMenuSection
+                        )}
                         showDriverAnnotationSection={
                             store.showDriverAnnotationMenuSection
                         }
@@ -976,8 +982,28 @@ export function buildFilterMenu(
     );
 }
 
-export const alterationMenuHeader: JSX.Element = (
-    <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
-        Select alteration types included in the over-representation analysis.
-    </span>
-);
+export function alterationMenuHeader(
+    studyHasMutations: boolean,
+    studyHasFusions: boolean,
+    studyHasCnas: boolean,
+    showDriverSection: boolean,
+    showTiersSection: boolean
+): JSX.Element {
+    const sections = [];
+    studyHasMutations && sections.push('mutations');
+    studyHasFusions &&
+        (showDriverSection || showTiersSection) &&
+        sections.push('fusions');
+    studyHasCnas &&
+        (showDriverSection || showTiersSection) &&
+        sections.push('copy number alterations');
+    let text = sections.join(' and ');
+    if (sections.length === 3)
+        text = sections[0] + ', ' + sections[1] + ' and ' + sections[2];
+    return (
+        <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+            Select filters for {text} included in the over-representation
+            analysis.
+        </span>
+    );
+}

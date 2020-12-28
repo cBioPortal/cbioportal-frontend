@@ -38,7 +38,10 @@ import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/P
 import AlterationsEnrichments from './AlterationsEnrichments';
 import { IAlterationEnrichmentTypeSelectorHandlers } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonTabUtils';
-import { buildFilterMenu } from 'pages/groupComparison/GroupComparisonUtils';
+import {
+    alterationMenuHeader,
+    buildFilterMenu,
+} from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -180,7 +183,14 @@ export default class GroupComparisonPage extends React.Component<
                         >
                             {buildFilterMenu(
                                 this.store,
-                                this.alterationEnrichmentTypeSelectorHandlers
+                                this.alterationEnrichmentTypeSelectorHandlers,
+                                alterationMenuHeader(
+                                    this.store.hasMutationEnrichmentData,
+                                    this.store.hasFusionEnrichmentData,
+                                    this.store.hasCnaEnrichmentData,
+                                    this.store.showDriverAnnotationMenuSection,
+                                    this.store.showTierAnnotationMenuSection
+                                )
                             )}
                             <AlterationsEnrichments store={this.store} />
                         </MSKTab>
