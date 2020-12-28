@@ -198,8 +198,7 @@ export default class ComparisonTab extends React.Component<
                             {buildFilterMenu(
                                 this.store,
                                 this.alterationEnrichmentTypeSelectorHandlers,
-                                alterationMenuHeader,
-                                this.store.showDriverAnnotationMenuSection
+                                alterationMenuHeader
                             )}
                             <AlterationsEnrichments
                                 store={this.store}

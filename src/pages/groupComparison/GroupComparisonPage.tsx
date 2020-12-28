@@ -36,13 +36,9 @@ import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationsEnrichments from './AlterationsEnrichments';
-import AlterationEnrichmentTypeSelector, {
-    IAlterationEnrichmentTypeSelectorHandlers,
-} from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import { getButtonNameWithDownPointer } from 'pages/studyView/StudyViewUtils';
-import SettingsMenu from 'shared/components/settings/SettingsMenu';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { IAlterationEnrichmentTypeSelectorHandlers } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonTabUtils';
+import { buildFilterMenu } from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -123,81 +119,6 @@ export default class GroupComparisonPage extends React.Component<
         this.urlWrapper.destroy();
     }
 
-    private buildAlterationsTab = () => {
-        const menuLayout = (window as any).frontendConfig.serverConfig
-            .skin_show_settings_menu ? (
-            <div>
-                <DefaultTooltip
-                    trigger={['click']}
-                    placement={'bottomRight'}
-                    overlay={
-                        <AlterationEnrichmentTypeSelector
-                            store={this.store}
-                            handlers={
-                                this.alterationEnrichmentTypeSelectorHandlers!
-                            }
-                            showMutations={this.store.hasMutationEnrichmentData}
-                            showCnas={this.store.hasCnaEnrichmentData}
-                            showFusions={this.store.hasMutationEnrichmentData}
-                        />
-                    }
-                >
-                    <button
-                        data-test="AlterationEnrichmentTypeSelectorButton"
-                        className="btn btn-primary btn-sm"
-                        style={{ marginBottom: '10px' }}
-                    >
-                        {getButtonNameWithDownPointer('Alteration Types')}
-                    </button>
-                </DefaultTooltip>
-                <DefaultTooltip
-                    trigger={['click']}
-                    placement={'bottomRight'}
-                    overlay={
-                        <SettingsMenu
-                            store={this.store}
-                            disabled={!this.store.hasCustomDriverAnnotations}
-                        />
-                    }
-                >
-                    <button
-                        data-test="AlterationEnrichmentTypeSelectorButton"
-                        style={{
-                            marginLeft: '10px',
-                            marginBottom: '10px',
-                        }}
-                        className="btn btn-primary btn-sm"
-                    >
-                        {getButtonNameWithDownPointer('Annotations')}
-                    </button>
-                </DefaultTooltip>
-                <AlterationsEnrichments store={this.store} />
-            </div>
-        ) : (
-            <div>
-                <AlterationEnrichmentTypeSelector
-                    store={this.store}
-                    handlers={this.alterationEnrichmentTypeSelectorHandlers!}
-                    showMutations={this.store.hasMutationEnrichmentData}
-                    showCnas={this.store.hasCnaEnrichmentData}
-                    showFusions={this.store.hasMutationEnrichmentData}
-                />
-                <AlterationsEnrichments store={this.store} />
-            </div>
-        );
-        return (
-            <MSKTab
-                id={GroupComparisonTab.ALTERATIONS}
-                linkText={this.alterationEnrichmentTabName}
-                anchorClassName={
-                    this.store.alterationsTabUnavailable ? 'greyedOut' : ''
-                }
-            >
-                {menuLayout}
-            </MSKTab>
-        );
-    };
-
     readonly tabs = MakeMobxView({
         await: () => [
             this.store._activeGroupsNotOverlapRemoved,
@@ -247,8 +168,23 @@ export default class GroupComparisonPage extends React.Component<
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
-                    {this.store.showAlterationsTab &&
-                        this.buildAlterationsTab()}
+                    {this.store.showAlterationsTab && (
+                        <MSKTab
+                            id={GroupComparisonTab.ALTERATIONS}
+                            linkText={this.alterationEnrichmentTabName}
+                            anchorClassName={
+                                this.store.alterationsTabUnavailable
+                                    ? 'greyedOut'
+                                    : ''
+                            }
+                        >
+                            {buildFilterMenu(
+                                this.store,
+                                this.alterationEnrichmentTypeSelectorHandlers
+                            )}
+                            <AlterationsEnrichments store={this.store} />
+                        </MSKTab>
+                    )}
                     {this.store.showMRNATab && (
                         <MSKTab
                             id={GroupComparisonTab.MRNA}
