@@ -415,6 +415,9 @@ export default class AlterationEnrichmentContainer extends React.Component<
             );
         }
 
+        const useInlineTypeSelectorMenu = !(window as any).frontendConfig
+            .serverConfig.skin_show_settings_menu;
+
         return (
             <div className={styles.Container}>
                 <div
@@ -433,9 +436,13 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 : 'auto',
                     }}
                 >
-                    <div
-                        className={styles.inlineAlterationTypeSelectorMenuDash}
-                    />
+                    {useInlineTypeSelectorMenu && (
+                        <div
+                            className={
+                                styles.inlineAlterationTypeSelectorMenuDash
+                            }
+                        />
+                    )}
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(
