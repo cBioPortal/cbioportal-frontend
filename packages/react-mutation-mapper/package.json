@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.6.26",
+  "version": "0.6.27",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -40,8 +40,8 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.3.21",
-    "cbioportal-utils": "^0.2.18",
+    "cbioportal-frontend-commons": "^0.3.22",
+    "cbioportal-utils": "^0.2.19",
     "classnames": "^2.2.5",
     "genome-nexus-ts-api-client": "^1.1.12",
     "jquery": "^3.2.1",
