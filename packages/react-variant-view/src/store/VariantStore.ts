@@ -27,12 +27,14 @@ export class VariantStore {
 
     @observable public variant: string = '';
     @observable public selectedTranscript: string = '';
+    @observable public isoformOverrideSource: string = 'mskcc';
 
     public readonly annotation = remoteData<VariantAnnotation>({
         invoke: async () => {
             return await this.genomeNexusClient.fetchVariantAnnotationGET({
                 variant: this.variant,
                 fields: ANNOTATION_QUERY_FIELDS,
+                isoformOverrideSource: this.isoformOverrideSource,
             });
         },
         onError: (err: Error) => {},

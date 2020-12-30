@@ -31,6 +31,7 @@ interface IHeaderAnnotationProps {
     isCanonicalTranscriptSelected?: boolean | undefined;
     allValidTranscripts: string[];
     onTranscriptSelect(transcriptId: string): void;
+    isoformOverrideSource?: string;
 }
 
 interface IMutationTypeFormat {
@@ -132,6 +133,9 @@ export default class HeaderAnnotation extends React.Component<
         makeObservable(this);
     }
     @observable private showAllTranscripts = false;
+    static readonly defaultProps = {
+        isoformOverrideSource: 'mskcc',
+    };
 
     public render() {
         const haveTranscriptTable = this.haveTranscriptTable(
@@ -367,7 +371,9 @@ export default class HeaderAnnotation extends React.Component<
                 <a
                     href={`https://www.genomenexus.org/annotation/${
                         this.props.variant
-                    }?fields=${ANNOTATION_QUERY_FIELDS.join(',')}`}
+                    }?isoformOverrideSource=${
+                        this.props.isoformOverrideSource
+                    }&fields=${ANNOTATION_QUERY_FIELDS.join(',')}`}
                     target="_blank"
                     style={{ paddingLeft: '8px', paddingRight: '8px' }}
                 >
