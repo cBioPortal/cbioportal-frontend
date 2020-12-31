@@ -31,6 +31,18 @@ export function restoreRouteAfterRedirect(injected: {
     return null;
 }
 
+export function correctBasePath(injected: { routing: ExtendedRouterStore }) {
+    if (AppConfig.basePath) {
+        injected.routing.updateRoute(
+            {},
+            window.location.pathname.replace(AppConfig.basePath, ''),
+            false,
+            true
+        );
+    }
+    return null;
+}
+
 // harvest query data written to the page by JSP (or assigned by parent window) to support queries originating
 // from external posts
 export function handlePostedSubmission(urlWrapper: ResultsViewURLWrapper) {
