@@ -484,6 +484,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
                                             cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
                                             cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                                            uniqueSampleKeyToOncoTreeCode={patientViewPageStore.uniqueSampleKeyToOncoTreeCode}
                                             cnaPharmacoDBViewListDW={patientViewPageStore.cnaPharmacoDBViewList}
                                             oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                             oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}

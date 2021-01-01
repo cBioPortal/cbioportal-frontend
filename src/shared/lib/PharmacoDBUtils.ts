@@ -50,7 +50,8 @@ export function getPharmacoDBCnaView(cnareqlist: Array<IPharmacoDBCnaRequest>): 
         for (let res in responses) {
             let arrayPharmacoDBViews: Array<IPharmacoDBView> = responses[res];
             arrayPharmacoDBViews.forEach((pharmacoDBView) => {
-                pharmacoDBviewlist[pharmacoDBView.gene] = pharmacoDBView;
+                let key:string = pharmacoDBView.gene + pharmacoDBView.onco_tree_code + pharmacoDBView.status;
+                pharmacoDBviewlist[key] = pharmacoDBView;
             });
         }
     }).then(function() {

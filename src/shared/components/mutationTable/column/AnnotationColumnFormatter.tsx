@@ -35,6 +35,7 @@ export interface IAnnotationColumnProps {
     userEmailAddress?:string;
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
+    uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string};
     cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
     studyIdToStudy?: {[studyId:string]:CancerStudy};
 }

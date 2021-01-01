@@ -11,7 +11,7 @@ export default class PharmacoDBAPI {
         return request.get('https://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({cna: cna})
-        .query({requestData: 'false'})
+        .query({retrieveData: 'false'})
                .then((res) => {
                    let result = res.body;
                    return result;
@@ -22,7 +22,7 @@ export default class PharmacoDBAPI {
         return request.get('https://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({cna: cna})
-        .query({requestData: 'true'})
+        .query({retrieveData: 'true'})
                       .then((res) => {
                    let result = res.body;
                    return result;
@@ -36,7 +36,7 @@ export default class PharmacoDBAPI {
         return request.get('https://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({direction: direction})
-        .query({requestData: 'false'})
+        .query({retrieveData: 'false'})
                .then((res) => {
                    let result = res.body;
                    return result;
@@ -50,7 +50,7 @@ export default class PharmacoDBAPI {
         return request.get('https://cbioapi.pharmacodb.ca/v1/genes/mrna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({direction: direction})
-        .query({requestData: 'true'})
+        .query({retrieveData: 'true'})
                .then((res) => {
                    let result = res.body;
                    return result;

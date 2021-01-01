@@ -708,7 +708,7 @@ export class PatientViewPageStore {
             this.samplesWithoutCancerTypeClinicalData);
     }
 
-    @computed get uniqueSampleKeyToOncoTreeCode(): {[sampleId: string]: string} {
+    @computed get uniqueSampleKeyToOncoTreeCode(): {[uniqueSampleKey: string]: string} {
         return generateUniqueSampleKeyToOncoTreeCodeMap(this.clinicalDataForSamples);
     }
 

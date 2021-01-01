@@ -25,6 +25,7 @@ export default class AnnotationColumnFormatter
                           oncoKbData?: IOncoKbDataWrapper,
                           civicGenes?: ICivicGeneDataWrapper,
                           civicVariants?: ICivicVariantDataWrapper,
+                          uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string},
                           cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper,
                           studyIdToStudy?: {[studyId:string]:CancerStudy})
     {
@@ -66,8 +67,8 @@ export default class AnnotationColumnFormatter
                         AnnotationColumnFormatter.getCivicStatus(civicGenes.status, civicVariants.status) : "pending",
                 hasCivicVariants: civicGenes && civicGenes.result && civicVariants && civicVariants.result ?
                     AnnotationColumnFormatter.hasCivicVariants(copyNumberData, civicGenes.result, civicVariants.result) : true,
-                pharmacoDBView: cnaPharmacoDBViewListDW && cnaPharmacoDBViewListDW.result ? 
-                    AnnotationColumnFormatter.getPharamacoDBView(copyNumberData, cnaPharmacoDBViewListDW.result) : undefined,
+                pharmacoDBView: cnaPharmacoDBViewListDW && cnaPharmacoDBViewListDW.result && uniqueSampleKeyToOncoTreeCode ? 
+                    AnnotationColumnFormatter.getPharamacoDBView(copyNumberData, uniqueSampleKeyToOncoTreeCode, cnaPharmacoDBViewListDW.result) : undefined,
                 pharmacoDBStatus: cnaPharmacoDBViewListDW && cnaPharmacoDBViewListDW.status ? cnaPharmacoDBViewListDW.status : "pending",
                 myCancerGenomeLinks: [],
                 hotspotStatus: "complete",
@@ -87,14 +88,41 @@ export default class AnnotationColumnFormatter
     * Otherwise it returns an empty object.
     * Todo: Need to match against all 3 parameters
     */
-    public static getPharamacoDBView(copyNumberData:DiscreteCopyNumberData[], cnaPharmacoDBViewListDW : IPharmacoDBViewList): IPharmacoDBView | null 
+    public static getPharamacoDBView(copyNumberData:DiscreteCopyNumberData[], 
+        uniqueSampleKeyToOncoTreeCode:{[uniqueSampleKey: string]: string},
+        cnaPharmacoDBViewListDW : IPharmacoDBViewList): IPharmacoDBView | null
     {
         
         let pharmacoDBView = null;
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
-        if (cnaPharmacoDBViewListDW[geneSymbol])
+        let alteration:number = copyNumberData[0].alteration;
+        let status:string = '';
+        if(alteration != 0) {
+            switch (alteration) {
+                case -2:
+                    status ='DEEPDEL';
+                break;
+                case -1:
+                    status ='SHALLOWDEL';
+                break;
+                case 1:
+                    status ='GAIN';
+                break;
+                case 2:
+                    status ='AMP';
+                break;
+                default:
+                    status='';
+                break;
+            } 
+        }
+        let otc:string = '';
+        if(uniqueSampleKeyToOncoTreeCode && uniqueSampleKeyToOncoTreeCode[copyNumberData[0].uniqueSampleKey])
+            otc = uniqueSampleKeyToOncoTreeCode[copyNumberData[0].uniqueSampleKey];
+        let key:string = geneSymbol + otc + status;
+        if (cnaPharmacoDBViewListDW && cnaPharmacoDBViewListDW[key])
         {
-            pharmacoDBView = cnaPharmacoDBViewListDW[geneSymbol];
+            pharmacoDBView = cnaPharmacoDBViewListDW[key] ;
         }
         return pharmacoDBView;
     }
@@ -177,8 +205,9 @@ export default class AnnotationColumnFormatter
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGeneDataWrapper,
                             civicVariants?: ICivicVariantDataWrapper,
+                            uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string},
                             cnaPharmacoDBViewListDW?:IPharmacoDBViewListDataWrapper):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbAnnotatedGenes, oncoKbData, civicGenes, civicVariants,cnaPharmacoDBViewListDW);
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbAnnotatedGenes, oncoKbData, civicGenes, civicVariants, uniqueSampleKeyToOncoTreeCode, cnaPharmacoDBViewListDW);
 
         return _.flatten([OncoKB.sortValue(annotationData.oncoKbIndicator),
                          Civic.sortValue(annotationData.civicEntry),
@@ -187,7 +216,7 @@ export default class AnnotationColumnFormatter
 
     public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbAnnotatedGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants, columnProps.cnaPharmacoDBViewListDW, columnProps.studyIdToStudy);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbAnnotatedGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants,  columnProps.uniqueSampleKeyToOncoTreeCode, columnProps.cnaPharmacoDBViewListDW, columnProps.studyIdToStudy);
 
         let evidenceQuery:Query|undefined;
 

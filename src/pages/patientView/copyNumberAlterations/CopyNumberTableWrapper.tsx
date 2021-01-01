@@ -33,6 +33,7 @@ type ICopyNumberTableWrapperProps = {
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
+    uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string};
     cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error;
@@ -110,6 +111,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 civicGenes: this.props.cnaCivicGenes,
                 civicVariants: this.props.cnaCivicVariants,
                 enableCivic: this.props.enableCivic as boolean,
+                uniqueSampleKeyToOncoTreeCode: this.props.uniqueSampleKeyToOncoTreeCode,
                 cnaPharmacoDBViewListDW: this.props.cnaPharmacoDBViewListDW,
                 enablePharmacoDB: this.props.enablePharmacoDB as boolean,
                 enableMyCancerGenome: false,
@@ -119,7 +121,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaPharmacoDBViewListDW);
+                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.uniqueSampleKeyToOncoTreeCode, this.props.cnaPharmacoDBViewListDW);
             },
             order: 50
         });

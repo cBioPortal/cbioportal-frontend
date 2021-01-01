@@ -825,7 +825,7 @@ export function findMrnaRankMolecularProfileId(molecularProfilesInStudy: MobxPro
 
 export function generateUniqueSampleKeyToOncoTreeCodeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>): {[sampleId: string]: string}
 {
-    const map: { [sampleId: string]: string } = {};
+    const map: { [uniqueSampleKey: string]: string } = {};
 
     if (clinicalDataForSamples.result) {
         //  only ONCOTREE_CODE in clinical data can be used for each sample

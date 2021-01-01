@@ -32,7 +32,9 @@ export interface IPharmacoDBCnaEntry {
 }
 
 export interface IPharmacoDBView {
+    onco_tree_code: string;
     gene: string;
+    status: string;
     dataAvailable: boolean;
 }
 
