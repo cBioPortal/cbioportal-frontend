@@ -1,7 +1,6 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?: string;
-    basePath?: string;
     configurationServiceUrl?: string;
     frontendUrl?: string;
     serverConfig: IServerConfig;
