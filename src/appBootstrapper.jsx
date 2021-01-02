@@ -98,10 +98,7 @@ _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
 
-const history = createBrowserHistory();
-/*useRouterHistory(createHistory)({
-    basename: AppConfig.basePath || '',
-});*/
+const history = createBrowserHistory({ basename: AppConfig.basePath || '' });
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
