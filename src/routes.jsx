@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Route, Redirect, Switch } from 'react-router-dom';
 import { inject } from 'mobx-react';
-import AppConfig from 'appConfig';
+import Container from 'appShell/App/Container';
 import {
     handleIndexDO,
     handleCaseDO,
@@ -10,7 +10,6 @@ import {
     handleLinkOut,
     handleEncodedRedirect,
     redirectTo,
-    correctBasePath as _correctBasePath,
 } from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -110,7 +109,6 @@ import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
-import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 
 function SuspenseWrapper(Component) {
     return props => (
@@ -228,8 +226,6 @@ var defaultRoute = window.defaultRoute || '/home';
 
 var restoreRoute = inject('routing')(restoreRouteAfterRedirect);
 
-var correctBasePath = inject('routing')(_correctBasePath);
-
 let getBlankPage = function(callback) {
     return props => {
         if (callback) {
@@ -271,16 +267,6 @@ export const makeRoutes = routing => {
             <Switch>
                 <Route exact path={'/'} component={ScrollToTop(Homepage)} />
                 <Route path="/restore" component={ScrollToTop(restoreRoute)} />
-
-                {['private.cbioportal.org', 'sclc.cbioportal.org'].includes(
-                    window.location.hostname
-                ) && (
-                    <Route
-                        path={`${AppConfig.basePath}`}
-                        component={correctBasePath}
-                    />
-                )}
-
                 <Route
                     path="/loading/comparison"
                     component={ScrollToTop(GroupComparisonLoading)}
