@@ -1087,14 +1087,6 @@ export class StudyViewPageStore {
                     const groups: SessionGroupData[] = _.chain(
                         clinicalAttributeValues
                     )
-                        .sortBy(attrVal => -attrVal.count)
-                        // do not slice for comparison on cancer studies chart
-                        .slice(
-                            0,
-                            doesChartHaveComparisonGroupsLimit(chartMeta)
-                                ? MAX_GROUPS_IN_SESSION
-                                : undefined
-                        )
                         .filter(attrVal => {
                             const lcValue = attrVal.value.toLowerCase();
                             const sampleIdentifiers =
@@ -1104,6 +1096,15 @@ export class StudyViewPageStore {
                                 sampleIdentifiers.length > 0
                             );
                         })
+                        .sortBy(attrVal => -attrVal.count)
+                        // slice max number of groups
+                        // do not slice for comparison on cancer studies chart
+                        .slice(
+                            0,
+                            doesChartHaveComparisonGroupsLimit(chartMeta)
+                                ? MAX_GROUPS_IN_SESSION
+                                : undefined
+                        )
                         .map(attrVal => {
                             const lcValue = attrVal.value.toLowerCase();
                             const sampleIdentifiers =
