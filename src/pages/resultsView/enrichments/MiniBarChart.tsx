@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import styles from './styles.module.scss';
 import {
     VictoryChart,
@@ -29,6 +29,11 @@ export default class MiniBarChart extends React.Component<
     IMiniBarChartProps,
     {}
 > {
+    constructor(props: IMiniBarChartProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable tooltipModel: any;
 
     public render() {

@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet';
 import { PageLayout } from '../../../../shared/components/PageLayout/PageLayout';
 import OncoprinterStore from './OncoprinterStore';
 import Oncoprinter from './Oncoprinter';
-import { action, observable, runInAction } from 'mobx';
+import { action, observable, runInAction, makeObservable } from 'mobx';
 import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
@@ -63,6 +63,11 @@ export default class OncoprinterTool extends React.Component<
     @observable geneOrderInput = '';
     @observable sampleOrderInput = '';
 
+    constructor(props: IOncoprinterToolProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     componentDidMount() {
         // Load posted data, if it exists
         const postData = getBrowserWindow().clientPostedData;
@@ -79,62 +84,62 @@ export default class OncoprinterTool extends React.Component<
         }
     }
 
-    @autobind
+    @action.bound
     private toggleHelpOpened() {
         this.helpOpened = !this.helpOpened;
     }
 
-    @autobind
+    @action.bound
     private populateGeneticExampleData() {
         this.geneticDataInput = exampleGeneticData;
     }
 
-    @autobind
+    @action.bound
     private populateClinicalExampleData() {
         this.clinicalDataInput = exampleClinicalData;
     }
 
-    @autobind
+    @action.bound
     private populateHeatmapExampleData() {
         this.heatmapDataInput = exampleHeatmapData;
     }
 
-    @autobind
+    @action.bound
     private onGeneticDataInputChange(e: any) {
         this.geneticDataInput = e.currentTarget.value;
     }
 
-    @autobind
+    @action.bound
     private onClinicalDataInputChange(e: any) {
         this.clinicalDataInput = e.currentTarget.value;
     }
 
-    @autobind
+    @action.bound
     private onHeatmapDataInputChange(e: any) {
         this.heatmapDataInput = e.currentTarget.value;
     }
 
-    @autobind
+    @action.bound
     private onGeneOrderInputChange(e: any) {
         this.geneOrderInput = e.currentTarget.value;
     }
 
-    @autobind
+    @action.bound
     private onSampleOrderInputChange(e: any) {
         this.sampleOrderInput = e.currentTarget.value;
     }
 
-    @autobind
+    @action.bound
     private toggleGeneticHelp() {
         this.geneticHelpOpened = !this.geneticHelpOpened;
     }
 
-    @autobind
+    @action.bound
     private toggleClinicalHelp() {
         this.clinicalHelpOpened = !this.clinicalHelpOpened;
     }
 
-    @autobind
+    @action.bound
     private toggleHeatmapHelp() {
         this.heatmapHelpOpened = !this.heatmapHelpOpened;
     }
@@ -193,8 +198,7 @@ export default class OncoprinterTool extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private async onClickSubmit() {
         const geneticData = await this.getGeneticDataForSubmission();
         const clinicalData = await this.getClinicalDataForSubmission();

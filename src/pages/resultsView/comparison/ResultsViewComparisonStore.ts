@@ -1,4 +1,5 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
+import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../../shared/lib/comparison/ComparisonStore';
@@ -25,6 +26,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         protected resultsViewStore: ResultsViewPageStore
     ) {
         super(appStore, resultsViewStore);
+        makeObservable(this);
     }
 
     @action public updateOverlapStrategy(strategy: OverlapStrategy) {
@@ -44,8 +46,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         return this.resultsViewStore.usePatientLevelEnrichments;
     }
 
-    @autobind
-    @action
+    @action.bound
     public setUsePatientLevelEnrichments(e: boolean) {
         this.resultsViewStore.setUsePatientLevelEnrichments(e);
     }
@@ -117,8 +118,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         return this.selectedGroups.includes(name);
     }
 
-    @autobind
-    @action
+    @action.bound
     public toggleGroupSelected(name: string) {
         const groups = this.selectedGroups.slice();
         if (groups.includes(name)) {
@@ -129,15 +129,13 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
         this.updateSelectedGroups(groups);
     }
 
-    @autobind
-    @action
+    @action.bound
     public selectAllGroups() {
         const groups = this._originalGroups.result!; // assumed complete
         this.updateSelectedGroups(groups.map(g => g.name));
     }
 
-    @autobind
-    @action
+    @action.bound
     public deselectAllGroups() {
         this.updateSelectedGroups([]);
     }

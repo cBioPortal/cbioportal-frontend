@@ -187,6 +187,12 @@ export type GeneXref = {
         'version': string
 
 };
+export type GeneralPopulationStats = {
+    'counts': SignalPopulationStats
+
+        'frequencies': SignalPopulationStats
+
+};
 export type GenomicLocation = {
     'chromosome': string
 
@@ -265,6 +271,14 @@ export type Hotspot = {
         'tumorCount': number
 
         'type': string
+
+};
+export type HrdScore = {
+    'fractionLoh': number
+
+        'lst': number
+
+        'ntelomericAi': number
 
 };
 export type IntegerRange = {
@@ -418,7 +432,11 @@ export type SignalMutation = {
 
         'endPosition': number
 
+        'generalPopulationStats': GeneralPopulationStats
+
         'hugoGeneSymbol': string
+
+        'mskExperReview': boolean
 
         'mutationStatus': string
 
@@ -432,11 +450,27 @@ export type SignalMutation = {
 
         'startPosition': number
 
+        'statsByTumorType': Array < StatsByTumorType >
+
         'variantAllele': string
 
 };
 export type SignalMutationFilter = {
     'hugoSymbols': Array < string >
+
+};
+export type SignalPopulationStats = {
+    'afr': number
+
+        'asj': number
+
+        'asn': number
+
+        'eur': number
+
+        'impact': number
+
+        'oth': number
 
 };
 export type SignalQuery = {
@@ -457,6 +491,26 @@ export type SignalQuery = {
 };
 export type Snpeff = {
     'license': string
+
+};
+export type StatsByTumorType = {
+    'ageAtDx': number
+
+        'fBiallelic': number
+
+        'fCancerTypeCount': number
+
+        'hrdScore': HrdScore
+
+        'msiScore': number
+
+        'nCancerTypeCount': number
+
+        'nwithSig': number
+
+        'tmb': number
+
+        'tumorType': string
 
 };
 export type TranscriptConsequenceSummary = {
@@ -2347,9 +2401,11 @@ export default class GenomeNexusAPIInternal {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/signal/search/{keyword}';
+        let path = '/signal/search';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
 
-        path = path.replace('{keyword}', parameters['keyword'] + '');
         if (parameters['limit'] !== undefined) {
             queryParameters['limit'] = parameters['limit'];
         }
@@ -2380,7 +2436,7 @@ export default class GenomeNexusAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/signal/search/{keyword}';
+        let path = '/signal/search';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -2389,7 +2445,9 @@ export default class GenomeNexusAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{keyword}', parameters['keyword'] + '');
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
 
             if (parameters['keyword'] === undefined) {
                 reject(new Error('Missing required  parameter: keyword'));

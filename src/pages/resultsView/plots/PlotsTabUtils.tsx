@@ -422,7 +422,7 @@ export function scatterPlotLegendData(
     plotType: PlotType,
     driversAnnotated: boolean,
     limitValueTypes: string[],
-    highlightedLegendItems?: ObservableMap<LegendDataWithId>,
+    highlightedLegendItems?: ObservableMap<string, LegendDataWithId>,
     highlight?: (d: IPlotSampleData) => boolean,
     coloringClinicalDataCacheEntry?: ClinicalDataCacheEntry,
     coloringClinicalDataLogScale?: boolean,

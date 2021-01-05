@@ -1,5 +1,5 @@
 import classnames from 'classnames';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable, { Column } from 'react-table';
@@ -43,6 +43,7 @@ export default class OncoKbSummaryTable extends React.Component<
 
     constructor(props: OncoKbSummaryTableProps) {
         super(props);
+        makeObservable(this);
         this.state = {};
     }
 

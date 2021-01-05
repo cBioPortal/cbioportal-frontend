@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import ReactSelect from 'react-select1';
 
@@ -31,6 +31,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<
     ];
     constructor(props: GenesetsHierarchyFilterFormProps) {
         super(props);
+        makeObservable(this);
         this.percentileChange = this.percentileChange.bind(this);
         this.applyFilter = this.applyFilter.bind(this);
     }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
@@ -31,6 +31,7 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
+import { getPercentage } from 'shared/lib/FormatUtils';
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -73,6 +74,11 @@ export default class CopyNumberTableWrapper extends React.Component<
     ICopyNumberTableWrapperProps,
     {}
 > {
+    constructor(props: ICopyNumberTableWrapperProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         enableOncoKb: true,
         enableCivic: false,
@@ -270,6 +276,16 @@ export default class CopyNumberTableWrapper extends React.Component<
                     return 0;
                 }
             },
+            download: (d: DiscreteCopyNumberData[]) => {
+                if (this.props.copyNumberCountCache) {
+                    return CohortColumnFormatter.getDownloadValue(
+                        d,
+                        this.props.copyNumberCountCache
+                    );
+                } else {
+                    return 'N/A';
+                }
+            },
             tooltip: <span>Alteration frequency in cohort</span>,
             defaultSortDirection: 'desc',
             order: 80,
@@ -287,6 +303,16 @@ export default class CopyNumberTableWrapper extends React.Component<
                     ) : (
                         <span />
                     ),
+                download: (d: DiscreteCopyNumberData[]) => {
+                    if (this.props.mrnaExprRankCache) {
+                        return MrnaExprColumnFormatter.getDownloadData(
+                            d,
+                            this.props.mrnaExprRankCache
+                        );
+                    } else {
+                        return 'N/A';
+                    }
+                },
                 order: 70,
             });
         }

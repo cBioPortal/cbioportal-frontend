@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { map } from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import SampleManager from 'pages/patientView/SampleManager';
 import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import TumorColumnFormatter from 'pages/patientView/mutation/column/TumorColumnFormatter';
@@ -15,6 +15,10 @@ interface PanelColumnFormatterProps {
 }
 
 export class GenePanelLinks extends React.Component<PanelColumnFormatterProps> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @autobind handleClick(genePanelId: string | undefined) {
         if (this.props.onSelectGenePanel && genePanelId) {
             this.props.onSelectGenePanel(genePanelId);

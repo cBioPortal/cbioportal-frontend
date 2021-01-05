@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 
 type TrackCircleProps = {
@@ -21,6 +21,10 @@ export type TrackItemSpec = {
 
 @observer
 export default class TrackCircle extends React.Component<TrackCircleProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         radius: 2.8,
         hoverRadius: 5,

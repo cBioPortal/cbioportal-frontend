@@ -8,6 +8,7 @@ import {
     reaction,
     action,
     computed,
+    makeObservable,
 } from 'mobx';
 import {
     TypeOfCancer as CancerType,
@@ -121,11 +122,12 @@ export enum Focus {
 // mobx observable
 export class QueryStore {
     constructor(urlWithInitialParams?: string) {
+        makeObservable(this);
         this.initialize(urlWithInitialParams);
     }
 
     initialize(urlWithInitialParams?: string) {
-        labelMobxPromises(this);
+        //labelMobxPromises(this);
 
         if (urlWithInitialParams) this.setParamsFromUrl(urlWithInitialParams);
 
@@ -252,15 +254,16 @@ export class QueryStore {
     @observable searchText: string = '';
 
     @observable private _allSelectedStudyIds: ObservableMap<
+        string,
         boolean
-    > = observable.map<boolean>();
+    > = observable.map<string, boolean>();
 
     @computed get allSelectedStudyIds(): string[] {
-        return this._allSelectedStudyIds.keys();
+        return Array.from(this._allSelectedStudyIds.keys());
     }
 
     @computed get selectableSelectedStudyIds(): string[] {
-        let ids: string[] = this._allSelectedStudyIds.keys();
+        let ids: string[] = Array.from(this._allSelectedStudyIds.keys());
         const selectableStudies = this.selectableStudiesSet.result;
         ids = ids.reduce((obj: string[], next) => {
             if (selectableStudies[next]) {
@@ -296,15 +299,16 @@ export class QueryStore {
 
     //this is to cache a selected ids in the query
     // used in when visualizing a shared another user virtual study
-    private _defaultSelectedIds: ObservableMap<boolean> = observable.map<
+    private _defaultSelectedIds: ObservableMap<
+        string,
         boolean
-    >();
+    > = observable.map<string, boolean>();
 
     @computed get defaultSelectedIds() {
         return this._defaultSelectedIds;
     }
 
-    @observable private profileFilterSet?: ObservableMap<boolean>;
+    @observable private profileFilterSet?: ObservableMap<string, boolean>;
 
     dataTypePriorityFromUrl?: string;
     profileIdsFromUrl?: string[];
@@ -396,7 +400,7 @@ export class QueryStore {
                     });
                 }
             } else {
-                selectedIdSet = this.profileFilterSet.toJS();
+                selectedIdSet = _.fromPairs(this.profileFilterSet.toJSON());
             }
         }
         return selectedIdSet;
@@ -617,9 +621,9 @@ export class QueryStore {
             } = Object.assign({}, physicalStudiesIdsSet, virtualStudiesIdsSet);
 
             //queried id that are not selectable(this would mostly be shared virtual study)
-            const unknownQueriedIds: string[] = this._defaultSelectedIds
-                .keys()
-                .filter(id => !knownSelectableIdsSet[id]);
+            const unknownQueriedIds: string[] = Array.from(
+                this._defaultSelectedIds.keys()
+            ).filter(id => !knownSelectableIdsSet[id]);
 
             let result: { [studyId: string]: string[] } = {};
 
@@ -717,9 +721,9 @@ export class QueryStore {
             );
 
             //queried id that are not selectable(this would mostly be shared virtual study)
-            const unknownQueriedIds: string[] = this._defaultSelectedIds
-                .keys()
-                .filter(id => !_.includes(knownSelectableIds, id));
+            const unknownQueriedIds: string[] = Array.from(
+                this._defaultSelectedIds.keys()
+            ).filter(id => !_.includes(knownSelectableIds, id));
 
             let result: { [studyId: string]: VirtualStudy } = {};
 
@@ -769,10 +773,7 @@ export class QueryStore {
                 studyId => this.physicalStudiesSet.result[studyId]
             );
 
-            if (
-                this._allSelectedStudyIds.keys().length !==
-                physicalStudyIds.length
-            ) {
+            if (this._allSelectedStudyIds.size !== physicalStudyIds.length) {
                 await Promise.all(
                     _.map(physicalStudyIds, studyId => {
                         return client
@@ -792,7 +793,7 @@ export class QueryStore {
                     ...this.sharedVirtualStudiesSet.result,
                 };
 
-                this._allSelectedStudyIds.keys().forEach(id => {
+                for (const id of this._allSelectedStudyIds.keys()) {
                     if (_vs[id]) {
                         let virtualStudy = _vs[id];
                         virtualStudy.data.studies.forEach(study => {
@@ -803,7 +804,7 @@ export class QueryStore {
                             }
                         });
                     }
-                });
+                }
             } else {
                 physicalStudyIds.forEach(studyId => {
                     studyToSampleSet[studyId] = {};
@@ -850,7 +851,7 @@ export class QueryStore {
                 const sharedVirtualStudiesSet = this.sharedVirtualStudiesSet
                     .result;
                 let sharedIds: string[] = _.filter(
-                    this._allSelectedStudyIds.keys(),
+                    [...this._allSelectedStudyIds.keys()],
                     id => sharedVirtualStudiesSet[id] !== undefined
                 );
 
@@ -900,7 +901,7 @@ export class QueryStore {
         await: () => [this.selectableStudiesSet],
         invoke: async () => {
             const _selectableStudiesSet = this.selectableStudiesSet.result;
-            let ids: string[] = this._allSelectedStudyIds.keys();
+            let ids: string[] = [...this._allSelectedStudyIds.keys()];
             return ids.filter(id => !(id in _selectableStudiesSet));
         },
         default: [],
@@ -1369,7 +1370,7 @@ export class QueryStore {
 
     // CANCER STUDY
 
-    @cached get treeData() {
+    @cached @computed get treeData() {
         return new CancerStudyTreeData({
             cancerTypes: this.cancerTypes.result,
             studies: this.cancerStudies.result,
@@ -1754,7 +1755,10 @@ export class QueryStore {
         }
     }
 
-    @observable map_genesets_selected_volcano = new ObservableMap<boolean>();
+    @observable map_genesets_selected_volcano = new ObservableMap<
+        string,
+        boolean
+    >();
 
     @computed get volcanoPlotGraphData():
         | { x: number; y: number; fill: string }[]
@@ -2135,10 +2139,10 @@ export class QueryStore {
     }
 
     @action applyGeneSelection(
-        map_geneSymbol_selected: ObservableMap<boolean>
+        map_geneSymbol_selected: ObservableMap<string, boolean>
     ) {
         let [toAppend, toRemove] = _.partition(
-            map_geneSymbol_selected.keys(),
+            Array.from(map_geneSymbol_selected.keys()),
             geneSymbol => map_geneSymbol_selected.get(geneSymbol)
         );
         toAppend = _.difference(toAppend, this.geneIds);
@@ -2150,10 +2154,10 @@ export class QueryStore {
     }
 
     @action addToGenesetSelection(
-        map_geneset_selected: ObservableMap<boolean>
+        map_geneset_selected: ObservableMap<string, boolean>
     ) {
         let [toAppend, toRemove] = _.partition(
-            map_geneset_selected.keys(),
+            Array.from(map_geneset_selected.keys()),
             geneSet => map_geneset_selected.get(geneSet)
         );
         const genesetQuery = _.union(toAppend, this.genesetIds).join(' ');
@@ -2161,10 +2165,10 @@ export class QueryStore {
     }
 
     @action applyGenesetSelection(
-        map_geneset_selected: ObservableMap<boolean>
+        map_geneset_selected: ObservableMap<string, boolean>
     ) {
         const [toAppend, toRemove] = _.partition(
-            map_geneset_selected.keys(),
+            Array.from(map_geneset_selected.keys()),
             geneSet => map_geneset_selected.get(geneSet)
         );
         let genesetQuery = this.genesetQuery;
@@ -2227,11 +2231,11 @@ export class QueryStore {
         redirectToStudyView(this.selectableSelectedStudyIds);
     }
 
-    @cached get molecularProfilesInStudyCache() {
+    @cached @computed get molecularProfilesInStudyCache() {
         return new MolecularProfilesInStudyCache();
     }
 
-    @cached get sampleListsInStudyCache() {
+    @cached @computed get sampleListsInStudyCache() {
         return new SampleListsInStudyCache();
     }
 }

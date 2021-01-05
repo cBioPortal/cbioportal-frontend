@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import {
     IMutationTableProps,
@@ -37,12 +37,12 @@ export interface IPatientViewMutationTableProps extends IMutationTableProps {
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 
-@observer
 export default class PatientViewMutationTable extends MutationTable<
     IPatientViewMutationTableProps
 > {
     constructor(props: IPatientViewMutationTableProps) {
         super(props);
+        makeObservable(this);
     }
 
     public static defaultProps = {

@@ -1,6 +1,13 @@
 import * as _ from 'lodash';
 import $ from 'jquery';
-import { observable, computed, reaction, action } from 'mobx';
+import {
+    observable,
+    computed,
+    reaction,
+    action,
+    makeObservable,
+    IReactionDisposer,
+} from 'mobx';
 import {
     default as StructureVisualizer,
     ProteinScheme,
@@ -116,7 +123,6 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         _3dMol?: any
     ) {
         super();
-
         this._3dMol = _3dMol || $3Dmol;
         this._3dMolDiv = div;
 
@@ -140,6 +146,14 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         };
 
         this.updateViewer = this.updateViewer.bind(this);
+        makeObservable(this);
+
+        this.stateChangeReaction = reaction(
+            () => this.state,
+            (state: IStructureVisualizerState) => {
+                this.onStateChange(state);
+            }
+        );
     }
 
     @action setState(newState: IStructureVisualizerState) {
@@ -148,12 +162,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
     }
 
     // we need to update the view for each state change action
-    private stateChangeReaction = reaction(
-        () => this.state,
-        (state: IStructureVisualizerState) => {
-            this.onStateChange(state);
-        }
-    );
+    private stateChangeReaction: IReactionDisposer;
 
     private onStateChange(state: IStructureVisualizerState) {
         // do not update or render if pdb is still loading,
@@ -164,6 +173,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
         }
     }
 
+    @action
     protected setProps(newProps: IStructureVisualizerProps) {
         this._prevProps = this.props;
         this.props = newProps;
@@ -545,6 +555,7 @@ export default class StructureVisualizer3D extends StructureVisualizer {
     /**
      * Updates the visual style (scheme, coloring, selection, etc.)
      */
+    @action
     public updateVisualStyle(
         residues: IResidueSpec[],
         chainId: string,

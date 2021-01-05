@@ -8,7 +8,7 @@ import './styles.scss';
 import { sleep } from 'shared/lib/TimeUtils';
 import { Label } from 'react-bootstrap';
 import * as moduleStyles from './styles.module.scss';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import Pluralize from 'pluralize';
 import AppConfig from 'appConfig';
@@ -61,6 +61,11 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
     @observable private inputValue: string = '';
     @observable private isFocusing = false;
     @observable private isLoading = false;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed get menuIsOpen() {
         return this.isFocusing && this.inputValue.length > 0;
@@ -339,8 +344,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
         },
     });
 
-    @autobind
-    @action
+    @action.bound
     private handleChange(newOption: any) {
         let parameters;
         let route;
@@ -392,8 +396,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
         trackEvent({ category: 'quickSearch', action: action, label: label });
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleInputChange(inputValue: any, { action }: { action: any }) {
         if (action !== 'set-value') {
             // if user has changed search query then
@@ -415,8 +418,7 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onFocus() {
         this.isFocusing = true;
     }

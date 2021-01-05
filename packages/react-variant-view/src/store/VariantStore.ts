@@ -1,7 +1,7 @@
 import { remoteData } from 'cbioportal-frontend-commons';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import MobxPromise from 'mobxpromise';
 import { CuratedGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
@@ -32,7 +32,6 @@ export class VariantStore {
         invoke: async () => {
             return await this.genomeNexusClient.fetchVariantAnnotationGET({
                 variant: this.variant,
-                isoformOverrideSource: 'uniprot',
                 fields: ANNOTATION_QUERY_FIELDS,
             });
         },
@@ -121,6 +120,7 @@ export class VariantStore {
     }
 
     constructor(public variantId: string, public queryString: string) {
+        makeObservable(this);
         this.variant = variantId;
     }
 

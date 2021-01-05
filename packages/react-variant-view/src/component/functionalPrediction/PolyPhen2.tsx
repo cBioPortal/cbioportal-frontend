@@ -42,13 +42,7 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
     private static polyPhenTooltipTable() {
         return (
             <div>
-                <Table
-                    table-border-top={true}
-                    striped={true}
-                    bordered={true}
-                    hover={true}
-                    sizes="sm"
-                >
+                <Table striped={true} bordered={true} hover={true} sizes="sm">
                     <thead>
                         <tr>
                             <th>Legend</th>
@@ -162,7 +156,7 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
         }
 
         return (
-            <div className={featureTableStyle['functional-group']}>
+            <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     {this.polyPhenTooltip(
                         <a
@@ -197,12 +191,14 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                 <table className={tooltipStyles['polyPhen2-tooltip-table']}>
                     {(this.props.polyPhenScore ||
                         this.props.polyPhenScore === 0) && (
-                        <tr>
-                            <td>Score</td>
-                            <td>
-                                <b>{this.props.polyPhenScore.toFixed(2)}</b>
-                            </td>
-                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>Score</td>
+                                <td>
+                                    <b>{this.props.polyPhenScore.toFixed(2)}</b>
+                                </td>
+                            </tr>
+                        </tbody>
                     )}
                 </table>
                 <span>

@@ -5,7 +5,7 @@ import Spinner from 'react-spinkit';
 import { Portal } from 'react-portal';
 import classNames from 'classnames';
 import styles from './styles.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 
 export interface ILoader {
@@ -22,6 +22,11 @@ export interface ILoader {
 
 @observer
 export default class LoadingIndicator extends React.Component<ILoader, {}> {
+    constructor(props: ILoader) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         inline: true,
         center: false,

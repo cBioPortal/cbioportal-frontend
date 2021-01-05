@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import styles from './styles.module.scss';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { ButtonGroup, Modal, Radio } from 'react-bootstrap';
 import { CustomChart } from '../../StudyViewPageStore';
 import ErrorBox from '../../../../shared/components/errorBox/ErrorBox';
@@ -48,11 +48,16 @@ export default class CustomCaseSelection extends React.Component<
     private validateContent: boolean = false;
     private chartNameValidation: ValidationResult = { warning: [], error: [] };
     @observable dataFormatCollapsed: boolean = true;
-    @observable chartName: string;
+    @observable.ref chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     public static defaultProps = {
         submitButtonText: 'Submit',
@@ -100,8 +105,7 @@ export default class CustomCaseSelection extends React.Component<
         };
     }
 
-    @autobind
-    @action
+    @action.bound
     onClick(selectMode: SelectMode) {
         let selectedCases;
         if (selectMode === SelectMode.SELECTED) {
@@ -134,15 +138,13 @@ export default class CustomCaseSelection extends React.Component<
         this.validContent = this.content;
     }
 
-    @autobind
-    @action
+    @action.bound
     onChange(newContent: string) {
         this.validContent = newContent;
         this.validateContent = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     onChartNameChange(event: any) {
         this.chartName = event.currentTarget.value;
         const validChartName = this.props.isChartNameValid
@@ -166,14 +168,12 @@ export default class CustomCaseSelection extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onAddChart() {
         this.props.onSubmit(this.newChartInfo);
     }
 
-    @autobind
-    @action
+    @action.bound
     protected handleDataFormatToggle() {
         this.dataFormatCollapsed = !this.dataFormatCollapsed;
     }

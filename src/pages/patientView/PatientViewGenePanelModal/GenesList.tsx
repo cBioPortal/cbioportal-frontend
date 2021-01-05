@@ -5,7 +5,7 @@ import { SimpleCopyDownloadControls } from 'shared/components/copyDownloadContro
 import { serializeData } from 'shared/lib/Serializer';
 import styles from './styles.module.scss';
 import { chunk, flatten } from 'lodash';
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import SimpleTable from 'shared/components/simpleTable/SimpleTable';
@@ -20,8 +20,12 @@ interface IGenesListProps {
 export default class GenesList extends React.Component<IGenesListProps, {}> {
     @observable filter: string = '';
 
-    @autobind
-    @action
+    constructor(props: IGenesListProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     handleChangeInput(value: string) {
         this.filter = value;
     }

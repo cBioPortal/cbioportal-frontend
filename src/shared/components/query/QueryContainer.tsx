@@ -14,7 +14,7 @@ import CaseSetSelector from './CaseSetSelector';
 import UnknownStudiesWarning from '../unknownStudies/UnknownStudiesWarning';
 import classNames from 'classnames';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import { Else, If, Then } from 'react-if';
 import autobind from 'autobind-decorator';
 import SectionHeader from 'shared/components/sectionHeader/SectionHeader';
@@ -63,6 +63,7 @@ export default class QueryContainer extends React.Component<
 
     constructor(props: QueryContainerProps) {
         super(props);
+        makeObservable(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 

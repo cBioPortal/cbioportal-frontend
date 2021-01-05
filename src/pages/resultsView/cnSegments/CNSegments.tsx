@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import MobxPromise from 'mobxpromise';
 import autobind from 'autobind-decorator';
 import { Nav, NavItem } from 'react-bootstrap';
@@ -37,11 +37,12 @@ export default class CNSegments extends React.Component<
     {}
 > {
     @observable renderingComplete = false;
-    @observable selectedLocus: string;
+    @observable.ref selectedLocus: string;
     @observable segmentTrackMaxHeight: number | undefined;
 
     constructor(props: { store: ResultsViewPageStore }) {
         super(props);
+        makeObservable(this);
         this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
     }
 
@@ -197,21 +198,18 @@ export default class CNSegments extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onTabSelect(id: any) {
         this.selectedLocus = id;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onIgvRenderingStart() {
         // we would like to keep the loader icon in the rendering state until initial IGV rendering is complete
         this.renderingComplete = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onIgvRenderingComplete() {
         this.renderingComplete = true;
     }

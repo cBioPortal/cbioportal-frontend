@@ -7,7 +7,7 @@ import {
     VictoryLabel,
     VictoryScatter,
 } from 'victory';
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import { formatLogOddsRatio } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
@@ -42,12 +42,16 @@ export default class MiniScatterChart extends React.Component<
     IMiniScatterChartProps,
     {}
 > {
-    @observable tooltipModel: any;
-    @observable private svgContainer: any;
+    @observable tooltipModel: any = null;
+    @observable private svgContainer: any = null;
     private dragging = false;
 
-    @autobind
-    @action
+    constructor(props: IMiniScatterChartProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private svgRef(svgContainer: SVGElement | null) {
         this.svgContainer =
             svgContainer && svgContainer.children
@@ -87,17 +91,13 @@ export default class MiniScatterChart extends React.Component<
         this.props.onSelectionCleared();
     }
 
-    @autobind @action private onPointMouseOver(
-        datum: any,
-        x: number,
-        y: number
-    ) {
+    @action.bound private onPointMouseOver(datum: any, x: number, y: number) {
         this.tooltipModel = datum;
         this.tooltipModel.x = x;
         this.tooltipModel.y = y;
     }
 
-    @autobind @action private onPointMouseOut() {
+    @action.bound private onPointMouseOut() {
         this.tooltipModel = null;
     }
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {
@@ -50,6 +50,7 @@ import {
     generateGenericAssayProfileDownloadData,
     generateStructuralVariantData,
     generateStructuralDownloadData,
+    makeIsSampleProfiledFunction,
 } from './DownloadUtils';
 
 import styles from './styles.module.scss';
@@ -88,6 +89,8 @@ export default class DownloadTab extends React.Component<
 > {
     constructor(props: IDownloadTabProps) {
         super(props);
+
+        makeObservable(this);
 
         this.handleMutationDownload = this.handleMutationDownload.bind(this);
         this.handleTransposedMutationDownload = this.handleTransposedMutationDownload.bind(
@@ -139,11 +142,13 @@ export default class DownloadTab extends React.Component<
             this.props.store.filteredSamples,
             this.geneAlterationDataByGene,
             this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () =>
             Promise.resolve(
                 generateCaseAlterationData(
                     this.props.store.oqlText,
+                    this.props.store.defaultOQLQueryAlterations.result!,
                     this.props.store.selectedMolecularProfiles.result!,
                     this.props.store.oqlFilteredCaseAggregatedDataByOQLLine
                         .result!,
@@ -178,13 +183,21 @@ export default class DownloadTab extends React.Component<
             this.mutationData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateMutationDownloadData(
                     this.mutationData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.MUTATION_EXTENDED,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -253,6 +266,7 @@ export default class DownloadTab extends React.Component<
             this.allOtherMolecularProfileDataGroupByProfileName,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
         ],
         invoke: () =>
             Promise.resolve(
@@ -331,13 +345,21 @@ export default class DownloadTab extends React.Component<
             this.mrnaData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.mrnaData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.MRNA_EXPRESSION,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -357,13 +379,21 @@ export default class DownloadTab extends React.Component<
             this.proteinData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.proteinData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.PROTEIN_LEVEL,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -383,13 +413,21 @@ export default class DownloadTab extends React.Component<
             this.cnaData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateDownloadData(
                     this.cnaData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -411,13 +449,21 @@ export default class DownloadTab extends React.Component<
             this.structuralVariantData,
             this.props.store.samples,
             this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
         ],
         invoke: () =>
             Promise.resolve(
                 generateStructuralDownloadData(
                     this.structuralVariantData.result!,
                     this.props.store.samples.result!,
-                    this.props.store.genes.result!
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
                 )
             ),
     });
@@ -490,6 +536,7 @@ export default class DownloadTab extends React.Component<
     readonly trackLabels = remoteData({
         await: () => [
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () => {
             const labels: string[] = [];
@@ -503,7 +550,9 @@ export default class DownloadTab extends React.Component<
                                 this.props.store.oqlText,
                                 data.oql as OQLLineFilterOutput<
                                     AnnotatedExtendedAlteration
-                                >
+                                >,
+                                this.props.store.defaultOQLQueryAlterations
+                                    .result!
                             )
                         );
                     }
@@ -526,6 +575,7 @@ export default class DownloadTab extends React.Component<
     readonly trackAlterationTypesMap = remoteData({
         await: () => [
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () => {
             const trackAlterationTypesMap: { [label: string]: string[] } = {};
@@ -541,7 +591,8 @@ export default class DownloadTab extends React.Component<
                             this.props.store.oqlText,
                             data.oql as OQLLineFilterOutput<
                                 AnnotatedExtendedAlteration
-                            >
+                            >,
+                            this.props.store.defaultOQLQueryAlterations.result!
                         );
                         // put types for single track into the map, key is track label
                         if (singleTrackOql.parsed_oql_line.alterations) {

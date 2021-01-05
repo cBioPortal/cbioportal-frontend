@@ -7,7 +7,7 @@ import {
 } from './GroupComparisonUtils';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import client from '../../shared/api/cbioportalClientInstance';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -26,9 +26,13 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
+import { GroupComparisonTab } from './GroupComparisonTabs';
 
 export default class GroupComparisonStore extends ComparisonStore {
-    @observable private sessionId: string;
+    @observable private _currentTabId:
+        | GroupComparisonTab
+        | undefined = undefined;
+    @observable.ref private sessionId: string;
 
     constructor(
         sessionId: string,
@@ -36,6 +40,8 @@ export default class GroupComparisonStore extends ComparisonStore {
         private urlWrapper: GroupComparisonURLWrapper
     ) {
         super(appStore);
+
+        makeObservable(this);
 
         this.sessionId = sessionId;
     }
@@ -53,8 +59,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         return this.urlWrapper.query.patientEnrichments === 'true';
     }
 
-    @autobind
-    @action
+    @action.bound
     public setUsePatientLevelEnrichments(e: boolean) {
         this.urlWrapper.updateURL({ patientEnrichments: e.toString() });
     }
@@ -93,8 +98,7 @@ export default class GroupComparisonStore extends ComparisonStore {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     public toggleGroupSelected(name: string) {
         const groups = this.unselectedGroups.slice();
         if (groups.includes(name)) {
@@ -105,14 +109,12 @@ export default class GroupComparisonStore extends ComparisonStore {
         this.updateUnselectedGroups(groups);
     }
 
-    @autobind
-    @action
+    @action.bound
     public selectAllGroups() {
         this.updateUnselectedGroups([]);
     }
 
-    @autobind
-    @action
+    @action.bound
     public deselectAllGroups() {
         const groups = this._originalGroups.result!; // assumed complete
         this.updateUnselectedGroups(groups.map(g => g.name));
@@ -129,7 +131,11 @@ export default class GroupComparisonStore extends ComparisonStore {
         this.urlWrapper.updateURL({ sessionId: id });
     }
 
-    readonly _session = remoteData<Session>({
+    get _session() {
+        return this.__session;
+    }
+
+    private readonly __session = remoteData<Session>({
         invoke: () => {
             return comparisonClient.getComparisonSession(this.sessionId);
         },
@@ -251,7 +257,10 @@ export default class GroupComparisonStore extends ComparisonStore {
         },
     });
 
-    readonly samples = remoteData({
+    public get samples() {
+        return this._samples;
+    }
+    private readonly _samples = remoteData({
         await: () => [this._session],
         invoke: () => {
             const sampleIdentifiers = [];
@@ -367,7 +376,10 @@ export default class GroupComparisonStore extends ComparisonStore {
         default: [],
     });
 
-    readonly studies = remoteData(
+    public get studies() {
+        return this._studies;
+    }
+    private readonly _studies = remoteData(
         {
             await: () => [this._session, this.allStudyIdToStudy],
             invoke: () => {

@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { remoteData } from 'cbioportal-frontend-commons';
 import onMobxPromise from './onMobxPromise';
-import { extras, IReactionDisposer, observable } from 'mobx';
+import { IReactionDisposer, observable } from 'mobx';
 
 describe('onMobxPromise', () => {
     it('executes the given callback with the result when the mobx promise completes', done => {
@@ -57,7 +57,7 @@ describe('onMobxPromise', () => {
     });
     it('executes the given callback the specified number of times', done => {
         let handlerInvokeCount = 0;
-        let promiseResult = observable(0);
+        let promiseResult = observable.box(0);
         let lastInvokedPromiseResult = 0;
         let promiseResultIncrementerDisposer: IReactionDisposer;
         let promise = remoteData({
@@ -99,7 +99,7 @@ describe('onMobxPromise', () => {
     });
     it('executes immediately if the promise is already resolved, does not execute again', done => {
         let handlerInvokeCount = 0;
-        let promiseResult = observable(0);
+        let promiseResult = observable.box(0);
         let lastInvokedPromiseResult = 0;
         let promiseResultIncrementerDisposer: IReactionDisposer;
         let promise = remoteData({

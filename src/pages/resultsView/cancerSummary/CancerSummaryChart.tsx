@@ -15,7 +15,7 @@ import {
     IAlterationData,
     ICancerSummaryChartData,
 } from './CancerSummaryContent';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import { CSSProperties } from 'react';
 import autobind from 'autobind-decorator';
@@ -124,16 +124,15 @@ export class CancerSummaryChart extends React.Component<
 
     constructor(props: CancerSummaryChartProps) {
         super(props);
+        makeObservable(this);
     }
 
-    @autobind
-    @action
+    @action.bound
     private tooltipMouseEnter(): void {
         this.isBarPlotTooltipHovered = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     private tooltipMouseLeave(): void {
         this.isBarPlotTooltipHovered = false;
         this.barPlotTooltipModel = null;
@@ -348,8 +347,7 @@ export class CancerSummaryChart extends React.Component<
         });
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseMove(e: React.MouseEvent<any>) {
         if (this.shouldUpdatePosition) {
             this.mousePosition.x = e.pageX;

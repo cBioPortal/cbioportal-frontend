@@ -1,14 +1,26 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { GnomadFrequency } from 'react-mutation-mapper';
+import { GnomadFrequency, HotspotAnnotation } from 'react-mutation-mapper';
 
-import { MyVariantInfo } from 'genome-nexus-ts-api-client';
+import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
+import {
+    extractGenomicLocation,
+    genomicLocationString,
+    IHotspotIndex,
+    is3dHotspot,
+    isLinearClusterHotspot,
+    Mutation,
+} from 'cbioportal-utils';
+import { computed } from 'mobx';
+import MskImpact from './MskImpact';
 
-interface IPopulationPrevalenceProps {
-    myVariantInfo: MyVariantInfo | undefined;
+interface IGenralPopulationPrevalenceProps {
+    myVariantInfo?: MyVariantInfo;
     chromosome: string | null;
+    mutation: Mutation;
+    variantAnnotation?: VariantAnnotation;
 }
 
 interface IVcf {
@@ -19,7 +31,27 @@ interface IVcf {
 }
 
 @observer
-class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
+class GenralPopulationPrevalence extends React.Component<
+    IGenralPopulationPrevalenceProps
+> {
+    @computed get indexedHotspots() {
+        const indexHotspot: IHotspotIndex = {};
+        const genomicLocation = extractGenomicLocation(this.props.mutation);
+        if (
+            genomicLocation &&
+            this.props.variantAnnotation?.hotspots?.annotation?.[0]
+        ) {
+            const aggregatedHotspots = {
+                genomicLocation: genomicLocation,
+                hotspots: this.props.variantAnnotation.hotspots.annotation[0],
+            };
+            indexHotspot[
+                genomicLocationString(genomicLocation)
+            ] = aggregatedHotspots;
+        }
+        return indexHotspot;
+    }
+
     public gnomad(
         myVariantInfo: MyVariantInfo | undefined,
         chromosome: string | null
@@ -42,7 +74,7 @@ class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
                 this.props.myVariantInfo.gnomadGenome)
         ) {
             return (
-                <div className={featureTableStyle['functional-group']}>
+                <div className={featureTableStyle['feature-table-layout']}>
                     <div className={featureTableStyle['data-source']}>
                         {this.gnomadTooltip(gnomadUrl)}
                     </div>
@@ -61,7 +93,7 @@ class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
             );
         } else {
             return (
-                <div className={featureTableStyle['functional-group']}>
+                <div className={featureTableStyle['feature-table-layout']}>
                     <div className={featureTableStyle['data-source']}>
                         {this.gnomadTooltip(gnomadUrl)}
                     </div>
@@ -119,7 +151,7 @@ class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
             this.props.myVariantInfo.dbsnp.rsid
         ) {
             return (
-                <div className={featureTableStyle['functional-group']}>
+                <div className={featureTableStyle['feature-table-layout']}>
                     <div className={featureTableStyle['data-source']}>
                         {this.dbsnpToolTip(dbsnpUrl)}
                     </div>
@@ -136,7 +168,7 @@ class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
             );
         } else {
             return (
-                <div className={featureTableStyle['functional-group']}>
+                <div className={featureTableStyle['feature-table-layout']}>
                     <div className={featureTableStyle['data-source']}>
                         {this.dbsnpToolTip(dbsnpUrl)}
                     </div>
@@ -184,14 +216,85 @@ class PopulationPrevalence extends React.Component<IPopulationPrevalenceProps> {
         );
     }
 
+    private hotspotToolTip() {
+        return (
+            <DefaultTooltip
+                placement="top"
+                overlay={
+                    <span>
+                        <a
+                            href={'https://www.cancerhotspots.org/#/home'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            CancerHotspots.org
+                        </a>{' '}
+                        is a resource of recurrent mutational hotspots in tumor
+                        <br />
+                        samples of various cancer types.
+                    </span>
+                }
+            >
+                <a
+                    href={'https://www.cancerhotspots.org/#/home'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    CancerHotspots.org
+                </a>
+            </DefaultTooltip>
+        );
+    }
+
+    private hotspotData() {
+        const isCancerHotspot = isLinearClusterHotspot(
+            this.props.mutation,
+            this.indexedHotspots
+        );
+        const is3DCancerHotspot = is3dHotspot(
+            this.props.mutation,
+            this.indexedHotspots
+        );
+        if (isCancerHotspot || is3DCancerHotspot) {
+            return (
+                <HotspotAnnotation
+                    isHotspot={isCancerHotspot}
+                    is3dHotspot={is3DCancerHotspot}
+                    status={'complete'}
+                />
+            );
+        } else {
+            return 'N/A';
+        }
+    }
+
+    private hotspot() {
+        return (
+            <div className={featureTableStyle['feature-table-layout']}>
+                <div className={featureTableStyle['data-source']}>
+                    {this.hotspotToolTip()}
+                </div>
+                <div className={featureTableStyle['logo-image']}>
+                    {this.hotspotData()}
+                </div>
+            </div>
+        );
+    }
+
     public render() {
         return (
             <div>
                 {this.gnomad(this.props.myVariantInfo, this.props.chromosome)}
                 {this.dbsnp(this.props.myVariantInfo)}
+                {this.hotspot()}
+                <MskImpact
+                    signalAnnotation={
+                        this.props.variantAnnotation?.signalAnnotation
+                    }
+                />
             </div>
         );
     }
 }
 
-export default PopulationPrevalence;
+export default GenralPopulationPrevalence;

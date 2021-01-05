@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { CancerStudy, Sample } from 'cbioportal-ts-api-client';
 import classnames from 'classnames';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
@@ -36,6 +36,11 @@ export interface IVirtualStudyProps {
 @observer
 export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
     @observable private showDescription = false;
+
+    constructor(props: CancerStudy) {
+        super(props);
+        makeObservable(this);
+    }
 
     render() {
         return (
@@ -90,8 +95,8 @@ export default class VirtualStudy extends React.Component<
     IVirtualStudyProps,
     {}
 > {
-    @observable private name: string;
-    @observable private description: string;
+    @observable.ref private name: string;
+    @observable.ref private description: string;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -99,6 +104,7 @@ export default class VirtualStudy extends React.Component<
 
     constructor(props: IVirtualStudyProps) {
         super(props);
+        makeObservable(this);
         this.name = props.name || '';
         this.description =
             props.description ||
@@ -191,14 +197,12 @@ export default class VirtualStudy extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onCopyClick() {
         this.copied = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onTooltipVisibleChange(visible: boolean) {
         this.copied = !visible;
     }

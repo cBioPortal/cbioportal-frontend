@@ -10,6 +10,7 @@ import {
     action,
     reaction,
     IReactionDisposer,
+    makeObservable,
 } from 'mobx';
 import { Gene } from 'cbioportal-ts-api-client';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -123,6 +124,7 @@ export default class OQLTextArea extends React.Component<
 
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
+        makeObservable(this);
         this.geneQuery = this.props.inputGeneQuery || '';
         this.queryToBeValidated = this.geneQuery;
         if (!this.props.validateInputGeneQuery) {
@@ -164,8 +166,7 @@ export default class OQLTextArea extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private updateGeneQuery(value: string) {
         this.geneQuery = value;
         // at the time gene query is updated, the queryToBeValidated should be set to the same
@@ -186,8 +187,7 @@ export default class OQLTextArea extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     updateTextAreaRefValue() {
         this.textAreaRef.current!.value = this.getTextAreaValue();
     }
@@ -229,8 +229,7 @@ export default class OQLTextArea extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     afterGeneSymbolValidation(
         validQuery: boolean,
         validationResult: GeneValidationResult,

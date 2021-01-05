@@ -1,8 +1,6 @@
 import * as React from 'react';
 import _ from 'lodash';
-import autobind from 'autobind-decorator';
-import { observer } from 'mobx-react';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import classnames from 'classnames';
 import {
     DataFilterType,
@@ -32,7 +30,7 @@ import {
 } from 'shared/lib/MutationUtils';
 import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
 import MutationMapperStore from './MutationMapperStore';
-import {
+import MutationMapperDataStore, {
     findProteinImpactTypeFilter,
     PROTEIN_IMPACT_TYPE_FILTER_ID,
 } from './MutationMapperDataStore';
@@ -73,11 +71,15 @@ export interface IMutationMapperProps {
     enableCivic?: boolean;
 }
 
-@observer
 export default class MutationMapper<
     P extends IMutationMapperProps
 > extends DefaultMutationMapper<P> {
-    @computed get trackDataStatus(): TrackDataStatus {
+    constructor(props: P) {
+        super(props);
+        makeObservable(this);
+    }
+
+    protected getTrackDataStatus(): TrackDataStatus {
         let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
             .props.store.oncoKbData.status;
 
@@ -130,8 +132,7 @@ export default class MutationMapper<
         };
     }
 
-    @computed
-    protected get windowWrapper() {
+    protected getWindowWrapper() {
         return WindowStore;
     }
 
@@ -141,12 +142,12 @@ export default class MutationMapper<
 
     // No default implementation, child classes should override this
     // TODO provide a generic version of this? See ResultsViewMutationMapper.mutationRateSummary
-    protected get mutationRateSummary(): JSX.Element | null {
+    protected getMutationRateSummary(): JSX.Element | null {
         return null;
     }
 
     @computed get multipleMutationInfo(): string {
-        const count = this.props.store.dataStore
+        const count = (this.props.store.dataStore as MutationMapperDataStore)
             .duplicateMutationCountInMultipleSamples;
         const mutationsLabel = count === 1 ? 'mutation' : 'mutations';
 
@@ -184,7 +185,9 @@ export default class MutationMapper<
     protected get structureViewerPanel(): JSX.Element | null {
         return this.is3dPanelOpen ? (
             <StructureViewerPanel
-                mutationDataStore={this.props.store.dataStore}
+                mutationDataStore={
+                    this.props.store.dataStore as MutationMapperDataStore
+                }
                 pdbChainDataStore={this.props.store.pdbChainDataStore}
                 pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                 pdbHeaderCache={this.props.pdbHeaderCache}
@@ -210,8 +213,8 @@ export default class MutationMapper<
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
                 getLollipopColor={getColorForProteinImpactType}
                 filterResetPanel={
-                    !this.props.store.dataStore.showingAllData &&
-                    this.filterResetPanel !== null
+                    !(this.props.store.dataStore as MutationMapperDataStore)
+                        .showingAllData && this.filterResetPanel !== null
                         ? this.filterResetPanel
                         : undefined
                 }
@@ -266,7 +269,7 @@ export default class MutationMapper<
     }
 
     protected get filterResetPanel(): JSX.Element | null {
-        const dataStore = this.props.store.dataStore;
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
 
         return (
             <FilterResetPanel
@@ -333,14 +336,12 @@ export default class MutationMapper<
         this.trackVisibility[TrackName.PDB] = 'visible';
     }
 
-    @autobind
-    @action
+    @action.bound
     protected close3dPanel() {
         this.trackVisibility[TrackName.PDB] = 'hidden';
     }
 
-    @autobind
-    @action
+    @action.bound
     protected toggle3dPanel() {
         if (this.is3dPanelOpen) {
             this.close3dPanel();
@@ -349,8 +350,7 @@ export default class MutationMapper<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onTrackVisibilityChange(selectedTrackNames: string[]) {
         // 3D panel is toggled to open
         if (
@@ -378,8 +378,7 @@ export default class MutationMapper<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onProteinImpactTypeSelect(
         selectedMutationTypeIds: string[],
         allValuesSelected: boolean

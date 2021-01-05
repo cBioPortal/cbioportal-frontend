@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
@@ -49,6 +49,7 @@ export default class ComparisonTab extends React.Component<
 
     constructor(props: IComparisonTabProps) {
         super(props);
+        makeObservable(this);
         (window as any).comparisonTab = this;
         this.store = new ResultsViewComparisonStore(
             this.props.appStore,
@@ -108,8 +109,7 @@ export default class ComparisonTab extends React.Component<
         },
     });
 
-    @autobind
-    @action
+    @action.bound
     public onOverlapStrategySelect(option: any) {
         trackEvent({
             category: 'resultsView',

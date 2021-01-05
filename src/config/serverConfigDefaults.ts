@@ -27,6 +27,11 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     mygene_info_url:
         'https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot',
 
+    oncoprint_custom_driver_annotation_binary_menu_label:
+        'Custom driver annotation',
+    oncoprint_custom_driver_annotation_tiers_menu_label: 'Custom driver tiers',
+    oncoprint_custom_driver_annotation_binary_default: true,
+    oncoprint_custom_driver_annotation_tiers_default: true,
     oncoprint_oncokb_default: true,
     oncoprint_hotspots_default: true,
     oncoprint_hide_vus_default: false,
@@ -168,6 +173,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
+    enable_request_body_gzip_compression: false,
 };
 
 export default ServerConfigDefaults;

@@ -2,7 +2,7 @@ import * as React from 'react';
 import Draggable from 'react-draggable';
 import { CSSProperties } from 'react';
 import { observer } from 'mobx-react';
-import { action, observable, runInAction } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 
 import styles from './styles.module.scss';
 import autobind from 'autobind-decorator';
@@ -19,6 +19,11 @@ interface IScrollBar {
 
 @observer
 export default class ScrollBar extends React.Component<IScrollBar, {}> {
+    constructor(props: IScrollBar) {
+        super(props);
+        makeObservable(this);
+    }
+
     public scrollbarEl: HTMLDivElement | undefined;
 
     public get scrollEl() {

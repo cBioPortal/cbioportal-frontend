@@ -23,7 +23,7 @@ import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
 } from '../../shared/lib/oql/oqlfilter';
-import oql_parser from '../../shared/lib/oql/oql-parser';
+import oql_parser, { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
     AlterationTypeConstants,
@@ -507,7 +507,8 @@ export function getSampleAlteredMap(
     oqlQuery: string,
     coverageInformation: CoverageInformation,
     selectedMolecularProfileIds: string[],
-    studyToMolecularProfiles: _.Dictionary<MolecularProfile[]>
+    studyToMolecularProfiles: _.Dictionary<MolecularProfile[]>,
+    defaultOQLQueryAlterations: Alteration[] | false
 ) {
     const result: SampleAlteredMap = {};
     filteredAlterationData.forEach((element, key) => {
@@ -548,7 +549,12 @@ export function getSampleAlteredMap(
                     .map(sample => sample.uniqueSampleKey)
             );
             result[
-                getSingleGeneResultKey(key, oqlQuery, notGroupedOql)
+                getSingleGeneResultKey(
+                    key,
+                    oqlQuery,
+                    notGroupedOql,
+                    defaultOQLQueryAlterations
+                )
             ] = samples.map((sample: Sample) => {
                 if (sample.uniqueSampleKey in unProfiledSampleKeysMap) {
                     return AlteredStatus.UNPROFILED;
@@ -624,12 +630,16 @@ export function getSampleAlteredMap(
 export function getSingleGeneResultKey(
     key: number,
     oqlQuery: string,
-    notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>
+    notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>,
+    defaultOQLQueryAlterations: Alteration[] | false
 ) {
-    //only gene
+    // if oql for gene is the same as the default OQL, it means probably
+    //  no oql was specified, so just show the gene
     if (
-        (oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery)
-            .alterations === false
+        _.isEqual(
+            notGroupedOql.parsed_oql_line.alterations,
+            defaultOQLQueryAlterations
+        )
     ) {
         return notGroupedOql.gene;
     }
@@ -844,7 +854,7 @@ export function evaluateDiscreteCNAPutativeDriverInfo(
     cnaDatum: CustomDriverNumericGeneMolecularData,
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<boolean> | undefined
+    customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
 
@@ -883,7 +893,7 @@ export function evaluateMutationPutativeDriverInfo(
     cosmicCountActive: boolean,
     cosmicCountExceeded: boolean,
     customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<boolean> | undefined
+    customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
     const hotspots = hotspotAnnotationsActive && hotspotDriver;

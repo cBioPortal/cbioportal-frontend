@@ -1820,7 +1820,7 @@ export function evaluateDiscreteCNAPutativeDriverInfo(
     cnaDatum: CustomDriverNumericGeneMolecularData,
     oncoKbDatum: IndicatorQueryResp | undefined | null | false,
     customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<boolean> | undefined
+    customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
 
@@ -1859,7 +1859,7 @@ export function evaluateMutationPutativeDriverInfo(
     cosmicCountActive: boolean,
     cosmicCountExceeded: boolean,
     customDriverAnnotationsActive: boolean,
-    customDriverTierSelection: ObservableMap<boolean> | undefined
+    customDriverTierSelection: ObservableMap<string, boolean> | undefined
 ) {
     const oncoKb = oncoKbDatum ? getOncoKbOncogenic(oncoKbDatum) : '';
     const hotspots = hotspotAnnotationsActive && hotspotDriver;

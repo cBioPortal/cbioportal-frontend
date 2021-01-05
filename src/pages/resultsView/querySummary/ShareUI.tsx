@@ -4,7 +4,7 @@ import * as React from 'react';
 import styles from './shareUI.module.scss';
 import autobind from 'autobind-decorator';
 import { BookmarkModal } from '../bookmark/BookmarkModal';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import request from 'superagent';
 import AppConfig from 'appConfig';
@@ -26,6 +26,10 @@ export interface ShareUrls {
 
 @observer
 export class ShareUI extends React.Component<IShareUI, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable showBookmarkDialog: boolean = false;
 
     async getUrls(): Promise<ShareUrls> {
@@ -43,8 +47,7 @@ export class ShareUI extends React.Component<IShareUI, {}> {
         };
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleBookmarkDialog() {
         this.showBookmarkDialog = !this.showBookmarkDialog;
     }

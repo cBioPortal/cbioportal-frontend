@@ -1,8 +1,7 @@
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { Col, Row } from 'react-bootstrap';
-import Spinner from 'react-spinkit';
 import HeaderAnnotation from '../headerAnnotation/HeaderAnnotation';
 import FeatureTable from '../featureTable/FeatureTable';
 import { VariantStore } from '../../store/VariantStore';
@@ -23,6 +22,15 @@ export function initDefaultVariantStore(props: IVariantProps) {
 class Variant extends React.Component<IVariantProps> {
     constructor(props: IVariantProps) {
         super(props);
+        makeObservable<
+            Variant,
+            | 'variantStore'
+            | 'myVariantInfo'
+            | 'oncokb'
+            | 'variantAnnotation'
+            | 'setActiveTranscript'
+            | 'onTranscriptSelect'
+        >(this);
     }
 
     public render(): React.ReactNode {
@@ -31,44 +39,43 @@ class Variant extends React.Component<IVariantProps> {
         ) : (
             <div className={'page-body variant-page'}>
                 <Row>
-                    <Col>
-                        <HeaderAnnotation
-                            annotation={this.variantStore.annotationSummary}
-                            mutation={
-                                variantToMutation(
-                                    this.variantStore.annotationSummary
-                                )[0]
-                            }
-                            variant={this.props.variant}
-                            oncokbGenesMap={
-                                this.variantStore.oncokbGenesMap.result
-                            }
-                            oncokb={this.oncokb}
-                            selectedTranscript={
-                                this.variantStore.selectedTranscript
-                            }
-                            isCanonicalTranscriptSelected={
-                                this.isCanonicalTranscriptSelected
-                            }
-                            allValidTranscripts={this.allValidTranscripts}
-                            onTranscriptSelect={this.onTranscriptSelect}
-                        />
-                    </Col>
+                    <HeaderAnnotation
+                        annotation={this.variantStore.annotationSummary}
+                        mutation={
+                            variantToMutation(
+                                this.variantStore.annotationSummary
+                            )[0]
+                        }
+                        variant={this.props.variant}
+                        oncokbGenesMap={this.variantStore.oncokbGenesMap.result}
+                        oncokb={this.oncokb}
+                        selectedTranscript={
+                            this.variantStore.selectedTranscript
+                        }
+                        isCanonicalTranscriptSelected={
+                            this.isCanonicalTranscriptSelected
+                        }
+                        allValidTranscripts={this.allValidTranscripts}
+                        onTranscriptSelect={this.onTranscriptSelect}
+                    />
                 </Row>
                 <Row>
-                    <Col>
-                        <FeatureTable
-                            myVariantInfo={this.myVariantInfo}
-                            annotationInternal={
+                    <FeatureTable
+                        myVariantInfo={this.myVariantInfo}
+                        annotationInternal={this.variantStore.annotationSummary}
+                        variantAnnotation={this.variantAnnotation}
+                        oncokb={this.oncokb}
+                        clinVar={this.clinVar}
+                        signalAnnotation={this.signalAnnotation}
+                        isCanonicalTranscriptSelected={
+                            this.isCanonicalTranscriptSelected!
+                        }
+                        mutation={
+                            variantToMutation(
                                 this.variantStore.annotationSummary
-                            }
-                            variantAnnotation={this.variantAnnotation}
-                            oncokb={this.oncokb}
-                            isCanonicalTranscriptSelected={
-                                this.isCanonicalTranscriptSelected!
-                            }
-                        />
-                    </Col>
+                            )[0]
+                        }
+                    />
                 </Row>
                 {!this.isCanonicalTranscriptSelected && (
                     <div>
@@ -93,6 +100,16 @@ class Variant extends React.Component<IVariantProps> {
             this.variantStore.annotation.result.my_variant_info
             ? this.variantStore.annotation.result.my_variant_info.annotation
             : undefined;
+    }
+
+    @computed
+    private get clinVar() {
+        return this.myVariantInfo?.clinVar;
+    }
+
+    @computed
+    private get signalAnnotation() {
+        return this.variantAnnotation?.signalAnnotation;
     }
 
     @computed
@@ -133,11 +150,7 @@ class Variant extends React.Component<IVariantProps> {
         return (
             this.props.mainLoadingIndicator || (
                 <div className={'loadingIndicator'}>
-                    <Spinner
-                        noFadeIn={true}
-                        spinnerName="three-bounce"
-                        className={'loading-spinner'}
-                    />
+                    <i className="fa fa-spinner fa-pulse fa-2x" />
                 </div>
             )
         );

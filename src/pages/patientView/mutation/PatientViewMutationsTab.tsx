@@ -8,7 +8,7 @@ import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import SampleManager from '../SampleManager';
 import { IColumnVisibilityDef } from '../../../shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import { Mutation, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
@@ -50,6 +50,10 @@ export default class PatientViewMutationsTab extends React.Component<
     IPatientViewMutationsTabProps,
     {}
 > {
+    constructor(props: IPatientViewMutationsTabProps) {
+        super(props);
+        makeObservable(this);
+    }
     get showTimeline() {
         return (
             this.props.urlWrapper.query.genomicEvolutionSettings
@@ -68,8 +72,7 @@ export default class PatientViewMutationsTab extends React.Component<
         });
     }
 
-    @autobind
-    @action
+    @action.bound
     private toggleTimeline() {
         this.showTimeline = !this.showTimeline;
     }
@@ -114,8 +117,7 @@ export default class PatientViewMutationsTab extends React.Component<
         return this._plotTab;
     }
 
-    @autobind
-    @action
+    @action.bound
     private setPlotTab(id: PlotTab) {
         this._plotTab = id;
         localStorage.setItem(LOCAL_STORAGE_PLOT_TAB_KEY, id);

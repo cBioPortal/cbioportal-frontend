@@ -2856,6 +2856,11 @@
   resolved "https://registry.yarnpkg.com/@types/numeral/-/numeral-0.0.22.tgz#86bef1f0a2d743afdc2ef3168d45f2905e1a0b93"
   integrity sha512-zUS7L52zNNVIKDf2/YiWUeFLiJPPZ03h9wVLDa04u4j5bTFc9OeACCg6piZBTwhPyWv3P7nKe4OWzQwU/FGHgQ==
 
+"@types/pako@1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/pako/-/pako-1.0.1.tgz#33b237f3c9aff44d0f82fe63acffa4a365ef4a61"
+  integrity sha512-GdZbRSJ3Cv5fiwT6I0SQ3ckeN2PWNqxd26W9Z2fCK1tGrrasGy4puvNFtnddqH9UJFMQYXxEuuB7B8UK+LLwSg==
+
 "@types/pdfobject@2.0.5":
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/@types/pdfobject/-/pdfobject-2.0.5.tgz#96e3d3a6fc27ae9be96b2eaecbd26b036d8b020b"
@@ -11571,11 +11576,6 @@ hoist-non-react-statics@^1.0.0:
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-1.2.0.tgz#aa448cf0986d55cc40773b17174b7dd066cb7cfb"
   integrity sha1-qkSM8JhtVcxAdzsXF0t90GbLfPs=
 
-hoist-non-react-statics@^2.3.1:
-  version "2.5.5"
-  resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
-  integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
-
 hoist-non-react-statics@^3.1.0:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-3.3.2.tgz#ece0acaf71d62c2969c2ec59feff42a4b1a85b45"
@@ -15184,43 +15184,53 @@ mkdirp@*, mkdirp@0.5.1, mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0
   dependencies:
     minimist "0.0.8"
 
-mobx-react-devtools@^4.2.11:
-  version "4.2.15"
-  resolved "https://registry.yarnpkg.com/mobx-react-devtools/-/mobx-react-devtools-4.2.15.tgz#881c038fb83db4dffd1e72bbaf5374d26b2fdebb"
-  integrity sha1-iBwDj7g9tN/9HnK7r1N00msv3rs=
+mobx-logger@^0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/mobx-logger/-/mobx-logger-0.7.1.tgz#6be44c726e14433463f5fa566f24f1768e2a9355"
+  integrity sha512-kAcNjzDGjILjvNiVrQZfVY6Bxs5YKt35rtwNuU/uneLq+E9zF5grnGmr95EMqqYSVpE6RjJLID3y3j0yQ/cvRA==
 
-mobx-react-lite@^2.0.7:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/mobx-react-lite/-/mobx-react-lite-2.0.7.tgz#1bfb3b4272668e288047cf0c7940b14e91cba284"
-  integrity sha512-YKAh2gThC6WooPnVZCoC+rV1bODAKFwkhxikzgH18wpBjkgTkkR9Sb0IesQAH5QrAEH/JQVmy47jcpQkf2Au3Q==
+mobx-react-devtools@6.1.1:
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/mobx-react-devtools/-/mobx-react-devtools-6.1.1.tgz#a462b944085cf11ff96fc937d12bf31dab4c8984"
+  integrity sha512-nc5IXLdEUFLn3wZal65KF3/JFEFd+mbH4KTz/IG5BOPyw7jo8z29w/8qm7+wiCyqVfUIgJ1gL4+HVKmcXIOgqA==
+
+mobx-react-lite@1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/mobx-react-lite/-/mobx-react-lite-1.4.0.tgz#193beb5fdddf17ae61542f65ff951d84db402351"
+  integrity sha512-5xCuus+QITQpzKOjAOIQ/YxNhOl/En+PlNJF+5QU4Qxn9gnNMJBbweAdEW3HnuVQbfqDYEUnkGs5hmkIIStehg==
+
+mobx-react-lite@3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/mobx-react-lite/-/mobx-react-lite-3.0.1.tgz#417f54a819d1e3e00c073077f29373399c95b005"
+  integrity sha512-Ue8uGgT5iOjMyNf5ptoFW7BTvyLIwggzIkoFpwORrqf73TPqu47iLpz/DNvaba3v40kSsEpp050qYroMNuA1xw==
 
 mobx-react-router@4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/mobx-react-router/-/mobx-react-router-4.1.0.tgz#de014848207d8aa32f6a4e67ed861bd2cb6516e5"
   integrity sha512-2knsbDqVorWLngZWbdO8tr7xcZXaLpVFsFlCaGaoyZ+EP9erVGRxnlWGqKyFObs3EH1JPLyTDOJ2LPTxb/lB6Q==
 
-mobx-react@^4.1.3:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/mobx-react/-/mobx-react-4.4.3.tgz#baa9ec41165ee35ae7b9df19bca10190f36f117e"
-  integrity sha1-uqnsQRZe41rnud8ZvKEBkPNvEX4=
+mobx-react@6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/mobx-react/-/mobx-react-6.0.0.tgz#251874d9a06468cdae668ce13f61a8e75c230a08"
+  integrity sha512-/c7WBPB9jEmK38ZVQG+YMca8JD4mTwei7ieHh3oAv8RYZvHoCBXOS+haeeFh0kZ9cmdtDxyUhth0WMPrdlC3og==
   dependencies:
-    hoist-non-react-statics "^2.3.1"
+    mobx-react-lite "1.4.0"
 
-mobx-utils@^2.0.1:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-2.0.2.tgz#c12c9cc69be8020e30c7b6417f14b4ea38ba9723"
-  integrity sha1-wSycxpvoAg4wx7ZBfxS06ji6lyM=
+mobx-utils@6.0.1:
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-6.0.1.tgz#bc16c2c62794a48498685f3663e6162d42fb6106"
+  integrity sha512-0p5xqHDt/arz3cswVcEHYKY/BwL+fifsNroT3Gjkz9lNC7ZDsJm3IuGsmYlvFcVRJRr1rwlFZGuZXrt/MhHEJQ==
 
-mobx@^3.1.7:
-  version "3.6.2"
-  resolved "https://registry.yarnpkg.com/mobx/-/mobx-3.6.2.tgz#fb9f5ff5090539a1ad54e75dc4c098b602693320"
-  integrity sha512-Dq3boJFLpZEvuh5a/MbHLUIyN9XobKWIb0dBfkNOJffNkE3vtuY0C9kSDVpfH8BB0BPkVw8g22qCv7d05LEhKg==
+mobx@6.0.0, mobx@6.0.1, mobx@^6.0.0:
+  version "6.0.4"
+  resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
+  integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
 
-"mobxpromise@github:cbioportal/mobxpromise#v1.0.2":
-  version "1.3.1"
-  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/bacd7f20be0b4e9285bd5330c103241a0f2d5256"
+"mobxpromise@github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f":
+  version "2.0.1"
+  resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
   dependencies:
-    mobx "^3.1.7"
+    mobx "6.0.0"
 
 mocha@^5.2.0:
   version "5.2.0"
@@ -16449,6 +16459,11 @@ pad-left@^1.0.2:
   integrity sha1-GeVzXqmDlaJs7carkm6tEPMQDUw=
   dependencies:
     repeat-string "^1.3.0"
+
+pako@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/pako/-/pako-2.0.2.tgz#8a72af7a93431ef22aa97e0d53b0acaa3c689220"
+  integrity sha512-9e8DRI3+dRLomCmMBAH30B2ejh+blwXr7VmMEx/pVFZlSDA7oyI8uKMhKXr8IrZpoxBF2YlxUvhqRXzTT1i0NA==
 
 pako@~1.0.2:
   version "1.0.11"

@@ -23,6 +23,15 @@ export const ANNOTATION_QUERY_FIELDS = [
     'annotation_summary',
     'my_variant_info',
     'mutation_assessor',
+    'signal',
 ];
 
+export enum Pathogenicity {
+    GERMLINE = 'germline',
+    SOMATIC = 'somatic',
+    BIALLELIC = 'biallelic',
+}
+
 export const SHOW_MUTATION_ASSESSOR = true;
+
+export const MskImpactFrequencyDigits = 3;

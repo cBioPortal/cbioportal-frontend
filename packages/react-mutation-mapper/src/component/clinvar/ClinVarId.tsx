@@ -1,6 +1,7 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { getClinVarId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
+import { makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -10,6 +11,10 @@ export type ClinVarIdProps = {
 
 @observer
 export default class ClinVarId extends React.Component<ClinVarIdProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public render() {
         const clinVarId = getClinVarId(this.props.myVariantInfo);
 

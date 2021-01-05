@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import MobxPromise, { cached, labelMobxPromises } from 'mobxpromise';
 
 import {
@@ -29,7 +29,6 @@ import {
 } from 'shared/lib/StoreUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
-    EnsemblTranscript,
     VariantAnnotation,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
@@ -53,7 +52,7 @@ import {
 
 import { IMutationMapperConfig } from './MutationMapperConfig';
 import autobind from 'autobind-decorator';
-import { normalizeMutation, normalizeMutations } from './MutationMapperUtils';
+import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
 import {
     ONCOKB_DEFAULT_INFO,
@@ -97,14 +96,15 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             getTranscriptId
         );
 
+        makeObservable(this);
+
         const unnormalizedGetMutations = this.getMutations;
         this.getMutations = () =>
             normalizeMutations(unnormalizedGetMutations());
-        labelMobxPromises(this);
+        //labelMobxPromises(this);
     }
 
-    @computed
-    public get dataFetcher(): DefaultMutationMapperDataFetcher {
+    protected getDataFetcher = () => {
         return new DefaultMutationMapperDataFetcher(
             {
                 myGeneUrlTemplate:
@@ -119,6 +119,24 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             this.genomenexusInternalClient || defaultInternalGenomeNexusClient,
             oncoKBClient
         );
+    };
+
+    public getAnnotatedMutations(transcriptId: string): SimpleMutation[] {
+        // overriding the base method (DefaultMutationMapperStore.getAnnotatedMutations)
+        // to skip annotating mutations for canonical transcript.
+        // we want to use the values from database for canonical transcript
+        return this.indexedVariantAnnotations.result
+            ? getMutationsByTranscriptId(
+                  this.getMutations(),
+                  transcriptId,
+                  this.indexedVariantAnnotations.result,
+                  this.canonicalTranscript.result
+                      ? this.canonicalTranscript.result!.transcriptId ===
+                            transcriptId
+                      : false,
+                  true
+              )
+            : this.getMutations();
     }
 
     readonly oncoKbInfo: MobxPromise<OncoKBInfo> = remoteData(
@@ -128,12 +146,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         },
         ONCOKB_DEFAULT_INFO
     );
-
-    @computed get usingPublicOncoKbInstance() {
-        return this.oncoKbInfo.result
-            ? this.oncoKbInfo.result.publicInstance
-            : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
-    }
 
     readonly mutationData = remoteData(
         {
@@ -192,7 +204,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
     @computed get unfilteredMutationsByPosition(): {
         [pos: number]: Mutation[];
     } {
-        return groupMutationsByProteinStartPos(this.dataStore.sortedData);
+        return groupMutationsByProteinStartPos(
+            (this.dataStore as MutationMapperDataStore).sortedData
+        );
     }
 
     // TODO remove when done refactoring react-mutation-mapper
@@ -213,8 +227,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         }
     }
 
-    @computed
-    protected get mutationsGroupedByProteinImpactType() {
+    protected getMutationsGroupedByProteinImpactType = () => {
         const filtersWithoutProteinImpactTypeFilter = this.dataStore.dataFilters.filter(
             f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
         );
@@ -229,11 +242,14 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
         // also apply lazy mobx table search filter
         sortedFilteredData = sortedFilteredData.filter(m =>
-            this.dataStore.applyLazyMobXTableFilter(m)
+            (this
+                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                m
+            )
         );
 
         return groupDataByProteinImpactType(sortedFilteredData);
-    }
+    };
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
@@ -261,18 +277,9 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
     }
 
-    @computed get transcriptsByTranscriptId(): {
-        [transcriptId: string]: EnsemblTranscript;
-    } {
-        return _.keyBy(
-            this.allTranscripts.result as EnsemblTranscript[],
-            transcript => transcript.transcriptId
-        );
-    }
-
-    @computed get mutationsByTranscriptId(): {
+    protected getMutationsByTranscriptId: () => {
         [transcriptId: string]: SimpleMutation[];
-    } {
+    } = () => {
         if (
             this.indexedVariantAnnotations.result &&
             this.transcriptsWithAnnotations.result &&
@@ -296,14 +303,14 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         } else {
             return {};
         }
-    }
+    };
 
     @computed get numberOfMutationsTotal(): number {
         // number of mutations regardless of transcript
         return this.getMutations().length;
     }
 
-    @cached get dataStore(): MutationMapperDataStore {
+    protected getDataStore: () => MutationMapperDataStore = () => {
         return new MutationMapperDataStore(
             this.processedMutationData,
             this.filterApplier,
@@ -312,13 +319,19 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
             this.config.highlightFilters,
             this.config.groupFilters
         );
-    }
+    };
 
-    @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
+    protected getDownloadDataFetcher() {
         return new MutationTableDownloadDataFetcher(this.mutationData);
     }
 
-    @cached get pdbChainDataStore(): PdbChainDataStore {
+    @cached
+    @computed
+    get downloadDataFetcher(): MutationTableDownloadDataFetcher {
+        return this.getDownloadDataFetcher();
+    }
+
+    @cached @computed get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
         return new PdbChainDataStore(
             this.sortedMergedAlignmentData.filter(
@@ -328,7 +341,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         );
     }
 
-    @cached get residueMappingCache() {
+    @cached @computed get residueMappingCache() {
         return new ResidueMappingCache();
     }
 }

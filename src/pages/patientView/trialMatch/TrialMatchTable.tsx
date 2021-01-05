@@ -11,7 +11,7 @@ import {
     IGenomicMatchType,
 } from '../../../shared/model/MatchMiner';
 import styles from './style/trialMatch.module.scss';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import SampleManager from '../SampleManager';
 import {
@@ -55,6 +55,11 @@ class TrialMatchTableComponent extends LazyMobXTable<IDetailedTrialMatch> {}
 
 @observer
 export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
+    constructor(props: ITrialMatchProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed
     get columnWidths() {
         return {
