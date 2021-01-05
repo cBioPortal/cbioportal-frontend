@@ -4,7 +4,7 @@ import {
     TimelineEvent,
     TimelineTrackSpecification,
 } from './types';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import {
     flattenTracks,
     getFullTicks,
@@ -36,6 +36,10 @@ export class TimelineStore {
     public uniqueId = `tl-id-` + _.random(1, 10000);
 
     constructor(tracks: TimelineTrackSpecification[]) {
+        makeObservable<
+            TimelineStore,
+            '_expandedTrims' | '_lastHoveredTooltipUid'
+        >(this);
         this._data = tracks;
     }
 
@@ -84,14 +88,13 @@ export class TimelineStore {
     @computed get expandedTrims() {
         return this._expandedTrims;
     }
-    @autobind
-    @action
+    @action.bound
     public toggleExpandedTrims() {
         this._expandedTrims = !this._expandedTrims;
     }
 
     private tooltipUidCounter = 0;
-    private tooltipModelsByUid = observable.map<TooltipModel>();
+    private tooltipModelsByUid = observable.map<string, TooltipModel>();
     @observable private _lastHoveredTooltipUid: string | null = null;
     @action
     public setHoveredTooltipUid(uid: string | null) {
@@ -104,7 +107,7 @@ export class TimelineStore {
         ) {
             return this._lastHoveredTooltipUid;
         } else if (this.tooltipModelsByUid.size === 1) {
-            return this.tooltipModelsByUid.keys()[0];
+            return this.tooltipModelsByUid.keys().next().value; // equivalent of keys()[0] with Iterators
         } else {
             return null;
         }
@@ -117,11 +120,10 @@ export class TimelineStore {
     }
 
     @computed get tooltipModels() {
-        return this.tooltipModelsByUid.entries();
+        return Array.from(this.tooltipModelsByUid.entries());
     }
 
-    @autobind
-    @action
+    @action.bound
     addTooltip(model: Pick<TooltipModel, 'track' | 'events'>) {
         const tooltipUid = (this.tooltipUidCounter++).toString();
         this.tooltipModelsByUid.set(tooltipUid, {
@@ -131,8 +133,7 @@ export class TimelineStore {
         return tooltipUid;
     }
 
-    @autobind
-    @action
+    @action.bound
     removeTooltip(tooltipUid: string) {
         this.tooltipModelsByUid.delete(tooltipUid);
         if (tooltipUid === this.hoveredTooltipUid) {
@@ -140,15 +141,14 @@ export class TimelineStore {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     removeAllTooltips() {
         this.tooltipModelsByUid.clear();
     }
 
     @action
     removeAllTooltipsExcept(tooltipUid: string) {
-        const uids = this.tooltipModelsByUid.keys();
+        const uids = Array.from(this.tooltipModelsByUid.keys());
         for (const uid of uids) {
             if (uid !== tooltipUid) {
                 this.tooltipModelsByUid.delete(uid);
@@ -156,8 +156,7 @@ export class TimelineStore {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     togglePinTooltip(tooltipUid: string) {
         const model = this.tooltipModelsByUid.get(tooltipUid)!;
         if (model.position) {
@@ -171,8 +170,7 @@ export class TimelineStore {
         return !!this.tooltipModelsByUid.get(tooltipUid)!.position;
     }
 
-    @autobind
-    @action
+    @action.bound
     nextTooltipEvent() {
         if (!this.hoveredTooltipUid) {
             return false;
@@ -184,8 +182,7 @@ export class TimelineStore {
         return true;
     }
 
-    @autobind
-    @action
+    @action.bound
     prevTooltipEvent() {
         if (!this.hoveredTooltipUid) {
             return false;
@@ -266,8 +263,7 @@ export class TimelineStore {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     setMousePosition(p: { x: number; y: number }) {
         this.mousePosition.x = p.x;
         this.mousePosition.y = p.y;

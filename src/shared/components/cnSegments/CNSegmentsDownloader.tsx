@@ -1,6 +1,6 @@
 import * as React from 'react';
 import MobxPromise from 'mobxpromise/dist/src/MobxPromise';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { Button } from 'react-bootstrap';
 import classnames from 'classnames';
@@ -23,6 +23,11 @@ export default class CNSegmentsDownloader extends React.Component<
     CNSegmentsDownloaderProps,
     {}
 > {
+    constructor(props: CNSegmentsDownloaderProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         filename: 'segments.seg',
         buttonClassName: 'btn btn-sm pull-right',

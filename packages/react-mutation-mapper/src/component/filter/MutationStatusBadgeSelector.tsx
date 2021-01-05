@@ -1,4 +1,4 @@
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { formatPercentValue } from 'cbioportal-utils';
@@ -41,6 +41,10 @@ export class MutationStatusBadgeSelector extends React.Component<
     MutationStatusBadgeSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<MutationStatusBadgeSelectorProps> = {
         badgeSelectorOptions: getMutationStatusFilterOptions(),
     };

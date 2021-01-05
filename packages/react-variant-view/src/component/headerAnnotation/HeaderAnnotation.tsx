@@ -10,7 +10,7 @@ import {
     VariantAnnotationSummary,
 } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { CuratedGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
@@ -127,6 +127,10 @@ enum styleNames {
 export default class HeaderAnnotation extends React.Component<
     IHeaderAnnotationProps
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable private showAllTranscripts = false;
 
     public render() {
@@ -454,8 +458,7 @@ export default class HeaderAnnotation extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     public onButtonClick() {
         this.showAllTranscripts = !this.showAllTranscripts;
     }

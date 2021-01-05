@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 import { OncoKbFilterValue } from '../../filter/OncoKbFilter';
 import { DataFilterType } from '../../model/DataFilter';
@@ -24,6 +24,10 @@ export function getOncoKbImage() {
 
 @observer
 export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get oncoKbSpecs(): TrackItemSpec[] {
         const filteredOncoKbDataByProteinPosStart = this.props.store
             .oncoKbDataByPosition;

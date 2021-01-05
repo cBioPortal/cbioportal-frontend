@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import classnames from 'classnames';
 
@@ -13,6 +13,10 @@ export interface IGroupLogicProps {
 
 @observer
 export class GroupLogic extends React.Component<IGroupLogicProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     get child() {
         let elements = [];

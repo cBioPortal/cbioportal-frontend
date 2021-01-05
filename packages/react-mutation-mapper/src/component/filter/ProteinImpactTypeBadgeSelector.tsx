@@ -1,5 +1,5 @@
 import { Option, ProteinImpactType } from 'cbioportal-frontend-commons';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { CSSProperties } from 'react';
@@ -60,6 +60,10 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<
     ProteinImpactTypeBadgeSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,

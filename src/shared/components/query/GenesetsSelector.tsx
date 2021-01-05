@@ -2,7 +2,7 @@ import * as React from 'react';
 import styles from './styles/styles.module.scss';
 import { Modal } from 'react-bootstrap';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { FlexRow, FlexCol } from '../flexbox/FlexBox';
 import gene_lists from './gene_lists';
 import classNames from 'classnames';
@@ -20,6 +20,10 @@ export default class GenesetsSelector extends QueryStoreComponent<
     GenesetsSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get selectedGeneListOption() {
         const option = this.geneListOptions.find(
             opt => opt.value === this.store.geneQuery

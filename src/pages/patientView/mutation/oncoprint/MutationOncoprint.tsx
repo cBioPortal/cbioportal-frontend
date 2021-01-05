@@ -16,7 +16,13 @@ import {
 } from './MutationOncoprintUtils';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../../shared/components/ErrorMessage';
-import { computed, IReactionDisposer, observable, reaction } from 'mobx';
+import {
+    computed,
+    IReactionDisposer,
+    observable,
+    reaction,
+    makeObservable,
+} from 'mobx';
 import OncoprintJS, {
     ColumnId,
     ColumnLabel,
@@ -119,6 +125,8 @@ export default class MutationOncoprint extends React.Component<
 
     constructor(props: IMutationOncoprintProps) {
         super(props);
+
+        makeObservable(this);
 
         (window as any).mutationOncoprint = this;
         this.minZoomUpdater = setInterval(() => {

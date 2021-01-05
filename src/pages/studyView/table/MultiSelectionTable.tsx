@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import * as _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     Column,
@@ -129,6 +129,7 @@ export class MultiSelectionTable extends React.Component<
 
     constructor(props: MultiSelectionTableProps, context: any) {
         super(props, context);
+        makeObservable(this);
         this.sortBy = this.props.defaultSortBy;
     }
 
@@ -589,8 +590,7 @@ export class MultiSelectionTable extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleModal(panelName: string) {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
         if (!this.modalSettings.modalOpen) {
@@ -599,8 +599,7 @@ export class MultiSelectionTable extends React.Component<
         this.modalSettings.modalPanelName = panelName;
     }
 
-    @autobind
-    @action
+    @action.bound
     closeModal() {
         this.modalSettings.modalOpen = !this.modalSettings.modalOpen;
     }
@@ -635,8 +634,7 @@ export class MultiSelectionTable extends React.Component<
         return _.some(this.preSelectedRowsKeys, key => key === uniqueKey);
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleSelectRow(uniqueKey: string) {
         const record = _.find(
             this.props.selectedRowsKeys,
@@ -654,8 +652,7 @@ export class MultiSelectionTable extends React.Component<
     }
     @observable private _selectionType: SelectionOperatorEnum;
 
-    @autobind
-    @action
+    @action.bound
     afterSelectingRows() {
         if (this.selectionType === SelectionOperatorEnum.UNION) {
             this.props.onSubmitSelection([this.props.selectedRowsKeys]);
@@ -687,8 +684,7 @@ export class MultiSelectionTable extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     toggleSelectionOperator() {
         const selectionType = this._selectionType || this.selectionType;
         if (selectionType === SelectionOperatorEnum.INTERSECTION) {
@@ -730,8 +726,7 @@ export class MultiSelectionTable extends React.Component<
             : styles.highlightedOddRow;
     }
 
-    @autobind
-    @action
+    @action.bound
     afterSorting(
         sortBy: MultiSelectionTableColumnKey,
         sortDirection: SortDirection

@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import {
     initDefaultTrackVisibility,
     TrackVisibility,
@@ -8,6 +8,7 @@ export default class MutationMapperUserSelectionStore {
     @observable trackVisibility: TrackVisibility;
 
     constructor() {
+        makeObservable(this);
         this.trackVisibility = initDefaultTrackVisibility();
     }
 }

@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import './errorScreen.scss';
 import AppConfig from 'appConfig';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 var Clipboard = require('clipboard');
 
@@ -20,6 +20,10 @@ export default class ErrorScreen extends React.Component<
     IErrorScreenProps,
     {}
 > {
+    constructor(props: IErrorScreenProps) {
+        super(props);
+        makeObservable(this);
+    }
     @autobind
     copyToClipRef(copyToClip: HTMLButtonElement | null) {
         if (copyToClip) {

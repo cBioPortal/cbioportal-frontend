@@ -4,7 +4,7 @@ import $ from 'jquery';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 
 import {
     getComponentIndex,
@@ -80,29 +80,31 @@ export default class LollipopPlotNoTooltip extends React.Component<
         showYAxis: true,
     };
 
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     @autobind
     protected ref(svg: SVGElement) {
         this.svg = svg;
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onBackgroundClick() {
         if (this.props.dataStore) {
             this.props.dataStore.clearSelectionFilters();
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onBackgroundMouseMove() {
         this.props.onBackgroundMouseMove && this.props.onBackgroundMouseMove();
         // unhover all of the lollipops if mouse hits background
         this.unhoverAllLollipops();
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onLollipopClick(codon: number) {
         if (this.props.dataStore) {
             updatePositionSelectionFilters(
@@ -113,24 +115,21 @@ export default class LollipopPlotNoTooltip extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onKeyDown(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = true;
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onKeyUp(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = false;
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onMouseOver(e: SyntheticEvent<any>) {
         // No matter what, unhover all lollipops - if we're hovering one, we'll set it later in this method
         this.unhoverAllLollipops();
@@ -207,8 +206,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     protected onSVGMouseLeave(e: SyntheticEvent<any>) {
         const target = e.target as Element;
 

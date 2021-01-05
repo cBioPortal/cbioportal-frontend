@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { bind } from 'bind-decorator';
 import {
     VictoryAxis,
@@ -126,6 +126,11 @@ class VictoryTableCell extends React.Component<IVictoryTableCellProps, {}> {
 @observer
 export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     @observable.ref private container: HTMLDivElement;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @bind
     private containerRef(container: HTMLDivElement) {

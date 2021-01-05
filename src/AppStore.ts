@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import {
     addServiceErrorHandler,
     getBrowserWindow,
@@ -17,6 +17,7 @@ export type SiteError = {
 
 export class AppStore {
     constructor() {
+        makeObservable(this);
         getBrowserWindow().me = this;
         addServiceErrorHandler((error: any) => {
             try {
@@ -34,9 +35,9 @@ export class AppStore {
 
     @observable siteErrors: SiteError[] = [];
 
-    @observable userName: string | undefined;
+    @observable.ref userName: string | undefined = undefined;
 
-    @observable authMethod: string | undefined;
+    @observable.ref authMethod: string | undefined = undefined;
 
     @computed get isLoggedIn() {
         return _.isString(this.userName) && this.userName !== 'anonymousUser';

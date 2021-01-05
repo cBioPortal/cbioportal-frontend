@@ -3,7 +3,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { MobxCache } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import {
@@ -68,6 +68,10 @@ export function hideArrow(tooltipEl: any) {
 
 @observer
 export default class OncoKB extends React.Component<IOncoKbProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable showFeedback: boolean = false;
     @observable tooltipDataLoadComplete: boolean = false;
 

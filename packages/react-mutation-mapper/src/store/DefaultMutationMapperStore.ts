@@ -36,7 +36,7 @@ import {
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import MobxPromise, { cached } from 'mobxpromise';
 
 import { DataFilter, DataFilterType } from '../model/DataFilter';
@@ -89,6 +89,8 @@ interface DefaultMutationMapperStoreConfig {
 }
 
 class DefaultMutationMapperStore implements MutationMapperStore {
+    protected getDataFetcher?: () => MutationMapperDataFetcher;
+
     @observable
     private _selectedTranscript: string | undefined = undefined;
 
@@ -109,7 +111,12 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         protected config: DefaultMutationMapperStoreConfig,
         protected getMutations: () => Mutation[],
         public getTranscriptId?: () => string | undefined
-    ) {}
+    ) {
+        makeObservable<
+            DefaultMutationMapperStore,
+            '_selectedTranscript' | 'mutationsGroupedByProteinImpactType'
+        >(this);
+    }
 
     readonly activeTranscript: MobxPromise<string | undefined> = remoteData(
         {
@@ -177,8 +184,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         );
     }
 
+    protected getDataStore?: () => DataStore;
+
     @cached
+    @computed
     public get dataStore(): DataStore {
+        if (this.getDataStore) {
+            return this.getDataStore();
+        }
         return new DefaultMutationMapperDataStore(
             this.mutations,
             this.filterApplier,
@@ -242,6 +255,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     public get dataFetcher(): MutationMapperDataFetcher {
         return (
             this.config.dataFetcher ||
+            (this.getDataFetcher && this.getDataFetcher()) ||
             new DefaultMutationMapperDataFetcher({
                 genomeNexusUrl: this.config.genomeNexusUrl,
                 oncoKbUrl: this.config.oncoKbUrl,
@@ -272,8 +286,15 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         }));
     }
 
+    protected getMutationsGroupedByProteinImpactType?: () => {
+        [type: string]: { group: string; data: any[] };
+    };
+
     @computed
     protected get mutationsGroupedByProteinImpactType() {
+        if (this.getMutationsGroupedByProteinImpactType) {
+            return this.getMutationsGroupedByProteinImpactType();
+        }
         const filtersWithoutProteinImpactTypeFilter = this.dataStore.dataFilters.filter(
             f => f.type !== DataFilterType.PROTEIN_IMPACT_TYPE
         );
@@ -902,8 +923,16 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         },
     });
 
+    protected getMutationsByTranscriptId?: () => {
+        [transcriptId: string]: Mutation[];
+    };
+
     @computed
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
+        if (this.getMutationsByTranscriptId) {
+            return this.getMutationsByTranscriptId();
+        }
+
         if (
             this.indexedVariantAnnotations.result &&
             this.transcriptsWithAnnotations.result &&

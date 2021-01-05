@@ -2,7 +2,14 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+} from 'mobx';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import ClinicalDataEnrichmentsTable from './ClinicalDataEnrichmentsTable';
 import _ from 'lodash';
@@ -101,6 +108,11 @@ export default class ClinicalData extends React.Component<
     IClinicalDataProps,
     {}
 > {
+    constructor(props: IClinicalDataProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable.ref highlightedRow: ClinicalDataEnrichmentWithQ | undefined;
 
     private scrollPane: HTMLDivElement;
@@ -203,8 +215,7 @@ export default class ClinicalData extends React.Component<
     @observable swapAxes = false;
     @observable horizontalBars = false;
 
-    @autobind
-    @action
+    @action.bound
     private onClickLogScale() {
         this.logScale = !this.logScale;
         if (this.logScale) {
@@ -220,14 +231,12 @@ export default class ClinicalData extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onClickSwapAxes() {
         this.swapAxes = !this.swapAxes;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onClickhorizontalBars() {
         this.horizontalBars = !this.horizontalBars;
     }
@@ -535,8 +544,7 @@ export default class ClinicalData extends React.Component<
 
     @observable plotType: PlotType = PlotType.PercentageStackedBar;
 
-    @autobind
-    @action
+    @action.bound
     private onPlotTypeSelect(option: any) {
         this.plotType = option.value;
     }

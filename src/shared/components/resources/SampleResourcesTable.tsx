@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { ResourceData, Sample } from 'cbioportal-ts-api-client';
 import LazyMobXTable, { Column } from '../lazyMobXTable/LazyMobXTable';
 import SampleManager from '../../../pages/patientView/SampleManager';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import ResourceLink from './ResourceLink';
 import _ from 'lodash';
 import { ResourcesTableRowData } from './ResourcesTableUtils';
@@ -21,6 +21,10 @@ export default class SampleResourcesTable extends React.Component<
     ISampleResourcesTableProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get data() {
         const sampleIndex = stringListToIndexSet(
             this.props.sampleManager.getSampleIdsInOrder()

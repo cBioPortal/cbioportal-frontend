@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import { cached } from 'mobxpromise';
 import {
@@ -87,6 +87,10 @@ export default class MutationMapperToolStore {
         },
         undefined
     );
+
+    constructor() {
+        makeObservable(this);
+    }
 
     @computed get isoformOverrideSource(): string {
         return AppConfig.serverConfig.isoformOverrideSource;
@@ -403,11 +407,11 @@ export default class MutationMapperToolStore {
         return getGenomeNexusHgvsgUrl(hgvsg, this.grch38GenomeNexusUrl);
     }
 
-    @cached get pubMedCache() {
+    @cached @computed get pubMedCache() {
         return new PubMedCache();
     }
 
-    @cached get genomeNexusCache() {
+    @cached @computed get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
                 ['annotation_summary'],
@@ -416,7 +420,7 @@ export default class MutationMapperToolStore {
         );
     }
 
-    @cached get genomeNexusMutationAssessorCache() {
+    @cached @computed get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
                 ['annotation_summary', 'mutation_assessor'],
@@ -425,11 +429,11 @@ export default class MutationMapperToolStore {
         );
     }
 
-    @cached get pdbHeaderCache() {
+    @cached @computed get pdbHeaderCache() {
         return new PdbHeaderCache();
     }
 
-    @cached get downloadDataFetcher() {
+    @cached @computed get downloadDataFetcher() {
         return new MutationTableDownloadDataFetcher(
             this.mutations,
             undefined,

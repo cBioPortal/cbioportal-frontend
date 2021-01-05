@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import ExpressionEnrichmentTable, {
     ExpressionEnrichmentTableColumnType,
 } from 'pages/resultsView/enrichments/ExpressionEnrichmentsTable';
@@ -57,6 +57,10 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     IExpressionEnrichmentContainerProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     static defaultProps: Partial<IExpressionEnrichmentContainerProps> = {
         alteredVsUnalteredMode: true,
         isGeneCheckBoxEnabled: false,
@@ -67,7 +71,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
     @observable underExpressedFilter: boolean = true;
     @observable significanceFilter: boolean = false;
     @observable.shallow checkedGenes: string[] = [];
-    @observable clickedGeneHugo: string;
+    @observable.ref clickedGeneHugo: string;
     @observable clickedGeneEntrez: number;
     @observable.ref selectedGenes: string[] | null;
     @observable.ref highlightedRow: ExpressionEnrichmentRow | undefined;
@@ -235,8 +239,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<
         return columns;
     }
 
-    @autobind
-    @action
+    @action.bound
     onChange(values: { value: string }[]) {
         this._expressedGroups = _.map(values, datum => datum.value);
     }

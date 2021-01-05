@@ -4,6 +4,7 @@
         "sourceMap": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
+        "useDefineForClassFields": true,
         "module": "es6",
         "target": "es6",
         "jsx": "preserve",

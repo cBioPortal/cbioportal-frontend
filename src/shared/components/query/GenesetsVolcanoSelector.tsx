@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
 import styles from './styles/styles.module.scss';
-import { action, computed, ObservableMap } from 'mobx';
+import { action, computed, ObservableMap, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { Geneset } from 'cbioportal-ts-api-client';
@@ -27,7 +27,7 @@ export interface GenesetsVolcanoSelectorProps {
     data: Geneset[] | undefined;
     plotData: { x: number; y: number; fill: string }[] | undefined;
     maxY: number | undefined;
-    onSelect: (map_genesets_selected: ObservableMap<boolean>) => void;
+    onSelect: (map_genesets_selected: ObservableMap<string, boolean>) => void;
 }
 
 @observer
@@ -42,6 +42,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
     ];
     constructor(props: GenesetsVolcanoSelectorProps) {
         super(props);
+        makeObservable(this);
         this.percentileChange = this.percentileChange.bind(this);
         this.updateSelectionFromPlot = this.updateSelectionFromPlot.bind(this);
     }

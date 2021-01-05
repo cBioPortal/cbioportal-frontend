@@ -11,7 +11,7 @@ import {
     FreqColumnTypeEnum,
 } from '../TableUtils';
 import { getQValue } from '../StudyViewUtils';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import { If, Then, Else } from 'react-if';
@@ -34,8 +34,12 @@ export type IGeneCellProps = {
 export class GeneCell extends React.Component<IGeneCellProps, {}> {
     @observable isVisible: boolean = false;
 
-    @autobind
-    @action
+    constructor(props: IGeneCellProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     onVisibleChange(isVisible: boolean) {
         this.isVisible = isVisible;
     }

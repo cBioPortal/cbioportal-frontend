@@ -4,20 +4,21 @@ import { Link } from 'react-router-dom';
 import { AppStore } from '../../../AppStore';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 
 export class UserDataAccessToken {
-    @observable token: string;
-    @observable creationDate: string;
-    @observable expirationDate: string;
-    @observable username: string;
+    @observable.ref token: string;
+    @observable.ref creationDate: string;
+    @observable.ref expirationDate: string;
+    @observable.ref username: string;
     constructor(
         token: string,
         creationDate: string,
         expirationDate: string,
         username: string
     ) {
+        makeObservable(this);
         this.token = token;
         this.creationDate = creationDate;
         this.expirationDate = expirationDate;
@@ -44,6 +45,7 @@ export class DataAccessTokensDropdown extends React.Component<
 
     constructor(props: IDataAccessTokensProps) {
         super(props);
+        makeObservable(this);
     }
 
     @computed get getDatDropdownList(): any {

@@ -915,7 +915,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Unknown',
                     } as IndicatorQueryResp,
                     false,
-                    observable.map<boolean>({ 'Class 1': false })
+                    observable.map<string, boolean>({ 'Class 1': false })
                 ),
                 {
                     oncoKb: '',
@@ -939,7 +939,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Oncogenic',
                     } as IndicatorQueryResp,
                     false,
-                    observable.map<boolean>({ 'Class 1': false })
+                    observable.map<string, boolean>({ 'Class 1': false })
                 ),
                 {
                     oncoKb: 'Oncogenic',
@@ -963,7 +963,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Unknown',
                     } as IndicatorQueryResp,
                     false,
-                    observable.map<boolean>({ 'Class 1': false })
+                    observable.map<string, boolean>({ 'Class 1': false })
                 ),
                 {
                     oncoKb: '',
@@ -985,7 +985,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Unknown',
                     } as IndicatorQueryResp,
                     true,
-                    observable.map<boolean>({ 'Class 1': false })
+                    observable.map<string, boolean>({ 'Class 1': false })
                 ),
                 {
                     oncoKb: '',
@@ -1009,7 +1009,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Unknown',
                     } as IndicatorQueryResp,
                     false,
-                    observable.map<boolean>({ 'Class 1': true })
+                    observable.map<string, boolean>({ 'Class 1': true })
                 ),
                 {
                     oncoKb: '',
@@ -1031,7 +1031,7 @@ describe('StoreUtils', () => {
                         oncogenic: 'Unknown',
                     } as IndicatorQueryResp,
                     false,
-                    observable.map<boolean>({
+                    observable.map<string, boolean>({
                         'Class 2': false,
                         'Class 1': true,
                     })

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import FeatureTitle from '../featureTitle/FeatureTitle';
 import WindowStore from '../window/WindowStore';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import autobind from 'autobind-decorator';
@@ -23,6 +23,10 @@ export default class ResourceTab extends React.Component<
     IResourceTabProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get iframeHeight() {
         return WindowStore.size.height - 275;
     }
@@ -46,8 +50,7 @@ export default class ResourceTab extends React.Component<
         return this.props.resourceData[this.currentResourceIndex];
     }
 
-    @autobind
-    @action
+    @action.bound
     private goToNextDatum() {
         if (!this.isLastDatum) {
             this.props.urlWrapper.setResourceUrl(
@@ -56,8 +59,7 @@ export default class ResourceTab extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private goToPrevDatum() {
         if (!this.isFirstDatum) {
             this.props.urlWrapper.setResourceUrl(
