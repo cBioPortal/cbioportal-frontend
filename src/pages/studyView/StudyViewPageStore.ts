@@ -6081,16 +6081,10 @@ export class StudyViewPageStore {
             this.selectedSamples,
         ],
         invoke: async () => {
-            let molecularProfileOptions: GenomicDataCountWithSampleUniqueKeys[] = [];
-            if (this.isInitialFilterState) {
-                molecularProfileOptions = this
-                    .initialMolecularProfileSampleCounts.result!;
-            } else {
-                molecularProfileOptions = getMolecularProfileOptions(
-                    this.molecularProfiles.result,
-                    this.sampleUniqueKeysByMolecularProfileIdSet.result!
-                );
-            }
+            const molecularProfileOptions: GenomicDataCountWithSampleUniqueKeys[] = getMolecularProfileOptions(
+                this.molecularProfiles.result,
+                this.sampleUniqueKeysByMolecularProfileIdSet.result!
+            );
 
             return molecularProfileOptions.map(molecularProfileOption => {
                 return {
