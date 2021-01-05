@@ -294,7 +294,7 @@ export default class QuerySummary extends React.Component<
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             {!this.isQueryOrGeneInvalid && (
-                                <div>
+                                <div style={{ display: 'flex' }}>
                                     <button
                                         id="modifyQueryBtn"
                                         onClick={this.toggleQueryFormVisibility}
