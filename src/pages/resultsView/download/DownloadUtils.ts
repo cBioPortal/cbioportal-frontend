@@ -40,6 +40,7 @@ import {
     getGenericAssayMetaPropertyOrDefault,
     COMMON_GENERIC_ASSAY_PROPERTY,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { Alteration } from 'shared/lib/oql/oql-parser';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -633,6 +634,7 @@ export function generateDownloadData(
 
 export function generateCaseAlterationData(
     oqlQuery: string,
+    defaultOQLQueryAlterations: Alteration[] | false,
     selectedMolecularProfiles: MolecularProfile[],
     caseAggregatedDataByOQLLine?: IQueriedCaseData<
         AnnotatedExtendedAlteration
@@ -716,7 +718,10 @@ export function generateCaseAlterationData(
                 trackName = getSingleGeneResultKey(
                     index,
                     oqlQuery,
-                    data.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>
+                    data.oql as OQLLineFilterOutput<
+                        AnnotatedExtendedAlteration
+                    >,
+                    defaultOQLQueryAlterations
                 );
             } else {
                 genes = (data.oql as MergedTrackLineFilterOutput<
