@@ -1,4 +1,4 @@
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import {
@@ -45,6 +45,10 @@ export default class MutationStatusSelector extends React.Component<
     MutationStatusSelectorProps,
     {}
 > {
+    constructor(props: MutationStatusSelectorProps) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     private get mutationStatusFilterOptions() {
         const options = [

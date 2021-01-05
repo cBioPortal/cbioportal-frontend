@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import autobind from 'autobind-decorator';
@@ -24,6 +24,10 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
     IEnrichmentsDataSetDropdownProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @autobind
     private change(selectedStudyId: string, o: any) {
         let updatedStudyMolecularProfileMap = _.mapValues(

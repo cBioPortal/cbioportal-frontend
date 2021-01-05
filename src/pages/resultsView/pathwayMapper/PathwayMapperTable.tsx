@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import LazyMobXTable, {
     Column,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { Radio } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
@@ -75,12 +75,14 @@ export default class PathwayMapperTable extends React.Component<
     @observable protected _columns: {
         [columnEnum: number]: PathwayMapperTableColumn;
     };
-    @observable selectedPathway: string;
+    @observable.ref selectedPathway: string;
 
     constructor(props: IPathwayMapperTableProps) {
         super(props);
+        makeObservable(this);
         this._columns = {};
         this.generateColumns();
+        makeObservable(this);
     }
 
     generateColumns() {

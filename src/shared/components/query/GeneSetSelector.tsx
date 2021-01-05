@@ -3,7 +3,7 @@ import styles from './styles/styles.module.scss';
 import { Modal } from 'react-bootstrap';
 import ReactSelect from 'react-select1';
 import { observer } from 'mobx-react';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import { FlexRow, FlexCol } from '../flexbox/FlexBox';
 import gene_lists from './gene_lists';
 import classNames from 'classnames';
@@ -24,6 +24,10 @@ import GeneSymbolValidationError from './GeneSymbolValidationError';
 
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get selectedGeneListOption() {
         let option = this.geneListOptions.find(
             opt => opt.value == this.store.geneQuery
@@ -55,8 +59,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
         ];
     }
 
-    @bind
-    @action
+    @action.bound
     handleOQLUpdate(
         oql: {
             query: SingleGeneQuery[];

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import styles from '../styles.module.scss';
 import autobind from 'autobind-decorator';
 import { getPatientViewUrl } from 'shared/api/urls';
@@ -27,6 +27,10 @@ export default class ActionButtons extends React.Component<
     ActionButtonsProps,
     {}
 > {
+    constructor(props: ActionButtonsProps) {
+        super(props);
+        makeObservable(this);
+    }
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
 

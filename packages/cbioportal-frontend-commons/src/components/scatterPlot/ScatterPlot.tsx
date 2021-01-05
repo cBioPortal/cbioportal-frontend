@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import * as React from 'react';
 import {
@@ -92,6 +92,11 @@ const GRADIENT_ID = 'scatterPlotLinearGradient';
 
 @observer
 export class ScatterPlot extends React.Component<IScatterPlotProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps: Partial<IScatterPlotProps> = {
         axisLabelTiltAngle: 50,
         disableSelection: true,

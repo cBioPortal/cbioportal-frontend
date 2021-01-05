@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { toJS, action, computed, observable, runInAction } from 'mobx';
+import {
+    toJS,
+    action,
+    computed,
+    observable,
+    runInAction,
+    makeObservable,
+} from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import './styles.scss';
 import {
@@ -260,7 +267,7 @@ const discreteVsDiscretePlotTypeOptions = [
 
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
-    private plotSvg: SVGElement | null = null;
+    @observable.ref private plotSvg: SVGElement | null = null;
 
     private horzSelection: AxisMenuSelection;
     private vertSelection: AxisMenuSelection;
@@ -273,8 +280,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @observable plotElementWidth = 0;
 
     @observable boxPlotSortByMedian = false;
-    @observable searchCaseInput: string;
-    @observable searchMutationInput: string;
+    @observable.ref searchCaseInput: string;
+    @observable.ref searchMutationInput: string;
     @observable showRegressionLine = false;
     // discrete vs discrete settings
     @observable discreteVsDiscretePlotType: DiscreteVsDiscretePlotType =
@@ -287,13 +294,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     @observable searchCase: string = '';
     @observable searchMutation: string = '';
-    @observable plotExists = false;
-    @observable highlightedLegendItems = observable.shallowMap<
+    @observable highlightedLegendItems = observable.map<
+        string,
         LegendDataWithId
-    >();
+    >({}, { deep: false });
 
-    @autobind
-    @action
+    @action.bound
     private onClickLegendItem(ld: LegendDataWithId<any>) {
         if (this.highlightedLegendItems.has(ld.highlighting!.uid)) {
             this.highlightedLegendItems.delete(ld.highlighting!.uid);
@@ -302,8 +308,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onClickColorByCopyNumber() {
         if (this.plotType.result === PlotType.WaterfallPlot) {
             // waterfall plot is a radio - cant select both mutation type and copy number
@@ -315,8 +320,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onClickColorByMutationType() {
         if (this.plotType.result === PlotType.WaterfallPlot) {
             // waterfall plot is a radio - cant select both mutation type and copy number
@@ -660,6 +664,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
 
     constructor(props: IPlotsTabProps) {
         super(props);
+
+        makeObservable(this);
 
         this.horzSelection = this.initAxisMenuSelection(false);
         this.vertSelection = this.initAxisMenuSelection(true);
@@ -1298,15 +1304,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             },
         });
     }
-    @autobind
-    @action
+    @action.bound
     private updateColoringMenuGene(entrezGeneId: number) {
         this.coloringMenuSelection.selectedOption = undefined;
         this.coloringMenuSelection.default.entrezGeneId = entrezGeneId;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         const plotType = this.plotType.result!;
         switch (parseInt((event.target as HTMLInputElement).value, 10)) {
@@ -1418,8 +1422,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private setSearchCaseInput(e: any) {
         this.searchCaseInput = e.target.value;
         clearTimeout(this.searchCaseTimeout);
@@ -1429,8 +1432,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private setSearchMutationInput(e: any) {
         this.searchMutationInput = e.target.value;
         clearTimeout(this.searchMutationTimeout);
@@ -1440,14 +1442,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     public executeSearchCase(caseId: string) {
         this.searchCase = caseId;
     }
 
-    @autobind
-    @action
+    @action.bound
     public executeSearchMutation(proteinChange: string) {
         this.searchMutation = proteinChange;
     }
@@ -1482,8 +1482,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onVerticalAxisGeneSelect(option: any) {
         this.vertSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
@@ -1491,8 +1490,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     private onHorizontalAxisGeneSelect(option: any) {
         this.horzSelection.selectedGeneOption = option;
         this.viewLimitValues = true;
@@ -1500,8 +1498,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     private selectSameGeneOptionForVerticalAxis() {
         if (!this.vertGeneOptions.result) {
             return;
@@ -1516,40 +1513,35 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onVerticalAxisGenesetSelect(option: any) {
         this.vertSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onHorizontalAxisGenesetSelect(option: any) {
         this.horzSelection.selectedGenesetOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onVerticalAxisGenericAssaySelect(option: any) {
         this.vertSelection.selectedGenericAssayOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateVerticalFromSelection(this.vertSelection);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onHorizontalAxisGenericAssaySelect(option: any) {
         this.horzSelection.selectedGenericAssayOption = option;
         this.viewLimitValues = true;
         this.selectionHistory.updateHorizontalFromSelection(this.horzSelection);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onColoringMenuOptionSelect(option: any) {
         this.coloringMenuSelection.selectedOption = option;
     }
@@ -2191,8 +2183,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         },
     });
 
-    @autobind
-    @action
+    @action.bound
     private onVerticalAxisDataTypeSelect(option: PlotsTabOption) {
         const oldVerticalGene = this.vertSelection.selectedGeneOption;
         const oldHorizontalGene = this.horzSelection.selectedGeneOption;
@@ -2227,8 +2218,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onHorizontalAxisDataTypeSelect(option: PlotsTabOption) {
         const oldHorizontalGene = this.horzSelection.selectedGeneOption;
         const oldVerticalGene = this.vertSelection.selectedGeneOption;
@@ -2264,8 +2254,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onVerticalAxisDataSourceSelect(option: PlotsTabOption) {
         this.vertSelection.selectedDataSourceOption = option;
         this.vertSelection.selectedGenericAssayOption = undefined;
@@ -2276,8 +2265,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onHorizontalAxisDataSourceSelect(option: PlotsTabOption) {
         this.horzSelection.selectedDataSourceOption = option;
         this.horzSelection.selectedGenericAssayOption = undefined;
@@ -2294,8 +2282,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             dataType !== AlterationTypeConstants.GENERIC_ASSAY;
     }
 
-    @autobind
-    @action
+    @action.bound
     autoChooseColoringMenuGene() {
         const currentSelectedGeneId = this.coloringMenuSelection.selectedOption
             ? this.coloringMenuSelection.selectedOption.info.entrezGeneId
@@ -2336,37 +2323,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     public onVerticalAxisMutationCountBySelect(option: any) {
         this.vertSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onHorizontalAxisMutationCountBySelect(option: any) {
         this.horzSelection.mutationCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     private onDiscreteVsDiscretePlotTypeSelect(option: any) {
         this.discreteVsDiscretePlotType = option.value;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onSortOrderButtonPressed() {
         this._waterfallPlotSortOrder =
             this.waterfallPlotSortOrder === 'ASC' ? 'DESC' : 'ASC';
     }
 
-    @autobind
-    @action
+    @action.bound
     private swapHorzVertSelections() {
         const keysToSwap: (keyof AxisMenuSelection)[] = [
             'dataType',
@@ -3007,9 +2989,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         };
         const highlightFunctions = [
             searchHighlight,
-            ...this.highlightedLegendItems
-                .values()
-                .map(x => x.highlighting!.isDatumHighlighted),
+            ...Array.from(this.highlightedLegendItems.values()).map(
+                x => x.highlighting!.isDatumHighlighted
+            ),
         ];
         return (d: IPlotSampleData) => {
             return _.some(highlightFunctions, f => f(d));
@@ -3809,7 +3791,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             });
         }
     }
-    @autobind
+    @action.bound
     private assignPlotSvgRef(el: SVGElement | null) {
         this.plotSvg = el;
         if (el) {
@@ -4859,36 +4841,47 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     </div>
                                 </div>
                             )}
-                            {this.plotExists && (
-                                <DownloadControls
-                                    getSvg={this.getSvg}
-                                    filename={this.downloadFilename}
-                                    additionalRightButtons={[
-                                        {
-                                            key: 'Data',
-                                            content: (
-                                                <span>
-                                                    Data{' '}
-                                                    <i
-                                                        className="fa fa-cloud-download"
-                                                        aria-hidden="true"
-                                                    />
-                                                </span>
-                                            ),
-                                            onClick: this.downloadData,
-                                            disabled: !this.props.store
-                                                .entrezGeneIdToGene.isComplete,
-                                        },
-                                    ]}
-                                    dontFade={true}
-                                    style={{
-                                        position: 'absolute',
-                                        right: 10,
-                                        top: 10,
-                                    }}
-                                    type="button"
-                                />
-                            )}
+                            <Observer>
+                                {() => {
+                                    if (this.plotExists) {
+                                        return (
+                                            <DownloadControls
+                                                getSvg={this.getSvg}
+                                                filename={this.downloadFilename}
+                                                additionalRightButtons={[
+                                                    {
+                                                        key: 'Data',
+                                                        content: (
+                                                            <span>
+                                                                Data{' '}
+                                                                <i
+                                                                    className="fa fa-cloud-download"
+                                                                    aria-hidden="true"
+                                                                />
+                                                            </span>
+                                                        ),
+                                                        onClick: this
+                                                            .downloadData,
+                                                        disabled: !this.props
+                                                            .store
+                                                            .entrezGeneIdToGene
+                                                            .isComplete,
+                                                    },
+                                                ]}
+                                                dontFade={true}
+                                                style={{
+                                                    position: 'absolute',
+                                                    right: 10,
+                                                    top: 10,
+                                                }}
+                                                type="button"
+                                            />
+                                        );
+                                    } else {
+                                        return <span />;
+                                    }
+                                }}
+                            </Observer>
                             <Observer>
                                 {() => (
                                     <div
@@ -4914,19 +4907,23 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     </div>
                                 )}
                             </Observer>
-                            <div
-                                style={{
-                                    position: 'relative',
-                                    display: 'inline-block',
-                                    width: '100%',
-                                    overflow: 'scroll',
-                                    marginTop: -13,
-                                }}
-                                className="hideScrollbar"
-                                ref={this.assignScrollPaneRef}
-                            >
-                                {plotElt}
-                            </div>
+                            <Observer>
+                                {() => (
+                                    <div
+                                        style={{
+                                            position: 'relative',
+                                            display: 'inline-block',
+                                            width: '100%',
+                                            overflow: 'scroll',
+                                            marginTop: -13,
+                                        }}
+                                        className="hideScrollbar"
+                                        ref={this.assignScrollPaneRef}
+                                    >
+                                        {plotElt}
+                                    </div>
+                                )}
+                            </Observer>
                         </div>
                         {this.canColorByMutationData && (
                             <div style={{ marginTop: 5 }}>
@@ -4970,8 +4967,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    componentDidUpdate() {
-        this.plotExists = !!this.getSvg();
+    @computed get plotExists() {
+        return !!this.getSvg();
     }
 
     public render() {

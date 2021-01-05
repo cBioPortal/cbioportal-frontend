@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactSelect from 'react-select';
 import autobind from 'autobind-decorator';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import {
@@ -39,6 +39,10 @@ export default class CheckedSelect extends React.Component<
     CheckedSelectProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<CheckedSelectProps> = {
         isClearable: false,
         isDisabled: false,
@@ -105,8 +109,7 @@ export default class CheckedSelect extends React.Component<
         return this.props.inputValue || this.defaultInputValue;
     }
 
-    @autobind
-    @action
+    @action.bound
     defaultOnInputChange(input: string, options: { action: string }) {
         // The input value (which is a blank string in the case of action === 'set-value')
         // will be passed to `this.props.onInputChange` by default without the `if` condition.

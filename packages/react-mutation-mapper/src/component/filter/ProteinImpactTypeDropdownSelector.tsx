@@ -1,5 +1,5 @@
 import { ProteinImpactType } from 'cbioportal-frontend-commons';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -20,6 +20,10 @@ export class ProteinImpactTypeDropdownSelector extends React.Component<
     ProteinImpactTypeDropdownSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<
         ProteinImpactTypeDropdownSelectorProps
     > = {

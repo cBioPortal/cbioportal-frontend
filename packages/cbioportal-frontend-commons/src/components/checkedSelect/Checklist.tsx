@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -37,6 +37,10 @@ function generateTableRows(
 
 @observer
 export default class Checklist extends React.Component<ChecklistProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<ChecklistProps> = {
         isDisabled: false,
         numberOfColumnsPerRow: 1,

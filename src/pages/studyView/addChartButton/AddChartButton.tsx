@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import 'react-mfb/mfb.css';
 import {
@@ -75,6 +75,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     constructor(props: IAddChartTabsProps, context: any) {
         super(props, context);
+        makeObservable(this);
     }
 
     readonly dataCount = remoteData<ChartDataCountSet>({
@@ -91,15 +92,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         default: {},
     });
 
-    @autobind
-    @action
+    @action.bound
     updateActiveId(newId: string) {
         this.activeId = newId as ChartMetaDataTypeEnum;
         this.resetInfoMessage();
     }
 
-    @autobind
-    @action
+    @action.bound
     onInfoMessageChange(newMessage: string) {
         this.infoMessage = newMessage;
         if (this.props.onInfoMessageChange) {
@@ -108,8 +107,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         setTimeout(this.resetInfoMessage, INFO_TIMEOUT);
     }
 
-    @autobind
-    @action
+    @action.bound
     resetInfoMessage() {
         this.infoMessage = '';
     }
@@ -128,7 +126,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.GENOMIC] ||
                 [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
 
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
@@ -149,7 +147,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ChartMetaDataTypeEnum.GENE_SPECIFIC
             ] || [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(
@@ -168,7 +166,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.CLINICAL] ||
                 [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
     }
 
@@ -179,7 +177,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ChartMetaDataTypeEnum.CUSTOM_DATA
             ] || [],
             this.selectedAttrs,
-            this.props.store.chartsType.toJS()
+            _.fromPairs(this.props.store.chartsType.toJSON())
         );
     }
 
@@ -198,8 +196,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onAddAll(keys: string[]) {
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
 
@@ -247,8 +244,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onToggleOption(chartUniqueKey: string) {
         const chartMeta = this.props.store.chartMetaSet[chartUniqueKey];
         if (chartMeta !== undefined) {
@@ -459,6 +455,10 @@ export default class AddChartButton extends React.Component<
     {}
 > {
     @observable showTooltip = false;
+    constructor(props: IAddChartButtonProps) {
+        super(props);
+        makeObservable(this);
+    }
     render() {
         return (
             <DefaultTooltip

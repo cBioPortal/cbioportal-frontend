@@ -18,7 +18,7 @@ import { TOOLTIP_MOUSE_ENTER_DELAY_MS } from 'cbioportal-frontend-commons';
 import * as ReactDOM from 'react-dom';
 import { Popover, Overlay } from 'react-bootstrap';
 import classnames from 'classnames';
-import { action, observable } from 'mobx';
+import { action, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { ButtonHTMLAttributes } from 'react';
 
@@ -41,36 +41,36 @@ class GroupSelectorButton extends React.Component<
     @observable.ref button: HTMLButtonElement | null;
     private hoverTimeout: any = null;
 
-    @autobind
-    @action
+    constructor(props: IGroupSelectorButtonProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private buttonRef(button: HTMLButtonElement | null) {
         this.button = button;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseClick() {
         this.hovered = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseEnter() {
         this.hoverTimeout = setTimeout(() => {
             this.hovered = true;
         }, TOOLTIP_MOUSE_ENTER_DELAY_MS);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseLeave() {
         this.hovered = false;
         clearTimeout(this.hoverTimeout);
         this.hoverTimeout = null;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseDown() {
         this.hovered = false;
     }

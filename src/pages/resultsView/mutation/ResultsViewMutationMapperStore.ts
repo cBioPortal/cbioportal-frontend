@@ -25,7 +25,7 @@ import MutationMapperStore, {
     IMutationMapperStoreConfig,
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -86,7 +86,9 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             genomenexusInternalClient
         );
 
-        labelMobxPromises(this);
+        makeObservable(this);
+
+        //labelMobxPromises(this);
     }
 
     readonly cosmicData = remoteData({
@@ -94,7 +96,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         invoke: () => fetchCosmicData(this.mutationData),
     });
 
-    @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
+    protected getDownloadDataFetcher(): MutationTableDownloadDataFetcher {
         return new MutationTableDownloadDataFetcher(
             this.mutationData,
             this.studyToMolecularProfileDiscrete,

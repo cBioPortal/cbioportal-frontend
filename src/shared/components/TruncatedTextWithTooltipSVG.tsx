@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
@@ -38,6 +38,10 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<
     ITruncatedTextSVGProps,
     {}
 > {
+    constructor(props: ITruncatedTextSVGProps) {
+        super(props);
+        makeObservable(this);
+    }
     static defaultProps: Partial<ITruncatedTextSVGProps> = {
         maxWidth: 100,
         suffix: '...',
@@ -54,14 +58,12 @@ export default class TruncatedTextWithTooltipSVG extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseOver() {
         this.tooltipOpen = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMouseOut() {
         this.tooltipOpen = false;
     }

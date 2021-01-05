@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
     applyDataFiltersOnDatum,
@@ -35,7 +35,10 @@ export default class MutationMapperDataStore
     @observable public dataFilters: DataFilter[] = [];
     @observable public selectionFilters: DataFilter[] = [];
     @observable public highlightFilters: DataFilter[] = [];
-    @observable public groupFilters: { group: string; filter: DataFilter }[];
+    @observable.ref public groupFilters: {
+        group: string;
+        filter: DataFilter;
+    }[];
 
     private lazyMobXTableFilter:
         | ((
@@ -196,6 +199,8 @@ export default class MutationMapperDataStore
         groupFilters: { group: string; filter: DataFilter }[] = []
     ) {
         super(data);
+
+        makeObservable(this);
 
         this.dataFilters = dataFilters;
         this.selectionFilters = selectionFilters;

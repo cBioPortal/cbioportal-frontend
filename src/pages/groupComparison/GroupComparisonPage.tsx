@@ -21,6 +21,7 @@ import {
     IReactionDisposer,
     observable,
     reaction,
+    makeObservable,
 } from 'mobx';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../AppStore';
@@ -57,6 +58,7 @@ export default class GroupComparisonPage extends React.Component<
 
     constructor(props: IGroupComparisonPageProps) {
         super(props);
+        makeObservable(this);
         this.urlWrapper = new GroupComparisonURLWrapper(props.routing);
         this.queryReaction = reaction(
             () => this.urlWrapper.query.sessionId,
@@ -307,8 +309,7 @@ export default class GroupComparisonPage extends React.Component<
         },
     });
 
-    @autobind
-    @action
+    @action.bound
     public onOverlapStrategySelect(option: any) {
         trackEvent({
             category: 'groupComparison',

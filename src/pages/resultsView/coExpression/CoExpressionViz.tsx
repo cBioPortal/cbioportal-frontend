@@ -8,7 +8,14 @@ import {
 import { observer, Observer } from 'mobx-react';
 import CoExpressionTableGenes from './CoExpressionTableGenes';
 import CoExpressionTableGenesets from './CoExpressionTableGenesets';
-import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+} from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 import { logScalePossibleForProfile } from '../plots/PlotsTabUtils';
@@ -77,6 +84,7 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
         public setHighlighted: (c: CoExpressionWithQ) => void
     ) {
         super(getData);
+        makeObservable(this);
         this.tableMode = TableMode.SHOW_ALL;
         this.dataHighlighter = (d: CoExpressionWithQ) => {
             const highlighted = getHighlighted();
@@ -174,14 +182,12 @@ export default class CoExpressionViz extends React.Component<
         }
     );
 
-    @bind
-    @action
+    @action.bound
     private onSelectTableMode(t: TableMode) {
         this.dataStore.tableMode = t;
     }
 
-    @bind
-    @action
+    @action.bound
     private requestAllData() {
         this.allDataRequested = true;
     }

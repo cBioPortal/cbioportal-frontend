@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 
 import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
 
@@ -24,6 +24,10 @@ type LollipopProps = {
 
 @observer
 export default class Lollipop extends React.Component<LollipopProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable public isHovered: boolean = false;
 
     @computed private get headRadius() {

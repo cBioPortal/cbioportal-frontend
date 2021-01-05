@@ -1,6 +1,6 @@
 import URLWrapper from '../../shared/lib/URLWrapper';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { getTabId } from './GroupComparisonUtils';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import autobind from 'autobind-decorator';
@@ -25,6 +25,7 @@ export default class GroupComparisonURLWrapper extends URLWrapper<
             overlapStrategy: { isSessionProp: false },
             patientEnrichments: { isSessionProp: false },
         });
+        makeObservable(this);
     }
 
     @computed public get tabId() {

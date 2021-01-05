@@ -3,7 +3,7 @@ import styles from './styles/styles.module.scss';
 import * as _ from 'lodash';
 import ReactSelect from 'react-select1';
 import { observer } from 'mobx-react';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import { FlexCol, FlexRow } from '../flexbox/FlexBox';
 import {
     QueryStore,
@@ -35,6 +35,10 @@ export default class CaseSetSelector extends QueryStoreComponent<
     { modifyQueryParams: ModifyQueryParams | undefined },
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     private isQueryModified = false;
 
     @computed get caseSetOptions(): ReactSelectOptionWithName[] {

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { remoteData, isWebdriver } from 'cbioportal-frontend-commons';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
 import styles from './styles.module.scss';
@@ -54,6 +54,7 @@ export default class UserMessager extends React.Component<
 > {
     constructor(props: IUserMessagerProps) {
         super(props);
+        makeObservable(this);
         this.messageData = remoteData<IUserMessage[]>(async () => {
             return Promise.resolve(props.messages || MESSAGE_DATA);
         });

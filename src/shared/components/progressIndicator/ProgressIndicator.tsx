@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import styles from './styles.module.scss';
 import classnames from 'classnames';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import ErrorMessage from '../ErrorMessage';
 import Spinner from 'react-spinkit';
@@ -43,6 +43,10 @@ export default class ProgressIndicator extends React.Component<
     IProgressIndicatorProps,
     {}
 > {
+    constructor(props: IProgressIndicatorProps) {
+        super(props);
+        makeObservable(this);
+    }
     @observable timeShown = 0;
     private timeShownInterval: Timer;
 

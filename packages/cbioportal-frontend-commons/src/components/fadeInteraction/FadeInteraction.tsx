@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable, reaction } from 'mobx';
+import { action, computed, observable, reaction, makeObservable } from 'mobx';
 
 export interface IFadeInteractionProps {
     fadeInSeconds?: number;
@@ -21,6 +21,7 @@ export default class FadeInteraction extends React.Component<
 
     constructor(props: IFadeInteractionProps) {
         super(props);
+        makeObservable(this);
         this.initialShow = props.showByDefault === true;
         this.onFocus = this.onFocus.bind(this);
         this.onBlur = this.onBlur.bind(this);

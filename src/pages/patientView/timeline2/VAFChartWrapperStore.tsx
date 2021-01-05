@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 
 export default class VAFChartWrapperStore {
     @observable groupByOption: string | null = null;
@@ -60,5 +60,7 @@ export default class VAFChartWrapperStore {
 
     constructor(
         private options?: { isOnlySequentialModePossible?: () => boolean }
-    ) {}
+    ) {
+        makeObservable(this);
+    }
 }

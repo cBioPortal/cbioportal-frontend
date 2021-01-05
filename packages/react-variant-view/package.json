@@ -47,7 +47,7 @@
     "genome-nexus-ts-api-client": "^1.1.12",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
-    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
+    "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "oncokb-styles": "~0.1.2",
     "oncokb-ts-api-client": "^1.1.4",
     "react-bootstrap": "^0.31.5",

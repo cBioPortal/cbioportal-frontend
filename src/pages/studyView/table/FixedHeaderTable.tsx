@@ -13,7 +13,7 @@ import {
     TableHeaderProps,
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
-import { action, computed, observable, toJS } from 'mobx';
+import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import styles from './tables.module.scss';
 import * as _ from 'lodash';
 import { Observer, observer } from 'mobx-react';
@@ -69,12 +69,13 @@ export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicat
 > {
     constructor(getData: () => any[], fixedTopRowsData: any[]) {
         super(getData);
+        makeObservable(this);
         this.fixedTopRowsData = fixedTopRowsData;
     }
 
     private fixedTopRowsData: any[];
 
-    @computed get sortedData() {
+    protected getSortedData = () => {
         // if not defined, use default values for sortMetric and sortAscending
         const sortMetric = this.sortMetric || (() => 0);
         const sortAscending =
@@ -84,7 +85,7 @@ export class FixedHeaderTableDataStore extends SimpleGetterLazyMobXTableApplicat
             ...this.fixedTopRowsData,
             ...lazyMobXTableSort(this.allData, sortMetric, sortAscending),
         ];
-    }
+    };
 }
 
 @observer
@@ -95,7 +96,7 @@ export default class FixedHeaderTable<T> extends React.Component<
     private _store: LazyMobXTableStore<T>;
     inputElement: HTMLSpanElement;
 
-    @observable private _sortBy: string;
+    @observable.ref private _sortBy: string;
     @observable private _sortDirection: SortDirection;
 
     public static defaultProps = {
@@ -114,6 +115,7 @@ export default class FixedHeaderTable<T> extends React.Component<
 
     constructor(props: IFixedHeaderTableProps<T>) {
         super(props);
+        makeObservable(this);
         this._sortBy = props.sortBy!;
         const sortByColumn = _.find(
             this.props.columns,
@@ -200,8 +202,7 @@ export default class FixedHeaderTable<T> extends React.Component<
         return _.keyBy(this.props.columns, column => column.name)[columnKey];
     }
 
-    @autobind
-    @action
+    @action.bound
     sort({ sortBy }: any) {
         this._store.defaultHeaderClick(this.getColumn(sortBy));
         this._sortBy = sortBy;
@@ -213,24 +214,21 @@ export default class FixedHeaderTable<T> extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onFilterTextChange() {
         return inputBoxChangeTimeoutEvent(filterValue => {
             this._store.setFilterString(filterValue);
         }, 400);
     }
 
-    @autobind
-    @action
+    @action.bound
     afterSelectingRows() {
         if (this.props.afterSelectingRows) {
             this.props.afterSelectingRows();
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     changeSelectionType(selectionOperator?: SelectionOperatorEnum) {
         if (
             this.props.toggleSelectionOperator &&

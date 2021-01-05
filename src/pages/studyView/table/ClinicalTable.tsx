@@ -7,6 +7,7 @@ import {
     toJS,
     reaction,
     IReactionDisposer,
+    makeObservable,
 } from 'mobx';
 import autobind from 'autobind-decorator';
 import _ from 'lodash';
@@ -56,6 +57,11 @@ export default class ClinicalTable extends React.Component<
     IClinicalTableProps,
     {}
 > {
+    constructor(props: IClinicalTableProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
 
@@ -303,8 +309,7 @@ export default class ClinicalTable extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     afterSorting(sortBy: string, sortDirection: SortDirection) {
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;

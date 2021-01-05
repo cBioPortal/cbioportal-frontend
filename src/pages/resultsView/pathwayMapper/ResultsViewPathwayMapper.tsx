@@ -12,6 +12,7 @@ import {
     action,
     reaction,
     IReactionDisposer,
+    makeObservable,
 } from 'mobx';
 import { Row } from 'react-bootstrap';
 
@@ -83,6 +84,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
 
     constructor(props: IResultsViewPathwayMapperProps) {
         super(props);
+        makeObservable(this);
         this.activeToasts = [];
         this.accumulatedValidGenes = {};
         this.accumulatedAlterationFrequencyDataForNonQueryGenes = [];
@@ -321,16 +323,14 @@ export default class ResultsViewPathwayMapper extends React.Component<
      * alteration data onto genes. Through this function callback, the function implemented
      * in PathwayMapper is copied here.
      */
-    @autobind
-    @action
+    @action.bound
     private addGenomicDataHandler(
         addGenomicData: (alterationData: ICBioData[]) => void
     ) {
         this.addGenomicData = addGenomicData;
     }
 
-    @autobind
-    @action
+    @action.bound
     private handlePathwayChange(pathwayGenes: string[]) {
         // Pathway genes here are the genes that are in the pathway and valid whose alteration data is not calculated yet.
         // Pathway genes does NOT always include all of the non-query genes
@@ -338,8 +338,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
         this.newGenesFromPathway = pathwayGenes;
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleAddGenes(selectedGenes: string[]) {
         addGenesToQuery(this.props.urlWrapper, selectedGenes);
     }

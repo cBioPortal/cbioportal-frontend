@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import _ from 'lodash';
 import * as React from 'react';
 import Slider from 'react-rangeslider';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import { calcYMaxInput } from '../../util/LollipopPlotUtils';
@@ -62,6 +62,10 @@ export default class LollipopMutationPlotControls extends React.Component<
     LollipopMutationPlotControlsProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<LollipopMutationPlotControlsProps> = {
         showTrackSelector: true,
         showYMaxSlider: true,
