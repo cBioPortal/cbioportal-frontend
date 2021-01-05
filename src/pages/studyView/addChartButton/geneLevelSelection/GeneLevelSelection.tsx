@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { GenomicChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import styles from './styles.module.scss';
 import ReactSelect from 'react-select';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -36,6 +36,10 @@ export default class GeneLevelSelection extends React.Component<
     IGeneLevelSelectionProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable private _selectedProfileOption?: {
         value: string;
         label: string;
@@ -51,14 +55,13 @@ export default class GeneLevelSelection extends React.Component<
         found: Gene[];
         suggestions: GeneReplacement[];
     };
-    @observable private _queryStr?: string;
+    @observable.ref private _queryStr?: string;
 
     public static defaultProps = {
         disableGrouping: false,
     };
 
-    @autobind
-    @action
+    @action.bound
     private onAddChart() {
         if (this.selectedOption !== undefined) {
             const charts = this.validGenes.map(gene => {
@@ -76,8 +79,7 @@ export default class GeneLevelSelection extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleSelect(option: any) {
         if (option && option.value) {
             this._selectedProfileOption = option;

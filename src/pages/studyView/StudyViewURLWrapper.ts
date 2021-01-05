@@ -1,7 +1,7 @@
 import URLWrapper from '../../shared/lib/URLWrapper';
 import { StudyViewPageTabKey, StudyViewURLQuery } from './StudyViewPageStore';
 import { PagePath } from '../../shared/enums/PagePaths';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { PatientViewPageTabs } from '../patientView/PatientViewPageTabs';
 import { StudyViewPageTabKeyEnum } from './StudyViewPageTabs';
 import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
@@ -14,6 +14,7 @@ export default class StudyViewURLWrapper extends URLWrapper<
             tab: { isSessionProp: false },
             resourceUrl: { isSessionProp: false },
         });
+        makeObservable(this);
     }
 
     public setTab(tab: string): void {

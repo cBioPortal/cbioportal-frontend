@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
@@ -74,6 +74,11 @@ export default class CopyNumberTableWrapper extends React.Component<
     ICopyNumberTableWrapperProps,
     {}
 > {
+    constructor(props: ICopyNumberTableWrapperProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         enableOncoKb: true,
         enableCivic: false,

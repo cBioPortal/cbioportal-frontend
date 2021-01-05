@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
@@ -44,12 +44,17 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
     IGenericAssayEnrichmentsContainerProps,
     {}
 > {
+    constructor(props: IGenericAssayEnrichmentsContainerProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     static defaultProps: Partial<IGenericAssayEnrichmentsContainerProps> = {
         alteredVsUnalteredMode: true,
     };
 
     @observable significanceFilter: boolean = false;
-    @observable clickedEntityStableId: string;
+    @observable.ref clickedEntityStableId: string;
     @observable.ref selectedStableIds: string[] | null;
     @observable.ref highlightedRow: GenericAssayEnrichmentRow | undefined;
     @observable.ref _enrichedGroups: string[] = this.props.groups.map(
@@ -170,8 +175,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
         return columns;
     }
 
-    @autobind
-    @action
+    @action.bound
     onChange(values: { value: string }[]) {
         this._enrichedGroups = _.map(values, datum => datum.value);
     }

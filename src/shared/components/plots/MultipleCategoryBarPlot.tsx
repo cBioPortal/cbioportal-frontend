@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Observer, observer } from 'mobx-react';
 import { IStringAxisData } from '../../../pages/resultsView/plots/PlotsTabUtils';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { bind } from 'bind-decorator';
 import {
     axisTickLabelStyles,
@@ -77,6 +77,10 @@ export default class MultipleCategoryBarPlot extends React.Component<
     IMultipleCategoryBarPlotProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     static defaultProps: Partial<IMultipleCategoryBarPlotProps> = {
         countAxisLabel: '# samples',
     };

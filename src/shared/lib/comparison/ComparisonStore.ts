@@ -32,7 +32,14 @@ import {
     Sample,
     SampleFilter,
 } from 'cbioportal-ts-api-client';
-import { action, autorun, computed, IReactionDisposer, observable } from 'mobx';
+import {
+    action,
+    autorun,
+    computed,
+    IReactionDisposer,
+    observable,
+    makeObservable,
+} from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
 import _ from 'lodash';
@@ -90,7 +97,8 @@ export enum OverlapStrategy {
 }
 
 export default abstract class ComparisonStore {
-    private tabHasBeenShown = observable.map<boolean>();
+    private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
+
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
 
@@ -98,6 +106,8 @@ export default abstract class ComparisonStore {
         protected appStore: AppStore,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
+        makeObservable(this);
+
         setTimeout(() => {
             this.tabHasBeenShownReactionDisposer = autorun(() => {
                 this.tabHasBeenShown.set(
@@ -170,12 +180,12 @@ export default abstract class ComparisonStore {
     protected async saveAndGoToSession(newSession: Session) {
         throw new Error(`saveAndGoToSession must be implemented in subclass`);
     }
-    abstract _session: MobxPromise<Session>;
+    abstract get _session(): MobxPromise<Session>;
     abstract _originalGroups: MobxPromise<ComparisonGroup[]>;
-    abstract overlapStrategy: OverlapStrategy;
-    abstract usePatientLevelEnrichments: boolean;
-    abstract samples: MobxPromise<Sample[]>;
-    abstract studies: MobxPromise<CancerStudy[]>;
+    abstract get overlapStrategy(): OverlapStrategy;
+    abstract get usePatientLevelEnrichments(): boolean;
+    abstract get samples(): MobxPromise<Sample[]>;
+    abstract get studies(): MobxPromise<CancerStudy[]>;
     // < / >
 
     public get isLoggedIn() {
@@ -1325,7 +1335,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showSurvivalTab() {
-        return (
+        return !!(
             this.survivalTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1350,7 +1360,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showMutationsTab() {
-        return (
+        return !!(
             this.mutationsTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1381,7 +1391,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showCopyNumberTab() {
-        return (
+        return !!(
             this.copyNumberTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1405,7 +1415,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showMRNATab() {
-        return (
+        return !!(
             this.mRNATabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1431,7 +1441,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showProteinTab() {
-        return (
+        return !!(
             this.proteinTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1457,7 +1467,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showMethylationTab() {
-        return (
+        return !!(
             this.methylationTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&
@@ -1487,7 +1497,7 @@ export default abstract class ComparisonStore {
     }
 
     @computed get showGenericAssayTab() {
-        return (
+        return !!(
             this.genericAssayTabShowable ||
             (this.activeGroups.isComplete &&
                 this.activeGroups.result!.length === 0 &&

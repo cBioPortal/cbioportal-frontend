@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { observer, Observer } from 'mobx-react';
 import {
     AlterationTypeConstants,
@@ -55,8 +55,8 @@ export default class CoExpressionTab extends React.Component<
     ICoExpressionTabProps,
     {}
 > {
-    @observable _selectedProfileX: string | undefined; // only undefined initially, until molecular profiles downloaded
-    @observable _selectedProfileY: string | undefined; // only undefined initially, until molecular profiles downloaded
+    @observable.ref _selectedProfileX: string | undefined; // only undefined initially, until molecular profiles downloaded
+    @observable.ref _selectedProfileY: string | undefined; // only undefined initially, until molecular profiles downloaded
     @observable _selectedGeneticEntity: GeneticEntity | undefined; // only undefined initially, until genes and gene sets downloaded
 
     readonly selectedProfileX = remoteData<string | undefined>({
@@ -130,6 +130,8 @@ export default class CoExpressionTab extends React.Component<
 
     constructor(props: ICoExpressionTabProps) {
         super(props);
+
+        makeObservable(this);
 
         (window as any).resultsViewCoExpressionTab = this; // for testing
 

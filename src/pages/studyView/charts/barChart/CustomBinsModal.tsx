@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { ChartMeta, customBinsAreValid } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import { Modal, Button } from 'react-bootstrap';
 
@@ -24,6 +24,7 @@ export default class CustomBinsModal extends React.Component<
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
+        makeObservable(this);
         if (this.props.currentBins) {
             this.currentBinsValue = _.sortBy(this.props.currentBins).join(
                 `${this.binSeparator} `

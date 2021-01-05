@@ -7,7 +7,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { ChartTypeEnum } from '../StudyViewConfig';
 import { ChartMeta, getClinicalAttributeOverlay } from '../StudyViewUtils';
@@ -72,21 +72,24 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     @observable showCustomBinModal: boolean = false;
     private closeMenuTimeout: number | undefined = undefined;
 
+    constructor(props: IChartHeaderProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed
     get fileName() {
         return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
-    @autobind
-    @action
+    @action.bound
     private openMenu() {
         this.menuOpen = true;
         window.clearTimeout(this.closeMenuTimeout);
         this.closeMenuTimeout = undefined;
     }
 
-    @autobind
-    @action
+    @action.bound
     private closeMenu() {
         if (!this.closeMenuTimeout) {
             this.closeMenuTimeout = window.setTimeout(() => {

@@ -1,5 +1,5 @@
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -17,6 +17,10 @@ export default class DomainTooltip extends React.Component<
     IDomainTooltipProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     get mutationAlignerCacheData() {
         return this.props.mutationAlignerCache &&

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
 import { CancerSummaryContent, IAlterationData } from './CancerSummaryContent';
@@ -40,6 +40,7 @@ export default class CancerSummaryContainer extends React.Component<
 
     constructor(props: ICancerSummaryContainerProps) {
         super(props);
+        makeObservable(this);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.pivotData = this.pivotData.bind(this);
         this.mapStudyIdToShortName = this.mapStudyIdToShortName.bind(this);

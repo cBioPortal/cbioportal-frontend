@@ -8,6 +8,7 @@ import {
     action,
     IReactionDisposer,
     reaction,
+    makeObservable,
 } from 'mobx';
 import { ProteinChainSpec } from './ProteinChainView';
 import { Collapse } from 'react-collapse';
@@ -57,6 +58,8 @@ export default class ProteinChainPanel extends React.Component<
 
     constructor(props: ProteinChainPanelProps) {
         super(props);
+
+        makeObservable(this);
 
         this.handlers = {
             onMouseEnter: action(() => {

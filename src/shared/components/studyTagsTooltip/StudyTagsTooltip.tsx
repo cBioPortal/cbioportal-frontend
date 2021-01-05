@@ -23,7 +23,7 @@
 
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
@@ -59,6 +59,11 @@ class StudyInfoOverlay extends React.Component<
             console.error('Error on getting study tags.', error);
         },
     });
+
+    constructor(props: StudyInfoOverlayTooltipProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     addHTMLDescription(description: string) {
         return { __html: description };

@@ -4,7 +4,7 @@ import { observer } from 'mobx-react';
 import GroupComparisonStore from './GroupComparisonStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import {
     ComparisonGroup,
     DUPLICATE_GROUP_NAME_MSG,
@@ -60,20 +60,22 @@ export default class CreateGroupFromOverlap extends React.Component<
     @observable inputGroupName = '';
     @observable saveGroupToUser = true;
 
-    @autobind
-    @action
+    constructor(props: ICreateGroupFromOverlapProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private toggleSaveGroupToUser() {
         this.saveGroupToUser = !this.saveGroupToUser;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChangeInputGroupName(e: SyntheticEvent<HTMLInputElement>) {
         this.inputGroupName = (e.target as HTMLInputElement).value;
     }
 
-    @autobind
-    @action
+    @action.bound
     private submit() {
         let studiesAttr: SessionGroupData['studies'];
         if (this.props.caseType === 'sample') {

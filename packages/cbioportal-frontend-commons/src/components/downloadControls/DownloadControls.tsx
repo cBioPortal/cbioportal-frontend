@@ -1,7 +1,7 @@
 import * as React from 'react';
 import FadeInteraction from '../fadeInteraction/FadeInteraction';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import fileDownload from 'react-file-download';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
@@ -94,6 +94,11 @@ export default class DownloadControls extends React.Component<
     IDownloadControlsProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable private collapsed = true;
 
     @autobind
@@ -279,8 +284,7 @@ export default class DownloadControls extends React.Component<
             .concat(this.props.additionalRightButtons || []);
     }
 
-    @autobind
-    @action
+    @action.bound
     private onTooltipVisibleChange(visible: boolean) {
         this.collapsed = !visible;
     }

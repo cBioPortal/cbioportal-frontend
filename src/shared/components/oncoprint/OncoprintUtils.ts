@@ -90,7 +90,7 @@ function makeGenesetHeatmapExpandHandler(
                 molecularProfileId: zScoreGeneticProfileId,
             })
         );
-        runInAction('genesetHeatmapExpansion', () => {
+        runInAction(() => {
             const list =
                 oncoprint.expansionsByGenesetHeatmapTrackKey.get(track_key) ||
                 [];
@@ -604,7 +604,7 @@ interface IGeneticTrackAppState {
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
     selectedMolecularProfiles: MolecularProfile[];
-    expansionIndexMap: ObservableMap<number[]>;
+    expansionIndexMap: ObservableMap<string, number[]>;
 }
 
 function isAltered(d: GeneticTrackDatum) {
@@ -851,8 +851,9 @@ export function makeClinicalTracksMobxPromise(
                 oncoprint.props.store.clinicalAttributeIdToClinicalAttribute
                     .isComplete
             ) {
-                const attributes = oncoprint.selectedClinicalAttributeIds
-                    .keys()
+                const attributes = Array.from(
+                    oncoprint.selectedClinicalAttributeIds.keys()
+                )
                     .map(attrId => {
                         return oncoprint.props.store
                             .clinicalAttributeIdToClinicalAttribute.result![
@@ -867,11 +868,12 @@ export function makeClinicalTracksMobxPromise(
             return ret;
         },
         invoke: async () => {
-            if (oncoprint.selectedClinicalAttributeIds.keys().length === 0) {
+            if (oncoprint.selectedClinicalAttributeIds.size === 0) {
                 return [];
             }
-            const attributes = oncoprint.selectedClinicalAttributeIds
-                .keys()
+            const attributes = Array.from(
+                oncoprint.selectedClinicalAttributeIds.keys()
+            )
                 .map(attrId => {
                     return oncoprint.props.store
                         .clinicalAttributeIdToClinicalAttribute.result![attrId];
@@ -1270,9 +1272,9 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
                 entrezGeneId: number;
                 molecularProfileId: string;
             }[] = _.flatten(
-                expansionsByGenesetTrack
-                    .values()
-                    .map(mobxArray => mobxArray.slice())
+                Array.from(expansionsByGenesetTrack.values()).map(mobxArray =>
+                    mobxArray.slice()
+                )
             ).map(({ entrezGeneId, molecularProfileId }) => ({
                 entrezGeneId,
                 molecularProfileId,
@@ -1282,7 +1284,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(
             const tracksByGenesetTrack: {
                 [genesetTrackKey: string]: IHeatmapTrackSpec[];
             } = {};
-            expansionsByGenesetTrack.entries().forEach(([gsTrack, genes]) => {
+            expansionsByGenesetTrack.toJSON().forEach(([gsTrack, genes]) => {
                 tracksByGenesetTrack[gsTrack] = genes.map(
                     ({
                         entrezGeneId,

@@ -8,7 +8,7 @@ import {
     NumericGeneMolecularData,
     MolecularProfile,
 } from 'cbioportal-ts-api-client';
-import { computed, observable } from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import {
     ExpressionStyle,
     expressionTooltip,
@@ -92,6 +92,7 @@ export default class ExpressionWrapper extends React.Component<
 > {
     constructor(props: ExpressionWrapperProps) {
         super(props);
+        makeObservable(this);
         this.selectedGene = props.genes[0];
         (window as any).box = this;
     }

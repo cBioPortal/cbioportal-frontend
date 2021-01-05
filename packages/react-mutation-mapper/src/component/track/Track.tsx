@@ -2,7 +2,7 @@ import * as React from 'react';
 import $ from 'jquery';
 import { observer } from 'mobx-react';
 import { SyntheticEvent } from 'react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 
@@ -49,6 +49,14 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     constructor(props: TrackProps) {
         super(props);
+        makeObservable<
+            Track,
+            | 'hitZoneConfig'
+            | 'shiftPressed'
+            | 'unhoverAllComponents'
+            | 'tooltipVisible'
+            | 'hitZone'
+        >(this);
     }
 
     @autobind
@@ -82,8 +90,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         return this.hitZoneConfig.tooltipPlacement;
     }
 
-    @autobind
-    @action
+    @action.bound
     onMouseLeave() {
         if (this.hitZoneConfig.onMouseOut) {
             this.hitZoneConfig.onMouseOut();
@@ -97,14 +104,12 @@ export default class Track extends React.Component<TrackProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onBackgroundClick() {
         this.props.dataStore.clearSelectionFilters();
     }
 
-    @autobind
-    @action
+    @action.bound
     onTrackCircleClick(circleComponent: TrackCircle) {
         updatePositionSelectionFilters(
             this.props.dataStore,
@@ -114,8 +119,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     onTrackCircleHover(circleComponent: TrackCircle) {
         updatePositionHighlightFilters(
             this.props.dataStore,
@@ -125,24 +129,21 @@ export default class Track extends React.Component<TrackProps, {}> {
         circleComponent.isHovered = true;
     }
 
-    @autobind
-    @action
+    @action.bound
     onKeyDown(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = true;
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onKeyUp(e: JQueryKeyEventObject) {
         if (e.which === 16) {
             this.shiftPressed = false;
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onMouseOver(e: SyntheticEvent<any>) {
         // No matter what, unhover all components - if we're hovering one, we'll set it later in this method
         this.unhoverAllComponents();
@@ -168,8 +169,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onSVGMouseLeave(e: SyntheticEvent<any>) {
         const target = e.target as Element;
         if (target.tagName.toLowerCase() === 'svg') {
@@ -177,8 +177,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onTooltipVisibleChange(visible: boolean) {
         this.tooltipActive = visible;
 
@@ -187,8 +186,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     onHitzoneMouseOut() {
         if (!this.tooltipActive) {
             this.unhoverAllComponents();

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
-import { observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -18,6 +18,11 @@ interface IInfoBeaconProps {
 @observer
 export default class InfoBeacon extends React.Component<IInfoBeaconProps, {}> {
     @observable infoShown = false;
+
+    constructor(props: IInfoBeaconProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     @autobind
     showInfo() {

@@ -10,7 +10,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import SampleManager from '../SampleManager';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import {
     sampleIdToIconData,
     IKeyedIconData,
@@ -38,6 +38,7 @@ export default class GenomicOverview extends React.Component<
 > {
     constructor(props: IGenomicOverviewProps) {
         super(props);
+        makeObservable(this);
     }
 
     @computed get frequencies() {

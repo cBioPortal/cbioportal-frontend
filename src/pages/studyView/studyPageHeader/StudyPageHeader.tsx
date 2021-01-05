@@ -6,6 +6,7 @@ import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import * as _ from 'lodash';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { computed, makeObservable } from 'mobx';
 
 export interface IStudyPageHeaderProps {
     store: StudyViewPageStore;
@@ -17,6 +18,14 @@ export default class StudyPageHeader extends React.Component<
     IStudyPageHeaderProps,
     {}
 > {
+    constructor(props: IStudyPageHeaderProps) {
+        super(props);
+        makeObservable(this);
+    }
+    @computed get customChartsFilter() {
+        return _.fromPairs(this.props.store.customChartFilterSet.toJSON());
+    }
+
     render() {
         return (
             <div className={'headBlock'} data-test="study-view-header">
@@ -61,7 +70,7 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store
                                 .numberOfSelectedSamplesInCustomSelection
                         }
-                        customChartsFilter={this.props.store.customChartFilterSet.toJS()}
+                        customChartsFilter={this.customChartsFilter}
                         attributesMetaSet={
                             this.props.store.chartMetaSetWithChartType
                         }

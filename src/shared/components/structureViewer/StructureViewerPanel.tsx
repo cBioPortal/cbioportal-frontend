@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { FormControl, Checkbox, Button, ButtonGroup } from 'react-bootstrap';
 import { If, Else, Then } from 'react-if';
 import { ThreeBounce } from 'better-react-spinkit';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import Draggable from 'react-draggable';
 import fileDownload from 'react-file-download';
@@ -64,6 +64,8 @@ export default class StructureViewerPanel extends React.Component<
 
     constructor(props: IStructureViewerPanelProps) {
         super(props);
+
+        makeObservable(this);
 
         this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);

@@ -73,7 +73,10 @@ describe('GenesetsSelectorStore', () => {
             assert.equal(minYValue, 0.0736);
         });
         it('builds the data for the volcano plot graph with the correct values', () => {
-            const map_genesets_selected_volcano = new ObservableMap<boolean>();
+            const map_genesets_selected_volcano = new ObservableMap<
+                string,
+                boolean
+            >();
             map_genesets_selected_volcano.set('AKT_UP.V1_DN', true);
             const graphData = getVolcanoPlotData(
                 genesets,
@@ -109,7 +112,10 @@ describe('GenesetsSelectorStore', () => {
             assert.equal(minYValue, undefined);
         });
         it('returns undefined for volcano plot data graph if the table data is an empty array', () => {
-            const map_genesets_selected_volcano = new ObservableMap<boolean>();
+            const map_genesets_selected_volcano = new ObservableMap<
+                string,
+                boolean
+            >();
             map_genesets_selected_volcano.set('AKT_UP.V1_DN', true);
             const graphDataUndefined = getVolcanoPlotData(
                 [],

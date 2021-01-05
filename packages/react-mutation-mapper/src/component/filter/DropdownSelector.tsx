@@ -1,7 +1,7 @@
 import autobind from 'autobind-decorator';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { components } from 'react-select';
@@ -36,6 +36,10 @@ export class DropdownSelector extends React.Component<
     DropdownSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<DropdownSelectorProps> = {
         showNumberOfSelectedValues: true,
         selectionIndicatorClassNames: {
@@ -123,8 +127,7 @@ export class DropdownSelector extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChange(values: Array<{ value: string }>) {
         handleOptionSelect(values, this.allValues, this.props.onSelect);
     }

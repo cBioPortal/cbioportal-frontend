@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import {
     VictoryChart,
     VictoryAxis,
@@ -103,6 +103,11 @@ export default class ScatterPlot<
 > extends React.Component<IScatterPlotProps<D>, {}> {
     @observable.ref private container: HTMLDivElement;
     private tooltipHelper: ScatterPlotTooltipHelper = new ScatterPlotTooltipHelper();
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @autobind
     private containerRef(container: HTMLDivElement) {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { getFileExtension } from './ResourcesTableUtils';
 import autobind from 'autobind-decorator';
 import { ResourceData } from 'cbioportal-ts-api-client';
@@ -16,6 +16,10 @@ export default class ResourceLink extends React.Component<
     IResourceLinkProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed get icon() {
         let className = '';
         const fileExtension = getFileExtension(this.props.resource.url);

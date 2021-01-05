@@ -9,7 +9,7 @@ import {
 } from '../GroupComparisonUtils';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
 import autobind from 'autobind-decorator';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 
@@ -34,6 +34,11 @@ export default class GroupCheckbox extends React.Component<
     IGroupCheckboxProps,
     {}
 > {
+    constructor(props: IGroupCheckboxProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @autobind
     private onCheckboxClick() {
         this.props.store.toggleComparisonGroupSelected(this.props.group.uid);

@@ -3,8 +3,7 @@ import { default as sinon, SinonSpy } from 'sinon';
 import lolex from 'lolex';
 import { Clock } from 'lolex';
 import { default as LazyMobXCache, CacheData } from './LazyMobXCache';
-import mobx from 'mobx';
-import { whyRun } from 'mobx';
+import mobx, { autorun } from 'mobx';
 
 // We have to use 'done' rather than fake clock because for some reason fake clock isn't working with async/await
 //  in LazyMobXCache.populate
@@ -76,7 +75,7 @@ describe('LazyMobXCache', () => {
     describe('#addData', () => {
         it('adds data properly, and returns data using #peek if it exists in the cache', done => {
             let timesRun = 0;
-            let reaction = mobx.autorun(() => {
+            let reaction = autorun(() => {
                 timesRun += 1;
                 if (timesRun === 1) {
                     // Initially, no data
@@ -165,7 +164,7 @@ describe('LazyMobXCache', () => {
         });
         it('returns data if it exists', done => {
             let timesRun = 0;
-            let reaction = mobx.autorun(() => {
+            let reaction = autorun(() => {
                 timesRun += 1;
                 let datum = cache.get({
                     numAsString: '5',
@@ -236,7 +235,7 @@ describe('LazyMobXCache', () => {
         });
         it('returns no data if no data exists', done => {
             let timesRun = 0;
-            let reaction = mobx.autorun(() => {
+            let reaction = autorun(() => {
                 timesRun += 1;
                 if (timesRun === 1) {
                     let firstTry = cache.get({
@@ -261,7 +260,7 @@ describe('LazyMobXCache', () => {
         });
         it('returns an error if fetching failed, and doesnt try to fetch data that has errored', done => {
             let timesRun = 0;
-            let reaction = mobx.autorun(() => {
+            let reaction = autorun(() => {
                 timesRun += 1;
                 if (timesRun === 1) {
                     let firstTry = cache.get({
@@ -397,7 +396,7 @@ describe('LazyMobXCache', () => {
         });
         it('adds data using metadata given by fetch', done => {
             let timesRun = 0;
-            let reaction = mobx.autorun(() => {
+            let reaction = autorun(() => {
                 timesRun += 1;
                 let datum = cache.get({
                     numAsString: '5',
@@ -504,9 +503,9 @@ describe('LazyMobXCache', () => {
             assert.equal(peekFn.callCount, 0);
             assert.equal(cacheFn.callCount, 0);
             assert.equal(getFn.callCount, 0);
-            let peekReaction = mobx.autorun(peekFn);
-            let cacheReaction = mobx.autorun(cacheFn);
-            let getReaction = mobx.autorun(getFn);
+            let peekReaction = autorun(peekFn);
+            let cacheReaction = autorun(cacheFn);
+            let getReaction = autorun(getFn);
             assert.equal(peekFn.callCount, 1);
             assert.equal(cacheFn.callCount, 1);
             assert.equal(getFn.callCount, 1);

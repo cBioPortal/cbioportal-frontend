@@ -18,14 +18,9 @@ export interface IResultsViewMutationTableProps extends IMutationTableProps {
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
 }
 //
-@observer
 export default class ResultsViewMutationTable extends MutationTable<
     IResultsViewMutationTableProps
 > {
-    constructor(props: IResultsViewMutationTableProps) {
-        super(props);
-    }
-
     public static defaultProps = {
         ...MutationTable.defaultProps,
         columns: [

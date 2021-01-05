@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { VictoryLabel, VictoryLegend } from 'victory';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { ComparisonGroup } from './GroupComparisonUtils';
 import RectangleVennDiagram from './rectangleVennDiagram/RectangleVennDiagram';
 import CreateGroupFromOverlap from './CreateGroupFromOverlap';
@@ -35,6 +35,11 @@ const LEGEND_WIDTH = 180;
 
 @observer
 export default class Venn extends React.Component<IVennProps, {}> {
+    constructor(props: IVennProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @observable.shallow sampleSelection = {
         regions: [] as number[][],
     };
@@ -52,8 +57,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         return 500;
     }
 
-    @autobind
-    @action
+    @action.bound
     private submitSampleOverlapGroup(
         group: SessionGroupData,
         saveToUser: boolean
@@ -62,8 +66,7 @@ export default class Venn extends React.Component<IVennProps, {}> {
         this.sampleSelection.regions = [];
     }
 
-    @autobind
-    @action
+    @action.bound
     private submitPatientOverlapGroup(
         group: SessionGroupData,
         saveToUser: boolean
@@ -72,14 +75,12 @@ export default class Venn extends React.Component<IVennProps, {}> {
         this.patientSelection.regions = [];
     }
 
-    @autobind
-    @action
+    @action.bound
     private changeSelectedSampleRegions(regions: number[][]) {
         this.sampleSelection.regions = regions;
     }
 
-    @autobind
-    @action
+    @action.bound
     private changeSelectedPatientRegions(regions: number[][]) {
         this.patientSelection.regions = regions;
     }

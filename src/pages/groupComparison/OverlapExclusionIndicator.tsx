@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import GroupComparisonStore from './GroupComparisonStore';
 import { ComparisonGroup, IOverlapComputations } from './GroupComparisonUtils';
 import { joinGroupNames } from './OverlapUtils';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ComparisonStore, {
     OverlapStrategy,
@@ -29,6 +29,10 @@ export default class OverlapExclusionIndicator extends React.Component<
     IOverlapExclusionIndicatorProps,
     {}
 > {
+    constructor(props: IOverlapExclusionIndicatorProps) {
+        super(props);
+        makeObservable(this);
+    }
     static defaultProps: Partial<IOverlapExclusionIndicatorProps> = {
         overlapTabMode: false,
         survivalTabMode: false,

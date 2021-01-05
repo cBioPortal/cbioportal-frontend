@@ -29,7 +29,7 @@ import {
     getMedian,
     getEstimates,
 } from 'pages/resultsView/survival/SurvivalUtil';
-import { observable, action } from 'mobx';
+import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable from 'pages/resultsView/survival/SurvivalPrefixTable';
 import autobind from 'autobind-decorator';
@@ -53,8 +53,12 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
     @observable
     private selectedSurvivalPlotPrefix: string | undefined = undefined;
 
-    @autobind
-    @action
+    constructor(props: ISurvivalProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private setSurvivalPlotPrefix(prefix: string) {
         this.selectedSurvivalPlotPrefix = prefix;
     }

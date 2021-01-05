@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import styles from '../styles.module.scss';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -30,8 +30,12 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
     @observable geneValidationHasIssue = false;
 
-    @autobind
-    @action
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
     private updateSelectedGenes(
         oql: {
             query: SingleGeneQuery[];

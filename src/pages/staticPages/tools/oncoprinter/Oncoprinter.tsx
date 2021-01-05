@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
-import { action, computed, IObservableObject, observable } from 'mobx';
+import { action, computed, observable, makeObservable, autorun } from 'mobx';
 import Oncoprint from '../../../../shared/components/oncoprint/Oncoprint';
 import OncoprintControls, {
     IOncoprintControlsHandlers,
@@ -53,12 +53,14 @@ export default class Oncoprinter extends React.Component<
     @observable renderingComplete = true;
 
     private controlsHandlers: IOncoprintControlsHandlers;
-    private controlsState: IOncoprintControlsState & IObservableObject;
+    private controlsState: IOncoprintControlsState;
 
-    @observable.ref public oncoprint: OncoprintJS;
+    @observable.ref public oncoprint: OncoprintJS | undefined = undefined;
 
     constructor(props: IOncoprinterProps) {
         super(props);
+
+        makeObservable(this);
 
         (window as any).oncoprinter = this;
 
@@ -243,14 +245,14 @@ export default class Oncoprinter extends React.Component<
                     case 'pdf':
                         svgToPdfDownload(
                             'oncoprint.pdf',
-                            this.oncoprint.toSVG(false)
+                            this.oncoprint!.toSVG(false)
                         );
                         // if (!pdfDownload("oncoprint.pdf", this.oncoprint.toSVG(true))) {
                         //     alert("Oncoprint too big to download as PDF - please download as SVG.");
                         // }
                         break;
                     case 'png':
-                        const img = this.oncoprint.toCanvas(
+                        const img = this.oncoprint!.toCanvas(
                             (canvas, truncated) => {
                                 canvas.toBlob(blob => {
                                     if (truncated) {
@@ -269,7 +271,7 @@ export default class Oncoprinter extends React.Component<
                     case 'svg':
                         fileDownload(
                             new XMLSerializer().serializeToString(
-                                this.oncoprint.toSVG(false)
+                                this.oncoprint!.toSVG(false)
                             ),
                             'oncoprint.svg'
                         );
@@ -277,7 +279,7 @@ export default class Oncoprinter extends React.Component<
                     case 'order':
                         const capitalizedColumnMode = 'Sample';
                         let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
-                        const caseIds = this.oncoprint.getIdOrder();
+                        const caseIds = this.oncoprint!.getIdOrder();
                         for (const caseId of caseIds) {
                             file += `${caseId}\n`;
                         }
@@ -286,16 +288,16 @@ export default class Oncoprinter extends React.Component<
                 }
             },
             onSetHorzZoom: (z: number) => {
-                this.oncoprint.setHorzZoomCentered(z);
+                this.oncoprint!.setHorzZoomCentered(z);
             },
             onClickZoomIn: () => {
-                this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() / 0.7
+                this.oncoprint!.setHorzZoomCentered(
+                    this.oncoprint!.getHorzZoom() / 0.7
                 );
             },
             onClickZoomOut: () => {
-                this.oncoprint.setHorzZoomCentered(
-                    this.oncoprint.getHorzZoom() * 0.7
+                this.oncoprint!.setHorzZoomCentered(
+                    this.oncoprint!.getHorzZoom() * 0.7
                 );
             },
             onClickNGCHM: () => {}, // do nothing in oncoprinter mode
@@ -307,36 +309,32 @@ export default class Oncoprinter extends React.Component<
         onMobxPromise(
             this.props.store.alteredSampleIds,
             (alteredUids: string[]) => {
-                this.oncoprint.setHorzZoomToFit(alteredUids);
+                this.oncoprint!.setHorzZoomToFit(alteredUids);
             }
         );
 
-        this.oncoprint.onHorzZoom(z => (this.horzZoom = z));
-        this.horzZoom = this.oncoprint.getHorzZoom();
+        this.oncoprint!.onHorzZoom(z => (this.horzZoom = z));
+        this.horzZoom = this.oncoprint!.getHorzZoom();
     }
 
-    @autobind
-    @action
+    @action.bound
     private oncoprintRef(oncoprint: OncoprintJS) {
         this.oncoprint = oncoprint;
 
         this.initializeOncoprint();
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMinimapClose() {
         this.showMinimap = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onSuppressRendering() {
         this.renderingComplete = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onReleaseRendering() {
         this.renderingComplete = true;
     }

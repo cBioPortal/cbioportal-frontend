@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
@@ -27,11 +27,12 @@ export default class CNSegments extends React.Component<
     {}
 > {
     @observable renderingComplete = false;
-    @observable segmentTrackMaxHeight: number | undefined;
+    @observable.ref segmentTrackMaxHeight: number | undefined = undefined;
     private lastSelectedLocus: string | undefined = undefined;
 
     constructor(props: { store: StudyViewPageStore }) {
         super(props);
+        makeObservable(this);
         this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
     }
 
@@ -161,14 +162,12 @@ export default class CNSegments extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onIgvRenderingStart() {
         this.renderingComplete = false;
     }
 
-    @autobind
-    @action
+    @action.bound
     private onIgvRenderingComplete() {
         this.renderingComplete = true;
     }

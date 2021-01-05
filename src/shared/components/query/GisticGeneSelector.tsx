@@ -1,6 +1,13 @@
 import * as React from 'react';
 import styles from './styles/styles.module.scss';
-import { ObservableMap, expr, toJS, computed, observable } from 'mobx';
+import {
+    ObservableMap,
+    toJS,
+    computed,
+    observable,
+    makeObservable,
+} from 'mobx';
+import { expr } from 'mobx-utils';
 import { observer, Observer } from 'mobx-react';
 import { Gistic } from 'cbioportal-ts-api-client';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
@@ -18,7 +25,7 @@ class GisticTable extends EnhancedReactTable<Gistic> {}
 export interface GisticGeneSelectorProps {
     initialSelection: string[];
     data: Gistic[];
-    onSelect: (map_geneSymbol_selected: ObservableMap<boolean>) => void;
+    onSelect: (map_geneSymbol_selected: ObservableMap<string, boolean>) => void;
 }
 
 @observer
@@ -33,7 +40,7 @@ export default class GisticGeneSelector extends React.Component<
         );
     }
 
-    map_geneSymbol_selected = observable.map<boolean>();
+    map_geneSymbol_selected = observable.map<string, boolean>();
 
     private columns: IColumnDefMap = {
         amp: {
@@ -190,10 +197,21 @@ export default class GisticGeneSelector extends React.Component<
 
 @observer
 class GisticGeneToggles extends React.Component<
-    { gistic?: Gistic; map_geneSymbol_selected: ObservableMap<boolean> },
+    {
+        gistic?: Gistic;
+        map_geneSymbol_selected: ObservableMap<string, boolean>;
+    },
     {}
 > {
     @observable showAll = false;
+
+    constructor(props: {
+        gistic?: Gistic;
+        map_geneSymbol_selected: ObservableMap<string, boolean>;
+    }) {
+        super(props);
+        makeObservable(this);
+    }
 
     renderGeneToggles(genes: string[]) {
         return genes.map(gene => (

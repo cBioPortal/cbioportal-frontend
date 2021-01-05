@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ObservableMap, observable } from 'mobx';
+import { ObservableMap, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import GenesetsJsTree from './GenesetsJsTree';
 import GenesetsHierarchyFilterForm, {
@@ -10,7 +10,7 @@ export interface GenesetsHierarchySelectorProps {
     initialSelection: string[];
     gsvaProfile: string;
     sampleListId: string | undefined;
-    onSelect: (map_geneSet_selected: ObservableMap<boolean>) => void;
+    onSelect: (map_geneSet_selected: ObservableMap<string, boolean>) => void;
 }
 
 @observer
@@ -25,6 +25,7 @@ export default class GenesetsHierarchySelector extends React.Component<
 
     constructor(props: GenesetsHierarchySelectorProps) {
         super(props);
+        makeObservable(this);
         this.updateSelectionParameters = this.updateSelectionParameters.bind(
             this
         );

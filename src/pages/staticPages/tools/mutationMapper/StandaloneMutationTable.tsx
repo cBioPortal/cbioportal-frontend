@@ -12,7 +12,6 @@ export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
 }
 
-@observer
 export default class StandaloneMutationTable extends MutationTable<
     IStandaloneMutationTableProps
 > {
