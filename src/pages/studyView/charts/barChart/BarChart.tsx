@@ -275,6 +275,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                             },
                         }}
                         height={this.props.height - this.bottomPadding}
+                        width={this.props.width}
                         padding={{
                             left: 40,
                             right: 20,
