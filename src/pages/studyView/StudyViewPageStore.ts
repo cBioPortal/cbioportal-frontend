@@ -6076,9 +6076,7 @@ export class StudyViewPageStore {
     >({
         await: () => [
             this.molecularProfiles,
-            this.initialMolecularProfileSampleCounts,
             this.sampleUniqueKeysByMolecularProfileIdSet,
-            this.selectedSamples,
         ],
         invoke: async () => {
             const molecularProfileOptions: GenomicDataCountWithSampleUniqueKeys[] = getMolecularProfileOptions(
