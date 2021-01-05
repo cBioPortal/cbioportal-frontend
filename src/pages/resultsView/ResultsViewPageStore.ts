@@ -225,6 +225,10 @@ import {
     REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
+import oql_parser, {
+    Alteration,
+    SingleGeneQuery,
+} from 'shared/lib/oql/oql-parser';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1843,6 +1847,7 @@ export class ResultsViewPageStore {
             this.coverageInformation,
             this.selectedMolecularProfiles,
             this.studyToMolecularProfiles,
+            this.defaultOQLQueryAlterations,
         ],
         invoke: async () => {
             return getSampleAlteredMap(
@@ -1853,7 +1858,8 @@ export class ResultsViewPageStore {
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
                 ),
-                this.studyToMolecularProfiles.result!
+                this.studyToMolecularProfiles.result!,
+                this.defaultOQLQueryAlterations.result!
             );
         },
     });
@@ -2150,6 +2156,21 @@ export class ResultsViewPageStore {
                     this.rppaScoreThreshold
                 )
             );
+        },
+    });
+
+    readonly defaultOQLQueryAlterations = remoteData<Alteration[] | false>({
+        await: () => [this.defaultOQLQuery],
+        invoke: () => {
+            if (this.defaultOQLQuery.result) {
+                return Promise.resolve(
+                    (oql_parser.parse(
+                        `DUMMYGENE: ${this.defaultOQLQuery.result!}`
+                    )![0] as SingleGeneQuery).alterations
+                );
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
