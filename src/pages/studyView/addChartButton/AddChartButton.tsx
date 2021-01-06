@@ -7,6 +7,7 @@ import {
     StudyViewPageStore,
     StudyViewPageTabKey,
     GenomicChart,
+    GenericAssayChart,
 } from '../StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import autobind from 'autobind-decorator';
@@ -28,6 +29,12 @@ import SuccessBanner from '../infoBanner/SuccessBanner';
 import { serializeEvent, trackEvent } from '../../../shared/lib/tracking';
 import classNames from 'classnames';
 import GeneLevelSelection from './geneLevelSelection/GeneLevelSelection';
+import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import GenericAssaySelection from './genericAssaySelection/GenericAssaySelection';
+import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -35,6 +42,7 @@ export interface IAddChartTabsProps {
     disableGenomicTab?: boolean;
     disableCustomTab?: boolean;
     disableGeneSpecificTab?: boolean;
+    disableGenericAssayTabs?: boolean;
     onInfoMessageChange?: (newMessage: string) => void;
     showResetPopup: () => void;
 }
@@ -54,6 +62,7 @@ export type ChartOption = {
 };
 
 export const INFO_TIMEOUT = 5000;
+export const MIN_ADD_CHART_TOOLTIP_WIDTH = 400;
 
 export enum TabNamesEnum {
     CUSTOM_DATA = 'Custom Data',
@@ -67,15 +76,24 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @observable activeId: ChartMetaDataTypeEnum =
         ChartMetaDataTypeEnum.CLINICAL;
     @observable infoMessage: string = '';
+    @observable tabsWidth = 0;
+    private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
+
     public static defaultProps = {
         disableGenomicTab: false,
         disableCustomTab: false,
         disableGeneSpecificTab: false,
+        disableGenericAssayTabs: false,
     };
 
     constructor(props: IAddChartTabsProps, context: any) {
         super(props, context);
         makeObservable(this);
+        this.tabsDivRef = React.createRef<HTMLDivElement>();
+    }
+
+    componentDidMount(): void {
+        this.setTabsWidth(this.tabsDivRef.current);
     }
 
     readonly dataCount = remoteData<ChartDataCountSet>({
@@ -91,6 +109,21 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         },
         default: {},
     });
+
+    @action.bound
+    setTabsWidth(tab: HTMLDivElement | null) {
+        if (tab) {
+            this.tabsWidth = tab.offsetWidth;
+        }
+    }
+
+    @computed get getTabsWidth(): number {
+        if (this.tabsWidth > MIN_ADD_CHART_TOOLTIP_WIDTH) {
+            return this.tabsWidth;
+        } else {
+            return MIN_ADD_CHART_TOOLTIP_WIDTH;
+        }
+    }
 
     @action.bound
     updateActiveId(newId: string) {
@@ -121,7 +154,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @computed
-    get genomicDataOptions(): ChartOption[] {
+    get genomicChartOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[ChartMetaDataTypeEnum.GENOMIC] ||
                 [],
@@ -141,7 +174,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @computed
-    get geneSpecificDataOptions(): ChartOption[] {
+    get geneSpecificChartOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(
             this.groupedChartMetaByDataType[
                 ChartMetaDataTypeEnum.GENE_SPECIFIC
@@ -158,6 +191,26 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         } else {
             return genomicDataOptions;
         }
+    }
+
+    @computed
+    get genericAssayChartOptionsByGenericAssayType(): {
+        [genericAssayType: string]: ChartOption[];
+    } {
+        const groupedChartMetaByGenericAssayType = _.groupBy(
+            this.groupedChartMetaByDataType[
+                ChartMetaDataTypeEnum.GENERIC_ASSAY
+            ] || [],
+            chartMeta => chartMeta.genericAssayType
+        );
+
+        return _.mapValues(groupedChartMetaByGenericAssayType, chartMeta => {
+            return getOptionsByChartMetaDataType(
+                chartMeta,
+                this.selectedAttrs,
+                _.fromPairs(this.props.store.chartsType.toJSON())
+            );
+        });
     }
 
     @computed
@@ -194,6 +247,38 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             (this.props.store.molecularProfileOptions.isComplete &&
                 this.props.store.molecularProfileOptions.result.length === 0)
         );
+    }
+
+    @computed
+    get hideGenericAssayTabs() {
+        return (
+            this.props.disableGenericAssayTabs ||
+            !this.props.store.genericAssayProfileOptionsByType.isComplete ||
+            !this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                .isComplete ||
+            (this.props.store.genericAssayProfileOptionsByType.isComplete &&
+                _.isEmpty(
+                    this.props.store.genericAssayProfileOptionsByType.result
+                ))
+        );
+    }
+
+    @action.bound
+    private onGenericAssaySubmit(charts: GenericAssayChart[]) {
+        // Update info message
+        this.infoMessage = getInfoMessageForGenericAssayChart(
+            charts,
+            this.selectedAttrs
+        );
+        // TODO: (GA) Add other datatype by using another function
+        if (
+            _.every(
+                charts,
+                chart => chart.dataType === DataTypeConstants.LIMITVALUE
+            )
+        ) {
+            this.props.store.addGenericAssayContinuousCharts(charts);
+        }
     }
 
     @action.bound
@@ -299,14 +384,75 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         }
     }
 
+    @computed
+    private get genericAssayTabs() {
+        let tabs = [];
+        // create one tab for each generic assay type
+        tabs = _.map(
+            this.props.store.genericAssayProfileOptionsByType.result,
+            (options, type) => {
+                const genericAssayEntityOptions = _.map(
+                    this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                        .result![type],
+                    entity => makeGenericAssayOption(entity, false)
+                );
+                const shouldShowChartOptionTable =
+                    this.genericAssayChartOptionsByGenericAssayType[type] &&
+                    this.genericAssayChartOptionsByGenericAssayType[type]
+                        .length > 0;
+
+                return (
+                    <MSKTab
+                        key={type}
+                        id={type}
+                        linkText={deriveDisplayTextFromGenericAssayType(type)}
+                    >
+                        <GenericAssaySelection
+                            containerWidth={this.getTabsWidth}
+                            molecularProfileOptions={options}
+                            submitButtonText={'Add Chart'}
+                            genericAssayType={type}
+                            genericAssayEntityOptions={
+                                genericAssayEntityOptions
+                            }
+                            onSubmit={this.onGenericAssaySubmit}
+                        />
+                        {shouldShowChartOptionTable && (
+                            <div style={{ marginTop: 10 }}>
+                                <AddChartByType
+                                    width={this.getTabsWidth}
+                                    options={
+                                        this
+                                            .genericAssayChartOptionsByGenericAssayType[
+                                            type
+                                        ]
+                                    }
+                                    freqPromise={this.dataCount}
+                                    onAddAll={this.onAddAll}
+                                    onClearAll={this.onClearAll}
+                                    onToggleOption={this.onToggleOption}
+                                    hideControls={true}
+                                    firstColumnHeaderName={`${deriveDisplayTextFromGenericAssayType(
+                                        type
+                                    )} Chart`}
+                                />
+                            </div>
+                        )}
+                    </MSKTab>
+                );
+            }
+        );
+        return tabs;
+    }
+
     render() {
         return (
             <div
                 style={{
-                    width: '400px',
                     display: 'flex',
                     flexDirection: 'column',
                 }}
+                ref={this.tabsDivRef}
             >
                 <MSKTabs
                     unmountOnHide={false}
@@ -321,6 +467,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         className="addClinicalChartTab"
                     >
                         <AddChartByType
+                            width={this.getTabsWidth}
                             options={this.clinicalDataOptions}
                             freqPromise={this.dataCount}
                             onAddAll={this.onAddAll}
@@ -336,7 +483,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         className="addGenomicChartTab"
                     >
                         <AddChartByType
-                            options={this.genomicDataOptions}
+                            width={this.getTabsWidth}
+                            options={this.genomicChartOptions}
                             freqPromise={this.dataCount}
                             onAddAll={this.onAddAll}
                             onClearAll={this.onClearAll}
@@ -350,6 +498,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         hide={this.hideGeneSpecificTab}
                     >
                         <GeneLevelSelection
+                            containerWidth={this.getTabsWidth}
                             molecularProfileOptionsPromise={
                                 this.props.store.molecularProfileOptions
                             }
@@ -371,10 +520,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 this.props.store.addGeneSpecificCharts(charts);
                             }}
                         />
-                        {this.geneSpecificDataOptions.length > 0 && (
-                            <div style={{ marginTop: '10px' }}>
+                        {this.geneSpecificChartOptions.length > 0 && (
+                            <div style={{ marginTop: 10 }}>
                                 <AddChartByType
-                                    options={this.geneSpecificDataOptions}
+                                    width={this.getTabsWidth}
+                                    options={this.geneSpecificChartOptions}
                                     freqPromise={this.dataCount}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
@@ -411,8 +561,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             }}
                         />
                         {this.customChartDataOptions.length > 0 && (
-                            <div style={{ marginTop: '10px' }}>
+                            <div style={{ marginTop: 10 }}>
                                 <AddChartByType
+                                    width={this.getTabsWidth}
                                     options={this.customChartDataOptions}
                                     freqPromise={this.dataCount}
                                     onAddAll={this.onAddAll}
@@ -424,6 +575,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             </div>
                         )}
                     </MSKTab>
+                    {!this.hideGenericAssayTabs && this.genericAssayTabs}
                 </MSKTabs>
                 {this.props.store.isLoggedIn &&
                     this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
@@ -431,8 +583,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         <button
                             style={{
                                 position: 'absolute',
-                                top: '14px',
-                                right: '18px',
+                                top: 14,
+                                right: 18,
                                 zIndex: 2,
                             }}
                             className="btn btn-primary btn-xs"
@@ -459,44 +611,63 @@ export default class AddChartButton extends React.Component<
         super(props);
         makeObservable(this);
     }
-    render() {
+
+    @computed
+    get tabsLoading() {
         return (
-            <DefaultTooltip
-                visible={this.showTooltip}
-                onVisibleChange={visible => (this.showTooltip = !!visible)}
-                trigger={['click']}
-                placement={'bottomRight'}
-                destroyTooltipOnHide={false}
-                overlay={() => (
-                    <AddChartTabs
-                        store={this.props.store}
-                        currentTab={this.props.currentTab}
-                        disableGenomicTab={this.props.disableGenomicTab}
-                        disableGeneSpecificTab={
-                            this.props.disableGeneSpecificTab
-                        }
-                        disableCustomTab={this.props.disableCustomTab}
-                        showResetPopup={this.props.showResetPopup}
-                    />
-                )}
-                overlayClassName={this.props.addChartOverlayClassName}
-            >
-                <button
-                    className={classNames('btn btn-primary btn-sm', {
-                        active: this.showTooltip,
-                    })}
-                    style={{ marginLeft: '10px' }}
-                    aria-pressed={this.showTooltip}
-                    data-event={serializeEvent({
-                        category: 'studyPage',
-                        action: 'addChartMenuOpen',
-                        label: this.props.store.studyIds.join(','),
-                    })}
-                    data-test="add-charts-button"
-                >
-                    {this.props.buttonText}
-                </button>
-            </DefaultTooltip>
+            this.props.store.genericAssayProfileOptionsByType.isPending ||
+            this.props.store.molecularProfileOptions.isPending ||
+            this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                .isPending
         );
+    }
+
+    render() {
+        if (this.tabsLoading) {
+            return <LoadingIndicator isLoading={true} />;
+        } else {
+            return (
+                <DefaultTooltip
+                    visible={this.showTooltip}
+                    onVisibleChange={visible => (this.showTooltip = !!visible)}
+                    trigger={['click']}
+                    placement={'bottomRight'}
+                    destroyTooltipOnHide={true}
+                    overlay={() => (
+                        <AddChartTabs
+                            store={this.props.store}
+                            currentTab={this.props.currentTab}
+                            disableGenomicTab={this.props.disableGenomicTab}
+                            disableGeneSpecificTab={
+                                this.props.disableGeneSpecificTab
+                            }
+                            disableGenericAssayTabs={
+                                this.props.disableGenericAssayTabs
+                            }
+                            disableCustomTab={this.props.disableCustomTab}
+                            showResetPopup={this.props.showResetPopup}
+                        />
+                    )}
+                    overlayClassName={this.props.addChartOverlayClassName}
+                >
+                    <button
+                        className={classNames('btn btn-primary btn-sm', {
+                            active: this.showTooltip,
+                            // disabled: this.tabsLoading
+                        })}
+                        style={{ marginLeft: 10 }}
+                        aria-pressed={this.showTooltip}
+                        data-event={serializeEvent({
+                            category: 'studyPage',
+                            action: 'addChartMenuOpen',
+                            label: this.props.store.studyIds.join(','),
+                        })}
+                        data-test="add-charts-button"
+                    >
+                        {this.props.buttonText}
+                    </button>
+                </DefaultTooltip>
+            );
+        }
     }
 }

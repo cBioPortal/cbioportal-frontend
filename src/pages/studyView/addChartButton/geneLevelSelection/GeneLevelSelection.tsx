@@ -17,18 +17,13 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import { Gene } from 'cbioportal-ts-api-client';
+import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 
 export interface IGeneLevelSelectionProps {
-    molecularProfileOptionsPromise: MobxPromise<
-        {
-            value: string;
-            label: string;
-            count: number;
-            description: string;
-        }[]
-    >;
+    molecularProfileOptionsPromise: MobxPromise<MolecularProfileOption[]>;
     submitButtonText: string;
     onSubmit: (charts: GenomicChart[]) => void;
+    containerWidth: number;
 }
 
 @observer
@@ -156,7 +151,7 @@ export default class GeneLevelSelection extends React.Component<
                 );
             }
             return (
-                <div>
+                <div style={{ width: this.props.containerWidth - 20 }}>
                     <OQLTextArea
                         inputGeneQuery={this._queryStr}
                         validateInputGeneQuery={false}
@@ -178,8 +173,8 @@ export default class GeneLevelSelection extends React.Component<
                     <div style={{ display: 'flex', marginTop: '10px' }}>
                         <div
                             style={{
-                                minWidth: 290,
-                                width: 290,
+                                minWidth: 310,
+                                flex: 1,
                                 marginRight: 15,
                             }}
                         >
