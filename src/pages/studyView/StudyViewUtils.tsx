@@ -2358,12 +2358,11 @@ export function getChartSettingsMap(
     visibleAttributes.forEach(attribute => {
         const id = attribute.uniqueKey;
         const chartType = chartTypeSet[id] || 'NONE';
-        let chartSetting = chartSettingsMap[id];
-        chartSetting = {
+        let chartSetting: ChartUserSetting = {
             id: id,
             chartType,
             patientAttribute: attribute.patientAttribute, // add chart attribute type
-        };
+        } as any;
         if (chartType === ChartTypeEnum.MUTATED_GENES_TABLE) {
             chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
         } else if (chartType === ChartTypeEnum.FUSION_GENES_TABLE) {
@@ -2402,6 +2401,7 @@ export function getChartSettingsMap(
                 chartSetting.customBins = clinicalDataBinFilter[id].customBins;
             }
         }
+        chartSettingsMap[id] = chartSetting;
     });
     // add layout for each chart
     gridLayout.forEach(layout => {
