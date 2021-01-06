@@ -317,14 +317,12 @@ export default class ResultsViewPathwayMapper extends React.Component<
         addGenesToQuery(this.props.urlWrapper, selectedGenes);
     }
 
-    @autobind
-    @action
+    @action.bound
     private updateMessage(message: string) {
         this.warningMessage = message;
     }
 
-    @autobind
-    @action
+    @action.bound
     private clearMessage() {
         this.warningMessage = null;
     }
