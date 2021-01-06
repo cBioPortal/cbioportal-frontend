@@ -53,9 +53,10 @@ import {
     getBinName,
     getGroupedClinicalDataByBins,
     updateSavedUserPreferenceChartIds,
+    getNonZeroUniqueBins,
+    DataBin,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    ClinicalDataBin,
     Sample,
     StudyViewFilter,
     DataFilterValue,
@@ -1440,21 +1441,21 @@ describe('StudyViewUtils', () => {
             { start: 20, end: 30 },
             { start: 30, end: 40 },
             { start: 40, end: 50 },
-        ] as ClinicalDataBin[];
+        ] as DataBin[];
 
         const everyBinDistinct = [
             { start: 0, end: 0 },
             { start: 10, end: 10 },
             { start: 20, end: 20 },
             { start: 30, end: 30 },
-        ] as ClinicalDataBin[];
+        ] as DataBin[];
 
         const someBinsDistinct = [
             { start: 0, end: 0 },
             { start: 10, end: 10 },
             { start: 20, end: 30 },
             { start: 30, end: 40 },
-        ] as ClinicalDataBin[];
+        ] as DataBin[];
 
         it('accepts a list of bins with all distinct values', () => {
             assert.isTrue(
@@ -3394,6 +3395,50 @@ describe('StudyViewUtils', () => {
                     { ...chartSetting2, id: 'SAMPLE_TYPE' },
                 ]
             );
+        });
+    });
+
+    describe('getNonZeroUniqueBins', () => {
+        const noBinDistinct = [
+            { start: 10, end: 20 },
+            { start: 20, end: 30 },
+            { start: 30, end: 40 },
+            { start: 40, end: 50 },
+        ] as DataBin[];
+
+        const everyBinDistinct = [
+            { start: 0, end: 0 },
+            { start: 10, end: 10 },
+            { start: 20, end: 20 },
+            { start: 30, end: 30 },
+        ] as DataBin[];
+
+        const someBinsDistinct = [
+            { start: 0, end: 0 },
+            { start: 10, end: 10 },
+            { start: 20, end: 30 },
+            { start: 30, end: 40 },
+        ] as DataBin[];
+
+        it('should return correct non zero unique bins', () => {
+            assert.deepEqual(getNonZeroUniqueBins(noBinDistinct), [
+                10,
+                20,
+                30,
+                40,
+                50,
+            ]);
+            assert.deepEqual(getNonZeroUniqueBins(everyBinDistinct), [
+                10,
+                20,
+                30,
+            ]);
+            assert.deepEqual(getNonZeroUniqueBins(someBinsDistinct), [
+                10,
+                20,
+                30,
+                40,
+            ]);
         });
     });
 });
