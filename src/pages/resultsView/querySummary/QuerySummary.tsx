@@ -13,7 +13,7 @@ import {
 import Loader, {
     default as LoadingIndicator,
 } from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import QueryAndDownloadTabs from '../../../shared/components/query/QueryAndDownloadTabs';
 import autobind from 'autobind-decorator';
 import ExtendedRouterStore from '../../../shared/lib/ExtendedRouterStore';
@@ -47,8 +47,11 @@ export default class QuerySummary extends React.Component<
     QuerySummaryProps,
     {}
 > {
-    @autobind
-    @action
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+    @action.bound
     private toggleQueryFormVisibility() {
         this.props.onToggleQueryFormVisibility(
             this.props.store.queryFormVisible
@@ -136,8 +139,7 @@ export default class QuerySummary extends React.Component<
         },
     });
 
-    @autobind
-    @action
+    @action.bound
     closeQueryForm() {
         // toggle QueryForm visibility only when queryFormVisible is true
         if (this.props.store.queryFormVisible === true) {
@@ -292,7 +294,7 @@ export default class QuerySummary extends React.Component<
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             {!this.isQueryOrGeneInvalid && (
-                                <div>
+                                <div style={{ display: 'flex' }}>
                                     <button
                                         id="modifyQueryBtn"
                                         onClick={this.toggleQueryFormVisibility}

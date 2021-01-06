@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-utils",
   "description": "cBioPortal Utilities",
-  "version": "0.2.19",
+  "version": "0.2.20",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -29,7 +29,7 @@
     "test:watch": "yarn run test -- --watch"
   },
   "peerDependencies": {
-    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0"
+    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0"
   },
   "dependencies": {
     "genome-nexus-ts-api-client": "^1.1.12",

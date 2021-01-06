@@ -6,7 +6,11 @@ import {
     normalizeQuery,
     Focus,
 } from 'shared/components/query/QueryStore';
-import { action, computed } from '../../../../node_modules/mobx';
+import {
+    action,
+    computed,
+    makeObservable,
+} from '../../../../node_modules/mobx';
 import { Gene } from 'cbioportal-ts-api-client';
 import 'react-select1/dist/react-select.css';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -51,6 +55,11 @@ export default class GeneSymbolValidator extends React.Component<
     IGeneSymbolValidatorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     public static defaultProps = {
         errorMessageOnly: false,
     };

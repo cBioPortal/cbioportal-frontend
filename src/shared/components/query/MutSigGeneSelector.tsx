@@ -2,7 +2,15 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from '../labeledCheckbox/LabeledCheckbox';
 import styles from './styles/styles.module.scss';
-import { action, ObservableMap, expr, toJS, computed, observable } from 'mobx';
+import {
+    action,
+    ObservableMap,
+    toJS,
+    computed,
+    observable,
+    makeObservable,
+} from 'mobx';
+import { expr } from 'mobx-utils';
 import { observer, Observer } from 'mobx-react';
 import EnhancedReactTable from '../enhancedReactTable/EnhancedReactTable';
 import { MutSig } from 'cbioportal-ts-api-client';
@@ -16,7 +24,7 @@ class MutSigTable extends EnhancedReactTable<MutSig> {}
 export interface MutSigGeneSelectorProps {
     initialSelection: string[];
     data: MutSig[];
-    onSelect: (map_geneSymbol_selected: ObservableMap<boolean>) => void;
+    onSelect: (map_geneSymbol_selected: ObservableMap<string, boolean>) => void;
 }
 
 @observer
@@ -26,12 +34,16 @@ export default class MutSigGeneSelector extends React.Component<
 > {
     constructor(props: MutSigGeneSelectorProps) {
         super(props);
+        makeObservable(this);
         this.map_geneSymbol_selected.replace(
             props.initialSelection.map(geneSymbol => [geneSymbol, true])
         );
     }
 
-    private readonly map_geneSymbol_selected = observable.map<boolean>();
+    private readonly map_geneSymbol_selected = observable.map<
+        string,
+        boolean
+    >();
 
     @computed get allGenes() {
         return _.uniq(this.props.data.map(mutSig => mutSig.hugoGeneSymbol));

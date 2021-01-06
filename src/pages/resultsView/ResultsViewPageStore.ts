@@ -35,7 +35,14 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
-import { action, computed, observable, ObservableMap, reaction } from 'mobx';
+import {
+    action,
+    computed,
+    observable,
+    ObservableMap,
+    reaction,
+    makeObservable,
+} from 'mobx';
 import {
     getProteinPositionFromProteinChange,
     IHotspotIndex,
@@ -225,6 +232,10 @@ import {
     REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
+import oql_parser, {
+    Alteration,
+    SingleGeneQuery,
+} from 'shared/lib/oql/oql-parser';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -452,7 +463,7 @@ export type DriverAnnotationSettings = {
     cosmicCountThreshold: number;
     customBinary: boolean;
     customTiersDefault: boolean;
-    driverTiers: ObservableMap<boolean>;
+    driverTiers: ObservableMap<string, boolean>;
     hotspots: boolean;
     oncoKb: boolean;
     driversAnnotated: boolean;
@@ -469,7 +480,8 @@ export type ModifyQueryParams = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
-        labelMobxPromises(this);
+        makeObservable(this);
+        //labelMobxPromises(this);
 
         this.urlWrapper = urlWrapper;
 
@@ -485,7 +497,7 @@ export class ResultsViewPageStore {
             cbioportalCountThreshold: 0,
             cosmicCount: false,
             cosmicCountThreshold: 0,
-            driverTiers: observable.map<boolean>(),
+            driverTiers: observable.map<string, boolean>(),
 
             _hotspots: false,
             _oncoKb: false,
@@ -519,23 +531,22 @@ export class ResultsViewPageStore {
                 return this._excludeVUS && this.driversAnnotated;
             },
             get driversAnnotated() {
+                const anyCustomDriverTiersSelected = Array.from(
+                    this.driverTiers.entries()
+                ).reduce(
+                    (oneSelected: boolean, nextEntry: [string, boolean]) => {
+                        return oneSelected || nextEntry[1];
+                    },
+                    false
+                );
+
                 const anySelected =
                     this.oncoKb ||
                     this.hotspots ||
                     this.cbioportalCount ||
                     this.cosmicCount ||
                     this.customBinary ||
-                    this.driverTiers
-                        .entries()
-                        .reduce(
-                            (
-                                oneSelected: boolean,
-                                nextEntry: [string, boolean]
-                            ) => {
-                                return oneSelected || nextEntry[1];
-                            },
-                            false
-                        );
+                    anyCustomDriverTiersSelected;
 
                 return anySelected;
             },
@@ -660,8 +671,7 @@ export class ResultsViewPageStore {
 
     public driverAnnotationSettings: DriverAnnotationSettings;
 
-    @autobind
-    @action
+    @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
         this.urlWrapper.updateURL({
             show_samples: (e === OncoprintAnalysisCaseType.SAMPLE).toString(),
@@ -673,8 +683,7 @@ export class ResultsViewPageStore {
         return this.urlWrapper.query.exclude_germline_mutations === 'true';
     }
 
-    @autobind
-    @action
+    @action.bound
     public setExcludeGermlineMutations(e: boolean) {
         this.urlWrapper.updateURL({
             exclude_germline_mutations: e.toString(),
@@ -686,8 +695,7 @@ export class ResultsViewPageStore {
         return this.urlWrapper.query.patient_enrichments === 'true';
     }
 
-    @autobind
-    @action
+    @action.bound
     public setUsePatientLevelEnrichments(e: boolean) {
         this.urlWrapper.updateURL({ patient_enrichments: e.toString() });
     }
@@ -697,8 +705,7 @@ export class ResultsViewPageStore {
         return this.urlWrapper.query.hide_unprofiled_samples === 'true';
     }
 
-    @autobind
-    @action
+    @action.bound
     public setHideUnprofiledSamples(e: boolean) {
         this.urlWrapper.updateURL({
             hide_unprofiled_samples: e.toString(),
@@ -741,7 +748,10 @@ export class ResultsViewPageStore {
         this.driverAnnotationSettings.cbioportalCountThreshold = 10;
         this.driverAnnotationSettings.cosmicCount = false;
         this.driverAnnotationSettings.cosmicCountThreshold = 10;
-        this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
+        this.driverAnnotationSettings.driverTiers = observable.map<
+            string,
+            boolean
+        >();
         (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig
             .serverConfig.oncoprint_oncokb_default;
         this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig
@@ -1843,6 +1853,7 @@ export class ResultsViewPageStore {
             this.coverageInformation,
             this.selectedMolecularProfiles,
             this.studyToMolecularProfiles,
+            this.defaultOQLQueryAlterations,
         ],
         invoke: async () => {
             return getSampleAlteredMap(
@@ -1853,7 +1864,8 @@ export class ResultsViewPageStore {
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
                 ),
-                this.studyToMolecularProfiles.result!
+                this.studyToMolecularProfiles.result!,
+                this.defaultOQLQueryAlterations.result!
             );
         },
     });
@@ -2150,6 +2162,21 @@ export class ResultsViewPageStore {
                     this.rppaScoreThreshold
                 )
             );
+        },
+    });
+
+    readonly defaultOQLQueryAlterations = remoteData<Alteration[] | false>({
+        await: () => [this.defaultOQLQuery],
+        invoke: () => {
+            if (this.defaultOQLQuery.result) {
+                return Promise.resolve(
+                    (oql_parser.parse(
+                        `DUMMYGENE: ${this.defaultOQLQuery.result!}`
+                    )![0] as SingleGeneQuery).alterations
+                );
+            } else {
+                return Promise.resolve(false);
+            }
         },
     });
 
@@ -4796,7 +4823,7 @@ export class ResultsViewPageStore {
     /*
      * For annotations of Genome Nexus we want to fetch lazily
      */
-    @cached get genomeNexusCache() {
+    @cached @computed get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
                 [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
@@ -4805,7 +4832,7 @@ export class ResultsViewPageStore {
         );
     }
 
-    @cached get genomeNexusMutationAssessorCache() {
+    @cached @computed get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
                 [
@@ -4817,29 +4844,29 @@ export class ResultsViewPageStore {
         );
     }
 
-    @cached get pubMedCache() {
+    @cached @computed get pubMedCache() {
         return new PubMedCache();
     }
 
-    @cached get discreteCNACache() {
+    @cached @computed get discreteCNACache() {
         return new DiscreteCNACache(
             this.studyToMolecularProfileDiscreteCna.result
         );
     }
 
-    @cached get cancerTypeCache() {
+    @cached @computed get cancerTypeCache() {
         return new CancerTypeCache();
     }
 
-    @cached get mutationCountCache() {
+    @cached @computed get mutationCountCache() {
         return new MutationCountCache();
     }
 
-    @cached get pdbHeaderCache() {
+    @cached @computed get pdbHeaderCache() {
         return new PdbHeaderCache();
     }
 
-    @cached get mutationDataCache() {
+    @cached @computed get mutationDataCache() {
         return new MutationDataCache(
             this.studyToMutationMolecularProfile.result,
             this.studyToDataQueryFilter.result

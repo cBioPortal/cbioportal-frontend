@@ -4,7 +4,7 @@ import { ComparisonGroup } from '../GroupComparisonUtils';
 import { getTextColor, renderGroupNameWithOrdinal } from '../OverlapUtils';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
 export interface IGroupTickLabelComponentProps {
     categoryCoordToGroup: (coord: number) => ComparisonGroup;
@@ -21,14 +21,17 @@ export interface IGroupTickLabelComponentProps {
 export default class GroupTickLabelComponent extends React.Component<
     IGroupTickLabelComponentProps
 > {
+    constructor(props: IGroupTickLabelComponentProps) {
+        super(props);
+        makeObservable(this);
+    }
     @observable.ref private textElt: SVGTextElement | null = null;
 
     @computed get group() {
         return this.props.categoryCoordToGroup(this.props.text!);
     }
 
-    @autobind
-    @action
+    @action.bound
     private ref(elt: any) {
         this.textElt = elt;
     }

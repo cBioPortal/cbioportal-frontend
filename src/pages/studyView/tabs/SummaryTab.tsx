@@ -5,7 +5,7 @@ import {
     ChartContainer,
     IChartContainerProps,
 } from 'pages/studyView/charts/ChartContainer';
-import { observable, toJS } from 'mobx';
+import { observable, toJS, makeObservable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import {
     DataFilterValue,
@@ -54,6 +54,7 @@ export class StudySummaryTab extends React.Component<
 
     constructor(props: IStudySummaryTabProps) {
         super(props);
+        makeObservable(this);
         this.store = props.store;
 
         this.handlers = {

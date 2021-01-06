@@ -8,14 +8,13 @@ import { IMutationalSignature } from '../../../shared/model/MutationalSignature'
 import { getMutationalSignaturePercentage } from '../../../shared/lib/FormatUtils';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { MUTATIONAL_SIGNATURES_SIGNIFICANT_PVALUE_THRESHOLD } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 
 export interface IClinicalInformationMutationalSignatureTableProps {
     data: IMutationalSignature[];
 }
 
-@observer
 class MutationalSignatureTable extends LazyMobXTable<IMutationalSignatureRow> {}
 
 interface IMutationalSignatureRow {
@@ -70,6 +69,11 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
     IClinicalInformationMutationalSignatureTableProps,
     {}
 > {
+    constructor(props: IClinicalInformationMutationalSignatureTableProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get uniqueSamples() {
         return _.map(_.uniqBy(this.props.data, 'sampleId'), uniqSample => ({
             id: uniqSample.sampleId,

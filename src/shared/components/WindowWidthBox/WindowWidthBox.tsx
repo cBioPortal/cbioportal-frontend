@@ -1,6 +1,6 @@
 import WindowStore from '../window/WindowStore';
 import * as React from 'react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { CSSProperties, HTMLProps } from 'react';
 
@@ -11,6 +11,11 @@ interface IWindowWidthBoxProps extends React.HTMLProps<HTMLDivElement> {
 @observer
 export class WindowWidthBox extends React.Component<IWindowWidthBoxProps, {}> {
     wrapper: HTMLDivElement;
+
+    constructor(props: IWindowWidthBoxProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed get offset() {
         return this.props.offset || 0;

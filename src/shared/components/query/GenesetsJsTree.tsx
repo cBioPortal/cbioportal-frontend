@@ -10,7 +10,7 @@ import CBioPortalAPIInternal, {
     GenesetHierarchyInfo,
 } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
-import { observable, ObservableMap } from 'mobx';
+import { observable, ObservableMap, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 
 export interface GenesetsJsTreeProps {
@@ -21,7 +21,7 @@ export interface GenesetsJsTreeProps {
     gsvaProfile: string;
     sampleListId: string | undefined;
     searchValue: string;
-    onSelect: (map_geneSet_selected: ObservableMap<boolean>) => void;
+    onSelect: (map_geneSet_selected: ObservableMap<string, boolean>) => void;
 }
 
 type JSNode = {
@@ -36,10 +36,14 @@ export default class GenesetsJsTree extends React.Component<
     tree: Element | null;
     @observable isLoading = true;
     promisedTree: Promise<Element>;
-    private readonly map_geneSets_selected = new ObservableMap<boolean>();
+    private readonly map_geneSets_selected = new ObservableMap<
+        string,
+        boolean
+    >();
 
     constructor(props: GenesetsJsTreeProps) {
         super(props);
+        makeObservable(this);
         this.map_geneSets_selected.replace(
             props.initialSelection.map(geneSet => [geneSet, true])
         );

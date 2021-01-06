@@ -1,7 +1,7 @@
 import * as React from 'react';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import Venn from './OverlapVenn';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
@@ -34,15 +34,19 @@ enum PlotType {
 
 @observer
 export default class Overlap extends React.Component<IOverlapProps, {}> {
-    @observable plotExists = false;
     @observable vennFailed = false;
 
-    componentDidUpdate() {
-        this.plotExists = !!this.getSvg();
+    constructor(props: IOverlapProps) {
+        super(props);
+        makeObservable(this);
+        (window as any).blah = this;
     }
 
-    @autobind
-    @action
+    @computed get plotExists() {
+        return this.plotType.isComplete && !this.vennFailed;
+    }
+
+    @action.bound
     private onVennLayoutFailure() {
         this.vennFailed = true;
     }

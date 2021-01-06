@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.3.22",
+  "version": "0.3.23",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -31,19 +31,20 @@
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
-    "mobx": "^3.0.0 || ^4.0.0 || ^5.0.0",
+    "mobx": "^6.0.0",
     "mobx-react": "^4.0.0 || ^5.0.0",
     "react": "^15.0.0 || ^16.0.0",
     "react-dom": "^15.0.0 || ^16.0.0"
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-utils": "^0.2.19",
+    "cbioportal-utils": "^0.2.20",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "measure-text": "0.0.4",
-    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
+    "mobx": "6.0.1",
+    "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "object-sizeof": "^1.2.0",
     "oncokb-ts-api-client": "^1.1.4",
     "rc-tooltip": "3.7.3",

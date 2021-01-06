@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { Collapse } from 'react-collapse';
 import autobind from 'autobind-decorator';
 import {
@@ -81,6 +81,10 @@ const PTM_ID_CLASS_PREFIX = 'ptm-';
 
 @observer
 export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         subTrackMargin: 25,
     };
@@ -254,8 +258,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleToggleExpand() {
         this.expanded = !this.expanded;
     }

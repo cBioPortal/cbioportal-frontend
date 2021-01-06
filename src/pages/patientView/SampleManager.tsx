@@ -11,7 +11,7 @@ import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { SampleLabelHTML } from 'shared/components/sampleLabel/SampleLabel';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 // sort samples based on event, clinical data and id
 // 1. based on sample collection data (timeline event)
@@ -174,6 +174,7 @@ class SampleManager {
         events?: ClinicalEvent[],
         private sampleIdsInHeader?: string[]
     ) {
+        makeObservable(this);
         this.sampleIndex = {};
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};

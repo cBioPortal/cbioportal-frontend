@@ -8,11 +8,11 @@ import { MobxPromise } from 'mobxpromise';
 import {
     action,
     computed,
-    IObservableObject,
     observable,
     ObservableMap,
     reaction,
     toJS,
+    makeObservable,
 } from 'mobx';
 import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
@@ -139,7 +139,7 @@ export interface IOncoprintControlsState {
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
-    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    selectedCustomDriverAnnotationTiers?: ObservableMap<string, boolean>;
     annotateCustomDriverBinary?: boolean;
 
     columnMode?: OncoprintAnalysisCaseType;
@@ -150,7 +150,7 @@ export interface IOncoprintControlsState {
 export interface IOncoprintControlsProps {
     store?: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
-    state: IOncoprintControlsState & IObservableObject;
+    state: IOncoprintControlsState;
     oncoprinterMode?: boolean;
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
@@ -223,27 +223,7 @@ export default class OncoprintControls extends React.Component<
     constructor(props: IOncoprintControlsProps) {
         super(props);
 
-        this.getHeatmapMenu = this.getHeatmapMenu.bind(this);
-        this.getClinicalTracksMenu = this.getClinicalTracksMenu.bind(this);
-        this.getSortMenu = this.getSortMenu.bind(this);
-        this.getViewMenu = this.getViewMenu.bind(this);
-        this.getDownloadMenu = this.getDownloadMenu.bind(this);
-        this.onInputClick = this.onInputClick.bind(this);
-        this.getMutationColorMenu = this.getMutationColorMenu.bind(this);
-        this.getHorzZoomControls = this.getHorzZoomControls.bind(this);
-        this.onSelect = this.onSelect.bind(this);
-        this.toggleShowMinimap = this.toggleShowMinimap.bind(this);
-        this.onType = this.onType.bind(this);
-        this.onHeatmapProfileSelect = this.onHeatmapProfileSelect.bind(this);
-        this.onButtonClick = this.onButtonClick.bind(this);
-        this.onZoomInClick = this.onZoomInClick.bind(this);
-        this.onZoomOutClick = this.onZoomOutClick.bind(this);
-        this.onCustomDriverTierCheckboxClick = this.onCustomDriverTierCheckboxClick.bind(
-            this
-        );
-        this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
-        this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
-        this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
+        makeObservable(this);
 
         this.horzZoomSliderState = props.state.horzZoom;
         // initialze selected generic assay entity Ids from props
@@ -289,20 +269,24 @@ export default class OncoprintControls extends React.Component<
                 : [];
     }
 
+    @autobind
     private onZoomInClick() {
         this.props.handlers.onClickZoomIn();
     }
 
+    @autobind
     private onZoomOutClick() {
         this.props.handlers.onClickZoomOut();
     }
 
+    @autobind
     private onSetHorzZoomTextInput(val: string) {
         const percentage = parseFloat(val);
         const zoom = percentage / 100;
         this.props.handlers.onSetHorzZoom(zoom);
     }
 
+    @autobind
     private onSelect(eventKey: any) {
         if (eventKey === EVENT_KEY.distinguishMutationType) {
             this.props.handlers.onSelectDistinguishMutationType &&
@@ -311,6 +295,7 @@ export default class OncoprintControls extends React.Component<
                 );
         }
     }
+    @autobind
     private onHeatmapProfileSelect(option: { label: string; value: string }) {
         this.props.handlers.onSelectHeatmapProfile &&
             this.props.handlers.onSelectHeatmapProfile(option.value);
@@ -388,6 +373,7 @@ export default class OncoprintControls extends React.Component<
         );
     }
 
+    @autobind
     private toggleShowMinimap() {
         this.props.handlers.onSelectShowMinimap &&
             this.props.handlers.onSelectShowMinimap(
@@ -395,6 +381,7 @@ export default class OncoprintControls extends React.Component<
             );
     }
 
+    @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
             case EVENT_KEY.showUnalteredColumns:
@@ -521,15 +508,18 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
+    @autobind
     private onHorzZoomSliderChange(z: number) {
         this.horzZoomSliderState = z;
     }
 
+    @autobind
     private onHorzZoomSliderSet() {
         this.props.handlers.onSetHorzZoom(this.horzZoomSliderState);
         this.horzZoomSliderState = this.props.state.horzZoom; // set it back in case it doesnt change
     }
 
+    @autobind
     private onCustomDriverTierCheckboxClick(
         event: React.MouseEvent<HTMLInputElement>
     ) {
@@ -545,6 +535,7 @@ export default class OncoprintControls extends React.Component<
             );
     }
 
+    @autobind
     private onButtonClick(event: React.MouseEvent<HTMLButtonElement>) {
         switch ((event.target as HTMLButtonElement).name) {
             case EVENT_KEY.addGenesToHeatmap:
@@ -592,8 +583,7 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChangeHeatmapGeneInput(oql: any, genes: any, queryStr: string) {
         this.props.handlers.onChangeHeatmapGeneInputValue &&
             this.props.handlers.onChangeHeatmapGeneInputValue(queryStr);
@@ -608,6 +598,7 @@ export default class OncoprintControls extends React.Component<
         ); // all genes valid
     }
 
+    @autobind
     private onType(event: React.ChangeEvent<HTMLTextAreaElement>) {
         switch ((event.target as HTMLTextAreaElement).name) {
             case EVENT_KEY.annotateCBioPortalInput:
@@ -668,8 +659,7 @@ export default class OncoprintControls extends React.Component<
         return {};
     }
 
-    @autobind
-    @action
+    @action.bound
     private onSelectGenericAssayEntities(
         selectedOptions: ISelectOption[],
         selectInfo: any
@@ -804,7 +794,7 @@ export default class OncoprintControls extends React.Component<
         return this.props.state.selectedClinicalAttributeIds;
     }
 
-    private getClinicalTracksMenu() {
+    private ClinicalTracksMenu = observer(() => {
         // TODO: put onFocus handler on CheckedSelect when possible
         // TODO: pass unmodified string array as value prop when possible
         // TODO: remove labelKey specification, leave to default prop, when possible
@@ -827,9 +817,9 @@ export default class OncoprintControls extends React.Component<
         } else {
             return null;
         }
-    }
+    });
 
-    private getHeatmapMenu() {
+    private HeatmapMenu = observer(() => {
         const showItemSelectionElements = this.props.state
             .heatmapIsDynamicallyQueried;
         const showGenesTextArea =
@@ -1015,9 +1005,9 @@ export default class OncoprintControls extends React.Component<
                 {menu}
             </CustomDropdown>
         );
-    }
+    });
 
-    private getSortMenuOncoprinter() {
+    private SortMenuOncoprinter = observer(() => {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
                 <div
@@ -1053,9 +1043,9 @@ export default class OncoprintControls extends React.Component<
                 </div>
             </CustomDropdown>
         );
-    }
+    });
 
-    private getSortMenuOncoprint() {
+    private SortMenuOncoprint = observer(() => {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
                 <div
@@ -1174,7 +1164,7 @@ export default class OncoprintControls extends React.Component<
                 </div>
             </CustomDropdown>
         );
-    }
+    });
 
     @computed get driverAnnotationSection() {
         if (this.props.oncoprinterMode || !this.props.store) {
@@ -1271,7 +1261,7 @@ export default class OncoprintControls extends React.Component<
         }
     }
 
-    private getMutationColorMenu() {
+    private MutationColorMenu = observer(() => {
         return (
             <CustomDropdown
                 bsStyle="default"
@@ -1317,17 +1307,17 @@ export default class OncoprintControls extends React.Component<
                 </div>
             </CustomDropdown>
         );
-    }
+    });
 
-    private getViewMenu() {
+    private ViewMenu = observer(() => {
         if (this.props.oncoprinterMode) {
-            return this.getViewMenuOncoprinter();
+            return <this.ViewMenuOncoprinter />;
         } else {
-            return this.getViewMenuOncoprint();
+            return <this.ViewMenuOncoprint />;
         }
-    }
+    });
 
-    private getViewMenuOncoprinter() {
+    private ViewMenuOncoprinter = observer(() => {
         return (
             <CustomDropdown
                 bsStyle="default"
@@ -1371,8 +1361,9 @@ export default class OncoprintControls extends React.Component<
                 </div>
             </CustomDropdown>
         );
-    }
-    private getViewMenuOncoprint() {
+    });
+
+    private ViewMenuOncoprint = observer(() => {
         return (
             <CustomDropdown
                 bsStyle="default"
@@ -1488,9 +1479,9 @@ export default class OncoprintControls extends React.Component<
                 </div>
             </CustomDropdown>
         );
-    }
+    });
 
-    private getDownloadMenu() {
+    private DownloadMenu = observer(() => {
         return (
             <CustomDropdown
                 bsStyle="default"
@@ -1549,9 +1540,9 @@ export default class OncoprintControls extends React.Component<
                 )}
             </CustomDropdown>
         );
-    }
+    });
 
-    private getHorzZoomControls() {
+    private HorzZoomControls = observer(() => {
         return (
             <div className="btn btn-default oncoprint__zoom-controls">
                 <DefaultTooltip
@@ -1609,7 +1600,7 @@ export default class OncoprintControls extends React.Component<
                 </DefaultTooltip>
             </div>
         );
-    }
+    });
 
     @computed get showMinimap() {
         return this.props.state.showMinimap;
@@ -1635,25 +1626,25 @@ export default class OncoprintControls extends React.Component<
         );
     }
 
-    private getSortMenu() {
+    private SortMenu = observer(() => {
         if (this.props.oncoprinterMode) {
-            return this.getSortMenuOncoprinter();
+            return <this.SortMenuOncoprinter />;
         } else {
-            return this.getSortMenuOncoprint();
+            return <this.SortMenuOncoprint />;
         }
-    }
+    });
 
     render() {
         return (
             <div className="oncoprint__controls">
                 <ButtonGroup>
-                    <Observer>{this.getClinicalTracksMenu}</Observer>
-                    <Observer>{this.getHeatmapMenu}</Observer>
-                    <Observer>{this.getSortMenu}</Observer>
-                    <Observer>{this.getMutationColorMenu}</Observer>
-                    <Observer>{this.getViewMenu}</Observer>
-                    <Observer>{this.getDownloadMenu}</Observer>
-                    <Observer>{this.getHorzZoomControls}</Observer>
+                    <this.ClinicalTracksMenu />
+                    <this.HeatmapMenu />
+                    <this.SortMenu />
+                    <this.MutationColorMenu />
+                    <this.ViewMenu />
+                    <this.DownloadMenu />
+                    <this.HorzZoomControls />
                     {this.minimapButton}
                     <ConfirmNgchmModal
                         show={this.showConfirmNgchmModal}

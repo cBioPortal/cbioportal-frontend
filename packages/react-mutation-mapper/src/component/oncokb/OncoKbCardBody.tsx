@@ -1,6 +1,6 @@
 import React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed } from 'mobx';
+import { observable, computed, makeObservable } from 'mobx';
 
 import tabsStyles from './tabs.module.scss';
 import OncoKbCardLevelsOfEvidenceDropdown from './OncoKbCardLevelsOfEvidenceDropdown';
@@ -32,6 +32,10 @@ export type OncoKbCardBodyProps = {
 export default class OncoKbCardBody extends React.Component<
     OncoKbCardBodyProps
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable activeTab: 'oncogenicity' | 'mutationEffect' = 'oncogenicity';
 
     getBody(indicator: IndicatorQueryResp) {

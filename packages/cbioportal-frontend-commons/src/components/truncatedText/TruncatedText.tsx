@@ -1,7 +1,7 @@
 import * as React from 'react';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { default as DefaultTooltip } from '../defaultTooltip/DefaultTooltip';
 
 export interface ITruncatedTextProps {
@@ -43,6 +43,10 @@ export default class TruncatedText extends React.Component<
     ITruncatedTextProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps = {
         maxLength: 50,
         buffer: 2,

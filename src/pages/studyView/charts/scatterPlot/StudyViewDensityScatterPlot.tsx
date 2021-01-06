@@ -12,7 +12,7 @@ import {
     makeTooltipMouseEvents,
     VictorySelectionContainerWithLegend,
 } from 'cbioportal-frontend-commons';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { tickFormatNumeral } from '../../../../shared/components/plots/TickUtils';
 import _ from 'lodash';
@@ -52,6 +52,10 @@ const DOMAIN_PADDING = 15;
 export default class StudyViewDensityScatterPlot
     extends React.Component<IStudyViewDensityScatterPlotProps, {}>
     implements AbstractChart {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @observable tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
     @observable mouseIsDown: boolean = false;

@@ -9,7 +9,7 @@ import {
     CancerStudy,
 } from 'cbioportal-ts-api-client';
 import { QueryStore } from './QueryStore';
-import { computed, action } from 'mobx';
+import { computed, action, makeObservable } from 'mobx';
 import {
     parse_search_query,
     perform_search_single,
@@ -22,9 +22,11 @@ import memoize from 'memoize-weak-decorator';
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
 
 export default class StudyListLogic {
-    constructor(private readonly store: QueryStore) {}
+    constructor(private readonly store: QueryStore) {
+        makeObservable(this);
+    }
 
-    @cached get map_node_filterByDepth() {
+    @cached @computed get map_node_filterByDepth() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         for (let [node, meta] of this.store.treeData.map_node_meta.entries()) {
             let filter = true;
@@ -43,7 +45,7 @@ export default class StudyListLogic {
         return map_node_filter;
     }
 
-    @cached get map_node_filterBySearchText() {
+    @cached @computed get map_node_filterBySearchText() {
         // first compute individual node match results
         let parsedQuery = parse_search_query(this.store.searchText);
         let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
@@ -92,7 +94,7 @@ export default class StudyListLogic {
         return map_node_filter;
     }
 
-    @cached get map_node_filterBySelectedCancerTypes() {
+    @cached @computed get map_node_filterBySelectedCancerTypes() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         if (this.store.selectedCancerTypes.length) {
             for (let cancerType of this.store.selectedCancerTypes) {
@@ -115,7 +117,7 @@ export default class StudyListLogic {
         return map_node_filter;
     }
 
-    @cached get map_node_filterBySelectedStudies() {
+    @cached @computed get map_node_filterBySelectedStudies() {
         let map_node_filter = new Map<CancerTreeNode, boolean>();
         if (this.store.selectableSelectedStudies.length) {
             for (let study of this.store.selectableSelectedStudies) {
@@ -193,7 +195,9 @@ export class FilteredCancerTreeView {
     constructor(
         private store: QueryStore,
         private filters: Pick<Map<CancerTreeNode, boolean>, 'get'>[]
-    ) {}
+    ) {
+        makeObservable(this);
+    }
 
     nodeFilter = (node: CancerTreeNode): boolean => {
         return this.filters.every(map => !!map.get(node));

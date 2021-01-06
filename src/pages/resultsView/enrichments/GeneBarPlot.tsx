@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import { DownloadControls, DefaultTooltip } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import MultipleCategoryBarPlot from 'shared/components/plots/MultipleCategoryBarPlot';
@@ -54,11 +54,16 @@ export default class GeneBarPlot extends React.Component<
     {}
 > {
     @observable tooltipModel: any;
-    @observable _geneQuery: string | undefined;
+    @observable.ref _geneQuery: string | undefined = undefined;
     @observable selectedGenes: SingleGeneQuery[] | undefined;
     @observable _label: GeneOptionLabel | undefined;
     @observable isGeneSelectionPopupVisible: boolean | undefined = false;
     @observable private svgContainer: SVGElement | null;
+
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
 
     @computed get geneListOptions() {
         return getGeneListOptions(this.props.data, this.props.showCNAInTable);
@@ -348,10 +353,11 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
 
     constructor(props: IGeneSelectionProps) {
         super(props);
+        makeObservable(this);
         (window as any).genesSelection = this;
     }
 
-    @observable _geneQuery: string | undefined;
+    @observable.ref _geneQuery: string | undefined = undefined;
     @observable selectedGenesHasError = false;
     @observable private numberOfGenes = this.props.defaultNumberOfGenes;
     @observable private _selectedGeneListOption:
@@ -403,8 +409,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
             : this._geneQuery || '';
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChangeGeneInput(
         oql: { query: SingleGeneQuery[]; error?: any },
         genes: { found: Gene[]; suggestions: GeneReplacement[] },
@@ -482,8 +487,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     public onGeneListOptionChange(option: any) {
         this._selectedGeneListOption = option;
         if (option.value !== '') {
@@ -502,8 +506,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleTotalInputChange(e: any) {
         const newCount: number = e.target.value.replace(/[^0-9]/g, '');
         if (newCount <= this.props.maxNumberOfGenes!) {
@@ -511,8 +514,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private handleTotalInputKeyPress(target: any) {
         if (target.charCode === 13) {
             if (isNaN(this.numberOfGenes)) {
@@ -523,8 +525,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onBlur() {
         if (isNaN(this.numberOfGenes)) {
             this.numberOfGenes = 0;
@@ -533,8 +534,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
         this.updateGeneQuery();
     }
 
-    @autobind
-    @action
+    @action.bound
     private updateGeneQuery() {
         //removes leading 0s
         this.numberOfGenes = Number(this.numberOfGenes);

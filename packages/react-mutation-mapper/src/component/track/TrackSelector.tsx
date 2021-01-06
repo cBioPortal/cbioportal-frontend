@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import * as React from 'react';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
@@ -31,6 +31,10 @@ export default class TrackSelector extends React.Component<
     TrackSelectorProps,
     {}
 > {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     public static defaultProps: Partial<TrackSelectorProps> = {
         name: 'mutationMapperTrackSelector',
         placeholder: 'Add annotation tracks',
@@ -42,8 +46,7 @@ export default class TrackSelector extends React.Component<
         ],
     };
 
-    @autobind
-    @action
+    @action.bound
     private onChange(values: { value: string }[]) {
         this.props.onChange(values.map(o => o.value));
     }

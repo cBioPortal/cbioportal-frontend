@@ -1,5 +1,5 @@
 import { RouterStore } from 'mobx-react-router';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import * as _ from 'lodash';
 import URL, { QueryParams } from 'url';
 import sessionClient from '../api/sessionServiceInstance';
@@ -50,6 +50,11 @@ export function normalizeLegacySession(sessionData: any) {
 }
 
 export default class ExtendedRouterStore extends RouterStore {
+    constructor() {
+        super();
+        makeObservable(this);
+    }
+
     @action updateRoute(
         newParams: QueryParams,
         path: string | undefined = undefined,

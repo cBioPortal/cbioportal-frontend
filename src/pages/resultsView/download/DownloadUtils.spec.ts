@@ -16,6 +16,7 @@ import {
     decideMolecularProfileSortingOrder,
 } from './DownloadUtils';
 import { AnnotatedMutation, ExtendedAlteration } from '../ResultsViewPageStore';
+import oql_parser, { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 
 describe('DownloadUtils', () => {
     const genes = [
@@ -283,6 +284,9 @@ describe('DownloadUtils', () => {
             oql: {
                 gene: 'EGFR',
                 oql_line: 'EGFR: AMP HOMDEL MUT FUSION;',
+                parsed_oql_line: oql_parser.parse(
+                    'EGFR: AMP HOMDEL MUT FUSION;'
+                )![0],
                 data: sampleDataWithBothMutationAndFusion,
             },
         },
@@ -299,6 +303,9 @@ describe('DownloadUtils', () => {
             oql: {
                 gene: 'PTEN',
                 oql_line: 'PTEN: AMP HOMDEL MUT FUSION;',
+                parsed_oql_line: oql_parser.parse(
+                    'PTEN: AMP HOMDEL MUT FUSION;'
+                )![0],
                 data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C],
             },
         },
@@ -312,6 +319,9 @@ describe('DownloadUtils', () => {
             oql: {
                 gene: 'TP53',
                 oql_line: 'TP53: AMP HOMDEL MUT FUSION;',
+                parsed_oql_line: oql_parser.parse(
+                    'TP53: AMP HOMDEL MUT FUSION;'
+                )![0],
                 data: [],
             },
         },
@@ -767,6 +777,9 @@ describe('DownloadUtils', () => {
 
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
+                (oql_parser.parse(
+                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                )![0] as SingleGeneQuery).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,
@@ -821,6 +834,9 @@ describe('DownloadUtils', () => {
 
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
+                (oql_parser.parse(
+                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                )![0] as SingleGeneQuery).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,

@@ -405,11 +405,11 @@ describe('URLWrapper', () => {
         );
 
         assert.isNotTrue(
-            'clinicallist' in wrapper._sessionData!.query,
+            'clinicallist' in wrapper.localSessionData!.query,
             'non session params NOT present in internal session store'
         );
         assert.isNotTrue(
-            'plots_horz_selection' in wrapper._sessionData!.query,
+            'plots_horz_selection' in wrapper.localSessionData!.query,
             'non session nested object params NOT present in internal session store'
         );
 
@@ -580,7 +580,7 @@ describe('URLWrapper', () => {
 
         assert.isTrue(testWrapper.isLoadingSession, 'it is loading session');
         assert.isFalse(
-            testWrapper.isPendingSession,
+            testWrapper.isTemporarySessionPendingSave,
             'it is NOT pending session'
         );
 
@@ -648,7 +648,7 @@ describe('URLWrapper', () => {
 
         assert.isTrue(testWrapper.isLoadingSession, 'it is loading session');
         assert.isFalse(
-            testWrapper.isPendingSession,
+            testWrapper.isTemporarySessionPendingSave,
             'it is NOT pending session'
         );
 
@@ -806,7 +806,7 @@ describe('URLWrapper', () => {
                 'sets query params for new session immediately'
             );
 
-            assert.isTrue(wrapper.isPendingSession);
+            assert.isTrue(wrapper.isTemporarySessionPendingSave);
 
             setTimeout(() => {
                 assert.isTrue(
@@ -893,7 +893,7 @@ describe('URLWrapper', () => {
                 'sets query params for new session immediately'
             );
 
-            assert.isTrue(testWrapper.isPendingSession);
+            assert.isTrue(testWrapper.isTemporarySessionPendingSave);
 
             setTimeout(() => {
                 assert.isTrue(
@@ -1015,7 +1015,7 @@ describe('URLWrapper', () => {
         assert.isFalse(
             needToLoadSession({
                 sessionId: '123',
-                _sessionData: { id: '123' } as PortalSession,
+                localSessionData: { id: '123' } as PortalSession,
             }),
             'sessionId is same, so we already have data'
         );
@@ -1023,7 +1023,7 @@ describe('URLWrapper', () => {
         assert.isTrue(
             needToLoadSession({
                 sessionId: '123',
-                _sessionData: { id: '321' } as PortalSession,
+                localSessionData: { id: '321' } as PortalSession,
             }),
             'sessionId from url is different from internal store'
         );

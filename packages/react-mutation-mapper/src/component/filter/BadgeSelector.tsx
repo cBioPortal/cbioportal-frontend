@@ -6,7 +6,7 @@ import {
     Option,
 } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
-import { action, computed } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { CSSProperties } from 'react';
@@ -191,6 +191,10 @@ export function calculateBadgeAlignmentStyles(
 
 @observer
 export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
     @computed
     public get allValues() {
         return getAllOptionValues(this.props.options);
@@ -281,8 +285,7 @@ export class BadgeSelector extends React.Component<BadgeSelectorProps, {}> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onChange(values: Array<{ value: string }>) {
         handleOptionSelect(values, this.allValues, this.props.onSelect);
     }

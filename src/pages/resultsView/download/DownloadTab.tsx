@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {
@@ -87,6 +87,8 @@ export default class DownloadTab extends React.Component<
     constructor(props: IDownloadTabProps) {
         super(props);
 
+        makeObservable(this);
+
         this.handleMutationDownload = this.handleMutationDownload.bind(this);
         this.handleTransposedMutationDownload = this.handleTransposedMutationDownload.bind(
             this
@@ -137,11 +139,13 @@ export default class DownloadTab extends React.Component<
             this.props.store.filteredSamples,
             this.geneAlterationDataByGene,
             this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () =>
             Promise.resolve(
                 generateCaseAlterationData(
                     this.props.store.oqlText,
+                    this.props.store.defaultOQLQueryAlterations.result!,
                     this.props.store.selectedMolecularProfiles.result!,
                     this.props.store.oqlFilteredCaseAggregatedDataByOQLLine
                         .result!,
@@ -493,6 +497,7 @@ export default class DownloadTab extends React.Component<
     readonly trackLabels = remoteData({
         await: () => [
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () => {
             const labels: string[] = [];
@@ -506,7 +511,9 @@ export default class DownloadTab extends React.Component<
                                 this.props.store.oqlText,
                                 data.oql as OQLLineFilterOutput<
                                     AnnotatedExtendedAlteration
-                                >
+                                >,
+                                this.props.store.defaultOQLQueryAlterations
+                                    .result!
                             )
                         );
                     }
@@ -529,6 +536,7 @@ export default class DownloadTab extends React.Component<
     readonly trackAlterationTypesMap = remoteData({
         await: () => [
             this.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            this.props.store.defaultOQLQueryAlterations,
         ],
         invoke: () => {
             const trackAlterationTypesMap: { [label: string]: string[] } = {};
@@ -544,7 +552,8 @@ export default class DownloadTab extends React.Component<
                             this.props.store.oqlText,
                             data.oql as OQLLineFilterOutput<
                                 AnnotatedExtendedAlteration
-                            >
+                            >,
+                            this.props.store.defaultOQLQueryAlterations.result!
                         );
                         // put types for single track into the map, key is track label
                         if (singleTrackOql.parsed_oql_line.alterations) {

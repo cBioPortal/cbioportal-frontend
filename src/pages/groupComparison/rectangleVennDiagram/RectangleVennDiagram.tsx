@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import { ComparisonGroup } from '../GroupComparisonUtils';
 import * as d3 from 'd3';
@@ -64,6 +64,11 @@ export default class RectangleVennDiagram extends React.Component<
         sizeOfRegion: number;
     } | null = null;
     @observable mousePosition = { x: 0, y: 0 };
+
+    constructor(props: IRectangleVennDiagramProps) {
+        super(props);
+        makeObservable(this);
+    }
 
     private regionClickHandlers = MemoizedHandlerFactory(
         (e: any, params: { combination: number[] }) => {
