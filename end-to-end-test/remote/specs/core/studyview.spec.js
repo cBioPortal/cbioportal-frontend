@@ -743,3 +743,15 @@ describe('submit genes to results view query', () => {
         });
     });
 });
+
+describe('study view treatments table', () => {
+    it('loads multiple studies with treatments tables', function() {
+        var url = `${CBIOPORTAL_URL}/study/summary?id=gbm_columbia_2019%2Clgg_ucsf_2014`;
+        goToUrlAndSetLocalStorage(url);
+        $('[data-test="PATIENT_TREATMENTS-table"]').waitForExist();
+        $('[data-test="SAMPLE_TREATMENTS-table"]').waitForExist();
+
+        const res = checkElementWithMouseDisabled('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+});
