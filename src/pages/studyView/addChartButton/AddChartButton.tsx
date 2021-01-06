@@ -612,62 +612,48 @@ export default class AddChartButton extends React.Component<
         makeObservable(this);
     }
 
-    @computed
-    get tabsLoading() {
-        return (
-            this.props.store.genericAssayProfileOptionsByType.isPending ||
-            this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupByGenericAssayType
-                .isPending
-        );
-    }
-
     render() {
-        if (this.tabsLoading) {
-            return <LoadingIndicator isLoading={true} />;
-        } else {
-            return (
-                <DefaultTooltip
-                    visible={this.showTooltip}
-                    onVisibleChange={visible => (this.showTooltip = !!visible)}
-                    trigger={['click']}
-                    placement={'bottomRight'}
-                    destroyTooltipOnHide={true}
-                    overlay={() => (
-                        <AddChartTabs
-                            store={this.props.store}
-                            currentTab={this.props.currentTab}
-                            disableGenomicTab={this.props.disableGenomicTab}
-                            disableGeneSpecificTab={
-                                this.props.disableGeneSpecificTab
-                            }
-                            disableGenericAssayTabs={
-                                this.props.disableGenericAssayTabs
-                            }
-                            disableCustomTab={this.props.disableCustomTab}
-                            showResetPopup={this.props.showResetPopup}
-                        />
-                    )}
-                    overlayClassName={this.props.addChartOverlayClassName}
+        return (
+            <DefaultTooltip
+                visible={this.showTooltip}
+                onVisibleChange={visible => (this.showTooltip = !!visible)}
+                trigger={['click']}
+                placement={'bottomRight'}
+                destroyTooltipOnHide={true}
+                overlay={() => (
+                    <AddChartTabs
+                        store={this.props.store}
+                        currentTab={this.props.currentTab}
+                        disableGenomicTab={this.props.disableGenomicTab}
+                        disableGeneSpecificTab={
+                            this.props.disableGeneSpecificTab
+                        }
+                        disableGenericAssayTabs={
+                            this.props.disableGenericAssayTabs
+                        }
+                        disableCustomTab={this.props.disableCustomTab}
+                        showResetPopup={this.props.showResetPopup}
+                    />
+                )}
+                overlayClassName={this.props.addChartOverlayClassName}
+            >
+                <button
+                    className={classNames('btn btn-primary btn-sm', {
+                        active: this.showTooltip,
+                        // disabled: this.tabsLoading
+                    })}
+                    style={{ marginLeft: 10 }}
+                    aria-pressed={this.showTooltip}
+                    data-event={serializeEvent({
+                        category: 'studyPage',
+                        action: 'addChartMenuOpen',
+                        label: this.props.store.studyIds.join(','),
+                    })}
+                    data-test="add-charts-button"
                 >
-                    <button
-                        className={classNames('btn btn-primary btn-sm', {
-                            active: this.showTooltip,
-                            // disabled: this.tabsLoading
-                        })}
-                        style={{ marginLeft: 10 }}
-                        aria-pressed={this.showTooltip}
-                        data-event={serializeEvent({
-                            category: 'studyPage',
-                            action: 'addChartMenuOpen',
-                            label: this.props.store.studyIds.join(','),
-                        })}
-                        data-test="add-charts-button"
-                    >
-                        {this.props.buttonText}
-                    </button>
-                </DefaultTooltip>
-            );
-        }
+                    {this.props.buttonText}
+                </button>
+            </DefaultTooltip>
+        );
     }
 }
