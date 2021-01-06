@@ -11,7 +11,7 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import { ClinicalDataBin, StudyViewFilter } from 'cbioportal-ts-api-client';
+import { StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -33,6 +33,7 @@ import {
     MutationCountVsCnaYBinsMin,
     SpecialChartsUniqueKeyEnum,
     NumericalGroupComparisonType,
+    DataBin,
 } from '../StudyViewUtils';
 import { GenePanel } from 'cbioportal-ts-api-client';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
@@ -166,7 +167,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onChangeSelectedRows: action((values: string[]) => {
                 this.selectedRowsKeys = values;
             }),
-            onDataBinSelection: action((dataBins: ClinicalDataBin[]) => {
+            onDataBinSelection: action((dataBins: DataBin[]) => {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
             }),
             onToggleLogScale: action(() => {

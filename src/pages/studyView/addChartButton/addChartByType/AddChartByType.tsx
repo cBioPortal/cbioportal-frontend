@@ -26,6 +26,7 @@ export interface IAddChartByTypeProps {
     onToggleOption: (key: string) => void;
     optionsGivenInSortedOrder?: boolean;
     frequencyHeaderTooltip?: string;
+    width?: number;
     firstColumnHeaderName?: string;
     hideControls?: boolean;
 }
@@ -46,6 +47,7 @@ export default class AddChartByType extends React.Component<
     public static defaultProps = {
         firstColumnHeaderName: 'Name',
         hideControls: false,
+        width: 400,
     };
 
     @computed
@@ -130,7 +132,7 @@ export default class AddChartByType extends React.Component<
             filter: (d: AddChartOption, f: string, filterStringUpper: string) =>
                 d.label.toUpperCase().includes(filterStringUpper),
             sortBy: (d: AddChartOption) => d.label,
-            width: 320,
+            width: this.props.width! - 80,
             defaultSortDirection: 'asc' as 'asc',
         },
         {
@@ -218,7 +220,7 @@ export default class AddChartByType extends React.Component<
             >
                 {this.props.freqPromise.isComplete && (
                     <AddChartTableComponent
-                        width={380}
+                        width={this.props.width! - 20}
                         height={this.tableHeight}
                         columns={this._columns}
                         data={this.options}
