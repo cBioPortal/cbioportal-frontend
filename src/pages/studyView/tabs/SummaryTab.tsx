@@ -7,11 +7,7 @@ import {
 } from 'pages/studyView/charts/ChartContainer';
 import { observable, toJS, makeObservable } from 'mobx';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import {
-    DataFilterValue,
-    ClinicalDataBin,
-    GenomicDataBin,
-} from 'cbioportal-ts-api-client';
+import { DataFilterValue, GenomicDataBin } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ReactGridLayout, { WidthProvider, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -27,11 +23,20 @@ import ProgressIndicator, {
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
-import { ChartMeta, ChartType, RectangleBounds } from '../StudyViewUtils';
+import {
+    ChartMeta,
+    ChartType,
+    RectangleBounds,
+    DataBin,
+} from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { toSampleTreatmentFilter } from '../table/treatments/treatmentsTableUtil';
-import { OredSampleTreatmentFilters } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import {
+    OredSampleTreatmentFilters,
+    GenericAssayDataBin,
+} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
+import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -64,10 +69,7 @@ export class StudySummaryTab extends React.Component<
                     values.map(value => ({ value } as DataFilterValue))
                 );
             },
-            onDataBinSelection: (
-                chartMeta: ChartMeta,
-                dataBins: ClinicalDataBin[]
-            ) => {
+            onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
                 this.store.updateClinicalDataIntervalFilters(
                     chartMeta.uniqueKey,
                     dataBins
@@ -106,6 +108,15 @@ export class StudySummaryTab extends React.Component<
                 dataBins: GenomicDataBin[]
             ) => {
                 this.store.updateGenomicDataIntervalFilters(
+                    chartMeta.uniqueKey,
+                    dataBins
+                );
+            },
+            onGenericAssayDataBinSelection: (
+                chartMeta: ChartMeta,
+                dataBins: GenericAssayDataBin[]
+            ) => {
+                this.store.updateGenericAssayDataIntervalFilters(
                     chartMeta.uniqueKey,
                     dataBins
                 );
@@ -175,6 +186,19 @@ export class StudySummaryTab extends React.Component<
                     );
                     props.onDataBinSelection = this.handlers.onGenomicDataBinSelection;
                     props.onResetSelection = this.handlers.onGenomicDataBinSelection;
+                    props.getData = () =>
+                        this.store.getChartDownloadableData(chartMeta);
+                } else if (
+                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
+                ) {
+                    props.promise = this.store.getGenericAssayChartDataBin(
+                        chartMeta
+                    );
+                    props.filters = this.store.getGenericAssayDataIntervalFiltersByUniqueKey(
+                        props.chartMeta!.uniqueKey
+                    );
+                    props.onDataBinSelection = this.handlers.onGenericAssayDataBinSelection;
+                    props.onResetSelection = this.handlers.onGenericAssayDataBinSelection;
                     props.getData = () =>
                         this.store.getChartDownloadableData(chartMeta);
                 } else {
@@ -412,6 +436,24 @@ export class StudySummaryTab extends React.Component<
 
     @autobind
     getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {
+        const clinicalDataPromises = [
+            this.store.initialVisibleAttributesClinicalDataBinCountData,
+            this.store.initialVisibleAttributesClinicalDataCountData,
+        ];
+
+        const sampleDataPromises = [
+            this.store.caseListSampleCounts,
+            this.store.selectedSamples,
+        ];
+
+        // do not display "this can take several seconds" if the corresponding data group has already been loaded
+        const isClinicalDataTakingLong =
+            elapsedSecs > 2 &&
+            getRemoteDataGroupStatus(...clinicalDataPromises) === 'pending';
+        const isSampleDataTakingLong =
+            elapsedSecs > 2 &&
+            getRemoteDataGroupStatus(...sampleDataPromises) === 'pending';
+
         return [
             {
                 label: 'Loading meta information',
@@ -424,11 +466,18 @@ export class StudySummaryTab extends React.Component<
             {
                 label:
                     'Loading clinical data' +
-                    (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
-                promises: [
-                    this.store.initialVisibleAttributesClinicalDataBinCountData,
-                    this.store.initialVisibleAttributesClinicalDataCountData,
-                ],
+                    (isClinicalDataTakingLong
+                        ? ' - this can take several seconds'
+                        : ''),
+                promises: clinicalDataPromises,
+            },
+            {
+                label:
+                    'Loading sample data' +
+                    (isSampleDataTakingLong
+                        ? ' - this can take several seconds'
+                        : ''),
+                promises: sampleDataPromises,
             },
             {
                 label: 'Rendering',
