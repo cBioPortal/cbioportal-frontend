@@ -14,7 +14,7 @@ export type MyVariantInfoProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
-    indexedMyVariantInfoAnnotations: RemoteData<
+    indexedMyVariantInfoAnnotations?: RemoteData<
         { [genomicLocation: string]: MyVariantInfo } | undefined
     >;
     className?: string;
@@ -28,7 +28,7 @@ export function renderMyVariantInfoContent(
     ) => JSX.Element
 ) {
     let content;
-    const status = props.indexedMyVariantInfoAnnotations.status;
+    const status = props.indexedMyVariantInfoAnnotations?.status || 'complete';
     const variantAnnotation = props.indexedVariantAnnotations
         ? getVariantAnnotation(
               props.mutation,
@@ -37,7 +37,7 @@ export function renderMyVariantInfoContent(
         : undefined;
     const myVariantInfo = getMyVariantInfoAnnotation(
         props.mutation,
-        props.indexedMyVariantInfoAnnotations.result
+        props.indexedMyVariantInfoAnnotations?.result
     );
 
     if (status === 'pending') {
