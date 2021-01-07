@@ -14,8 +14,6 @@ import {
     clinVarDownload,
 } from 'react-mutation-mapper';
 
-import generalStyles from './styles.module.scss';
-
 export default class ClinVarColumnFormatter {
     public static renderFunction(
         data: Mutation[],
@@ -29,7 +27,6 @@ export default class ClinVarColumnFormatter {
         return (
             <div data-test="clinvar-data">
                 <ClinVar
-                    className={generalStyles['integer-data']}
                     mutation={data[0]}
                     indexedVariantAnnotations={indexedVariantAnnotations}
                     indexedMyVariantInfoAnnotations={
@@ -73,7 +70,7 @@ export default class ClinVarColumnFormatter {
         indexedMyVariantInfoAnnotations?: RemoteData<
             IMyVariantInfoIndex | undefined
         >
-    ): number | null {
+    ): string | null {
         const myVariantInfo = ClinVarColumnFormatter.getData(
             data,
             indexedMyVariantInfoAnnotations
