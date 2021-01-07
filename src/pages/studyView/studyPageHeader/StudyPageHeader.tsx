@@ -22,7 +22,9 @@ export default class StudyPageHeader extends React.Component<
         makeObservable(this);
     }
     @computed get customChartsFilter() {
-        return _.fromPairs(this.props.store.preDefinedCustomChartFilterSet.toJSON());
+        return _.fromPairs(
+            this.props.store.preDefinedCustomChartFilterSet.toJSON()
+        );
     }
 
     render() {

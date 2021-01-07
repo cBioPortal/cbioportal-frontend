@@ -177,7 +177,10 @@ export default class AddChartByType extends React.Component<
                 ) => d.label.toUpperCase().includes(filterStringUpper),
                 sortBy: (d: AddChartOption) => d.label,
                 // 250 for custom data tab
-                width: this.props.width! - 80 - (this.props.shareCharts || this.props.deleteChart ? 70 : 0),
+                width:
+                    this.props.width! -
+                    80 -
+                    (this.props.shareCharts || this.props.deleteChart ? 70 : 0),
                 defaultSortDirection: 'asc' as 'asc',
             },
             {
