@@ -2625,6 +2625,56 @@ export class StudyViewPageStore {
         this.changeChartVisibility(chartUniqueKey, visible);
     }
 
+    private isChartFiltered(chartUniqueKey: string) {
+        switch (this.chartsType.get(chartUniqueKey)) {
+            case ChartTypeEnum.PIE_CHART:
+            case ChartTypeEnum.TABLE:
+                if (this.isUserDefinedCustomDataChart(chartUniqueKey)) {
+                    return (
+                        this._customDataFilterSet.has(chartUniqueKey) ||
+                        this.preDefinedCustomChartFilterSet.has(chartUniqueKey)
+                    );
+                }
+                return this._clinicalDataFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.BAR_CHART:
+                if (this.isGeneSpecificChart(chartUniqueKey)) {
+                    this._genomicDataIntervalFilterSet.has(chartUniqueKey);
+                }
+                return this._clinicalDataFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.SCATTER:
+                if (
+                    chartUniqueKey ===
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+                ) {
+                    return (
+                        this._customBinsFromScatterPlotSelectionSet.has(
+                            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+                        ) &&
+                        this._customBinsFromScatterPlotSelectionSet.has(
+                            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                        )
+                    );
+                }
+                return false;
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+            case ChartTypeEnum.FUSION_GENES_TABLE:
+            case ChartTypeEnum.CNA_GENES_TABLE:
+                return this._geneFilterSet.has(chartUniqueKey);
+            case ChartTypeEnum.GENOMIC_PROFILES_TABLE:
+                return !_.isEmpty(this._genomicProfilesFilter);
+            case ChartTypeEnum.CASE_LIST_TABLE:
+                return !_.isEmpty(this._caseListsFilter);
+            case ChartTypeEnum.SURVIVAL:
+                return false;
+            case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
+                return !_.isEmpty(this._patientTreatmentsFilter.filters);
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                return !_.isEmpty(this._sampleTreatmentsFilters.filters);
+            default:
+                return false;
+        }
+    }
+
     @action.bound
     removeComparisonGroupSelectionFilter() {
         this._chartSampleIdentifiersFilterSet.delete(
@@ -4994,7 +5044,15 @@ export class StudyViewPageStore {
 
     @action.bound
     private clearPageSettings() {
-        this._chartVisibility.clear();
+        // Only remove visibility of unfiltered chart. This is to fix https://github.com/cBioPortal/cbioportal/issues/8057#issuecomment-747062244
+        _.forEach(
+            _.fromPairs(this._chartVisibility.toJSON()),
+            (isVisible, chartUniqueKey) => {
+                if (isVisible && !this.isChartFiltered(chartUniqueKey)) {
+                    this._chartVisibility.delete(chartUniqueKey);
+                }
+            }
+        );
         this.currentGridLayout = [];
         this.currentFocusedChartByUser = undefined;
         this.currentFocusedChartByUserDimension = undefined;
