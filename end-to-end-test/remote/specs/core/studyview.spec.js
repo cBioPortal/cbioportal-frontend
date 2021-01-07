@@ -340,6 +340,7 @@ describe('check the fusion filter is working properly', () => {
         waitForNetworkQuiet(60000);
     });
     it('fusion filter filter study from url', function() {
+        waitForStudyViewSelectedInfo();
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });

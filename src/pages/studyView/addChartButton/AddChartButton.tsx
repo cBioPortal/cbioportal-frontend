@@ -703,7 +703,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         this.props.store.isChartNameValid
                                     }
                                     getDefaultChartName={
-                                        this.props.store.getDefaultCustomChartName
+                                        this.props.store
+                                            .getDefaultCustomChartName
                                     }
                                     disableSubmitButton={this.savingCustomData}
                                     onSubmit={(chart: CustomChart) => {
@@ -735,7 +736,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         />
                                         <AddChartByType
                                             width={this.getTabsWidth}
-                                            options={this.customChartDataOptions}
+                                            options={
+                                                this.customChartDataOptions
+                                            }
                                             freqPromise={this.dataCount}
                                             onAddAll={this.onAddAll}
                                             onClearAll={this.onClearAll}
@@ -777,19 +780,19 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
                 </MSKTabs>
                 {this.showResetButton && (
-                        <button
-                            style={{
-                                position: 'absolute',
-                                top: 14,
-                                right: 18,
-                                zIndex: 2,
-                            }}
-                            className="btn btn-primary btn-xs"
-                            onClick={this.props.showResetPopup}
-                        >
-                            Reset charts
-                        </button>
-                    )}
+                    <button
+                        style={{
+                            position: 'absolute',
+                            top: 14,
+                            right: 18,
+                            zIndex: 2,
+                        }}
+                        className="btn btn-primary btn-xs"
+                        onClick={this.props.showResetPopup}
+                    >
+                        Reset charts
+                    </button>
+                )}
                 {this.infoMessage && !this.savingCustomData && (
                     <SuccessBanner message={this.infoMessage} />
                 )}
