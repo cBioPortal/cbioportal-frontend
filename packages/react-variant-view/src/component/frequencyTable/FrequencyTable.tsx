@@ -133,8 +133,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onTabSelect(tabId: string) {
         this.selectedTab = tabId;
     }

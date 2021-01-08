@@ -142,8 +142,7 @@ class MskImpact extends React.Component<IMskImpactProps> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     public onClick() {
         this.showFrequencies = !this.showFrequencies;
     }

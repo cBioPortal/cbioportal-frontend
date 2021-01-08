@@ -311,8 +311,7 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onCnaTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
@@ -324,8 +323,7 @@ export default class PatientViewPage extends React.Component<
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onMutationTableColumnVisibilityToggled(
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]

@@ -348,8 +348,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         }
     }
 
-    @autobind
-    @action
+    @action.bound
     private onClickColorByStructuralVariant() {
         if (this.plotType.result === PlotType.WaterfallPlot) {
             // waterfall plot has radio buttons
@@ -2427,16 +2426,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onVerticalAxisStructuralVariantCountBySelect(option: any) {
         this.vertSelection.structuralVariantCountBy = option.value;
         this.viewLimitValues = true;
         this.autoChooseColoringMenuGene();
     }
 
-    @autobind
-    @action
+    @action.bound
     public onHorizontalAxisStructuralVariantCountBySelect(option: any) {
         this.horzSelection.structuralVariantCountBy = option.value;
         this.viewLimitValues = true;
