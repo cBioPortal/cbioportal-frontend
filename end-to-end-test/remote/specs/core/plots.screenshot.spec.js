@@ -138,6 +138,14 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
+    it('plots tab mutations driver mode vs clinical boxplot', function() {
+        browser.execute(function() {
+            resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({
+                value: 'DriverVsVUS',
+            });
+        });
+        waitForAndCheckPlotsTab();
+    });
     it('plots tab mutations wild type mode vs clinical boxplot', function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({
