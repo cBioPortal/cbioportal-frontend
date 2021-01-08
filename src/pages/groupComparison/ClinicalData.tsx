@@ -46,6 +46,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -191,7 +192,21 @@ export default class ClinicalData extends React.Component<
 
     private tableDataStore = new ClinicalDataEnrichmentStore(
         () => {
-            return this.props.store.clinicalDataEnrichmentsWithQValues.result;
+            // ClinicalData is only used in Group Comparison Page and Group Comparison Tab
+            // And survival related attributes are used to create KM plots in survival tab
+            // We are doing the proper statistical tests in the survival tab and the used tests for the clinical tab are not appropriate for that type of data
+            // There is no need to still keep them in clinical tab
+            // So, exclude them from the data store
+            const survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
+                this.props.store.survivalClinicalAttributesPrefix.result || []
+            );
+            return this.props.store.clinicalDataEnrichmentsWithQValues.result.filter(
+                d =>
+                    !(
+                        d.clinicalAttribute.clinicalAttributeId in
+                        survivalAttributeIdsDict
+                    )
+            );
         },
         () => {
             return this.highlightedRow;
