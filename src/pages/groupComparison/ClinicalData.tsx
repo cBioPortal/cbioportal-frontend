@@ -36,6 +36,7 @@ import { scatterPlotSize } from 'shared/components/plots/PlotUtils';
 import {
     CLINICAL_TAB_NOT_ENOUGH_GROUPS_MSG,
     ClinicalDataEnrichmentWithQ,
+    getStatisticalCautionInfo,
 } from './GroupComparisonUtils';
 import MultipleCategoryBarPlot from '../../shared/components/plots/MultipleCategoryBarPlot';
 import ReactSelect from 'react-select1';
@@ -144,7 +145,10 @@ export default class ClinicalData extends React.Component<
                 );
             } else {
                 content.push(
-                    <OverlapExclusionIndicator store={this.props.store} />
+                    <div className={'tabMessageContainer'}>
+                        {getStatisticalCautionInfo()}
+                        <OverlapExclusionIndicator store={this.props.store} />
+                    </div>
                 );
                 content.push(this.overlapUI.component);
             }
