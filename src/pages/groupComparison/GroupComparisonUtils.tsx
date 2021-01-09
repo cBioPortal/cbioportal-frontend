@@ -887,3 +887,21 @@ export function getGroupsDownloadData(
     }
     return lines.map(line => line.join('\t')).join('\n');
 }
+
+export function getStatisticalCautionInfo() {
+    return (
+        <div className="alert alert-info">
+            <i
+                className="fa fa-md fa-info-circle"
+                style={{
+                    verticalAlign: 'middle !important',
+                    marginRight: 6,
+                    marginBottom: 1,
+                }}
+            />
+            Interpret all results with caution, as they can be confounded by
+            many different variables that are not controlled for in these
+            analyses. Consider consulting a statistician.
+        </div>
+    );
+}
