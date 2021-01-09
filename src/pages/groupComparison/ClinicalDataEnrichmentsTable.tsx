@@ -7,6 +7,10 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { ClinicalDataEnrichmentStore } from './ClinicalData';
 import { ClinicalDataEnrichmentWithQ } from './GroupComparisonUtils';
 import { toConditionalPrecisionWithMinimum } from '../../shared/lib/FormatUtils';
+import { makeObservable, observable } from 'mobx';
+import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
+import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import AppConfig from 'appConfig';
 
 export interface IClinicalDataEnrichmentsTableProps {
     dataStore: ClinicalDataEnrichmentStore;
@@ -45,6 +49,7 @@ const COLUMNS = [
         download: (d: ClinicalDataEnrichmentWithQ) =>
             d.clinicalAttribute.displayName,
         width: 160,
+        visible: true,
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.CLINICAL_ATTRIBUTE_TYPE,
@@ -66,6 +71,7 @@ const COLUMNS = [
         download: (d: ClinicalDataEnrichmentWithQ) =>
             d.clinicalAttribute.patientAttribute ? 'Patient' : 'Sample',
         width: 100,
+        visible: true,
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.STATISTICAL_TEST_NAME,
@@ -80,6 +86,7 @@ const COLUMNS = [
         sortBy: (d: ClinicalDataEnrichmentWithQ) => d.method,
         download: (d: ClinicalDataEnrichmentWithQ) => d.method,
         width: 130,
+        visible: true,
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.P_VALUE,
@@ -103,6 +110,7 @@ const COLUMNS = [
                 Kruskal-Wallis test
             </span>
         ),
+        visible: true,
     },
     {
         name: ClinicalDataEnrichmentTableColumnType.Q_VALUE,
@@ -125,6 +133,7 @@ const COLUMNS = [
                 Derived from Benjamini-Hochberg FDR correction procedure.
             </span>
         ),
+        visible: true,
     },
 ];
 
@@ -138,6 +147,44 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
         this.props.dataStore.setHighlighted(d);
     }
 
+    @observable private columnVisibility: { [group: string]: boolean };
+    constructor(props: IClinicalDataEnrichmentsTableProps) {
+        super(props);
+        makeObservable(this);
+        this.columnVisibility = this.initColumnVisibility();
+    }
+
+    private initColumnVisibility() {
+        const P_Q_VALUES_AND_STATISTICAL_TEST_NAME_DICT = _.keyBy(
+            [
+                ClinicalDataEnrichmentTableColumnType.STATISTICAL_TEST_NAME,
+                ClinicalDataEnrichmentTableColumnType.P_VALUE,
+                ClinicalDataEnrichmentTableColumnType.Q_VALUE,
+            ],
+            name => name
+        );
+        return _.mapValues(
+            _.keyBy(COLUMNS, c => c.name),
+            c =>
+                AppConfig.serverConfig
+                    .survival_show_p_q_values_in_survival_type_table
+                    ? c.visible!
+                    : !(c.name in P_Q_VALUES_AND_STATISTICAL_TEST_NAME_DICT)
+        );
+    }
+
+    @autobind
+    private onColumnToggled(
+        columnId: string,
+        columnVisibilityDefs: IColumnVisibilityDef[]
+    ) {
+        this.columnVisibility = toggleColumnVisibility(
+            this.columnVisibility,
+            columnId,
+            columnVisibilityDefs
+        );
+    }
+
     public render() {
         return (
             <LazyMobXTable
@@ -146,7 +193,11 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
                     ClinicalDataEnrichmentTableColumnType.Q_VALUE
                 }
                 initialSortDirection="asc"
-                showColumnVisibility={false}
+                showColumnVisibility={true}
+                columnVisibility={this.columnVisibility}
+                columnVisibilityProps={{
+                    onColumnToggled: this.onColumnToggled,
+                }}
                 dataStore={this.props.dataStore}
                 onRowClick={this.onRowClick}
                 paginationProps={{ itemsPerPageOptions: [20] }}

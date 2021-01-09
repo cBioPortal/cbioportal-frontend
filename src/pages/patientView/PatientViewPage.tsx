@@ -74,6 +74,7 @@ import {
     getPatientViewResourceTabId,
     PatientViewPageTabs,
 } from './PatientViewPageTabs';
+import PatientViewPathwayMapper from './pathwayMapper/PatientViewPathwayMapper';
 import ResourcesTab, { RESOURCES_TAB_NAME } from './resources/ResourcesTab';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import ResourceTab from '../../shared/components/resources/ResourceTab';
@@ -1458,6 +1459,27 @@ export default class PatientViewPage extends React.Component<
                                             />
                                         </MSKTab>
                                     )}
+                                <MSKTab
+                                    key={8}
+                                    id={PatientViewPageTabs.PathwayMapper}
+                                    linkText={'Pathways'}
+                                >
+                                    {this.patientViewPageStore.geneticTrackData
+                                        .isComplete &&
+                                    this.patientViewPageStore
+                                        .mergedMutationDataIncludingUncalledFilteredByGene ? (
+                                        <PatientViewPathwayMapper
+                                            store={this.patientViewPageStore}
+                                            sampleManager={sampleManager}
+                                        />
+                                    ) : (
+                                        <LoadingIndicator
+                                            isLoading={true}
+                                            size={'big'}
+                                            center={true}
+                                        />
+                                    )}
+                                </MSKTab>
 
                                 <MSKTab
                                     key={2}

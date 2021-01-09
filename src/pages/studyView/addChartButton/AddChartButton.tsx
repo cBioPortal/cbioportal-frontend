@@ -63,6 +63,8 @@ export type ChartOption = {
 
 export const INFO_TIMEOUT = 5000;
 export const MIN_ADD_CHART_TOOLTIP_WIDTH = 400;
+export const RESET_CHART_BUTTON_WIDTH = 70;
+export const CONTAINER_PADDING_WIDTH = 20;
 
 export enum TabNamesEnum {
     CUSTOM_DATA = 'Custom Data',
@@ -118,11 +120,22 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @computed get getTabsWidth(): number {
-        if (this.tabsWidth > MIN_ADD_CHART_TOOLTIP_WIDTH) {
-            return this.tabsWidth;
+        let widthWithResetButton =
+            this.tabsWidth +
+            (this.showResetButton ? RESET_CHART_BUTTON_WIDTH : 0);
+        if (widthWithResetButton > MIN_ADD_CHART_TOOLTIP_WIDTH) {
+            return widthWithResetButton;
         } else {
             return MIN_ADD_CHART_TOOLTIP_WIDTH;
         }
+    }
+
+    @computed get showResetButton(): boolean {
+        return (
+            this.props.store.isLoggedIn &&
+            this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
+            this.props.store.showResetToDefaultButton
+        );
     }
 
     @action.bound
@@ -542,57 +555,65 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         hide={this.props.disableCustomTab}
                         className="custom"
                     >
-                        <CustomCaseSelection
-                            allSamples={this.props.store.samples.result}
-                            selectedSamples={
-                                this.props.store.selectedSamples.result
-                            }
-                            submitButtonText={'Add Chart'}
-                            queriedStudies={
-                                this.props.store.queriedPhysicalStudyIds.result
-                            }
-                            isChartNameValid={this.props.store.isChartNameValid}
-                            getDefaultChartName={
-                                this.props.store.getDefaultCustomChartName
-                            }
-                            onSubmit={(chart: CustomChart) => {
-                                this.infoMessage = `${chart.name} has been added.`;
-                                this.props.store.addCustomChart(chart);
+                        <div
+                            style={{
+                                width:
+                                    this.getTabsWidth - CONTAINER_PADDING_WIDTH,
                             }}
-                        />
-                        {this.customChartDataOptions.length > 0 && (
-                            <div style={{ marginTop: 10 }}>
-                                <AddChartByType
-                                    width={this.getTabsWidth}
-                                    options={this.customChartDataOptions}
-                                    freqPromise={this.dataCount}
-                                    onAddAll={this.onAddAll}
-                                    onClearAll={this.onClearAll}
-                                    onToggleOption={this.onToggleOption}
-                                    hideControls={true}
-                                    firstColumnHeaderName="Custom Chart"
-                                />
-                            </div>
-                        )}
+                        >
+                            <CustomCaseSelection
+                                allSamples={this.props.store.samples.result}
+                                selectedSamples={
+                                    this.props.store.selectedSamples.result
+                                }
+                                submitButtonText={'Add Chart'}
+                                queriedStudies={
+                                    this.props.store.queriedPhysicalStudyIds
+                                        .result
+                                }
+                                isChartNameValid={
+                                    this.props.store.isChartNameValid
+                                }
+                                getDefaultChartName={
+                                    this.props.store.getDefaultCustomChartName
+                                }
+                                onSubmit={(chart: CustomChart) => {
+                                    this.infoMessage = `${chart.name} has been added.`;
+                                    this.props.store.addCustomChart(chart);
+                                }}
+                            />
+                            {this.customChartDataOptions.length > 0 && (
+                                <div style={{ marginTop: 10 }}>
+                                    <AddChartByType
+                                        width={this.getTabsWidth}
+                                        options={this.customChartDataOptions}
+                                        freqPromise={this.dataCount}
+                                        onAddAll={this.onAddAll}
+                                        onClearAll={this.onClearAll}
+                                        onToggleOption={this.onToggleOption}
+                                        hideControls={true}
+                                        firstColumnHeaderName="Custom Chart"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
                 </MSKTabs>
-                {this.props.store.isLoggedIn &&
-                    this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY &&
-                    this.props.store.showResetToDefaultButton && (
-                        <button
-                            style={{
-                                position: 'absolute',
-                                top: 14,
-                                right: 18,
-                                zIndex: 2,
-                            }}
-                            className="btn btn-primary btn-xs"
-                            onClick={this.props.showResetPopup}
-                        >
-                            Reset charts
-                        </button>
-                    )}
+                {this.showResetButton && (
+                    <button
+                        style={{
+                            position: 'absolute',
+                            top: 14,
+                            right: 18,
+                            zIndex: 2,
+                        }}
+                        className="btn btn-primary btn-xs"
+                        onClick={this.props.showResetPopup}
+                    >
+                        Reset charts
+                    </button>
+                )}
                 {this.infoMessage && (
                     <SuccessBanner message={this.infoMessage} />
                 )}
@@ -612,14 +633,26 @@ export default class AddChartButton extends React.Component<
         makeObservable(this);
     }
 
+    @computed
+    get tabsLoading() {
+        return (
+            this.props.store.genericAssayProfileOptionsByType.isPending ||
+            this.props.store.molecularProfileOptions.isPending ||
+            this.props.store.genericAssayEntitiesGroupByGenericAssayType
+                .isPending
+        );
+    }
+
     render() {
         return (
             <DefaultTooltip
                 visible={this.showTooltip}
-                onVisibleChange={visible => (this.showTooltip = !!visible)}
+                onVisibleChange={visible =>
+                    (this.showTooltip = !this.tabsLoading && !!visible)
+                }
                 trigger={['click']}
                 placement={'bottomRight'}
-                destroyTooltipOnHide={true}
+                destroyTooltipOnHide={false}
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
@@ -640,7 +673,7 @@ export default class AddChartButton extends React.Component<
                 <button
                     className={classNames('btn btn-primary btn-sm', {
                         active: this.showTooltip,
-                        // disabled: this.tabsLoading
+                        disabled: this.tabsLoading,
                     })}
                     style={{ marginLeft: 10 }}
                     aria-pressed={this.showTooltip}
