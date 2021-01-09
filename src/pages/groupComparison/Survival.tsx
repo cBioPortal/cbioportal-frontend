@@ -8,6 +8,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import {
     SURVIVAL_NOT_ENOUGH_GROUPS_MSG,
     SURVIVAL_TOO_MANY_GROUPS_MSG,
+    getStatisticalCautionInfo,
 } from './GroupComparisonUtils';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { blendColors } from './OverlapUtils';
@@ -298,26 +299,33 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
+                var isGenieBpcStudy = window.location.href.includes(
+                    'genie_bpc'
+                );
+
                 content = (
                     <>
                         <div
                             className={'tabMessageContainer'}
                             style={{ paddingBottom: 0 }}
                         >
-                            <div className="alert alert-info">
-                                <i
-                                    className="fa fa-md fa-info-circle"
-                                    style={{
-                                        verticalAlign: 'middle !important',
-                                        marginRight: 6,
-                                        marginBottom: 1,
-                                    }}
-                                />
-                                Interpret all outcome results with caution, as
-                                they can be confounded by many different
-                                variables that are not controlled for in these
-                                analyses. Consider consulting a statistician.
-                            </div>
+                            {getStatisticalCautionInfo()}
+                            {isGenieBpcStudy && (
+                                <div className="alert alert-info">
+                                    <i
+                                        className="fa fa-md fa-info-circle"
+                                        style={{
+                                            verticalAlign: 'middle !important',
+                                            marginRight: 6,
+                                            marginBottom: 1,
+                                        }}
+                                    />
+                                    Kaplan-Meier estimates of time-to-event
+                                    endpoints do not account for the lead time
+                                    bias introduced by the inclusion criteria
+                                    for the GENIE BPC Project.
+                                </div>
+                            )}
                             <OverlapExclusionIndicator
                                 store={this.props.store}
                                 only="patient"
