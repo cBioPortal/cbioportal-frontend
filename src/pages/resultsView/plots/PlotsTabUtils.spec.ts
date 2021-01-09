@@ -17,6 +17,9 @@ import {
     getWaterfallPlotDownloadData,
     getLimitValues,
     deriveDisplayTextFromGenericAssayType,
+    MUT_PROFILE_COUNT_DRIVER,
+    MUT_PROFILE_COUNT_VUS,
+    mutDriverVsVUSCategoryOrder,
 } from './PlotsTabUtils';
 import { Mutation, Sample, Gene } from 'cbioportal-ts-api-client';
 import {
@@ -481,8 +484,11 @@ describe('PlotsTabUtils', () => {
 
     describe('makeAxisDataPromise_Molecular_MakeMutationData', () => {
         let mutations: Pick<
-            Mutation,
-            'uniqueSampleKey' | 'proteinChange' | 'mutationType'
+            AnnotatedMutation,
+            | 'uniqueSampleKey'
+            | 'proteinChange'
+            | 'mutationType'
+            | 'putativeDriver'
         >[];
         let coverageInformation: CoverageInformation;
         let samples: Pick<Sample, 'uniqueSampleKey'>[];
@@ -495,26 +501,31 @@ describe('PlotsTabUtils', () => {
                     uniqueSampleKey: 'sample1',
                     proteinChange: '',
                     mutationType: 'missense',
+                    putativeDriver: true,
                 },
                 {
                     uniqueSampleKey: 'sample1',
                     proteinChange: '',
                     mutationType: 'missense',
+                    putativeDriver: true,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'in_frame_del',
+                    putativeDriver: false,
                 },
                 {
                     uniqueSampleKey: 'sample2',
                     proteinChange: '',
                     mutationType: 'nonsense',
+                    putativeDriver: true,
                 },
                 {
                     uniqueSampleKey: 'sample3',
                     proteinChange: '',
                     mutationType: 'missense',
+                    putativeDriver: false,
                 },
             ];
             coverageInformation = {
@@ -628,6 +639,49 @@ describe('PlotsTabUtils', () => {
                     hugoGeneSymbol: 'BRCA1',
                     datatype: 'string',
                     categoryOrder: mutVsWildCategoryOrder,
+                }
+            );
+        });
+        it('gives the correct result for driver vs vus data', () => {
+            assert.deepEqual(
+                makeAxisDataPromise_Molecular_MakeMutationData(
+                    [molecularProfileId],
+                    'BRCA1',
+                    mutations,
+                    coverageInformation,
+                    MutationCountBy.DriverVsVUS,
+                    samples
+                ),
+                {
+                    data: [
+                        {
+                            uniqueSampleKey: 'sample1',
+                            value: MUT_PROFILE_COUNT_DRIVER,
+                        },
+                        {
+                            uniqueSampleKey: 'sample2',
+                            value: MUT_PROFILE_COUNT_DRIVER,
+                        },
+                        {
+                            uniqueSampleKey: 'sample3',
+                            value: MUT_PROFILE_COUNT_VUS,
+                        },
+                        {
+                            uniqueSampleKey: 'sample4',
+                            value: MUT_PROFILE_COUNT_NOT_MUTATED,
+                        },
+                        {
+                            uniqueSampleKey: 'sample5',
+                            value: MUT_PROFILE_COUNT_NOT_PROFILED,
+                        },
+                        {
+                            uniqueSampleKey: 'sample6',
+                            value: MUT_PROFILE_COUNT_NOT_PROFILED,
+                        },
+                    ],
+                    hugoGeneSymbol: 'BRCA1',
+                    datatype: 'string',
+                    categoryOrder: mutDriverVsVUSCategoryOrder,
                 }
             );
         });

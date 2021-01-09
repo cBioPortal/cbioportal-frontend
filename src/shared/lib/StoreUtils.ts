@@ -1915,8 +1915,9 @@ export function filterAndAnnotateMolecularData(
             getPutativeDriverInfo(datum),
             discreteCnaProfileIds
         );
-        annotatedDatum.hugoGeneSymbol =
-            entrezGeneIdToGene[datum.entrezGeneId].hugoGeneSymbol;
+        annotatedDatum.hugoGeneSymbol = (
+            entrezGeneIdToGene[datum.entrezGeneId] || datum.gene
+        ).hugoGeneSymbol;
         const isVus = !annotatedDatum.putativeDriver;
         if (isVus) {
             vus.push(annotatedDatum);
@@ -1958,8 +1959,9 @@ export function filterAndAnnotateMutations(
             mutation,
             getPutativeDriverInfo(mutation)
         ); // annotate
-        annotatedMutation.hugoGeneSymbol =
-            entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
+        annotatedMutation.hugoGeneSymbol = (
+            entrezGeneIdToGene[mutation.entrezGeneId] || mutation.gene
+        ).hugoGeneSymbol;
         const isGermline = !isNotGermlineMutation(mutation);
         const isVus = !annotatedMutation.putativeDriver;
         if (isGermline && isVus) {

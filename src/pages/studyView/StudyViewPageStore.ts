@@ -2554,8 +2554,6 @@ export class StudyViewPageStore {
             this.sampleTreatmentFilters.filters.length > 0
         ) {
             filters.sampleTreatmentFilters = this.sampleTreatmentFilters;
-        } else {
-            filters.sampleTreatmentFilters = { filters: [] };
         }
 
         if (
@@ -2563,8 +2561,6 @@ export class StudyViewPageStore {
             this.patientTreatmentFilters.filters.length > 0
         ) {
             filters.patientTreatmentFilters = this.patientTreatmentFilters;
-        } else {
-            filters.patientTreatmentFilters = { filters: [] };
         }
 
         let sampleIdentifiersFilterSets = Array.from(
@@ -5783,6 +5779,7 @@ export class StudyViewPageStore {
                                       .displayName
                               )
                             : `${prefix} Survival`;
+                    plotTitle += ' (months)';
 
                     const survivalStatusAttribute = this
                         .clinicalAttributeIdToClinicalAttribute.result![

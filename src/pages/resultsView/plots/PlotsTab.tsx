@@ -166,6 +166,7 @@ export enum DiscreteVsDiscretePlotType {
 export enum MutationCountBy {
     MutationType = 'MutationType',
     MutatedVsWildType = 'MutatedVsWildType',
+    DriverVsVUS = 'DriverVsVUS',
 }
 
 export enum StructuralVariantCountBy {
@@ -255,6 +256,7 @@ const LEGEND_TO_BOTTOM_WIDTH_THRESHOLD = 550; // when plot is wider than this va
 const mutationCountByOptions = [
     { value: MutationCountBy.MutationType, label: 'Mutation Type' },
     { value: MutationCountBy.MutatedVsWildType, label: 'Mutated vs Wild-type' },
+    { value: MutationCountBy.DriverVsVUS, label: 'Driver vs VUS' },
 ];
 const structuralVariantCountByOptions = [
     { value: StructuralVariantCountBy.VariantType, label: 'Variant Type' },
@@ -2728,7 +2730,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
-            this.props.store.mutationCache,
+            this.props.store.annotatedMutationCache,
             this.props.store.structuralVariantCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
@@ -2755,7 +2757,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             this.props.store.patientKeyToFilteredSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
-            this.props.store.mutationCache,
+            this.props.store.annotatedMutationCache,
             this.props.store.structuralVariantCache,
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.coverageInformation,
