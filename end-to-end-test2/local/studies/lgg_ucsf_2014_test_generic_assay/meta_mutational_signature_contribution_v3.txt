@@ -1,0 +1,10 @@
+cancer_study_identifier: lgg_ucsf_2014_test_generic_assay
+genetic_alteration_type: GENERIC_ASSAY
+generic_assay_type: MUTATIONAL_SIGNATURE
+datatype: LIMIT-VALUE
+stable_id: mutational_signature_contribution_v3
+profile_name: mutational signature contribution v3
+profile_description: profile for contribution value of mutational signatures (COSMIC version 3)
+data_filename: data_mutational_signature_contribution_v3.txt
+show_profile_in_analysis_tab: true
+generic_entity_meta_properties: NAME,DESCRIPTION,URL
