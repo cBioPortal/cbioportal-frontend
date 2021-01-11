@@ -1567,9 +1567,6 @@ export class StudyViewPageStore {
             delete (studyViewFilter as Partial<StudyViewFilter>).studyIds;
         }
 
-        studyViewFilter.patientTreatmentFilters = { filters: [] };
-        studyViewFilter.sampleTreatmentFilters = { filters: [] };
-
         return studyViewFilter;
     }
 
@@ -2723,7 +2720,10 @@ export class StudyViewPageStore {
         await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
             //only invoke if there are filtered samples
-            if (this.hasFilteredSamples()) {
+            if (
+                this.hasFilteredSamples() &&
+                !_.isEmpty(this.unfilteredAttrsForNonNumerical)
+            ) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this.unfilteredAttrsForNonNumerical,
@@ -2754,7 +2754,10 @@ export class StudyViewPageStore {
         await: () => [this.studyViewFilterWithFilteredSampleIdentifiers],
         invoke: () => {
             //only invoke if there are filtered samples
-            if (this.hasFilteredSamples()) {
+            if (
+                this.hasFilteredSamples() &&
+                !_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)
+            ) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this
