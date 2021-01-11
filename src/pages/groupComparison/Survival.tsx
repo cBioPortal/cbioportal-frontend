@@ -299,8 +299,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             } else if (numActiveGroups === 0) {
                 content = <span>{SURVIVAL_NOT_ENOUGH_GROUPS_MSG}</span>;
             } else {
-                var isGenieBpcStudy = window.location.href.includes(
-                    'genie_bpc'
+                var isGenieBpcStudy = this.props.store.studies.result.find(s =>
+                    s.studyId.includes('genie_bpc')
                 );
 
                 content = (
