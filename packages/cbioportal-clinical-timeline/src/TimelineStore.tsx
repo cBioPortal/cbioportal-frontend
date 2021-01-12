@@ -30,7 +30,7 @@ type TooltipModel = {
 export class TimelineStore {
     @observable private _expandedTrims = false;
     @observable.ref _data: TimelineTrackSpecification[];
-    private collapsedTracks = observable.map({}, {deep:false});
+    private collapsedTracks = observable.map({}, { deep: false });
 
     public uniqueId = `tl-id-` + _.random(1, 10000);
 
@@ -98,8 +98,14 @@ export class TimelineStore {
     // Have to keep tooltip index separate so it can be observable.
     // TooltipModel has recursive nested structure so its not safe to
     //  make it observable in a deep map.
-    private tooltipModelsByUid = observable.map<string, TooltipModel>({}, {deep:false});
-    private tooltipIndexByUid = observable.map<string, number>({}, {deep:false});
+    private tooltipModelsByUid = observable.map<string, TooltipModel>(
+        {},
+        { deep: false }
+    );
+    private tooltipIndexByUid = observable.map<string, number>(
+        {},
+        { deep: false }
+    );
     @observable private _lastHoveredTooltipUid: string | null = null;
     @action
     public setHoveredTooltipUid(uid: string | null) {
@@ -125,14 +131,14 @@ export class TimelineStore {
     }
 
     @computed get tooltipModels() {
-        return Array.from(this.tooltipModelsByUid.entries())
-            .map(entry =>
+        return Array.from(this.tooltipModelsByUid.entries()).map(
+            entry =>
                 [...entry, this.tooltipIndexByUid.get(entry[0])!] as [
                     string,
                     TooltipModel,
                     number
                 ]
-            );
+        );
     }
 
     @action.bound
