@@ -834,13 +834,13 @@ describe('DataUtils', () => {
                     ...makeMinimalUnfilledDatum(),
                     trackLabel: 'gene',
                     data: data,
-                    disp_cna: 'hetloss',
+                    disp_cna: 'shallowdel',
                     disp_mrna: undefined,
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
                 },
-                'hetloss'
+                'shallowdel'
             );
 
             data = [
@@ -857,13 +857,13 @@ describe('DataUtils', () => {
                     ...makeMinimalUnfilledDatum(),
                     trackLabel: 'gene',
                     data: data,
-                    disp_cna: 'homdel',
+                    disp_cna: 'deepdel',
                     disp_mrna: undefined,
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
                 },
-                'homdel'
+                'deepdel'
             );
 
             data = [
@@ -1226,13 +1226,13 @@ describe('DataUtils', () => {
                     ...makeMinimalUnfilledDatum(),
                     trackLabel: 'gene',
                     data: data,
-                    disp_cna: 'homdel',
+                    disp_cna: 'deepdel',
                     disp_mrna: undefined,
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
                 },
-                'homdel beats diploid'
+                'deepdel beats diploid'
             );
 
             data = [
@@ -1258,13 +1258,13 @@ describe('DataUtils', () => {
                     ...makeMinimalUnfilledDatum(),
                     trackLabel: 'gene',
                     data: data,
-                    disp_cna: 'homdel',
+                    disp_cna: 'deepdel',
                     disp_mrna: undefined,
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
                 },
-                'two homdels beats one amp'
+                'two deepdels beats one amp'
             );
 
             data = [
@@ -1296,7 +1296,7 @@ describe('DataUtils', () => {
                     disp_mut: undefined,
                     disp_germ: undefined,
                 },
-                'two amps beats one homdel'
+                'two amps beats one deepdel'
             );
         });
         it('fills a datum w multiple mrna data w correct priority', () => {
@@ -1495,7 +1495,7 @@ describe('DataUtils', () => {
                     ...makeMinimalUnfilledDatum(),
                     trackLabel: 'gene',
                     data: data,
-                    disp_cna: 'homdel',
+                    disp_cna: 'deepdel',
                     disp_mrna: 'high',
                     disp_prot: 'low',
                     disp_mut: 'trunc_rec',

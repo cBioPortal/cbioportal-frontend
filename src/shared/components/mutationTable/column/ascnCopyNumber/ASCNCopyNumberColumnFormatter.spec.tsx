@@ -17,8 +17,8 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
                         ASCN_AMP = #ff0000 (red) [2]
                         ASCN_GAIN #e15b5b (a salmon-ish color close to web color 'IndianRed') [1]
                         ASCN_LIGHTGREY #bcbcbc (close to web color 'Silver') [0]
-                        ASCN_HETLOSS #2a5eea (a medium blue color close to web color 'DodgerBlue') [-1]
-                        ASCN_HOMDEL #0000ff (blue) [-2]
+                        ASCN_SHALLOWDEL #2a5eea (a medium blue color close to web color 'DodgerBlue') [-1]
+                        ASCN_DEEPDEL #0000ff (blue) [-2]
                         ASCN_BLACK #000000 (black) [anything else]
                     } based on the value of mutation attribute alleleSpecificCopyNumber.ascnIntegerCopyNumber (e.g. [1])
             - text : showing the value of mutation attribute alleleSpecificCopyNumber.TotalCopyNumber
@@ -40,14 +40,14 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
         - cases involving two samples:
             - without any set ASCN mutation attriubutes
             - sample1 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}; sample2 NO_WGD, ASCN_AMP
-            - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
-            - sample1 NO_WGD, ASCN_HETLOSS; sample2 WGD, ASCN_GAIN
-            - sample1 WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCN_GAIN
+            - sample1 NO_WGD, ASCN_DEEPDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
+            - sample1 NO_WGD, ASCN_SHALLOWDEL; sample2 WGD, ASCN_GAIN
+            - sample1 WGD, ASCN_DEEPDEL; sample2 NO_WGD, ASCN_GAIN
             - sample1 WGD, ASCN_LIGHTGREY [0]; sample2 WGD, ASCN_BLACK [999]
             - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
             - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
         - cases involving three samples:
-            - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_HOMDEL
+            - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_DEEPDEL
 
     Note: all tests will test the appropriate presence of a populated tooltip popup
     Also, the first single sample test case, and second two sample test case will omit the
@@ -110,24 +110,24 @@ describe('ASCNCopyNumberColumnFormatter', () => {
     const mutation_s1Amp_TCN2 = createMockMutation(sample1Id, '2', '2');
     const mutation_s1Gain = createMockMutation(sample1Id, '1', '1');
     const mutation_s1Diploid = createMockMutation(sample1Id, '0', '1');
-    const mutation_s1Hetloss = createMockMutation(sample1Id, '-1', '1');
-    const mutation_s1Hetloss_TCN2 = createMockMutation(sample1Id, '-1', '2');
-    const mutation_s1Homdel = createMockMutation(sample1Id, '-2', '1');
+    const mutation_s1Shallowdel = createMockMutation(sample1Id, '-1', '1');
+    const mutation_s1Shallowdel_TCN2 = createMockMutation(sample1Id, '-1', '2');
+    const mutation_s1Deepdel = createMockMutation(sample1Id, '-2', '1');
     const mutation_s1Other = createMockMutation(sample1Id, '999', '1');
     const mutation_s1NA = createMockMutation(sample1Id, 'NA', '1');
     const mutation_s2Amp = createMockMutation(sample2Id, '2', '1');
     const mutation_s2Gain = createMockMutation(sample2Id, '1', '1');
     const mutation_s2Diploid = createMockMutation(sample2Id, '0', '1');
-    const mutation_s2Hetloss = createMockMutation(sample2Id, '-1', '1');
-    const mutation_s2Hetloss_TCN2 = createMockMutation(sample2Id, '-1', '2');
-    const mutation_s2Homdel = createMockMutation(sample2Id, '-2', '1');
+    const mutation_s2Shallowdel = createMockMutation(sample2Id, '-1', '1');
+    const mutation_s2Shallowdel_TCN2 = createMockMutation(sample2Id, '-1', '2');
+    const mutation_s2Deepdel = createMockMutation(sample2Id, '-2', '1');
     const mutation_s2Other = createMockMutation(sample2Id, '999', '1');
     const mutation_s2NA = createMockMutation(sample2Id, 'NA', '1');
     const mutation_s3Amp = createMockMutation(sample3Id, '2', '1');
     const mutation_s3Gain = createMockMutation(sample3Id, '1', '1');
     const mutation_s3Diploid = createMockMutation(sample3Id, '0', '1');
-    const mutation_s3Hetloss = createMockMutation(sample3Id, '-1', '1');
-    const mutation_s3Homdel = createMockMutation(sample3Id, '-2', '1');
+    const mutation_s3Shallowdel = createMockMutation(sample3Id, '-1', '1');
+    const mutation_s3Deepdel = createMockMutation(sample3Id, '-2', '1');
     const mutation_s3Other = createMockMutation(sample3Id, '999', '1');
     const mutation_s3NA = createMockMutation(sample3Id, 'NA', '1');
     const mutation_s6 = createMockMutation(sample6Id);
@@ -138,8 +138,8 @@ describe('ASCNCopyNumberColumnFormatter', () => {
     const mutations_s1Amp_TCN2: Mutation[] = [mutation_s1Amp_TCN2];
     const mutations_s1Gain: Mutation[] = [mutation_s1Gain];
     const mutations_s1Diploid: Mutation[] = [mutation_s1Diploid];
-    const mutations_s1Hetloss: Mutation[] = [mutation_s1Hetloss];
-    const mutations_s1Homdel: Mutation[] = [mutation_s1Homdel];
+    const mutations_s1Shallowdel: Mutation[] = [mutation_s1Shallowdel];
+    const mutations_s1Deepdel: Mutation[] = [mutation_s1Deepdel];
     const mutations_s1Other: Mutation[] = [mutation_s1Other];
     const mutations_s1NA: Mutation[] = [mutation_s1NA];
     const mutations_s6: Mutation[] = [mutation_s6];
@@ -152,12 +152,12 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         mutation_s1Diploid,
         mutation_s2Amp,
     ];
-    const mutations_s1Hetloss_s2Amp: Mutation[] = [
-        mutation_s1Hetloss,
+    const mutations_s1Shallowdel_s2Amp: Mutation[] = [
+        mutation_s1Shallowdel,
         mutation_s2Amp,
     ];
-    const mutations_s1Homdel_s2Amp: Mutation[] = [
-        mutation_s1Homdel,
+    const mutations_s1Deepdel_s2Amp: Mutation[] = [
+        mutation_s1Deepdel,
         mutation_s2Amp,
     ];
     const mutations_s1Other_s2Amp: Mutation[] = [
@@ -165,54 +165,54 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         mutation_s2Amp,
     ];
     const mutations_s1NA_s2Amp: Mutation[] = [mutation_s1NA, mutation_s2Amp];
-    const mutations_s1Homdel_s2Gain: Mutation[] = [
-        mutation_s1Homdel,
+    const mutations_s1Deepdel_s2Gain: Mutation[] = [
+        mutation_s1Deepdel,
         mutation_s2Gain,
     ];
-    const mutations_s1Homdel_s2Diploid: Mutation[] = [
-        mutation_s1Homdel,
+    const mutations_s1Deepdel_s2Diploid: Mutation[] = [
+        mutation_s1Deepdel,
         mutation_s2Diploid,
     ];
-    const mutations_s1Homdel_s2Hetloss: Mutation[] = [
-        mutation_s1Homdel,
-        mutation_s2Hetloss,
+    const mutations_s1Deepdel_s2Shallowdel: Mutation[] = [
+        mutation_s1Deepdel,
+        mutation_s2Shallowdel,
     ];
-    const mutations_s1Homdel_s2Homdel: Mutation[] = [
-        mutation_s1Homdel,
-        mutation_s2Homdel,
+    const mutations_s1Deepdel_s2Deepdel: Mutation[] = [
+        mutation_s1Deepdel,
+        mutation_s2Deepdel,
     ];
-    const mutations_s1Homdel_s2Other: Mutation[] = [
-        mutation_s1Homdel,
+    const mutations_s1Deepdel_s2Other: Mutation[] = [
+        mutation_s1Deepdel,
         mutation_s2Other,
     ];
-    const mutations_s1Homdel_s2NA: Mutation[] = [
-        mutation_s1Homdel,
+    const mutations_s1Deepdel_s2NA: Mutation[] = [
+        mutation_s1Deepdel,
         mutation_s2NA,
     ];
-    const mutations_s1Hetloss_s2Gain: Mutation[] = [
-        mutation_s1Hetloss,
+    const mutations_s1Shallowdel_s2Gain: Mutation[] = [
+        mutation_s1Shallowdel,
         mutation_s2Gain,
     ];
     const mutations_s1Diploid_s2Other: Mutation[] = [
         mutation_s1Diploid,
         mutation_s2Other,
     ];
-    const mutations_s1Hetloss_s2Hetloss_TCN2: Mutation[] = [
-        mutation_s1Hetloss,
-        mutation_s2Hetloss_TCN2,
+    const mutations_s1Shallowdel_s2Shallowdel_TCN2: Mutation[] = [
+        mutation_s1Shallowdel,
+        mutation_s2Shallowdel_TCN2,
     ];
-    const mutations_s1Hetloss_TCN2_s2Hetloss: Mutation[] = [
-        mutation_s1Hetloss_TCN2,
-        mutation_s2Hetloss,
+    const mutations_s1Shallowdel_TCN2_s2Shallowdel: Mutation[] = [
+        mutation_s1Shallowdel_TCN2,
+        mutation_s2Shallowdel,
     ];
-    const mutations_s1Hetloss_TCN2_s2Hetloss_TCN2: Mutation[] = [
-        mutation_s1Hetloss_TCN2,
-        mutation_s2Hetloss_TCN2,
+    const mutations_s1Shallowdel_TCN2_s2Shallowdel_TCN2: Mutation[] = [
+        mutation_s1Shallowdel_TCN2,
+        mutation_s2Shallowdel_TCN2,
     ];
-    const mutations_s1Amp_s2Diploid_s2Homdel: Mutation[] = [
+    const mutations_s1Amp_s2Diploid_s2Deepdel: Mutation[] = [
         mutation_s1Amp,
         mutation_s2Diploid,
-        mutation_s3Homdel,
+        mutation_s3Deepdel,
     ];
     const mutations_s6_s7: Mutation[] = [mutation_s6, mutation_s7];
 
@@ -445,8 +445,8 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '0');
     });
-    it('renders sample1 NoWgd Hetloss', () => {
-        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Hetloss));
+    it('renders sample1 NoWgd Shallowdel', () => {
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Shallowdel));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
@@ -454,8 +454,8 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'NO_WGD', '1', '1', '-1');
     });
-    it('renders sample1 NoWgd Homdel', () => {
-        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Homdel));
+    it('renders sample1 NoWgd Deepdel', () => {
+        const cellWrapper = mount(s1NoWgdColDef.render(mutations_s1Deepdel));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
@@ -509,8 +509,8 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '0');
     });
-    it('renders sample1 Wgd Hetloss', () => {
-        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Hetloss));
+    it('renders sample1 Wgd Shallowdel', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Shallowdel));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
@@ -518,8 +518,8 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s1Wrapper, 'WGD', '1', '1', '-1');
     });
-    it('renders sample1 Wgd Homdel', () => {
-        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Homdel));
+    it('renders sample1 Wgd Deepdel', () => {
+        const cellWrapper = mount(s1WgdColDef.render(mutations_s1Deepdel));
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(1); // one sample
         const s1Wrapper = elementsWrapper.filterWhere(
@@ -643,9 +643,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
-    it('renders sample1 NoWgd Hetloss, sample2 NoWgd Amp', () => {
+    it('renders sample1 NoWgd Shallowdel, sample2 NoWgd Amp', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Amp)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Shallowdel_s2Amp)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -658,9 +658,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Amp', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Amp', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Amp)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Amp)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -703,10 +703,10 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
-    // Two sample tests - sample1 NO_WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Amp', () => {
+    // Two sample tests - sample1 NO_WGD, ASCN_DEEPDEL; sample2 NO_WGD, ASCNCopyNumberValueEnum from each of {see_above}
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Amp', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Amp)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Amp)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -719,9 +719,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '2');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Gain', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Gain', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Gain)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Gain)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -734,9 +734,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Diploid', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Diploid', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Diploid)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Diploid)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -749,9 +749,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '0');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Hetloss', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Shallowdel', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Hetloss)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Shallowdel)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -764,9 +764,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Homdel', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Deepdel', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Homdel)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Deepdel)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -779,9 +779,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-2');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd Other(999)', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd Other(999)', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2Other)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2Other)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -794,9 +794,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '999');
     });
-    it('renders sample1 NoWgd Homdel, sample2 NoWgd NA', () => {
+    it('renders sample1 NoWgd Deepdel, sample2 NoWgd NA', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Homdel_s2NA)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Deepdel_s2NA)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -809,10 +809,10 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', 'NA');
     });
-    // Two sample tests - sample1 NO_WGD, ASCN_HETLOSS; sample2 WGD, ASCN_GAIN
-    it('renders sample1 NoWgd Hetloss, sample2 Wgd Gain', () => {
+    // Two sample tests - sample1 NO_WGD, ASCN_SHALLOWDEL; sample2 WGD, ASCN_GAIN
+    it('renders sample1 NoWgd Shallowdel, sample2 Wgd Gain', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Gain)
+            s1NoWgds2NoWgdColDef.render(mutations_s1Shallowdel_s2Gain)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -825,10 +825,10 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '1');
     });
-    // Two sample tests - sample1 WGD, ASCN_HOMDEL; sample2 NO_WGD, ASCN_GAIN
-    it('renders sample1 Wgd Homdel, sample2 NoWgd Gain', () => {
+    // Two sample tests - sample1 WGD, ASCN_DEEPDEL; sample2 NO_WGD, ASCN_GAIN
+    it('renders sample1 Wgd Deepdel, sample2 NoWgd Gain', () => {
         const cellWrapper = mount(
-            s1Wgds2NoWgdColDef.render(mutations_s1Homdel_s2Gain)
+            s1Wgds2NoWgdColDef.render(mutations_s1Deepdel_s2Gain)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -858,9 +858,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '999');
     });
     // Two sample tests - sample1 and sample 2 with NO_WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
-    it('renders sample1 NoWgd Hetloss, sample2 NoWgd Hetloss totalCopy2', () => {
+    it('renders sample1 NoWgd Shallowdel, sample2 NoWgd Shallowdel totalCopy2', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
+            s1NoWgds2NoWgdColDef.render(
+                mutations_s1Shallowdel_s2Shallowdel_TCN2
+            )
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -873,9 +875,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
     });
-    it('renders sample1 NoWgd Hetloss totalCopy2, sample2 NoWgd Hetloss', () => {
+    it('renders sample1 NoWgd Shallowdel totalCopy2, sample2 NoWgd Shallowdel', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss)
+            s1NoWgds2NoWgdColDef.render(
+                mutations_s1Shallowdel_TCN2_s2Shallowdel
+            )
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -888,9 +892,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '1', '1', '-1');
     });
-    it('renders sample1 NoWgd Hetloss totalCopy2, sample2 NoWgd Hetloss totalCopy2', () => {
+    it('renders sample1 NoWgd Shallowdel totalCopy2, sample2 NoWgd Shallowdel totalCopy2', () => {
         const cellWrapper = mount(
-            s1NoWgds2NoWgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss_TCN2)
+            s1NoWgds2NoWgdColDef.render(
+                mutations_s1Shallowdel_TCN2_s2Shallowdel_TCN2
+            )
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -904,9 +910,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         expectElementPropertiesMatch(s2Wrapper, 'NO_WGD', '2', '1', '-1');
     });
     // Two sample tests - sample1 and sample 2 with WGD and TotalCopyNumber of either '1' or '2' and ASCNCopyNumberValueEnum of '-1'
-    it('renders sample1 Wgd Hetloss, sample2 Wgd Hetloss totalCopy2', () => {
+    it('renders sample1 Wgd Shallowdel, sample2 Wgd Shallowdel totalCopy2', () => {
         const cellWrapper = mount(
-            s1Wgds2WgdColDef.render(mutations_s1Hetloss_s2Hetloss_TCN2)
+            s1Wgds2WgdColDef.render(mutations_s1Shallowdel_s2Shallowdel_TCN2)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -919,9 +925,9 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
     });
-    it('renders sample1 Wgd Hetloss totalCopy2, sample2 Wgd Hetloss', () => {
+    it('renders sample1 Wgd Shallowdel totalCopy2, sample2 Wgd Shallowdel', () => {
         const cellWrapper = mount(
-            s1Wgds2WgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss)
+            s1Wgds2WgdColDef.render(mutations_s1Shallowdel_TCN2_s2Shallowdel)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -934,9 +940,11 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         );
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '1', '1', '-1');
     });
-    it('renders sample1 Wgd Hetloss totalCopy2, sample2 Wgd Hetloss totalCopy2', () => {
+    it('renders sample1 Wgd Shallowdel totalCopy2, sample2 Wgd Shallowdel totalCopy2', () => {
         const cellWrapper = mount(
-            s1Wgds2WgdColDef.render(mutations_s1Hetloss_TCN2_s2Hetloss_TCN2)
+            s1Wgds2WgdColDef.render(
+                mutations_s1Shallowdel_TCN2_s2Shallowdel_TCN2
+            )
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(2); // two sample
@@ -950,10 +958,10 @@ describe('ASCNCopyNumberColumnFormatter', () => {
         expectElementPropertiesMatch(s2Wrapper, 'WGD', '2', '1', '-1');
     });
 
-    // Three sample test - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_HOMDEL
-    it('renders sample1 Wgd Amp, sample2 NoWgd Diploid, sample3 Wgd Homdel', () => {
+    // Three sample test - sample1 WGD, ASCN_AMP; sample2 NO_WGD, ASCN_LIGHTGREY; sample3 WGD, ASCN_DEEPDEL
+    it('renders sample1 Wgd Amp, sample2 NoWgd Diploid, sample3 Wgd Deepdel', () => {
         const cellWrapper = mount(
-            s1Wgds2NoWgds3WgdColDef.render(mutations_s1Amp_s2Diploid_s2Homdel)
+            s1Wgds2NoWgds3WgdColDef.render(mutations_s1Amp_s2Diploid_s2Deepdel)
         );
         const elementsWrapper = cellWrapper.find('ASCNCopyNumberElement');
         expect(elementsWrapper.length).to.equal(3); // three sample

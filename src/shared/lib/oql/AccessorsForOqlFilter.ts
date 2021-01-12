@@ -7,7 +7,6 @@ import * as _ from 'lodash';
 import {
     AlterationTypeConstants,
     CustomDriverNumericGeneMolecularData,
-    AnnotatedExtendedAlteration,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
 } from '../../../pages/resultsView/ResultsViewPageStore';
@@ -15,8 +14,8 @@ import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
 
 export const cna_profile_data_to_string: any = {
-    '-2': 'homdel',
-    '-1': 'hetloss',
+    '-2': 'deepdel',
+    '-1': 'shallowdel',
     '0': null,
     '1': 'gain',
     '2': 'amp',

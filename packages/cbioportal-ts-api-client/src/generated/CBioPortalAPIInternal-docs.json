@@ -443,14 +443,14 @@
             "description": "Type of the copy number event",
             "required": false,
             "type": "string",
-            "default": "HOMDEL",
+            "default": "DEEPDEL",
             "allowEmptyValue": false,
             "enum": [
               "AMP",
               "GAIN",
               "DIPLOID",
-              "HETLOSS",
-              "HOMDEL"
+              "SHALLOWDEL",
+              "DEEPDEL"
             ]
           },
           {

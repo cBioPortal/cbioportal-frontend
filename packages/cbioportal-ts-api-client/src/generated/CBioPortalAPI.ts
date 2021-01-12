@@ -3073,7 +3073,7 @@ export default class CBioPortalAPI {
         });
     };
     getDiscreteCopyNumbersInMolecularProfileUsingGETURL(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'sampleListId': string,
@@ -3114,7 +3114,7 @@ export default class CBioPortalAPI {
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      */
     getDiscreteCopyNumbersInMolecularProfileUsingGETWithHttpInfo(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'sampleListId': string,
@@ -3178,7 +3178,7 @@ export default class CBioPortalAPI {
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      */
     getDiscreteCopyNumbersInMolecularProfileUsingGET(parameters: {
-            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
             'molecularProfileId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'sampleListId': string,
@@ -3282,7 +3282,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOSTURL(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
         'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -3319,7 +3319,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
-        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
         'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'molecularProfileId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -3384,7 +3384,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(parameters: {
-            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'discreteCopyNumberEventType' ? : "DEEPDEL_AND_AMP" | "DEEPDEL" | "AMP" | "GAIN" | "SHALLOWDEL" | "DIPLOID" | "ALL",
             'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
             'molecularProfileId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",

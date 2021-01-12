@@ -156,7 +156,7 @@ describe('Oncoprint DeltaUtils', () => {
             const expandableTrack = {
                 key: 'GENETICTRACK_0',
                 label: 'GENE5 / GENE7 / GENE1',
-                oql: '[GENE5: HOMDEL; GENE7: AMP HOMDEL; GENE1: HOMDEL]',
+                oql: '[GENE5: DEEPDEL; GENE7: AMP DEEPDEL; GENE1: DEEPDEL]',
                 info: '60%',
                 data: [],
             };
@@ -173,21 +173,21 @@ describe('Oncoprint DeltaUtils', () => {
                             {
                                 key: 'GENETICTRACK_0_EXPANSION_0',
                                 label: 'GENE5',
-                                oql: 'GENE5: HOMDEL',
+                                oql: 'GENE5: DEEPDEL',
                                 info: '30%',
                                 data: [],
                             },
                             {
                                 key: 'GENETICTRACK_0_EXPANSION_1',
                                 label: 'GENE7',
-                                oql: 'GENE7: AMP HOMDEL',
+                                oql: 'GENE7: AMP DEEPDEL',
                                 info: '40%',
                                 data: [],
                             },
                             {
                                 key: 'GENETICTRACK_0_EXPANSION_2',
                                 label: 'GENE1',
-                                oql: 'GENE1: HOMDEL',
+                                oql: 'GENE1: DEEPDEL',
                                 info: '10%',
                                 data: [],
                             },

@@ -88,9 +88,9 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
     alteration:
         | OncoprintMutationType
         | 'amp'
-        | 'homdel'
+        | 'deepdel'
         | 'gain'
-        | 'hetloss'
+        | 'shallowdel'
         | 'mrnaHigh'
         | 'mrnaLow'
         | 'protHigh'
@@ -446,7 +446,7 @@ export function makeGeneticTrackDatum_Data(
                 value: 2,
             });
             break;
-        case 'homdel':
+        case 'deepdel':
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
@@ -462,7 +462,7 @@ export function makeGeneticTrackDatum_Data(
                 value: 1,
             });
             break;
-        case 'hetloss':
+        case 'shallowdel':
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.COPY_NUMBER_ALTERATION,
@@ -801,19 +801,19 @@ export function parseGeneticInput(
                 switch (lcType) {
                     case 'cna':
                         if (
-                            ['amp', 'gain', 'hetloss', 'homdel'].indexOf(
+                            ['amp', 'gain', 'shallowdel', 'deepdel'].indexOf(
                                 lcAlteration
                             ) === -1
                         ) {
                             throw new Error(
-                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"HETLOSS", or "HOMDEL" since Type is "CNA"`
+                                `${errorPrefix}Alteration "${alteration}" is not valid - it must be "AMP", "GAIN" ,"SHALLOWDEL", or "DEEPDEL" since Type is "CNA"`
                             );
                         }
                         ret.alteration = lcAlteration as
                             | 'amp'
                             | 'gain'
-                            | 'hetloss'
-                            | 'homdel';
+                            | 'shallowdel'
+                            | 'deepdel';
                         break;
                     case 'exp':
                         if (lcAlteration === 'high') {

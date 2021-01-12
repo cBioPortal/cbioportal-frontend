@@ -368,7 +368,7 @@ export default class CaseAlterationTable extends React.Component<
             // add column for each track
             columns.push({
                 name: `${trackLabel}`,
-                headerDownload: (name: string) => `${trackLabel}`,
+                headerDownload: () => `${trackLabel}`,
                 render: (data: ICaseAlteration) => {
                     const pseudoOqlSummary = getPseudoOqlSummaryByAlterationTypes(
                         data.oqlData,
@@ -423,8 +423,7 @@ export default class CaseAlterationTable extends React.Component<
                 ) {
                     columns.push({
                         name: `${gene}: ${oql_line}`,
-                        headerDownload: (name: string) =>
-                            `${gene}: ${oql_line}`,
+                        headerDownload: () => `${gene}: ${oql_line}`,
                         render: (data: ICaseAlteration) => {
                             const pseudoOqlSummary = generatePseudoOqlSummary(
                                 data.oqlDataByGene,

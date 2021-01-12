@@ -3,8 +3,8 @@ import {
     ASCN_AMP,
     ASCN_GAIN,
     ASCN_LIGHTGREY,
-    ASCN_HETLOSS,
-    ASCN_HOMDEL,
+    ASCN_SHALLOWDEL,
+    ASCN_DEEPDEL,
     ASCN_BLACK,
     ASCN_WHITE,
 } from 'shared/lib/Colors';
@@ -21,9 +21,9 @@ export function getASCNCopyNumberColor(
         case '0':
             return ASCN_WHITE;
         case '-1':
-            return ASCN_HETLOSS;
+            return ASCN_SHALLOWDEL;
         case '-2':
-            return ASCN_HOMDEL;
+            return ASCN_DEEPDEL;
         case 'INDETERMINATE':
             return ASCN_LIGHTGREY;
         default:
@@ -43,9 +43,9 @@ export function getASCNCopyNumberStrokeColor(
         case '0':
             return ASCN_LIGHTGREY;
         case '-1':
-            return ASCN_HETLOSS;
+            return ASCN_SHALLOWDEL;
         case '-2':
-            return ASCN_HOMDEL;
+            return ASCN_DEEPDEL;
         case 'INDETERMINATE':
             return 'ASCN_LIGHTGREY';
         default:

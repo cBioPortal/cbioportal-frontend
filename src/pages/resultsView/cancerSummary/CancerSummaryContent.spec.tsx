@@ -26,8 +26,8 @@ describe('CancerSummaryContent', () => {
                 alterationTypeCounts: {
                     mutated: 10,
                     amp: 0,
-                    homdel: 0,
-                    hetloss: 0,
+                    deepdel: 0,
+                    shallowdel: 0,
                     gain: 0,
                     fusion: 0,
                     mrnaExpressionHigh: 0,
@@ -57,8 +57,8 @@ describe('CancerSummaryContent', () => {
                 alterationTypeCounts: {
                     mutated: 1,
                     amp: 0,
-                    homdel: 0,
-                    hetloss: 0,
+                    deepdel: 0,
+                    shallowdel: 0,
                     gain: 0,
                     fusion: 0,
                     mrnaExpressionHigh: 0,
@@ -88,8 +88,8 @@ describe('CancerSummaryContent', () => {
                 alterationTypeCounts: {
                     mutated: 4,
                     amp: 1,
-                    homdel: 0,
-                    hetloss: 0,
+                    deepdel: 0,
+                    shallowdel: 0,
                     gain: 0,
                     fusion: 0,
                     mrnaExpressionHigh: 0,

@@ -103,8 +103,8 @@ export function countAlterationOccurences(
             const counts: IAlterationCountMap = {
                 mutated: 0,
                 amp: 0, // 2
-                homdel: 0, // -2
-                hetloss: 0, // -1
+                deepdel: 0, // -2
+                shallowdel: 0, // -1
                 gain: 0, // 1
                 fusion: 0,
                 mrnaExpressionHigh: 0,

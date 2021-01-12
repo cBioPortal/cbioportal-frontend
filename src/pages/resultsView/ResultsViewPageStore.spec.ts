@@ -6,10 +6,10 @@ import {
 import { CancerStudy, ClinicalData, Sample } from 'cbioportal-ts-api-client';
 
 describe('buildDefaultOQLProfile', () => {
-    it('produces correct default queryies based on alteration profiles and zscore/rppa', () => {
+    it('produces correct default queries based on alteration profiles and zscore/rppa', () => {
         assert.equal(
             buildDefaultOQLProfile(['COPY_NUMBER_ALTERATION'], 2, 2),
-            'AMP HOMDEL'
+            'AMP DEEPDEL'
         );
         assert.equal(
             buildDefaultOQLProfile(['MUTATION_EXTENDED'], 2, 2),
@@ -21,7 +21,7 @@ describe('buildDefaultOQLProfile', () => {
                 2,
                 2
             ),
-            'MUT FUSION AMP HOMDEL'
+            'MUT FUSION AMP DEEPDEL'
         );
         assert.equal(
             buildDefaultOQLProfile(

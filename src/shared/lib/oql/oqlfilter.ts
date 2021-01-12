@@ -33,9 +33,9 @@ export interface IAccessorsForOqlFilter<T> {
     // returns lower case gene symbol
     gene: (d: T) => string;
 
-    // returns 'amp', 'homdel', 'hetloss', or 'gain',
+    // returns 'amp', 'deepdel', 'shallowdel', or 'gain',
     //  or null
-    cna: (d: T) => 'amp' | 'homdel' | 'hetloss' | 'gain' | null;
+    cna: (d: T) => 'amp' | 'deepdel' | 'shallowdel' | 'gain' | null;
 
     // returns 'missense', 'nonsense', 'nonstart', 'nonstop', 'frameshift', 'inframe', 'splice', 'trunc', or 'promoter'
     //  or null
@@ -484,9 +484,9 @@ function isDatumWantedByAnyTypeWithModifiersCommand<T>(
             case 'DRIVER':
                 const cnaValue = accessors.cna(datum);
                 datumWanted =
-                    cnaValue !== null && // dont include gains, hetloss or unmodified here
+                    cnaValue !== null && // dont include gains, shallowdel or unmodified here
                     cnaValue !== 'gain' &&
-                    cnaValue !== 'hetloss' &&
+                    cnaValue !== 'shallowdel' &&
                     isDatumWantedByOQLAlterationModifier(
                         modifier,
                         datum,
@@ -565,26 +565,31 @@ function isDatumWantedByOQLCNACommand<T>(
                 var integer_copy_number = {
                     amp: 2,
                     gain: 1,
-                    hetloss: -1,
-                    homdel: -2,
+                    shallowdel: -1,
+                    deepdel: -2,
                 };
                 var d_int_cna = integer_copy_number[d_cna];
                 var alt_int_cna =
                     integer_copy_number[
                         alt_cmd.constr_val!.toLowerCase() as
                             | 'amp'
+                            | 'deepdel'
                             | 'gain'
-                            | 'hetloss'
-                            | 'homdel'
+                            | 'shallowdel'
                     ];
-                if (alt_cmd.constr_rel === '>') {
-                    match = d_int_cna > alt_int_cna;
-                } else if (alt_cmd.constr_rel === '>=') {
-                    match = d_int_cna >= alt_int_cna;
-                } else if (alt_cmd.constr_rel === '<') {
-                    match = d_int_cna < alt_int_cna;
-                } else if (alt_cmd.constr_rel === '<=') {
-                    match = d_int_cna <= alt_int_cna;
+                switch (alt_cmd.constr_rel) {
+                    case '>':
+                        match = d_int_cna > alt_int_cna;
+                        break;
+                    case '>=':
+                        match = d_int_cna >= alt_int_cna;
+                        break;
+                    case '<':
+                        match = d_int_cna < alt_int_cna;
+                        break;
+                    case '<=':
+                        match = d_int_cna <= alt_int_cna;
+                        break;
                 }
                 break;
         }

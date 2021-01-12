@@ -145,7 +145,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
         }, {} as { [key in MutationEnrichmentEventType]?: boolean });
 
         let selectedCopyNumberEnrichmentEventTypes = {
-            [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            [CopyNumberEnrichmentEventType.DEEPDEL]: true,
             [CopyNumberEnrichmentEventType.AMP]: true,
         };
 
@@ -420,7 +420,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
             menu.pressSubmitButton();
 
             (handlers.updateSelectedCopyNumber as sinon.SinonSpy).args[0][0].should.have.members(
-                ['HOMDEL']
+                ['DEEPDEL']
             );
         });
     });

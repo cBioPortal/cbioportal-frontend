@@ -24,8 +24,8 @@ export enum ASCNCopyNumberValueEnum {
     DIPLOID = 'Diploid',
     DOUBLELOSSAFTER = 'Double Loss After',
     GAIN = 'Gain',
-    HETLOSS = 'Hetloss',
-    HOMDEL = 'Homdel',
+    SHALLOWDEL = 'ShallowDel',
+    DEEPDEL = 'DeepDel',
     LOSSGAIN = 'Loss & Gain',
     LOSSAFTER = 'Loss After',
     LOSSBEFOREAFTER = 'Loss Before & After',
@@ -34,8 +34,8 @@ export enum ASCNCopyNumberValueEnum {
 }
 
 const ASCNCallTable: { [key: string]: string } = {
-    'no WGD,0,0': ASCNCopyNumberValueEnum.HOMDEL,
-    'no WGD,1,0': ASCNCopyNumberValueEnum.HETLOSS,
+    'no WGD,0,0': ASCNCopyNumberValueEnum.DEEPDEL,
+    'no WGD,1,0': ASCNCopyNumberValueEnum.SHALLOWDEL,
     'no WGD,2,0': ASCNCopyNumberValueEnum.CNLOH,
     'no WGD,3,0': ASCNCopyNumberValueEnum.CNLOHGAIN,
     'no WGD,4,0': ASCNCopyNumberValueEnum.CNLOHGAIN,
@@ -56,7 +56,7 @@ const ASCNCallTable: { [key: string]: string } = {
     'no WGD,4,3': ASCNCopyNumberValueEnum.AMP,
     'no WGD,5,3': ASCNCopyNumberValueEnum.AMP,
     'no WGD,6,3': ASCNCopyNumberValueEnum.AMP,
-    'WGD,0,0': ASCNCopyNumberValueEnum.HOMDEL,
+    'WGD,0,0': ASCNCopyNumberValueEnum.DEEPDEL,
     'WGD,1,0': ASCNCopyNumberValueEnum.LOSSBEFOREAFTER,
     'WGD,2,0': ASCNCopyNumberValueEnum.LOSSBEFORE,
     'WGD,3,0': ASCNCopyNumberValueEnum.CNLOHBEFORELOSS,

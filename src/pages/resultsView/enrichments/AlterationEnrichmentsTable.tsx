@@ -13,7 +13,7 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
+import { CNA_COLOR_AMP, CNA_COLOR_DEEPDEL } from 'cbioportal-frontend-commons';
 
 export interface IAlterationEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
@@ -142,7 +142,7 @@ export default class AlterationEnrichmentTable extends React.Component<
                 <span
                     style={{
                         color:
-                            d.value! === 2 ? CNA_COLOR_AMP : CNA_COLOR_HOMDEL,
+                            d.value! === 2 ? CNA_COLOR_AMP : CNA_COLOR_DEEPDEL,
                     }}
                 >
                     {cnaToAlteration[d.value!]}
