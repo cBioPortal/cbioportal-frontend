@@ -3,7 +3,7 @@ export interface TimelineEvent {
     end: number;
     event: any;
     render?(item: TimelineEvent): JSX.Element | string;
-    containingTrack: TimelineTrackSpecification;
+    containingTrack: any;
 }
 
 export enum TimelineTrackType {
