@@ -1,14 +1,14 @@
 import { ICache } from 'cbioportal-frontend-commons';
-import { MobxCache } from 'cbioportal-utils';
+import { MobxCache, OncoKbCardDataType } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 
 import OncoKbCard from './OncoKbCard';
-import { OncoKbCardDataType } from './OncoKbHelper';
 
 export interface IOncoKbTooltipProps {
+    type: OncoKbCardDataType;
     indicator?: IndicatorQueryResp;
     pubMedCache?: MobxCache;
     handleFeedbackOpen?: () => void;
@@ -28,27 +28,29 @@ export default class OncoKbTooltip extends React.Component<
 > {
     public get pmidData(): ICache<any> {
         if (this.props.pubMedCache) {
-            let mutationEffectPmids =
-                this.props.indicator && this.props.indicator.mutationEffect
-                    ? this.props.indicator.mutationEffect.citations.pmids.map(
-                          pmid => Number(pmid)
-                      )
-                    : [];
-            const refs = (this.props.indicator
-                ? _.reduce(
-                      this.props.indicator.treatments,
-                      (acc, next) => {
-                          acc = acc.concat(
-                              next.pmids.map(pmid => Number(pmid))
-                          );
-                          return acc;
-                      },
-                      [] as number[]
-                  )
-                : []
-            ).concat(mutationEffectPmids);
+            let allPmids: string[] = [];
 
-            for (const ref of refs) {
+            if (this.props.indicator) {
+                if (this.props.indicator.mutationEffect) {
+                    allPmids = allPmids.concat(
+                        this.props.indicator.mutationEffect.citations.pmids
+                    );
+                }
+                this.props.indicator.treatments.forEach(treatment => {
+                    allPmids = allPmids.concat(treatment.pmids);
+                });
+                this.props.indicator.diagnosticImplications.forEach(
+                    implication => {
+                        allPmids = allPmids.concat(implication.pmids);
+                    }
+                );
+                this.props.indicator.prognosticImplications.forEach(
+                    implication => {
+                        allPmids = allPmids.concat(implication.pmids);
+                    }
+                );
+            }
+            for (const ref of _.uniq(allPmids).map(pmid => Number(pmid))) {
                 this.props.pubMedCache.get(ref);
             }
         }
@@ -62,7 +64,7 @@ export default class OncoKbTooltip extends React.Component<
         if (this.props.geneNotExist) {
             tooltipContent = (
                 <OncoKbCard
-                    type={OncoKbCardDataType.TX}
+                    type={this.props.type}
                     usingPublicOncoKbInstance={
                         this.props.usingPublicOncoKbInstance
                     }
@@ -83,7 +85,7 @@ export default class OncoKbTooltip extends React.Component<
             const pmidData: ICache<any> = this.pmidData;
             tooltipContent = (
                 <OncoKbCard
-                    type={OncoKbCardDataType.TX}
+                    type={this.props.type}
                     usingPublicOncoKbInstance={
                         this.props.usingPublicOncoKbInstance
                     }
