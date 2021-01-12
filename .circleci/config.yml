@@ -196,7 +196,7 @@ jobs:
               cd $TEST_HOME/local/runtime-config && \
               ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV            
       - run:
-          name: Build image
+          name: Build or pull backend image
           command: |
               cd $TEST_HOME/local/docker && \
               ./build_portal_image.sh
