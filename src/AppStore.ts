@@ -43,6 +43,13 @@ export class AppStore {
         return _.isString(this.userName) && this.userName !== 'anonymousUser';
     }
 
+    @computed get isSocialAuthenticated() {
+        if (this.authMethod) {
+            return this.authMethod.includes('social_auth');
+        }
+        return false;
+    }
+
     @computed get logoutUrl() {
         if (this.authMethod === 'saml') {
             return 'saml/logout';
