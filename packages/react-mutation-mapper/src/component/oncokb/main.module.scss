@@ -7,6 +7,10 @@
     line-height: 18px;
 }
 
+.tab-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
 .tooltip-refs {
     max-width: 400px;
     max-height: 400px;
