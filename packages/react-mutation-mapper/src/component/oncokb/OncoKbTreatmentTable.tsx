@@ -1,22 +1,12 @@
-import _ from 'lodash';
 import { DefaultTooltip, ICache } from 'cbioportal-frontend-commons';
-import { LEVELS } from 'cbioportal-utils';
 import { ArticleAbstract, IndicatorQueryTreatment } from 'oncokb-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable from 'react-table';
 
-import {
-    getPositionalVariant,
-    getTumorTypeName,
-    levelIconClassNames,
-    mergeAlterations,
-    normalizeLevel,
-} from '../../util/OncoKbUtils';
-import { defaultArraySortMethod, defaultSortMethod } from 'cbioportal-utils';
+import { getTumorTypeName } from '../../util/OncoKbUtils';
 import OncoKbHelper from './OncoKbHelper';
-import ReferenceList from './ReferenceList';
-import SummaryWithRefs from './SummaryWithRefs';
+import { EvidenceReferenceContent } from './oncokbCard/EvidenceReferenceContent';
 
 import mainStyles from './main.module.scss';
 import './oncoKbTreatmentTable.scss';
@@ -48,19 +38,17 @@ export default class OncoKbTreatmentTable extends React.Component<
         return abstracts.length > 0 || pmids.length > 0 ? (
             () => (
                 <div className={mainStyles['tooltip-refs']}>
-                    {description !== undefined && description.length > 0 ? (
-                        <SummaryWithRefs
-                            content={description}
-                            type={'tooltip'}
-                            pmidData={this.props.pmidData}
-                        />
-                    ) : (
-                        <ReferenceList
-                            pmids={pmids}
-                            pmidData={pmidData}
-                            abstracts={abstracts}
-                        />
-                    )}
+                    <EvidenceReferenceContent
+                        description={description}
+                        citations={{
+                            pmids: pmids.map(pmid => pmid.toString()),
+                            abstracts: abstracts,
+                        }}
+                        pmidData={pmidData}
+                        noInfoDisclaimer={
+                            'Mutation effect information is not available.'
+                        }
+                    />
                 </div>
             )
         ) : (
@@ -69,83 +57,13 @@ export default class OncoKbTreatmentTable extends React.Component<
     };
 
     readonly columns = [
+        OncoKbHelper.getDefaultColumnDefinition('level'),
         {
-            id: 'level',
-            Header: <span>Level</span>,
-            accessor: 'level',
-            maxWidth: 45,
-            sortMethod: (a: string, b: string) =>
-                defaultSortMethod(
-                    LEVELS.all.indexOf(normalizeLevel(a) || ''),
-                    LEVELS.all.indexOf(normalizeLevel(b) || '')
-                ),
-            Cell: (props: { value: string }) => {
-                const normalizedLevel = normalizeLevel(props.value) || '';
-                return (
-                    <DefaultTooltip
-                        overlay={this.levelTooltipContent(normalizedLevel)}
-                        placement="left"
-                        trigger={['hover', 'focus']}
-                        destroyTooltipOnHide={true}
-                    >
-                        <i
-                            className={levelIconClassNames(normalizedLevel)}
-                            style={{ margin: 'auto' }}
-                        />
-                    </DefaultTooltip>
-                );
-            },
-        },
-        {
-            id: 'alterations',
-            Header: <span>Alteration(s)</span>,
-            accessor: 'alterations',
-            minWidth: 80,
-            sortMethod: (a: string[], b: string[]) =>
-                defaultArraySortMethod(a, b),
+            ...OncoKbHelper.getDefaultColumnDefinition('alterations'),
             Cell: (props: { value: string[] }) => {
-                const mergedAlteration = mergeAlterations(props.value);
-                let content = <span>{mergedAlteration}</span>;
-                if (props.value.length > 5) {
-                    const lowerCasedQueryVariant = this.props.variant.toLowerCase();
-                    let matchedAlteration = _.find(
-                        props.value,
-                        alteration =>
-                            alteration.toLocaleLowerCase() ===
-                            lowerCasedQueryVariant
-                    );
-                    if (!matchedAlteration) {
-                        matchedAlteration = getPositionalVariant(
-                            this.props.variant
-                        );
-                    }
-                    let pickedAlteration =
-                        matchedAlteration === undefined
-                            ? props.value[0]
-                            : matchedAlteration;
-                    content = (
-                        <span>
-                            {pickedAlteration} and{' '}
-                            <DefaultTooltip
-                                overlay={
-                                    <div style={{ maxWidth: '400px' }}>
-                                        {mergedAlteration}
-                                    </div>
-                                }
-                                placement="right"
-                                destroyTooltipOnHide={true}
-                            >
-                                <a>
-                                    {props.value.length - 1} other alterations
-                                </a>
-                            </DefaultTooltip>
-                        </span>
-                    );
-                }
-                return (
-                    <div style={{ whiteSpace: 'normal', lineHeight: '1rem' }}>
-                        {content}
-                    </div>
+                return OncoKbHelper.getAlterationsColumnCell(
+                    props.value,
+                    this.props.variant
                 );
             },
         },
