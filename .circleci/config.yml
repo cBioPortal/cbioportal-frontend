@@ -194,7 +194,13 @@ jobs:
           command: |
               source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
               cd $TEST_HOME/local/runtime-config && \
-              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
+              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV            
+      - run:
+          name: Build or pull backend image
+          command: |
+              cd $TEST_HOME/local/docker && \
+              ./build_portal_image.sh
+          no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
           command: |
