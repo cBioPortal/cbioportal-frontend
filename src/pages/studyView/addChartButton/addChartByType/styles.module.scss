@@ -21,6 +21,11 @@
     align-items: center;
 }
 
+.markedForDeletion {
+    color: #cccccc;
+    text-decoration: line-through black;
+}
+
 .footer {
     display: flex;
     justify-content: space-between;
@@ -43,4 +48,8 @@
 .labelDisabled {
     color: #cccccc;
     cursor: default;
+}
+
+.sharedChart {
+    background-color: #ffffaa !important;
 }
