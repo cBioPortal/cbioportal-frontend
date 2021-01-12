@@ -6,6 +6,8 @@ import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import autobind from 'autobind-decorator';
 import MolecularProfileSelector from '../../../shared/components/MolecularProfileSelector';
 import _ from 'lodash';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import FontAwesome from 'react-fontawesome';
 
 export interface IEnrichmentsDataSetDropdownProps {
     dataSets: MolecularProfile[];
@@ -17,6 +19,7 @@ export interface IEnrichmentsDataSetDropdownProps {
     };
     studies: CancerStudy[];
     alwaysShow?: boolean;
+    showDescription?: boolean;
 }
 
 @observer
@@ -78,34 +81,67 @@ export default class EnrichmentsDataSetDropdown extends React.Component<
                 x => x.studyId
             );
             const includeStudyName = Object.keys(studyProfilesMap).length > 1;
-            return _.map(studyProfilesMap, (molecularProfiles, studyId) => (
-                <div className={styles.DataSet}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <strong>
-                            {includeStudyName
-                                ? this.studiesMap[studyId].name + ' '
-                                : ''}
-                            Data Set:
-                        </strong>
-                        <div
-                            style={{
-                                display: 'inline-block',
-                                marginLeft: 5,
-                                width: 400,
-                            }}
-                        >
-                            <MolecularProfileSelector
-                                value={
-                                    this.props.selectedProfileByStudyId[studyId]
-                                        .molecularProfileId
-                                }
-                                molecularProfiles={molecularProfiles}
-                                onChange={(o: any) => this.change(studyId, o)}
-                            />
+            return _.map(studyProfilesMap, (molecularProfiles, studyId) => {
+                const selectedProfile = _.find(
+                    molecularProfiles,
+                    profile =>
+                        profile.molecularProfileId ===
+                        this.props.selectedProfileByStudyId[studyId]
+                            .molecularProfileId
+                )!;
+                return (
+                    <div className={styles.DataSet}>
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <strong>
+                                {includeStudyName
+                                    ? this.studiesMap[studyId].name + ' '
+                                    : ''}
+                                Data Set:
+                            </strong>
+                            <div
+                                style={{
+                                    display: 'inline-block',
+                                    marginLeft: 5,
+                                    width: 400,
+                                }}
+                            >
+                                <MolecularProfileSelector
+                                    value={
+                                        this.props.selectedProfileByStudyId[
+                                            studyId
+                                        ].molecularProfileId
+                                    }
+                                    molecularProfiles={molecularProfiles}
+                                    onChange={(o: any) =>
+                                        this.change(studyId, o)
+                                    }
+                                />
+                            </div>
+                            {this.props.showDescription &&
+                                selectedProfile.description && (
+                                    <DefaultTooltip
+                                        mouseEnterDelay={0}
+                                        placement="right"
+                                        overlay={
+                                            <div
+                                                className={
+                                                    styles.ProfileTooltip
+                                                }
+                                            >
+                                                {selectedProfile.description}
+                                            </div>
+                                        }
+                                    >
+                                        <FontAwesome
+                                            className={styles.ProfileInfoIcon}
+                                            name="info-circle"
+                                        />
+                                    </DefaultTooltip>
+                                )}
                         </div>
                     </div>
-                </div>
-            ));
+                );
+            });
         }
         return null;
     }

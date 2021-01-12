@@ -12,6 +12,8 @@ declare const styles: {
   readonly "DataSet": string;
   readonly "FlexCheckbox": string;
   readonly "GeneName": string;
+  readonly "ProfileInfoIcon": string;
+  readonly "ProfileTooltip": string;
   readonly "ScatterTooltip": string;
   readonly "Significant": string;
   readonly "StableId": string;
