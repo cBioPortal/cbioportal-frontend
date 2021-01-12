@@ -9,7 +9,6 @@ import { flattenTracks, sortNestedTracks } from './lib/helpers';
 import CustomTrack, { CustomTrackSpecification } from './CustomTrack';
 import { TICK_AXIS_HEIGHT } from './TickAxis';
 import { useObserver } from 'mobx-react-lite';
-import { ToolTipModel } from '../../../src/pages/studyView/charts/barChart/BarChartToolTip';
 
 export interface ITimelineTracks {
     store: TimelineStore;
