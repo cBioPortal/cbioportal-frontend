@@ -231,7 +231,7 @@ async function fetch(
                         studyId: sample.studyId,
                         uniquePatientKey: sample.uniquePatientKey,
                         uniqueSampleKey: sample.uniqueSampleKey,
-                        value: studyIdToStudy[sample.studyId].shortName,
+                        value: studyIdToStudy[sample.studyId].name,
                     } as ClinicalData)
             );
             break;

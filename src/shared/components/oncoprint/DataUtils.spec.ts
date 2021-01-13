@@ -170,7 +170,6 @@ describe('DataUtils', () => {
                         groups: '',
                         name: 'STUDY1',
                         publicStudy: true,
-                        shortName: 'STUDY1',
                         status: 1,
                         studyId: 'STUDY1',
                     },
