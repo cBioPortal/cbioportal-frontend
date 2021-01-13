@@ -1,8 +1,11 @@
 const { join } = require('path');
+
 const fs = require('fs');
 var path = require('path');
 var VisualRegressionCompare = require('wdio-novus-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
+
+const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
@@ -234,6 +237,13 @@ exports.config = {
                 },
             },
         ],
+
+        [
+            CustomReporter,
+            {
+                someOption: 'foobar',
+            },
+        ],
     ],
 
     //
@@ -242,6 +252,8 @@ exports.config = {
     mochaOpts: {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
+        require:
+            '/Users/newuser/Documents/VSCodeProjects/cbioportal-frontend/end-to-end-test2/shared/wdio/it-override.js',
     },
     //
     // =====
@@ -285,16 +297,7 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {Object}         browser      instance of created browser/device session
      */
-    before: function(capabilities, specs) {
-        console.log('hello and welcome');
-        const oldFunc = browser.checkElement;
-
-        console.log(oldFunc);
-        // browser.addCommand('checkElement', function(...args){
-        //     console.log("shmooo");
-        //     return oldFunc.apply(this,args);
-        // });
-    },
+    before: function(capabilities, specs) {},
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {String} commandName hook command name

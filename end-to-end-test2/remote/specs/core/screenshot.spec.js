@@ -10,13 +10,6 @@ const {
     sessionServiceIsEnabled,
 } = require('../../../shared/specUtils');
 
-const oldIt = it;
-it = function(...args) {
-    console.log('george');
-    console.log(this);
-    return oldIt.apply(this, args);
-};
-
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -337,30 +330,31 @@ describe.only('enrichments tab screenshot tests', function() {
     beforeEach(function() {
         var url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
         goToUrlAndSetLocalStorage(url);
-        browser.$('.poo').waitForDisplayed();
+        //browser.$('.fdsa').waitForDisplayed();
     });
+
     it('enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
-
-        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        $('a=mRNA').click();
-        $('b=MERTK').click();
-
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
-
-        assertScreenShotMatch(res);
+        //
+        // $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        // $('a=mRNA').click();
+        // $('b=MERTK').click();
+        //
+        // var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
+        //
+        // assertScreenShotMatch(res);
     });
-
-    it('fdsa enrichments tab coadread_tcga_pub mRNA profile222', function() {
+    //
+    it.skip(' fdsafdsa enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
-
-        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        $('a=mRNA').click();
-        $('b=MERTK').click();
-
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
-
-        assertScreenShotMatch(res);
+        //
+        // $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        // $('a=mRNA').click();
+        // $('b=MERTK').click();
+        //
+        // var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
+        //
+        // assertScreenShotMatch(res);
     });
 });
 
