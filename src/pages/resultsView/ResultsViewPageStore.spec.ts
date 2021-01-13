@@ -46,7 +46,6 @@ describe('extendSamplesWithCancerType', () => {
     var arg2 = [
         {
             name: 'NCI-60 Cell Lines (NCI, Cancer Res. 2012)',
-            shortName: 'NCI-60',
             description:
                 'NCI-60 cell line project; raw data at <A HREF="http://discover.nci.nih.gov/cellminer/loadDownload.do">CellMiner</A>.',
             publicStudy: true,
