@@ -63,19 +63,23 @@ class CustomReporter extends WDIOReporter {
     onRunnerEnd() {
         const strReport = JSON.stringify(this.report, null, 5);
 
-        fs.writeFileSync(`./donks.js`, `jsonpCallback(${strReport});`, err => {
-            if (err) console.log(err);
-            console.log('Successfully Written to File.');
-        });
+        fs.writeFileSync(
+            `${this.options[0].outputDir}/customReportJSONP.js`,
+            `jsonpCallback(${strReport});`,
+            err => {
+                if (err) console.log(err);
+                console.log('Successfully Written to File.');
+            }
+        );
 
-        // fs.writeFileSync(
-        //     `./customReport.json`,
-        //     strReport,
-        //     err => {
-        //         if (err) console.log(err);
-        //         console.log('Successfully Written to File.');
-        //     }
-        // );
+        fs.writeFileSync(
+            `${this.options[0].outputDir}/customReport.json`,
+            strReport,
+            err => {
+                if (err) console.log(err);
+                console.log('Successfully Written to File.');
+            }
+        );
     }
 }
 

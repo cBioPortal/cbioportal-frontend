@@ -11,16 +11,21 @@ const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
-var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
-var refDir =
-    process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
-var screenDir =
-    process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
-var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+const screenshotRoot =
+    process.env.SCREENSHOT_DIRECTORY || 'remote/screenshots/';
 
-// console.log("smokey");
-// console.log(screenDir);
-// console.log(path.join(process.cwd(), screenDir));
+// var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
+// var refDir =
+//     process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
+// var screenDir =  process.env.SCREENSHOT_DIRECTORY ?  process.env.SCREENSHOT_DIRECTORY + '/screen' : 'remote/screenshots/screen/';
+//     //process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
+// var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+
+var diffDir = `${screenshotRoot}/diff/`;
+var refDir = `${screenshotRoot}/reference/`;
+var screenDir = `${screenshotRoot}/screen/`;
+
+var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
@@ -229,22 +234,32 @@ exports.config = {
     reporters: [
         'spec',
         [
-            'json',
+            CustomReporter,
             {
-                outputDir: './Results',
+                outputDir: process.env.JUNIT_REPORT_PATH || './',
                 outputFileFormat: function(opts) {
-                    return `${opts.cid}-results.json`;
+                    // optional
+                    return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
                 },
             },
         ],
-
-        [
-            CustomReporter,
-            {
-                someOption: 'foobar',
-            },
-        ],
     ],
+
+    // reporterOptions: {
+    //     junit: {
+    //         outputDir: process.env.JUNIT_REPORT_PATH || './',
+    //         outputFileFormat: function(opts) {
+    //             // optional
+    //             return `results-${opts.cid}.${opts.capabilities}.xml`;
+    //         },
+    //     },
+    //     custom: {
+    //         outputDir: process.env.JUNIT_REPORT_PATH || './',
+    //         outputFileFormat: function(opts) {
+    //             // optional
+    //             return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+    //         },
+    //     },
 
     //
     // Options to be passed to Mocha.
@@ -252,8 +267,7 @@ exports.config = {
     mochaOpts: {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
-        require:
-            '/Users/newuser/Documents/VSCodeProjects/cbioportal-frontend/end-to-end-test2/shared/wdio/it-override.js',
+        require: './shared/wdio/it-override.js',
     },
     //
     // =====

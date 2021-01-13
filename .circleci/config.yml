@@ -20,7 +20,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
           yarn serveDist & \
-          cd end-to-end-test && \
+          cd end-to-end-test2 && \
           yarn install --frozen-lockfile && \
           ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
           ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
@@ -34,7 +34,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 20s && \
           (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
           sleep 1s && \
-          cd end-to-end-test && \
+          cd end-to-end-test2 && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
           yarn run e2e
         when: always
@@ -291,9 +291,9 @@ workflows:
             - end_to_end_tests:
                 requires:
                     - install
-            - end_to_end_tests_localdb:
-                requires:
-                    - install
+#            - end_to_end_tests_localdb:
+#                requires:
+#                    - install
             - api_sync:
                 requires:
                     - install

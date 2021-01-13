@@ -335,17 +335,17 @@ describe.only('enrichments tab screenshot tests', function() {
 
     it('enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
-        //
-        // $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        // $('a=mRNA').click();
-        // $('b=MERTK').click();
-        //
-        // var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
-        //
-        // assertScreenShotMatch(res);
+
+        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        $('a=mRNA').click();
+        $('b=MERTK').click();
+
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
+
+        assertScreenShotMatch(res);
     });
     //
-    it.skip(' fdsafdsa enrichments tab coadread_tcga_pub mRNA profile', function() {
+    it(' fdsafdsa enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
         //
         // $('.comparisonTabSubTabs .tabAnchor_mrna').click();
