@@ -43,7 +43,7 @@ export default class CancerSummaryContainer extends React.Component<
         makeObservable(this);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.pivotData = this.pivotData.bind(this);
-        this.mapStudyIdToShortName = this.mapStudyIdToShortName.bind(this);
+        this.mapStudyIdToName = this.mapStudyIdToName.bind(this);
     }
 
     private handleTabClick(id: string) {
@@ -79,10 +79,16 @@ export default class CancerSummaryContainer extends React.Component<
         }
     }
 
-    // this is used to map study id to study shortname
-    private mapStudyIdToShortName(str: string) {
+    // this is used to map study id to study name
+    private mapStudyIdToName(str: string) {
         if (str in this.props.store.physicalStudySet) {
-            return this.props.store.physicalStudySet[str].shortName;
+            const studyname = this.props.store.physicalStudySet[str].name;
+            if (studyname.indexOf('(') > 50) {
+                const indexofp = studyname.indexOf('(');
+                const studynameright: string = studyname.substring(indexofp);
+                const studynameleft: string = studyname.substring(0, 49);
+                return studynameleft + '...' + studynameright;
+            } else return studyname;
         } else {
             return str;
         }
@@ -90,10 +96,10 @@ export default class CancerSummaryContainer extends React.Component<
 
     @computed
     private get tabs() {
-        // if we're grouping by cancer study, we need to use study shortName property instead of studyId
+        // if we're grouping by cancer study, we need to use study name property instead of studyId
         const labelTransformer =
             this.groupAlterationsBy === 'studyId'
-                ? this.mapStudyIdToShortName
+                ? this.mapStudyIdToName
                 : undefined;
 
         const alterationCountsForCancerTypesByGene = getAlterationCountsForCancerTypesByGene(
