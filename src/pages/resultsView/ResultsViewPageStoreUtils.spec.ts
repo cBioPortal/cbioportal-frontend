@@ -886,28 +886,28 @@ describe('ResultsViewPageStoreUtils', () => {
     describe('buildResultsViewPageTitle', () => {
         it('handles various numbers of studies and genes', () => {
             let genes = ['KRAS', 'NRAS', 'BRAF'];
-            let studies = [{ shortName: 'Study Number One' } as CancerStudy];
+            let studies = [{ name: 'Study Number One' } as CancerStudy];
             let ret = buildResultsViewPageTitle(genes, studies);
             let expectedResult =
                 'cBioPortal for Cancer Genomics: KRAS, NRAS and 1 other gene in Study Number One';
             assert.equal(ret, expectedResult, 'three genes, one study');
 
             genes = ['KRAS', 'NRAS', 'BRAF', 'KFED'];
-            studies = [{ shortName: 'Study Number One' } as CancerStudy];
+            studies = [{ name: 'Study Number One' } as CancerStudy];
             ret = buildResultsViewPageTitle(genes, studies);
             expectedResult =
                 'cBioPortal for Cancer Genomics: KRAS, NRAS and 2 other genes in Study Number One';
             assert.equal(ret, expectedResult, 'two genes, one study');
 
             genes = ['KRAS', 'NRAS'];
-            studies = [{ shortName: 'Study Number One' } as CancerStudy];
+            studies = [{ name: 'Study Number One' } as CancerStudy];
             ret = buildResultsViewPageTitle(genes, studies);
             expectedResult =
                 'cBioPortal for Cancer Genomics: KRAS, NRAS in Study Number One';
             assert.equal(ret, expectedResult, 'two genes, one study');
 
             genes = ['KRAS'];
-            studies = [{ shortName: 'Study Number One' } as CancerStudy];
+            studies = [{ name: 'Study Number One' } as CancerStudy];
             ret = buildResultsViewPageTitle(genes, studies);
             expectedResult =
                 'cBioPortal for Cancer Genomics: KRAS in Study Number One';
@@ -915,8 +915,8 @@ describe('ResultsViewPageStoreUtils', () => {
 
             genes = ['KRAS'];
             studies = [
-                { shortName: 'Study Number One' } as CancerStudy,
-                { shortName: 'Study Number Two' } as CancerStudy,
+                { name: 'Study Number One' } as CancerStudy,
+                { name: 'Study Number Two' } as CancerStudy,
             ];
             ret = buildResultsViewPageTitle(genes, studies);
             expectedResult =
@@ -925,9 +925,9 @@ describe('ResultsViewPageStoreUtils', () => {
 
             genes = ['KRAS'];
             studies = [
-                { shortName: 'Study Number One' } as CancerStudy,
-                { shortName: 'Study Number Two' } as CancerStudy,
-                { shortName: 'Study Number Two' } as CancerStudy,
+                { name: 'Study Number One' } as CancerStudy,
+                { name: 'Study Number Two' } as CancerStudy,
+                { name: 'Study Number Two' } as CancerStudy,
             ];
             ret = buildResultsViewPageTitle(genes, studies);
             expectedResult =
