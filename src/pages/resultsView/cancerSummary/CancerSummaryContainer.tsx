@@ -82,7 +82,14 @@ export default class CancerSummaryContainer extends React.Component<
     // this is used to map study id to study name
     private mapStudyIdToName(str: string) {
         if (str in this.props.store.physicalStudySet) {
-            return this.props.store.physicalStudySet[str].name;
+            if (this.props.store.physicalStudySet[str].name.length > 50)
+                return (
+                    this.props.store.physicalStudySet[str].name.substring(
+                        0,
+                        49
+                    ) + '...'
+                );
+            else return this.props.store.physicalStudySet[str].name;
         } else {
             return str;
         }
