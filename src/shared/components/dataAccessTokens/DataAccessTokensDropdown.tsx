@@ -74,8 +74,7 @@ export class DataAccessTokensDropdown extends React.Component<
                     </Link>
                 ),
                 hide:
-                    AppConfig.serverConfig.authenticationMethod ===
-                        'social_auth' ||
+                    this.props.appStore.isSocialAuthenticated ||
                     (AppConfig.serverConfig.dat_method !== 'uuid' &&
                         AppConfig.serverConfig.dat_method !== 'jwt' &&
                         AppConfig.serverConfig.dat_method !== 'oauth2'),
