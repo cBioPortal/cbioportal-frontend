@@ -351,7 +351,7 @@ export function buildResultsViewPageTitle(
         }
         if (studies.length) {
             arr.push(' in ');
-            arr.push(studies[0].shortName);
+            arr.push(studies[0].name);
             if (studies.length > 1) {
                 arr.push(' and ');
                 arr.push((studies.length - 1).toString());

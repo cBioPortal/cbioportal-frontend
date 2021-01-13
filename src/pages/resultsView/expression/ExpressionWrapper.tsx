@@ -159,8 +159,7 @@ export default class ExpressionWrapper extends React.Component<
                         if (this.selectedStudyIds[sample.studyId]) {
                             _data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
-                                value: this.props.studyMap[sample.studyId]
-                                    .shortName,
+                                value: this.props.studyMap[sample.studyId].name,
                             });
                         }
                         return _data;
