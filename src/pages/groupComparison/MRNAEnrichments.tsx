@@ -68,6 +68,7 @@ export default class MRNAEnrichments extends React.Component<
                         }
                         alwaysShow={true}
                         studies={this.props.store.studies.result!}
+                        showDescription={true}
                     />
                     <ExpressionEnrichmentContainer
                         data={this.props.store.mRNAEnrichmentData.result!}
