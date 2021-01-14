@@ -22,7 +22,6 @@ import { EventTooltipContent, renderPoint } from './TimelineTrack';
 type TooltipModel = {
     track: TimelineTrackSpecification;
     events: TimelineEvent[];
-    index: number;
 
     // if `position` is undefined, then show it at mousePosition.
     position?: { x: number; y: number };
@@ -31,7 +30,7 @@ type TooltipModel = {
 export class TimelineStore {
     @observable private _expandedTrims = false;
     @observable.ref _data: TimelineTrackSpecification[];
-    private collapsedTracks = observable.map();
+    private collapsedTracks = observable.map({}, { deep: false });
 
     public uniqueId = `tl-id-` + _.random(1, 10000);
 
@@ -41,9 +40,11 @@ export class TimelineStore {
             '_expandedTrims' | '_lastHoveredTooltipUid'
         >(this);
         this._data = tracks;
+
+        (window as any).timelineStore = this;
     }
 
-    @observable enableCollapseTrack = false;
+    @observable enableCollapseTrack = true;
 
     @computed get data(): {
         track: TimelineTrackSpecification;
@@ -94,7 +95,17 @@ export class TimelineStore {
     }
 
     private tooltipUidCounter = 0;
-    private tooltipModelsByUid = observable.map<string, TooltipModel>();
+    // Have to keep tooltip index separate so it can be observable.
+    // TooltipModel has recursive nested structure so its not safe to
+    //  make it observable in a deep map.
+    private tooltipModelsByUid = observable.map<string, TooltipModel>(
+        {},
+        { deep: false }
+    );
+    private tooltipIndexByUid = observable.map<string, number>(
+        {},
+        { deep: false }
+    );
     @observable private _lastHoveredTooltipUid: string | null = null;
     @action
     public setHoveredTooltipUid(uid: string | null) {
@@ -120,22 +131,28 @@ export class TimelineStore {
     }
 
     @computed get tooltipModels() {
-        return Array.from(this.tooltipModelsByUid.entries());
+        return Array.from(this.tooltipModelsByUid.entries()).map(
+            entry =>
+                [...entry, this.tooltipIndexByUid.get(entry[0])!] as [
+                    string,
+                    TooltipModel,
+                    number
+                ]
+        );
     }
 
     @action.bound
     addTooltip(model: Pick<TooltipModel, 'track' | 'events'>) {
         const tooltipUid = (this.tooltipUidCounter++).toString();
-        this.tooltipModelsByUid.set(tooltipUid, {
-            ...model,
-            index: 0,
-        });
+        this.tooltipModelsByUid.set(tooltipUid, model);
+        this.tooltipIndexByUid.set(tooltipUid, 0);
         return tooltipUid;
     }
 
     @action.bound
     removeTooltip(tooltipUid: string) {
         this.tooltipModelsByUid.delete(tooltipUid);
+        this.tooltipIndexByUid.delete(tooltipUid);
         if (tooltipUid === this.hoveredTooltipUid) {
             this.setHoveredTooltipUid(null);
         }
@@ -144,6 +161,7 @@ export class TimelineStore {
     @action.bound
     removeAllTooltips() {
         this.tooltipModelsByUid.clear();
+        this.tooltipIndexByUid.clear();
     }
 
     @action
@@ -152,6 +170,7 @@ export class TimelineStore {
         for (const uid of uids) {
             if (uid !== tooltipUid) {
                 this.tooltipModelsByUid.delete(uid);
+                this.tooltipIndexByUid.delete(uid);
             }
         }
     }
@@ -177,7 +196,13 @@ export class TimelineStore {
         }
 
         const model = this.tooltipModelsByUid.get(this.hoveredTooltipUid)!;
-        model.index = (model.index + 1) % model.events.length;
+        const currentIndex = this.tooltipIndexByUid.get(
+            this.hoveredTooltipUid
+        )!;
+        this.tooltipIndexByUid.set(
+            this.hoveredTooltipUid,
+            (currentIndex + 1) % model.events.length
+        );
 
         return true;
     }
@@ -189,18 +214,25 @@ export class TimelineStore {
         }
 
         const model = this.tooltipModelsByUid.get(this.hoveredTooltipUid)!;
+        const currentIndex = this.tooltipIndexByUid.get(
+            this.hoveredTooltipUid
+        )!;
 
-        let nextIndex = model.index - 1;
+        let nextIndex = currentIndex - 1;
         while (nextIndex < 0) {
             nextIndex += model.events.length;
         }
-        model.index = nextIndex;
+        this.tooltipIndexByUid.set(this.hoveredTooltipUid, nextIndex);
 
         return true;
     }
 
-    public getTooltipContent(uid: string, tooltipModel: TooltipModel) {
-        const activeItem = tooltipModel.events[tooltipModel.index];
+    public getTooltipContent(
+        uid: string,
+        tooltipModel: TooltipModel,
+        tooltipIndex: number
+    ) {
+        const activeItem = tooltipModel.events[tooltipIndex];
         let content = null;
         if (tooltipModel.track.renderTooltip) {
             content = tooltipModel.track.renderTooltip(activeItem);
@@ -222,11 +254,7 @@ export class TimelineStore {
                     style={{ marginRight: 5 }}
                 >
                     <g transform={`translate(${TIMELINE_TRACK_HEIGHT / 2} 0)`}>
-                        {renderPoint(
-                            [activeItem],
-                            tooltipModel.track,
-                            TIMELINE_TRACK_HEIGHT / 2
-                        )}
+                        {renderPoint([activeItem], TIMELINE_TRACK_HEIGHT / 2)}
                     </g>
                 </svg>
             );
@@ -251,7 +279,7 @@ export class TimelineStore {
                         {point}
                         {uid === this.hoveredTooltipUid && (
                             <span>
-                                {tooltipModel.index + 1} of{' '}
+                                {tooltipIndex + 1} of{' '}
                                 {tooltipModel.events.length}. Use spacebar or
                                 arrow keys to see others.
                             </span>
