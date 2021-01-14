@@ -134,6 +134,11 @@ export default class CoExpressionViz extends React.Component<
 
     private lastCoExpressionData: CoExpressionWithQ[];
 
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
     get coExpressionDataPromise() {
         return this.props.coExpressionCache.get({
             geneticEntityId: this.props.geneticEntity.geneticEntityId.toString(),
