@@ -9,7 +9,7 @@
   "styles": "dist/styles.css",
   "engines": {
     "node": "15.2.1",
-    "yarn": ">=1.22.4"
+    "yarn": "1.22.5"
   },
   "files": [
     "dist"

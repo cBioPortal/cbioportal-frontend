@@ -61,7 +61,7 @@
   },
   "engines": {
     "node": "15.2.1",
-    "yarn": "1.22.4"
+    "yarn": "1.22.5"
   },
   "resolutions": {
     "mobx": "^6.0.0",
