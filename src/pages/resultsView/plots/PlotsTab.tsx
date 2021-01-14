@@ -2962,6 +2962,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     @computed get scatterPlotFillOpacity() {
         if (
             ColoringType.MutationType in this.coloringTypes ||
+            ColoringType.ClinicalData in this.coloringTypes ||
             _.isEmpty(this.coloringTypes)
         ) {
             return 1;
