@@ -190,7 +190,7 @@ describe('study laml_tcga tests', () => {
                     getNumberOfStudyViewCharts() + (isSelected ? 1 : -1)
             );
         });
-        describe('add custom chart', () => {
+        describe('add custom data', () => {
             before(() => {
                 if (!browser.isVisible(ADD_CHART_CUSTOM_DATA_TAB)) {
                     browser.waitForExist(ADD_CHART_BUTTON);
@@ -223,7 +223,10 @@ describe('study laml_tcga tests', () => {
                     browser.isEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON)
                 );
             });
-            it('a new chart should be added and filtered', () => {
+            //Skipping it for now since this feature is dependent on session-service and
+            // heroku instance of it not stable (would not be active/running all the time)
+            // also data-test would be dynamic and depends on chart id (session id)
+            it.skip('a new chart should be added and filtered', () => {
                 browser.waitForEnabled(
                     ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON
                 );
@@ -241,7 +244,7 @@ describe('study laml_tcga tests', () => {
                 assert(
                     getTextFromElement(
                         "[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle"
-                    ) === 'Custom Chart 1'
+                    ) === 'Custom data 1'
                 );
 
                 // make sure the chart is filtered
@@ -337,6 +340,7 @@ describe('check the fusion filter is working properly', () => {
         waitForNetworkQuiet(60000);
     });
     it('fusion filter filter study from url', function() {
+        waitForStudyViewSelectedInfo();
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });

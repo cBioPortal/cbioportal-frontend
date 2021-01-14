@@ -31,10 +31,6 @@
       "description": "Annotation Summary Controller"
     },
     {
-      "name": "isoform-override-controller",
-      "description": "Isoform Override Controller"
-    },
-    {
       "name": "signal-query-controller",
       "description": "Signal Query Controller"
     },
@@ -422,153 +418,6 @@
               "items": {
                 "$ref": "#/definitions/Hotspot"
               }
-            }
-          }
-        }
-      }
-    },
-    "/isoform_override": {
-      "post": {
-        "tags": [
-          "isoform-override-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
-        "operationId": "fetchIsoformOverridePOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "query",
-            "description": "Override source. For example uniprot",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "transcriptIds",
-            "description": "List of transcript ids. For example [\"ENST00000361125\",\"ENST00000443649\"]. ",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/isoform_override/sources": {
-      "get": {
-        "tags": [
-          "isoform-override-controller"
-        ],
-        "summary": "Gets a list of available isoform override data sources",
-        "operationId": "fetchIsoformOverrideSourcesGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/isoform_override/{source}": {
-      "get": {
-        "tags": [
-          "isoform-override-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source",
-        "operationId": "fetchAllIsoformOverridesGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "path",
-            "description": "Override source. For example uniprot",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/isoform_override/{source}/{transcriptId}": {
-      "get": {
-        "tags": [
-          "isoform-override-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source and transcript id",
-        "operationId": "fetchIsoformOverrideGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "path",
-            "description": "Override source. For example uniprot.",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "transcriptId",
-            "in": "path",
-            "description": "Transcript id. For example ENST00000361125.",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/IsoformOverride"
             }
           }
         }
@@ -1664,30 +1513,6 @@
         "start": {
           "type": "integer",
           "format": "int32"
-        }
-      }
-    },
-    "IsoformOverride": {
-      "type": "object",
-      "required": [
-        "transcriptId"
-      ],
-      "properties": {
-        "ccdsId": {
-          "type": "string",
-          "description": "CCDS ID"
-        },
-        "geneSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "refseqId": {
-          "type": "string",
-          "description": "RefSeq ID"
-        },
-        "transcriptId": {
-          "type": "string",
-          "description": "Ensembl transcript id"
         }
       }
     },

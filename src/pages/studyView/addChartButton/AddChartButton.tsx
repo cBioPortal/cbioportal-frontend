@@ -3,7 +3,6 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import 'react-mfb/mfb.css';
 import {
-    CustomChart,
     StudyViewPageStore,
     StudyViewPageTabKey,
     GenomicChart,
@@ -35,6 +34,10 @@ import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssa
 import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import classnames from 'classnames';
+import styles from './styles.module.scss';
+import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
+import { CustomChart } from 'shared/api/sessionServiceAPI';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -45,11 +48,15 @@ export interface IAddChartTabsProps {
     disableGenericAssayTabs?: boolean;
     onInfoMessageChange?: (newMessage: string) => void;
     showResetPopup: () => void;
+    openShareCustomDataUrlModal: (chartIds: string[]) => void;
+    defaultActiveTab?: ChartMetaDataTypeEnum;
 }
 
 export interface IAddChartButtonProps extends IAddChartTabsProps {
     buttonText: string;
     addChartOverlayClassName?: string;
+    openShareCustomDataUrlModal: (chartIds: string[]) => void;
+    isShareLinkModalVisible: boolean;
 }
 
 export type ChartOption = {
@@ -59,9 +66,10 @@ export type ChartOption = {
     disabled?: boolean;
     selected?: boolean;
     freq: number;
+    isSharedChart?: boolean;
 };
 
-export const INFO_TIMEOUT = 5000;
+export const INFO_TIMEOUT = 10000;
 export const MIN_ADD_CHART_TOOLTIP_WIDTH = 400;
 export const RESET_CHART_BUTTON_WIDTH = 70;
 export const CONTAINER_PADDING_WIDTH = 20;
@@ -76,7 +84,7 @@ export enum TabNamesEnum {
 @observer
 class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @observable activeId: ChartMetaDataTypeEnum =
-        ChartMetaDataTypeEnum.CLINICAL;
+        this.props.defaultActiveTab || ChartMetaDataTypeEnum.CLINICAL;
     @observable infoMessage: string = '';
     @observable tabsWidth = 0;
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
@@ -145,11 +153,8 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @action.bound
-    onInfoMessageChange(newMessage: string) {
+    updateInfoMessage(newMessage: string) {
         this.infoMessage = newMessage;
-        if (this.props.onInfoMessageChange) {
-            this.props.onInfoMessageChange(newMessage);
-        }
         setTimeout(this.resetInfoMessage, INFO_TIMEOUT);
     }
 
@@ -243,7 +248,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ChartMetaDataTypeEnum.CUSTOM_DATA
             ] || [],
             this.selectedAttrs,
-            _.fromPairs(this.props.store.chartsType.toJSON())
+            _.fromPairs(this.props.store.chartsType.toJSON()),
+            this.props.store.isLoggedIn
+                ? this.props.store.showCustomDataSelectionUI
+                    ? this.props.store.isSharedCustomData
+                    : undefined
+                : this.props.store.isSharedCustomData
         );
     }
 
@@ -302,13 +312,15 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             keys.length > 1 ? 's' : ''
         } added`;
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
-            this.infoMessage = `${keys.length} column${
-                keys.length > 1 ? 's' : ''
-            } added to table and ${addInSummaryInfoMessage} in Summary tab`;
+            this.updateInfoMessage(
+                `${keys.length} column${
+                    keys.length > 1 ? 's' : ''
+                } added to table and ${addInSummaryInfoMessage} in Summary tab`
+            );
         } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-            this.infoMessage = addInSummaryInfoMessage;
+            this.updateInfoMessage(addInSummaryInfoMessage);
         } else {
-            this.infoMessage = `Added`;
+            this.updateInfoMessage(`Added`);
         }
     }
 
@@ -332,13 +344,15 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         } removed`;
 
         if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
-            this.infoMessage = `${keys.length} column${
-                keys.length > 1 ? 's' : ''
-            } removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
+            this.updateInfoMessage(
+                `${keys.length} column${
+                    keys.length > 1 ? 's' : ''
+                } removed from table and ${removeInSummaryInfoMessage} from Summary tab`
+            );
         } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
-            this.infoMessage = removeInSummaryInfoMessage;
+            this.updateInfoMessage(removeInSummaryInfoMessage);
         } else {
-            this.infoMessage = `Removed`;
+            this.updateInfoMessage(`Removed`);
         }
     }
 
@@ -370,8 +384,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     action: 'removeChart',
                     label: chartUniqueKey,
                 });
-
-                this.infoMessage = `${chartMeta.displayName}${additionType} is removed`;
+                this.updateInfoMessage(
+                    `${chartMeta.displayName}${additionType} is removed`
+                );
             } else {
                 this.props.store.addCharts(
                     this.selectedAttrs.concat([chartUniqueKey])
@@ -386,7 +401,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 ) {
                     additionType = ` to table and as ${chartTypeName} in Summary tab`;
                 }
-                this.infoMessage = `${chartMeta.displayName} added${additionType}`;
+                this.updateInfoMessage(
+                    `${chartMeta.displayName} added${additionType}`
+                );
 
                 trackEvent({
                     category: 'studyPage',
@@ -458,6 +475,99 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return tabs;
     }
 
+    @computed get existSharedCustomData() {
+        return _.some(
+            this.customChartDataOptions,
+            option => option.isSharedChart
+        );
+    }
+
+    @computed get notificationMessages() {
+        let notificationMessages: JSX.Element[] = [];
+        if (this.props.store.customChartSet.size > 0) {
+            // Notify if there any shared custom data
+            if (this.existSharedCustomData) {
+                notificationMessages.push(
+                    <>
+                        <span
+                            className={classnames({
+                                [styles.sharedChart]: true,
+                            })}
+                        >
+                            Highlighted rows
+                        </span>{' '}
+                        are shared custom data.
+                    </>
+                );
+            }
+            // Notify that shared and page-session custom data are not saved for non-logged users
+            if (
+                !this.props.store.isLoggedIn &&
+                this.props.store.appStore.isSocialAuthenticated
+            ) {
+                if (notificationMessages.length > 0) {
+                    notificationMessages.push(<br />);
+                }
+                notificationMessages.push(
+                    <>
+                        <button
+                            className="btn btn-default btn-xs"
+                            onClick={() =>
+                                openSocialAuthWindow(this.props.store.appStore)
+                            }
+                        >
+                            Login
+                        </button>
+                        &nbsp;to save custom data charts to your profile.
+                    </>
+                );
+            } else if (this.existSharedCustomData) {
+                // Notify if shared custom data are saved to user profile
+                if (notificationMessages.length > 0) {
+                    notificationMessages.push(<br />);
+                }
+                notificationMessages.push(
+                    <>&nbsp;Custom charts are saved to your profile</>
+                );
+            }
+
+            if (
+                !_.isEmpty(this.props.store.customChartGroupMarkedForDeletion)
+            ) {
+                if (notificationMessages.length > 0) {
+                    notificationMessages.push(<br />);
+                }
+                notificationMessages.push(
+                    <span>
+                        Deleted charts will be permanently removed when this
+                        menu is closed. Any active filters based on deleted
+                        charts will also be removed.
+                    </span>
+                );
+            }
+        }
+        return notificationMessages;
+    }
+
+    @computed get selectedCustomChartIds() {
+        return this.customChartDataOptions
+            .filter(customData => !!customData.selected)
+            .map(customData => customData.key);
+    }
+
+    @observable private showAddNewChart = false;
+
+    @action.bound
+    private onToggleAddNewChart() {
+        this.showAddNewChart = !this.showAddNewChart;
+    }
+
+    @computed private get isAddNewChartWindowVisible() {
+        return this.customChartDataOptions.length === 0 || this.showAddNewChart;
+    }
+
+    @observable private savingCustomData = false;
+
     render() {
         return (
             <div
@@ -522,13 +632,19 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                         charts[0].hugoGeneSymbol,
                                         charts[0].profileType
                                     );
-                                    this.infoMessage = `${charts[0].name} ${
-                                        this.selectedAttrs.includes(uniqueKey)
-                                            ? 'is already'
-                                            : 'has been'
-                                    } added.`;
+                                    this.updateInfoMessage(
+                                        `${charts[0].name} ${
+                                            this.selectedAttrs.includes(
+                                                uniqueKey
+                                            )
+                                                ? 'is already'
+                                                : 'has been'
+                                        } added.`
+                                    );
                                 } else {
-                                    this.infoMessage = `${charts.length} charts added`;
+                                    this.updateInfoMessage(
+                                        `${charts.length} charts added`
+                                    );
                                 }
                                 this.props.store.addGeneSpecificCharts(charts);
                             }}
@@ -561,41 +677,104 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     this.getTabsWidth - CONTAINER_PADDING_WIDTH,
                             }}
                         >
-                            <CustomCaseSelection
-                                allSamples={this.props.store.samples.result}
-                                selectedSamples={
-                                    this.props.store.selectedSamples.result
-                                }
-                                submitButtonText={'Add Chart'}
-                                queriedStudies={
-                                    this.props.store.queriedPhysicalStudyIds
-                                        .result
-                                }
-                                isChartNameValid={
-                                    this.props.store.isChartNameValid
-                                }
-                                getDefaultChartName={
-                                    this.props.store.getDefaultCustomChartName
-                                }
-                                onSubmit={(chart: CustomChart) => {
-                                    this.infoMessage = `${chart.name} has been added.`;
-                                    this.props.store.addCustomChart(chart);
-                                }}
-                            />
                             {this.customChartDataOptions.length > 0 && (
-                                <div style={{ marginTop: 10 }}>
-                                    <AddChartByType
-                                        width={this.getTabsWidth}
-                                        options={this.customChartDataOptions}
-                                        freqPromise={this.dataCount}
-                                        onAddAll={this.onAddAll}
-                                        onClearAll={this.onClearAll}
-                                        onToggleOption={this.onToggleOption}
-                                        hideControls={true}
-                                        firstColumnHeaderName="Custom Chart"
-                                    />
-                                </div>
+                                <button
+                                    className="btn btn-primary btn-xs"
+                                    onClick={this.onToggleAddNewChart}
+                                >
+                                    {this.isAddNewChartWindowVisible
+                                        ? 'Cancel'
+                                        : '+ Add new custom data'}
+                                </button>
                             )}
+
+                            {this.isAddNewChartWindowVisible && (
+                                <CustomCaseSelection
+                                    allSamples={this.props.store.samples.result}
+                                    selectedSamples={
+                                        this.props.store.selectedSamples.result
+                                    }
+                                    submitButtonText={'Add Chart'}
+                                    queriedStudies={
+                                        this.props.store.queriedPhysicalStudyIds
+                                            .result
+                                    }
+                                    isChartNameValid={
+                                        this.props.store.isChartNameValid
+                                    }
+                                    getDefaultChartName={
+                                        this.props.store
+                                            .getDefaultCustomChartName
+                                    }
+                                    disableSubmitButton={this.savingCustomData}
+                                    onSubmit={(chart: CustomChart) => {
+                                        this.showAddNewChart = false;
+                                        this.savingCustomData = true;
+                                        this.updateInfoMessage(
+                                            `Saving ${chart.displayName}`
+                                        );
+                                        this.props.store
+                                            .addCustomChart(chart)
+                                            .then(() => {
+                                                this.savingCustomData = false;
+                                                this.updateInfoMessage(
+                                                    `${chart.displayName} has been added.`
+                                                );
+                                            });
+                                    }}
+                                />
+                            )}
+
+                            <>
+                                {this.customChartDataOptions.length > 0 && (
+                                    <>
+                                        <hr
+                                            style={{
+                                                marginTop: 10,
+                                                marginBottom: 10,
+                                            }}
+                                        />
+                                        <AddChartByType
+                                            width={this.getTabsWidth}
+                                            options={
+                                                this.customChartDataOptions
+                                            }
+                                            freqPromise={this.dataCount}
+                                            onAddAll={this.onAddAll}
+                                            onClearAll={this.onClearAll}
+                                            onToggleOption={this.onToggleOption}
+                                            hideControls={true}
+                                            firstColumnHeaderName="Custom data"
+                                            shareCharts={
+                                                this.props
+                                                    .openShareCustomDataUrlModal
+                                            }
+                                            deleteChart={(id: string) => {
+                                                this.props.store.toggleCustomChartMarkedForDeletion(
+                                                    id
+                                                );
+                                            }}
+                                            restoreChart={(id: string) => {
+                                                this.props.store.toggleCustomChartMarkedForDeletion(
+                                                    id
+                                                );
+                                            }}
+                                            markedForDeletion={
+                                                this.props.store
+                                                    .customChartGroupMarkedForDeletion
+                                            }
+                                        />
+                                    </>
+                                )}
+                                {this.notificationMessages.length > 0 && (
+                                    <>
+                                        <br />
+                                        <span className="text-warning">
+                                            Note: {this.notificationMessages}
+                                        </span>
+                                    </>
+                                )}
+                            </>
                         </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
@@ -614,8 +793,19 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         Reset charts
                     </button>
                 )}
-                {this.infoMessage && (
+                {this.infoMessage && !this.savingCustomData && (
                     <SuccessBanner message={this.infoMessage} />
+                )}
+                {this.savingCustomData && (
+                    <div
+                        className="alert alert-info"
+                        style={{ marginTop: '10px', marginBottom: '0' }}
+                    >
+                        <span>
+                            <i className="fa fa-spinner fa-spin" />{' '}
+                            {this.infoMessage}
+                        </span>
+                    </div>
                 )}
             </div>
         );
@@ -646,16 +836,29 @@ export default class AddChartButton extends React.Component<
     render() {
         return (
             <DefaultTooltip
-                visible={this.showTooltip}
-                onVisibleChange={visible =>
-                    (this.showTooltip = !this.tabsLoading && !!visible)
+                visible={
+                    this.showTooltip ||
+                    this.props.store.showCustomDataSelectionUI
                 }
+                onVisibleChange={visible => {
+                    if (!this.props.isShareLinkModalVisible) {
+                        this.showTooltip = !this.tabsLoading && !!visible;
+                        this.props.store.showCustomDataSelectionUI = false;
+                        if (!visible) {
+                            this.props.store.deleteMarkedCustomData();
+                        }
+                    }
+                }}
                 trigger={['click']}
                 placement={'bottomRight'}
                 destroyTooltipOnHide={false}
+                getTooltipContainer={() =>
+                    document.getElementById('comparisonGroupManagerContainer')!
+                }
                 overlay={() => (
                     <AddChartTabs
                         store={this.props.store}
+                        defaultActiveTab={this.props.defaultActiveTab}
                         currentTab={this.props.currentTab}
                         disableGenomicTab={this.props.disableGenomicTab}
                         disableGeneSpecificTab={
@@ -666,6 +869,9 @@ export default class AddChartButton extends React.Component<
                         }
                         disableCustomTab={this.props.disableCustomTab}
                         showResetPopup={this.props.showResetPopup}
+                        openShareCustomDataUrlModal={
+                            this.props.openShareCustomDataUrlModal
+                        }
                     />
                 )}
                 overlayClassName={this.props.addChartOverlayClassName}

@@ -408,7 +408,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                 />
                 <div
                     ref={refs.timelineViewPort}
-                    className={'tl-timelineviewport'}
+                    className={'tl-timelineviewport scrollbarAlwaysVisible'}
                     style={{ flexShrink: 1, height }}
                 >
                     {store.viewPortWidth > 0 && store.ticks && (

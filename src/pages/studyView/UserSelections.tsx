@@ -11,7 +11,6 @@ import {
     SampleTreatmentFilter,
 } from 'cbioportal-ts-api-client';
 import {
-    SpecialChartsUniqueKeyEnum,
     DataType,
     getUniqueKeyFromMolecularProfileIds,
     ChartType,
@@ -41,12 +40,11 @@ import {
     StudyViewComparisonGroup,
 } from '../groupComparison/GroupComparisonUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import { accessibilityOverscanIndicesGetter } from 'react-virtualized';
 import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { toPatientTreatmentFilter } from './table/treatments/treatmentsTableUtil';
+import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -177,106 +175,21 @@ export default class UserSelections extends React.Component<
             );
         }
 
-        _.reduce(
-            this.props.filter.clinicalDataFilters || [],
-            (acc, clinicalDataFilter) => {
-                const chartMeta = this.props.attributesMetaSet[
-                    clinicalDataFilter.attributeId
-                ];
-                if (chartMeta) {
-                    const dataType = this.props.clinicalAttributeIdToDataType[
-                        clinicalDataFilter.attributeId
-                    ];
-                    if (dataType === DataType.STRING) {
-                        // Pie chart filter
-                        acc.push(
-                            <div className={styles.parentGroupLogic}>
-                                <GroupLogic
-                                    components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
-                                            {chartMeta.displayName}
-                                        </span>,
-                                        <GroupLogic
-                                            components={clinicalDataFilter.values.map(
-                                                clinicalDataFilterValue => {
-                                                    return (
-                                                        <PillTag
-                                                            content={
-                                                                clinicalDataFilterValue.value
-                                                            }
-                                                            backgroundColor={
-                                                                STUDY_VIEW_CONFIG
-                                                                    .colors
-                                                                    .theme
-                                                                    .clinicalFilterContent
-                                                            }
-                                                            onDelete={() =>
-                                                                this.props.updateClinicalDataFilterByValues(
-                                                                    chartMeta.uniqueKey,
-                                                                    _.remove(
-                                                                        clinicalDataFilter.values,
-                                                                        value =>
-                                                                            value.value !==
-                                                                            clinicalDataFilterValue.value
-                                                                    )
-                                                                )
-                                                            }
-                                                        />
-                                                    );
-                                                }
-                                            )}
-                                            operation={'or'}
-                                            group={false}
-                                        />,
-                                    ]}
-                                    operation={':'}
-                                    group={false}
-                                />
-                            </div>
-                        );
-                    } else {
-                        // Bar chart filter
-                        acc.push(
-                            <div className={styles.parentGroupLogic}>
-                                <GroupLogic
-                                    components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
-                                            {chartMeta.displayName}
-                                        </span>,
-                                        <PillTag
-                                            content={intervalFiltersDisplayValue(
-                                                clinicalDataFilter.values
-                                            )}
-                                            backgroundColor={
-                                                STUDY_VIEW_CONFIG.colors.theme
-                                                    .clinicalFilterContent
-                                            }
-                                            onDelete={() =>
-                                                this.props.updateClinicalDataFilterByValues(
-                                                    chartMeta.uniqueKey,
-                                                    []
-                                                )
-                                            }
-                                        />,
-                                    ]}
-                                    operation={':'}
-                                    group={false}
-                                />
-                            </div>
-                        );
-                    }
-                }
-                return acc;
-            },
-            components
+        this.renderClinicalDataFilters(
+            this.props.filter.clinicalDataFilters,
+            components,
+            this.props.updateClinicalDataFilterByValues
+        );
+
+        this.renderClinicalDataFilters(
+            this.props.filter.customDataFilters,
+            components,
+            (uniqueKey: string, values: DataFilterValue[]) => {
+                this.props.updateCustomChartFilter(
+                    uniqueKey,
+                    values.map(datum => datum.value)
+                );
+            }
         );
 
         // Genomic Bar chart filters
@@ -300,21 +213,12 @@ export default class UserSelections extends React.Component<
                                     >
                                         {chartMeta.displayName}
                                     </span>,
-                                    <PillTag
-                                        content={intervalFiltersDisplayValue(
-                                            genomicDataIntervalFilter.values
-                                        )}
-                                        backgroundColor={
-                                            STUDY_VIEW_CONFIG.colors.theme
-                                                .clinicalFilterContent
-                                        }
-                                        onDelete={() =>
-                                            this.props.updateGenomicDataIntervalFilter(
-                                                chartMeta.uniqueKey,
-                                                []
-                                            )
-                                        }
-                                    />,
+                                    this.renderDataBinFilter(
+                                        genomicDataIntervalFilter.values,
+                                        this.props
+                                            .updateGenomicDataIntervalFilter,
+                                        chartMeta
+                                    ),
                                 ]}
                                 operation={':'}
                                 group={false}
@@ -376,7 +280,7 @@ export default class UserSelections extends React.Component<
             );
         }
 
-        // All custom charts
+        // All custom data charts
         if (!_.isEmpty(this.props.customChartsFilter)) {
             _.reduce(
                 this.props.customChartsFilter,
@@ -543,6 +447,114 @@ export default class UserSelections extends React.Component<
             components.push(f);
         }
         return components;
+    }
+
+    private renderClinicalDataFilters(
+        filters: ClinicalDataFilter[],
+        components: JSX.Element[],
+        onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void
+    ) {
+        return _.reduce(
+            filters || [],
+            (acc, clinicalDataFilter) => {
+                const chartMeta = this.props.attributesMetaSet[
+                    clinicalDataFilter.attributeId
+                ];
+                if (chartMeta) {
+                    const dataType = this.props.clinicalAttributeIdToDataType[
+                        clinicalDataFilter.attributeId
+                    ];
+                    let dataFilterComponent =
+                        dataType === DataType.STRING
+                            ? this.renderCategoricalDataFilter(
+                                  clinicalDataFilter,
+                                  onDelete,
+                                  chartMeta
+                              )
+                            : this.renderDataBinFilter(
+                                  clinicalDataFilter.values,
+                                  onDelete,
+                                  chartMeta
+                              );
+
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span
+                                        className={
+                                            styles.filterClinicalAttrName
+                                        }
+                                    >
+                                        {chartMeta.displayName}
+                                    </span>,
+                                    dataFilterComponent,
+                                ]}
+                                operation={':'}
+                                group={false}
+                            />
+                        </div>
+                    );
+                }
+                return acc;
+            },
+            components
+        );
+    }
+
+    // Bar chart filter
+    private renderDataBinFilter(
+        values: DataFilterValue[],
+        onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
+        chartMeta: ChartMeta
+    ): JSX.Element {
+        return (
+            <PillTag
+                content={intervalFiltersDisplayValue(values)}
+                backgroundColor={
+                    STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                }
+                onDelete={() => onDelete(chartMeta.uniqueKey, [])}
+            />
+        );
+    }
+
+    // Pie chart filter
+    private renderCategoricalDataFilter(
+        clinicalDataFilter: ClinicalDataFilter,
+        onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
+        chartMeta: ChartMeta & { chartType: ChartType }
+    ): JSX.Element {
+        return (
+            <GroupLogic
+                components={clinicalDataFilter.values.map(
+                    clinicalDataFilterValue => {
+                        return (
+                            <PillTag
+                                content={clinicalDataFilterValue.value}
+                                backgroundColor={
+                                    STUDY_VIEW_CONFIG.colors.theme
+                                        .clinicalFilterContent
+                                }
+                                onDelete={() =>
+                                    onDelete(
+                                        chartMeta.uniqueKey,
+                                        _.remove(
+                                            clinicalDataFilter.values,
+                                            value =>
+                                                value.value !==
+                                                clinicalDataFilterValue.value
+                                        )
+                                    )
+                                }
+                            />
+                        );
+                    }
+                )}
+                operation={'or'}
+                group={false}
+            />
+        );
     }
 
     private renderTreatmentFilter(

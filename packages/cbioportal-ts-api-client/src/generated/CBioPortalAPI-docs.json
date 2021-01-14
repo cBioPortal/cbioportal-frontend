@@ -7145,6 +7145,12 @@
             "$ref": "#/definitions/ClinicalDataFilter"
           }
         },
+        "customDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
         "geneFilters": {
           "type": "array",
           "items": {

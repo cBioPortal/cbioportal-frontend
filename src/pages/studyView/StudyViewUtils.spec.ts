@@ -252,6 +252,7 @@ describe('StudyViewUtils', () => {
                 genomicProfiles: [],
                 caseLists: [],
                 genericAssayDataFilters: [],
+                customDataFilters: [],
             } as StudyViewFilterWithSampleIdentifierFilters;
 
             assert.isTrue(
