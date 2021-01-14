@@ -6,14 +6,14 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:15.2.1-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    - run:
-        name: "Install yarn at specific version"
-        command:
-          sudo npm install --global yarn@1.22.4
+#    - run:
+#        name: "Install yarn at specific version"
+#        command:
+#          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
     - run:
@@ -22,8 +22,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn serveDist & \
           cd end-to-end-test2 && \
           yarn install --frozen-lockfile && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
           ./scripts/env_vars.sh && \
           eval "$(./scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
@@ -36,7 +34,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 1s && \
           cd end-to-end-test2 && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-          yarn run e2e
+          yarn run wdio
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
@@ -67,10 +65,10 @@ jobs:
   install:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+#      - run:
+#          name: "Install yarn at specific version"
+#          command:
+#            sudo npm install --global yarn@1.22.4
       - run:
           name: "Show yarn and node versions"
           command: |
@@ -124,10 +122,10 @@ jobs:
   unit_tests:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+#      - run:
+#          name: "Install yarn at specific version"
+#          command:
+#            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
       # run tests!
