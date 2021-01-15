@@ -27,6 +27,8 @@ var screenDir = `${screenshotRoot}/screen/`;
 
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
+console.log(`screen shots saved to: ${getScreenshotName(path.join(process.cwd(), screenDir)}`);
+
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
     screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
@@ -34,24 +36,24 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     misMatchTolerance: 0.01,
 });
 
-function proxyComparisonMethod(target) {
-    const oldProcessScreenshot = target.processScreenshot;
-    LocalCompare.processScreenshot = async function(context, base64Screenshot) {
-        const screenshotPath = this.getScreenshotFile(context);
-        const referencePath = this.getReferencefile(context);
-        const referenceExists = await fs.existsSync(referencePath);
-        const resp = oldProcessScreenshot.apply(this, arguments);
-        if (referenceExists === false) {
-            return {
-                ...this.createResultReport(1000, false, true),
-                referenceExists,
-            };
-        }
-        return resp;
-    };
-}
+// function proxyComparisonMethod(target) {
+//     const oldProcessScreenshot = target.processScreenshot;
+//     LocalCompare.processScreenshot = async function(context, base64Screenshot) {
+//         const screenshotPath = this.getScreenshotFile(context);
+//         const referencePath = this.getReferencefile(context);
+//         const referenceExists = await fs.existsSync(referencePath);
+//         const resp = oldProcessScreenshot.apply(this, arguments);
+//         if (referenceExists === false) {
+//             return {
+//                 ...this.createResultReport(1000, false, true),
+//                 referenceExists,
+//             };
+//         }
+//         return resp;
+//     };
+// }
 
-proxyComparisonMethod(LocalCompare);
+// proxyComparisonMethod(LocalCompare);
 
 exports.config = {
     //
@@ -243,6 +245,16 @@ exports.config = {
                 },
             },
         ],
+        [
+            'junit',
+            {
+                outputDir: process.env.JUNIT_REPORT_PATH || './',
+                outputFileFormat: function(opts) {
+                    // optional
+                    return `results-${opts.cid}.${opts.capabilities}.xml`;
+                }
+            }
+        ]
     ],
 
     // reporterOptions: {
