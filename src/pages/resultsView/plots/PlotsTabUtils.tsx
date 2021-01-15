@@ -46,6 +46,8 @@ import {
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'shared/lib/Colors';
@@ -96,11 +98,12 @@ export const NO_GENE_OPTION = {
 };
 
 export const mutationTypeToDisplayName: {
-    [oncoprintMutationType: string]: string;
+    [type in OncoprintMutationType]: string;
 } = {
     missense: 'Missense',
     inframe: 'Inframe',
     fusion: 'Fusion',
+    splice: 'Splice',
     promoter: 'Promoter',
     trunc: 'Truncating',
     other: 'Other',
@@ -1591,6 +1594,20 @@ export const oncoprintMutationTypeToAppearanceDrivers: {
         strokeOpacity: NON_CNA_STROKE_OPACITY,
         legendLabel: 'Truncating (Driver)',
     },
+    splice: {
+        symbol: 'circle',
+        fill: MUT_COLOR_SPLICE_PASSENGER,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Splice (VUS)',
+    },
+    'splice.driver': {
+        symbol: 'circle',
+        fill: MUT_COLOR_SPLICE,
+        stroke: '#000000',
+        strokeOpacity: NON_CNA_STROKE_OPACITY,
+        legendLabel: 'Splice (Driver)',
+    },
     promoter: {
         symbol: 'circle',
         fill: MUT_COLOR_PROMOTER,
@@ -1680,6 +1697,8 @@ export const mutationLegendOrder = [
     'fusion',
     'promoter.driver',
     'promoter',
+    'splice.driver',
+    'splice',
     'trunc.driver',
     'trunc',
     'inframe.driver',
@@ -1691,10 +1710,12 @@ export const mutationLegendOrder = [
 export const mutationRenderPriority = stringListToIndexSet([
     'fusion',
     'promoter.driver',
+    'splice.driver',
     'trunc.driver',
     'inframe.driver',
     'missense.driver',
     'promoter',
+    'splice',
     'trunc',
     'inframe',
     'missense',
@@ -1768,6 +1789,7 @@ export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
     mutationTypeToDisplayName.inframe,
     mutationTypeToDisplayName.trunc,
+    mutationTypeToDisplayName.splice,
     mutationTypeToDisplayName.fusion,
     mutationTypeToDisplayName.promoter,
     mutationTypeToDisplayName.other,
