@@ -602,7 +602,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         key={1}
                         id={ChartMetaDataTypeEnum.GENOMIC}
                         linkText={TabNamesEnum.GENOMIC}
-                        hide={this.props.disableGenomicTab}
+                        hide={
+                            this.props.disableGenomicTab ||
+                            this.genomicChartOptions.length === 0
+                        }
                         className="addGenomicChartTab"
                     >
                         <AddChartByType
