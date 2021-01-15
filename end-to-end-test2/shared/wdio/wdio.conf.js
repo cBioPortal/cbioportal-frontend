@@ -27,7 +27,11 @@ var screenDir = `${screenshotRoot}/screen/`;
 
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
-console.log(`screen shots saved to: ${getScreenshotName(path.join(process.cwd(), screenDir))}`);
+console.log(
+    `screen shots saved to: ${getScreenshotName(
+        path.join(process.cwd(), screenDir)
+    )}`
+);
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
@@ -36,6 +40,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     misMatchTolerance: 0.01,
 });
 
+//fds
 // function proxyComparisonMethod(target) {
 //     const oldProcessScreenshot = target.processScreenshot;
 //     LocalCompare.processScreenshot = async function(context, base64Screenshot) {
@@ -252,9 +257,9 @@ exports.config = {
                 outputFileFormat: function(opts) {
                     // optional
                     return `results-${opts.cid}.${opts.capabilities}.xml`;
-                }
-            }
-        ]
+                },
+            },
+        ],
     ],
 
     // reporterOptions: {
