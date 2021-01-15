@@ -15221,7 +15221,7 @@ mobx-utils@6.0.1:
   resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-6.0.1.tgz#bc16c2c62794a48498685f3663e6162d42fb6106"
   integrity sha512-0p5xqHDt/arz3cswVcEHYKY/BwL+fifsNroT3Gjkz9lNC7ZDsJm3IuGsmYlvFcVRJRr1rwlFZGuZXrt/MhHEJQ==
 
-mobx@6.0.0, mobx@6.0.1, mobx@^6.0.0:
+mobx@^6.0.0:
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
   integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
@@ -15230,7 +15230,7 @@ mobx@6.0.0, mobx@6.0.1, mobx@^6.0.0:
   version "2.0.1"
   resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
   dependencies:
-    mobx "6.0.0"
+    mobx "^6.0.0"
 
 mocha@^5.2.0:
   version "5.2.0"
