@@ -4135,6 +4135,9 @@ export class StudyViewPageStore {
     readonly filteredGenePanelData = remoteData({
         await: () => [this.molecularProfiles, this.samples],
         invoke: async () => {
+            if (_.isEmpty(this.molecularProfiles.result)) {
+                return [];
+            }
             const studyMolecularProfilesSet = _.groupBy(
                 this.molecularProfiles.result,
                 molecularProfile => molecularProfile.studyId
@@ -4686,6 +4689,11 @@ export class StudyViewPageStore {
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
+        if (_.isEmpty(this.molecularProfiles.result)) {
+            delete _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
+            ];
+        }
         _chartMetaSet = _.merge(
             _chartMetaSet,
             _.fromPairs(this._geneSpecificCharts.toJSON()),
