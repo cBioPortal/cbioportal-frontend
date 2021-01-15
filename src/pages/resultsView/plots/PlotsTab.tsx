@@ -4788,7 +4788,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     horizontal={horizontal}
                                     fill={this.waterfallPlotColor}
                                     fillOpacity={1}
-                                    stroke={this.scatterPlotStroke}
+                                    stroke={this.waterfallPlotColor}
                                     strokeOpacity={1}
                                     strokeWidth={this.scatterPlotStrokeWidth}
                                     symbol={this.scatterPlotSymbol}
