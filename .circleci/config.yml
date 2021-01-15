@@ -44,20 +44,20 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/screenshots
+        path: /tmp/repo/end-to-end-test2/remote/screenshots
         destination: /screenshots
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/shared/image-compare
+        path: /tmp/repo/end-to-end-test2/shared/image-compare
         destination: /image-compare
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/error
+        path: /tmp/repo/end-to-end-test2/remote/error
         destination: /errorShots
     - store_test_results:
-        path: /tmp/repo/end-to-end-test/remote/junit
+        path: /tmp/repo/end-to-end-test2/remote/junit
     - store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/junit
+        path: /tmp/repo/end-to-end-test2/remote/junit
     - store_artifacts:
-        path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+        path: /tmp/repo/end-to-end-test2/shared/imageCompare.html
         destination: /imageCompare.html
 
 
@@ -240,20 +240,20 @@ jobs:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/screenshots
+          path: /tmp/repo/end-to-end-test2/local/screenshots
           destination: /screenshots
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/shared/image-compare
+          path: /tmp/repo/end-to-end-test2/shared/image-compare
           destination: /image-compare
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/errorShots
+          path: /tmp/repo/end-to-end-test2/local/errorShots
           destination: /errorShots
       - store_test_results:
-          path: /tmp/repo/end-to-end-test/local/junit
+          path: /tmp/repo/end-to-end-test2/local/junit
       - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/junit
+          path: /tmp/repo/end-to-end-test2/local/junit
       - store_artifacts:
-          path: /tmp/repo/end-to-end-test/shared/imageCompare.html
+          path: /tmp/repo/end-to-end-test2/shared/imageCompare.html
           destination: /imageCompare.html
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo

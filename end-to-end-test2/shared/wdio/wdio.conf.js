@@ -34,7 +34,11 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     misMatchTolerance: 0.01,
 });
 
-console.log(`Screenshot root: ${path.join(process.cwd(), screenDir)}`);
+console.log(`SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
+
+console.log(`JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
+
+console.log(`JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
 
 // function proxyComparisonMethod(target) {
 //     const oldProcessScreenshot = target.processScreenshot;
