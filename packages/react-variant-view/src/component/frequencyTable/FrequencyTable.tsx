@@ -10,7 +10,7 @@ import {
 } from 'cbioportal-utils';
 import autobind from 'autobind-decorator';
 import { Pathogenicity } from '../../util/Constants';
-import MutationTumorTypeFrequencyTable from './MutationTumorTypeFrequencyTable';
+import { MutationTumorTypeFrequencyTable } from 'cbioportal-frontend-commons';
 
 interface IFrequencyTableProps {
     signalAnnotation?: SignalAnnotation;
@@ -37,7 +37,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
                     this.props.signalAnnotation.annotation,
                     annotation => {
                         const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-                            annotation.mutationStatus,
+                            annotation,
                             annotation.countsByTumorType,
                             annotation.biallelicCountsByTumorType,
                             annotation.qcPassCountsByTumorType,
@@ -78,7 +78,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
             } else {
                 const annotation = this.props.signalAnnotation.annotation[0];
                 const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-                    annotation.mutationStatus,
+                    annotation,
                     annotation.countsByTumorType,
                     annotation.biallelicCountsByTumorType,
                     annotation.qcPassCountsByTumorType,

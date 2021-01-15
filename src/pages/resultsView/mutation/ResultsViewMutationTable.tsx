@@ -60,6 +60,7 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.GNOMAD,
             MutationTableColumnType.CLINVAR,
             MutationTableColumnType.DBSNP,
+            MutationTableColumnType.SIGNAL,
         ],
     };
 
@@ -132,6 +133,7 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GNOMAD].order = 260;
         this._columns[MutationTableColumnType.CLINVAR].order = 270;
         this._columns[MutationTableColumnType.DBSNP].order = 280;
+        this._columns[MutationTableColumnType.SIGNAL].order = 290;
 
         // exclude
         this._columns[

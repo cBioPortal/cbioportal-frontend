@@ -46,6 +46,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_pathway_mapper: true,
     show_mutation_mapper_tool_grch38: true,
     show_transcript_dropdown: false,
+    show_signal: false,
     survival_show_p_q_values_in_survival_type_table: true,
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
