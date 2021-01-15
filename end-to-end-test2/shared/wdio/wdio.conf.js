@@ -27,12 +27,6 @@ var screenDir = `${screenshotRoot}/screen/`;
 
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
-console.log(
-    `screen shots saved to: ${getScreenshotName(
-        path.join(process.cwd(), screenDir)
-    )}`
-);
-
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
     screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
@@ -40,7 +34,8 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     misMatchTolerance: 0.01,
 });
 
-//fds
+console.log(`Screenshot root: ${path.join(process.cwd(), screenDir)}`);
+
 // function proxyComparisonMethod(target) {
 //     const oldProcessScreenshot = target.processScreenshot;
 //     LocalCompare.processScreenshot = async function(context, base64Screenshot) {
