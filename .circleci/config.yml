@@ -19,11 +19,12 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
+          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
           yarn serveDist & \
           cd end-to-end-test2 && \
           yarn install --frozen-lockfile && \
-          ./scripts/env_vars.sh && \
-          eval "$(./scripts/env_vars.sh)" && \
+          ../scripts/env_vars.sh && \
+          eval "$(../scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
           sleep 5s && \
           curl $CBIOPORTAL_URL > /dev/null && \
