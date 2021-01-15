@@ -27,7 +27,7 @@ var screenDir = `${screenshotRoot}/screen/`;
 
 var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
 
-console.log(`screen shots saved to: ${getScreenshotName(path.join(process.cwd(), screenDir)}`);
+console.log(`screen shots saved to: ${getScreenshotName(path.join(process.cwd(), screenDir))}`);
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
