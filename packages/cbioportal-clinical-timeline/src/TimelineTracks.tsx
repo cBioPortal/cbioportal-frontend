@@ -68,7 +68,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                             );
                         })}
                 </g>
-                {store.tooltipModels.map(([uid, model]) => {
+                {store.tooltipModels.map(([uid, model, index]) => {
                     const position = model.position || store.mousePosition;
                     const placementLeft = position.x > width / 2;
                     return (
@@ -87,7 +87,7 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                                 }
                                 positionTop={position.y - 17}
                             >
-                                {store.getTooltipContent(uid, model)}
+                                {store.getTooltipContent(uid, model, index)}
                             </Popover>
                         </Portal>
                     );
