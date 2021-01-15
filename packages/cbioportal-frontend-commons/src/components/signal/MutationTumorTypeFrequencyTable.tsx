@@ -48,20 +48,7 @@ class MutationTumorTypeFrequencyTable extends React.Component<
             FREQUENCY_COLUMNS_DEFINITION[
                 FrequencyTableColumnEnum.BIALLELIC_RATIO
             ],
-            FREQUENCY_COLUMNS_DEFINITION[
-                FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX
-            ],
-            FREQUENCY_COLUMNS_DEFINITION[FrequencyTableColumnEnum.MEDIAN_TMB],
-            FREQUENCY_COLUMNS_DEFINITION[FrequencyTableColumnEnum.MSI_SCORE],
-            FREQUENCY_COLUMNS_DEFINITION[
-                FrequencyTableColumnEnum.MEDIAN_HRD_LST
-            ],
-            FREQUENCY_COLUMNS_DEFINITION[
-                FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI
-            ],
-            FREQUENCY_COLUMNS_DEFINITION[
-                FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH
-            ],
+            // TODO: add more columns after having additional columns data for pathogenic variants
         ],
     };
 
