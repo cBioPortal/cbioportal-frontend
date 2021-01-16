@@ -88,9 +88,7 @@ export default class CancerSummaryContainer extends React.Component<
                 const studynameright: string = studyname.substring(indexofp);
                 const studynameleft: string = studyname.substring(0, 49);
                 return studynameleft + '...' + studynameright;
-            } else if (studyname.length > 50)
-                return studyname.substring(0, 49) + '...';
-            else return studyname;
+            } else return studyname;
         } else {
             return str;
         }
