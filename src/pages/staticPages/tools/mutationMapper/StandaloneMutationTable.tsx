@@ -49,6 +49,7 @@ export default class StandaloneMutationTable extends MutationTable<
             MutationTableColumnType.GNOMAD,
             MutationTableColumnType.CLINVAR,
             MutationTableColumnType.DBSNP,
+            MutationTableColumnType.SIGNAL,
         ],
     };
 
@@ -105,5 +106,6 @@ export default class StandaloneMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GNOMAD].order = 240;
         this._columns[MutationTableColumnType.CLINVAR].order = 250;
         this._columns[MutationTableColumnType.DBSNP].order = 260;
+        this._columns[MutationTableColumnType.SIGNAL].order = 270;
     }
 }

@@ -8,6 +8,7 @@ import { formatFrequencyValue } from 'cbioportal-utils';
 interface IFrequencyCellProps {
     frequency: number | null;
     overlay?: () => JSX.Element;
+    style?: React.CSSProperties;
 }
 
 @observer
@@ -36,7 +37,7 @@ export default class FrequencyCell extends React.Component<
 
     private mainContent(): JSX.Element {
         return (
-            <span className="pull-right mr-1">
+            <span className="pull-right mr-1" style={this.props.style}>
                 {formatFrequencyValue(this.props.frequency)}
             </span>
         );
