@@ -68,6 +68,8 @@ export type CancerStudy = {
 
         'sequencedSampleCount': number
 
+        'shortName': string
+        
         'status': number
 
         'studyId': string
