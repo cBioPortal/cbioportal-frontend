@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
@@ -96,6 +95,8 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     splice: MUT_COLOR_SPLICE,
     fusion: MUT_COLOR_FUSION,
     promoter: MUT_COLOR_PROMOTER,
+    driver: MUT_COLOR_MISSENSE,
+    vus: MUT_COLOR_MISSENSE_PASSENGER,
     // SURVIVAL_DATA: CLI_NO_COLOR
     '1:deceased': CLI_NO_COLOR,
     '1:recurred/progressed': CLI_NO_COLOR,
