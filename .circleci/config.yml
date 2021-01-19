@@ -59,7 +59,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - store_artifacts:
         path: /tmp/repo/end-to-end-test2/shared/imageCompare.html
         destination: /imageCompare.html
-
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test2/remote/junit/customReport.json
+        destination: /customReport.json
 
 version: 2
 jobs:

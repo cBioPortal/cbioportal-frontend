@@ -34,8 +34,19 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
     updateComparisonMode();
 });
 
+async function bootstrap() {
+    alert('arron');
+    const reportData = await getResultsReport(
+        'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
+    );
+}
+
 $(document).ready(function() {
     var selectedSSIndex = 0;
+
+    bootstrap();
+
+    return;
 
     var $list = $('<ul></ul>').prependTo('body');
 
@@ -239,6 +250,12 @@ function buildDisplay(ref, rootUrl) {
             startingPosition: '50%',
             makeResponsive: true,
         }
+    );
+}
+
+function getResultsReport(reportRoot) {
+    return $.getJSON(
+        `${reportRoot}/tmp/repo/end-to-end-test2/remote/junit/customReportJSONP.js`
     );
 }
 
