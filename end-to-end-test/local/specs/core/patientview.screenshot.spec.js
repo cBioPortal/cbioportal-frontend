@@ -17,7 +17,7 @@ const genericAssayPatientViewUrl =
 describe('patient view page', function() {
     describe('mutation table for study with ASCN data', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(ascnPatientViewUrl);
+            goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
             waitForPatientView();
         });
 
@@ -31,7 +31,7 @@ describe('patient view page', function() {
 
     describe('mutation table for study with no ASCN data', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(patientViewUrl);
+            goToUrlAndSetLocalStorage(patientViewUrl, true);
             waitForPatientView();
         });
 
@@ -48,7 +48,7 @@ describe('patient view page', function() {
         const iconIndexWholeGenomeSample = 3;
 
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(patientViewUrl);
+            goToUrlAndSetLocalStorage(patientViewUrl, true);
             waitForPatientView();
         });
 
@@ -67,12 +67,12 @@ describe('patient view page', function() {
             assertScreenShotMatch(res);
         });
 
-        it('filters VAF plot based on gene filter setting when switching to "all samples"', () => {
+        it('filters VAF plot based on gene filter setting when switching to _all samples_', () => {
             switchGeneFilter('allSamples');
             doVafPlotScreenshotTest();
         });
 
-        it('filters VAF plot based on gene filter setting when switching to "any sample"', () => {
+        it('filters VAF plot based on gene filter setting when switching to _any sample_', () => {
             switchGeneFilter('anySample');
             doVafPlotScreenshotTest();
         });
@@ -80,7 +80,7 @@ describe('patient view page', function() {
 
     describe('patient view mutational signatures', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(genericAssayPatientViewUrl);
+            goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
             waitForPatientView();
             browser.waitForVisible('a.tabAnchor_mutationalSignatures', 20000);
             browser.click('a.tabAnchor_mutationalSignatures');

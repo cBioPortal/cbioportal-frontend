@@ -212,7 +212,7 @@ export default class GenesetsJsTree extends React.Component<
             for (const geneSet of selectedNodes) {
                 if (geneSet.original.geneset) {
                     this.map_geneSets_selected.set(
-                        geneSet.original.description,
+                        geneSet.original.li_attr.name,
                         true
                     );
                 }
