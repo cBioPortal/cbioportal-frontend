@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  cbioportal:
+    volumes:
+      - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-webapp/WEB-INF/classes/samlKeystore.jks:ro
+      - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/WEB-INF/classes/client-tailored-saml-idp-metadata.xml:ro
+    command: /bin/sh -c "java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal-session:5000/api/sessions/my_portal/ -jar webapp-runner.jar -AmaxHttpHeaderSize=16384 -AconnectionTimeout=20000 --enable-compression /cbioportal-webapp"
+
+  keycloak:
+    networks:
+    - cbio-net
+    container_name: keycloak
+    image: jboss/keycloak:11.0.3
+    restart: unless-stopped
+    depends_on:
+    - kcdb
+    ports:
+    - "8081:8080"
+    environment:
+    - DB_VENDOR=mysql
+    - DB_ADDR=kcdb
+    - DB_USER=keycloak
+    - DB_PORT=3306
+    - DB_PASSWORD=password
+    - DB_DATABASE=keycloak
+    - KEYCLOAK_USER=admin
+    - KEYCLOAK_PASSWORD=admin
+    - JDBC_PARAMS=${KEYCLOAK_JDBC_PARAMS:-useSSL=false}
+
+  kcdb:
+    networks:
+    - cbio-net
+    image: mysql:5.7
+    container_name: kcdb
+    restart: unless-stopped
+    volumes:
+    - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=keycloak
+    command: --ssl=0
+    
+networks:
+  cbio-net: 
