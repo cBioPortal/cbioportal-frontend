@@ -45,3 +45,5 @@ errorshots/
 TESTS.xml
 key.pem
 cert.pem
+end
+e2e-localdb-workspace/

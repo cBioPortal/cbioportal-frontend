@@ -24,7 +24,7 @@ describe('custom driver annotations feature', function() {
     if (useExternalFrontend) {
         describe('oncoprint tab - mutations', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint(100000);
                 setResultsPageSettingsMenuOpen(true);
             });
@@ -100,7 +100,7 @@ describe('custom driver annotations feature', function() {
 
     describe('oncoprint tab - discrete CNA', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrlCna);
+            goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
             waitForOncoprint();
             setResultsPageSettingsMenuOpen(true);
         });

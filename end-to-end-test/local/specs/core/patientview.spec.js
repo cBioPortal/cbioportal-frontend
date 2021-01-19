@@ -18,7 +18,7 @@ describe('patient view page', function() {
     if (useExternalFrontend) {
         describe('gene panel information', () => {
             before(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -82,7 +82,7 @@ describe('patient view page', function() {
             let filterIcon;
 
             before(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -128,7 +128,8 @@ describe('patient view page', function() {
             it('filter menu icon is not shown when gene panels are not used', () => {
                 goToUrlAndSetLocalStorage(
                     CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
+                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK',
+                    true
                 );
                 waitForPatientView();
                 var filterIcon = $(
@@ -143,7 +144,7 @@ describe('patient view page', function() {
             let filterIcon;
 
             before(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -185,7 +186,8 @@ describe('patient view page', function() {
             it('filter menu icon is not shown when gene panels are not used', () => {
                 goToUrlAndSetLocalStorage(
                     CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A2-A04U'
+                        '/patient?studyId=study_es_0&caseId=TCGA-A2-A04U',
+                    true
                 );
                 waitForPatientView();
                 var filterIcon = $(
@@ -197,7 +199,7 @@ describe('patient view page', function() {
 
         describe('genomic tracks', () => {
             before(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -244,7 +246,8 @@ describe('patient view page', function() {
             it('hides gene panel icons when no gene panels are used for patient samples', () => {
                 goToUrlAndSetLocalStorage(
                     CBIOPORTAL_URL +
-                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK'
+                        '/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK',
+                    true
                 );
                 waitForPatientView();
                 assert(
@@ -255,7 +258,7 @@ describe('patient view page', function() {
 
         describe('VAF plot', () => {
             before(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -276,7 +279,7 @@ describe('patient view page', function() {
             }
 
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(genePanelPatientViewUrl);
+                goToUrlAndSetLocalStorage(genePanelPatientViewUrl, true);
                 waitForPatientView();
             });
 
@@ -363,7 +366,7 @@ describe('patient view page', function() {
 
         describe('mutation table ASCN columns', () => {
             before(() => {
-                goToUrlAndSetLocalStorage(ascnPatientViewUrl);
+                goToUrlAndSetLocalStorage(ascnPatientViewUrl, true);
                 waitForPatientView();
                 const mutationsTable = '[data-test=patientview-mutation-table]';
                 $(`${mutationsTable} button#dropdown-custom-1`).click();
