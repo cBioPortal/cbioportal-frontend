@@ -36,7 +36,7 @@ describe('gsva feature', function() {
     if (useExternalFrontend) {
         describe('query page', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
                 showGsva();
                 waitForStudyQueryPage();
             });
@@ -86,7 +86,7 @@ describe('gsva feature', function() {
 
         describe('GenesetsHierarchySelector', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
                 showGsva();
                 waitForStudyQueryPage();
                 checkTestStudy();
@@ -124,7 +124,7 @@ describe('gsva feature', function() {
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
                 var after = $$('*=GO_');
 
-                assert.equal(after.length, 7);
+                assert.equal(after.length, 5);
             });
 
             it('filters gene sets with the search input field', () => {
@@ -170,7 +170,7 @@ describe('gsva feature', function() {
 
         describe('GenesetVolcanoPlotSelector', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
                 showGsva();
                 waitForStudyQueryPage();
                 checkTestStudy();
@@ -264,7 +264,7 @@ describe('gsva feature', function() {
 
         describe('results view page', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint();
             });
 
@@ -275,7 +275,7 @@ describe('gsva feature', function() {
 
         describe('oncoprint tab', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint();
             });
 
@@ -301,7 +301,7 @@ describe('gsva feature', function() {
 
         describe('plots tab', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(plotsTabUrl);
+                goToUrlAndSetLocalStorage(plotsTabUrl, true);
                 waitForPlotsTab();
             });
 
@@ -426,7 +426,7 @@ describe('gsva feature', function() {
 
         describe('co-expression tab', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(coexpressionTabUrl);
+                goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
                 waitForCoExpressionTab();
             });
 
