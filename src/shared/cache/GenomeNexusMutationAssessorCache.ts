@@ -5,6 +5,7 @@ import LazyMobXCache, { CacheData } from 'shared/lib/LazyMobXCache';
 import AppConfig from 'appConfig';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { extractGenomicLocation } from 'cbioportal-utils';
+import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotation>;
 
@@ -14,7 +15,10 @@ export function defaultGNFetch(
     if (queries.length > 0) {
         return fetchVariantAnnotationsByMutation(
             queries,
-            ['annotation_summary', 'mutation_assessor'],
+            [
+                GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+            ],
             AppConfig.serverConfig.isoformOverrideSource
         );
     } else {
