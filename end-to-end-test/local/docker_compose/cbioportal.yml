@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  cbioportal:
+    volumes:
+    - $PWD/../../runtime-config/portal.properties:/cbioportal/portal.properties:ro
+    - $PWD/../keycloak/samlKeystore.jks:/cbioportal-webapp/WEB-INF/classes/samlKeystore.jks:ro
+    - $PWD/../keycloak/idp-metadata.xml:/cbioportal-webapp/WEB-INF/classes/client-tailored-saml-idp-metadata.xml:ro
+    command: /bin/sh -c "java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal_session:5000/api/sessions/my_portal/ -jar webapp-runner.jar -AmaxHttpHeaderSize=16384 -AconnectionTimeout=20000 --enable-compression /cbioportal-webapp"
+
+volumes:
+  cbioportal_mysql_data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $DB_DATA_DIR

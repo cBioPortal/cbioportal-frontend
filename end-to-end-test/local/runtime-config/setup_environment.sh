@@ -4,12 +4,7 @@ set -e
 
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARIABLES +-+-+-+-+-+-+-
 
-echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
 echo export CBIOPORTAL_URL="http://cbioportal:8080"
-echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
-echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
-echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
-echo export CUSTOM_BACKEND_IMAGE_NAME=cbioportal-endtoend-image
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
@@ -99,19 +94,13 @@ else
     echo export FRONTEND_GROUPID=com.github.$FRONTEND_PROJECT_USERNAME
 fi
 
-python3 $TEST_HOME/shared/read_portalproperties.py portal.properties
-# retrieves
-    # DB_USER                       ->  (e.g. 'cbio_user')
-    # DB_PASSWORD                   ->  (e.g. 'cbio_pass')
-    # DB_PORTAL_DB_NAME             ->  (e.g. 'endtoend_local_cbiodb')
-    # DB_CONNECTION_STRING          ->  (e.g. 'jdbc:mysql://cbiodb-endtoend:3306/')
-    # DB_HOST                       ->  (e.g. 'cbiodb-endtoend')
-
-# Evaluate what backend docker image to use
+# Evaluate whether a custom backend image should be built
 # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
 # update the reference to the corresponding image name when prebuilt image exists
-if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
-    echo export BACKEND_IMAGE_NAME="cbioportal/cbioportal:$BACKEND_BRANCH"
+[[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ) || CUSTOM_BACKEND=1
+if [[ $CUSTOM_BACKEND ]]; then
+    echo export BACKEND_BUILD_URL="https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git#$BACKEND_BRANCH"
 else
-    echo export BACKEND_IMAGE_NAME=cbioportal-endtoend-image
+  echo export BACKEND_BUILD_URL=""
+  echo export DOCKER_IMAGE_CBIOPORTAL="$BACKEND_PROJECT_USERNAME/cbioportal:$BACKEND_BRANCH"
 fi

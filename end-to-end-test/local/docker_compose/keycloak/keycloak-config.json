@@ -1,0 +1,100 @@
+{
+    "id": "cbio",
+    "realm": "cbio",
+    "displayName": "cBioPortal",
+    "enabled": true,
+    "defaultGroups": [ "PUBLIC_STUDIES" ],
+    "loginWithEmailAllowed": false,
+    "sslRequired": "none",
+    "clients": [
+        {
+            "clientId": "cbioportal",
+            "enabled": true,
+            "protocol": "saml",
+            "fullScopeAllowed": false,
+            "adminUrl": "https://localhost:443/saml",
+            "redirectUris": [
+                "https://localhost:443/*",
+                "https://localhost/*"
+            ],
+            "attributes": {
+                "saml_single_logout_service_url_post": "https://localhost:443/saml/logout",
+                "saml_name_id_format": "email",
+                "saml_force_name_id_format": "true",
+                "saml.force.post.binding": "false",
+                "saml.server.signature": "true",
+                "saml.assertion.signature": "false",
+                "saml.signature.algorithm": "RSA_SHA256",
+                "saml.client.signature": "true",
+                "saml.authnstatement": "true",
+                "saml_signature_canonicalization_method": "http://www.w3.org/2001/10/xml-exc-c14n#"            },
+            "protocolMappers": [
+                {
+                    "name": "role list",
+                    "protocol": "saml",
+                    "protocolMapper": "saml-role-list-mapper",
+                    "consentRequired": false,
+                    "config": {
+                        "single": "false",
+                        "attribute.name": "Role",
+                        "attribute.nameformat": "Basic"
+                    }
+                },
+                {
+                    "name": "X500 email",
+                    "protocol": "saml",
+                    "protocolMapper": "saml-user-property-mapper",
+                    "consentRequired": false,
+                    "consentText": "${email}",
+                    "config": {
+                        "user.attribute": "email",
+                        "friendly.name": "email",
+                        "attribute.name": "email",
+                        "attribute.nameformat": "Basic"
+                    }
+                }
+            ],
+            "defaultClientScopes": [],
+            "optionalClientScopes": []
+        },
+        {
+            "clientId": "cbioportal_api",
+            "name": "cBioPortal OIDC client",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "fullScopeAllowed": true,
+            "redirectUris": [
+                "https://localhost/api/data-access-token/oauth2",
+                "https://localhost:443/api/data-access-token/oauth2"
+            ],
+            "protocolMappers": [
+                {
+                    "name": "cbioportal_api_audience",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-audience-mapper",
+                    "config": {
+                        "included.client.audience": "cbioportal_api",
+                        "id.token.claim": "false",
+                        "access.token.claim": "true"
+                    }
+                }
+            ],
+            "defaultClientScopes": [ "roles" ],
+            "optionalClientScopes": [ "offline_access" ]
+        }
+    ],
+    "users" : [
+        {
+            "username": "testuser",
+            "enabled": true,
+            "email": "testuser@thehyve.nl",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "P@ssword1"
+                }
+            ],
+            "realmRoles": [ "offline_access" ]
+        }
+    ]
+}

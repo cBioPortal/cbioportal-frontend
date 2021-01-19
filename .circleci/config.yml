@@ -194,12 +194,18 @@ jobs:
           command: |
               source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
               cd $TEST_HOME/local/runtime-config && \
-              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV            
+              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
+#      - restore_cache:
+#          keys:
+#            - maven-repo-v1
       - run:
-          name: Build or pull backend image
+          name: Create MySQL data directory
           command: |
-              cd $TEST_HOME/local/docker && \
-              ./build_portal_image.sh
+            mkdir -p $DB_DATA_DIR
+      - run:
+          name: Setup docker compose assets
+          command: |
+              $TEST_HOME/local/docker_compose/setup.sh
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
@@ -208,35 +214,38 @@ jobs:
           no_output_timeout: 25m
       - restore_cache:
           keys:
-          - v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v6-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - run:
-          name: Create MySQL data directory when no cache found
+          name: Init database when no mysql data files present
           command: |
-              mkdir -p $DB_DATA_DIR
-      - run:
-          name: Setup docker images and containers
-          command: |
-              docker network create $DOCKER_NETWORK_NAME && \
-              cd $TEST_HOME/local/docker && \
-              if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-                ./setup_docker_containers.sh -p -e; \
-              else \
-                ./setup_docker_containers.sh -p -e -d; \
-              fi
-          no_output_timeout: 25m
+            cd $TEST_HOME/local/docker_compose && \
+            if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
+              echo "DB initialization is not needed."; \
+            else \
+              ./initdb.sh; \
+            fi
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
               sudo chmod -R 777 $DB_DATA_DIR && \
               sudo chown -R circleci:circleci $DB_DATA_DIR
+      - run:
+          name: Start cbioportal and other services
+          command: |
+              $TEST_HOME/local/docker_compose/start.sh
       - save_cache:
           paths:
             - /tmp/mysql
           key: v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+#      - save_cache:
+#          paths:
+#            - ~/.m2
+#          key: maven-repo-v1
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
-              cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
+              cd $PORTAL_SOURCE_DIR && \
+              $TEST_HOME/local/runtime-config/run_test.sh
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'

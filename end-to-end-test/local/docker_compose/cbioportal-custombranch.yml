@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  cbioportal:
+    build:
+      context: $BACKEND_BUILD_URL
+      dockerfile: docker/web-and-data/Dockerfile
+#    volumes:
+#      - /home/ubuntu/.m2:/root/.m2

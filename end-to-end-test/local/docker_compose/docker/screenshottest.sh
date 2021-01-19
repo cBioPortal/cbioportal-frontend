@@ -22,14 +22,6 @@ echo UPDATE WEBDRIVER-MANAGER
 echo START WEBDRIVER-MANAGER
 ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "2.42" &
 
-# echo PROBE CBIOPORTAL
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 5s
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 5s
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 20s
-
 echo PROBE FRONTEND SERVER
 (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null
 

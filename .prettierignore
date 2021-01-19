@@ -29,3 +29,4 @@ yarn.lock
 *properties
 *.seg
 end-to-end-test/local/studies/**
+*.screenshottest
