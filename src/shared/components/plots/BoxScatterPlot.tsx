@@ -22,7 +22,7 @@ import {
     separateScatterDataByAppearance,
 } from './PlotUtils';
 import { logicalAnd } from '../../lib/LogicUtils';
-import { tickFormatNumeral } from './TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import { makeScatterPlotSizeFunction } from './PlotUtils';
 import {
     CBIOPORTAL_VICTORY_THEME,

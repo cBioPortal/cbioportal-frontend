@@ -14,7 +14,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
-import { tickFormatNumeral } from '../../../../shared/components/plots/TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { AbstractChart } from '../ChartContainer';
