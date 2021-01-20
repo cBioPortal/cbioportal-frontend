@@ -22,7 +22,6 @@ import ProgressIndicator, {
     IProgressIndicatorItem,
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
-import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import {
     ChartMeta,
     ChartType,
@@ -30,11 +29,7 @@ import {
     DataBin,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
-import { toSampleTreatmentFilter } from '../table/treatments/treatmentsTableUtil';
-import {
-    OredSampleTreatmentFilters,
-    GenericAssayDataBin,
-} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 
@@ -75,6 +70,9 @@ export class StudySummaryTab extends React.Component<
             },
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta.uniqueKey);
+            },
+            onToggleNAValue: (chartMeta: ChartMeta) => {
+                this.store.toggleNAValue(chartMeta.uniqueKey);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(
@@ -213,12 +211,19 @@ export class StudySummaryTab extends React.Component<
                         this.store.getChartDownloadableData(chartMeta);
                 }
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
+                props.onToggleNAValue = this.handlers.onToggleNAValue;
                 props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
                     chartMeta.uniqueKey,
                     props.promise!.result
                 );
                 props.logScaleChecked = this.store.isLogScaleChecked(
                     chartMeta.uniqueKey
+                );
+                props.isShowNAChecked = this.store.isShowNAChecked(
+                    chartMeta.uniqueKey
+                );
+                props.showNAToggle = this.store.isShowNAToggleVisible(
+                    props.promise!.result
                 );
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
@@ -506,7 +511,7 @@ export class StudySummaryTab extends React.Component<
                                 <button
                                     type="button"
                                     className="close"
-                                    onClick={event =>
+                                    onClick={() =>
                                         (this.showErrorMessage = false)
                                     }
                                 >
