@@ -2339,7 +2339,9 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
-    clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
+    clinicalDataBinFilterSet: {
+        [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
+    },
     filterMutatedGenesTableByCancerGenes: boolean = true,
     filterFusionGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
@@ -2363,12 +2365,16 @@ export function getChartSettingsMap(
             chartType,
             patientAttribute: attribute.patientAttribute, // add chart attribute type
         } as any;
-        if (chartType === ChartTypeEnum.MUTATED_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
-        } else if (chartType === ChartTypeEnum.FUSION_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterFusionGenesTableByCancerGenes;
-        } else if (chartType === ChartTypeEnum.CNA_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+        switch (chartType) {
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+                break;
+            case ChartTypeEnum.FUSION_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterFusionGenesTableByCancerGenes;
+                break;
+            case ChartTypeEnum.CNA_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+                break;
         }
         const genomicChart = genomicChartSet[id];
         if (genomicChart) {
@@ -2387,12 +2393,16 @@ export function getChartSettingsMap(
             chartSetting.profileType = genericAssayChart.profileType;
             chartSetting.dataType = genericAssayChart.dataType;
         }
-        if (clinicalDataBinFilter[id]) {
-            if (clinicalDataBinFilter[id].disableLogScale) {
+        if (clinicalDataBinFilterSet[id]) {
+            if (clinicalDataBinFilterSet[id].disableLogScale) {
                 chartSetting.disableLogScale = true;
             }
-            if (!_.isEmpty(clinicalDataBinFilter[id].customBins)) {
-                chartSetting.customBins = clinicalDataBinFilter[id].customBins;
+            if (clinicalDataBinFilterSet[id].showNA !== undefined) {
+                chartSetting.showNA = clinicalDataBinFilterSet[id].showNA;
+            }
+            if (!_.isEmpty(clinicalDataBinFilterSet[id].customBins)) {
+                chartSetting.customBins =
+                    clinicalDataBinFilterSet[id].customBins;
             }
         }
         chartSettingsMap[id] = chartSetting;
