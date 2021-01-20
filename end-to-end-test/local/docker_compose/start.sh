@@ -14,6 +14,15 @@ if [[ -n $BACKEND_BUILD_URL ]]; then
   compose_extensions="$compose_extensions -f ../cbioportal-custombranch.yml"
 fi
 
+# initiate keycloak and get idp-client-metadata
+docker-compose $compose_extensions up -d keycloak
+for i in {1..30}; do
+    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service..."
+    sleep 10s
+done
+[ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Successful deploy."
+wget -O ../keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
+
 docker-compose $compose_extensions up -d
 
 cd $PWD

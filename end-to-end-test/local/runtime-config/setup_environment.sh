@@ -4,7 +4,7 @@ set -e
 
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARIABLES +-+-+-+-+-+-+-
 
-echo export CBIOPORTAL_URL="http://cbioportal:8080"
+echo export CBIOPORTAL_URL="http://localhost:8080"
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
@@ -17,7 +17,6 @@ echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/mas
 
 parse_custom_backend_var() {
     # Parse BACKEND environmental variable. This must occur after PR evaluation
-    # because this possibly overwrites variables extracted from the GitHub pull request.
     if [[ $BACKEND =~ (.+):(.+) ]]; then
         BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}
         echo "export BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}"
