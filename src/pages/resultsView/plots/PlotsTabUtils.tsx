@@ -1924,7 +1924,6 @@ export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.inframe,
     mutationTypeToDisplayName.trunc,
     mutationTypeToDisplayName.splice,
-    mutationTypeToDisplayName.fusion,
     mutationTypeToDisplayName.promoter,
     mutationTypeToDisplayName.other,
     MUT_PROFILE_COUNT_MULTIPLE,

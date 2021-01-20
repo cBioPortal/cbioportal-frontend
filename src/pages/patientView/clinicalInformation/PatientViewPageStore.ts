@@ -336,8 +336,7 @@ export class PatientViewPageStore {
         this.openResourceTabMap.set(resourceId, open);
     }
 
-    @autobind
-    @action
+    @action.bound
     public onFilterGenesStructuralVariantTable(option: GeneFilterOption): void {
         this.structuralVariantTableGeneFilterOption = option;
     }
