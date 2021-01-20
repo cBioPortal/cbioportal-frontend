@@ -21,6 +21,8 @@ for i in {1..30}; do
     sleep 10s
 done
 [ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Successful deploy."
+
+rm -rf ../keycloak/idp-metadata.xml
 wget -O ../keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
 
 docker-compose $compose_extensions up -d
