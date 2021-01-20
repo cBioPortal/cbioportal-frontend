@@ -41,11 +41,11 @@ export default function getSvg(
         ) as unknown) as SVGLineElement;
         separatingLine.setAttribute(
             'x1',
-            `${headersSize.width + headersPadding}`
+            `${store.headersWidth}`
         );
         separatingLine.setAttribute(
             'x2',
-            `${headersSize.width + headersPadding}`
+            `${store.headersWidth}`
         );
         separatingLine.setAttribute('y1', '0');
         separatingLine.setAttribute(
@@ -65,7 +65,7 @@ export default function getSvg(
         // Move tracks over from labels
         timelineG.setAttribute(
             'transform',
-            `translate(${headersSize.width + headersPadding} 0)`
+            `translate(${store.headersWidth} 0)`
         );
 
         const everythingSize = everythingG.getBBox();

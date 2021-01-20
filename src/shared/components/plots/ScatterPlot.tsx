@@ -11,7 +11,7 @@ import {
     VictoryLine,
 } from 'victory';
 import jStat from 'jStat';
-import { tickFormatNumeral } from './TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import {
     computeCorrelationPValue,
     makeScatterPlotSizeFunction,

@@ -64,8 +64,14 @@ $borderColor: #ccc;
         // This allows sensing the pointer for the purpose of the hover effect
         pointer-events: all;
 
+        // On mouse hover, another handler will turn .tl-track-highlight elements to opacity 1
+        line.tl-axis-grid-line.tl-track-highlight {
+            stroke: #aaa;
+            stroke-width: 1;
+            stroke-dasharray: 5 2;
+            opacity: 0;
+        }
         rect.tl-track-highlight {
-            // On mouse hover, another handler will turn this opacity to 1
             fill: #f2f2f2;
             opacity: 0;
         }

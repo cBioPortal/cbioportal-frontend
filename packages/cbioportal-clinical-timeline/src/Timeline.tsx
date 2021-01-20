@@ -166,7 +166,7 @@ const hoverCallback = (
                     }
                     
                      #${uniqueId} .tl-timeline .tl-track:nth-child(${trackIndex +
-                        1}) rect.tl-track-highlight {
+                        1}) .tl-track-highlight {
                         opacity: 1 !important;
                     }
                 `);
