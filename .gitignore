@@ -38,6 +38,8 @@ end-to-end-test/undefined
 end-to-end-test/results-0-0..xml
 end-to-end-test/customReport.json
 end-to-end-test/customReportJSONP.js
+end-to-end-test/local/docker_compose/keycloak/idp-metadata.xml
+end-to-end-test/local/docker_compose/cbioportal-docker-compose/
 wdio/browserstack.txt
 env/custom.sh
 image-compare/errors.js
@@ -45,3 +47,4 @@ errorshots/
 TESTS.xml
 key.pem
 cert.pem
+end
