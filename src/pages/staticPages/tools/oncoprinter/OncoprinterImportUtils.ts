@@ -34,6 +34,7 @@ const geneticAlterationToDataType: {
     structuralVariant: AlterationTypeConstants.STRUCTURAL_VARIANT,
     promoter: AlterationTypeConstants.MUTATION_EXTENDED,
     trunc: AlterationTypeConstants.MUTATION_EXTENDED,
+    splice: AlterationTypeConstants.MUTATION_EXTENDED,
     other: AlterationTypeConstants.MUTATION_EXTENDED,
     amp: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
     homdel: AlterationTypeConstants.COPY_NUMBER_ALTERATION,

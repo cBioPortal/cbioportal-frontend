@@ -45,11 +45,13 @@ const cnaDataToString: { [integerCNA: string]: string | undefined } = {
 };
 const mutRenderPriority = stringListToIndexSet([
     'trunc_rec',
+    'splice_rec',
     'inframe_rec',
     'promoter_rec',
     'missense_rec',
     'other_rec',
     'trunc',
+    'splice',
     'inframe',
     'promoter',
     'missense',
@@ -80,6 +82,7 @@ export type OncoprintMutationType =
     | 'inframe'
     | 'promoter'
     | 'trunc'
+    | 'splice'
     | 'other';
 
 export function getOncoprintMutationType(
@@ -95,6 +98,7 @@ export function getOncoprintMutationType(
         switch (simplifiedMutationType) {
             case 'missense':
             case 'inframe':
+            case 'splice':
             case 'other':
                 return simplifiedMutationType;
             default:

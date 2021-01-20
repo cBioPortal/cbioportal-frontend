@@ -4144,23 +4144,19 @@ export class StudyViewPageStore {
             this.structuralVariantProfiles,
         ],
         invoke: async () => {
-            const filteredMolecularProfiles: MolecularProfile[] = [];
-            const structuralVariantMolecularProfiles: MolecularProfile[] = [];
+            if (_.isEmpty(this.molecularProfiles.result)) {
+                return [];
+            }
 
-            //TODO: remove this block once fusion profiles data is fixed
+            //TODO: remove filtering logic fusion profiles data is fixed
             //filter out structural variant/fusion profiles
-            this.molecularProfiles.result.forEach(molecularProfile => {
-                if (
-                    [
+            const filteredMolecularProfiles: MolecularProfile[] = this.molecularProfiles.result.filter(
+                molecularProfile =>
+                    ![
                         AlterationTypeConstants.STRUCTURAL_VARIANT,
                         AlterationTypeConstants.FUSION,
                     ].includes(molecularProfile.molecularAlterationType)
-                ) {
-                    structuralVariantMolecularProfiles.push(molecularProfile);
-                } else {
-                    filteredMolecularProfiles.push(molecularProfile);
-                }
-            });
+            );
 
             //Add appropriate structural variant/fusion profiles
             this.structuralVariantProfiles.result.forEach(
@@ -4169,7 +4165,6 @@ export class StudyViewPageStore {
                 }
             );
             //TODO: remove this block once fusion profiles data is fixed
-
             const studyMolecularProfilesSet = _.groupBy(
                 filteredMolecularProfiles,
                 molecularProfile => molecularProfile.studyId
@@ -4721,6 +4716,11 @@ export class StudyViewPageStore {
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         let _chartMetaSet = _.fromPairs(this._customCharts.toJSON());
+        if (_.isEmpty(this.molecularProfiles.result)) {
+            delete _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT
+            ];
+        }
         _chartMetaSet = _.merge(
             _chartMetaSet,
             _.fromPairs(this._geneSpecificCharts.toJSON()),

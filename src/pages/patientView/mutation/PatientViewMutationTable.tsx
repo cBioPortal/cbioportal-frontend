@@ -23,6 +23,7 @@ import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
+import { FrequencyTableColumnEnum } from 'cbioportal-frontend-commons';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -87,6 +88,7 @@ export default class PatientViewMutationTable extends MutationTable<
             MutationTableColumnType.CLINVAR,
             MutationTableColumnType.DBSNP,
             MutationTableColumnType.GENE_PANEL,
+            MutationTableColumnType.SIGNAL,
         ],
     };
 
@@ -306,6 +308,7 @@ export default class PatientViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.GNOMAD].order = 187;
         this._columns[MutationTableColumnType.CLINVAR].order = 188;
         this._columns[MutationTableColumnType.DBSNP].order = 189;
+        this._columns[MutationTableColumnType.SIGNAL].order = 190;
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = () => {

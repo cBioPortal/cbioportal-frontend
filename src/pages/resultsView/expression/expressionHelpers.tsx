@@ -20,6 +20,7 @@ import {
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_SPLICE,
     MUT_COLOR_TRUNC,
 } from 'shared/lib/Colors';
 import { getJitterForCase } from '../../../shared/components/plots/PlotUtils';
@@ -80,6 +81,13 @@ export const ExpressionStyleSheet: {
         fill: MUT_COLOR_TRUNC,
         stroke: '#000000',
         legendText: 'Truncating',
+    },
+    splice: {
+        typeName: 'Splice',
+        symbol: VictoryShapeType.circle,
+        fill: MUT_COLOR_SPLICE,
+        stroke: '#000000',
+        legendText: 'Splice',
     },
     promoter: {
         typeName: 'Promoter',

@@ -18,6 +18,9 @@ export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
 export const MUT_COLOR_TRUNC = BLACK;
 export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
 export const STRUCTURAL_VARIANT_COLOR = '#8B00C9';
+export const MUT_COLOR_SPLICE = '#e5802b';
+export const MUT_COLOR_SPLICE_PASSENGER = '#f0b87b';
+export const MUT_COLOR_FUSION = '#8B00C9';
 export const MUT_COLOR_PROMOTER = '#00B7CE';
 export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
 
@@ -92,6 +95,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     inframe: MUT_COLOR_INFRAME,
     truncating: MUT_COLOR_TRUNC,
     fusion: STRUCTURAL_VARIANT_COLOR,
+    splice: MUT_COLOR_SPLICE,
     promoter: MUT_COLOR_PROMOTER,
     // SURVIVAL_DATA: CLI_NO_COLOR
     '1:deceased': CLI_NO_COLOR,
