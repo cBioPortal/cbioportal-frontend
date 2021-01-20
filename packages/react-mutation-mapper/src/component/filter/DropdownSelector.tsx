@@ -1,4 +1,3 @@
-import autobind from 'autobind-decorator';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import { action, computed, makeObservable } from 'mobx';
@@ -31,15 +30,30 @@ export type DropdownSelectorProps = {
     options?: { label?: string | JSX.Element; value: string }[];
 };
 
+const SelectionIndicator: React.FunctionComponent<{
+    allValues: string[];
+    selectedValues: { value: string }[];
+    selectionIndicatorClassNames: string;
+}> = observer(props => {
+    return (
+        <div
+            style={{
+                marginRight: 5,
+                marginTop: 'auto',
+                marginBottom: 'auto',
+            }}
+            className={props.selectionIndicatorClassNames}
+        >
+            {props.selectedValues.length}/{props.allValues.length}
+        </div>
+    );
+});
+
 @observer
 export class DropdownSelector extends React.Component<
     DropdownSelectorProps,
     {}
 > {
-    constructor(props: any) {
-        super(props);
-        makeObservable(this);
-    }
     public static defaultProps: Partial<DropdownSelectorProps> = {
         showNumberOfSelectedValues: true,
         selectionIndicatorClassNames: {
@@ -49,13 +63,18 @@ export class DropdownSelector extends React.Component<
         },
     };
 
+    constructor(props: DropdownSelectorProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed
-    public get allValues() {
+    public get allValues(): string[] {
         return getAllOptionValues(this.props.options);
     }
 
     @computed
-    public get selectedValues() {
+    public get selectedValues(): { value: string }[] {
         return getSelectedOptionValues(this.allValues, this.props.filter);
     }
 
@@ -68,7 +87,7 @@ export class DropdownSelector extends React.Component<
     }
 
     @computed
-    public get selectionIndicatorClassNames() {
+    public get selectionIndicatorClassNames(): string {
         const allValuesSelected =
             this.allValues.length === this.selectedValues.length;
         const classes = this.props.selectionIndicatorClassNames!;
@@ -102,30 +121,20 @@ export class DropdownSelector extends React.Component<
         );
     }
 
-    protected get selectionIndicator() {
-        return (
-            <div
-                style={{
-                    marginRight: 5,
-                    marginTop: 'auto',
-                    marginBottom: 'auto',
-                }}
-                className={this.selectionIndicatorClassNames}
-            >
-                {this.selectedValues.length}/{this.allValues.length}
-            </div>
-        );
-    }
-
-    @autobind
-    protected indicatorsContainer(props: any) {
+    protected indicatorsContainer = (props: any) => {
         return (
             <div style={{ display: 'flex' }}>
-                {this.selectionIndicator}
+                <SelectionIndicator
+                    allValues={this.allValues}
+                    selectedValues={this.selectedValues}
+                    selectionIndicatorClassNames={
+                        this.selectionIndicatorClassNames
+                    }
+                />
                 <components.IndicatorsContainer {...props} />
             </div>
         );
-    }
+    };
 
     @action.bound
     private onChange(values: Array<{ value: string }>) {
