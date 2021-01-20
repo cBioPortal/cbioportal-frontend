@@ -10,20 +10,19 @@ DIR=$PWD
 cd $TEST_HOME/local/docker_compose/cbioportal-docker-compose
 
 # If the mysql data dir is empty, download schema and seed before starting
-#HAS_DATA=`ls $DB_DATA_DIR/* 2> /dev/null > /dev/null`
-#if [[ ! $HAS_DATA ]]; then
-#  rm -rf data/cgds.sql
-#  rm -rf data/seed.sql.gz
-#  curl $DB_CGDS_URL > data/cgds.sql
-#  curl $DB_SEED_URL > data/seed.sql.gz
-#fi
+HAS_DATA=`ls $DB_DATA_DIR/* 2> /dev/null > /dev/null`
+if [[ ! $HAS_DATA ]]; then
+  rm -rf data/cgds.sql
+  rm -rf data/seed.sql.gz
+  curl $DB_CGDS_URL > data/cgds.sql
+  curl $DB_SEED_URL > data/seed.sql.gz
+fi
 
 compose_extensions="-f docker-compose.yml -f ../cbioportal.yml"
 if [[ -n $BACKEND_BUILD_URL ]]; then
   compose_extensions="$compose_extensions -f ../cbioportal-custombranch.yml"
 fi
 
-echo "$compose_extensions"
 docker-compose $compose_extensions up -d cbioportal
 # wait for up to 15m until all services are up and running
 for i in {1..30}; do
