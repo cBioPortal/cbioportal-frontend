@@ -6,7 +6,7 @@ import PdbChainDataStore from "../mutationMapper/PdbChainDataStore";
 import PdbChainInfo from "../PdbChainInfo";
 import PdbHeaderCache from "../../cache/PdbHeaderCache";
 import {computed} from "mobx";
-import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
+import {PdbHeader} from "public-lib/api/generated/GenomeNexusAPI";
 import OrganismColumnFormatter from "./column/OrganismColumnFormatter";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {generatePdbInfoSummary} from "../../lib/PdbUtils";

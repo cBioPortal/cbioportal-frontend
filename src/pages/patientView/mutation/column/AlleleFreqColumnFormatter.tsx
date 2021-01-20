@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {If, Else, Then } from 'react-if';
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
+import {getFormattedFrequencyValue} from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
@@ -49,7 +49,7 @@ export default class AlleleFreqColumnFormatter {
             const variantReadText:string = `${isUncalled(mutation.molecularProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
 
             const text = (<span>
-                    <strong>{freq.toFixed(2)}</strong> {variantReadText}
+                    <strong>{getFormattedFrequencyValue(freq)}</strong> {variantReadText}
                 </span>);
             return {
                 sampleId:mutation.sampleId, bar, component:sampleComponent, text, freq
@@ -82,7 +82,7 @@ export default class AlleleFreqColumnFormatter {
 
         // single sample: just show the number
         if (sampleManager.samples.length === 1) {
-            content = <span>{ (!isNaN(freqs[0]) ? freqs[0].toFixed(2) : '') }</span>;
+            content = <span>{ (!isNaN(freqs[0]) ? getFormattedFrequencyValue(freqs[0]) : '') }</span>;
         }
         // multiple samples: show a graphical component
         // (if no tooltip info available do not update content)

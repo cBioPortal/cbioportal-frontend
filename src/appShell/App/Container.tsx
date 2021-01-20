@@ -1,11 +1,9 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/UnsupportedBrowserModal";
 
 import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
-import PortalFooter from "./PortalFooter";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
@@ -13,7 +11,12 @@ import AppConfig from "appConfig";
 import Helmet from "react-helmet";
 import {computed} from "mobx";
 import { If, Else, Then } from 'react-if';
-import ErrorScreen from "./ErrorScreen";
+import UserMessager from "shared/components/userMessager/UserMessage";
+import {formatError} from "shared/lib/errorFormatter";
+import {buildCBioPortalPageUrl} from "shared/api/urls";
+import ErrorScreen from "shared/components/errorScreen/ErrorScreen";
+import { ServerConfigHelpers } from 'config/config';
+import {isWebdriver} from "public-lib/lib/webdriverUtils";
 
 interface IContainerProps {
     location: Location;
@@ -45,6 +48,18 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
+        if (!isWebdriver() && !ServerConfigHelpers.sessionServiceIsEnabled()) {
+            return (
+                <div className="contentWrapper">
+                    <ErrorScreen
+                        title={"No session service configured"}
+                        body={<p>As of version 3.0.0, all cBioPortal installations require a session service.  Please review these instructions for how to do so. <a href="https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service">https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service</a>
+                        </p>}
+                    />
+                </div>
+            )
+        }
+
         return (
             <If condition={this.isSessionLoaded}>
                 <div>
@@ -55,16 +70,21 @@ export default class Container extends React.Component<IContainerProps, {}> {
                     </Helmet>
 
                     <div className="pageTopContainer">
+                        <UserMessager />
                         <div className="contentWidth">
                             <PortalHeader appStore={this.appStore}/>
                         </div>
                     </div>
                     <If condition={this.appStore.isErrorCondition}>
-                       <Then>
-                           <div className="contentWrapper">
-                               <ErrorScreen appStore={this.appStore}/>
-                           </div>
-                       </Then>
+                        <Then>
+                            <div className="contentWrapper">
+                                <ErrorScreen
+                                    title={"Oops. There was an error retrieving data."}
+                                    body={<a href={buildCBioPortalPageUrl("/")}>Return to homepage</a>}
+                                    errorLog={formatError(this.appStore.undismissedSiteErrors)}
+                                />
+                            </div>
+                        </Then>
                         <Else>
                             <div className="contentWrapper">
                                 {(this.isSessionLoaded) && this.props.children}

@@ -22,7 +22,7 @@ export class PageLayout extends React.Component<IPageLayout,{}> {
         const noMargin = this.props.noMargin ? "noMargin" : "";
 
         return (
-            <div>
+            <div className={'mainContainer'}>
                 <div className={classNames('contentWidth',this.props.className, noMargin) }>
                     <div id="mainColumn">
                         <div>
@@ -43,7 +43,7 @@ export class PageLayout extends React.Component<IPageLayout,{}> {
                 }
 
             </div>
-        )
+        );
     }
 
 }

@@ -60,27 +60,6 @@ export function parseConfigDisabledTabs(configDisabledTabsParam:string){
     });
 }
 
-export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[]>{
-
-    const prom = new Promise<VirtualStudy[]>((resolve, reject)=>{
-        Promise.all([
-            sessionServiceClient.getUserVirtualStudies(),
-            client.getAllStudiesUsingGET({projection:"SUMMARY"})
-        ]).then(([userVirtualStudies, allCancerStudies])=>{
-            // return virtual studies from given cancer study ids
-            const missingFromCancerStudies = _.differenceWith(cancerStudyIds, allCancerStudies,(id:string, study:CancerStudy)=>id==study.studyId);
-            const virtualStudies = userVirtualStudies.filter(
-                (virtualStudy: VirtualStudy) => (missingFromCancerStudies.includes(virtualStudy.id))
-            );
-            resolve(virtualStudies);
-        }).catch(()=>{
-            resolve([]);
-;       });
-    });
-    return prom;
-
-}
-
 export function substitutePhysicalStudiesForVirtualStudies(cancerStudyIds:string[], virtualStudies:VirtualStudy[]){
 
     let physicalStudies:string[] = [];
@@ -103,15 +82,17 @@ export function substitutePhysicalStudiesForVirtualStudies(cancerStudyIds:string
 
 }
 
-export function populateSampleSpecificationsFromVirtualStudies(samplesSpecification:SamplesSpecificationElement[], virtualStudies:VirtualStudy[]){
+export function populateSampleSpecificationsFromVirtualStudies(samplesSpecifications:SamplesSpecificationElement[], virtualStudies:VirtualStudy[]){
 
     const virtualStudiesKeyedById = _.keyBy(virtualStudies,(virtualStudy)=>virtualStudy.id);
-
+    const samplesSpecificationsKeyedByStudyId = _.keyBy(samplesSpecifications,(spec)=>spec.studyId);
     // remove specs for virtual studies (since they mean nothing to api)
     // and then populate with ids
-    samplesSpecification = _.filter(samplesSpecification,(spec)=>!virtualStudiesKeyedById[spec.studyId]);
+    samplesSpecifications = _.filter(samplesSpecifications,(spec)=>!virtualStudiesKeyedById[spec.studyId]);
 
-    const allVirtualStudySampleSpecs = _.flatMapDeep(virtualStudies.map((virtualStudy)=>{
+    // only add sample specs when this virtual study is in the samplesSpecifications
+    const selectedVirtualStudies = _.filter(virtualStudies, (virtualStudy) => samplesSpecificationsKeyedByStudyId[virtualStudy.id]);
+    const allSelectedVirtualStudySampleSpecs = _.flatMapDeep(selectedVirtualStudies.map((virtualStudy)=>{
         return virtualStudy.data.studies.map((study)=>{
             return study.samples.map((sampleId)=>{
                 return {
@@ -124,20 +105,20 @@ export function populateSampleSpecificationsFromVirtualStudies(samplesSpecificat
     }));
 
     // ts not resolving type above and not sure why, so cast it
-    samplesSpecification = samplesSpecification.concat(allVirtualStudySampleSpecs as SamplesSpecificationElement[]);
+    samplesSpecifications = samplesSpecifications.concat(allSelectedVirtualStudySampleSpecs as SamplesSpecificationElement[]);
 
-    return samplesSpecification;
+    return samplesSpecifications;
 
 }
 
 //testIt
 export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): SamplesSpecificationElement[]{
 
-    let samplesSpecification: SamplesSpecificationElement[];
+    let samplesSpecifications: SamplesSpecificationElement[];
 
     if (query.case_ids && query.case_ids.length > 0) {
         const case_ids = query.case_ids.split(/\+|\s+/);
-        samplesSpecification = case_ids.map((item:string)=>{
+        samplesSpecifications = case_ids.map((item:string)=>{
             const split = item.split(":");
             return {
                 studyId:split[0],
@@ -145,7 +126,7 @@ export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): 
             }
         });
     } else if (query.sample_list_ids) {
-        samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+        samplesSpecifications = query.sample_list_ids.split(",").map((studyListPair:string)=>{
             const pair = studyListPair.split(":");
             return {
                 studyId:pair[0],
@@ -155,7 +136,7 @@ export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): 
         });
     } else if (query.case_set_id !== "all") {
         // by definition if there is a case_set_id, there is only one study
-        samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+        samplesSpecifications = cancerStudyIds.map((studyId:string)=>{
             return {
                 studyId: studyId,
                 sampleListId: query.case_set_id,
@@ -163,7 +144,7 @@ export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): 
             };
         });
     } else if (query.case_set_id === "all") { // case_set_id IS equal to all
-        samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+        samplesSpecifications = cancerStudyIds.map((studyId:string)=>{
             return {
                 studyId,
                 sampleListId:`${studyId}_all`,
@@ -174,6 +155,6 @@ export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): 
         throw("INVALID QUERY");
     }
 
-    return samplesSpecification;
+    return samplesSpecifications;
 
 }

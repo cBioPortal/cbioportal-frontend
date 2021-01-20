@@ -20,8 +20,7 @@ import { join as joinPaths } from "path";
 import { findRule } from "../ruleLoader";
 import { hasOwnProperty } from "../utils";
 
-// tslint:disable object-literal-sort-keys
-// tslint:disable object-literal-key-quotes
+
 export const rules = {
     // TypeScript Specific
 

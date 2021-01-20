@@ -1,4 +1,4 @@
-export type CopyDownloadControlsStyle = 'BUTTON' | 'LINK';
+export type CopyDownloadControlsStyle = 'BUTTON' | 'LINK' | 'QUERY';
 
 export interface ICopyDownloadControlsProps
 {

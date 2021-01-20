@@ -16,7 +16,7 @@ import classnames from 'classnames';
 import {If} from 'react-if';
 import autobind from 'autobind-decorator';
 import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -25,6 +25,8 @@ export type IFixedHeaderTableProps<T> = {
     sortDirection?: SortDirection;
     width?: number;
     height?: number;
+    headerHeight? :number;
+    rowHeight? :number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
     showControls?: boolean;
@@ -33,6 +35,7 @@ export type IFixedHeaderTableProps<T> = {
     showAddRemoveAllButtons?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
+    removeAllDisabled?:boolean;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
     autoFocusSearchAfterRendering?:boolean;
@@ -60,6 +63,8 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         autoFocusSearchAfterRendering: false,
         width: 398,
         height: 350,
+        headerHeight: 25,
+        rowHeight: 25,
         showSelectableNumber: false,
         sortBy: ''
     };
@@ -222,7 +227,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     {this.props.removeAll && (
                         <button className="btn btn-default btn-xs"
                                 data-test="fixed-header-table-remove-all"
-                                onClick={this.onRemoveAll}>Deselect all</button>
+                                onClick={this.onRemoveAll}
+                                disabled={this.props.removeAllDisabled}
+                        >Deselect all</button>
                     )}
                 </div>
             </If>
@@ -244,12 +251,12 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                {this.props.showControlsAtTop && this.getControls()}
+                {this.props.showControls && this.props.showControlsAtTop && this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
-                    headerHeight={25}
-                    rowHeight={25}
+                    headerHeight={this.props.headerHeight!}
+                    rowHeight={this.props.rowHeight!}
                     rowCount={this._store.dataStore.sortedFilteredData.length}
                     rowGetter={this.rowGetter}
                     className={styles.studyViewTablesBody}
@@ -272,7 +279,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         })
                     }
                 </RVTable>
-                {!this.props.showControlsAtTop && this.getControls()}
+                {this.props.showControls && !this.props.showControlsAtTop && this.getControls()}
             </div>
         );
     }

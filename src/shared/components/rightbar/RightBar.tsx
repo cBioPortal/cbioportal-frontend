@@ -4,12 +4,9 @@ import BarGraph from "../barGraph/BarGraph";
 import { observer} from "mobx-react";
 import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import Testimonials from "../testimonials/Testimonials";
-import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 import { Link } from 'react-router';
-import getBrowserWindow from "../../lib/getBrowserWindow";
-import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {redirectToStudyView} from "../../api/urls";
 import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPageHelpers";
@@ -41,7 +38,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
     get logic() { return this.studyStore.studyListLogic; }
 
     private CancerTypeList() {
-        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType);
+        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType, true);
     };
 
     private CancerTypeDescendantStudy({cancerType}: {cancerType:CancerType}) {
@@ -60,50 +57,54 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
     }
 
     private getWhatsNew() {
-        if (!_.isEmpty(AppConfig.serverConfig.skin_right_nav_whats_new_blurb)) {
-            return (
-                <div className="rightBarSection">
-                    <h3>What's New</h3>
-                    <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_right_nav_whats_new_blurb!}}></div>
-                </div>
-            );
+        if (AppConfig.serverConfig.skin_right_nav_show_whats_new) {
+            if (!_.isEmpty(AppConfig.serverConfig.skin_right_nav_whats_new_blurb)) {
+                return (
+                    <div className="rightBarSection">
+                        <h3>What's New</h3>
+                        <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_right_nav_whats_new_blurb!}}></div>
+                    </div>
+                );
+            } else {
+                let Timeline = require('react-twitter-widgets').Timeline;
+                return (
+                    <div className="rightBarSection" style={{paddingBottom:20}}>
+                        <h3 style={{borderBottom:0}}>
+                            What's New
+                            <a href="http://www.twitter.com/cbioportal" className="pull-right">
+                                @cbioportal <i className="fa fa-twitter" aria-hidden="true"></i>
+                            </a>
+                        </h3>
+                        <div style={{marginTop:3}}>
+                            <Timeline
+                                dataSource={{
+                                    sourceType: 'profile',
+                                    screenName: 'cbioportal'
+                                }}
+                                options={{
+                                    username: 'cbioportal',
+                                    height: '200',
+                                    chrome: 'noheader%20nofooter',
+                                }}
+                                onLoad={() => this.setState({twitterLoading:false})}
+                            />
+                        </div>
+                        <div>
+                            {this.state.twitterLoading &&
+                                 (<span style={{textAlign:"center"}}><LoadingIndicator isLoading={true} small={true}/></span>) ||
+                                 (
+                                    <div style={{paddingTop:5}}>
+                                        <p style={{textAlign:'center'}}>Sign up for low-volume email news alerts</p>
+                                        <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
+                                     </div>
+                                 )
+                            }
+                        </div>
+                    </div>
+                );
+            }
         } else {
-            let Timeline = require('react-twitter-widgets').Timeline;
-            return (
-                <div className="rightBarSection" style={{paddingBottom:20}}>
-                    <h3 style={{borderBottom:0}}>
-                        What's New
-                        <a href="http://www.twitter.com/cbioportal" className="pull-right">
-                            @cbioportal <i className="fa fa-twitter" aria-hidden="true"></i>
-                        </a>
-                    </h3>
-                    <div style={{marginTop:3}}>
-                        <Timeline
-                            dataSource={{
-                                sourceType: 'profile',
-                                screenName: 'cbioportal'
-                            }}
-                            options={{
-                                username: 'cbioportal',
-                                height: '200',
-                                chrome: 'noheader%20nofooter',
-                            }}
-                            onLoad={() => this.setState({twitterLoading:false})}
-                        />
-                    </div>
-                    <div>
-                        {this.state.twitterLoading &&
-                             (<span style={{textAlign:"center"}}><LoadingIndicator isLoading={true} small={true}/></span>) ||
-                             (
-                                <div style={{paddingTop:5}}>
-                                    <p style={{textAlign:'center'}}>Sign up for low-volume email news alerts</p>
-                                    <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
-                                 </div>
-                             )
-                        }
-                    </div>
-                </div>
-            );
+            return null;
         }
     }
 
@@ -119,6 +120,9 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                 <div className="rightBarSection exampleQueries">
                     <h3>Example Queries</h3>
                     <ul>
+                        <li>
+                            <Link to="/comparison/mutations?sessionId=5cf89323e4b0ab413787436c">Primary vs. metastatic prostate cancer</Link>
+                        </li>
                         <li>
                             <Link to="/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list">RAS/RAF alterations in colorectal cancer</Link>
                         </li>
@@ -136,6 +140,15 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                         </li>
                         <li>
                             <Link to="/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</Link>
+                        </li>
+                        <li>
+                            <Link to="/study?id=laml_tcga_pan_can_atlas_2018,acc_tcga_pan_can_atlas_2018,blca_tcga_pan_can_atlas_2018,lgg_tcga_pan_can_atlas_2018,brca_tcga_pan_can_atlas_2018,cesc_tcga_pan_can_atlas_2018,chol_tcga_pan_can_atlas_2018,coadread_tcga_pan_can_atlas_2018,dlbc_tcga_pan_can_atlas_2018,esca_tcga_pan_can_atlas_2018,gbm_tcga_pan_can_atlas_2018,hnsc_tcga_pan_can_atlas_2018,kich_tcga_pan_can_atlas_2018,kirc_tcga_pan_can_atlas_2018,kirp_tcga_pan_can_atlas_2018,lihc_tcga_pan_can_atlas_2018,luad_tcga_pan_can_atlas_2018,lusc_tcga_pan_can_atlas_2018,meso_tcga_pan_can_atlas_2018,ov_tcga_pan_can_atlas_2018,paad_tcga_pan_can_atlas_2018,pcpg_tcga_pan_can_atlas_2018,prad_tcga_pan_can_atlas_2018,sarc_tcga_pan_can_atlas_2018,skcm_tcga_pan_can_atlas_2018,stad_tcga_pan_can_atlas_2018,tgct_tcga_pan_can_atlas_2018,thym_tcga_pan_can_atlas_2018,thca_tcga_pan_can_atlas_2018,ucs_tcga_pan_can_atlas_2018,ucec_tcga_pan_can_atlas_2018,uvm_tcga_pan_can_atlas_2018">All TCGA Pan-Cancer</Link>
+                        </li>
+                        <li>
+                            <Link to="/study?id=msk_impact_2017">MSK-IMPACT clinical cohort, Zehir et al. 2017</Link>
+                        </li>
+                        <li>
+                            <Link to="/study?id=5c26a970e4b05228701f9fa9">Histone mutations across cancer types</Link>
                         </li>
                     </ul>
                 </div>

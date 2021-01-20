@@ -1,11 +1,16 @@
-import getBrowserWindow from "./getBrowserWindow";
-import {parseCohortIds} from "../../pages/patientView/clinicalInformation/PatientViewPageStore";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 
 export const NAVCASEIDS_PARAM = "navCaseIds";
 
 export const NAVCASEIDS_REGEXP = new RegExp(`${NAVCASEIDS_PARAM}=([^&]*)`);
 
 const PROP_NAME = "navCaseIdsCache";
+
+export function parseCohortIds(concatenatedIds:string){
+    return concatenatedIds.split(',').map((entityId:string)=>{
+        return entityId.includes(':') ? entityId : this.studyId + ':' + entityId;
+    });
+}
 
 export function handleLongUrls(){
     const navCaseIdMatch = getBrowserWindow().location.hash.match(new RegExp(NAVCASEIDS_REGEXP));

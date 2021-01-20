@@ -1,4 +1,4 @@
-var requests = {};
+window.ajaxRequests = {};
 var _send = XMLHttpRequest.prototype.send;
 var lastTimeout = null;
 
@@ -17,15 +17,15 @@ export function setNetworkListener(){
     XMLHttpRequest.prototype.send = function() {
         window.ajaxQuiet = false;
         var id = Math.floor(Math.random() * 1000000000);
-        requests[id] = true;
+        window.ajaxRequests[id] = { url:this._url, started: Date.now()  };
         /* Wrap onreadystaechange callback */
         var callback = this.onreadystatechange;
         this.onreadystatechange = function () {
             if (this.readyState == 4) {
-                delete requests[id];
+                delete window.ajaxRequests[id];
             }
             if (callback) callback.apply(this, arguments);
-            if (Object.keys(requests).length === 0) {
+            if (Object.keys(window.ajaxRequests).length === 0) {
                 window.ajaxQuiet = true;
             }
         }

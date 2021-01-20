@@ -1,5 +1,4 @@
-import {getGenomeNexusApiUrl} from "./urls";
-import GenomeNexusAPIInternal from "./generated/GenomeNexusAPIInternal";
+import GenomeNexusAPIInternal from "../../public-lib/api/generated/GenomeNexusAPIInternal";
 
 const client = new GenomeNexusAPIInternal();
 

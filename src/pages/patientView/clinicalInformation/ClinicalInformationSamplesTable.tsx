@@ -7,6 +7,7 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import styles from './style/sampleTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
+import { isUrl } from "public-lib";
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -28,7 +29,12 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
         const columns:Column<ISampleRow>[] = [{id: 'attribute'}, ...sampleInvertedData.columns].map((col) =>  (
             {
                 name: col.id,
-                render: (data:ISampleRow)=><span>{data[col.id]}</span>,
+                render: (data: ISampleRow) => {
+                    if (isUrl(data[col.id] as any)) {
+                        return <a href={data[col.id] as any} target="_blank">{data[col.id]}</a>
+                    }
+                    return <span>{data[col.id]}</span>
+                },
                 download: (data:ISampleRow) => `${data[col.id]}`,
                 filter: (data:ISampleRow, filterString:string, filterStringUpper:string) =>
                     (data[col.id].toString().toUpperCase().indexOf(filterStringUpper) > -1)

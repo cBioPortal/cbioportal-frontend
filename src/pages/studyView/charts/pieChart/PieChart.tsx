@@ -8,17 +8,18 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountSummary} from "pages/studyView/StudyViewUtils";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
-import {getTextWidth} from "../../../../shared/lib/wrapText";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../public-lib/lib/TextTruncationUtils";
+import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
 
 export interface IPieChartProps {
     width: number;
     height: number;
-    data: ClinicalDataCountWithColor[];
+    data: ClinicalDataCountSummary[];
     filters: string[];
     onUserSelection: (values: string[]) => void;
     placement: 'left' | 'right';
@@ -87,7 +88,11 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
+        return toSvgDomNodeWithLegend(this.svg, {
+            legendGroupSelector: ".studyViewPieChartLegend",
+            chartGroupSelector: ".studyViewPieChartGroup",
+            centerLegend: true
+        });
     }
 
     @computed
@@ -97,9 +102,9 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get fill() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return STUDY_VIEW_CONFIG.colors.na;
+                return DEFAULT_NA_COLOR;
             }
             return d.color;
         };
@@ -107,7 +112,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get stroke() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return "#cccccc";
             }
@@ -117,7 +122,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get strokeWidth() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return 3;
             }
@@ -127,7 +132,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed
     get fillOpacity() {
-        return (d: ClinicalDataCountWithColor) => {
+        return (d: ClinicalDataCountSummary) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return '0.5';
             }
@@ -136,17 +141,17 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     @autobind
-    private x(d: ClinicalDataCountWithColor) {
+    private x(d: ClinicalDataCountSummary) {
         return d.value;
     }
 
     @autobind
-    private y(d: ClinicalDataCountWithColor) {
+    private y(d: ClinicalDataCountSummary) {
         return d.count;
     }
 
     @autobind
-    private label(d: ClinicalDataCountWithColor) {
+    private label(d: ClinicalDataCountSummary) {
         return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
             this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
             getTextWidth(
@@ -156,7 +161,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
             ) ? '' : d.count.toLocaleString());
     }
 
-    // We do want to show a bigger pie chart when the height is way smaller than width
+    // We don't want to show a bigger pie chart when the height is way smaller than width
     @computed
     get chartSize() {
         return (this.props.width + this.props.height ) / 2;
@@ -175,7 +180,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer responsive={false}/>}
-                groupComponent={<g className="studyViewPieChartGroup"/>}
+                groupComponent={<g className="studyViewPieChartGroup" transform="translate(0, -12)"/>}
                 width={this.props.width}
                 height={this.chartSize}
                 labelRadius={this.pieSliceRadius / 3}
@@ -242,12 +247,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     public render() {
         return (
             <DefaultTooltip
-                placement="right"
+                placement={this.props.placement}
                 overlay={(
                     <ClinicalTable
                         width={300}
                         height={150}
                         data={this.props.data}
+                        label={this.props.label}
                         labelDescription={this.props.labelDescription}
                         patientAttribute={this.props.patientAttribute}
                         showAddRemoveAllButtons={true}

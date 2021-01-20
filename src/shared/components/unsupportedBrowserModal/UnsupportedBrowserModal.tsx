@@ -11,8 +11,8 @@ interface IBrowserState {
 
 export default class UnsupportedBrowserModal extends React.Component<{}, IBrowserState> {
 
-    constructor() {
-        super();
+    constructor(props:any) {
+        super(props);
 
         this.state = {
             name: browser.name,

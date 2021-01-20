@@ -7,6 +7,7 @@ import { observable } from "mobx";
 import { Badge } from 'react-bootstrap';
 import { formatPValue, formatQValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
 import styles from "./styles.module.scss";
+import classNames from "classnames";
 
 export interface IMutualExclusivityTableProps {
     columns?: MutualExclusivityTableColumnType[];
@@ -127,7 +128,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
             name: "p-Value",
             render: (d: MutualExclusivity) => <span>{formatPValue(d.pValue)}</span>,
-            tooltip: <span>Derived from Fisher Exact Test</span>,
+            tooltip: <span>Derived from one-sided Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
         };
@@ -142,8 +143,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.qValue < 0.05 ?
-                <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</div>,
+            render: (d: MutualExclusivity) => <div className={classNames(styles.Tendency, {[styles.Significant]:(d.qValue < 0.05)})}>{d.association}</div>,
             tooltip: 
                 <table>
                     <tr>

@@ -1,10 +1,8 @@
 import {
     somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange,
-    countDuplicateMutations, uniqueGenomicLocations, updateMissingGeneInfo, countMutationsByProteinChange
+    countDuplicateMutations, uniqueGenomicLocations, updateMissingGeneInfo
 } from "./MutationUtils";
-import * as _ from 'lodash';
-import { assert, expect } from 'chai';
-import sinon from 'sinon';
+import { assert } from 'chai';
 import {Gene, MolecularProfile, Mutation} from "../api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
@@ -155,29 +153,6 @@ describe('MutationUtils', () => {
         });
     });
 
-    describe('countMutationsByProteinChange', () => {
-        it("returns an empty array when there are no mutations", () => {
-            assert.equal(countMutationsByProteinChange([]).length, 0,
-                "no mutation count for an empty input");
-        });
-
-        it("counts and sorts mutations by protein change values", () => {
-            const mutationCountByProteinChange = countMutationsByProteinChange(mutationsToCount);
-
-            assert.equal(mutationCountByProteinChange.length, 3,
-                "there should be 3 unique protein change values");
-
-            assert.deepEqual(mutationCountByProteinChange[0], {proteinChange: "D66B", count: 5},
-                "first protein change should be D66B with 5 count");
-
-            assert.deepEqual(mutationCountByProteinChange[1], {proteinChange: "D666C", count: 1},
-                "second protein change should be D666C with 1 count");
-
-            assert.deepEqual(mutationCountByProteinChange[2], {proteinChange: "D666F", count: 1},
-                "third protein change should be D666F with 1 count");
-        });
-    });
-
     describe('countUniqueMutations', () => {
         it("counts unique mutations as zero when there are no mutations", () => {
             assert.equal(countUniqueMutations([]), 0,
@@ -210,7 +185,7 @@ describe('MutationUtils', () => {
     describe('somaticMutationRate', () => {
         it("calculates rate correctly", () => {
             // only one of the patients has a TP53 mutation
-            let result:number = 
+            let result:number =
                 somaticMutationRate(
                     "TP53",
                     somaticMutations,
@@ -220,7 +195,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 50);
 
             // No non-existing gene mutations
-            result = 
+            result =
                 somaticMutationRate(
                     "NASDASFASG",
                     somaticMutations,
@@ -231,7 +206,7 @@ describe('MutationUtils', () => {
 
             // when nr of given patientIds is 1 it should give 100% (not sure if
             // this should be an error instead)
-            result = 
+            result =
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
@@ -241,7 +216,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 100);
 
             // germline mutations should be ignored
-            result = 
+            result =
                 somaticMutationRate(
                     "BRCA1",
                     somaticMutations.concat(germlineMutations),
@@ -251,7 +226,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
-            result = 
+            result =
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
@@ -275,7 +250,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 50);
 
             // somatic mutations should be ignored
-            result = 
+            result =
                 germlineMutationRate(
                     "PIK3CA",
                     germlineMutations.concat(somaticMutations),
@@ -285,7 +260,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
-            result = 
+            result =
                 germlineMutationRate(
                     "BRCA2",
                     germlineMutations,
@@ -295,7 +270,7 @@ describe('MutationUtils', () => {
             assert.equal(result, 0);
 
             // No non-existing gene mutations
-            result = 
+            result =
                 germlineMutationRate(
                     "NASDASFASG",
                     germlineMutations,
@@ -310,45 +285,35 @@ describe('MutationUtils', () => {
         it('extracts unique genomic locations', () => {
             const mutations = [
                 initMutation({
-                    gene: {
-                        chromosome: "7"
-                    },
+                    chr:"7",
                     startPosition: 111,
                     endPosition: 111,
                     referenceAllele: "T",
                     variantAllele: "C",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "7"
-                    },
+                    chr:"7",
                     startPosition: 111,
                     endPosition: 111,
                     referenceAllele: "T",
                     variantAllele: "C",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "17"
-                    },
+                    chr:"17",
                     startPosition: 66,
                     endPosition: 66,
                     referenceAllele: "T",
                     variantAllele: "A",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "17"
-                    },
+                    chr:"17",
                     startPosition: 66,
                     endPosition: 66,
                     referenceAllele: "T",
                     variantAllele: "A",
                 }),
                 initMutation({
-                    gene: {
-                        chromosome: "4"
-                    },
+                    chr:"4",
                     startPosition: 11,
                     endPosition: 11,
                     referenceAllele: "-",
@@ -367,28 +332,22 @@ describe('MutationUtils', () => {
 
         const genesByHugoSymbol: {[hugoGeneSymbol:string]: Gene} = {
             AR: {
+                geneticEntityId:310,
                 entrezGeneId: 367,
                 hugoGeneSymbol: "AR",
-                type: "protein-coding",
-                cytoband: "Xq12",
-                length: 186588,
-                chromosome: "X"
+                type: "protein-coding"
             },
             BRCA1: {
+                geneticEntityId: 553,
                 entrezGeneId: 672,
                 hugoGeneSymbol: "BRCA1",
-                type: "protein-coding",
-                cytoband: "17q21.31",
-                length: 81189,
-                chromosome: "17"
+                type: "protein-coding"
             },
             BRCA2: {
+                geneticEntityId: 555,
                 entrezGeneId: 675,
                 hugoGeneSymbol: "BRCA2",
-                type: "protein-coding",
-                cytoband: "13q13.1",
-                length: 84193,
-                chromosome: "13"
+                type: "protein-coding"
             }
         };
 

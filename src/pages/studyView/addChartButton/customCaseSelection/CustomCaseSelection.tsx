@@ -5,24 +5,25 @@ import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {action, computed, observable} from 'mobx';
 import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
-import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
+import { CustomChart} from "../../StudyViewPageStore";
 import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {
-    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, ErrorCodeEnum,
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, CodeEnum,
     parseContent,
     ParseResult,
     ValidationResult
 } from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
-import Collapse from "react-collapse";
+import {Collapse} from "react-collapse";
 import {serializeEvent} from "../../../../shared/lib/tracking";
+import {ClinicalDataType, ClinicalDataTypeEnum} from "../../StudyViewUtils";
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
     selectedSamples: Sample[];
     submitButtonText: string;
-    onSubmit: (chart: NewChart) => void;
+    onSubmit: (chart: CustomChart) => void;
     queriedStudies: string[];
     disableGrouping?: boolean;
     getDefaultChartName?: () => string;
@@ -65,9 +66,10 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     }
 
     @computed
-    get newChartInfo(): NewChart {
+    get newChartInfo(): CustomChart {
         return {
             name: this.chartName ? this.chartName : this.props.getDefaultChartName ? this.props.getDefaultChartName() : '',
+            patientAttribute: this.caseIdsMode === ClinicalDataTypeEnum.PATIENT,
             groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
         }
     }
@@ -92,7 +94,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         this.validContent = newContent;
         this.validateContent = true;
     }
-
+    
     @autobind
     @action
     onChartNameChange(event: any) {
@@ -101,7 +103,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         if (!validChartName) {
             this.chartNameValidation = {
                 error: [{
-                    code: ErrorCodeEnum.INVALID,
+                    code: CodeEnum.INVALID,
                     message: new Error('Chart name exists.')
                 }],
                 warning: []
@@ -158,32 +160,32 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                 </ButtonGroup>
 
 
-                {!this.props.disableGrouping && (
-                    <span>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                            <span
-                                className={styles.fillIds}
-                                onClick={this.onClick}>
-                                Use currently selected samples/patients
-                            </span>
+                <span>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span
+                            className={styles.fillIds}
+                            onClick={this.onClick}>
+                            Use currently selected samples/patients
+                        </span>
 
-                            <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
-                                <a>Data Format</a>
-                                <span style={{paddingLeft: 4, cursor: 'pointer'}}>
-                                {this.dataFormatCollapsed ?
-                                    <i className="fa fa-chevron-down"/> :
-                                    <i className="fa fa-chevron-up"/>
-                                }
-                            </span>
-                            </div>
+                        <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                            <a>Data Format</a>
+                            <span style={{paddingLeft: 4, cursor: 'pointer'}}>
+                            {this.dataFormatCollapsed ?
+                                <i className="fa fa-chevron-down"/> :
+                                <i className="fa fa-chevron-up"/>
+                            }
+                        </span>
                         </div>
-                        <Collapse isOpened={!this.dataFormatCollapsed}>
-                            <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
-                        </Collapse>
-                    </span>
-                )}
+                    </div>
+                    <Collapse isOpened={!this.dataFormatCollapsed}>
+                        <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
+                    </Collapse>
+                </span>
 
                 <textarea
+                    className="form-control"
+                    rows={5}
                     value={this.content}
                     onChange={(event) => {
                         this.content = event.currentTarget.value;
@@ -193,17 +195,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     }}
                     data-test='CustomCaseSetInput'
                 />
-                {
-                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(message => {
-                        return <ErrorBox className={styles.error} error={message.message}/>
-                    })
-                }
-                {
-                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(message => {
-                        return <ErrorBox style={{backgroundColor: STUDY_VIEW_CONFIG.colors.theme.tertiary}}
-                                         error={message.message}/>
-                    })
-                }
+
                 <div className={styles.operations}>
                     {!this.props.disableGrouping && (
                         <input placeholder={"Chart name (optional)"}
@@ -221,6 +213,16 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         {this.props.submitButtonText}
                     </button>
                 </div>
+                {
+                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(error => {
+                        return <div className="alert alert-danger" role="alert" style={{marginTop: '10px', marginBottom: '0'}}>{error.message.message}</div>
+                    })
+                }
+                {
+                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(warning => {
+                        return <div className="alert alert-warning" role="alert"  style={{marginTop: '10px', marginBottom: '0'}}>{warning.message.message}</div>
+                    })
+                }
             </div>
         );
     }

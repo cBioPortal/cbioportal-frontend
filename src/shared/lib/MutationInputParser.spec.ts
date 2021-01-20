@@ -193,7 +193,7 @@ describe("MutationInputParser", () => {
         assert.equal(mutations[1].mutationType, undefined,
             "mutation should NOT have mutation type");
 
-        assert.equal(mutations[1].gene!.chromosome, undefined,
+        assert.equal(mutations[1].chr, undefined,
             "mutation should NOT have chromosome");
         assert.equal(mutations[1].startPosition, undefined,
             "mutation should NOT have start position");
@@ -216,7 +216,7 @@ describe("MutationInputParser", () => {
         assert.equal(mutations[mutations.length - 1].sampleId, "Unknown",
             "input order of mutations should be preserved");
 
-        assert.equal(mutations[0].gene!.hugoGeneSymbol, undefined,
+        assert.equal(mutations[0].gene, undefined,
             "gene instance should NOT have hugo symbol");
 
         assert.equal(mutations[1].sampleId, "TCGA-BS-A0UF",
@@ -226,7 +226,7 @@ describe("MutationInputParser", () => {
         assert.equal(mutations[1].mutationType, undefined,
             "mutation should NOT have mutation type");
 
-        assert.equal(mutations[1].gene!.chromosome, "X",
+        assert.equal(mutations[1].chr, "X",
             "mutation should have chromosome");
         assert.equal(mutations[1].startPosition, 66942713,
             "mutation should have start position");
@@ -258,7 +258,7 @@ describe("MutationInputParser", () => {
         assert.equal(mutations[3].mutationType, "Missense_Mutation",
             "mutation should have mutation type");
 
-        assert.equal(mutations[4].gene!.chromosome, "17",
+        assert.equal(mutations[4].chr, "17",
             "mutation should have chromosome");
         assert.equal(mutations[4].startPosition, 41242962,
             "mutation should have start position");

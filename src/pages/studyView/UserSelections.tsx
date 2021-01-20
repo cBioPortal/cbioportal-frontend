@@ -4,30 +4,45 @@ import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
-import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
+import {UniqueKey} from 'pages/studyView/StudyViewUtils';
+import {
+    ChartMeta,
+    getCNAColorByAlteration, getPatientIdentifiers,
+    getSelectedGroupNames,
+    intervalFiltersDisplayValue, StudyViewFilterWithSampleIdentifierFilters
+} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
 import classnames from 'classnames';
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {DEFAULT_NA_COLOR, MUT_COLOR_FUSION, MUT_COLOR_MISSENSE} from "shared/lib/Colors";
+import {
+    caseCounts,
+    getNumPatients,
+    getNumSamples, getSampleIdentifiers,
+    StudyViewComparisonGroup
+} from "../groupComparison/GroupComparisonUtils";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
     getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
+    comparisonGroupSelection:StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
-    removeGeneFilter: (entrezGeneId: number) => void;
+    removeMutatedGeneFilter: (entrezGeneId: number) => void;
+    removeFusionGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
     removeCustomSelectionFilter: () => void,
+    removeComparisonGroupSelectionFilter: ()=>void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -35,10 +50,6 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-
-    constructor(props: IUserSelectionsProps) {
-        super(props);
-    }
 
     @computed
     get showFilters() {
@@ -60,6 +71,24 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             content={`${this.props.numberOfSelectedSamplesInCustomSelection} sample${this.props.numberOfSelectedSamplesInCustomSelection > 1 ? 's' : ''}`}
                             backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                             onDelete={() => this.props.removeCustomSelectionFilter()}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>);
+        }
+
+        // Show the filter for the comparison group selection
+        if (this.props.comparisonGroupSelection.length > 0) {
+            const numSamples = getSampleIdentifiers(this.props.comparisonGroupSelection).length;
+            const numPatients = getPatientIdentifiers(this.props.comparisonGroupSelection).length;
+            components.push(<div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>{getSelectedGroupNames(this.props.comparisonGroupSelection)}</span>,
+                        <PillTag
+                            content={caseCounts(numSamples, numPatients)}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={() => this.props.removeComparisonGroupSelectionFilter()}
                         />
                     ]}
                     operation={':'}
@@ -148,8 +177,28 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
                             return <PillTag
                                 content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
-                                backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
-                                onDelete={() => this.props.removeGeneFilter(entrezGene)}
+                                backgroundColor={MUT_COLOR_MISSENSE}
+                                onDelete={() => this.props.removeMutatedGeneFilter(entrezGene)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.entrezGeneIds.length > 1}
+                    />
+                })} operation={"and"} group={false}/></div>);
+        }
+
+        // Fusion Genes table
+        chartMeta = this.props.attributesMetaSet[UniqueKey.FUSION_GENES_TABLE];
+        if (chartMeta && !_.isEmpty(this.props.filter.fusionGenes)) {
+            components.push(<div className={styles.parentGroupLogic}><GroupLogic
+                components={this.props.filter.fusionGenes.map(filter => {
+                    return <GroupLogic
+                        components={filter.entrezGeneIds.map(entrezGene => {
+                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
+                            return <PillTag
+                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
+                                backgroundColor={MUT_COLOR_FUSION}
+                                onDelete={() => this.props.removeFusionGeneFilter(entrezGene)}
                             />
                         })}
                         operation="or"
@@ -167,7 +216,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         components={filter.alterations.map(filter => {
                             const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
                             let tagColor = getCNAColorByAlteration(filter.alteration);
-                            tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
+                            tagColor = tagColor === undefined ? DEFAULT_NA_COLOR : tagColor;
                             return <PillTag
                                 content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
                                 backgroundColor={tagColor}

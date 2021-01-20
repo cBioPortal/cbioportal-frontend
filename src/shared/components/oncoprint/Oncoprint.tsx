@@ -47,16 +47,21 @@ export type ClinicalTrackSpec = {
 export interface IBaseHeatmapTrackDatum {
     profile_data: number|null;
     sample?: string;
-    patient?: string;
-    study: string;
+    patient: string;
+    study_id: string;
     uid: string;
     na?:boolean;
+    category?:string;
+    thresholdType?:">"|"<";
 }
 export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     hugo_gene_symbol: string;
 }
 export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     geneset_id: string;
+}
+export interface ITreatmentHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    treatment_id: string;
 }
 
 export type GeneticTrackDatum_Data =
@@ -70,7 +75,7 @@ export type GeneticTrackDatum_ProfiledIn = {genePanelId?:string, molecularProfil
 export type GeneticTrackDatum = {
     trackLabel: string;
     sample?:string;
-    patient?:string;
+    patient:string;
     study_id:string;
     uid:string;
     data:GeneticTrackDatum_Data[];
@@ -99,7 +104,7 @@ export type GeneticTrackSpec = {
     labelColor?: string;
 };
 
-interface IBaseHeatmapTrackSpec {
+export interface IBaseHeatmapTrackSpec {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
     molecularProfileId: string; // source
@@ -108,16 +113,23 @@ interface IBaseHeatmapTrackSpec {
     data: IBaseHeatmapTrackDatum[];
     trackGroupIndex: number;
 }
-export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
-    data: IGeneHeatmapTrackDatum[];
-    onRemove: () => void;
+
+export interface IHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IBaseHeatmapTrackDatum[]; // can be IGeneHeatmapTrackDatum or ITreatmentHeatmapTrackDatum
     info?: string;
     labelColor?: string;
+    trackLinkUrl?: string | undefined;
+    onRemove: () => void;
+    molecularProfileName?: string;
+    pivotThreshold?: number;
+    sortOrder?: string;
+    maxProfileValue?: number;
+    minProfileValue?: number;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
     trackLinkUrl: string | undefined;
-    expansionTrackList: IGeneHeatmapTrackSpec[];
+    expansionTrackList: IHeatmapTrackSpec[];
     expansionCallback: () => void;
 }
 
@@ -125,15 +137,16 @@ export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;
 
 export interface IOncoprintProps {
-    oncoprintRef?:(oncoprint:OncoprintJS<any>)=>void;
+    oncoprintRef?:(oncoprint:OncoprintJS)=>void;
 
     clinicalTracks: ClinicalTrackSpec[];
     geneticTracks: GeneticTrackSpec[];
     geneticTracksOrder?:string[]; // track keys
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
-    heatmapTracks: IGeneHeatmapTrackSpec[];
+    heatmapTracks: IHeatmapTrackSpec[];
     divId:string;
     width:number;
+    caseLinkOutInTooltips:boolean;
 
     molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
 
@@ -173,12 +186,12 @@ export interface IOncoprintProps {
 @observer
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div:HTMLDivElement;
-    public oncoprint:OncoprintJS<any>|undefined;
+    public oncoprint:OncoprintJS|undefined;
     private trackSpecKeyToTrackId:{[key:string]:TrackId};
     private lastTransitionProps:IOncoprintProps;
 
-    constructor() {
-        super();
+    constructor(props:IOncoprintProps) {
+        super(props);
 
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);

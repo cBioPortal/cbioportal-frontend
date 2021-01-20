@@ -2,14 +2,18 @@ import {assert} from "chai";
 import {
     heatmapClusterValueFn, numTracksWhoseDataChanged, transitionSortConfig,
     transition,
-    transitionTrackGroupSortPriority
+    transitionTrackGroupSortPriority,
+    transitionHeatmapTrack
 } from "./DeltaUtils";
-import {createStubInstance, match, SinonStub, spy} from "sinon";
+
+import {spy, SinonStub, match, createStubInstance} from 'sinon';
+
 import OncoprintJS from "oncoprintjs";
+import { MolecularProfile, CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import {
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,
-    IGeneHeatmapTrackSpec,
+    IHeatmapTrackSpec,
     IOncoprintProps
 } from "./Oncoprint";
 
@@ -40,6 +44,7 @@ describe("Oncoprint DeltaUtils", ()=>{
 
     describe("transition", () => {
         const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            caseLinkOutInTooltips:false,
             clinicalTracks: [],
             geneticTracks: [],
             genesetHeatmapTracks: [],
@@ -63,7 +68,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     expansionCallback: expansionCallback
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -114,7 +119,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     ]
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {'GENETICTRACK_0': 5};
             // when instructed to render the track from scratch
@@ -244,7 +249,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     ]
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([27]);
             const trackIdsByKey: {[trackKey: string]: number} = {
                 'GENETICTRACK_0': 5
@@ -292,7 +297,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     labelColor: 'fuchsia'
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -327,7 +332,7 @@ describe("Oncoprint DeltaUtils", ()=>{
                     labelColor: 'olive'
                 }]
             };
-            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
             (oncoprint.addTracks as SinonStub).returns([1]);
             const trackIdsByKey = {};
             // when instructed to render the track from scratch
@@ -511,5 +516,173 @@ describe("Oncoprint DeltaUtils", ()=>{
             transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:2}}, {sortConfig:{clusterHeatmapTrackGroupIndex:2}}, oncoprint);
             assert.equal(oncoprint.setSortConfig.callCount, 0);
         });
+    });
+
+    describe('transitionHeatmapTrack() for molecular profile', () => {
+
+        const molecularAlterationType = "MRNA_EXPRESSION"; 
+
+        const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            caseLinkOutInTooltips:false,
+            clinicalTracks: [],
+            geneticTracks: [],
+            genesetHeatmapTracks: [],
+            heatmapTracks: [],
+            divId: 'myDomId',
+            width: 1000
+        });
+
+        const nextSpec: IHeatmapTrackSpec = {
+            key: '',
+            label: '',
+            molecularProfileId: "profile_1",
+            molecularAlterationType: molecularAlterationType,
+            datatype: "",
+            trackGroupIndex: 1,
+            onRemove: () => {},
+            data: [
+                {profile_data: 1, study_id: "study1", uid: "uid", patient: "patient1"}, 
+                {profile_data: 2, study_id: "study1", uid: "uid", patient: "patient1"}, 
+                {profile_data: 3, study_id: "study1", uid: "uid", patient: "patient1"}
+            ]
+        };
+
+        const prevSpec = undefined;
+
+        const trackspec2trackId = () => {
+            return {
+                'MOLECULARTRACK_1': 1,
+                'MOLECULARTRACK_2': 2
+            };
+        };
+
+        const nextProps: IOncoprintProps = makeMinimalOncoprintProps();
+        const prevProps: IOncoprintProps = makeMinimalOncoprintProps();
+        
+        const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
+
+        beforeEach(function () {
+            (oncoprint.shareRuleSet as SinonStub).resetHistory();
+        });
+        
+        it('when is new track and ruleSetId is undefined, the trackId is set as ruleSetId', () => {
+            
+            const trackIdForRuleSetSharing = {heatmap: undefined};
+
+            (oncoprint.addTracks as SinonStub).returns([1]);
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.heatmap, 1);
+        });
+
+        it('when is new track and ruleSetId is defined, the ruleSetId is shared', () => {
+            
+            const trackIdForRuleSetSharing = {heatmap: 1};
+
+            (oncoprint.addTracks as SinonStub).returns([2]);
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isTrue((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.heatmap, 2);
+        });
+
+        it('when is existing track, the ruleSetId is not shared (nothing happens)', () => {
+            
+            const trackIdForRuleSetSharing = {heatmap: 1};
+            const prevSpec = nextSpec;
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.heatmap, 1); 
+        });
+
+    });
+
+    describe('transitionHeatmapTrack() for treatment response profile', () => {
+
+        const molecularAlterationType = "GENERIC_ASSAY";
+
+        const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            caseLinkOutInTooltips:false,
+            clinicalTracks: [],
+            geneticTracks: [],
+            genesetHeatmapTracks: [],
+            heatmapTracks: [],
+            divId: 'myDomId',
+            width: 1000
+        });
+
+        const nextSpec: IHeatmapTrackSpec = {
+            key: '',
+            label: '',
+            molecularProfileId: "profile_1",
+            molecularAlterationType: molecularAlterationType,
+            datatype: "",
+            trackGroupIndex: 1,
+            onRemove: () => {},
+            data: [
+                {profile_data: 1, study_id: "study1", uid: "uid", patient: "patient1"}, 
+                {profile_data: 2, study_id: "study1", uid: "uid", patient: "patient1"}, 
+                {profile_data: 3, study_id: "study1", uid: "uid", patient: "patient1"}
+            ]
+        };
+
+        const prevSpec = undefined;
+
+        const trackspec2trackId = () => {
+            return {
+                'TREATMENT_TRACK_1': 1,
+                'TREATMENT_TRACK_2': 2
+            };
+        };
+
+        const nextProps: IOncoprintProps = makeMinimalOncoprintProps();
+        const prevProps: IOncoprintProps = makeMinimalOncoprintProps();
+        
+        const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
+
+        beforeEach(function () {
+            (oncoprint.shareRuleSet as SinonStub).resetHistory();
+        });
+        
+        it('when is new track and ruleSetId is undefined, the new trackId is set as ruleSetId', () => {
+            
+            const trackIdForRuleSetSharing = {treatment: {} as {[m:string]:number}};
+
+            (oncoprint.addTracks as SinonStub).returns([1]);
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 1);
+        });
+
+        it('when is new track and ruleSetId is defined, the new trackId is set as ruleSetId', () => {
+            
+            const trackIdForRuleSetSharing = {treatment: { profile_1: 1 }};
+
+            (oncoprint.addTracks as SinonStub).returns([2]);
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 2);
+        });
+
+        it('when is existing track and ruleSetId is defined, the ruleset of existing track is updated to ruleSetId', () => {
+            
+            const trackIdForRuleSetSharing = {treatment: { profile_1: 2 }};
+            const prevSpec = nextSpec;
+
+            transitionHeatmapTrack(nextSpec, prevSpec, trackspec2trackId, ()=>undefined, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+            
+            assert.isTrue((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(trackIdForRuleSetSharing.treatment['profile_1'], 2);
+        });
+
     });
 });

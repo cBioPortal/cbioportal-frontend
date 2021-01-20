@@ -11,11 +11,14 @@ import {CoverageInformation, ExtendedClinicalAttribute} from "../../pages/result
 import _ from "lodash";
 import client from "../api/cbioportalClientInstance";
 import internalClient from "../api/cbioportalInternalClientInstance";
+import {Group} from "../api/ComparisonGroupClient";
+import ComplexKeySet from "../lib/complexKeyDataStructures/ComplexKeySet";
 
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
     ProfiledInPrefix = "PROFILED_IN",
+    ComparisonGroupPrefix = "IN_COMPARISON_GROUP",
     NumSamplesPerPatient = "NUM_SAMPLES_PER_PATIENT"
 }
 
@@ -25,11 +28,43 @@ export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:str
     return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
 }
 
+export function clinicalAttributeIsINCOMPARISONGROUP(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ComparisonGroupPrefix);
+}
+
 export function clinicalAttributeIsLocallyComputed(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
-    return clinicalAttributeIsPROFILEDIN(attribute) || (locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1);
+    return clinicalAttributeIsPROFILEDIN(attribute) || clinicalAttributeIsINCOMPARISONGROUP(attribute) ||
+        locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1;
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
+
+function makeComparisonGroupData(
+    attribute:ExtendedClinicalAttribute,
+    samples:Sample[]
+):ClinicalData[] {
+    const ret = [];
+    const samplesInGroup = new ComplexKeySet();
+    for (const study of attribute.comparisonGroup!.data.studies) {
+        const studyId = study.id;
+        for (const sampleId of study.samples) {
+            samplesInGroup.add({ studyId, sampleId });
+        }
+    }
+    for (const sample of samples) {
+        ret.push({
+            clinicalAttribute: attribute as ClinicalAttribute,
+            clinicalAttributeId: attribute.clinicalAttributeId,
+            patientId: sample.patientId,
+            sampleId: sample.sampleId,
+            studyId: sample.studyId,
+            uniquePatientKey: sample.uniquePatientKey,
+            uniqueSampleKey: sample.uniqueSampleKey,
+            value: samplesInGroup.has({ studyId: sample.studyId, sampleId: sample.sampleId }) ? "Yes" : "No"
+        });
+    }
+    return ret;
+}
 
 function makeProfiledData(
     attribute: ExtendedClinicalAttribute,
@@ -118,8 +153,10 @@ async function fetch(
             });
             break;
         default:
-            if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
+            if (clinicalAttributeIsPROFILEDIN(attribute)) {
                 ret = makeProfiledData(attribute, samples, coverageInformation);
+            } else if (clinicalAttributeIsINCOMPARISONGROUP(attribute)) {
+                ret = makeComparisonGroupData(attribute, samples);
             } else {
                 ret = await client.fetchClinicalDataUsingPOST({
                     clinicalDataType: attribute.patientAttribute ? "PATIENT" : "SAMPLE",

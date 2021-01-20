@@ -18,12 +18,12 @@ export default class StandaloneMutationMapper extends MutationMapper<IStandalone
         super(props);
     }
 
-    protected mutationTableComponent(): JSX.Element|null
+    protected get mutationTableComponent(): JSX.Element | null
     {
         return (
             <StandaloneMutationTable
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
-                oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
+                oncoKbCancerGenes={this.props.store.oncoKbCancerGenes}
                 indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
                 genomeNexusCache={this.props.genomeNexusCache}
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}

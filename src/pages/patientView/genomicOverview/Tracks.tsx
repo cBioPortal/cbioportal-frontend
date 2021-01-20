@@ -1,11 +1,10 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
-import * as tracksHelper from './tracksHelper'
+import * as tracksHelper from './tracksHelper';
 import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAPI';
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
@@ -15,11 +14,9 @@ interface TracksPropTypes {
     width:number;
 }
 
-export default class Tracks extends React.Component<TracksPropTypes, {}> {
+export const DEFAULT_GENOME_BUILD="GRCh37";
 
-    constructor(){
-        super();
-    }
+export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
     componentDidMount() {
 
@@ -35,8 +32,12 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of raphael config ---
 
         // --- chromosome chart ---
-        var chmInfo = tracksHelper.getChmInfo(this.props.mutations[0].ncbiBuild);
-        tracksHelper.plotChromosomes(paper,config,chmInfo);
+        let genomeBuild = DEFAULT_GENOME_BUILD;
+        if (this.props.mutations && this.props.mutations.length > 0) {
+            genomeBuild = this.props.mutations[0].ncbiBuild;
+        }
+        const chmInfo = tracksHelper.getChmInfo( genomeBuild);
+        tracksHelper.plotChromosomes(paper,config,chmInfo, genomeBuild);
         // --- end of chromosome chart ---
 
 
@@ -63,7 +64,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
                 if (this.props.sampleManager.samples.length > 1) {
                     const $container = $(`[id="cnaTrack${sample.id}"]`);
-                    const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
+                    const pos = {x: parseInt($container.attr('x')!) - 10, y: parseInt($container.attr('y')!) - 5};
                     const $newContainer = $('<svg height="12" width="12" />').attr(pos);
                     $container.replaceWith($newContainer);
 
@@ -91,7 +92,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                 if (this.props.sampleManager.samples.length > 1) {
                     const id = `mutTrack${sample.id}`;
                     const $container = $(`[id="${id}"]`);
-                    const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
+                    const pos = {x: parseInt($container.attr('x')!) - 10, y: parseInt($container.attr('y')!) - 5};
                     const $newContainer = $(`<svg id="${id}" height="12" width="12" />`);
                     $newContainer.attr(pos);
                     $container.replaceWith($newContainer);

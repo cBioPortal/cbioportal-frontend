@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 
 import { toConditionalPrecision } from "shared/lib/NumberUtils";
+import numeral from "numeral";
 
 export function toPrecision(value:number, precision:number, threshold:number)
 {
@@ -17,6 +18,16 @@ export function toPrecision(value:number, precision:number, threshold:number)
     //    ret = ret.replace(/\.?0+$/,'');
 
     return ret;
+}
+
+export function toFixedWithoutTrailingZeros(value:number, digits:number):string {
+    let fixed = value.toFixed(digits);
+    let zeros = "";
+    for (let i=0; i<digits; i++) {
+        zeros += "0";
+    }
+
+    return numeral(value).format(`0[.][${zeros}]`);
 }
 
 /**
@@ -78,6 +89,20 @@ export function roundLogRatio(logRatio: number, threshold: number): number {
         return Number(logRatio.toFixed(2));
     }
 }
+
+export function toConditionalPrecisionWithMinimum(
+    positiveNumber:number,
+    precision:number,
+    precisionThreshold:number,
+    minimumExponent:number
+){
+    if (positiveNumber === 0 || Math.log10(positiveNumber) < minimumExponent) {
+        return <span>&lt; 10<sup>{minimumExponent}</sup></span>;
+    } else {
+        return toConditionalPrecision(positiveNumber, precision, precisionThreshold);
+    }
+}
+
 /* difference between this function and the previous one is it will display
 percentages less than 1% as <1%
 */

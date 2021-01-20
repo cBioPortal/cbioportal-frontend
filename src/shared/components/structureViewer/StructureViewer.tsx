@@ -21,8 +21,8 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
     private _pdbId: string;
     private wrapper: StructureVisualizer3D;
 
-    public constructor() {
-        super();
+    public constructor(props:IStructureViewerProps) {
+        super(props);
 
         this.divHandler = this.divHandler.bind(this);
     }

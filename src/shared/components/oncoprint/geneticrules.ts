@@ -1,32 +1,26 @@
 import * as $ from "jquery";
-import {IGeneticAlterationRuleSetParams, RuleSetParams} from "oncoprintjs";
+import {IGeneticAlterationRuleSetParams, RuleSetParams, RuleSetType} from "oncoprintjs";
+import {
+	CNA_COLOR_AMP,
+	CNA_COLOR_GAIN,
+	CNA_COLOR_HETLOSS,
+	CNA_COLOR_HOMDEL,
+	DEFAULT_GREY,
+	MRNA_COLOR_HIGH,
+	MRNA_COLOR_LOW,
+	MUT_COLOR_FUSION,
+	MUT_COLOR_GERMLINE,
+	MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
+	MUT_COLOR_MISSENSE,
+	MUT_COLOR_MISSENSE_PASSENGER,
+	MUT_COLOR_OTHER,
+	MUT_COLOR_PROMOTER,
+	MUT_COLOR_TRUNC,
+	MUT_COLOR_TRUNC_PASSENGER,
+	PROT_COLOR_HIGH,
+	PROT_COLOR_LOW
+} from "shared/lib/Colors";
 // Feed this in as
-
-// Default grey
-export const DEFAULT_GREY = "rgba(190, 190, 190, 1)";
-
-// Mutation colors
-export const MUT_COLOR_MISSENSE = '#008000';
-export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
-export const MUT_COLOR_INFRAME = '#993404';
-export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
-export const MUT_COLOR_TRUNC = '#000000';
-export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
-export const MUT_COLOR_FUSION = '#8B00C9';
-export const MUT_COLOR_PROMOTER = '#00B7CE';
-export const MUT_COLOR_OTHER = '#cf58bc';//'#cfb537';
-
-export const MRNA_COLOR_UP = "#ff9999";
-export const MRNA_COLOR_DOWN = "#6699cc";
-export const MUT_COLOR_GERMLINE = '#FFFFFF';
-
-export const PROT_COLOR_UP = "#ff3df8";
-export const PROT_COLOR_DOWN = "#00E1FF";
-
-export const CNA_COLOR_AMP = "#ff0000";
-export const CNA_COLOR_GAIN = "#ffb6c1";
-export const CNA_COLOR_HETLOSS = "#8fd8d8";
-export const CNA_COLOR_HOMDEL = "#0000ff";
 
 const MUTATION_LEGEND_ORDER = 0;
 const FUSION_LEGEND_ORDER = 1;
@@ -35,10 +29,10 @@ const AMP_LEGEND_ORDER = 10;
 const GAIN_LEGEND_ORDER = 11;
 const HOMDEL_LEGEND_ORDER = 12;
 const HETLOSS_LEGEND_ORDER = 13;
-const MRNA_UP_LEGEND_ORDER = 20;
-const MRNA_DOWN_LEGEND_ORDER = 21;
-const PROT_UP_LEGEND_ORDER = 31;
-const PROT_DOWN_LEGEND_ORDER = 32;
+const MRNA_HIGH_LEGEND_ORDER = 20;
+const MRNA_LOW_LEGEND_ORDER = 21;
+const PROT_HIGH_LEGEND_ORDER = 31;
+const PROT_LOW_LEGEND_ORDER = 32;
 
 let non_mutation_rule_params = {
     // Default: gray rectangle
@@ -113,11 +107,11 @@ let non_mutation_rule_params = {
     // mRNA regulation
     'disp_mrna': {
 	// Light red outline for High
-	'up': {
+	'high': {
 	    shapes: [{
 		    'type': 'rectangle',
 		    'fill': 'rgba(0, 0, 0, 0)',
-		    'stroke': MRNA_COLOR_UP,
+		    'stroke': MRNA_COLOR_HIGH,
 		    'stroke-width': '2',
 		    'x': '0%',
 		    'y': '0%',
@@ -126,14 +120,14 @@ let non_mutation_rule_params = {
 		    'z': 3,
 		}],
 	    legend_label: 'mRNA High',
-		legend_order: MRNA_UP_LEGEND_ORDER
+		legend_order: MRNA_HIGH_LEGEND_ORDER
 	},
 	// Light blue outline for downregulation
-	'down': {
+	'low': {
 	    shapes: [{
 		    'type': 'rectangle',
 		    'fill': 'rgba(0, 0, 0, 0)',
-		    'stroke': MRNA_COLOR_DOWN,
+		    'stroke': MRNA_COLOR_LOW,
 		    'stroke-width': '2',
 		    'x': '0%',
 		    'y': '0%',
@@ -142,16 +136,16 @@ let non_mutation_rule_params = {
 		    'z': 3,
 		}],
 	    legend_label: 'mRNA Low',
-		legend_order: MRNA_DOWN_LEGEND_ORDER
+		legend_order: MRNA_LOW_LEGEND_ORDER
 	},
     },
     // protein expression regulation
     'disp_prot': {
 	// small up arrow for upregulated
-	'up': {
+	'high': {
 	    shapes: [{
 			'type': 'rectangle',
-			'fill': PROT_COLOR_UP,
+			'fill': PROT_COLOR_HIGH,
 			'x':"0%",
 			'y':"0%",
 			'width':"100%",
@@ -159,13 +153,13 @@ let non_mutation_rule_params = {
 			'z': 4,
 		}],
 	    legend_label: 'Protein High',
-		legend_order: PROT_UP_LEGEND_ORDER
+		legend_order: PROT_HIGH_LEGEND_ORDER
 	},
 	// small down arrow for upregulated
-	'down': {
+	'low': {
 	    shapes: [{
 			'type': 'rectangle',
-			'fill': PROT_COLOR_DOWN,
+			'fill': PROT_COLOR_LOW,
 			'x':"0%",
 			'y':"80%",
 			'width':"100%",
@@ -173,7 +167,7 @@ let non_mutation_rule_params = {
 			'z': 4,
 		}],
 	    legend_label: 'Protein Low',
-		legend_order: PROT_DOWN_LEGEND_ORDER
+		legend_order: PROT_LOW_LEGEND_ORDER
 	}
     },
     // fusion
@@ -216,14 +210,14 @@ export const germline_rule_params = {
 };
 
 const base_genetic_rule_set_params = {
-	type: 'gene',
+	type: RuleSetType.GENE as RuleSetType.GENE,
 	legend_label: 'Genetic Alteration',
 	na_legend_label: 'Not profiled',
 	legend_base_color: DEFAULT_GREY
 };
 
 export const genetic_rule_set_same_color_for_all_no_recurrence:IGeneticAlterationRuleSetParams =
-	$.extend({}, base_genetic_rule_set_params, {
+	Object.assign({}, base_genetic_rule_set_params, {
 		'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {
 				'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {

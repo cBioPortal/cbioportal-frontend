@@ -8,7 +8,7 @@ describe('alterationCountHelpers', () => {
 
     describe('#countAlterationOccurences', () => {
 
-        let groupedSamples:any, alterationsBySampleId:any;
+        let groupedSamples:any, alterationsBySampleId:any, molecularProfileIdsByAlterationType:any, genePanelData:any;
 
         beforeEach(()=>{
 
@@ -199,15 +199,62 @@ describe('alterationCountHelpers', () => {
                 ]
             };
 
+            molecularProfileIdsByAlterationType = {
+                "MUTATION_EXTENDED":[{
+                    "molecularProfileId": "chol_nus_2012_mutations"
+                }]
+            }
+
+            genePanelData = {
+                samples: {
+                    "UjEwNDpjaG9sX251c18yMDEy": {
+                        byGene:{"KRAS":[{
+                            uniqueSampleKey: "UjEwNDpjaG9sX251c18yMDEy",
+                            uniquePatientKey: "UjEwNDpjaG9sX251c18yMDEy",
+                            molecularProfileId: "chol_nus_2012_mutations",
+                            genePanelId: "GENEPANEL1",
+                            profiled: true
+                        }]},
+                        allGenes:[],
+                        notProfiledByGene:{},
+                        notProfiledAllGenes:[]
+                    },
+                    "QjA4NTpjaG9sX251c18yMDEy": {
+                        byGene:{"KRAS":[{
+                            uniqueSampleKey: "QjA4NTpjaG9sX251c18yMDEy",
+                            uniquePatientKey: "QjA4NTpjaG9sX251c18yMDEy",
+                            molecularProfileId: "chol_nus_2012_mutations",
+                            genePanelId: "GENEPANEL1",
+                            profiled: true
+                        }]},
+                        allGenes:[],
+                        notProfiledByGene:{},
+                        notProfiledAllGenes:[]
+                    },
+                    "VzA0MDpjaG9sX251c18yMDEy": {
+                        byGene:{"KRAS":[{
+                            uniqueSampleKey: "VzA0MDpjaG9sX251c18yMDEy",
+                            uniquePatientKey: "VzA0MDpjaG9sX251c18yMDEy",
+                            molecularProfileId: "chol_nus_2012_mutations",
+                            genePanelId: "GENEPANEL1",
+                            profiled: true
+                        }]},
+                        allGenes:[],
+                        notProfiledByGene:{},
+                        notProfiledAllGenes:[]
+                    }
+                }
+            }
+
         });
 
         it('count total samples and alteration totals', () => {
 
-            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
+            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId, molecularProfileIdsByAlterationType, genePanelData);
 
             const expectedResult = {
                 "Hepatobiliary Cancer": {
-                    "sampleTotal": 8,
+                    "profiledSampleTotal": 3,
                     "alterationTotal": 2,
                     "alterationTypeCounts": {
                         "mutated": 2,
@@ -216,14 +263,26 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 0
                     },
                     "alteredSampleCount": 2,
-                    "parentCancerType": "Hepatobiliary Cancer"
+                    "parentCancerType": "Hepatobiliary Cancer",
+                    "profiledSamplesCounts":{
+                        "mutation": 3,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    },
+                    "notProfiledSamplesCounts":{
+                        "mutation": 5,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    }
                 }
             };
 
@@ -258,11 +317,11 @@ describe('alterationCountHelpers', () => {
                 }
             ];
 
-            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
+            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId, molecularProfileIdsByAlterationType, genePanelData);
 
             const expectedResult = {
                 "Hepatobiliary Cancer": {
-                    "sampleTotal": 8,
+                    "profiledSampleTotal": 3,
                     "alterationTotal": 5,
                     "alterationTypeCounts": {
                         "mutated": 2,
@@ -271,14 +330,26 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 1,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 0
                     },
                     "alteredSampleCount": 5,
-                    "parentCancerType": "Hepatobiliary Cancer"
+                    "parentCancerType": "Hepatobiliary Cancer",
+                    "profiledSamplesCounts":{
+                        "mutation": 3,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    },
+                    "notProfiledSamplesCounts":{
+                        "mutation": 5,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    }
                 }
             };
 
@@ -298,11 +369,11 @@ describe('alterationCountHelpers', () => {
             }
             ];
 
-            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
+            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId, molecularProfileIdsByAlterationType, genePanelData);
 
             const expectedResult = {
                 "Hepatobiliary Cancer": {
-                    "sampleTotal": 8,
+                    "profiledSampleTotal": 3,
                     "alterationTotal": 4,
                     "alterationTypeCounts": {
                         "mutated": 2,
@@ -311,14 +382,26 @@ describe('alterationCountHelpers', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 1
                     },
                     "alteredSampleCount": 3,
-                    "parentCancerType": "Hepatobiliary Cancer"
+                    "parentCancerType": "Hepatobiliary Cancer",
+                    "profiledSamplesCounts":{
+                        "mutation": 3,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    },
+                    "notProfiledSamplesCounts":{
+                        "mutation": 5,
+                        "cna": 0,
+                        "expression": 0,
+                        "protein": 0
+                    }
                 }
             };
 
@@ -332,7 +415,7 @@ describe('alterationCountHelpers', () => {
                 {
                     "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
                     "molecularProfileAlterationType": "MUTATION_EXTENDED",
-                    "alterationSubType": "down",
+                    "alterationSubType": "low",
                     "alterationType": "MRNA_EXPRESSION"
                 },
             ];
@@ -340,15 +423,15 @@ describe('alterationCountHelpers', () => {
             alterationsBySampleId["VzAxMjpjaG9sX251c18yMDEy"] = [
                 {
                     "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
-                    "alterationSubType": "up",
+                    "alterationSubType": "high",
                     "alterationType": "MRNA_EXPRESSION"
                 }
             ];
 
-            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
+            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId, molecularProfileIdsByAlterationType, genePanelData);
 
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionDown, 1);
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionUp, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionLow, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.mrnaExpressionHigh, 1);
 
         });
 
@@ -358,7 +441,7 @@ describe('alterationCountHelpers', () => {
                 {
                     "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
                     "molecularProfileAlterationType": "MUTATION_EXTENDED",
-                    "alterationSubType": "down",
+                    "alterationSubType": "low",
                     "alterationType": "PROTEIN_LEVEL"
                 },
             ];
@@ -366,15 +449,15 @@ describe('alterationCountHelpers', () => {
             alterationsBySampleId["VzAxMjpjaG9sX251c18yMDEy"] = [
                 {
                     "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
-                    "alterationSubType": "up",
+                    "alterationSubType": "high",
                     "alterationType": "PROTEIN_LEVEL"
                 }
             ];
 
-            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId);
+            const ret = countAlterationOccurences(groupedSamples, alterationsBySampleId, molecularProfileIdsByAlterationType, genePanelData);
 
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionDown, 1);
-            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionUp, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionLow, 1);
+            assert.equal(ret["Hepatobiliary Cancer"].alterationTypeCounts.protExpressionHigh, 1);
 
         });
 

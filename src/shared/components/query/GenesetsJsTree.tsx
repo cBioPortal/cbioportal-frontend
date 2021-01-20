@@ -5,7 +5,7 @@ import {getHierarchyData} from "shared/lib/StoreUtils";
 import 'jstree/dist/jstree.min'; // tslint:disable-line
 import 'shared/components/query/styles/jstree/style.css'; // tslint:disable-line
 import * as _ from "lodash";
-import { remoteData } from "shared/api/remoteData";
+import { remoteData } from "public-lib/api/remoteData";
 import CBioPortalAPIInternal, { GenesetHierarchyInfo } from "shared/api/generated/CBioPortalAPIInternal";
 import { observer } from "mobx-react";
 import { observable, ObservableMap } from "mobx";
@@ -196,7 +196,7 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
         return (
                 <div>
                 <LoadingIndicator isLoading={this.isLoading} />
-                <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}}></div>
+                <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}} data-test="gsva-tree-container" ></div>
                 <div style={{padding: "30px 0px"}}>
                 <button className="btn btn-primary btn-sm pull-right"
                     style={{margin: "2px"}}

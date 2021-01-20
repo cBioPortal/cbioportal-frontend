@@ -12,7 +12,7 @@ import SampleManager from "../sampleManager";
 
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CBioPortalAPI";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 
 interface ITimelineProps {
@@ -104,7 +104,7 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
                 getSvg={this.getSvg}
                 filename="timeline"
                 dontFade={true}
-                collapse={true}
+                type='button'
                 style={{position:"absolute", top:0, right:5}}
                 />
             </div>

@@ -1,0 +1,28 @@
+{
+  "name": "end-to-end",
+  "version": "1.0.0",
+  "description": "Dependencies for running tests with webdriverio and browserstack",
+  "main": "index.js",
+  "scripts": {
+    "test-webdriver-manager": "cd .. && ./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cd ./end-to-end-test && (wdio shared/wdio/webdriver-manager.conf.js || bash shared/image-compare/upload_failed_screenshots.sh)",
+    "test-webdriver-manager-local": "(wdio shared/wdio/webdriver-manager.conf.js || bash shared/image-compare/upload_failed_screenshots.sh)",
+    "test-webdriver-manager-debug": "(DEBUG=true wdio shared/wdio/webdriver-manager.conf.js --inspect || bash shared/image-compare/upload_failed_screenshots.sh)",
+    "e2e": "rm -rf remote/screenshots/diff/; yarn run test-webdriver-manager",
+    "clear": "rm -rf remote/screenshots/screen/; rm -rf remote/screenshots/error/; rm -rf remote/screenshots/diff/; rm -rf remote/screenshots/junit/; rm -rf local/screenshots/screen/; rm -rf local/screenshots/diff/; rm -rf local/screenshots/error/; rm -rf local/screenshots/junit/;"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "browserstack-local": "1.3.0",
+    "clipboardy": "^2.0.0",
+    "wdio-browserstack-service": "0.1.4",
+    "wdio-junit-reporter": "^0.3.1",
+    "wdio-mocha-framework": "0.5.10",
+    "wdio-spec-reporter": "0.1.0",
+    "webdriver-manager": "^13.0.0",
+    "webdriverio": "4.8.0"
+  },
+  "devDependencies": {
+    "wdio-visual-regression-service": "^0.9.0"
+  }
+}

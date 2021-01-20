@@ -13,8 +13,8 @@ export default class TestimonialsPage extends React.Component<{},{}> {
 
     private store:TestimonialStore;
 
-    constructor() {
-        super();
+    constructor(props:any) {
+        super(props);
 
         this.store = new TestimonialStore();
     }

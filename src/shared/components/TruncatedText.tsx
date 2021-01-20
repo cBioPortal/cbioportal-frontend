@@ -2,7 +2,7 @@ import * as React from 'react';
 import classNames from 'classnames';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
-import DefaultTooltip from "./defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export interface ITruncatedTextProps
 {
@@ -11,7 +11,7 @@ export interface ITruncatedTextProps
     maxLength?: number; // max allowed length of the text
     buffer?: number;    // buffer length before considering truncating the text
     suffix?: string;    // will be added to the end of the text if truncated
-    addTooltip?: 'truncated'|'always'; // when to add the tooltip
+    addTooltip?: 'truncated'|'always' | 'never'; // when to add the tooltip
     tooltip?: JSX.Element; // tooltip content
 }
 
@@ -57,7 +57,7 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
         if (this.needsTooltip) {
             content = (
                 <DefaultTooltip
-                    overlay={() => this.props.tooltip || <span />}
+                    overlay={() => this.props.tooltip || <div style={{maxWidth: 500}}>{this.props.text}</div>}
                     placement="right"
                     destroyTooltipOnHide={true}
                 >
@@ -72,7 +72,7 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
     @computed get needsTooltip(): boolean
     {
         return (
-            this.props.tooltip !== undefined &&
+            this.props.addTooltip !== 'never' &&
             (this.props.addTooltip === 'always' || (this.props.addTooltip === 'truncated' && this.isTooLong))
         );
     }

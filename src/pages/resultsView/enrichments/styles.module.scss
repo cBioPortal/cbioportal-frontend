@@ -1,30 +1,34 @@
 .Container {
-    display: flex;
+
+}
+
+.ChartsPanel {
+    display:flex;
+    justify-content: flex-start;
+
+    > div {
+        margin-right:$standardMargin;
+        &:last-child {
+            margin-right:0;
+        }
+    }
+
+
+    margin-bottom: $standardMargin;
+
 }
 
 .Checkboxes {
     display: flex;
     flex-direction: row;
-    float: left;
     align-items:center;
     height: 30px;
+    float:left;
 }
-  
+
 .Checkboxes > * {
-    margin:0 10px !important;
+    margin-right:10px !important;
 }
-  
-.TableContainer {
-
-}
-
-//.TableContainer th {
-//    font-size: 10px;
-//}
-//
-//.TableContainer td {
-//    font-size: 11px;
-//}
 
 .TableContainer {
     :global(.tableSearchInput) {
@@ -52,6 +56,9 @@
 
 .DataSet {
     padding-bottom: $standardMargin;
+    :global(div.Select-menu-outer) {
+        z-index: 99 !important;
+    }
 }
 
 .ScatterTooltip div:last-child {
@@ -75,8 +82,26 @@
     display: flex;
     flex-direction: column;
     align-items:flex-start;
+
+    &.Significant {
+        font-weight: bold;
+    }
+
+    &.ColoredBackground {
+        border-radius:3px;
+        padding:1px 5px 1px 5px;
+        display:inline-block;
+        line-height:1.4;
+    }
 }
 
-.LeftColumn {
-    width:400px;
+.FlexCheckbox label {
+    font-weight:normal !important;
+    display: flex;
+    align-items: center;
+}
+
+.FlexCheckbox label input {
+    margin-top:1px !important;
+    margin-right:5px !important;
 }

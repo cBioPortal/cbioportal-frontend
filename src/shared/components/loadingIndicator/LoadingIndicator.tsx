@@ -2,7 +2,7 @@ import * as React from 'react';
 import {ThreeBounce} from 'better-react-spinkit';
 import {If, Else, Then} from 'react-if';
 import Spinner from "react-spinkit";
-import Portal from 'react-portal';
+import {Portal} from 'react-portal';
 import classNames from 'classnames';
 import styles from './styles.module.scss';
 
@@ -13,6 +13,7 @@ export interface ILoader {
     big?: boolean;
     inline?: boolean;
     center?: boolean;
+    centerRelativeToContainer?:boolean;
     size?: "big" | "small"
     className?:string;
 }
@@ -35,7 +36,8 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]:this.props.center,
-            [styles["centered-with-children"]]:this.props.center && (React.Children.count(this.props.children) > 0),
+            [styles["centered-relative-to-container"]]:this.props.centerRelativeToContainer,
+            [styles["centered-with-children"]]:(this.props.center || this.props.centerRelativeToContainer) && (React.Children.count(this.props.children) > 0),
             inlineBlock: this.props.inline
         };
 
@@ -47,9 +49,11 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                                  className={classNames(styles.color, spinnerStyles)}
                                  style={{display: 'inline-block'}}
                                  name="line-scale-pulse-out"/>
+                        <div className={styles.progressUI}>
                         {
                             this.props.children
                         }
+                        </div>
                     </div>
                 </Then>
             </If>

@@ -1,12 +1,19 @@
 import {
     alterationInfoForCaseAggregatedDataByOQLLine,
     makeGeneticTrackWith,
-    percentAltered
+    percentAltered,
+    extractTreatmentSelections,
+    getTreatmentTrackRuleSetParams
 } from "./OncoprintUtils";
 import {observable} from "mobx";
 import * as _ from 'lodash';
 import {assert} from 'chai';
 import {IQueriedMergedTrackCaseData} from "../../../pages/resultsView/ResultsViewPageStore";
+import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';
+import { ISelectOption } from 'shared/components/oncoprint/controls/OncoprintControls';
+import { IHeatmapTrackSpec, IBaseHeatmapTrackDatum } from "./Oncoprint";
+import { IGradientAndCategoricalRuleSetParams } from "oncoprintjs";
+import { isMutationProfile } from "shared/lib/StoreUtils";
 
 describe('OncoprintUtils', () => {
     describe('alterationInfoForCaseAggregatedDataByOQLLine', () => {
@@ -392,4 +399,197 @@ describe('OncoprintUtils', () => {
             assert.equal(percentAltered(2,100), "2%");
         })
     });
+
+    describe('Treatment ruleset params', () => {
+
+        it('Is created from Track Spec param', () => {
+            const treatmentTracSpec = {
+                key: 'TREATMENTTRACK_1',
+                label: '',
+                molecularProfileId: "profile1",
+                molecularAlterationType: "GENERIC_ASSAY",
+                data: [
+                    {profile_data: 1, study: "study1", uid: "uid"}, 
+                    {profile_data: 2, study: "study1", uid: "uid"}, 
+                    {profile_data: 3, study: "study1", uid: "uid"}
+                ],
+                datatype: "GENERIC_ASSAY",
+                trackGroupIndex: 1,
+                onRemove: () => {}
+            };
+
+            // const ruleSetParams = getTreatmentTrackRuleSetParams(treatmentTracSpec);
+
+        });
+    });
+
+});
+
+describe('splitHeatmapTextField', () => {
+    it('Splits around spaces', () => {
+        const elements = splitHeatmapTextField("A B C");
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it('Splits around tabs', () => {
+        const elements = splitHeatmapTextField("A   B   C");
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it("Splits around comma's", () => {
+        const elements = splitHeatmapTextField("A,B,C");
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it("Splits around comma's and spaces", () => {
+        const elements = splitHeatmapTextField("A, B, C");
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it("Splits around comma's and tabs", () => {
+        const elements = splitHeatmapTextField("A,  B,  C");
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it("Splits around EOL's", () => {
+        const elements = splitHeatmapTextField(`
+        A
+        B
+        C`);
+        assert.deepEqual(elements, ["A", "B", "C"]);
+    });
+    it("Removes duplicate entries", () => {
+        const elements = splitHeatmapTextField("A B B");
+        assert.deepEqual(elements, ["A", "B"]);
+    });
+});
+
+describe('getTreatmentTrackRuleSetParams', () => {
+    
+    const treatmentTracSpec = {
+        key: 'TREATMENTTRACK_1',
+        label: '',
+        molecularProfileId: "profile_1",
+        molecularAlterationType: "GENERIC_ASSAY",
+        data: [
+            {profile_data: 1, study: "study1", uid: "uid"},
+            {profile_data: 2, study: "study1", uid: "uid"},
+            {profile_data: 3, study: "study1", uid: "uid"}
+        ] as any as IBaseHeatmapTrackDatum[],
+        datatype: "GENERIC_ASSAY",
+        trackGroupIndex: 1,
+        maxProfileValue: 100,
+        minProfileValue: -100,
+        onRemove: () => {}
+    } as any as IHeatmapTrackSpec;
+    
+    it('RuleSetParams are correct w/o sortOrder and pivotThreshold provided', () => {
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(treatmentTracSpec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.equal(colors!.length, 2);
+        assert.deepEqual(value_range, [-100, 100]);
+        assert.deepEqual(value_stop_points, [-100, 100]);
+        assert.deepEqual(category_to_color, undefined);
+
+    });
+
+    it('ASC SortOrder is default', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.sortOrder = "ASC";
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(treatmentTracSpec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.deepEqual(value_range, [-100, 100]);
+
+    });
+
+    it('DESC SortOrder reverses value range', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.sortOrder = "DESC";
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.deepEqual(value_range, [100, -100]);
+
+    });
+
+    it('DESC SortOrder reverses value_range and value_stop_points', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.sortOrder = "DESC";
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.deepEqual(value_range, [100, -100]);
+        assert.deepEqual(value_stop_points, [100, -100]);
+
+    });
+
+    it('PivotThreshold adds middle value and color param', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.pivotThreshold = 0;
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.equal(colors!.length, 4);
+        assert.deepEqual(value_range, [-100, 100]);
+        assert.deepEqual(value_stop_points, [-100, 0, 0, 100]);
+
+    });
+
+    it('PivotThreshold to the left of min and max profile values is correctly integrated', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.pivotThreshold = -200;
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.equal(colors!.length, 2);
+        assert.deepEqual(value_range, [-200, 100]);
+        assert.deepEqual(value_stop_points, [-200, 100]);
+
+    });
+
+    it('PivotThreshold to the right of min and max profile values is correctly integrated', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.pivotThreshold = 200;
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.equal(colors!.length, 2);
+        assert.deepEqual(value_range, [-100, 200]);
+        assert.deepEqual(value_stop_points, [-100, 200]);
+
+    });
+
+    it('Categories are added when present on data points', () => {
+
+        const spec = Object.assign({}, treatmentTracSpec);
+        spec.data = [{profile_data: 3, study: "study1", uid: "uid", category: ">8.00"}] as any as IBaseHeatmapTrackDatum[];
+
+        const {value_range, colors, value_stop_points, category_to_color} = getTreatmentTrackRuleSetParams(spec) as IGradientAndCategoricalRuleSetParams;
+        
+        assert.isDefined(category_to_color);
+        assert.isString(category_to_color!['>8.00']);
+
+    });
+});
+
+describe('extractTreatmentSelections', () => {
+
+    const selectedTreatments:string[] = [];
+    const treatmentMap = {
+        'treatmentA': {id: 'treatmentA', value: 'valueA', label: 'labelA'}
+    };
+
+    it('Adds recognized treatments to selection', () => {
+        extractTreatmentSelections("treatmentA treatmentB", selectedTreatments, treatmentMap);
+        assert.deepEqual(selectedTreatments, ['treatmentA']);
+    });
+
+    it('Removed recognized treatments from text field', () => {
+        const text = extractTreatmentSelections('treatmentC treatmentA treatmentB', selectedTreatments, treatmentMap);
+        assert.equal(text, 'treatmentC  treatmentB');
+    });
+
 });

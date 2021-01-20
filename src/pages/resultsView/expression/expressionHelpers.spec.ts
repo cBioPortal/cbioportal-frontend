@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {getMolecularDataBuckets, prioritizeMutations} from "./expressionHelpers";
+import {getMolecularDataBuckets, prioritizeMutations, getPossibleRNASeqVersions} from "./expressionHelpers";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {studyData as sampleStudyData, mutationsKeyedBySampleId, coverageInformation} from './expressionHelpers.sample.js';
 import {Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
@@ -1571,6 +1571,11 @@ describe('prioritizeMutations',()=>{
 
 });
 
-
-
-
+describe('getPossibleRNASeqVersions', () => {
+    it('return appropriate RNA seq version options', () => {
+        assert.deepEqual(getPossibleRNASeqVersions([{ "molecularProfileId": "" }]), [])
+        assert.deepEqual(getPossibleRNASeqVersions([{ "molecularProfileId": "acc_tcga_rna_seq_v2_mrna" }]), [{"label":"RNA Seq V2","value":"rna_seq_v2_mrna"}])
+        assert.deepEqual(getPossibleRNASeqVersions([{ "molecularProfileId": "laml_tcga_rna_seq_mrna" }]), [{"label":"RNA Seq","value":"rna_seq_mrna"}])
+        assert.deepEqual(getPossibleRNASeqVersions([{ "molecularProfileId": "acc_tcga_rna_seq_v2_mrna" }, { "molecularProfileId": "laml_tcga_rna_seq_mrna" }]), [{"label":"RNA Seq V2","value":"rna_seq_v2_mrna"},{"label":"RNA Seq","value":"rna_seq_mrna"}])
+    });
+});

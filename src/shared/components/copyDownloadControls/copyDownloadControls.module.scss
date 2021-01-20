@@ -5,3 +5,23 @@
     //left: 50%;
     //transform: translate(-50%, -50%) !important;
 }
+
+.downloadTabLinksGroup {
+    > a {
+        > i{
+            margin-right: 5px !important;
+        }
+    }
+
+    > a:last-of-type {
+        margin-right: 10px;
+    }
+
+    > span {
+        margin: 0px 10px;
+    }
+
+    > span:last-child {
+        margin: 0px;
+    }
+}

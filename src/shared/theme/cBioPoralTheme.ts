@@ -88,6 +88,7 @@ const CBIOPORTAL_VICTORY_THEME = {
             grid: {
                 fill: "none",
                 stroke: blueGrey50,
+                strokeOpacity: (t:number)=>(t === 0 ? 0 : 1),
                 strokeDasharray,
                 strokeLinecap,
                 strokeLinejoin,

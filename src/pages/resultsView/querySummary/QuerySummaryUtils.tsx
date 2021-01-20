@@ -1,5 +1,8 @@
 import {getPercentage} from "../../../shared/lib/FormatUtils";
 import * as React from "react";
+import { SampleList, Sample } from "shared/api/generated/CBioPortalAPI";
+import _ from "lodash";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 export function getPatientSampleSummary(
     samples:any[],
@@ -59,4 +62,20 @@ export function getAlterationSummary(
             </strong>
         );
     }
+}
+
+export function getStudyViewFilterHash(
+    samples: Pick<Sample, "sampleId" | "studyId">[],
+    hasVirtualStudies: boolean,
+    sampleLists?: Pick<SampleList, "category">[]) {
+    const hasAllCaseLists = _.some(sampleLists, sampleList => sampleList.category === 'all_cases_in_study');
+    let studyViewFilterHash: string | undefined;
+    if (samples.length > 0 && (hasVirtualStudies || !hasAllCaseLists)) {
+        const sampleIdentifiers = samples.map(sample => ({
+            sampleId: sample.sampleId,
+            studyId: sample.studyId
+        }));
+        studyViewFilterHash = `filterJson=${JSON.stringify({ sampleIdentifiers })}`;
+    }
+    return studyViewFilterHash;
 }

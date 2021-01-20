@@ -1,164 +1,75 @@
-import { assert, expect } from 'chai';
-import { mount } from "enzyme";
+import {assert} from 'chai';
+import {mount} from "enzyme";
 import * as React from "react";
-import GeneSymbolValidator, { IGeneSymbolValidatorProps } from './GeneSymbolValidator';
-import { DisplayStatus } from './GeneSelectionBox';
+import GeneSymbolValidator, {IGeneSymbolValidatorProps} from './GeneSymbolValidator';
+import sinon from 'sinon';
 
 describe('GeneSymbolValidator', () => {
 
     let props: IGeneSymbolValidatorProps;
+    let wrapper: any;
+    let instance: GeneSymbolValidator;
 
     beforeEach(() => {
         props = {
             oql: {
-                query: []
+                query: [{gene: 'TP53', alterations: false}]
             },
-            genes: {
-                result: { found: [], suggestions: [] },
-                status: 'complete' as 'complete',
-                peekStatus: 'complete',
-                isPending: false,
-                isError: false,
-                isComplete: true,
-                error: undefined
-            },
-            geneQueryErrorDisplayStatus: DisplayStatus.UNFOCUSED,
-            geneQuery: '',
+            geneQuery: 'TP53',
+            skipGeneValidation: false,
             updateGeneQuery: () => null,
         } as IGeneSymbolValidatorProps;
+        wrapper = mount(<GeneSymbolValidator {...props} />);
+        instance = wrapper.instance() as GeneSymbolValidator;
     });
     afterEach(() => {
     });
 
-    it('valid oql', () => {
+    it('Validate geneQuery properly', () => {
+        sinon.stub(instance, 'genes').get(() => {
+            return {
+                status: 'complete',
+                isPending: false,
+                isError: false,
+                isComplete: true,
+                result: {
+                    found: [{
+                        entrezGeneId: 7157,
+                        hugoGeneSymbol: "TP53",
+                        type: "protein-coding",
+                        cytoband: "17p13.1",
+                        length: 19149,
+                        chromosome: "17"
+                    }],
+                    suggestions: []
+                },
+                error: undefined
+            };
+        });
 
-        props.oql.query = [{ gene: 'TP53', alterations: false }];
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
+        instance.forceUpdate();
 
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
             "All gene symbols are valid.");
-
-        wrapper.setProps({ hideSuccessMessage: true });
-
-        expect(wrapper.find('#geneBoxValidationStatus')).to.be.empty;
-
-    });
-
-    it('invalid oql', () => {
-
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
-
-        expect(wrapper.find('#geneBoxValidationStatus')).to.be.empty;
-
-        wrapper.setProps({ oql: { error: { start: 0, end: 0, message: '' } } })
-
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            "Cannot validate gene symbols because of invalid OQL. ");
-
-        wrapper.setProps({ geneQueryErrorDisplayStatus: undefined });
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            "Cannot validate gene symbols because of invalid OQL. ");
-
     });
 
     it('api error', () => {
+        sinon.stub(instance, 'genes').get(() => {
+            return {
+                status: 'error',
+                isPending: false,
+                isError: true,
+                isComplete: true,
+                result: {found: [], suggestions: []},
+                error: new Error('error')
+            };
+        });
 
-        props.oql.query = [{ gene: 'TP53', alterations: false }];
-        props.genes = {
-            result: { found: [], suggestions: [] },
-            status: 'error' as 'error',
-            peekStatus: 'error',
-            isPending: false,
-            isError: true,
-            isComplete: false,
-            error: undefined
-        }
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
+        instance.forceUpdate();
 
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
             "Unable to validate gene symbols.");
-
     });
-
-    it('api pending', () => {
-
-        props.oql.query = [{ gene: 'TP53', alterations: false }];
-        props.genes = {
-            result: { found: [], suggestions: [] },
-            status: 'pending' as 'pending',
-            peekStatus: 'pending',
-            isPending: true,
-            isError: false,
-            isComplete: false,
-            error: undefined
-        }
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
-
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            "Validating gene symbols...");
-
-    });
-
-    it('invalid genes with no suggestions', () => {
-
-        props.genes = {
-            result: { found: [], suggestions: [{ alias: 'TP5', genes: [] }] },
-            status: 'pending' as 'pending',
-            peekStatus: 'pending',
-            isPending: true,
-            isError: false,
-            isComplete: false,
-            error: undefined
-        }
-        props.oql.query = [{ gene: 'TP53', alterations: false }];
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
-
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            "Invalid gene symbols.TP5");
-
-    });
-
-    it('invalid genes with suggestions', () => {
-
-        props.genes = {
-            result: {
-                found: [],
-                suggestions: [
-                    {
-                        alias: 'AAA',
-                        genes: [
-                            {
-                                "entrezGeneId": 351,
-                                "hugoGeneSymbol": "APP",
-                                "type": "protein-coding",
-                                "cytoband": "21q21.3",
-                                "length": 6349,
-                                "chromosome": "21"
-                            }
-                        ]
-                    }
-                ]
-            },
-            status: 'pending' as 'pending',
-            peekStatus: 'pending',
-            isPending: true,
-            isError: false,
-            isComplete: false,
-            error: undefined
-        }
-        props.oql.query = [{ gene: 'AAA', alterations: false }];
-        const wrapper = mount(<GeneSymbolValidator {...props} />);
-
-        assert.equal(
-            wrapper.find('#geneBoxValidationStatus').text(),
-            "Invalid gene symbols.AAA: APP");
-
-    });
-
 });

@@ -4,6 +4,11 @@
 		resize: vertical;
 		border-radius: 2px;
 	}
+	textarea.oncoprintHeatmap {
+		width: 100%;
+		resize: vertical;
+		border-radius: 2px;
+	}
 	textarea{
 		padding: 5px;
 		border: 1px solid #d3d3d3;
@@ -33,10 +38,14 @@
     .GeneSymbolValidator {
 		cursor: default;
 		display: flex;
-		width:200px;
 		align-items: center;
 		padding-top: 5px;
-		white-space: nowrap;
+		flex-wrap:wrap;
+		&.nowrap {
+			white-space: nowrap;
+			flex-wrap:nowrap;
+			width:200px;
+		}
 		span.icon {
 			text-align: center;
 			margin-right: 4px;
@@ -66,12 +75,15 @@
 		}
 		div.invalidBubble {
 			background: $redError;
+			white-space:nowrap;
 		}
 		div.validBubble {
 			background: $greenSuccess;
+			white-space:nowrap;
 		}
 		div.suggestionBubble {
 			color: rgba(0, 0, 0, 0.5);
+			white-space:nowrap;
 			cursor: pointer;
 			display: flex;
 			align-items: center;

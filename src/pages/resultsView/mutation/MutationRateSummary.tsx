@@ -3,7 +3,7 @@ import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated
 import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
 import {MobxPromise} from "mobxpromise";
 import {observer} from "mobx-react";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 
 export interface IMutationRateSummaryProps {
     mutations: Mutation[];

@@ -5,7 +5,7 @@ import {PageLayout} from "shared/components/PageLayout/PageLayout";
 
 import './styles.scss';
 import styles from './visualize.module.scss';
-import {getNCBIlink} from "../../../shared/api/urls";
+import {getNCBIlink} from "../../../public-lib/lib/urls";
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {

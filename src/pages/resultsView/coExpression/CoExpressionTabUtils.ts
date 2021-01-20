@@ -1,13 +1,22 @@
+import * as _ from 'lodash';
 import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, GeneticEntityType} from "../ResultsViewPageStore";
+import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
+
+export type CoExpressionWithQ = CoExpression & {geneticEntityType: GeneticEntityType, qValue:number };
+
 export const correlationInformation = "Pearson correlations are computed first. For genes with a correlation greater "+
                                         "than 0.3 or less than -0.3, the Spearman correlations are also computed. By "+
                                         "default, only gene pairs with values > 0.3 or < -0.3 in both measures are shown.";
 
 export const tableSearchInformation = "Coexpression data can be filtered by gene, or by cytoband. To exclude all genes "+
                                         "from a cytoband, prefix with a dash -. For example, to exclude all genes on "+
-                                        "1p, search '-1p'."
+                                        "1p, search '-1p'.";
 
+export function sortRnaSeqProfilesToTop(profs: MolecularProfile[]) {
+    // sort rna seq to the top
+    return _.sortBy(profs, profile=>(profile.molecularProfileId.toLowerCase().indexOf("rna_seq") > -1) ? 0 : 1);
+}
 
 export function filterAndSortProfiles(profiles:MolecularProfile[]) {
     const profs = profiles.filter(profile=>{
@@ -24,17 +33,37 @@ export function filterAndSortProfiles(profiles:MolecularProfile[]) {
         }
         return good;
     });
-    profs.sort(function(profA, profB) {
-        // sort rna seq to the top
-        const rnaSeqA = profA.molecularProfileId.toLowerCase().indexOf("rna_seq") > -1;
-        const rnaSeqB = profB.molecularProfileId.toLowerCase().indexOf("rna_seq") > -1;
-        if (rnaSeqA === rnaSeqB) {
-            return 0;
-        } else if (rnaSeqA) {
-            return -1;
-        } else {
-            return 1;
+
+    // sort rna seq to the top
+    return sortRnaSeqProfilesToTop(profs);
+}
+
+export function getGenesetProfiles(profiles:MolecularProfile[]) {
+    const profs = profiles.filter(profile=>{
+        // we want only the geneset score profiles, excluding p-values
+
+        let good = false;
+        if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+
+            const profileId = profile.molecularProfileId.toLowerCase();
+            good = profileId.indexOf("gsva_pvalues") === -1;
         }
+        return good;
     });
     return profs;
+}
+
+export function getProfileOptions(profiles: MolecularProfile[],
+    molecularProfileIdToProfiledSampleCount?: { [molecularProfileId: string]: number; }) {
+    return profiles.map(profile => {
+        let label = profile.name;
+        if (molecularProfileIdToProfiledSampleCount) {
+            const profiledSampleCount = molecularProfileIdToProfiledSampleCount[profile.molecularProfileId];
+            label += ` (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`;
+        }
+        return {
+            label,
+            value: profile.molecularProfileId
+        };
+    });
 }

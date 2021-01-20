@@ -1,12 +1,12 @@
 import { assert } from 'chai';
-import React from 'react';
-import { calculateAlterationTendency, calculateExpressionTendency,
+import { calculateExpressionTendency,
     formatPercentage, getAlterationScatterData, getExpressionScatterData,
-    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
-    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
+    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData,
+    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels, getAlterationEnrichmentColumns, getEnrichmentBarPlotData, getGeneListOptions
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
+import * as _ from "lodash";
 
 expect.extend(expectJSX);
 
@@ -15,9 +15,15 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 1956,
         "hugoGeneSymbol": "EGFR",
         "cytoband": "7p11.2",
-        "alteredCount": 3,
-        "unalteredCount": 0,
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 3,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.00003645111904935468,
         "qValue": 0.2521323904643863
     },
@@ -25,19 +31,31 @@ const exampleAlterationEnrichments = [
         "entrezGeneId": 6468,
         "hugoGeneSymbol": "FBXW4",
         "cytoband": "10q24.32",
-        "alteredCount": 2,
-        "unalteredCount": 0,
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 2,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
-    }, 
+    },
     {
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
         "cytoband": "3p25.2",
-        "alteredCount": 2,
-        "unalteredCount": 0,
-        "logRatio": "Infinity",
+        "counts":[{
+            "alteredCount": 2,
+            "name": "altered group",
+            "profiledCount": 4
+        },{
+            "alteredCount": 0,
+            "name": "unaltered group",
+            "profiledCount": 4
+        }],
         "pValue": 0.0015673981191222392,
         "qValue": 0.9385345997286061
     }
@@ -50,13 +68,25 @@ const exampleAlterationEnrichmentRowData = [
         "entrezGeneId": 1956,
         "hugoGeneSymbol": "EGFR",
         "cytoband": "7p11.2",
-        "alteredCount": 3,
-        "alteredPercentage": 75,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name": "altered group",
+                "alteredCount": 3,
+                "profiledCount": 4,
+                "alteredPercentage": 75
+            },
+            "unaltered group": {
+                "name": "unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.00003645111904935468,
-        "qValue": 0.2521323904643863
+        "qValue": 0.2521323904643863,
+        "value":undefined,
+        "enrichedGroup":"altered group"
     },
     {
         "checked": false,
@@ -64,27 +94,51 @@ const exampleAlterationEnrichmentRowData = [
         "entrezGeneId": 6468,
         "hugoGeneSymbol": "FBXW4",
         "cytoband": "10q24.32",
-        "alteredCount": 2,
-        "alteredPercentage": 50,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name":"altered group",
+                "alteredCount": 2,
+                "profiledCount": 4,
+                "alteredPercentage": 50
+            },
+            "unaltered group": {
+                "name":"unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
-        "qValue": 0.9385345997286061
-    }, 
+        "qValue": 0.9385345997286061,
+        "value":undefined,
+        "enrichedGroup":"altered group"
+    },
     {
         "checked": false,
         "disabled": false,
         "entrezGeneId": 23066,
         "hugoGeneSymbol": "CAND2",
         "cytoband": "3p25.2",
-        "alteredCount": 2,
-        "alteredPercentage": 50,
-        "unalteredCount": 0,
-        "unalteredPercentage": 0,
+        "groupsSet": {
+            "altered group": {
+                "name":"altered group",
+                "alteredCount": 2,
+                "profiledCount": 4,
+                "alteredPercentage": 50
+            },
+            "unaltered group": {
+                "name":"unaltered group",
+                "alteredCount": 0,
+                "profiledCount": 4,
+                "alteredPercentage": 0
+            }
+        },
         "logRatio": Infinity,
         "pValue": 0.0015673981191222392,
-        "qValue": 0.9385345997286061
+        "qValue": 0.9385345997286061,
+        "value":undefined,
+        "enrichedGroup":"altered group"
     }
 ];
 
@@ -93,81 +147,119 @@ const exampleExpressionEnrichments = [
         "entrezGeneId": 25979,
         "hugoGeneSymbol": "DHRS7B",
         "cytoband": "17p11.2",
-        "meanExpressionInAlteredGroup": 8.797111512335256,
-        "meanExpressionInUnalteredGroup": 9.548546748530768,
-        "standardDeviationInAlteredGroup": 0.09305770504332485,
-        "standardDeviationInUnalteredGroup": 0.5899774772149077,
+        "groupsStatistics": [{
+            "meanExpression": 8.797111512335256,
+            "name": "altered group",
+            "standardDeviation": 0.09305770504332485
+        }, {
+            "meanExpression": 9.548546748530768,
+            "name": "unaltered group",
+            "standardDeviation": 0.5899774772149077
+        }],
         "pValue": 1.9359580614715825E-9,
         "qValue": 0.000024032306741578182
-    }, 
+    },
     {
         "entrezGeneId": 5774,
         "hugoGeneSymbol": "PTPN3",
         "cytoband": "9q31.3",
-        "meanExpressionInAlteredGroup": 8.973330136818843,
-        "meanExpressionInUnalteredGroup": 7.599637956820568,
-        "standardDeviationInAlteredGroup": 0.15386396864659846,
-        "standardDeviationInUnalteredGroup": 1.5212548411382572,
+        "groupsStatistics": [{
+            "meanExpression": 8.973330136818843,
+            "name": "altered group",
+            "standardDeviation": 0.15386396864659846,
+        }, {
+            "meanExpression": 7.599637956820568,
+            "name": "unaltered group",
+            "standardDeviation": 1.5212548411382572,
+        }],
         "pValue": 3.698700537372556E-9,
         "qValue": 0.000024032306741578182
-    }, 
+    },
     {
         "entrezGeneId": 2049,
         "hugoGeneSymbol": "EPHB3",
         "cytoband": "3q27.1",
-        "meanExpressionInAlteredGroup": 8.082947701098236,
-        "meanExpressionInUnalteredGroup": 5.430662108616908,
-        "standardDeviationInAlteredGroup": 0.33113816397794055,
-        "standardDeviationInUnalteredGroup": 1.8406977746799924,
+        "groupsStatistics": [{
+            "meanExpression": 8.082947701098236,
+            "name": "altered group",
+            "standardDeviation": 0.33113816397794055,
+        }, {
+            "meanExpression": 5.430662108616908,
+            "name": "unaltered group",
+            "standardDeviation": 1.8406977746799924,
+        }],
         "pValue": 5.631839749745262E-9,
         "qValue": 0.000024395252515979897
     }
 ];
 
-const exampleExpressionEnrichmentRowData = [
-    {
-        "checked": false,
-        "disabled": false,
-        "entrezGeneId": 25979,
-        "hugoGeneSymbol": "DHRS7B",
-        "cytoband": "17p11.2",
-        "meanExpressionInAlteredGroup": 8.797111512335256,
-        "meanExpressionInUnalteredGroup": 9.548546748530768,
-        "standardDeviationInAlteredGroup": 0.09305770504332485,
-        "standardDeviationInUnalteredGroup": 0.5899774772149077,
-        "logRatio": -0.7514352361955119,
-        "pValue": 1.9359580614715825E-9,
-        "qValue": 0.000024032306741578182
-    }, 
-    {
-        "checked": false,
-        "disabled": false,
-        "entrezGeneId": 5774,
-        "hugoGeneSymbol": "PTPN3",
-        "cytoband": "9q31.3",
-        "meanExpressionInAlteredGroup": 8.973330136818843,
-        "meanExpressionInUnalteredGroup": 7.599637956820568,
-        "standardDeviationInAlteredGroup": 0.15386396864659846,
-        "standardDeviationInUnalteredGroup": 1.5212548411382572,
-        "logRatio": 1.373692179998275,
-        "pValue": 3.698700537372556E-9,
-        "qValue": 0.000024032306741578182
-    }, 
-    {
-        "checked": false,
-        "disabled": false,
-        "entrezGeneId": 2049,
-        "hugoGeneSymbol": "EPHB3",
-        "cytoband": "3q27.1",
-        "meanExpressionInAlteredGroup": 8.082947701098236,
-        "meanExpressionInUnalteredGroup": 5.430662108616908,
-        "standardDeviationInAlteredGroup": 0.33113816397794055,
-        "standardDeviationInUnalteredGroup": 1.8406977746799924,
-        "logRatio": 2.652285592481328,
-        "pValue": 5.631839749745262E-9,
-        "qValue": 0.000024395252515979897
-    }
-];
+const exampleExpressionEnrichmentRowData = [{
+    "checked": false,
+    "disabled": false,
+    "entrezGeneId": 25979,
+    "hugoGeneSymbol": "DHRS7B",
+    "cytoband": "17p11.2",
+    "groupsSet": {
+        "altered group": {
+            "meanExpression": 8.797111512335256,
+            "name": "altered group",
+            "standardDeviation": 0.09305770504332485
+        },
+        "unaltered group": {
+            "meanExpression": 9.548546748530768,
+            "name": "unaltered group",
+            "standardDeviation": 0.5899774772149077
+        }
+    },
+    "logRatio": -0.7514352361955119,
+    "pValue": 1.9359580614715825E-9,
+    "qValue": 0.000024032306741578182,
+    "enrichedGroup":"unaltered group"
+}, {
+    "checked": false,
+    "disabled": false,
+    "entrezGeneId": 5774,
+    "hugoGeneSymbol": "PTPN3",
+    "cytoband": "9q31.3",
+    "groupsSet": {
+        "altered group": {
+            "meanExpression": 8.973330136818843,
+            "name": "altered group",
+            "standardDeviation": 0.15386396864659846,
+        },
+        "unaltered group": {
+            "meanExpression": 7.599637956820568,
+            "name": "unaltered group",
+            "standardDeviation": 1.5212548411382572,
+        }
+    },
+    "logRatio": 1.373692179998275,
+    "pValue": 3.698700537372556E-9,
+    "qValue": 0.000024032306741578182,
+    "enrichedGroup":"altered group"
+}, {
+    "checked": false,
+    "disabled": false,
+    "entrezGeneId": 2049,
+    "hugoGeneSymbol": "EPHB3",
+    "cytoband": "3q27.1",
+    "groupsSet": {
+        "altered group": {
+            "meanExpression": 8.082947701098236,
+            "name": "altered group",
+            "standardDeviation": 0.33113816397794055,
+        },
+        "unaltered group": {
+            "meanExpression": 5.430662108616908,
+            "name": "unaltered group",
+            "standardDeviation": 1.8406977746799924,
+        }
+    },
+    "logRatio": 2.652285592481328,
+    "pValue": 5.631839749745262E-9,
+    "qValue": 0.000024395252515979897,
+    "enrichedGroup":"altered group"
+}];
 
 const exampleAlterations = [
     {
@@ -242,24 +334,24 @@ const exampleAlterations = [
 
 const exampleBoxPlotScatterData = [
     {
-        x: 1.922684807165747, 
-        y: 9.940678152790728, 
-        sampleId: "TCGA-OR-A5J1-01", 
-        studyId: "acc_tcga", 
+        x: 1.922684807165747,
+        y: 9.940678152790728,
+        sampleId: "TCGA-OR-A5J1-01",
+        studyId: "acc_tcga",
         alterations: ""
     },
     {
-        x: 2.0781361505168783, 
-        y: 8.34481740339671, 
-        sampleId: "TCGA-OR-A5J2-01", 
-        studyId: "acc_tcga", 
+        x: 2.0781361505168783,
+        y: 8.34481740339671,
+        sampleId: "TCGA-OR-A5J2-01",
+        studyId: "acc_tcga",
         alterations: ""
     },
     {
-        x: 1.8867908893279546, 
-        y: 9.660310790006957, 
-        sampleId: "TCGA-OR-A5J3-01", 
-        studyId: "acc_tcga", 
+        x: 1.8867908893279546,
+        y: 9.660310790006957,
+        sampleId: "TCGA-OR-A5J3-01",
+        studyId: "acc_tcga",
         alterations: ""
     }
 ]
@@ -268,12 +360,10 @@ const exampleMolecularData = [
     {
         entrezGeneId: 25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J1",
@@ -286,12 +376,10 @@ const exampleMolecularData = [
     {
         entrezGeneId:25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J2",
@@ -304,12 +392,10 @@ const exampleMolecularData = [
     {
         entrezGeneId:25979,
         gene: {
+            geneticEntityId: 9829,
             entrezGeneId: 25979,
             hugoGeneSymbol: "DHRS7B",
-            type: "protein-coding",
-            cytoband: "17p11.2",
-            length: 68604,
-            chromosome: "17"
+            type: "protein-coding"
         },
         molecularProfileId:"acc_tcga_rna_seq_v2_mrna",
         patientId:"TCGA-OR-A5J3",
@@ -322,19 +408,6 @@ const exampleMolecularData = [
 ]
 
 describe("EnrichmentsUtil", () => {
-    describe("#calculateAlterationTendency()", () => {
-        it("returns Co-occurrence for 5", () => {
-            assert.equal(calculateAlterationTendency(5), "Co-occurrence");
-        });
-
-        it("returns Mutual exclusivity for 0", () => {
-            assert.equal(calculateAlterationTendency(0), "Mutual exclusivity");
-        });
-
-        it("returns Mutual exclusivity for -3", () => {
-            assert.equal(calculateAlterationTendency(-3), "Mutual exclusivity");
-        });
-    });
 
     describe("#calculateExpressionTendency()", () => {
         it("returns Over-expressed for 3", () => {
@@ -351,12 +424,28 @@ describe("EnrichmentsUtil", () => {
     });
 
     describe("#formatPercentage()", () => {
-        it("returns 5 (10.35%) for 5 and 10.3452", () => {
-            assert.equal(formatPercentage(5, 10.3452), "5 (10.35%)");
+        it("returns 3 (75.00%) for altered count 3 and profiled count 4", () => {
+            assert.equal(formatPercentage("altered group", {
+                "groupsSet": {
+                    "altered group": {
+                        "name": "altered group",
+                        "alteredCount": 3,
+                        "alteredPercentage": 75
+                    }
+                }
+            } as any), "3 (75.00%)");
         });
 
-        it("returns 1 (1.00%) for 1 and 1", () => {
-            assert.equal(formatPercentage(1, 1), "1 (1.00%)");
+        it("returns 1 (1.00%) for altered count 1 and profiled count 100", () => {
+            assert.equal(formatPercentage("altered group", {
+                "groupsSet": {
+                    "altered group": {
+                        "name": "altered group",
+                        "alteredCount": 1,
+                        "alteredPercentage": 1
+                    }
+                }
+            } as any), "1 (1.00%)");
         });
     });
 
@@ -366,7 +455,7 @@ describe("EnrichmentsUtil", () => {
         });
 
         it("returns correct scatter data", () => {
-            assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData, ["EGFR"]), [
+            assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData as any, ["EGFR"]), [
                 {x: 10, y: 2.804820678721167, hugoGeneSymbol: "FBXW4", logRatio: Infinity, pValue:0.0015673981191222392, qValue: 0.9385345997286061, hovered: false},
                 {x: 10, y: 2.804820678721167, hugoGeneSymbol: "CAND2", logRatio: Infinity, pValue:0.0015673981191222392, qValue: 0.9385345997286061, hovered: false},
             ]);
@@ -380,9 +469,9 @@ describe("EnrichmentsUtil", () => {
 
         it("returns correct scatter data", () => {
             assert.deepEqual(getExpressionScatterData(exampleExpressionEnrichmentRowData, ["EGFR"]), [
-                {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979, 
+                {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979,
                     logRatio: -0.7514352361955119, pValue: 1.9359580614715825E-9, qValue: 0.000024032306741578182, hovered: false},
-                {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774, 
+                {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774,
                     logRatio: 1.373692179998275, pValue: 3.698700537372556E-9, qValue: 0.000024032306741578182, hovered: false},
                 {x: 2.652285592481328, y: 8.249349711250797, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049,
                     logRatio: 2.652285592481328, pValue: 5.631839749745262E-9, qValue: 0.000024395252515979897, hovered: false}
@@ -392,62 +481,57 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getAlterationRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getAlterationRowData([], 0, 0, []), []);
+            assert.deepEqual(getAlterationRowData([], [], []), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, 4, 84, ["EGFR"]), exampleAlterationEnrichmentRowData);
+            assert.deepEqual(getAlterationRowData(exampleAlterationEnrichments, ["EGFR"], [{name:"altered group"}, {name:"unaltered group"}]), exampleAlterationEnrichmentRowData as any);
         });
     });
 
     describe("#getExpressionRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getExpressionRowData([], ["EGFR"]), []);
+            assert.deepEqual(getExpressionRowData([], ["EGFR"],[]), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getExpressionRowData(exampleExpressionEnrichments, ["EGFR"]), exampleExpressionEnrichmentRowData);
+            assert.deepEqual(getExpressionRowData(exampleExpressionEnrichments, ["EGFR"], [{name:"altered group"}, {name:"unaltered group"}]), exampleExpressionEnrichmentRowData);
         });
     });
 
     describe("#getFilteredData()", () => {
         it("returns correct filtered data", () => {
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, true, false, null, null),
-                exampleExpressionEnrichmentRowData);
+            assert.deepEqual(getFilteredData(exampleAlterationEnrichmentRowData as any, ["altered group", "unaltered group"], false, null),
+            exampleAlterationEnrichmentRowData);
 
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null, null), [
+            assert.deepEqual(getFilteredData(exampleAlterationEnrichmentRowData as any , ["unaltered group"], true, null), []);
+
+            assert.deepEqual(getFilteredData(exampleAlterationEnrichmentRowData as any, ["altered group"], false, ["FBXW4"]), [
                 {
                     "checked": false,
                     "disabled": false,
-                    "entrezGeneId": 25979,
-                    "hugoGeneSymbol": "DHRS7B",
-                    "cytoband": "17p11.2",
-                    "meanExpressionInAlteredGroup": 8.797111512335256,
-                    "meanExpressionInUnalteredGroup": 9.548546748530768,
-                    "standardDeviationInAlteredGroup": 0.09305770504332485,
-                    "standardDeviationInUnalteredGroup": 0.5899774772149077,
-                    "logRatio": -0.7514352361955119,
-                    "pValue": 1.9359580614715825E-9,
-                    "qValue": 0.000024032306741578182
-                }
-            ]);
-
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null, ["DHRS7B"]), []);
-
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, false, true, false, ["DHRS7B", "PTPN3"], null), [
-                {
-                    "checked": false,
-                    "disabled": false,
-                    "entrezGeneId": 5774,
-                    "hugoGeneSymbol": "PTPN3",
-                    "cytoband": "9q31.3",
-                    "meanExpressionInAlteredGroup": 8.973330136818843,
-                    "meanExpressionInUnalteredGroup": 7.599637956820568,
-                    "standardDeviationInAlteredGroup": 0.15386396864659846,
-                    "standardDeviationInUnalteredGroup": 1.5212548411382572,
-                    "logRatio": 1.373692179998275,
-                    "pValue": 3.698700537372556E-9,
-                    "qValue": 0.000024032306741578182
+                    "entrezGeneId": 6468,
+                    "hugoGeneSymbol": "FBXW4",
+                    "cytoband": "10q24.32",
+                    "groupsSet": {
+                        "altered group": {
+                            "name":"altered group",
+                            "alteredCount": 2,
+                            "profiledCount": 4,
+                            "alteredPercentage": 50
+                        },
+                        "unaltered group": {
+                            "name":"unaltered group",
+                            "alteredCount": 0,
+                            "profiledCount": 4,
+                            "alteredPercentage": 0
+                        }
+                    },
+                    "logRatio": Infinity,
+                    "pValue": 0.0015673981191222392,
+                    "qValue": 0.9385345997286061,
+                    "enrichedGroup": "altered group",
+                    "value":undefined
                 }
             ]);
         });
@@ -513,8 +597,8 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getDownloadContent()", () => {
         it("returns correct download content", () => {
-            assert.equal(getDownloadContent(exampleBoxPlotScatterData, "EGFR", "acc_tcga_rna_seq_v2_mrna"), "Sample ID\tEGFR, " + 
-            "acc_tcga_rna_seq_v2_mrna\tAlteration\nTCGA-OR-A5J1-01\t9.940678152790728\t\nTCGA-OR-A5J2-01\t8.34481740339671\t\n" + 
+            assert.equal(getDownloadContent(exampleBoxPlotScatterData, "EGFR", "acc_tcga_rna_seq_v2_mrna"), "Sample ID\tEGFR, " +
+            "acc_tcga_rna_seq_v2_mrna\tAlteration\nTCGA-OR-A5J1-01\t9.940678152790728\t\nTCGA-OR-A5J2-01\t8.34481740339671\t\n" +
             "TCGA-OR-A5J3-01\t9.660310790006957\t");
         });
     });
@@ -539,24 +623,24 @@ describe("EnrichmentsUtil", () => {
         it("returns correct boxplot model", () => {
             assert.deepEqual(getBoxPlotModels(exampleBoxPlotScatterData.concat([
                 {
-                    x: 1, 
-                    y: 5, 
-                    sampleId: "TCGA-OR-A5F1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 5,
+                    sampleId: "TCGA-OR-A5F1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 },
                 {
-                    x: 1, 
-                    y: 4, 
-                    sampleId: "TCGA-OR-A5O1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 4,
+                    sampleId: "TCGA-OR-A5O1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 },
                 {
-                    x: 1, 
-                    y: 7, 
-                    sampleId: "TCGA-OR-A5Q1-01", 
-                    studyId: "acc_tcga", 
+                    x: 1,
+                    y: 7,
+                    sampleId: "TCGA-OR-A5Q1-01",
+                    studyId: "acc_tcga",
                     alterations: ""
                 }
             ])), [
@@ -579,7 +663,7 @@ describe("EnrichmentsUtil", () => {
                         suspectedOutliers: []
                     },
                     x: 1
-                }, 
+                },
                 {
                     q1: 8.34481740339671,
                     q2: 9.660310790006957,
@@ -611,8 +695,71 @@ describe("EnrichmentsUtil", () => {
                 "VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh": [],
                 "VENHQS1PUi1BNUozLTAxOmFjY190Y2dh": []
             }
-            assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []), 
+            assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []),
                 exampleBoxPlotScatterData);
+        });
+    });
+
+    describe("#getGroupColumns()", () => {
+        it("returns correct group columns", () => {
+            assert.deepEqual(getAlterationEnrichmentColumns([]),[]);
+            assert.deepEqual(_.map(getAlterationEnrichmentColumns([{name:"altered group", description:""}]),datum=>datum.name),[]);
+            assert.deepEqual(_.map(getAlterationEnrichmentColumns([{name:"altered group", description:""},{name:"unaltered group", description:""}], true),datum=>datum.name),["Log Ratio", "Tendency", "altered group", "unaltered group"]);
+            assert.deepEqual(_.map(getAlterationEnrichmentColumns([{name:"group1", description:""},{name:"group2", description:""}]),datum=>datum.name),["Log Ratio", "Enriched in", "group1", "group2"]);
+            assert.deepEqual(_.map(getAlterationEnrichmentColumns([{name:"group1", description:""},{name:"group2", description:""}, {name:"group3", description:""}]),datum=>datum.name),["Most enriched in", "group1", "group2", "group3"]);
+        });
+    });
+
+    describe("#getEnrichmentBarPlotData()", () => {
+        it("returns correct data", () => {
+            const data = _.keyBy(exampleAlterationEnrichmentRowData, datum => datum.hugoGeneSymbol);
+            //empty requests
+            assert.deepEqual(getEnrichmentBarPlotData({}, []), []);
+            //empty genes
+            assert.deepEqual(getEnrichmentBarPlotData(data, []), []);
+            //genes not present in data
+            assert.deepEqual(getEnrichmentBarPlotData(data, ['ABC']), []);
+            //genes present in data
+            assert.deepEqual(getEnrichmentBarPlotData(data, ['EGFR']), [
+                { "minorCategory": "altered group", "counts": [{ "majorCategory": "EGFR", "count": 75, "percentage": 100 }] },
+                { "minorCategory": "unaltered group", "counts": [{ "majorCategory": "EGFR", "count": 0, "percentage": 0 }] }
+            ]);
+        });
+    });
+
+    describe("#getGeneListOptions()", () => {
+        it("returns correct options", () => {
+            //empty requests
+            assert.deepEqual(getGeneListOptions([]), [{ "label": "User-defined genes", "genes": [] }] as any);
+
+            //non empty requests
+            assert.deepEqual(getGeneListOptions(exampleAlterationEnrichmentRowData), [
+                { "label": "User-defined genes", "genes": [] },
+                { "label": "Genes with highest frequency in any group", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Genes with highest average frequency", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Genes with most significant p-value", "genes": ["EGFR", "FBXW4", "CAND2"] },
+                { "label": "Sync with table (up to 100 genes)", "genes": [] }
+            ]);
+
+            //non empty requests
+            let exampleCopyNumberAlterationEnrichmentRowData = _.map(exampleAlterationEnrichmentRowData,rowDatum=>{
+                let value = 2;
+                if(rowDatum.hugoGeneSymbol === "FBXW4") {
+                    value = -2
+                }
+                return {
+                    ...rowDatum,
+                    value
+                }
+            })
+            assert.deepEqual(getGeneListOptions(exampleCopyNumberAlterationEnrichmentRowData, true), [
+                { "label": "User-defined genes", "genes": [] },
+                { "label": "Genes with highest frequency in any group", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Genes with highest average frequency", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Genes with most significant p-value", "genes": ["EGFR: AMP", "FBXW4: HOMDEL", "CAND2: AMP"] },
+                { "label": "Sync with table (up to 100 genes)", "genes": [] }
+            ]);
+
         });
     });
 });

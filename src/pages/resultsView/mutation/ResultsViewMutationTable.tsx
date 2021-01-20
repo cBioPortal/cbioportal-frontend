@@ -5,9 +5,13 @@ import {
 } from "shared/components/mutationTable/MutationTable";
 import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
+import { Mutation } from "shared/api/generated/CBioPortalAPI";
+import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
+import GnomadColumnFormatter from "shared/components/mutationTable/column/GnomadColumnFormatter";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
+    totalNumberOfExons?:string;
 }
 //
 @observer
@@ -44,7 +48,12 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.CANCER_TYPE,
-            MutationTableColumnType.NUM_MUTATIONS
+            MutationTableColumnType.NUM_MUTATIONS,
+            MutationTableColumnType.EXON,
+            MutationTableColumnType.HGVSC,
+            MutationTableColumnType.GNOMAD,
+            MutationTableColumnType.CLINVAR,
+            MutationTableColumnType.DBSNP
         ]
     };
 
@@ -87,6 +96,11 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.VAR_READS_N].order = 200;
         this._columns[MutationTableColumnType.REF_READS_N].order = 210;
         this._columns[MutationTableColumnType.NUM_MUTATIONS].order = 220;
+        this._columns[MutationTableColumnType.EXON].order = 230;
+        this._columns[MutationTableColumnType.HGVSC].order = 240;
+        this._columns[MutationTableColumnType.GNOMAD].order = 260;
+        this._columns[MutationTableColumnType.CLINVAR].order = 270;
+        this._columns[MutationTableColumnType.DBSNP].order = 280;
 
         // exclude
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
@@ -95,5 +109,11 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;
         };
+
+        // customization for columns
+        this._columns[MutationTableColumnType.EXON].render = 
+            (d:Mutation[]) => (ExonColumnFormatter.renderFunction(d, this.props.genomeNexusCache, false));
+        this._columns[MutationTableColumnType.EXON].headerRender = 
+            () => <span style = {{display:'inline-block'}}>Exon<br/>({this.props.totalNumberOfExons} in total)</span>;
     }
 }

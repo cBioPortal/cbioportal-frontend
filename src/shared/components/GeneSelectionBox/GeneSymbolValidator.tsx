@@ -1,159 +1,217 @@
 import * as React from 'react';
-import styles from "./styles.module.scss";
-import {observer} from "mobx-react";
-import FontAwesome from "react-fontawesome";
-import ReactSelect from 'react-select';
-import { DisplayStatus } from './GeneSelectionBox';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import MobxPromise from '../../../../node_modules/mobxpromise';
-import { GeneReplacement, normalizeQuery } from 'shared/components/query/QueryStore';
+import * as _ from 'lodash';
+import { observer } from 'mobx-react';
+import {
+    GeneReplacement,
+    normalizeQuery,
+    Focus,
+} from 'shared/components/query/QueryStore';
 import { action, computed } from '../../../../node_modules/mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import 'react-select/dist/react-select.css';
+import 'react-select1/dist/react-select.css';
+import { remoteData } from 'public-lib/api/remoteData';
+import client from 'shared/api/cbioportalClientInstance';
+import memoize from 'memoize-weak-decorator';
+import { OQL } from 'shared/components/GeneSelectionBox/OQLTextArea';
+import {
+    getEmptyGeneValidationResult,
+    getOQL,
+} from 'shared/components/GeneSelectionBox/GeneSelectionBoxUtils';
+import autobind from 'autobind-decorator';
+import GeneSymbolValidatorMessage from 'shared/components/GeneSelectionBox/GeneSymbolValidatorMessage';
 
 export interface IGeneSymbolValidatorProps {
-	oql:{
-        query: SingleGeneQuery[],
-        error?: { start: number, end: number, message: string }
-    }
-	geneQueryErrorDisplayStatus?: DisplayStatus;
-	genes:MobxPromise<{
-        found: Gene[];
-        suggestions: GeneReplacement[];
-	}>,
-	geneQuery:string;
-	updateGeneQuery:(query:string)=>void;
-	hideSuccessMessage?:boolean
-	hideValidatingMessage?:boolean
+    deferOqlError?: boolean;
+    focus?: Focus;
+    errorMessageOnly?: boolean;
+    skipGeneValidation: boolean;
+    geneQuery: string;
+    updateGeneQuery: (newQuery: string) => void;
+    afterValidation?: (
+        validQuery: boolean,
+        validationResult: GeneValidationResult,
+        oql: OQL
+    ) => void;
+    wrap?: boolean;
+}
+
+export type GeneValidationResult = {
+    found: Gene[];
+    suggestions: GeneReplacement[];
+};
+
+function isInteger(str: string) {
+    return Number.isInteger(Number(str));
 }
 
 @observer
-export default class GeneSymbolValidator extends React.Component<IGeneSymbolValidatorProps, {}> {
+export default class GeneSymbolValidator extends React.Component<
+    IGeneSymbolValidatorProps,
+    {}
+> {
+    public static defaultProps = {
+        errorMessageOnly: false,
+    };
 
-	@computed get message(){
-		if (this.props.oql.error)
-			return (
-				<div className={styles.GeneSymbolValidator}>
-					<span className={styles.errorMessage}>
-						{`Cannot validate gene symbols because of invalid OQL. ${
-							this.props.geneQueryErrorDisplayStatus === DisplayStatus.UNFOCUSED
-							? ""
-							: this.props.oql.error.message
-						}`}
-					</span>
-				</div>
-			);
-
-		if (!this.props.oql.query.length)
-			return null;
-
-		if (this.props.genes.isError)
-			return (
-				<div className={styles.GeneSymbolValidator}>
-					<span className={styles.pendingMessage}>
-						Unable to validate gene symbols.
-					</span>
-				</div>
-			);
-
-		if (!this.props.hideValidatingMessage && this.props.genes.isPending && this.props.genes.result!.suggestions.length === 0)
-			return (
-				<div className={styles.GeneSymbolValidator}>
-					<span className={styles.pendingMessage}>
-						Validating gene symbols...
-					</span>
-				</div>
-			);
-
-		if (this.props.genes.result!.suggestions.length)
-			return (
-				<div className={styles.GeneSymbolValidator}>
-					<div className={styles.invalidBubble} title="Please edit the gene symbols.">
-						<FontAwesome className={styles.icon} name='exclamation-circle'/>
-						<span>Invalid gene symbols.</span>
-					</div>
-
-					{this.props.genes.result!.suggestions.map(this.renderSuggestion, this)}
-				</div>
-			);
-			
-		if(this.props.hideSuccessMessage)
-		    return null;
-
-		return (
-			<div className={styles.GeneSymbolValidator}>
-				<div className={styles.validBubble} title="You can now submit the list.">
-					<FontAwesome className={styles.icon} name='check-circle'/>
-					<span>All gene symbols are valid.</span>
-				</div>
-			</div>
-		);
-
-	}
-	render()
-	{
-		return(
-			<div id="geneBoxValidationStatus">
-			    {this.message}
-			</div>
-		)
-		
-	}
-
-    @action private replaceGene(oldSymbol: string, newSymbol: string) {
-		
-		let updatedQuery = normalizeQuery(
-			this.props.geneQuery
-				.toUpperCase()
-				.replace(new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'), () => newSymbol.toUpperCase()));
-		this.props.updateGeneQuery(updatedQuery);
+    @memoize
+    public async getGeneSuggestions(alias: string): Promise<GeneReplacement> {
+        return {
+            alias,
+            genes: await client.getAllGenesUsingGET({ alias }),
+        };
     }
 
-	renderSuggestion({alias, genes}:GeneReplacement, key:number)
-	{
-		if (genes.length == 0)
-		{
-			let title = 'Could not find gene symbol. Click to remove it from the gene list.';
-			let onClick = () => this.replaceGene(alias, '');
-			return (
-				<div key={key} className={styles.suggestionBubble} title={title} onClick={onClick}>
-					<FontAwesome className={styles.icon} name='times-circle'/>
-					<span className={styles.noChoiceLabel}>{alias}</span>
-				</div>
-			);
-		}
+    readonly genes = remoteData({
+        invoke: async (): Promise<{
+            found: Gene[];
+            suggestions: GeneReplacement[];
+        }> => {
+            if (this.geneIds.length === 0) {
+                return getEmptyGeneValidationResult();
+            }
+            let [entrezIds, hugoIds] = _.partition(
+                _.uniq(this.geneIds),
+                isInteger
+            );
 
-		if (genes.length == 1)
-		{
-			let {hugoGeneSymbol} = genes[0];
-			let title = `'${alias}' is a synonym for '${hugoGeneSymbol}'. Click here to replace it with the official symbol.`;
-			let onClick = () => this.replaceGene(alias, hugoGeneSymbol);
-			return (
-				<div key={key} className={styles.suggestionBubble} title={title} onClick={onClick}>
-					<FontAwesome className={styles.icon} name='question'/>
-					<span className={styles.singleChoiceLabel}>{alias}</span>
-					<span>{`: ${hugoGeneSymbol}`}</span>
-				</div>
-			);
-		}
+            let getEntrezResults = async () => {
+                let found: Gene[];
+                if (entrezIds.length)
+                    found = await client.fetchGenesUsingPOST({
+                        geneIdType: 'ENTREZ_GENE_ID',
+                        geneIds: entrezIds,
+                    });
+                else found = [];
+                let missingIds = _.difference(
+                    entrezIds,
+                    found.map(gene => gene.entrezGeneId + '')
+                );
+                let removals = missingIds.map(entrezId => ({
+                    alias: entrezId,
+                    genes: [],
+                }));
+                let replacements = found.map(gene => ({
+                    alias: gene.entrezGeneId + '',
+                    genes: [gene],
+                }));
+                let suggestions = [...removals, ...replacements];
+                return { found, suggestions };
+            };
 
-		let title = 'Ambiguous gene symbol. Click on one of the alternatives to replace it.';
-		let options = genes.map(gene => ({
-			label: gene.hugoGeneSymbol,
-			value: gene.hugoGeneSymbol
-		}));
-		return (
-			<div key={key} className={styles.suggestionBubble} title={title}>
-				<FontAwesome className={styles.icon} name='question'/>
-				<span className={styles.multiChoiceLabel}>{alias}</span>
-				<span>{': '}</span>
-				<ReactSelect
-					placeholder='select a symbol'
-					options={options}
-					onChange={option => option && this.replaceGene(alias, option.value)}
-					autosize
-				/>
-			</div>
-		);
-	}
+            let getHugoResults = async () => {
+                let found: Gene[];
+                if (hugoIds.length)
+                    found = await client.fetchGenesUsingPOST({
+                        geneIdType: 'HUGO_GENE_SYMBOL',
+                        geneIds: hugoIds,
+                    });
+                else found = [];
+                let missingIds = _.difference(
+                    hugoIds,
+                    found.map(gene => gene.hugoGeneSymbol)
+                );
+                let suggestions = await Promise.all(
+                    missingIds.map(alias => this.getGeneSuggestions(alias))
+                );
+                return { found, suggestions };
+            };
+
+            let [entrezResults, hugoResults] = await Promise.all([
+                getEntrezResults(),
+                getHugoResults(),
+            ]);
+            return {
+                found: [...entrezResults.found, ...hugoResults.found],
+                suggestions: [
+                    ...entrezResults.suggestions,
+                    ...hugoResults.suggestions,
+                ],
+            };
+        },
+        onResult: genes => {
+            if (this.props.afterValidation) {
+                this.props.afterValidation(
+                    genes.suggestions.length === 0,
+                    this.genes.result,
+                    this.oql
+                );
+            }
+        },
+        default: getEmptyGeneValidationResult(),
+    });
+
+    @computed get oql() {
+        return getOQL(this.props.geneQuery);
+    }
+    @computed private get geneIds(): string[] {
+        return this.oql.error ? [] : this.oql.query.map(line => line.gene);
+    }
+
+    @computed
+    get oqlOrError(): OQL | Error {
+        if (!this.oql.error) {
+            return this.oql;
+        }
+
+        if (this.props.focus !== null && this.props.focus !== undefined) {
+            if (this.props.focus === Focus.Unfocused) {
+                return new Error(
+                    "Please click 'Submit' to see location of error."
+                );
+            } else {
+                return new Error(
+                    'OQL syntax error at selected character; please fix and submit again.'
+                );
+            }
+        }
+
+        return new Error(this.oql.error.message);
+    }
+
+    render() {
+        if (this.props.skipGeneValidation) {
+            if (this.props.afterValidation) {
+                this.props.afterValidation(
+                    true,
+                    getEmptyGeneValidationResult(),
+                    this.oql
+                );
+            }
+        }
+
+        return (
+            <GeneSymbolValidatorMessage
+                genes={
+                    this.props.skipGeneValidation
+                        ? getEmptyGeneValidationResult()
+                        : this.genes.isError
+                        ? new Error('ERROR')
+                        : this.genes.result
+                }
+                oql={this.oqlOrError}
+                validatingGenes={
+                    this.props.skipGeneValidation ? false : this.genes.isPending
+                }
+                errorMessageOnly={this.props.errorMessageOnly}
+                wrapTheContent={this.props.wrap}
+                replaceGene={this.replaceGene}
+            >
+                {this.props.children}
+            </GeneSymbolValidatorMessage>
+        );
+    }
+
+    @autobind
+    @action
+    private replaceGene(oldSymbol: string, newSymbol: string) {
+        let updatedQuery = normalizeQuery(
+            this.props.geneQuery
+                .toUpperCase()
+                .replace(
+                    new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'),
+                    () => newSymbol.toUpperCase()
+                )
+        );
+        this.props.updateGeneQuery(updatedQuery);
+    }
 }

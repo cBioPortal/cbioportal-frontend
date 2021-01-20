@@ -3,7 +3,9 @@ import $ from 'jquery';
 import * as _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
-import { Mutation } from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
+import {DEFAULT_GENOME_BUILD} from "pages/patientView/genomicOverview/Tracks";
+import {default as chromosomeSizes} from "./chromosomeSizes.json";
 
 export function GenomicOverviewConfig(nRows: any,width: any) {
     let sel: any = {};
@@ -56,20 +58,38 @@ function getChmEndsPerc(chms: Array<any>, total: any) {
 /**
  * storing chromesome length info
  */
+export const genomeBuilds: Map<string, string> = new Map([
+    [ "hg19", "GRCh37" ],
+    [ "37", "GRCh37" ],
+    [ "hg38", "GRCh38" ],
+    [ "38", "GRCh38" ],
+    [ "mm10", "GRCm38" ]
+]);
+
+export type ChromosomeSizes = {
+    genomeBuild: string,
+    chromosomeSize: number[]
+};
+
+const referenceGenomeSizes:{[genomeBuild:string]:number[]} =
+    chromosomeSizes.reduce(
+            (map:{[genomeBuild:string]:number[]}, next:ChromosomeSizes)=>
+            { map[next.genomeBuild] = next.chromosomeSize || [];return map;},
+            {});
+
 export function getChmInfo(genomeBuild:string) {
-    let sel: any = {};
-    const chromSizes = require('./chromSizes.json');
-    for (let i = 0; i < chromSizes.length; i++) {
-        if (chromSizes[i]["build"] === genomeBuild) {
-            sel.hg19 = chromSizes[i]['size'];
-            break;
-        }
+    const sel: any = {genomeRef:{}, total:0};
+    let referenceGenome = genomeBuilds.get(genomeBuild);
+    if (!referenceGenome || referenceGenome === "") {
+        referenceGenome = DEFAULT_GENOME_BUILD;
     }
-    sel.total = 0
-    for (let i=0; i < sel.hg19.length; i++ ) {
-        sel.total += sel.hg19[i];
+    const genomeSize = referenceGenomeSizes[genomeBuild];
+    if (genomeSize) {
+        sel.genomeRef = genomeSize;
+        sel.total = _.sum(genomeSize);
     }
-    sel.perc = getChmEndsPerc(sel.hg19,sel.total);
+
+    sel.perc = getChmEndsPerc(sel.genomeRef,sel.total);
     sel.loc2perc = function(chm: any,loc: any) {
         return sel.perc[chm-1] + loc/sel.total;
     };
@@ -79,7 +99,7 @@ export function getChmInfo(genomeBuild:string) {
     sel.perc2loc = function(xPerc: any,startChm: any) {
         var chm;
         if (!startChm) {//binary search
-            var low = 1, high = sel.hg19.length-1, i;
+            var low = 1, high = sel.genomeRef.length-1, i;
             while (low <= high) {
                 i = Math.floor((low + high) / 2);
                 if (sel.perc[i] >= xPerc)  {high = i - 1;}
@@ -88,7 +108,7 @@ export function getChmInfo(genomeBuild:string) {
             chm = low;
         } else {//linear search
             var i;
-            for (i=startChm; i<sel.hg19.length; i++) {
+            for (i=startChm; i<sel.genomeRef.length; i++) {
                 if (xPerc<=sel.perc[i]) break;
             }
             chm = i;
@@ -101,7 +121,7 @@ export function getChmInfo(genomeBuild:string) {
         return sel.perc2loc(xPerc,startChm);
     };
     sel.middle = function(chm: any, goConfig: any) {
-        var loc = sel.hg19[chm]/2;
+        var loc = sel.genomeRef[chm]/2;
         return sel.loc2xpixil(chm,loc,goConfig);
     };
     sel.chmName = function(chm: any) {
@@ -112,16 +132,21 @@ export function getChmInfo(genomeBuild:string) {
     return sel;
 }
 
-export function plotChromosomes(p: any, config: any,chmInfo: any) {
+export function plotChromosomes(p: any, config: any,chmInfo: any, genomeBuild: any) {
     var yRuler = config.rowMargin+config.ticHeight;
     drawLine(config.wideLeftText,yRuler,config.wideLeftText+config.GenomeWidth,yRuler,p,'#000',1);
     // ticks & texts
-    for (var i=1; i<chmInfo.hg19.length; i++) {
+    for (var i=1; i<chmInfo.genomeRef.length; i++) {
+        if (chmInfo.genomeRef[i] === 0 && genomeBuild === "GRCm38") {
+            // Do not display chromosomes 20, 21 and 22 in mouse, they do not exist
+            // They have length 0 in the file chromosomeSizes.json
+        } else {
         var xt = chmInfo.loc2xpixil(i,0,config);
         drawLine(xt,yRuler,xt,config.rowMargin,p,'#000',1);
 
         var m = chmInfo.middle(i,config);
         p.text(m,yRuler-config.rowMargin,chmInfo.chmName(i));
+        }
     }
     drawLine(config.wideLeftText+config.GenomeWidth,yRuler,config.wideLeftText+config.GenomeWidth,config.rowMargin,p,'#000',1);
 }
@@ -157,7 +182,7 @@ export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array
 
     _.each(segs, function(seg: any) {
         let chm: any = translateChm(seg[chrCol]);
-        if (chm == null || chm[0]>=chmInfo.hg19.length) return;
+        if (chm == null || chm[0]>=chmInfo.genomeRef.length) return;
         var start = seg[startCol];
         var end = seg[endCol];
         var segMean = seg[segCol];
@@ -211,9 +236,9 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
     let pixelMap: Array<Array<string>> = [];
     for (var i = 0; i < mutObjs.length; i++) {
         var mutObj: Mutation = mutObjs[i];
-        if (typeof mutObj.gene.chromosome !== 'undefined') {
-            var chm = translateChm(mutObj.gene.chromosome);
-            if (chm != null && chm <= chmInfo.hg19.length) {
+        if (typeof mutObj.chr !== 'undefined') {
+            var chm = translateChm(mutObj.chr);
+            if (chm != null && chm <= chmInfo.genomeRef.length) {
                 var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
                 var xBin = x - x%config.pixelsPerBinMut;
                 if (pixelMap[xBin] == null) pixelMap[xBin] = [];
@@ -265,10 +290,10 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
         style: { classes: 'qtip-light qtip-rounded' },
         position: {
             my: "bottom right",
-            at: "top left"
+            at: "top left",
+            viewport: $("body")
         }
-        //position: {viewport: $(window)}
-    }; //TODO: viewport causes jquery exception
+    };
     // if (showDelay)
     //     param['show'] = { delay: showDelay };
     // if (position)

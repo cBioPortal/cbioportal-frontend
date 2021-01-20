@@ -13,9 +13,6 @@ export interface ICivicCardProps {
 }
 
 export default class CivicCard extends React.Component<ICivicCardProps, {}> {
-    constructor() {
-        super();
-    }
 
     /**
      * Generate variants

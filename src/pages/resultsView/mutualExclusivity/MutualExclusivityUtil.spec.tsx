@@ -3,7 +3,7 @@ import React from 'react';
 import * as _ from 'lodash';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatQValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
+    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatQValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue, AlteredStatus
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -90,10 +90,10 @@ const exampleData = [
 ];
 
 const isSampleAlteredMap: any = {
-    "EGFR": [true, false, true, true, false, false, true, true, false, false],
-    "KRAS": [false, true, false, false, true, true, false, false, true, true],
-    "TP53": [false, false, false, false, false, true, false, false, true, true],
-    "BRAF": [false, false, false, true, false, true, false, false, true, true]
+    "EGFR": [AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED],
+    "KRAS": [AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED],
+    "TP53": [AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED],
+    "BRAF": [AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED]
 };
 
 describe("MutualExclusivityUtil", () => {
@@ -112,17 +112,30 @@ describe("MutualExclusivityUtil", () => {
     });
 
     describe("#countOccurences()", () => {
-        it("returns [1, 0, 0, 1] for [false, true] and [false, true]", () => {
-            assert.deepEqual(countOccurences([false, true], [false, true]), [1, 0, 0, 1]);
+        it("returns [1, 0, 0, 1] for [AlteredStatus.UNALTERED, AlteredStatus.ALTERED] and [AlteredStatus.UNALTERED, AlteredStatus.ALTERED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNALTERED, AlteredStatus.ALTERED], [AlteredStatus.UNALTERED, AlteredStatus.ALTERED]), [1, 0, 0, 1]);
         });
 
-        it("returns [1, 1, 1, 1] for [false, true, false, true] and [false, true, true, false]", () => {
-            assert.deepEqual(countOccurences([false, true, false, true], [false, true, true, false]), [1, 1, 1, 1]);
+        it("returns [1, 1, 1, 1] for [AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED] and [AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.ALTERED], [AlteredStatus.UNALTERED, AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED]), [1, 1, 1, 1]);
         });
 
-        it("returns [2, 0, 0, 0] for [false, false] and [false, false]", () => {
-            assert.deepEqual(countOccurences([false, false], [false, false]), [2, 0, 0, 0]);
+        it("returns [2, 0, 0, 0] for [AlteredStatus.UNALTERED, AlteredStatus.UNALTERED] and [AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNALTERED, AlteredStatus.UNALTERED], [AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]), [2, 0, 0, 0]);
         });
+
+        it("returns [1, 0, 1, 1] for [AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED] and [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED], [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]), [1, 0, 1, 0]);
+        });
+
+        it("returns [0, 0, 0, 0] for [AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED] and [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED], [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED]), [0, 0, 0, 0]);
+        });
+        
+        it("returns [0, 0, 0, 0] for [AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED] and [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]", () => {
+            assert.deepEqual(countOccurences([AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED, AlteredStatus.UNPROFILED], [AlteredStatus.ALTERED, AlteredStatus.ALTERED, AlteredStatus.UNALTERED, AlteredStatus.UNALTERED]), [0, 0, 0, 0]);
+        });
+
     });
 
     describe("#calculatePValue()", () => {
@@ -283,7 +296,7 @@ describe("MutualExclusivityUtil", () => {
 
     describe("#getFilteredData()", () => {
         it("returns the data correctly", () => {
-
+            
             const result = getFilteredData(exampleData, true, false, true);
             assert.deepEqual(result,
                 [
@@ -395,8 +408,8 @@ describe("MutualExclusivityUtil", () => {
             assert.equal(cells.at(6).html(), "<td><span>&gt;3</span></td>");
             assert.equal(cells.at(7).html(), "<td><span>0.004</span></td>");
             assert.equal(cells.at(8).html(), "<td><b><span>0.024</span></b></td>");
-            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X\">" + 
-                "Co-occurrence<span class=\"badge\" style=\"background-color: rgb(88, 172, 250);\">Significant</span></div></td>");
+            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X styles-module__Significant__34YnP\">" +
+                "Co-occurrence</div></td>");
             assert.equal(cells.at(19).html().replace(/<!--[^>]*-->/g, ""), "<td><div class=\"styles-module__Tendency__2Y46X\">Co-occurrence</div></td>");
         });
     });

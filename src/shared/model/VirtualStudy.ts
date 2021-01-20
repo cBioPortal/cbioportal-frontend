@@ -1,10 +1,11 @@
+import {StudyViewFilter} from "../api/generated/CBioPortalAPIInternal";
+
 export interface VirtualStudyData {
     name: string;
     description: string;
     studies:{ id:string, samples: string[] }[];
     origin: string[];
-    filters:{ patients: Map<string, string[]>;
-              samples:  Map<string, string[]>};
+    studyViewFilter:StudyViewFilter;
 };
 
 export interface VirtualStudy {

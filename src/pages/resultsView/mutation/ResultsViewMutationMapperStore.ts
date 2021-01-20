@@ -1,10 +1,11 @@
+import {IHotspotIndex} from "react-mutation-mapper";
 import {
     Mutation, Gene, ClinicalData, CancerStudy, MolecularProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
-import {remoteData} from "shared/api/remoteData";
+import {remoteData} from "public-lib/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {IOncoKbData} from "shared/model/OncoKB";
+import {CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
@@ -12,19 +13,20 @@ import {
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
-import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import {IServerConfig} from "../../../config/IAppConfig";
 
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore
 {
-    constructor(protected config: IServerConfig,
+    constructor(protected mutationMapperConfig: IServerConfig,
                 protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
-                public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                public oncoKbCancerGenes:MobxPromise<CancerGene[] | Error>,
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
                 // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
@@ -35,6 +37,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 getMutations:()=>Mutation[],
                 private getMutationCountCache: ()=>MutationCountCache,
                 private getGenomeNexusCache: ()=>GenomeNexusCache,
+                private getGenomeNexusMyVariantInfoCache: ()=>GenomeNexusMyVariantInfoCache,
                 private getDiscreteCNACache: ()=>DiscreteCNACache,
                 public studyToMolecularProfileDiscrete: {[studyId:string]:MolecularProfile},
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
@@ -45,16 +48,16 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
                 public indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>,
                 public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
-                public oncoKbData:IOncoKbDataWrapper)
+                public oncoKbData:MobxPromise<IOncoKbData | Error>)
     {
         super(
-            config,
+            mutationMapperConfig,
             mutationMapperStoreConfig,
             gene,
             getMutations,
             indexedHotspotData,
             indexedVariantAnnotations,
-            oncoKbAnnotatedGenes,
+            oncoKbCancerGenes,
             oncoKbData,
             uniqueSampleKeyToTumorType
         );
@@ -74,7 +77,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.show_civic ? fetchCivicGenes(this.mutationData) : {},
+        invoke: async() => this.mutationMapperConfig.show_civic ? fetchCivicGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -86,7 +89,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.show_civic && this.civicGenes.result) {
+            if (this.mutationMapperConfig.show_civic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
             }
             else {
@@ -99,6 +102,8 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
     }, undefined);
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
-        return new MutationTableDownloadDataFetcher(this.mutationData, this.studyToMolecularProfileDiscrete, this.getGenomeNexusCache, this.getMutationCountCache, this.getDiscreteCNACache);
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.studyToMolecularProfileDiscrete, this.getGenomeNexusCache, this.getGenomeNexusMyVariantInfoCache, this.getMutationCountCache, this.getDiscreteCNACache);
     }
+
+    
 }

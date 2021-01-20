@@ -2,16 +2,20 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import styles from "./styles.module.scss";
 import { observer } from "mobx-react";
-import { computed, observable, action } from 'mobx';
+import { computed, observable, action, reaction, IReactionDisposer } from 'mobx';
 import { CancerStudy, Sample } from 'shared/api/generated/CBioPortalAPI';
 import classnames from 'classnames';
-import { remoteData } from 'shared/api/remoteData';
+import { remoteData } from 'public-lib/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
-import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
-import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { ChartMeta} from 'pages/studyView/StudyViewUtils';
+import {
+    getVirtualStudyDescription,
+    getCurrentDate,
+    StudyViewFilterWithSampleIdentifierFilters, StudyWithSamples
+} from 'pages/studyView/StudyViewUtils';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
 import client from "shared/api/cbioportalClientInstance";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -24,6 +28,8 @@ export interface IVirtualStudyProps {
     selectedSamples: Sample[];
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: { [id: string]: ChartMeta };
+    name?: string,
+    description?: string,
     user?: string;
 }
 
@@ -59,8 +65,8 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
 @observer
 export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}> {
 
-    @observable private name: string = '';
-    @observable private description: string = '';
+    @observable private name: string;
+    @observable private description: string;
 
     @observable private saving = false;
     @observable private sharing = false;
@@ -68,6 +74,8 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
 
     constructor(props: IVirtualStudyProps) {
         super(props);
+        this.name = props.name || '';
+        this.description = props.description || '';
     }
 
     @computed get namePlaceHolder() {
@@ -90,16 +98,12 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                     return acc;
                 }, []);
 
-                let filters = { patients: {}, samples: {} };
+                let { sampleIdentifiersSet, ...studyViewFilter } = this.props.filter;
 
-                /* 
-                    TODO: this is to support existing virtual study feature.
-                    but eventually we need to save StudyViewFilter
-                 */
                 let parameters = {
                     name: this.name || this.namePlaceHolder,
                     description: this.description,
-                    filters: filters,
+                    studyViewFilter: studyViewFilter,
                     origin: this.props.studyWithSamples.map(study => study.studyId),
                     studies: studies
                 }
@@ -177,6 +181,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         },
         onResult: (genes) => {
             this.description = getVirtualStudyDescription(
+                this.props.description,
                 this.props.studyWithSamples,
                 this.props.filter,
                 this.attributeNamesSet,
@@ -210,6 +215,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                             <input
                                                 type="text"
                                                 className="form-control"
+                                                value={this.name}
                                                 placeholder={this.namePlaceHolder || "Virtual study name"}
                                                 onInput={(event) => this.name = event.currentTarget.value} />
                                             <div className="input-group-btn">
@@ -288,7 +294,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                                 className="btn btn-default"
                                                 onClick={(event) => {
                                                     if (this.virtualStudy.result) {
-                                                        window.open(buildCBioPortalPageUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
+                                                        window.open(buildCBioPortalPageUrl('results', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
                                                     }
                                                 }}>
                                                 Query

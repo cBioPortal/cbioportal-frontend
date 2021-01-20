@@ -1,33 +1,22 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
-import MobxPromise from "mobxpromise";
-import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {Modal} from 'react-bootstrap';
-import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
-import {remoteData} from "../../../shared/api/remoteData";
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
-import URL, {QueryParams} from 'url';
 import {observable} from "mobx";
 import {ShareUrls} from "../querySummary/ShareUI";
 import classNames from "classnames";
 import autobind from "autobind-decorator";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 var Clipboard = require('clipboard');
 
 
 @observer
 export class BookmarkModal extends React.Component<{ onHide: () => void, urlPromise:Promise<any> }, {}> {
 
-    constructor(){
-        super();
-    }
-
     @observable
     urlData:ShareUrls;
 
     clipboards:any[] = [];
-
-    private clipboardInitialized = false;
 
     componentDidMount(){
         // this is an $.ajax promise, not a real promise
@@ -88,7 +77,7 @@ export class BookmarkModal extends React.Component<{ onHide: () => void, urlProm
                 <Modal.Title>Bookmark Query</Modal.Title>
             </Modal.Header>
             <Modal.Body style={{minHeight:70}}>
-                <LoadingIndicator size={"small"} center={true} style={{top:32}} isLoading={!this.urlData}/>
+                <LoadingIndicator size={"big"} center={true} style={{top:32}} isLoading={!this.urlData}/>
                     <div className={classNames({hidden:!this.urlData})} ref={(el:HTMLDivElement)=>this.container=el}>
                         <form>
                             <div className="form-group">

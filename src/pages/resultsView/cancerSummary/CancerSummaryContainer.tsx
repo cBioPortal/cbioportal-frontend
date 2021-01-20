@@ -17,9 +17,11 @@ import {
     getAlterationCountsForCancerTypesByGene,
     getAlterationCountsForCancerTypesForAllGenes
 } from "../../../shared/lib/alterationCountHelpers";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/banners/OqlStatusBanner";
 import MobxPromise from "mobxpromise/dist/src/MobxPromise";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import NotUsingGenePanelWarning from "../NotUsingGenePanelWarning";
+import AlterationFilterWarning from "../../../shared/components/banners/AlterationFilterWarning";
 
 interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
@@ -35,8 +37,8 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
 
     private resultsViewPageContent: HTMLElement;
 
-    constructor() {
-        super();
+    constructor(props:ICancerSummaryContainerProps) {
+        super(props);
         this.handleTabClick = this.handleTabClick.bind(this);
         this.pivotData = this.pivotData.bind(this);
         this.mapStudyIdToShortName = this.mapStudyIdToShortName.bind(this);
@@ -85,8 +87,12 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene =
-            getAlterationCountsForCancerTypesByGene(this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
+            getAlterationCountsForCancerTypesByGene(
+                this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
+                this.props.store.samplesExtendedWithClinicalData.result!,
+                this.groupAlterationsBy,
+                this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
+                this.props.store.coverageInformation.result!);
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene:Gene) => {
             const geneData = alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol];
@@ -116,7 +122,9 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
             const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
                 this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!,
-                this.groupAlterationsBy);
+                this.groupAlterationsBy,
+                this.props.store.selectedMolecularProfileIdsByAlterationType.result!,
+                this.props.store.coverageInformation.result!);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'}
                                       width={this.resultsViewPageWidth}
@@ -136,7 +144,10 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         const status = getMobxPromiseGroupStatus(
             this.props.store.samplesExtendedWithClinicalData,
             this.props.store.oqlFilteredAlterationsByGeneBySampleKey,
-            this.props.store.studies
+            this.props.store.studies,
+            this.props.store.sequencedSampleKeysByGene,
+            this.props.store.selectedMolecularProfileIdsByAlterationType,
+            this.props.store.coverageInformation
         );
 
         switch(status) {
@@ -149,6 +160,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                 return <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el} data-test="cancerTypeSummaryWrapper">
                     <div className={"tabMessageContainer"}>
                         <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+                        <AlterationFilterWarning store={this.props.store}/>
                     </div>
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={false}

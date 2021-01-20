@@ -1,15 +1,47 @@
 .centered {
   position:fixed;
-  top: 300px;
   left:50%;
+  top:50%;
   z-index:10000;
   text-align:center;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
+  animation: fadein 1s;
+
+  border-radius:10px;
 
   :global(.hiddenByPosition) & {
     display:none !important;
   }
 
+  > :global(.sk-spinner) {
+    background:$brand-primary;
+    padding:15px;
+    border-radius: 50%;
+    height:115px;
+    width:115px;
+
+  }
+
+  .color {
+    > div {
+      color:#fff !important;
+    }
+  }
+
+}
+
+//.centered-relative-to-container {
+//  position:absolute;
+//  top: 300px;
+//  left:50%;
+//  z-index:10000;
+//  text-align:center;
+//  transform: translateX(-50%);
+//}
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .centered-with-children {
@@ -38,5 +70,19 @@
     height:75px !important;
     width:6px !important;
     margin:4px !important;
+  }
+}
+
+.progressUI {
+  position:absolute;
+  top:140px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#fff;
+  border-radius:20px;
+  padding:15px;
+
+  &:empty {
+    display:none;
   }
 }

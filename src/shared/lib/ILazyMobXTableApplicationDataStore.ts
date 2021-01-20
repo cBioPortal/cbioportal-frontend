@@ -1,6 +1,7 @@
 import {SortMetric} from "./ISortMetric";
 import {observable, computed, action} from "mobx";
 import {lazyMobXTableSort} from "../components/lazyMobXTable/LazyMobXTable";
+import { SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL} from "shared/components/paginationControls/PaginationControls";
 export interface ILazyMobXTableApplicationDataStore<T> {
     // setter
     setFilter:(fn:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean)=>void;
@@ -11,6 +12,7 @@ export interface ILazyMobXTableApplicationDataStore<T> {
     sortedFilteredData:T[];
     sortedFilteredSelectedData:T[];
     tableData:T[];
+    visibleData:T[];
 
     // exposed methods for interacting with data
     isHighlighted:(d:T)=>boolean;
@@ -19,6 +21,8 @@ export interface ILazyMobXTableApplicationDataStore<T> {
     filterString:string;
     sortAscending:boolean|undefined;
     sortMetric:SortMetric<T>|undefined;
+    itemsPerPage:number;
+    page:number;
 };
 
 export class SimpleGetterLazyMobXTableApplicationDataStore<T> implements ILazyMobXTableApplicationDataStore<T> {
@@ -29,6 +33,8 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T> implements ILazyMo
     @observable public filterString:string;
     @observable public sortMetric:SortMetric<T>|undefined;
     @observable public sortAscending:boolean|undefined;
+    @observable public page:number;
+    @observable public itemsPerPage:number;
 
     @computed get allData() {
         return this.getData();
@@ -56,6 +62,14 @@ export class SimpleGetterLazyMobXTableApplicationDataStore<T> implements ILazyMo
             return this.sortedFilteredSelectedData;
         } else {
             return this.sortedFilteredData;
+        }
+    }
+
+    @computed get visibleData(): T[] {
+        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
+            return this.tableData;
+        } else {
+            return this.tableData.slice(this.page * this.itemsPerPage, (this.page + 1) * this.itemsPerPage);
         }
     }
 

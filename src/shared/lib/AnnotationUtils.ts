@@ -1,10 +1,11 @@
+import {IHotspotIndex, isHotspot} from "react-mutation-mapper/";
+
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import {ICosmicData} from "shared/model/Cosmic";
 import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {isHotspot} from "./CancerHotspotsUtils";
-import {Hotspot} from "../api/generated/GenomeNexusAPI";
+import {normalizeMutation} from "../components/mutationMapper/MutationMapperUtils";
+import {Hotspot} from "../../public-lib/api/generated/GenomeNexusAPI";
 
 /**
  * Utility functions related to annotation data.
@@ -54,12 +55,12 @@ export function recurrentHotspotFilter(hotspot:Hotspot) {
         hotspot.type.toLowerCase().includes("indel"));
 }
 
-export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex)
+export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
-    return isHotspot(mutation, index, recurrentHotspotFilter);
+    return isHotspot(normalizeMutation(mutation), index, recurrentHotspotFilter);
 }
 
-export function is3dHotspot(mutation:Mutation, index:IHotspotIndex):boolean
+export function is3dHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
-    return isHotspot(mutation, index, hotspot => hotspot.type.toLowerCase().includes("3d"));
+    return isHotspot(normalizeMutation(mutation), index, hotspot => hotspot.type.toLowerCase().includes("3d"));
 }

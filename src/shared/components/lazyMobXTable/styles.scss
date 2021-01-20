@@ -27,3 +27,11 @@ th.sort-asc:after {
     margin-bottom: 5px;
   }
 }
+
+.cbioportal-frontend .table > tbody > tr > td.columnResizer,
+.cbioportal-frontend .table > thead > tr > td.columnResizer {
+  width: 2px;
+  border-right: #CCC 1px solid;
+  border-left: #CCC 1px solid;
+  padding: 0 !important;
+}

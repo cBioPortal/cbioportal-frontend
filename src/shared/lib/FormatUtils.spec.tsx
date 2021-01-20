@@ -1,7 +1,15 @@
 import * as React from 'react';
 import { assert } from 'chai';
-import {toFixedWithThreshold, formatLogOddsRatio, formatSignificanceValueWithStyle, roundLogRatio } from "shared/lib/FormatUtils";
+import {
+    toFixedWithThreshold,
+    formatLogOddsRatio,
+    formatSignificanceValueWithStyle,
+    roundLogRatio,
+    toFixedWithoutTrailingZeros
+} from "shared/lib/FormatUtils";
 import expect from 'expect';
+import expectJSX from "expect-jsx";
+expect.extend(expectJSX);
 
 describe('toFixedWithThreshold', ()=>{
     it("has the same behavior with regular toFixed function when the result is not expected to be a zero value", () => {
@@ -73,5 +81,33 @@ describe("#roundLogRatio()", () => {
 
     it("returns 3.21 for 3.2123 and 10", () => {
         assert.equal(roundLogRatio(3.2123, 10), 3.21);
+    });
+});
+
+describe("toFixedWithoutTrailingZeros", ()=>{
+    it("removes trailing zeros right after decimal point", ()=>{
+        assert.equal(toFixedWithoutTrailingZeros(2, 5), "2");
+        assert.equal(toFixedWithoutTrailingZeros(5, 5), "5");
+    });
+    it("removes trailing zeros not right after decimal point", ()=>{
+        assert.equal(toFixedWithoutTrailingZeros(2.25, 5), "2.25");
+        assert.equal(toFixedWithoutTrailingZeros(2.5, 100), "2.5");
+    });
+    it("doesnt remove non-trailing zeros", ()=>{
+        assert.equal(toFixedWithoutTrailingZeros(12.025, 3), "12.025");
+        assert.equal(toFixedWithoutTrailingZeros(51.05, 2), "51.05");
+        assert.equal(toFixedWithoutTrailingZeros(5100.05, 2), "5100.05");
+        assert.equal(toFixedWithoutTrailingZeros(5100.5, 1), "5100.5");
+        assert.equal(toFixedWithoutTrailingZeros(.025, 3), "0.025");
+        assert.equal(toFixedWithoutTrailingZeros(.05, 2), "0.05");
+        assert.equal(toFixedWithoutTrailingZeros(.5, 1), "0.5");
+        assert.equal(toFixedWithoutTrailingZeros(80, 1), "80");
+        assert.equal(toFixedWithoutTrailingZeros(8020, 1), "8020");
+        assert.equal(toFixedWithoutTrailingZeros(80, 0), "80");
+        assert.equal(toFixedWithoutTrailingZeros(8020, 0), "8020");
+    });
+    it("removes trailing zeros not right after decimal point", ()=>{
+        assert.equal(toFixedWithoutTrailingZeros(2.25, 5), "2.25");
+        assert.equal(toFixedWithoutTrailingZeros(2.5, 100), "2.5");
     });
 });

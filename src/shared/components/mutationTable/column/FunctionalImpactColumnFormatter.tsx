@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import classNames from 'classnames';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
-import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPI';
+import {MutationAssessor as MutationAssessorData} from 'public-lib/api/generated/GenomeNexusAPI';
 import Sift from "shared/components/annotation/genomeNexus/Sift";
 import PolyPhen2 from "shared/components/annotation/genomeNexus/PolyPhen2";
 import siftStyles from "shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss";
@@ -14,7 +14,7 @@ import polyPhen2Styles from "shared/components/annotation/genomeNexus/styles/pol
 import mutationAssessorStyles from "shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss";
 import annotationStyles from "shared/components/annotation/styles/annotation.module.scss";
 import MobxPromise from 'mobxpromise';
-import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
+import { VariantAnnotation } from 'public-lib/api/generated/GenomeNexusAPI';
 import { extractGenomicLocation, genomicLocationString } from 'shared/lib/MutationUtils';
 import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
 

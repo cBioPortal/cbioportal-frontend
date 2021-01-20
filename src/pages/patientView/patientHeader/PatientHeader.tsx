@@ -4,11 +4,11 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
-import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
+import {placeArrowBottomLeft} from "public-lib/components/defaultTooltip/DefaultTooltip";
 import SampleManager from './../sampleManager';
 
 import styles from './styles.module.scss';
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;
@@ -35,7 +35,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         if (darwinUrl !== undefined && darwinUrl !== null && darwinUrl !== '') {
             // add link to darwin
             let darwinImgSrc = require("./images/darwin_logo.png");
-            return (<a target='_blank' href={darwinUrl}><img style={{paddingLeft:'5px'}} src={darwinImgSrc} /></a>);
+            return (<a target='_blank' href={darwinUrl}><img style={{paddingLeft:'5px', height:'21px', width:'29px'}} src={darwinImgSrc} /></a>);
         } else {
             return null;
         }

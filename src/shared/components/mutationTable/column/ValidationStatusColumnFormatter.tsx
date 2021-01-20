@@ -1,7 +1,7 @@
 import * as React from "react";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import styles from "./validationStatus.module.scss";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "public-lib/components/defaultTooltip/DefaultTooltip";
 
 /**
  * @author Selcuk Onur Sumer

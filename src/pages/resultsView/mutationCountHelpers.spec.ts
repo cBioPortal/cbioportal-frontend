@@ -18,10 +18,7 @@ describe('#countMutations', () => {
                 "gene": {
                     "entrezGeneId": 3845,
                     "hugoGeneSymbol": "KRAS",
-                    "type": "protein-coding",
-                    "cytoband": "12p12.1",
-                    "length": 47305,
-                    "chromosome": "12"
+                    "type": "protein-coding"
                 },
                 "studyId": "chol_tcga",
                 "center": "hgsc.bcm.edu;broad.mit.edu;ucsc.edu;bcgsc.ca",
@@ -63,8 +60,6 @@ describe('#countMutations', () => {
                     "entrezGeneId": 3845,
                     "hugoGeneSymbol": "KRAS",
                     "type": "protein-coding",
-                    "cytoband": "12p12.1",
-                    "length": 47305,
                     "chromosome": "12"
                 },
                 "studyId": "chol_tcga",

@@ -18,23 +18,26 @@ import {
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import DownloadControls from "../../../public-lib/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
-import {AnalysisGroup} from "../../studyView/StudyViewPageStore";
+import {AnalysisGroup} from "../../studyView/StudyViewUtils";
 import {AbstractChart} from "../../studyView/charts/ChartContainer";
 import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
+import TruncatedTextWithTooltipSVG from "../../../shared/components/TruncatedTextWithTooltipSVG";
 
 export enum LegendLocation {
     TOOLTIP = "tooltip",
     CHART = "chart"
 }
 
+export const SURVIVAL_CHART_ATTRIBUTES = ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"]
+
 export interface ISurvivalChartProps {
     patientSurvivals:ReadonlyArray<PatientSurvival>;
-    patientToAnalysisGroup:{[uniquePatientKey:string]:string};
+    patientToAnalysisGroups:{[uniquePatientKey:string]:string[]};
     analysisGroups:ReadonlyArray<AnalysisGroup>; // identified by `value`
     analysisClinicalAttribute?:ClinicalAttribute;
     naPatientsHiddenInSurvival?:boolean;
@@ -57,6 +60,8 @@ export interface ISurvivalChartProps {
     disableZoom?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
+    showCurveInTooltip?:boolean;
+    legendLabelComponent?:any;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -76,6 +81,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 20},
+        tooltipXOffset:20,
+        tooltipYOffset:-47,
         axis: {
             x: {
                 axisLabel: {
@@ -135,8 +142,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }];
 
-    public toSVGDOMNode(): Element {
-        return toSvgDomNodeWithLegend(this.svgContainer.firstChild, ".survivalChartDownloadLegend");
+    public toSVGDOMNode(): SVGElement {
+        return toSvgDomNodeWithLegend(
+            this.svgContainer.firstChild,
+            {
+                legendGroupSelector: ".survivalChartDownloadLegend",
+                selectorToHide: ".survivalChartLegendHideForDownload"
+            }
+        );
     }
 
     @computed
@@ -159,13 +172,16 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed get sortedGroupedSurvivals():{[groupValue:string]:PatientSurvival[]} {
-        const patientToAnalysisGroup = this.props.patientToAnalysisGroup;
+        const patientToAnalysisGroups = this.props.patientToAnalysisGroups;
         const survivalsByAnalysisGroup = _.reduce(this.props.patientSurvivals, (map, nextSurv)=>{
-            if (nextSurv.uniquePatientKey in patientToAnalysisGroup) {
+            if (nextSurv.uniquePatientKey in patientToAnalysisGroups) {
                 // only include this data if theres an analysis group (curve) to put it in
-                const group = patientToAnalysisGroup[nextSurv.uniquePatientKey];
-                map[group] = map[group] || [];
-                map[group].push(nextSurv);
+                const groups = patientToAnalysisGroups[nextSurv.uniquePatientKey];
+                groups.forEach(group=>{
+                    map[group] = map[group] || [];
+                    map[group].push(nextSurv);
+                })
+                
             }
             return map;
         }, {} as {[groupValue:string]:PatientSurvival[]});
@@ -182,11 +198,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         // map through groups and generate plot data for each
         return _.mapValues(this.sortedGroupedSurvivals, (survivals, group)=>{
             const estimates = this.estimates[group];
+            const groupName = this.analysisGroupsMap[group].name;
             return {
                 numOfCases: survivals.length,
                 line: getLineData(survivals, estimates),
-                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates),
-                scatter: getScatterData(survivals, estimates)
+                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates, groupName),
+                scatter: getScatterData(survivals, estimates, groupName)
             };
         });
     }
@@ -218,6 +235,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
 
+    @computed get analysisGroupsMap() {
+        return _.keyBy(this.props.analysisGroups, g=>g.value);
+    }
+
     @computed get logRankTestPVal(): number | null {
         if (this.analysisGroupsWithData.length === 2) {
             // log rank test only makes sense with two groups
@@ -235,8 +256,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         if (this.props.legendLocation === LegendLocation.CHART) {
             for (const grp of this.analysisGroupsWithData) {
                 data.push({
-                    name: !!grp.legendText ? grp.legendText : grp.value,
-                    symbol: { fill: grp.color, type: "square" }
+                    name: grp.legendText || grp.name || grp.value,
+                    symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 },
                 });
             }
         }
@@ -261,8 +282,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed get legendDataForDownload() {
         const data: any = this.analysisGroupsWithData.map(grp => ({
-            name: !!grp.legendText ? grp.legendText : grp.value,
-            symbol: { fill: grp.color, type: "square" }
+            name: !!grp.name ? grp.name : grp.value,
+            symbol: { fill: grp.color, strokeOpacity:0, type:"square", size: 6 }
         }));
 
         // add an indicator in case NA is excluded
@@ -287,7 +308,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @autobind
     private getSvg() {
-        return this.svgContainer.firstChild;
+        return this.toSVGDOMNode();
     }
 
     @autobind
@@ -295,8 +316,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         const data = [];
         for (const group of this.analysisGroupsWithData) {
             data.push({
-                scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value]),
-                title: group.legendText !== undefined ? group.legendText : group.value
+                scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value], group.value),
+                title: group.name !== undefined ? group.name : group.value
             });
         }
         return getDownloadContent(data, this.props.title);
@@ -402,7 +423,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     getSvg={this.getSvg}
                     getData={this.getData}
                     style={{position:'absolute', zIndex: 10, right: 10}}
-                    collapse={true}
+                    type='button'
                 />
                 }
 
@@ -424,7 +445,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     {this.scattersAndLines}
                     {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
-                                   data={this.victoryLegendData} />
+                                   data={this.victoryLegendData}
+                                   labelComponent={this.props.legendLabelComponent || <TruncatedTextWithTooltipSVG dy="0.3em" maxWidth={256}/>}
+                                   groupComponent={<g className="survivalChartLegendHideForDownload"/>}
+                    />
                     }
                     {this.legendForDownload}
                     {this.pValueText}
@@ -443,7 +467,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         onClick={()=>{ this.highlightedCurve = (this.highlightedCurve === group.value ? "" : group.value)}}
                     >
                         <div style={{width:10, height:10, display:"inline-block", backgroundColor:group.color, marginRight:5}}/>
-                        {!!group.legendText ? group.legendText : group.value}
+                        {!!group.name ? group.name : group.value}
                     </span>
                 ))}
                 { this.props.showNaPatientsHiddenToggle && (
@@ -462,7 +486,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed get tableRows() {
         return this.props.analysisGroups.map(grp=>(
             <tr>
-                <td>{!!grp.legendText ? grp.legendText : grp.value}</td>
+                <td>{!!grp.name ? grp.name : grp.value}</td>
                 {
                     getStats(this.sortedGroupedSurvivals[grp.value], this.estimates[grp.value]).map(stat =>
                         <td><b>{stat}</b></td>)
@@ -477,10 +501,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         } else {
             return (
 
-                <div>
+                <div style={{position:"relative"}}>
                     { (this.props.legendLocation === LegendLocation.TOOLTIP) ? (
                         <DefaultTooltip
-                            mouseLeaveDelay={0}
+                            mouseLeaveDelay={.2}
                             placement="rightBottom"
                             overlay={this.chartTooltip}
                         >
@@ -488,12 +512,16 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         </DefaultTooltip>
                     ) : this.chart }
                     {this.tooltipModel &&
-                        <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
+                        <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + this.styleOpts.tooltipXOffset}
                                  { ...{container:this} }
-                            positionTop={this.tooltipModel.y - 47}
+                            positionTop={this.tooltipModel.y + this.styleOpts.tooltipYOffset}
                             onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                             <div>
                                 Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
+                                {!!this.props.showCurveInTooltip && [
+                                    `Curve: ${this.tooltipModel.datum.group}`,
+                                    <br/>
+                                ]}
                                 {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
                                 {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                                     this.props.xLabelWithoutEventTooltip}
@@ -501,7 +529,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                 "(censored)"}<br/>
                                 {this.props.analysisClinicalAttribute && (
                                     <span>
-                                        {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroup[this.tooltipModel.datum.uniquePatientKey]}
+                                        {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroups[this.tooltipModel.datum.uniquePatientKey]}
                                     </span>
                                 )}
                             </div>

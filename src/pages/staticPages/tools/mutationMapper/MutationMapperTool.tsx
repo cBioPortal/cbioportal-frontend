@@ -2,13 +2,14 @@ import * as React from 'react';
 import { inject, observer } from "mobx-react";
 import {action, computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import Collapse from 'react-collapse';
+import {Collapse} from 'react-collapse';
 import {ControlLabel, FormControl, FormGroup} from "react-bootstrap";
 import {PageLayout} from "shared/components/PageLayout/PageLayout";
 import Helmet from "react-helmet";
 
 import Loader from "shared/components/loadingIndicator/LoadingIndicator";
 import {MSKTab, MSKTabs} from "shared/components/MSKTabs/MSKTabs";
+import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
 import {parseInput} from "shared/lib/MutationInputParser";
 
 import StandaloneMutationMapper from "./StandaloneMutationMapper";
@@ -25,6 +26,8 @@ interface IMutationMapperToolProps {
 @observer
 export default class MutationMapperTool extends React.Component<IMutationMapperToolProps, {}>
 {
+    private userSelectionStore: MutationMapperUserSelectionStore;
+
     @observable standaloneMutationMapperGeneTab:string|undefined;
     @observable dataFormatCollapsed = true;
     @observable inputText: string|undefined;
@@ -37,6 +40,9 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
 
     constructor(props: IMutationMapperToolProps) {
         super(props);
+
+        this.userSelectionStore = new MutationMapperUserSelectionStore();
+
         this.handleTabChange.bind(this);
     }
 
@@ -369,6 +375,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
                             store={mutationMapperStore}
+                            trackVisibility={this.userSelectionStore.trackVisibility}
                             downloadDataFetcher={this.store.downloadDataFetcher}
                             genomeNexusCache={this.store.genomeNexusCache}
                             oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
@@ -376,7 +383,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
-                            showDropDown={true}
+                            showTranscriptDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={!this.store.hasInputWithProteinChanges}
                         />
                     </MSKTab>

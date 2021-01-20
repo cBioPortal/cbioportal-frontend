@@ -6,11 +6,7 @@ import {observable} from "mobx";
 import autobind from "autobind-decorator";
 
 @observer
-export default class IFrameLoader extends React.Component<{ url:string; iframeId?:string; height:Number }, {}> {
-
-    constructor(){
-        super();
-    }
+export default class IFrameLoader extends React.Component<{ url:string; className?:string; iframeId?:string; height?:number }, {}> {
 
     @observable iframeLoaded = false;
 
@@ -26,6 +22,7 @@ export default class IFrameLoader extends React.Component<{ url:string; iframeId
 
                 <LoadingIndicator center={true} size={"big"} isLoading={!this.iframeLoaded}  />
                 <iframe id={this.props.iframeId||""}
+                        className={this.props.className||""}
                         style={{ width:'100%', position:'relative', zIndex:100, height:this.props.height, border:'none'}}
                         src={this.props.url}
                         onLoad={this.onLoad}

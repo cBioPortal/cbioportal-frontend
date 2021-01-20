@@ -1,27 +1,27 @@
 import * as React from "react";
-import {Gene, MolecularProfile, Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation, NumericGeneMolecularData, Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import {observer, Observer} from "mobx-react";
-import CoExpressionTable from "./CoExpressionTable";
+import CoExpressionTableGenes from "./CoExpressionTableGenes";
+import CoExpressionTableGenesets from "./CoExpressionTableGenesets";
 import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {
-    SimpleGetterLazyMobXTableApplicationDataStore,
-    SimpleLazyMobXTableApplicationDataStore
-} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
-import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import GeneMolecularDataCache from "../../../shared/cache/GeneMolecularDataCache";
+import {SimpleGetterLazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
+import {logScalePossibleForProfile} from "../plots/PlotsTabUtils";
 import CoExpressionPlot, {ICoExpressionPlotProps} from "./CoExpressionPlot";
-import {remoteData} from "../../../shared/api/remoteData";
-import MutationDataCache from "../../../shared/cache/MutationDataCache";
-import {cached, MobxPromise} from "mobxpromise";
+import {remoteData} from "../../../public-lib/api/remoteData";
+import {MobxPromise} from "mobxpromise";
 import {computePlotData, requestAllDataMessage} from "./CoExpressionVizUtils";
 import {Button} from "react-bootstrap";
 import {CoExpressionCache} from "./CoExpressionTab";
 import {bind} from "bind-decorator";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
+import {AlterationTypeConstants, GeneticEntityType} from "../ResultsViewPageStore";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import _ from "lodash";
 import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+import {CoExpressionWithQ} from "./CoExpressionTabUtils";
+import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {GeneticEntity} from "../ResultsViewPageStore";
 
 export interface ICoExpressionVizProps {
     plotState:{
@@ -30,10 +30,12 @@ export interface ICoExpressionVizProps {
         plotShowRegressionLine:boolean;
     };
     plotHandlers:ICoExpressionPlotProps["handlers"];
-    gene:Gene;
-    molecularProfile:MolecularProfile;
+    geneticEntity:GeneticEntity;
+    profileX:MolecularProfile;
+    profileY:MolecularProfile;
     coExpressionCache:CoExpressionCache;
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>;
+    numericGenesetMolecularDataCache:MobxPromiseCache<{genesetId:string, molecularProfileId:string}, GenesetMolecularData[]>;
     coverageInformation:MobxPromise<CoverageInformation>;
     studyToMutationMolecularProfile:MobxPromise<{[studyId:string]:MolecularProfile}>;
     mutationCache?:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>;
@@ -44,23 +46,23 @@ export enum TableMode {
     SHOW_ALL, SHOW_POSITIVE, SHOW_NEGATIVE
 }
 
-export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpression> {
+export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpressionWithQ> {
     @observable public tableMode:TableMode;
 
     private reactionDisposer:IReactionDisposer;
 
     constructor(
-        getData:()=>CoExpression[],
-        getHighlighted:()=>CoExpression|undefined,
-        public setHighlighted:(c:CoExpression)=>void
+        getData:()=>CoExpressionWithQ[],
+        getHighlighted:()=>CoExpressionWithQ|undefined,
+        public setHighlighted:(c:CoExpressionWithQ)=>void
     ) {
         super(getData);
         this.tableMode = TableMode.SHOW_ALL;
-        this.dataHighlighter = (d:CoExpression) =>{
+        this.dataHighlighter = (d:CoExpressionWithQ) =>{
             const highlighted = getHighlighted();
-            return !!(highlighted && (d.entrezGeneId === highlighted.entrezGeneId));
+            return !!(highlighted && (d.geneticEntityId === highlighted.geneticEntityId));
         };
-        this.dataSelector = (d:CoExpression) =>{
+        this.dataSelector = (d:CoExpressionWithQ) =>{
             let selected;
             switch (this.tableMode) {
                 case TableMode.SHOW_POSITIVE:
@@ -95,29 +97,31 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
 @observer
 export default class CoExpressionViz extends React.Component<ICoExpressionVizProps, {}> {
 
-    @observable.ref highlightedCoExpression:CoExpression|undefined; // only undefined initially, before data loaded
+    @observable.ref highlightedCoExpression:CoExpressionWithQ|undefined; // only undefined initially, before data loaded
     @observable allDataRequested:boolean = true; // set to true to request all data by default
 
-    private lastCoExpressionData:CoExpression[];
+    private lastCoExpressionData:CoExpressionWithQ[];
 
     get coExpressionDataPromise() {
         return this.props.coExpressionCache.get({
-            entrezGeneId: this.props.gene.entrezGeneId,
-            molecularProfile: this.props.molecularProfile,
+            geneticEntityId: this.props.geneticEntity.geneticEntityId.toString(),
+            geneticEntityType: this.props.geneticEntity.geneticEntityType,
+            profileX: this.props.profileX,
+            profileY: this.props.profileY,
             allData: this.allDataRequested
         });
     }
 
-    readonly coExpressionsWithQValues = remoteData<(CoExpression & { qValue:number})[]>({
+    readonly coExpressionsWithQValues = remoteData<CoExpressionWithQ[]>({
         await:()=>[this.coExpressionDataPromise],
         invoke:()=>{
             const coexpressions = this.coExpressionDataPromise.result!;
             const sortedByPvalue = _.sortBy(coexpressions, c=>c.pValue);
             const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
             qValues.forEach((qValue, index)=>{
-                sortedByPvalue[index].qValue = qValue;
+                (sortedByPvalue[index] as CoExpressionWithQ).qValue = qValue;
             });
-            return Promise.resolve(sortedByPvalue);
+            return Promise.resolve(sortedByPvalue as CoExpressionWithQ[]);
         }
     });
 
@@ -141,7 +145,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         ()=>{
             return this.highlightedCoExpression;
         },
-        (c:CoExpression)=>{
+        (c:CoExpressionWithQ)=>{
             this.highlightedCoExpression = c;
         }
     );
@@ -158,16 +162,20 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         this.allDataRequested = true;
     }
 
-    private getPlotDataPromises(yAxisCoExpression?:CoExpression) {
+    private getPlotDataPromises(yAxisCoExpression?:CoExpressionWithQ) {
         const ret:{
-            molecularX:MobxPromise<NumericGeneMolecularData[]>,
-            molecularY:MobxPromise<NumericGeneMolecularData[]>|undefined,
+            molecularX:MobxPromise<NumericGeneMolecularData[]> | MobxPromise<GenesetMolecularData[]>,
+            molecularY:MobxPromise<NumericGeneMolecularData[]> | MobxPromise<GenesetMolecularData[]>|undefined,
             mutationX:MobxPromise<Mutation[]>|undefined,
             mutationY:MobxPromise<Mutation[]>|undefined
         } = {
-            molecularX: this.props.numericGeneMolecularDataCache.get({
-                entrezGeneId: this.props.gene.entrezGeneId,
-                molecularProfileId: this.props.molecularProfile.molecularProfileId
+            molecularX: this.props.profileX.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE ?
+                this.props.numericGenesetMolecularDataCache.get({
+                genesetId: this.props.geneticEntity.geneticEntityId.toString(),
+                molecularProfileId: this.props.profileX.molecularProfileId
+            }) : this.props.numericGeneMolecularDataCache.get({
+                entrezGeneId: parseInt(String(this.props.geneticEntity.geneticEntityId), 10),
+                molecularProfileId: this.props.profileX.molecularProfileId
             }),
             mutationX:undefined,
             molecularY:undefined,
@@ -175,22 +183,26 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         };
 
         if (yAxisCoExpression) {
-            ret.molecularY = this.props.numericGeneMolecularDataCache.get({
-                entrezGeneId: yAxisCoExpression.entrezGeneId,
-                molecularProfileId: this.props.molecularProfile.molecularProfileId
+            ret.molecularY = this.props.profileY.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE ?
+            this.props.numericGenesetMolecularDataCache.get({
+                genesetId: yAxisCoExpression.geneticEntityId,
+                molecularProfileId: this.props.profileY.molecularProfileId
+            }) : this.props.numericGeneMolecularDataCache.get({
+                    entrezGeneId: parseInt(yAxisCoExpression.geneticEntityId, 10),
+                    molecularProfileId: this.props.profileY.molecularProfileId
             });
         }
 
         if (this.props.mutationCache) {
-            ret.mutationX = this.props.mutationCache.get({entrezGeneId: this.props.gene.entrezGeneId});
+            ret.mutationX = this.props.mutationCache.get({entrezGeneId: parseInt(String(this.props.geneticEntity.geneticEntityId), 10)});
             if (yAxisCoExpression) {
-                ret.mutationY = this.props.mutationCache.get({entrezGeneId: yAxisCoExpression.entrezGeneId});
+                ret.mutationY = this.props.mutationCache.get({entrezGeneId: parseInt(yAxisCoExpression.geneticEntityId, 10)});
             }
         }
 
         return ret;
     }
-    
+
     readonly plotData = remoteData({
         await:()=>{
             if (this.props.hidden)
@@ -225,11 +237,11 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             }
 
             const promises = this.getPlotDataPromises(this.highlightedCoExpression);
-            let numericGeneMolecularData:NumericGeneMolecularData[] = [];
+            let numericGeneMolecularData:NumericGeneMolecularData[]|GenesetMolecularData[] = [];
             if (promises.molecularX && promises.molecularX.isComplete)
-                numericGeneMolecularData = numericGeneMolecularData.concat(promises.molecularX.result!);
+                numericGeneMolecularData = (numericGeneMolecularData as any[]).concat(promises.molecularX.result!);
             if (promises.molecularY && promises.molecularY.isComplete)
-                numericGeneMolecularData = numericGeneMolecularData.concat(promises.molecularY.result!);
+                numericGeneMolecularData = (numericGeneMolecularData as any[]).concat(promises.molecularY.result!);
 
             let mutations:Mutation[] = [];
             if (promises.mutationX && promises.mutationX.isComplete)
@@ -240,9 +252,12 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             return Promise.resolve(computePlotData(
                 numericGeneMolecularData,
                 mutations,
-                this.props.gene.entrezGeneId,
-                this.props.gene.hugoGeneSymbol,
-                this.highlightedCoExpression.hugoGeneSymbol,
+                this.props.geneticEntity.geneticEntityId,
+                isNaN(Number(this.highlightedCoExpression.geneticEntityId))?
+                    this.highlightedCoExpression.geneticEntityId :
+                    Number(this.highlightedCoExpression.geneticEntityId),
+                this.props.geneticEntity.geneticEntityName,
+                this.highlightedCoExpression.geneticEntityName,
                 this.props.coverageInformation.result!,
                 this.props.studyToMutationMolecularProfile.result!
             ));
@@ -262,10 +277,10 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
     }
 
     @computed get showLogScaleControls() {
-        const profileId = this.props.molecularProfile.molecularProfileId.toLowerCase();
+        const profileXId = this.props.profileX.molecularProfileId.toLowerCase();
+        const profileYId = this.props.profileY.molecularProfileId.toLowerCase();
         return (
-            (profileId.indexOf("rna_seq") > -1) &&
-            (profileId.indexOf("zscore") === -1)
+            (logScalePossibleForProfile(profileXId) || logScalePossibleForProfile(profileYId))
         );
     }
 
@@ -273,7 +288,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         if (this.plotData.isComplete && !this.dataStore.allData.length && !this.allDataRequested) {
             return (
                 <div>
-                    <span style={{marginRight:5}}>{requestAllDataMessage(this.props.gene.hugoGeneSymbol)}</span>
+                    <span style={{marginRight:5}}>{requestAllDataMessage(this.props.geneticEntity.geneticEntityName)}</span>
                     <Button onClick={this.requestAllData}>Load data for all genes.</Button>
                 </div>
             );
@@ -284,17 +299,31 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
 
     @bind
     private table() {
-        return (
-            <div>
-                <CoExpressionTable
-                    referenceGene={this.props.gene}
-                    dataStore={this.dataStore}
-                    tableMode={this.dataStore.tableMode}
-                    onSelectTableMode={this.onSelectTableMode}
-                />
-                {this.requestAllDataButton}
-            </div>
-        );
+        if (this.props.profileY.molecularAlterationType !== AlterationTypeConstants.GENESET_SCORE){
+            return (
+                <div>
+                    <CoExpressionTableGenes
+                        referenceGeneticEntity={this.props.geneticEntity.geneticEntityData}
+                        dataStore={this.dataStore}
+                        tableMode={this.dataStore.tableMode}
+                        onSelectTableMode={this.onSelectTableMode}
+                    />
+                    {this.requestAllDataButton}
+                </div>
+            );
+        } else {
+            return (
+                <div>
+                    <CoExpressionTableGenesets
+                        referenceGeneticEntity={this.props.geneticEntity.geneticEntityData}
+                        dataStore={this.dataStore}
+                        tableMode={this.dataStore.tableMode}
+                        onSelectTableMode={this.onSelectTableMode}
+                    />
+                    {this.requestAllDataButton}
+                </div>
+            );
+        }
     }
 
     @bind
@@ -303,8 +332,18 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             return <span></span>;
 
         if (this.plotData.isError) {
-            return <span>Error fetching data. Please refresh the page and try again.</span>
+            return <span>Error fetching data. Please refresh the page and try again.</span>;
         } else {
+            //Create a GeneticEntity object based on this.highlightedCoExpression
+            let yGeneticEntity: GeneticEntity;
+            if (this.highlightedCoExpression) {
+                const emptyGeneEntityData: Gene = {geneticEntityId:0,entrezGeneId: 0, hugoGeneSymbol: '', type: ''};
+                yGeneticEntity = {geneticEntityName: this.highlightedCoExpression.geneticEntityName,
+                    geneticEntityType: this.highlightedCoExpression.geneticEntityType,
+                    geneticEntityId: this.highlightedCoExpression.geneticEntityId,
+                    cytoband: this.highlightedCoExpression.cytoband,
+                    geneticEntityData: emptyGeneEntityData};
+            }
             return (
                 <div style={{position:"relative"}}>
                     <LoadingIndicator
@@ -317,17 +356,17 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                     { (this.plotData.isComplete && this.highlightedCoExpression) && (
                         <div style={{marginLeft:10}}>
                             <CoExpressionPlot
-                                xAxisGene={this.props.gene}
-                                yAxisGene={this.highlightedCoExpression}
+                                xAxisGeneticEntity={this.props.geneticEntity}
+                                yAxisGeneticEntity={yGeneticEntity!}
                                 data={this.plotData.result}
-                                coExpression={this.highlightedCoExpression}
                                 showLogScaleControls={this.showLogScaleControls}
                                 showMutationControls={this.showMutationControls}
                                 showMutations={this.plotShowMutations}
                                 showRegressionLine={this.props.plotState.plotShowRegressionLine}
                                 logScale={this.plotLogScale}
                                 handlers={this.props.plotHandlers}
-                                molecularProfile={this.props.molecularProfile}
+                                molecularProfileY={this.props.profileY}
+                                molecularProfileX={this.props.profileX}
 
                                 height={530}
                                 width={530}
@@ -354,16 +393,27 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                 data-test="CoExpressionGeneTabContent"
             >
                 <div className="clearfix">
-                    <div style={{width:"40%", float:"left", marginTop:6}}>
-                        <Observer>
-                            {this.table}
-                        </Observer>
-                    </div>
-                    <div style={{width:"60%", float:"right", marginTop:6 /*align with table controls*/}}>
-                        <Observer>
-                            {this.plot}
-                        </Observer>
-                    </div>
+                    { this.dataStore.allData.length > 0 ? [
+                        <div style={{width:"40%", float:"left", marginTop:6}}>
+                            <Observer>
+                                {this.table}
+                            </Observer>
+                        </div>,
+                        <div style={{width:"60%", float:"right", marginTop:6 /*align with table controls*/}}>
+                            <Observer>
+                                {this.plot}
+                            </Observer>
+                        </div>
+                    ] : (
+                        <div style={{
+                            position:"absolute",
+                            top:200,
+                            left:"50%",
+                            transform:"translate(-50%, 0)"
+                        }}>
+                            There is no expression data for <strong>{this.props.geneticEntity.geneticEntityName}</strong> with the selected samples in <strong>{this.props.profileX.name}</strong>.
+                        </div>
+                    )}
                 </div>
             </div>
         );

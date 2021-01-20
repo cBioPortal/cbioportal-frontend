@@ -10,7 +10,8 @@ export type ScatterData = {
     uniquePatientKey:string,
     studyId: string,
     status: boolean,
-    opacity?: number
+    opacity?: number,
+    group?:string
 }
 
 export type DownSamplingOpts = {
@@ -76,21 +77,25 @@ export function getLineData(patientSurvivals: PatientSurvival[], estimates: numb
     return chartData;
 }
 
-export function getScatterData(patientSurvivals: PatientSurvival[], estimates: number[]): ScatterData[] {
+export function getScatterData(patientSurvivals: PatientSurvival[], estimates: number[], group?:string): ScatterData[] {
 
     return patientSurvivals.map((patientSurvival, index) => {
-        return {
+        const ret:ScatterData = {
             x: patientSurvival.months, y: estimates[index] * 100,
             patientId: patientSurvival.patientId, studyId: patientSurvival.studyId,
             uniquePatientKey: patientSurvival.uniquePatientKey,
             status: patientSurvival.status
         };
+        if (group) {
+            ret.group = group;
+        }
+        return ret;
     });
 }
 
-export function getScatterDataWithOpacity(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
+export function getScatterDataWithOpacity(patientSurvivals: PatientSurvival[], estimates: number[], group?:string): any[] {
 
-    let scatterData = getScatterData(patientSurvivals, estimates);
+    let scatterData = getScatterData(patientSurvivals, estimates, group);
     let chartData: any[] = [];
     let previousEstimate: number;
 
@@ -283,15 +288,15 @@ export function getSurvivalChartDataByAlteredStatus(
     alteredSurvivals:PatientSurvival[],
     unalteredSurvivals:PatientSurvival[]
 ) {
-    const patientToAnalysisGroup:{[patientKey:string]:string} = {};
+    const patientToAnalysisGroups:{[patientKey:string]:string[]} = {};
     for (const s of alteredSurvivals) {
-        patientToAnalysisGroup[s.uniquePatientKey] = ALTERED_GROUP_VALUE;
+        patientToAnalysisGroups[s.uniquePatientKey] = [ALTERED_GROUP_VALUE];
     }
     for (const s of unalteredSurvivals) {
-        patientToAnalysisGroup[s.uniquePatientKey] = UNALTERED_GROUP_VALUE;
+        patientToAnalysisGroups[s.uniquePatientKey] = [UNALTERED_GROUP_VALUE];
     }
     return {
         patientSurvivals: alteredSurvivals.concat(unalteredSurvivals),
-        patientToAnalysisGroup
+        patientToAnalysisGroups
     };
 }

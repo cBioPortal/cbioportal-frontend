@@ -1,12 +1,13 @@
 import * as React from "react";
 import {Button, Dropdown, ButtonProps} from "react-bootstrap";
 import {RootCloseWrapper} from "react-overlays";
+import classNames from "classnames";
 import {observer} from "mobx-react";
 import {observable} from "mobx";
 
 export interface ICustomDropdownProps extends ButtonProps {
     title: string;
-    buttonProps?: ButtonProps;
+    className?: string;
 }
 
 class CustomButton extends React.Component<any,{}> { // cant type this more specifically because of some typing issues w ES6 classes not having component.replaceState
@@ -22,10 +23,10 @@ class CustomButton extends React.Component<any,{}> { // cant type this more spec
 class CustomMenu extends React.Component<any,{}> {
 
     render() {
-        const { children } = this.props;
+        const { className, children } = this.props;
 
         return (
-            <div className="dropdown-menu" style={{ padding: '6px' }}>
+            <div className={classNames("dropdown-menu", className)} style={{ padding: '6px' }}>
                 {children}
             </div>
         );
@@ -39,19 +40,19 @@ export default class CustomDropdown extends React.Component<ButtonProps, {}> {
     private toggle:()=>void;
     private hide:()=>void;
 
-    constructor() {
-        super();
+    constructor(props:ButtonProps) {
+        super(props);
         this.toggle = ()=>{this.open = !this.open;};
         this.hide = ()=>{this.open = false;};
     }
 
     render() {
-        const {children, id, ...props} = this.props;
+        const {children, id, className, ref, ...props} = this.props;
         return (
             <RootCloseWrapper onRootClose={this.hide}>
                 <Dropdown id={id+""} open={this.open}>
                     <CustomButton bsStyle="default" bsRole="toggle" title="Custom Toggle" onClick={this.toggle} {...props}/>
-                    <CustomMenu bsRole="menu">
+                    <CustomMenu bsRole="menu" className={classNames(className)}>
                         {children}
                     </CustomMenu>
                 </Dropdown>

@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import TableCellStatusIndicator from "shared/components/TableCellStatus";
-import {TableCellStatus} from "shared/components/TableCellStatus";
-import TumorAlleleFreqColumnFormatter from "./TumorAlleleFreqColumnFormatter";
+import TableCellStatusIndicator from "public-lib/components/TableCellStatus";
+import {TableCellStatus} from "public-lib/components/TableCellStatus";
+import TumorAlleleFreqColumnFormatter, {getFormattedFrequencyValue} from "./TumorAlleleFreqColumnFormatter";
 
 export default class NormalAlleleFreqColumnFormatter
 {
@@ -26,7 +26,7 @@ export default class NormalAlleleFreqColumnFormatter
         const frequency = NormalAlleleFreqColumnFormatter.getSortValue(mutations);
 
         if (frequency) {
-            return frequency.toFixed(2);
+            return getFormattedFrequencyValue(frequency);
         }
 
         return "";

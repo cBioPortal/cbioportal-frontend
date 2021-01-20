@@ -1,5 +1,4 @@
-import {remoteData} from "../../../shared/api/remoteData";
-import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
+import getBrowserWindow from "../../../public-lib/lib/getBrowserWindow";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import {observer} from "mobx-react";
 import * as React from "react";
@@ -8,8 +7,7 @@ import styles from './shareUI.module.scss';
 import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
-import AppConfig from "appConfig";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../public-lib/components/defaultTooltip/DefaultTooltip";
 
 interface IShareUI {
     sessionEnabled: boolean;
@@ -27,10 +25,6 @@ export interface ShareUrls {
 
 @observer
 export class ShareUI extends React.Component<IShareUI, {}> {
-
-    constructor() {
-        super();
-    }
 
     @observable showBookmarkDialog:boolean = false;
 
@@ -108,28 +102,6 @@ export class ShareUI extends React.Component<IShareUI, {}> {
 
     render() {
         return <div className={styles.shareModule}>
-
-            {/*{*/}
-                {/*(AppConfig.serverConfig.skin_show_tweet_button) && (*/}
-                    {/*<DefaultTooltip placement={"top"} overlay={<div>Tweet query results</div>}>*/}
-                        {/*<a onClick={this.shareTwitter}>*/}
-                            {/*<span className="fa-stack fa-4x">*/}
-                                {/*<i className="fa fa-circle fa-stack-2x"></i>*/}
-                                {/*<i className="fa fa-twitter fa-stack-1x"></i>*/}
-                            {/*</span>*/}
-                        {/*</a>*/}
-                    {/*</DefaultTooltip>*/}
-                {/*)*/}
-            {/*}*/}
-
-            {/*<DefaultTooltip placement={"top"} overlay={<div>Email query results</div>}>*/}
-                {/*<a onClick={this.openEmail}>*/}
-                    {/*<span className="fa-stack fa-4x">*/}
-                        {/*<i className="fa fa-circle fa-stack-2x"></i>*/}
-                        {/*<i className="fa fa-envelope fa-stack-1x"></i>*/}
-                    {/*</span>*/}
-                {/*</a>*/}
-            {/*</DefaultTooltip>*/}
 
             <DefaultTooltip placement={"topLeft"} overlay={<div>Get bookmark link</div>}>
                 <a onClick={this.toggleBookmarkDialog}>

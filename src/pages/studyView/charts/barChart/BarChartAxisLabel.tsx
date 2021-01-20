@@ -26,32 +26,29 @@ export class BarChartAxisLabel extends VictoryLabel {
             key: style[0].textAnchor || textAnchor
         };
 
-        let tspan;
+        let tspan = [];
 
         // add the second string as a superscript
         // we are not using baselineShift property due to compatibility issues, instead adjusting dy
         // for more details see https://stackoverflow.com/questions/12332448/subscripts-and-superscripts-in-svg
         if (content.length > 1) {
-            tspan = (
-                <tspan {...tspanProps}>
-                    {content[0]}
-                    <tspan
-                        dy={-style[0].fontSize/2}
-                        style={{...style[0], fontSize: "70%"}}
-                    >
-                        {content[1]}
-                    </tspan>
-                </tspan>
-            );
+            tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
+            tspan.push(
+                        <tspan
+                            dy={-style[0].fontSize/2}
+                            style={{...style[0], fontSize: style[0].fontSize * 0.7}}
+                        >
+                            {content[1]}
+                        </tspan>);
         }
         else {
-            tspan = <tspan {...tspanProps}>{content[0]}</tspan>;
+            tspan.push(<tspan {...tspanProps}>{content[0]}</tspan>);
         }
 
         return React.cloneElement(
             props.textComponent,
             { dx, dy, x, y, events, transform, className, title, desc },
-            [tspan]
+            tspan
         );
     }
 }

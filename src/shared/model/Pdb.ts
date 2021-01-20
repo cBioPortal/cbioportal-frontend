@@ -1,4 +1,4 @@
-import {Alignment} from "shared/api/generated/Genome2StructureAPI";
+import {Alignment} from "public-lib/api/generated/Genome2StructureAPI";
 
 export interface IPdbPosition {
     position: number;

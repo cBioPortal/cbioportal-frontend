@@ -1,9 +1,10 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 import {QueryParams} from "url";
 import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
 import {Patient} from "../api/generated/CBioPortalAPI";
 import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
+import AppConfig from "appConfig";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -64,6 +65,27 @@ export function handleCaseDO(){
 
     (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(newParams, "/patient", true);
 
+}
+
+/*
+ * Handle LinkOut of style /ln?q=TP53:MUT and ln?cancer_study_id=gbm_tcga&q=EGFR+NF1.
+ */
+export function handleLinkOut() {
+    const routingStore:ExtendedRouterStore = getBrowserWindow().routingStore;
+    const currentQuery = routingStore.location.query;
+
+    const data = {
+        case_set_id: 'all',
+        gene_list: currentQuery.q.replace("+",","),
+        cancer_study_list:
+            currentQuery.cancer_study_id ||
+            // use same set of studies as quick search gene query if no
+            // specific study is supplied
+            AppConfig.serverConfig.default_cross_cancer_study_session_id ||
+            AppConfig.serverConfig.default_cross_cancer_study_list
+    };
+
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results/mutations", true, true);
 }
 
 export function handleStudyDO(){

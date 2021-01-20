@@ -3,15 +3,21 @@ import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
-import {getClinicalAttributeOverlay, getClinicalAttributeUniqueKey} from "../StudyViewUtils";
+import {
+    chartMetaComparator,
+    getClinicalAttributeOverlay,
+    getClinicalAttributeUniqueKey,
+    ChartMeta,
+    UniqueKey
+} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
-import {remoteData} from "shared/api/remoteData";
+import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
+import {remoteData} from "public-lib/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
-import windowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
+import { isUrl } from "public-lib";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -27,7 +33,12 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
         return {
             name: columnName || '',
             headerRender: (data: string) => <span data-test={data}>{data}</span>,
-            render: (data: { [id: string]: string }) => <span data-test={data[key]}>{data[key]}</span>,
+            render: (data: { [id: string]: string }) => {
+                if (isUrl(data[key])) {
+                    return <a href={data[key]} target="_blank">{data[key]}</a>
+                }
+                return <span data-test={data[key]}>{data[key]}</span>
+            },
             download: (data: { [id: string]: string }) => data[key] || '',
             sortBy: (data: { [id: string]: any }) => {
                 if (data[key]) {
@@ -57,16 +68,19 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                 render: (data: { [id: string]: string }) => {
                     return <a href={getSampleViewUrl(data.studyId, data.sampleId)} target='_blank'>{data.sampleId}</a>
                 }
-            }, {
-                ...this.getDefaultColumnConfig('studyId', 'Cancer Study')
             }];
-            // Descent sort priority then ascent sort by display name
-            return _.reduce(this.props.store.visibleAttributes,
+
+            if (_.find(this.props.store.visibleAttributes, chartMeta => chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) !== undefined) {
+                defaultColumns.push({
+                    ...this.getDefaultColumnConfig('studyId', 'Cancer Study')
+                });
+            }
+            return _.reduce(this.props.store.visibleAttributes.sort(chartMetaComparator),
                 (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.displayName, chartMeta.clinicalAttribute.datatype === "NUMBER"),
-                            tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '')
+                            tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : '', chartMeta.clinicalAttribute ? chartMeta.clinicalAttribute.clinicalAttributeId : undefined)
                         });
                     }
                     return acc;

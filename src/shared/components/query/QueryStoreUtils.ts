@@ -11,7 +11,8 @@ export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
 export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
     'genetic_profile_ids_PROFILE_MRNA_EXPRESSION' | 'genetic_profile_ids_PROFILE_METHYLATION' |
-    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION' | 'genetic_profile_ids_PROFILE_GENESET_SCORE'>;
+    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION' | 'genetic_profile_ids_PROFILE_GENESET_SCORE' |
+    'genetic_profile_ids_PROFILE_GENERIC_ASSAY' >;
 
 
 export function currentQueryParams(store:QueryStore) {
@@ -36,7 +37,7 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
 }
 
 export function nonMolecularProfileParams(store:QueryStore, whitespace_separated_case_ids?:string):NonMolecularProfileQueryParams {
-    const selectedStudyIds = store.allSelectedStudyIds;
+    const selectableSelectedStudyIds = store.selectableSelectedStudyIds;
 
     // case ids is of format study1:sample1+study2:sample2+...
     const case_ids = whitespace_separated_case_ids ?
@@ -44,7 +45,7 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
                     store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('+');
 
     let ret:NonMolecularProfileQueryParams = {
-        cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
+        cancer_study_id: selectableSelectedStudyIds.length === 1 ? selectableSelectedStudyIds[0] : 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
@@ -57,8 +58,8 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
         Action: 'Submit',
     };
 
-    if (selectedStudyIds.length !== 1) {
-        ret.cancer_study_list = selectedStudyIds.join(",");
+    if (selectableSelectedStudyIds.length !== 1) {
+        ret.cancer_study_list = selectableSelectedStudyIds.join(",");
     }
 
     return ret;
@@ -71,7 +72,8 @@ export function molecularProfileParams(store:QueryStore, molecularProfileIds?:Re
         genetic_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("MRNA_EXPRESSION", molecularProfileIds),
         genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
         genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds),
-        genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds)
+        genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds),
+        genetic_profile_ids_PROFILE_GENERIC_ASSAY: store.getSelectedProfileIdFromMolecularAlterationType("GENERIC_ASSAY", molecularProfileIds)
     };
 }
 

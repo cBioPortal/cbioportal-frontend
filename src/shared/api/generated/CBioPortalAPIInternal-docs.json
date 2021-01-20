@@ -6,7 +6,7 @@
     "title": "cBioPortal web API [Beta]",
     "contact": {
       "name": "cBioPortal",
-      "url": "http://www.cbioportal.org",
+      "url": "https://www.cbioportal.org",
       "email": "cbioportal@googlegroups.com"
     },
     "license": {
@@ -15,6 +15,10 @@
     }
   },
   "tags": [
+    {
+      "name": "Clinical Data Enrichments",
+      "description": " "
+    },
     {
       "name": "Co-Expressions",
       "description": " "
@@ -25,6 +29,10 @@
     },
     {
       "name": "Cosmic Counts",
+      "description": " "
+    },
+    {
+      "name": "Data Access Tokens",
       "description": " "
     },
     {
@@ -69,6 +77,14 @@
     },
     {
       "name": "Study View",
+      "description": " "
+    },
+    {
+      "name": "Treatment response values",
+      "description": " "
+    },
+    {
+      "name": "Treatments",
       "description": " "
     },
     {
@@ -279,6 +295,43 @@
         }
       }
     },
+    "/clinical-data-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Data Enrichments"
+        ],
+        "summary": "Fetch clinical data enrichments for the sample groups",
+        "operationId": "fetchClinicalEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "groupFilter",
+            "description": "List of altered and unaltered Sample/Patient IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GroupFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
     "/cna-genes/fetch": {
       "post": {
         "tags": [
@@ -310,6 +363,70 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/copy-number-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Copy Number Enrichments"
+        ],
+        "summary": "Fetch copy number enrichments in a molecular profile",
+        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "copyNumberEventType",
+            "in": "query",
+            "description": "Type of the copy number event",
+            "required": false,
+            "type": "string",
+            "default": "HOMDEL",
+            "enum": [
+              "HOMDEL",
+              "AMP"
+            ]
+          },
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -356,6 +473,179 @@
         }
       }
     },
+    "/data-access-tokens": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "getAllDataAccessTokens",
+        "operationId": "getAllDataAccessTokensUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataAccessToken"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "createDataAccessToken",
+        "operationId": "createDataAccessTokenUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "allowRevocationOfOtherTokens",
+            "in": "query",
+            "description": "allowRevocationOfOtherTokens",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/DataAccessToken"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "revokeAllDataAccessTokens",
+        "operationId": "revokeAllDataAccessTokensUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/data-access-tokens/{token}": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "getDataAccessToken",
+        "operationId": "getDataAccessTokenUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/DataAccessToken"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "revokeDataAccessToken",
+        "operationId": "revokeDataAccessTokenUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/expression-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Expression Enrichments"
+        ],
+        "summary": "Fetch expression enrichments in a molecular profile",
+        "operationId": "fetchExpressionEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample and molecular profile identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExpressionEnrichment"
+              }
+            }
+          }
+        }
+      }
+    },
     "/filtered-samples/fetch": {
       "post": {
         "tags": [
@@ -395,6 +685,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Sample"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fusion-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch fusion genes by study view filter",
+        "operationId": "fetchFusionGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationCountByGene"
               }
             }
           }
@@ -744,6 +1071,50 @@
         }
       }
     },
+    "/genetic-profiles/{geneticProfileId}/treatment-genetic-data/fetch": {
+      "post": {
+        "tags": [
+          "Treatment response values"
+        ],
+        "summary": "Fetch treatment \"genetic data\" items (treatment response values) by profile Id, treatment Ids and sample Ids",
+        "operationId": "fetchTreatmentGeneticDataItemsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "geneticProfileId",
+            "in": "path",
+            "description": "Genetic profile ID, e.g. study_es_0_treatment_ic50",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "treatmentDataFilterCriteria",
+            "description": "Search parameters to return the values for a given set of samples and treatment items. treatmentIds: The list of identifiers (STABLE_ID) for the treatments of interest, e.g. 17-AAG. Use one of these if you want to specify a subset of samples:(1) sampleListId: Identifier of pre-defined sample list with samples to query, e.g. brca_tcga_all or (2) sampleIds: custom list of samples or patients to query, e.g. TCGA-BH-A1EO-01, TCGA-AR-A1AR-01",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TreatmentDataFilterCriteria"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TreatmentMolecularData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/info": {
       "get": {
         "tags": [
@@ -764,12 +1135,12 @@
         }
       }
     },
-    "/molecular-profiles/{molecularProfileId}/co-expressions/fetch": {
+    "/molecular-profiles/co-expressions/fetch": {
       "post": {
         "tags": [
           "Co-Expressions"
         ],
-        "summary": "Fetch co-expressions in a molecular profile",
+        "summary": "Calculates correlations between a genetic entity from a specific profile and another profile from the same study",
         "operationId": "fetchCoExpressionsUsingPOST",
         "consumes": [
           "application/json"
@@ -779,28 +1150,27 @@
         ],
         "parameters": [
           {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
+            "name": "molecularProfileIdA",
+            "in": "query",
+            "description": "Molecular Profile ID from the Genetic Entity referenced in the co-expression filter e.g. acc_tcga_rna_seq_v2_mrna",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "molecularProfileIdB",
+            "in": "query",
+            "description": "Molecular Profile ID (can be the same as molecularProfileIdA) e.g. acc_tcga_rna_seq_v2_mrna",
             "required": true,
             "type": "string"
           },
           {
             "in": "body",
             "name": "coExpressionFilter",
-            "description": "List of Sample IDs/Sample List ID",
+            "description": "List of Sample IDs/Sample List ID and Entrez Gene ID/Gene set ID",
             "required": true,
             "schema": {
               "$ref": "#/definitions/CoExpressionFilter"
             }
-          },
-          {
-            "name": "entrezGeneId",
-            "in": "query",
-            "description": "Entrez Gene ID",
-            "required": true,
-            "type": "integer",
-            "format": "int32"
           },
           {
             "name": "threshold",
@@ -819,130 +1189,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CoExpression"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/molecular-profiles/{molecularProfileId}/copy-number-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Copy Number Enrichments"
-        ],
-        "summary": "Fetch copy number enrichments in a molecular profile",
-        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "copyNumberEventType",
-            "in": "query",
-            "description": "Type of the copy number event",
-            "required": false,
-            "type": "string",
-            "default": "HOMDEL",
-            "enum": [
-              "HOMDEL",
-              "AMP"
-            ]
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "enrichmentFilter",
-            "description": "List of altered and unaltered Sample/Patient IDs",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/EnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/molecular-profiles/{molecularProfileId}/expression-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Expression Enrichments"
-        ],
-        "summary": "Fetch expression enrichments in a molecular profile",
-        "operationId": "fetchExpressionEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "enrichmentFilter",
-            "description": "List of altered and unaltered Sample/Patient IDs",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/EnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ExpressionEnrichment"
               }
             }
           }
@@ -998,62 +1244,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MrnaPercentile"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/molecular-profiles/{molecularProfileId}/mutation-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Mutation Enrichments"
-        ],
-        "summary": "Fetch mutation enrichments in a molecular profile",
-        "operationId": "fetchMutationEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "enrichmentFilter",
-            "description": "List of altered and unaltered Sample/Patient IDs",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/EnrichmentFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -1182,6 +1372,58 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mutation-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Mutation Enrichments"
+        ],
+        "summary": "Fetch mutation enrichments in a molecular profile",
+        "operationId": "fetchMutationEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groups",
+            "description": "List of groups containing sample identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -1415,24 +1657,166 @@
           }
         }
       }
+    },
+    "/treatments": {
+      "get": {
+        "tags": [
+          "Treatments"
+        ],
+        "summary": "Get all treatments",
+        "operationId": "getAllTreatmentsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Treatment"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/treatments/fetch": {
+      "post": {
+        "tags": [
+          "Treatments"
+        ],
+        "summary": "Fetch treatments",
+        "operationId": "fetchTreatmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "treatmentFilter",
+            "description": "List of Treatment IDs or List of Study IDs (mutually exclusive)",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TreatmentFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Treatment"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/treatments/{treatmentId}": {
+      "get": {
+        "tags": [
+          "Treatments"
+        ],
+        "summary": "Get a treatment by stable ID",
+        "operationId": "getTreatmentUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "treatmentId",
+            "in": "path",
+            "description": "Treatment stable ID e.g. 17-AAG",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Treatment"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
     "AlterationEnrichment": {
       "type": "object",
       "required": [
-        "alteredCount",
+        "counts",
         "entrezGeneId",
         "hugoGeneSymbol",
-        "logRatio",
-        "pValue",
-        "qValue",
-        "unalteredCount"
+        "pValue"
       ],
       "properties": {
-        "alteredCount": {
-          "type": "integer",
-          "format": "int32"
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CountSummary"
+          }
         },
         "cytoband": {
           "type": "string"
@@ -1444,21 +1828,44 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "logRatio": {
-          "type": "string"
-        },
         "pValue": {
           "type": "number"
-        },
-        "qValue": {
-          "type": "number"
-        },
-        "unalteredCount": {
-          "type": "integer",
-          "format": "int32"
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "ClinicalAttribute": {
+      "type": "object",
+      "required": [
+        "clinicalAttributeId",
+        "displayName",
+        "patientAttribute",
+        "studyId"
+      ],
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "patientAttribute": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalAttribute"
     },
     "ClinicalDataBinCountFilter": {
       "type": "object",
@@ -1491,20 +1898,17 @@
         "customBins": {
           "type": "array",
           "items": {
-            "type": "number",
-            "format": "double"
+            "type": "number"
           }
         },
         "disableLogScale": {
           "type": "boolean"
         },
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         }
       },
       "title": "ClinicalDataBinFilter"
@@ -1558,6 +1962,30 @@
         }
       },
       "title": "ClinicalDataCountItem"
+    },
+    "ClinicalDataEnrichment": {
+      "type": "object",
+      "required": [
+        "clinicalAttribute",
+        "method",
+        "pValue",
+        "score"
+      ],
+      "properties": {
+        "clinicalAttribute": {
+          "$ref": "#/definitions/ClinicalAttribute"
+        },
+        "method": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "score": {
+          "type": "number"
+        }
+      },
+      "title": "ClinicalDataEnrichment"
     },
     "ClinicalDataEqualityFilter": {
       "type": "object",
@@ -1623,12 +2051,10 @@
       "type": "object",
       "properties": {
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "value": {
           "type": "string"
@@ -1640,27 +2066,30 @@
       "type": "object",
       "required": [
         "cytoband",
-        "entrezGeneId",
-        "hugoGeneSymbol",
+        "geneticEntityId",
+        "geneticEntityName",
+        "geneticEntityType",
         "pValue",
-        "qValue",
         "spearmansCorrelation"
       ],
       "properties": {
         "cytoband": {
           "type": "string"
         },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
+        "geneticEntityId": {
           "type": "string"
         },
-        "pValue": {
-          "type": "number"
+        "geneticEntityName": {
+          "type": "string"
         },
-        "qValue": {
+        "geneticEntityType": {
+          "type": "string",
+          "enum": [
+            "GENE",
+            "GENESET"
+          ]
+        },
+        "pValue": {
           "type": "number"
         },
         "spearmansCorrelation": {
@@ -1672,6 +2101,13 @@
     "CoExpressionFilter": {
       "type": "object",
       "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "genesetId": {
+          "type": "string"
+        },
         "sampleIds": {
           "type": "array",
           "items": {
@@ -1691,10 +2127,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "countByEntity": {
-          "type": "integer",
-          "format": "int32"
-        },
         "cytoband": {
           "type": "string"
         },
@@ -1702,11 +2134,22 @@
           "type": "integer",
           "format": "int32"
         },
-        "frequency": {
-          "type": "number"
-        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
         },
         "qValue": {
           "type": "number"
@@ -1768,6 +2211,48 @@
       },
       "title": "CosmicMutation"
     },
+    "CountSummary": {
+      "type": "object",
+      "required": [
+        "alteredCount",
+        "name",
+        "profiledCount"
+      ],
+      "properties": {
+        "alteredCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profiledCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CountSummary"
+    },
+    "DataAccessToken": {
+      "type": "object",
+      "properties": {
+        "creation": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiration": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "token": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "title": "DataAccessToken"
+    },
     "DataBin": {
       "type": "object",
       "properties": {
@@ -1786,15 +2271,13 @@
           "format": "int32"
         },
         "end": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "specialValue": {
           "type": "string"
         },
         "start": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         }
       },
       "title": "DataBin"
@@ -1827,46 +2310,13 @@
       },
       "title": "DensityPlotBin"
     },
-    "EnrichmentFilter": {
-      "type": "object",
-      "required": [
-        "alteredIds",
-        "unalteredIds"
-      ],
-      "properties": {
-        "alteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "queryGenes": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "unalteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "title": "EnrichmentFilter"
-    },
     "ExpressionEnrichment": {
       "type": "object",
       "required": [
         "entrezGeneId",
+        "groupsStatistics",
         "hugoGeneSymbol",
-        "meanExpressionInAlteredGroup",
-        "meanExpressionInUnalteredGroup",
-        "pValue",
-        "qValue",
-        "standardDeviationInAlteredGroup",
-        "standardDeviationInUnalteredGroup"
+        "pValue"
       ],
       "properties": {
         "cytoband": {
@@ -1876,29 +2326,33 @@
           "type": "integer",
           "format": "int32"
         },
+        "groupsStatistics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GroupStatistics"
+          }
+        },
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "meanExpressionInAlteredGroup": {
-          "type": "number"
-        },
-        "meanExpressionInUnalteredGroup": {
-          "type": "number"
-        },
         "pValue": {
-          "type": "number"
-        },
-        "qValue": {
-          "type": "number"
-        },
-        "standardDeviationInAlteredGroup": {
-          "type": "number"
-        },
-        "standardDeviationInUnalteredGroup": {
           "type": "number"
         }
       },
       "title": "ExpressionEnrichment"
+    },
+    "FusionGeneFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "title": "FusionGeneFilter"
     },
     "Geneset": {
       "type": "object",
@@ -2006,6 +2460,9 @@
         "value"
       ],
       "properties": {
+        "geneset": {
+          "$ref": "#/definitions/Geneset"
+        },
         "genesetId": {
           "type": "string"
         },
@@ -2016,6 +2473,9 @@
           "type": "string"
         },
         "sampleId": {
+          "type": "string"
+        },
+        "stableId": {
           "type": "string"
         },
         "studyId": {
@@ -2095,6 +2555,53 @@
       },
       "title": "GisticToGene"
     },
+    "Group": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        }
+      },
+      "title": "Group"
+    },
+    "GroupFilter": {
+      "type": "object",
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Group"
+          }
+        }
+      },
+      "title": "GroupFilter"
+    },
+    "GroupStatistics": {
+      "type": "object",
+      "required": [
+        "meanExpression",
+        "name",
+        "standardDeviation"
+      ],
+      "properties": {
+        "meanExpression": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "standardDeviation": {
+          "type": "number"
+        }
+      },
+      "title": "GroupStatistics"
+    },
     "Info": {
       "type": "object",
       "required": [
@@ -2151,6 +2658,37 @@
       },
       "title": "Info"
     },
+    "MolecularProfileCaseIdentifier": {
+      "type": "object",
+      "required": [
+        "caseId",
+        "molecularProfileId"
+      ],
+      "properties": {
+        "caseId": {
+          "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "MolecularProfileCaseIdentifier"
+    },
+    "MolecularProfileCasesGroupFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileCaseIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileCaseIdentifier"
+          }
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "MolecularProfileCasesGroupFilter"
+    },
     "MolecularProfileSampleCount": {
       "type": "object",
       "properties": {
@@ -2159,6 +2697,10 @@
           "format": "int32"
         },
         "numberOfCNAUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfCNSegmentSamples": {
           "type": "integer",
           "format": "int32"
         },
@@ -2258,19 +2800,26 @@
     "MutationCountByGene": {
       "type": "object",
       "properties": {
-        "countByEntity": {
-          "type": "integer",
-          "format": "int32"
-        },
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
         },
-        "frequency": {
-          "type": "number"
-        },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
         },
         "qValue": {
           "type": "number"
@@ -2465,6 +3014,12 @@
             "$ref": "#/definitions/CopyNumberGeneFilter"
           }
         },
+        "fusionGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FusionGeneFilter"
+          }
+        },
         "mutatedGenes": {
           "type": "array",
           "items": {
@@ -2494,6 +3049,111 @@
         }
       },
       "title": "StudyViewFilter"
+    },
+    "Treatment": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "geneticEntityId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "internalId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "refLink": {
+          "type": "string"
+        },
+        "treatmentId": {
+          "type": "string"
+        }
+      },
+      "title": "Treatment"
+    },
+    "TreatmentDataFilterCriteria": {
+      "type": "object",
+      "properties": {
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        },
+        "treatmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "TreatmentDataFilterCriteria"
+    },
+    "TreatmentFilter": {
+      "type": "object",
+      "properties": {
+        "studyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "treatmentIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "TreatmentFilter"
+    },
+    "TreatmentMolecularData": {
+      "type": "object",
+      "required": [
+        "geneticProfileId",
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
+      "properties": {
+        "geneticProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "stableId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "treatmentId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "TreatmentMolecularData"
     },
     "VariantCount": {
       "type": "object",

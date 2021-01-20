@@ -1,4 +1,4 @@
-import getBrowserWindow from "./getBrowserWindow";
+import getBrowserWindow from "../../public-lib/lib/getBrowserWindow";
 
 const win = getBrowserWindow();
 

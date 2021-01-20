@@ -3,15 +3,15 @@ import * as _ from 'lodash';
 import {
     DEFAULT_GROUP_NAME_WITH_USER_INPUT,
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
-    ErrorCodeEnum, getGroups,
+    CodeEnum, getGroups,
     getLine,
     getLines,
     InputLine,
     LineTypeEnum,
     ValidationResult,
-    validateLines, WarningCodeEnum
+    validateLines
 } from "./CustomCaseSelectionUtils";
-import {ClinicalDataTypeEnum} from "../../StudyViewPageStore";
+import {ClinicalDataTypeEnum} from "../../StudyViewUtils";
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 
 describe('CustomCaseSelectionUtils', () => {
@@ -84,6 +84,7 @@ describe('CustomCaseSelectionUtils', () => {
             assert.equal(result.groupName, 'group1');
         });
     });
+
     describe('getLines', () => {
         it('proper number of lines should be returned - 1', () => {
             const line = 'test\n';
@@ -164,8 +165,8 @@ describe('CustomCaseSelectionUtils', () => {
             }];
             const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
 
-            assert.isTrue(result.error.length !== 0);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.INVALID_CASE_ID] !== undefined);
+            assert.isTrue(result.warning.length !== 0);
+            assert.isTrue(_.keyBy(result.warning, 'code')[CodeEnum.INVALID_CASE_ID] !== undefined);
         });
 
         it('Give error for unknown study ids', () => {
@@ -184,7 +185,7 @@ describe('CustomCaseSelectionUtils', () => {
             }];
             const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
             assert.isTrue(result.error.length !== 0);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.STUDY_NOT_SELECTED] !== undefined);
+            assert.isTrue(_.keyBy(result.error, 'code')[CodeEnum.STUDY_NOT_SELECTED] !== undefined);
         });
 
         it('In single study, study id does not need to be specified', () => {
@@ -196,18 +197,48 @@ describe('CustomCaseSelectionUtils', () => {
             assert.isTrue(result.error.length === 0);
         });
 
-        it('For duplicate cases, give OVERLAP warning when no group name is specified', () => {
-            const lines: InputLine[] = [{
-                line: 's1',
-                caseId: 's1'
-            }, {
-                line: 's1',
-                caseId: 's1'
-            }];
-            const noGroupNameResult: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
-            assert.isTrue(noGroupNameResult.warning.length === 1);
-            assert.isTrue(noGroupNameResult.error.length === 0);
-            assert.equal(noGroupNameResult.warning[0].code, WarningCodeEnum.OVERLAP);
+        describe('The warning message should be given when case is invalid', () => {
+            it('Check when study id is not specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1test',
+                    caseId: 's1test'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+            it('Check when study id is specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1test',
+                    studyId: 'chol_nus_2012',
+                    caseId: 's1test'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+        });
+
+        describe('The warning message should be given when case id is sample but asking for validation on patient', () => {
+            it('Check when study id is not specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1',
+                    caseId: 's1'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.PATIENT, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
+            it('Check when study id is specified', function () {
+                const lines: InputLine[] = [{
+                    line: 's1',
+                    studyId: 'chol_nus_2012',
+                    caseId: 's1'
+                }];
+                const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.PATIENT, st1, true, ['chol_nus_2012']);
+                assert.isTrue(result.warning.length === 1);
+                assert.equal(result.warning[0].code, CodeEnum.INVALID_CASE_ID);
+            });
         });
 
         it('For duplicate cases, give POTENTIAL_OVERLAP warning when the case is in different group', () => {
@@ -223,26 +254,7 @@ describe('CustomCaseSelectionUtils', () => {
             const noGroupNameResult: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
             assert.isTrue(noGroupNameResult.warning.length === 1);
             assert.isTrue(noGroupNameResult.error.length === 0);
-            assert.equal(noGroupNameResult.warning[0].code, WarningCodeEnum.POTENTIAL_OVERLAP);
-        });
-
-        it('TOO_MANY_INVALID_CASE_ID should be given when there are too many invalid case ids', () => {
-            const lines: InputLine[] = new Array(20).fill('').map((item, index) => {
-                return {
-                    line: 'chol_nus_2012:ss' + index,
-                    studyId: 'chol_nus_2012',
-                    caseId: 'ss' + index
-                };
-            });
-
-            const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, false, ['chol_nus_2012']);
-            const errors = _.keyBy(result.error, 'code');
-
-            assert.isTrue(result.error.length !== 0);
-            assert.isTrue(errors[ErrorCodeEnum.TOO_MANY_INVALID_CASE_ID] !== undefined);
-
-            // When TOO_MANY_INVALID_CASE_ID error is given, the INVALID_CASE_ID should not be added
-            assert.isTrue(errors[ErrorCodeEnum.INVALID_CASE_ID] === undefined);
+            assert.equal(noGroupNameResult.warning[0].code, CodeEnum.POTENTIAL_OVERLAP);
         });
     });
 

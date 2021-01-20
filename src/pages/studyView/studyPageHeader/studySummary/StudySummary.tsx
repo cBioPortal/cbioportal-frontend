@@ -7,10 +7,11 @@ import * as _ from 'lodash';
 import styles from "../styles.module.scss";
 import {StudySummaryRecord} from "../../virtualStudy/VirtualStudy";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
-import {getStudySummaryUrl, getNCBIlink} from "../../../../shared/api/urls";
+import {getStudySummaryUrl} from "../../../../shared/api/urls";
+import {getNCBIlink} from "../../../../public-lib/lib/urls";
 import MobxPromise from 'mobxpromise';
 import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
-import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import DefaultTooltip from "../../../../public-lib/components/defaultTooltip/DefaultTooltip";
 import {serializeEvent} from "../../../../shared/lib/tracking";
 
 interface IStudySummaryProps {

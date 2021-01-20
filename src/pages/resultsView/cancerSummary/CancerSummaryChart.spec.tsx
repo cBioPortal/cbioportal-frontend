@@ -36,34 +36,34 @@ describe('CancerSummaryChart', () => {
                 "x": "Lung Adenocarcinoma",
                 "y": 13.18181818181818
             }], [{
-                "alterationType": "protExpressionDown",
+                "alterationType": "protExpressionLow",
                 "x": "Lung Squamous Cell Carcinoma",
                 "y": 0
             }, {
-                "alterationType": "protExpressionDown",
+                "alterationType": "protExpressionLow",
                 "x": "Lung Adenocarcinoma",
                 "y": 0
             }], [{
-                "alterationType": "protExpressionUp",
+                "alterationType": "protExpressionHigh",
                 "x": "Lung Squamous Cell Carcinoma",
                 "y": 0
             }, {
-                "alterationType": "protExpressionUp",
+                "alterationType": "protExpressionHigh",
                 "x": "Lung Adenocarcinoma",
                 "y": 0
             }], [{
-                "alterationType": "mrnaExpressionDown",
+                "alterationType": "mrnaExpressionLow",
                 "x": "Lung Squamous Cell Carcinoma",
                 "y": 0
             }, {
-                "alterationType": "mrnaExpressionDown",
+                "alterationType": "mrnaExpressionLow",
                 "x": "Lung Adenocarcinoma",
                 "y": 0
             }], [{
-                "alterationType": "mrnaExpressionUp",
+                "alterationType": "mrnaExpressionHigh",
                 "x": "Lung Squamous Cell Carcinoma",
                 "y": 0
-            }, {"alterationType": "mrnaExpressionUp", "x": "Lung Adenocarcinoma", "y": 0}], [{
+            }, {"alterationType": "mrnaExpressionHigh", "x": "Lung Adenocarcinoma", "y": 0}], [{
                 "alterationType": "hetloss",
                 "x": "Lung Squamous Cell Carcinoma",
                 "y": 0
@@ -94,7 +94,7 @@ describe('CancerSummaryChart', () => {
             }, {"alterationType": "mutated", "x": "Lung Adenocarcinoma", "y": 42.42424242424242}]],
             "countsByGroup": {
                 "Lung Adenocarcinoma": {
-                    "sampleTotal": 660,
+                    "profiledSampleTotal": 660,
                     "alterationTotal": 547,
                     "alterationTypeCounts": {
                         "mutated": 280,
@@ -103,17 +103,17 @@ describe('CancerSummaryChart', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 87
                     },
                     "alteredSampleCount": 460,
                     "parentCancerType": "Non-Small Cell Lung Cancer"
                 },
                 "Lung Squamous Cell Carcinoma": {
-                    "sampleTotal": 484,
+                    "profiledSampleTotal": 484,
                     "alterationTotal": 574,
                     "alterationTypeCounts": {
                         "mutated": 292,
@@ -122,10 +122,10 @@ describe('CancerSummaryChart', () => {
                         "hetloss": 0,
                         "gain": 0,
                         "fusion": 0,
-                        "mrnaExpressionUp": 0,
-                        "mrnaExpressionDown": 0,
-                        "protExpressionUp": 0,
-                        "protExpressionDown": 0,
+                        "mrnaExpressionHigh": 0,
+                        "mrnaExpressionLow": 0,
+                        "protExpressionHigh": 0,
+                        "protExpressionLow": 0,
                         "multiple": 131
                     },
                     "alteredSampleCount": 443,
@@ -135,10 +135,10 @@ describe('CancerSummaryChart', () => {
             "representedAlterations": {"multiple": true, "homdel": true, "amp": true, "mutated": true},
             "alterationTypes": {
                 "multiple": "Multiple Alterations",
-                "protExpressionDown": "Protein Low",
-                "protExpressionUp": "Protein High",
-                "mrnaExpressionDown": "mRNA Low",
-                "mrnaExpressionUp": "mRNA High",
+                "protExpressionLow": "Protein Low",
+                "protExpressionHigh": "Protein High",
+                "mrnaExpressionLow": "mRNA Low",
+                "mrnaExpressionHigh": "mRNA High",
                 "hetloss": "Shallow Deletion",
                 "homdel": "Deep Deletion",
                 "gain": "Gain",
@@ -154,14 +154,35 @@ describe('CancerSummaryChart', () => {
                 "hetloss": "#000",
                 "gain": "rgb(255,182,193)",
                 "fusion": "#8B00C9",
-                "mrnaExpressionUp": "#FF989A",
-                "mrnaExpressionDown": "#529AC8",
-                "protExpressionUp": "#FF989A",
-                "protExpressionDown": "#E0FFFF",
+                "mrnaExpressionHigh": "#FF989A",
+                "mrnaExpressionLow": "#529AC8",
+                "protExpressionHigh": "#FF989A",
+                "protExpressionLow": "#E0FFFF",
                 "multiple": "#666"
             },
-            "xLabels": ["Lung Squamous Cell Carcinoma", "Lung Adenocarcinoma"]
-        };
+            "xLabels": ["Lung Squamous Cell Carcinoma", "Lung Adenocarcinoma"],
+            "alterationTypeDataCounts": [{
+                "x": "Lung Squamous Cell Carcinoma",
+                "y": "Mutation data",
+                "profiledCount": 484,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Adenocarcinoma",
+                "y": "Mutation data",
+                "profiledCount": 660,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Squamous Cell Carcinoma",
+                "y": "CNA data",
+                "profiledCount": 100,
+                "notProfiledCount": 0
+            },{
+                "x": "Lung Adenocarcinoma",
+                "y": "CNA data",
+                "profiledCount": 25,
+                "notProfiledCount": 0
+            }]
+        } as any;
 
         const instance = shallow(<CancerSummaryChart {...props} />).instance() as CancerSummaryChart;
 
@@ -183,7 +204,7 @@ describe('CancerSummaryChart', () => {
 
     it('#mergeAlterationDataAcrossAlterationTypes should merge alteration rate/count across alteration types',()=>{
 
-        let alterationData = [[{"alterationType":"multiple","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"multiple","x":"Rectal Adenocarcinoma","y":2.083333333333333},{"alterationType":"multiple","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"protExpressionDown","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"protExpressionDown","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"protExpressionDown","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"protExpressionUp","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"protExpressionUp","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"protExpressionUp","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mrnaExpressionDown","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionDown","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionDown","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mrnaExpressionUp","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionUp","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionUp","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"hetloss","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"hetloss","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"hetloss","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"homdel","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"homdel","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"homdel","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"gain","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"gain","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"gain","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"amp","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"amp","x":"Rectal Adenocarcinoma","y":2.083333333333333},{"alterationType":"amp","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"fusion","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"fusion","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"fusion","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mutated","x":"Colorectal Adenocarcinoma","y":78.26086956521739},{"alterationType":"mutated","x":"Rectal Adenocarcinoma","y":54.166666666666664},{"alterationType":"mutated","x":"Colon Adenocarcinoma","y":46.808510638297875}]];
+        let alterationData = [[{"alterationType":"multiple","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"multiple","x":"Rectal Adenocarcinoma","y":2.083333333333333},{"alterationType":"multiple","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"protExpressionLow","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"protExpressionLow","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"protExpressionLow","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"protExpressionHigh","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"protExpressionHigh","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"protExpressionHigh","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mrnaExpressionLow","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionLow","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionLow","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mrnaExpressionHigh","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionHigh","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"mrnaExpressionHigh","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"hetloss","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"hetloss","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"hetloss","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"homdel","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"homdel","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"homdel","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"gain","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"gain","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"gain","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"amp","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"amp","x":"Rectal Adenocarcinoma","y":2.083333333333333},{"alterationType":"amp","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"fusion","x":"Colorectal Adenocarcinoma","y":0},{"alterationType":"fusion","x":"Rectal Adenocarcinoma","y":0},{"alterationType":"fusion","x":"Colon Adenocarcinoma","y":0}],[{"alterationType":"mutated","x":"Colorectal Adenocarcinoma","y":78.26086956521739},{"alterationType":"mutated","x":"Rectal Adenocarcinoma","y":54.166666666666664},{"alterationType":"mutated","x":"Colon Adenocarcinoma","y":46.808510638297875}]];
 
         const ret = mergeAlterationDataAcrossAlterationTypes(alterationData);
 

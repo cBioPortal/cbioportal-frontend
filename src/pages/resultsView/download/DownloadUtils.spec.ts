@@ -3,7 +3,7 @@ import {assert} from 'chai';
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
-    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData
+    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData, decideMolecularProfileSortingOrder
 } from "./DownloadUtils";
 import {
     AnnotatedMutation, ExtendedAlteration
@@ -13,28 +13,22 @@ describe('DownloadUtils', () => {
 
     const genes = [
         {
+            "geneticEntityId": 4598,
             "entrezGeneId": 5728,
             "hugoGeneSymbol": "PTEN",
-            "type": "protein-coding",
-            "cytoband": "10q23.31",
-            "length": 87892669,
-            "chromosome": "10"
+            "type": "protein-coding"
         },
         {
+            "geneticEntityId": 5808,
             "entrezGeneId": 7157,
             "hugoGeneSymbol": "TP53",
-            "type": "protein-coding",
-            "cytoband": "17p13.1",
-            "length": 19149,
-            "chromosome": "17"
+            "type": "protein-coding"
         },
         {
+            "geneticEntityId": 1575,
             "entrezGeneId": 1956,
             "hugoGeneSymbol": "EGFR",
-            "type": "protein-coding",
-            "cytoband": "7p11.2",
-            "length": 188307,
-            "chromosome": "7"
+            "type": "protein-coding"
         }
     ];
 
@@ -67,15 +61,14 @@ describe('DownloadUtils', () => {
         value: 2.4745,
         entrezGeneId: 5728,
         gene: {
+            geneticEntityId: 4598,
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
-            type: "protein-coding",
-            cytoband: "10q23.31",
-            length: 87892669
+            type: "protein-coding"
         },
         molecularProfileAlterationType: "MRNA_EXPRESSION",
         alterationType: "MRNA_EXPRESSION",
-        alterationSubType: "up"
+        alterationSubType: "high"
     };
 
     const proteinDataForTCGAEEA20C = {
@@ -89,15 +82,14 @@ describe('DownloadUtils', () => {
         value: 2.5406,
         entrezGeneId: 5728,
         gene: {
+            geneticEntityId: 4598,
             entrezGeneId: 5728,
             hugoGeneSymbol: "PTEN",
-            type: "protein-coding",
-            cytoband: "10q23.31",
-            length: 87892669
+            type: "protein-coding"
         },
         molecularProfileAlterationType: "PROTEIN_LEVEL",
         alterationType: "PROTEIN_LEVEL",
-        alterationSubType: "up"
+        alterationSubType: "high"
     };
 
     const cnaDataForTCGAEEA20C = {
@@ -111,11 +103,10 @@ describe('DownloadUtils', () => {
         value: -1,
         entrezGeneId: 7157,
         gene: {
+            geneticEntityId:5808,
             entrezGeneId: 7157,
             hugoGeneSymbol: "TP53",
-            type: "protein-coding",
-            cytoband: "17p13.1",
-            length: 19149
+            type: "protein-coding"
         }
     };
 
@@ -132,12 +123,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "length": 188307,
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "NA",
@@ -184,12 +173,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "length": 188307,
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "MSKCC-DMP",
@@ -232,12 +219,10 @@ describe('DownloadUtils', () => {
             "patientId": "P-0000378",
             "entrezGeneId": 1956,
             "gene": {
+                "geneticEntityId": 1575,
                 "entrezGeneId": 1956,
                 "hugoGeneSymbol": "EGFR",
-                "type": "protein-coding",
-                "cytoband": "7p11.2",
-                "length": 188307,
-                "chromosome": "7"
+                "type": "protein-coding"
             },
             "studyId": "msk_impact_2017",
             "center": "NA",
@@ -318,6 +303,7 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-BF-A1PV-01",
+                patient: "TCGA-BF-A1PV",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1CRi1BMVBWLTAxOnNrY21fdGNnYQ",
                 trackLabel: "PTEN",
@@ -344,12 +330,13 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-EE-A20C-06",
+                patient: "TCGA-EE-A20C",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
                 trackLabel: "PTEN",
                 data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C] as any[],
-                disp_mrna: "up",
-                disp_prot: "up"
+                disp_mrna: "high",
+                disp_prot: "high"
             };
 
             const oqlData = generateOqlData(geneticTrackDatum);
@@ -378,6 +365,7 @@ describe('DownloadUtils', () => {
 
             const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "P-0000378-T01-IM3",
+                patient: "P-0000378",
                 study_id: "msk_impact_2017",
                 uid: "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3",
                 trackLabel: "EGFR",
@@ -596,16 +584,18 @@ describe('DownloadUtils', () => {
             const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
             const caseAlterationData = generateCaseAlterationData(
+                "EGFR TP53 PTEN",
                 selectedMolecularProfiles,
+                caseAggregatedDataByOQLLine,
                 caseAggregatedDataByOQLLine,
                 genePanelInformation,
                 samples,
                 geneAlterationData);
 
-            assert.isFalse(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].sequenced,
+            assert.isFalse(caseAlterationData[0].oqlData["EGFR"].sequenced,
                 "cases with the gene EGFR should be marked as not sequenced");
 
-            assert.isTrue(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].sequenced,
+            assert.isTrue(caseAlterationData[1].oqlData["PTEN"].sequenced,
                 "cases with the gene other than EGFR should be marked as sequenced");
         });
 
@@ -632,7 +622,7 @@ describe('DownloadUtils', () => {
 
             const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
-            const caseAlterationData = generateCaseAlterationData(selectedMolecularProfiles, caseAggregatedDataByOQLLine, genePanelInformation, samples);
+            const caseAlterationData = generateCaseAlterationData("EGFR TP53 PTEN", selectedMolecularProfiles, caseAggregatedDataByOQLLine, caseAggregatedDataByOQLLine, genePanelInformation, samples);
 
             assert.equal(caseAlterationData.length, 2,
                 "case alteration data has correct size");
@@ -643,10 +633,10 @@ describe('DownloadUtils', () => {
                 "study id is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
             assert.isTrue(caseAlterationData[0].altered,
                 "sample UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3 is altered");
-            assert.deepEqual(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].mutation,
+            assert.deepEqual(caseAlterationData[0].oqlData["EGFR"].mutation,
                 ["G598A", "G239C"],
                 "mutation data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
-            assert.deepEqual(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].fusion,
+            assert.deepEqual(caseAlterationData[0].oqlData["EGFR"].fusion,
                 ["EGFR-intragenic"],
                 "fusion data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3");
 
@@ -656,10 +646,10 @@ describe('DownloadUtils', () => {
                 "study id is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
             assert.isTrue(caseAlterationData[1].altered,
                 "sample VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ is altered");
-            assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].mrnaExp,
+            assert.deepEqual(caseAlterationData[1].oqlData["PTEN"].mrnaExp,
                 [{type: 'HIGH', value: 2.4745}],
                 "mRNA data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
-            assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].proteinLevel,
+            assert.deepEqual(caseAlterationData[1].oqlData["PTEN"].proteinLevel,
                 [{type: 'HIGH', value: 2.5406}],
                 "protein data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
         });
@@ -686,6 +676,7 @@ describe('DownloadUtils', () => {
             const notProfiledGeneticTrackDatum: GeneticTrackDatum[] = [
                 {
                     "sample": "TCGA-S9-A7J0-01",
+                    "patient": "TCGA-S9-A7J0",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1TOS1BN0owLTAxOmxnZ190Y2dh",
                     "profiled_in": [
@@ -713,6 +704,7 @@ describe('DownloadUtils', () => {
                 },
                 {
                     "sample": "TCGA-F6-A8O3-01",
+                    "patient": "TCGA-F6-A8O3",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1GNi1BOE8zLTAxOmxnZ190Y2dh",
                     "profiled_in": [
@@ -738,10 +730,11 @@ describe('DownloadUtils', () => {
                         } as GenePanelData
                     ],
                     "trackLabel": "EGFR",
-                    "data": []                
+                    "data": []
                 },
                 {
                     "sample": "TCGA-DU-6396-01",
+                    "patient": "TCGA-DU-6396",
                     "study_id": "lgg_tcga",
                     "uid": "VENHQS1EVS02Mzk2LTAxOmxnZ190Y2dh",
                     "profiled_in": [],
@@ -910,6 +903,30 @@ describe('DownloadUtils', () => {
                 "mutation is not profiled for the two not profiled GeneticTrackDatum");
             assert.equal(oqlData2.isProteinLevelNotProfiled, true,
                 "protein level is profiled for the two not profiled GeneticTrackDatum");
+        });
+    });
+
+    describe('molecularProfileSortingOrder', () => {
+        it('should return specific number for 7 specific molecular profile types', () => {
+            assert.equal(decideMolecularProfileSortingOrder("MUTATION_EXTENDED"), 1,
+                "MUTATION_EXTENDED should be the 1st type");
+            assert.equal(decideMolecularProfileSortingOrder("COPY_NUMBER_ALTERATION"), 2,
+                "COPY_NUMBER_ALTERATION should be the 2nd type");
+            assert.equal(decideMolecularProfileSortingOrder("GENESET_SCORE"), 3,
+                "GENESET_SCORE should be the 3rd type");
+            assert.equal(decideMolecularProfileSortingOrder("MRNA_EXPRESSION"), 4,
+                "MRNA_EXPRESSION should be the 4th type");
+            assert.equal(decideMolecularProfileSortingOrder("METHYLATION"), 5,
+                "METHYLATION should be the 5th type");
+            assert.equal(decideMolecularProfileSortingOrder("METHYLATION_BINARY"), 6,
+                "METHYLATION_BINARY should be the 6th type");
+            assert.equal(decideMolecularProfileSortingOrder("PROTEIN_LEVEL"), 7,
+                "PROTEIN_LEVEL should be the 7th type");
+        });
+
+        it('should return maximum number for the other types', () => {
+            assert.equal(decideMolecularProfileSortingOrder("FUSION"), Number.MAX_VALUE,
+                "FUSION should be put to the end");
         });
     });
 });

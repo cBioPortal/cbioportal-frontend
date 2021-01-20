@@ -1,8 +1,9 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
+import {computed} from "mobx";
 import * as _ from 'lodash';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {CancerStudy, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, DiscreteCopyNumberData, Gene, ReferenceGenomeGene} from "shared/api/generated/CBioPortalAPI";
 import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import MrnaExprColumnFormatter from "shared/components/mutationTable/column/MrnaExprColumnFormatter";
 import {IColumnVisibilityControlsProps} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
@@ -11,7 +12,7 @@ import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
 import SampleManager from "../sampleManager";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {IOncoKbCancerGenesWrapper, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
@@ -33,10 +34,11 @@ type ICopyNumberTableWrapperProps = {
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
-    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error;
+    oncoKbCancerGenes?:IOncoKbCancerGenesWrapper;
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     pubMedCache?:PubMedCache;
+    referenceGenes:ReferenceGenomeGene[];
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -48,14 +50,26 @@ type ICopyNumberTableWrapperProps = {
     status:"loading"|"available"|"unavailable";
 };
 
-
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
-
     public static defaultProps = {
         enableOncoKb: true,
         enableCivic: false
     };
+
+    @computed get hugoGeneSymbolToCytoband() {
+        // build reference gene map
+        const result:{[hugosymbol:string]:string} =
+            this.props.referenceGenes!.reduce(
+                (map:{[hugosymbol:string]:string}, next:ReferenceGenomeGene)=>
+                { map[next.hugoGeneSymbol] = next.cytoband || '';return map;},
+                {});
+        return result;
+    }
+
+    getCytobandForGene(hugoGeneSymbol:string) {
+        return this.hugoGeneSymbolToCytoband[hugoGeneSymbol];
+    }
 
     render() {
         const columns: CNATableColumn[] = [];
@@ -63,11 +77,12 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         if (numSamples >= 2) {
             columns.push({
-                name: "Tumors",
+                name: "Samples",
                 render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
                 download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
-                order: 20
+                order: 20,
+                resizable: true,
             });
         }
 
@@ -100,7 +115,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
                 oncoKbData: this.props.cnaOncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
-                oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
+                oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 pubMedCache: this.props.pubMedCache,
                 civicGenes: this.props.cnaCivicGenes,
@@ -113,16 +128,15 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
+                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
             },
             order: 50
         });
 
         columns.push({
             name: "Cytoband",
-            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.cytoband}</span>,
-            download: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
-            sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
+            render: (d:DiscreteCopyNumberData[])=><span>{this.getCytobandForGene(d[0].gene.hugoGeneSymbol)}</span>,
+            sortBy: (d:DiscreteCopyNumberData[])=>this.getCytobandForGene(d[0].gene.hugoGeneSymbol),
             visible: true,
             order: 60
         });

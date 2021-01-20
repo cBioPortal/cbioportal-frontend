@@ -6,15 +6,22 @@ import OncoprinterStore from "./OncoprinterStore";
 import Oncoprinter from "./Oncoprinter";
 import {action, computed, observable} from "mobx";
 import {Button,FormGroup, ControlLabel, FormControl} from "react-bootstrap";
-import Collapse from "react-collapse";
+import {Collapse} from "react-collapse";
 import autobind from "autobind-decorator";
 import {exampleData} from "./OncoprinterConstants";
 import $ from "jquery";
 import {SyntheticEvent} from "react";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 import {WindowWidthBox} from "../../../../shared/components/WindowWidthBox/WindowWidthBox";
+import {MSKTab, MSKTabs} from "../../../../shared/components/MSKTabs/MSKTabs";
+import MutualExclusivityTab from "../../../resultsView/mutualExclusivity/MutualExclusivityTab";
 
 export interface IOncoprinterToolProps {
+}
+
+export enum OncoprinterTab {
+    ONCOPRINT="oncoprint",
+    MUTUAL_EXCLUSIVITY="mutualExclusivity",
 }
 
 const helpSection = (
@@ -44,14 +51,14 @@ const helpSection = (
                     </li>
                     <li>mRNA expression - please use one of the two events below:
                         <ul>
-                            <li><code>UP</code>: expression up</li>
-                            <li><code>DOWN</code>: expression down</li>
+                            <li><code>HIGH</code>: expression high</li>
+                            <li><code>LOW</code>: expression low</li>
                         </ul>
                     </li>
                     <li>Protein expression - please use one of the two events below:
                         <ul>
-                            <li><code>HIGH</code>: Protein High</li>
-                            <li><code>LOW</code>: Protein Low</li>
+                            <li><code>HIGH</code>: Protein high</li>
+                            <li><code>LOW</code>: Protein low</li>
                         </ul>
                     </li>
                 </ul>
@@ -86,11 +93,14 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     private store = new OncoprinterStore();
     private oncoprinter:Oncoprinter|null;
     private filesInput:HTMLInputElement|null;
+    @observable private activeTabId:OncoprinterTab = OncoprinterTab.ONCOPRINT;
 
     @autobind
     private oncoprinterRef(o:Oncoprinter|null) {
         this.oncoprinter = o;
     }
+
+    @observable dataInputOpened = true;
 
     // help
     @observable helpOpened = false;
@@ -99,14 +109,6 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     @observable dataInput = "";
     @observable geneOrderInput = "";
     @observable sampleOrderInput = "";
-
-    @computed get inputError() {
-        /*if (this.store.parsedInputLines.isError) {
-            return this.store.parsedInputLines.error;
-        } else {*/
-            return null;
-        //}
-    }
 
     @autobind
     private toggleHelpOpened() {
@@ -135,12 +137,14 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
 
     @action private doSubmit(dataInput:string) {
         this.store.setInput(dataInput, this.geneOrderInput, this.sampleOrderInput);
+        if (!this.store.parsedInputLines.error) {
+            this.dataInputOpened = false;
+        }
 
         onMobxPromise(this.store.alteredSampleIds,
             (alteredUids:string[])=>{
                 this.oncoprinter && this.oncoprinter.oncoprint.setHorzZoomToFit(alteredUids);
             });
-
     }
 
     @autobind private filesInputRef(input:HTMLInputElement|null) {
@@ -178,10 +182,16 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
         );
     }
 
+    @computed get error() {
+        return this.store.parsedInputLines.error;
+    }
+
     @autobind
     private getInputSection() {
         return (
-            <FormGroup>
+            <FormGroup
+                style={{ display:this.dataInputOpened ? undefined : "none" }}
+            >
                 <ControlLabel>Input genomic alteration data:<Button className="oncoprinterExampleData" style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateExampleData}>Load example data</Button></ControlLabel>
                 <FormControl
                     className="oncoprinterDataInput"
@@ -214,12 +224,15 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     style={{"height":35, width:475}}
                 />
                 <br/>
-                <Button className="oncoprinterSubmit" bsStyle="default" onClick={this.onClickSubmit} disabled={!!this.inputError}>Submit</Button>
+                <Button className="oncoprinterSubmit" bsSize="large" bsStyle="primary" disabled={this.dataInput.trim().length === 0} onClick={this.onClickSubmit}>Submit</Button>
+                { this.error && <div className="alert alert-danger" style={{marginTop:5, whiteSpace:"pre-wrap"}}>{this.error}</div> }
             </FormGroup>
         );
     }
 
     render() {
+
+        const numCells = this.store.hugoGeneSymbols.length * this.store.sampleIds.length;
         return (
             <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
@@ -235,11 +248,42 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                         <Observer>
                             {this.getInputSection}
                         </Observer>
-                        <Oncoprinter
-                            ref={this.oncoprinterRef}
-                            divId="oncoprinter"
-                            store={this.store}
-                        />
+                        { !this.dataInputOpened && (
+                            <button className="btn btn-primary btn-lg oncoprinterModifyInput" style={{paddingLeft:50, paddingRight:50, marginBottom:15}}
+                                    onClick={()=>{ this.dataInputOpened = true; }}
+                            >
+                                Modify Input
+                            </button>
+                        )}
+                        <div style={{display:(this.store.hasData() && !this.error ? "block" : "none")}}>
+                            <MSKTabs activeTabId={this.activeTabId} unmountOnHide={false}
+                                     onTabClick={(id:string)=>{ this.activeTabId=id as OncoprinterTab; }}
+                                     className="mainTabs"
+                            >
+                                <MSKTab key={0} id={OncoprinterTab.ONCOPRINT} linkText="Oncoprint">
+                                    {(numCells > 100000) && (
+                                        <div
+                                            className="alert alert-warning"
+                                        >
+                                            Warning: Because your inputted data is very large,
+                                            the Oncoprinter may be slow, and downloaded PDF, SVG, and PNG 
+                                            may be huge and unresponsive. We recommend plotting
+                                            data for fewer genes at a time.
+                                        </div>
+                                    )}
+                                    <div style={{marginTop:10}}>
+                                        <Oncoprinter
+                                            ref={this.oncoprinterRef}
+                                            divId="oncoprinter"
+                                            store={this.store}
+                                        />
+                                    </div>
+                                </MSKTab>
+                                <MSKTab key={1} id={OncoprinterTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
+                                    <MutualExclusivityTab isSampleAlteredMap={this.store.isSampleAlteredMap}/>
+                                </MSKTab>
+                            </MSKTabs>
+                        </div>
                     </div>
                 </WindowWidthBox>
             </PageLayout>

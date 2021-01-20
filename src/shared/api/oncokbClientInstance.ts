@@ -1,5 +1,4 @@
-import OncoKbAPI from "./generated/OncoKbAPI";
-import {getOncoKbApiUrl} from "./urls";
+import OncoKbAPI from "../../public-lib/api/generated/OncoKbAPI";
 
 const client = new OncoKbAPI();
 

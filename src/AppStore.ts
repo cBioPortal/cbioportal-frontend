@@ -1,14 +1,14 @@
 import {action, computed, observable} from "mobx";
-import {addServiceErrorHandler, remoteData} from "shared/api/remoteData";
+import {addServiceErrorHandler, remoteData} from "public-lib/api/remoteData";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {sendSentryMessage} from "./shared/lib/tracking";
-import getBrowserWindow from "./shared/lib/getBrowserWindow";
+import getBrowserWindow from "./public-lib/lib/getBrowserWindow";
 
-type SiteError = {
-    message:string;
-    dismissed?:boolean;
+export type SiteError = {
+    errorObj:any;
+    dismissed:boolean;
 };
 
 export class AppStore {
@@ -21,12 +21,15 @@ export class AppStore {
                 sendSentryMessage("ERRORHANDLER:" + error);
             } catch (ex) {};
 
-            if (/Error: 400|Error: 500/.test(error)) {
+            if (error.status && /400|500/.test(error.status)) {
+
                 sendSentryMessage("ERROR DIALOG SHOWN:" + error);
-                this.siteErrors.push({ message:error });
+                this.siteErrors.push({errorObj: error, dismissed:false});
             }
         });
     }
+
+    @observable private _appReady = false;
 
     @observable siteErrors: SiteError[] = [];
 
@@ -47,8 +50,7 @@ export class AppStore {
     }
 
     @computed get undismissedSiteErrors(){
-        const me =  _.filter(this.siteErrors.slice(), (err)=>!err.dismissed);
-        return me;
+        return _.filter(this.siteErrors.slice(), (err)=>!err.dismissed);
     }
 
     @computed get isErrorCondition(){
@@ -63,13 +65,22 @@ export class AppStore {
         });
     }
 
+    @action
+    public setAppReady() {
+        this._appReady = true;
+    }
+
+    public get appReady() {
+        return this._appReady;
+    }
+
     readonly portalVersion = remoteData<string | undefined>({
         invoke:async()=>{
             const portalVersionResult = await internalClient.getInfoUsingGET({});
             if (portalVersionResult && portalVersionResult.portalVersion) {
                 return Promise.resolve("v" + portalVersionResult.portalVersion.split('-')[0]);
             }
-            return undefined; 
+            return undefined;
         }
     });
 }

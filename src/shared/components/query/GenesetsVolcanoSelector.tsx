@@ -11,7 +11,7 @@ import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {Td} from 'reactable';
 import {toPrecision} from "../../lib/FormatUtils";
 import { getHierarchyData } from "shared/lib/StoreUtils";
-import ReactSelect from "react-select";
+import ReactSelect from "react-select1";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { VictoryChart, VictoryScatter, VictoryTheme, VictorySelectionContainer,
     VictoryAxis, VictoryLabel, VictoryLine } from 'victory';

@@ -5,7 +5,7 @@ import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
 import autobind from "autobind-decorator";
 import {getPatientViewUrl} from 'shared/api/urls';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from 'public-lib/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import fileDownload from 'react-file-download';
 import {Else, If, Then} from 'react-if';
@@ -15,6 +15,7 @@ import {AppStore} from "../../../AppStore";
 import {serializeEvent} from "../../../shared/lib/tracking";
 
 export interface ActionButtonsProps {
+    loadingComplete: boolean;
     store: StudyViewPageStore;
     appStore: AppStore;
 }
@@ -64,8 +65,23 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
         return 'Download clinical data for the selected cases';
     }
 
+    @computed
+    get virtualStudy(): JSX.Element | null {
+        if (this.props.loadingComplete) {
+            return <VirtualStudy
+                user={this.props.appStore.userName}
+                name={this.props.store.isSingleVirtualStudyPageWithoutFilter ? this.props.store.filteredVirtualStudies.result[0].data.name : undefined}
+                description={this.props.store.isSingleVirtualStudyPageWithoutFilter ? this.props.store.filteredVirtualStudies.result[0].data.description : undefined}
+                studyWithSamples={this.props.store.studyWithSamples.result}
+                selectedSamples={this.props.store.selectedSamples.result}
+                filter={this.props.store.userSelections}
+                attributesMetaSet={this.props.store.chartMetaSet}
+            />
+        }
+        return null;
+    }
 
-    render() {
+    render() {       
         return (
             <div className={classNames(styles.actionButtons, "btn-group")}>
 
@@ -74,9 +90,10 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     placement={"top"}
                     overlay={<span>View selected cases</span>}
                 >
-                    <button className="btn btn-default btn-sm"
-                            onClick={this.openCases}
-                            data-event={serializeEvent({category:"studyPage", action:"viewPatientCohort", label:this.props.store.queriedPhysicalStudyIds.result})}
+                    <button
+                        className="btn btn-default btn-sm"
+                        onClick={this.openCases}
+                        data-event={serializeEvent({category:"studyPage", action:"viewPatientCohort", label:this.props.store.queriedPhysicalStudyIds.result})}
                     >
                         <i className="fa fa-user-circle-o"></i>
                     </button>
@@ -85,15 +102,7 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                 <DefaultTooltip
                     trigger={['click']}
                     destroyTooltipOnHide={true}
-                    overlay={
-                        <VirtualStudy
-                            user={this.props.appStore.userName}
-                            studyWithSamples={this.props.store.studyWithSamples.result}
-                            selectedSamples={this.props.store.selectedSamples.result}
-                            filter={this.props.store.userSelections}
-                            attributesMetaSet={this.props.store.chartMetaSet}
-                        />
-                    }
+                    overlay={this.virtualStudy}
                     placement="bottom"
                 >
                     <DefaultTooltip
@@ -103,6 +112,7 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     >
                         <button
                             className="btn btn-default btn-sm"
+                            disabled={!this.props.loadingComplete}
                         >
                             <i className="fa fa-bookmark"></i>
                         </button>
@@ -114,8 +124,15 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     placement={"top"}
                     overlay={<span>{this.downloadButtonTooltip}</span>}
                 >
-                    <button className="btn btn-default btn-sm" onClick={this.initiateDownload}
-                            data-event={serializeEvent({category:"studyPage", action:"dataDownload", label:this.props.store.queriedPhysicalStudyIds.result})}
+                    <button
+                        className="btn btn-default btn-sm"
+                        disabled={!this.props.loadingComplete}
+                        onClick={this.initiateDownload}
+                        data-event={serializeEvent({
+                            category:"studyPage",
+                            action:"dataDownload",
+                            label:this.props.store.queriedPhysicalStudyIds.result
+                        })}
                     >
                             <If condition={this.downloadingData}>
                                 <Then>

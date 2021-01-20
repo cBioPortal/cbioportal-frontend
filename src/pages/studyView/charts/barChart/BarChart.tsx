@@ -1,7 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from 'victory';
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -17,7 +17,12 @@ import {
     needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {getTextWidth} from "../../../../shared/lib/wrapText";
+import {getTextDiagonal, getTextHeight, getTextWidth} from "public-lib/lib/TextTruncationUtils";
+import {DEFAULT_NA_COLOR} from "shared/lib/Colors";
+import BarChartToolTip, { ToolTipModel } from "./BarChartToolTip";
+import { IAlterationData } from "pages/resultsView/cancerSummary/CancerSummaryContent";
+import WindowStore from "shared/components/window/WindowStore";
+import ReactDOM from "react-dom";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -47,6 +52,15 @@ const TILT_ANGLE = 50;
 export default class BarChart extends React.Component<IBarChartProps, {}> implements AbstractChart {
 
     private svgContainer: any;
+    
+    @observable.ref
+    private mousePosition = {x: 0, y: 0};
+
+    @observable
+    private currentBarIndex = -1;
+
+    @observable
+    private toolTipModel: ToolTipModel | null = null;
 
     constructor(props: IBarChartProps) {
         super(props);
@@ -133,22 +147,18 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     }
 
     @computed
-    get tilted() {
-        return this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick;
-    }
-
-    @computed
     get bottomPadding(): number {
-        const MAX_PADDING = 30;
-        const padding = this.tilted ? _.max(this.tickFormat.map((tick: string | string[]) => {
-            let content;
-            if (_.isArray(tick)) {
-                content = tick.join();
-            } else {
-                content = tick;
-            }
-            return getTextWidth(content, VICTORY_THEME.axis.style.tickLabels.fontFamily, `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`);
-        })) * Math.sin(Math.PI * TILT_ANGLE / 180) + 5 : 20;
+        const MAX_PADDING = 40;
+        const MIN_PADDING = 10; // used when tickFormat is empty
+        const padding = _.max(this.tickFormat.map((tick: string | string[]) => {
+            const content = _.isArray(tick) ? tick.join() : tick;
+            const fontFamily = VICTORY_THEME.axis.style.tickLabels.fontFamily;
+            const fontSize = `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`;
+            const textHeight = getTextHeight(content, fontFamily, fontSize);
+            const textWidth = getTextWidth(content, fontFamily, fontSize);
+            const textDiagonal = getTextDiagonal(textHeight, textWidth);
+            return 10 + (textDiagonal * Math.sin(Math.PI * TILT_ANGLE / 180));
+        })) || MIN_PADDING;
         return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 
@@ -160,25 +170,64 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
     }
 
+    @autobind
+    private onMouseMove(event: React.MouseEvent<any>): void {
+        this.mousePosition = { x: event.pageX, y: event.pageY };
+    }
+
+     /*
+     * Supplies the BarPlot with the event handlers needed to record when the mouse enters
+     * or leaves a bar on the plot.
+     */
+    private get barPlotEvents(){
+        const self = this;
+        return [{
+            target: "data",
+            eventHandlers: {
+                onMouseEnter: () => {
+                    return [{
+                        target: "data",
+                        mutation: (event: any) => {
+                            self.currentBarIndex = event.datum.eventKey;
+                            self.toolTipModel = {
+                                start: self.barData[self.currentBarIndex].dataBin.start,
+                                end: self.barData[self.currentBarIndex].dataBin.end,
+                                special: self.barData[self.currentBarIndex].dataBin.specialValue,
+                                sampleCount: event.datum.y,                            
+                            }
+                        }
+                    }];
+                },
+                onMouseLeave: () => {
+                    return [{
+                        target: "data",
+                        mutation: () => {
+                            self.toolTipModel = null;
+                        }
+                    }];
+                }
+            }
+        }];
+    }
+
     public render() {
 
         return (
-            <div>
+            <div onMouseMove={this.onMouseMove}>
                 {this.barData.length > 0 &&
                 <VictoryChart
                     containerComponent={
                         <VictorySelectionContainer
                             containerRef={(ref: any) => this.svgContainer = ref}
                             selectionDimension="x"
-                            onSelection={this.onSelection}
-                        />
+                            onSelection={this.onSelection} />
                     }
                     style={{
                         parent: {
                             width: this.props.width, height: this.props.height
                         }
                     }}
-                    height={this.props.height - 10 - this.bottomPadding}
+                    height={this.props.height - this.bottomPadding}
                     padding={{left: 40, right: 20, top: 10, bottom: this.bottomPadding}}
                     theme={VICTORY_THEME}
                 >
@@ -187,15 +236,13 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length - 1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
-                        style={
-                            this.tilted ? {
-                                tickLabels: {
-                                    angle: TILT_ANGLE,
-                                    verticalAnchor: "start",
-                                    textAnchor: "start"
-                                }
-                            } : undefined
-                        }
+                        style={{
+                            tickLabels: {
+                                angle: TILT_ANGLE,
+                                verticalAnchor: "start",
+                                textAnchor: "start"
+                            }
+                        }}
                     />
                     <VictoryAxis
                         dependentAxis={true}
@@ -207,12 +254,23 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                             data: {
                                 fill: (d: BarDatum) =>
                                     (this.isDataBinSelected(d.dataBin, this.props.filters) || this.props.filters.length === 0) ?
-                                        STUDY_VIEW_CONFIG.colors.theme.primary : STUDY_VIEW_CONFIG.colors.na
+                                        STUDY_VIEW_CONFIG.colors.theme.primary : DEFAULT_NA_COLOR
                             }
                         }}
                         data={this.barData}
+                        events={this.barPlotEvents}
                     />
                 </VictoryChart>}
+                {ReactDOM.createPortal(
+                    <BarChartToolTip
+                        mousePosition={this.mousePosition}
+                        windowWidth={WindowStore.size.width}
+                        model={this.toolTipModel}
+                        totalBars={this.barData.length}
+                        currentBarIndex={this.currentBarIndex}
+                    />,
+                    document.body
+                )}
             </div>
         );
     }
