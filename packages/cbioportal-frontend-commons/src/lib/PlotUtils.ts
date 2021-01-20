@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { action } from 'mobx';
 
 import Timeout = NodeJS.Timeout;
 
@@ -93,7 +94,7 @@ export function makeTooltipMouseEvents(self: {
                     return [
                         {
                             target: 'data',
-                            mutation: (props: any) => {
+                            mutation: action((props: any) => {
                                 self.tooltipModel = props;
                                 self.pointHovered = true;
 
@@ -103,7 +104,7 @@ export function makeTooltipMouseEvents(self: {
                                 }
 
                                 return { active: true };
-                            },
+                            }),
                         },
                     ];
                 },
@@ -111,17 +112,20 @@ export function makeTooltipMouseEvents(self: {
                     return [
                         {
                             target: 'data',
-                            mutation: () => {
+                            mutation: action(() => {
                                 if (disappearTimeout !== null) {
                                     clearTimeout(disappearTimeout);
                                 }
 
-                                disappearTimeout = setTimeout(() => {
-                                    self.pointHovered = false;
-                                }, disappearDelayMs);
+                                disappearTimeout = setTimeout(
+                                    action(() => {
+                                        self.pointHovered = false;
+                                    }),
+                                    disappearDelayMs
+                                );
 
                                 return { active: false };
-                            },
+                            }),
                         },
                     ];
                 },

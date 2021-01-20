@@ -1,5 +1,4 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-import { observer } from 'mobx-react';
 import * as React from 'react';
 import { ReactNode } from 'react';
 import { TableProps } from 'react-table';
@@ -188,37 +187,30 @@ export default class MutationMapper<
         return this.getTrackDataStatus();
     }
 
-    @computed
     protected get plotTopYAxisSymbol(): string | undefined {
         return this.props.plotTopYAxisSymbol;
     }
 
-    @computed
     protected get plotYMaxLabelPostfix(): string | undefined {
         return this.props.plotYMaxLabelPostfix;
     }
 
-    @computed
     protected get plotBottomYAxisSymbol(): string | undefined {
         return this.props.plotBottomYAxisSymbol;
     }
 
-    @computed
     protected get plotTopYAxisDefaultMax(): number | undefined {
         return this.props.plotTopYAxisDefaultMax;
     }
 
-    @computed
     protected get plotTopYAxisDefaultMin(): number | undefined {
         return this.props.plotTopYAxisDefaultMin;
     }
 
-    @computed
     protected get plotBottomYAxisDefaultMax(): number | undefined {
         return this.props.plotBottomYAxisDefaultMax;
     }
 
-    @computed
     protected get plotBottomYAxisDefaultMin(): number | undefined {
         return this.props.plotBottomYAxisDefaultMin;
     }
@@ -230,7 +222,6 @@ export default class MutationMapper<
             : initDefaultMutationMapperStore(this.props);
     }
 
-    @computed
     protected get lollipopPlotControlsConfig(): LollipopPlotControlsConfig {
         return this.props.lollipopPlotControlsConfig
             ? this.props.lollipopPlotControlsConfig!
@@ -255,6 +246,7 @@ export default class MutationMapper<
             ? this.props.windowWrapper!
             : getDefaultWindowInstance();
     }
+
     @computed
     protected get windowWrapper(): { size: { width: number; height: number } } {
         return this.getWindowWrapper();
@@ -399,7 +391,6 @@ export default class MutationMapper<
         );
     }
 
-    @computed
     protected get mutationRates(): MutationRate[] | undefined {
         return this.props.mutationRates;
     }
@@ -410,7 +401,7 @@ export default class MutationMapper<
         ) : null;
     }
 
-    @computed protected get mutationRateSummary(): JSX.Element | null {
+    protected get mutationRateSummary(): JSX.Element | null {
         return this.getMutationRateSummary();
     }
 
