@@ -46,7 +46,6 @@ docker-compose $compose_extensions run --rm cbioportal sh -c '\
 for DIR in "$TEST_HOME"/local/studies/*/; do
 
     echo "Loading study $DIR"
-    ls $DIR
     # FIXME metaImport.py canot be used here since the URL for validation cannot contain '_'
     # for the study to be validated the container names in docker compose should be updated
     docker-compose $compose_extensions run --rm \
