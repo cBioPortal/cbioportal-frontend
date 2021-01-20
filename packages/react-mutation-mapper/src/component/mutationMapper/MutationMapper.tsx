@@ -188,24 +188,40 @@ export default class MutationMapper<
         return this.getTrackDataStatus();
     }
 
-    @computed
-    protected get plotTopYAxisSymbol(): string | undefined {
+    protected getPlotTopYAxisSymbol(): string | undefined {
         return this.props.plotTopYAxisSymbol;
     }
 
     @computed
-    protected get plotYMaxLabelPostfix(): string | undefined {
+    protected get plotTopYAxisSymbol(): string | undefined {
+        return this.getPlotTopYAxisSymbol();
+    }
+
+    protected getPlotYMaxLabelPostfix(): string | undefined {
         return this.props.plotYMaxLabelPostfix;
     }
 
     @computed
-    protected get plotBottomYAxisSymbol(): string | undefined {
+    protected get plotYMaxLabelPostfix(): string | undefined {
+        return this.getPlotYMaxLabelPostfix();
+    }
+
+    protected getPlotBottomYAxisSymbol(): string | undefined {
         return this.props.plotBottomYAxisSymbol;
     }
 
     @computed
-    protected get plotTopYAxisDefaultMax(): number | undefined {
+    protected get plotBottomYAxisSymbol(): string | undefined {
+        return this.getPlotBottomYAxisSymbol();
+    }
+
+    protected getPlotTopYAxisDefaultMax(): number | undefined {
         return this.props.plotTopYAxisDefaultMax;
+    }
+
+    @computed
+    protected get plotTopYAxisDefaultMax(): number | undefined {
+        return this.getPlotTopYAxisDefaultMax();
     }
 
     @computed
@@ -213,9 +229,13 @@ export default class MutationMapper<
         return this.props.plotTopYAxisDefaultMin;
     }
 
+    protected getPlotBottomYAxisDefaultMax(): number | undefined {
+        return this.props.plotBottomYAxisDefaultMax;
+    }
+
     @computed
     protected get plotBottomYAxisDefaultMax(): number | undefined {
-        return this.props.plotBottomYAxisDefaultMax;
+        return this.getPlotBottomYAxisDefaultMax();
     }
 
     @computed
