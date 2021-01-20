@@ -122,6 +122,21 @@ function goToUrlAndSetLocalStorage(url) {
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
     }
+    // wait for page to load
+    browser.waitForExist('html');
+
+    // check whether it is keycloak login page
+    if (browser.getUrl().includes('/auth/realms/cbio')) {
+        // perform login
+        $('#username').setValue('testuser');
+        $('#password').setValue('P@ssword1');
+        $('#kc-login').click();
+        browser.waitUntil(
+            () => !browser.getUrl().includes('/auth/realms/cbio')
+        );
+        browser.waitForExist('html');
+    }
+
     browser.setViewportSize({ height: 1000, width: 1600 });
 
     // move mouse out of the way
