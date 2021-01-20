@@ -61,6 +61,7 @@ export type DefaultMutationTableProps = {
     appendColumns?: boolean;
 } & DataTableProps<Partial<Mutation>>;
 
+@observer
 class DefaultMutationTableComponent extends DataTable<Partial<Mutation>> {}
 
 @observer

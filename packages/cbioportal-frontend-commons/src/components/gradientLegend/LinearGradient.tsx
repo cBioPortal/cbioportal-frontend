@@ -21,6 +21,7 @@ export class LinearGradient extends React.Component<ILinearGradientProps> {
         for (let i = 0; i < colors.length; i++) {
             gradientStopPoints.push(
                 <stop
+                    key={`gradientStop${i}`}
                     offset={`${((i / colors.length) * 100).toFixed(0)}%`}
                     stopColor={colors[i]}
                 />
