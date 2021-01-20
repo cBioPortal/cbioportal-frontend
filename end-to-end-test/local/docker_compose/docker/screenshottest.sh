@@ -4,17 +4,13 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
+echo START SERVE_DIST
+cd /cbioportal-frontend
+yarn serveDistLocalDb &
+
 echo INSTALL SCREENSHOT DEPENDENCIES
 cd /cbioportal-frontend/end-to-end-test
 yarn install --frozen-lockfile
-
-echo START SERVE_DIST
-cd /cbioportal-frontend
-yarn
-yarn buildModules
-yarn serveDistLocalDb &
-
-cd /cbioportal-frontend/end-to-end-test
 
 echo UPDATE WEBDRIVER-MANAGER
 ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42"
