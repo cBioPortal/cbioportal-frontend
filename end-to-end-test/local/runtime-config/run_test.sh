@@ -10,7 +10,7 @@ docker build -f Dockerfile.screenshottest -t cbio-screenshottest .
 
 cd $PORTAL_SOURCE_DIR
 docker run -it --rm \
-    --network=cbio-net \
+    --network=cbioportal-docker-compose_cbio-net \
     -e CBIOPORTAL_URL="$CBIOPORTAL_URL" \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \
