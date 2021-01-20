@@ -7304,11 +7304,34 @@ export class StudyViewPageStore {
                     );
                 }
 
+                const calculateSampleCount = (
+                    result:
+                        | (SampleTreatmentRow | PatientTreatmentRow)[]
+                        | undefined
+                ) => {
+                    if (!result) {
+                        return 0;
+                    }
+
+                    return result
+                        .map(row => row.samples)
+                        .reduce((allSamples, samples) => {
+                            samples.forEach(s =>
+                                allSamples.add(s.sampleId + '::' + s.studyId)
+                            );
+                            return allSamples;
+                        }, new Set<String>()).size;
+                };
+
                 if (!_.isEmpty(this.sampleTreatments.result)) {
-                    ret['SAMPLE_TREATMENTS'] = 1;
+                    ret['SAMPLE_TREATMENTS'] = calculateSampleCount(
+                        this.sampleTreatments.result
+                    );
                 }
                 if (!_.isEmpty(this.patientTreatments.result)) {
-                    ret['PATIENT_TREATMENTS'] = 1;
+                    ret['PATIENT_TREATMENTS'] = calculateSampleCount(
+                        this.patientTreatments.result
+                    );
                 }
 
                 if (!_.isEmpty(this.structuralVariantProfiles.result)) {
