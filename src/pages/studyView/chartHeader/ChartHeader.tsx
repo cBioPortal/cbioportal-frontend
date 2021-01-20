@@ -5,7 +5,6 @@ import {
     ChartType,
     NumericalGroupComparisonType,
 } from 'pages/studyView/StudyViewUtils';
-import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
@@ -22,10 +21,7 @@ import CustomBinsModal from 'pages/studyView/charts/barChart/CustomBinsModal';
 import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
-import {
-    getHugoGeneSymbols,
-    getComparisonParamsForTable,
-} from 'pages/studyView/StudyViewComparisonUtils';
+import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -39,6 +35,7 @@ export interface IChartHeaderProps {
     deleteChart: () => void;
     selectedRowsKeys?: string[];
     toggleLogScale?: () => void;
+    toggleNAValue?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
     changeChartType: (chartType: ChartType) => void;
@@ -62,6 +59,8 @@ export interface ChartControls {
     showComparisonPageIcon?: boolean;
     showLogScaleToggle?: boolean;
     logScaleChecked?: boolean;
+    isShowNAChecked?: boolean;
+    showNAToggle?: boolean;
 }
 
 @observer
@@ -249,7 +248,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         const items = [];
         if (
             this.props.chartControls &&
-            !!this.props.chartControls.showLogScaleToggle
+            this.props.chartControls.showLogScaleToggle &&
+            this.props.toggleLogScale
         ) {
             items.push(
                 <li>
@@ -264,7 +264,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     this.props.chartControls.logScaleChecked
                                 )
                             }
-                            onClick={this.props.toggleLogScale}
                             label={
                                 <span style={{ marginTop: -3 }}>Log Scale</span>
                             }
@@ -366,6 +365,35 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     />
                 </li>
             );
+            if (
+                this.props.chartControls &&
+                this.props.chartControls.showNAToggle &&
+                this.props.toggleNAValue
+            ) {
+                items.push(
+                    <li>
+                        <a
+                            className="dropdown-item"
+                            onClick={this.props.toggleNAValue}
+                        >
+                            <FlexAlignedCheckbox
+                                checked={
+                                    !!(
+                                        this.props.chartControls &&
+                                        this.props.chartControls.isShowNAChecked
+                                    )
+                                }
+                                label={
+                                    <span style={{ marginTop: -3 }}>
+                                        Show NA
+                                    </span>
+                                }
+                                style={{ marginTop: 1, marginBottom: -3 }}
+                            />
+                        </a>
+                    </li>
+                );
+            }
         }
 
         if (
