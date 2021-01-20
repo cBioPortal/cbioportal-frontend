@@ -34,37 +34,39 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
     updateComparisonMode();
 });
 
-async function bootstrap() {
-    alert('arron');
-    const reportData = await getResultsReport(
-        'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
-    );
+function buildData(reportData) {
+    const data = reportData.map(test => {
+        const testName = test.title.replace(/\s/g, '_').toLowerCase();
+        const imagePath = `/${testName}_element_chrome_1600x1000.png`;
+        const rootUrl = './screenshots/';
+        return {
+            screenImagePath: `${rootUrl}screen${imagePath}`,
+            diffImagePath: `${rootUrl}diff${imagePath}`,
+            refImagePath: `${rootUrl}reference${imagePath}`,
+            imageName: testName,
+        };
+    });
+
+    return data;
 }
 
-$(document).ready(function() {
-    var selectedSSIndex = 0;
-
-    bootstrap();
-
-    return;
-
+function renderList(data) {
     var $list = $('<ul></ul>').prependTo('body');
 
-    errorImages.forEach((item, index) => {
+    data.forEach((item, index) => {
         $(
-            `<li><a data-index='${index}' data-path='${item}' href="javascript:void">${item}</a></li>`
-        ).appendTo($list);
+            `<li><a data-index='${index}' data-path='${item}' href="javascript:void">${item.imageName}</a></li>`
+        )
+            .appendTo($list)
+            .click(() => {
+                $list.find('a').removeClass('active');
+                $(this).addClass('active');
+                //clearSideBySideInterval();
+                buildDisplay(item, data, '');
+            });
     });
 
-    $list.on('click', 'a', function() {
-        selectedSSIndex = parseInt($(this).attr('data-index'), 10);
-        $list.find('a').removeClass('active');
-
-        $(this).addClass('active');
-        buildDisplay($(this).attr('data-path'), rootUrl);
-        clearSideBySideInterval();
-    });
-
+    // click first one
     $list
         .find('a')
         .get(0)
@@ -86,6 +88,29 @@ $(document).ready(function() {
         selectedSSIndex = clampSSIndex(selectedSSIndex - 1);
         selectSS();
     });
+}
+
+async function bootstrap() {
+    const reportData = await getResultsReport(
+        'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
+    );
+
+    const filteredReportData = reportData.tests.filter(test => {
+        return (
+            test.state === 'failed' &&
+            /isWithinMisMatchTolerance/i.test(test.error.message)
+        );
+    });
+
+    const data = buildData(filteredReportData);
+
+    renderList(data);
+}
+
+$(document).ready(function() {
+    var selectedSSIndex = 0;
+
+    bootstrap();
 });
 
 var sideBySideCycleInterval = null;
@@ -101,12 +126,12 @@ function buildImagePath(ref, rootUrl) {
     };
 }
 
-function buildCurlStatement(data) {
+function buildCurlStatement(data, env = 'remote') {
     // -L means follow redirects
     //      CircleCI seems to be hosting their files differently now, with the real URL
     //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
     //      -L makes curl "follow" the redirect so it downloads the file correctly.
-    return `curl -L '${data.screenImagePath}' > 'end-to-end-test/remote/screenshots/reference/${data.imageName}'; git add 'end-to-end-test/remote/screenshots/reference/${data.imageName}';`;
+    return `curl -L '${data.screenImagePath}' > 'end-to-end-test/${env}/screenshots/reference/${data.imageName}'; git add 'end-to-end-test/${env}/screenshots/reference/${data.imageName}';`;
 }
 
 function updateSideBySide(opacity) {
@@ -119,11 +144,9 @@ function clearSideBySideInterval() {
     $('#sidebyside_cycleBtn')[0].style['background-color'] = '#ffffff';
 }
 
-function buildDisplay(ref, rootUrl) {
-    var data = buildImagePath(ref, rootUrl);
-
-    var curlStatements = errorImages.map(item => {
-        var data = buildImagePath(item, rootUrl);
+function buildDisplay(data, allData, rootUrl) {
+    var curlStatements = allData.map(item => {
+        //var data = buildImagePath(item, rootUrl);
         return buildCurlStatement(data);
     });
 
@@ -254,9 +277,7 @@ function buildDisplay(ref, rootUrl) {
 }
 
 function getResultsReport(reportRoot) {
-    return $.getJSON(
-        `${reportRoot}/tmp/repo/end-to-end-test2/remote/junit/customReportJSONP.js`
-    );
+    return $.get(`./customReport.json`);
 }
 
 function buildPage() {
