@@ -61,7 +61,7 @@ function getTrackValueRange(track: TimelineTrackSpecification) {
 
     return { min, max };
 }
-
+console.log('hello');
 function getLineChartYCoordinate(
     events: TimelineEvent[],
     track: TimelineTrackSpecification,
