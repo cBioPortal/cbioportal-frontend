@@ -122,6 +122,8 @@ function goToUrlAndSetLocalStorage(url) {
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
     }
+
+    browser.pause(1000);
     // wait for page to load
     browser.waitForExist('html');
 
@@ -131,6 +133,7 @@ function goToUrlAndSetLocalStorage(url) {
         $('#username').setValue('testuser');
         $('#password').setValue('P@ssword1');
         $('#kc-login').click();
+        browser.pause(1000);
         browser.waitUntil(
             () => !browser.getUrl().includes('/auth/realms/cbio')
         );
