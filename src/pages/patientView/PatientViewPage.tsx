@@ -605,7 +605,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             this.getSlideId(patientViewPageStore.clinicalDataPatient.result)==='')}
                                 >
                                     <div style={{position: "relative"}}>
-                                        <IFrameLoader height={700} url={  `https://riswtp01-ext.uhnresearch.ca/eSlideTray.php?ImageIds=${this.getSlideId(patientViewPageStore.clinicalDataPatient.result)}` } />
+                                        <IFrameLoader height={700} url={  `https://slidesharing.ca/eSlideTray.php?ImageIds=${this.getSlideId(patientViewPageStore.clinicalDataPatient.result)}` } />
                                     </div>
                                 </MSKTab>
                                 <MSKTab key={9} id="IPRTab" linkText="BCGSC Integrated Pipeline Reports"
@@ -614,7 +614,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             patientViewPageStore.studyId !== 'COMPARISON')}
                                 >
                                     <div style={{position: "relative"}}>
-                                        <IFrameLoader height={900} url={  `https://iprweb.bcgsc.ca/reports/${patientViewPageStore.patientId}` } />
+                                        <IFrameLoader height={900} url={  `https://ipr.bcgsc.ca/reports/${patientViewPageStore.patientId}` } />
                                     </div>
                                 </MSKTab>
                             </MSKTabs>
