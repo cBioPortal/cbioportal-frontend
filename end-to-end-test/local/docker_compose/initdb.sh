@@ -10,8 +10,7 @@ DIR=$PWD
 cd $TEST_HOME/local/docker_compose/cbioportal-docker-compose
 
 # If the mysql data dir is empty, download schema and seed before starting
-HAS_DATA=`ls $DB_DATA_DIR/* 2> /dev/null > /dev/null`
-if [[ ! $HAS_DATA ]]; then
+if (ls "$DB_DATA_DIR"/* 2> /dev/null > /dev/null); then
   rm -rf data/cgds.sql
   rm -rf data/seed.sql.gz
   curl $DB_CGDS_URL > data/cgds.sql
@@ -40,9 +39,6 @@ docker-compose $compose_extensions run --rm cbioportal sh -c '\
       --sup /cbioportal/core/src/test/resources/genesets/study_es_0_supp-genesets.txt --confirm-delete-all-genesets-hierarchy-genesetprofiles\
   && ./importGenesetHierarchy.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_tree.yaml'
 
-# download portal info
-
-# import custom studies
 for DIR in "$TEST_HOME"/local/studies/*/; do
 
     echo "Loading study $DIR"
@@ -51,7 +47,7 @@ for DIR in "$TEST_HOME"/local/studies/*/; do
     docker-compose $compose_extensions run --rm \
         -v "$DIR:/study:ro" \
         cbioportal \
-        sh -c '/cbioportal/core/src/main/scripts/importer/cbioportalImporter.py \
+        sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./cbioportalImporter.py \
           --command import-study \
           --study_directory /study'
 
