@@ -45,7 +45,7 @@ fi
 ## 2. Uncomment to simulate CircleCI+PR context (replace '8' with valid PR number)
 # export CIRCLE_PULL_REQUEST=/8
 
-export TEST_HOME=$PORTAL_SOURCE_DIR/end-to-end-test
+export TEST_HOME=$PORTAL_SOURCE_DIR/end-to-end-test2
 export FRONTEND_TEST_USE_LOCAL_DIST=true
 export NO_PARALLEL=true
 
