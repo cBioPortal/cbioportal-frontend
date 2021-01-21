@@ -289,12 +289,12 @@ workflows:
             - unit_tests:
                 requires:
                     - install
-            - end_to_end_tests:
-                requires:
-                    - install
-#            - end_to_end_tests_localdb:
+#            - end_to_end_tests:
 #                requires:
 #                    - install
+            - end_to_end_tests_localdb:
+                requires:
+                    - install
             - api_sync:
                 requires:
                     - install
