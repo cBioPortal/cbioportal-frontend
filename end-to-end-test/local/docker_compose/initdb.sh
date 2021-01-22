@@ -42,18 +42,17 @@ docker-compose $compose_extensions run --rm cbioportal sh -c '\
 for DIR in "$TEST_HOME"/local/studies/*/; do
 
     echo "Loading study $DIR"
-    # FIXME metaImport.py canot be used here since the URL for validation cannot contain '_'
+    # FIXME metaImport.py cannot be used here since the URL for validation cannot contain '_'
     # for the study to be validated the container names in docker compose should be updated
     docker-compose $compose_extensions run --rm \
-        -v "$DIR:/study:ro" \
+        -v "$DIR:/study-to-import:rw" \
         cbioportal \
         sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./cbioportalImporter.py \
           --command import-study \
-          --study_directory /study'
+          --study_directory /study-to-import'
 
 done
 
-# shut down cbioportal so that db changes will take effect when started again
 docker-compose $compose_extensions down
 
 cd $PWD
