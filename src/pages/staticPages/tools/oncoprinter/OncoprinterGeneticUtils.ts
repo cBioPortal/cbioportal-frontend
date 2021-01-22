@@ -414,6 +414,14 @@ export function makeGeneticTrackDatum_Data(
                 proteinChange: 'promoter',
             });
             break;
+        case 'splice':
+            ret = Object.assign(ret, {
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'splice',
+                mutationType: 'splice',
+            });
+            break;
         case 'trunc':
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
@@ -877,11 +885,12 @@ export function parseGeneticInput(
                                 'inframe',
                                 'promoter',
                                 'trunc',
+                                'splice',
                                 'other',
                             ].indexOf(lcMutationType) === -1
                         ) {
                             throw new Error(
-                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`
+                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "SPLICE", "PROMOTER", or "OTHER" for a mutation alteration.`
                             );
                         }
                         ret.alteration = lcMutationType as OncoprintMutationType;
