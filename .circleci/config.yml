@@ -259,7 +259,7 @@ jobs:
           destination: /imageCompare.html
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo
-        TEST_HOME: /tmp/repo/end-to-end-test
+        TEST_HOME: /tmp/repo/end-to-end-test2
         FRONTEND_TEST_USE_LOCAL_DIST: true
         NO_PARALLEL: true
 
