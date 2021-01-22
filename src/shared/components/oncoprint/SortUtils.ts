@@ -56,14 +56,16 @@ export function getGeneticTrackSortComparator(
             ]);
         } else {
             _order = makeComparatorMetric([
-                [
-                    'amp_rec',
-                    'homdel_rec',
-                    'gain_rec',
-                    'hetloss_rec',
-                    'diploid_rec',
-                ],
-                ['amp', 'homdel', 'gain', 'hetloss', 'diploid'],
+                'amp_rec',
+                'homdel_rec',
+                'gain_rec',
+                'hetloss_rec',
+                'diploid_rec',
+                'amp',
+                'homdel',
+                'gain',
+                'hetloss',
+                'diploid',
                 undefined,
             ]);
         }
