@@ -8,7 +8,8 @@ import {REMOVE_FOR_DOWNLOAD_CLASSNAME} from "..";
 export default function getSvg(
     store: TimelineStore,
     timelineG: SVGGElement | null,
-    customTracks?: CustomTrackSpecification[]
+    customTracks?: CustomTrackSpecification[],
+    visibleTracks?: string[]
 ) {
     if (!timelineG) {
         return null;
@@ -28,7 +29,7 @@ export default function getSvg(
 
     try {
         // Add headers
-        const headersG = getTrackHeadersG(store, customTracks);
+        const headersG = getTrackHeadersG(store, customTracks, visibleTracks);
         everythingG.appendChild(headersG);
         const headersSize = headersG.getBBox();
         const headersPadding = 10;
