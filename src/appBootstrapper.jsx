@@ -7,6 +7,7 @@ import { Router, Switch } from 'react-router-dom';
 import { createHistory, createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+
 import {
     fetchServerConfig,
     initializeAPIClients,
