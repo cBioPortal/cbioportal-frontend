@@ -41,7 +41,6 @@ import {
 import ComparisonGroupManager from '../groupComparison/comparisonGroupManager/ComparisonGroupManager';
 import classNames from 'classnames';
 import AppConfig from 'appConfig';
-import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { ServerConfigHelpers } from '../../config/config';
 import {
     getButtonNameWithDownPointer,
