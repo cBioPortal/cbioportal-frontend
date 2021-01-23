@@ -39,6 +39,7 @@ end-to-end-test/results-0-0..xml
 end-to-end-test/customReport.json
 end-to-end-test/customReportJSONP.js
 end-to-end-test/local/docker_compose/keycloak/idp-metadata.xml
+end-to-end-test/local/docker_compose/keycloak/keycloak-config-generated.json
 end-to-end-test/local/docker_compose/cbioportal-docker-compose/
 wdio/browserstack.txt
 env/custom.sh

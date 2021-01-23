@@ -3,7 +3,9 @@
     "realm": "cbio",
     "displayName": "cBioPortal",
     "enabled": true,
-    "defaultGroups": [ "PUBLIC_STUDIES" ],
+    "defaultGroups": [
+        "PUBLIC_STUDIES"
+    ],
     "loginWithEmailAllowed": false,
     "sslRequired": "none",
     "clients": [
@@ -79,11 +81,15 @@
                     }
                 }
             ],
-            "defaultClientScopes": [ "roles" ],
-            "optionalClientScopes": [ "offline_access" ]
+            "defaultClientScopes": [
+                "roles"
+            ],
+            "optionalClientScopes": [
+                "offline_access"
+            ]
         }
     ],
-    "users" : [
+    "users": [
         {
             "username": "testuser",
             "enabled": true,
@@ -94,7 +100,43 @@
                     "value": "P@ssword1"
                 }
             ],
-            "realmRoles": [ "offline_access" ]
+            "realmRoles": [
+                "offline_access"
+            ],
+            "groups": [
+                "/PUBLIC_STUDIES"
+            ]
         }
-    ]
+    ],
+    "groups": [
+        {
+            "name": "PUBLIC_STUDIES",
+            "clientRoles": {
+                "cbioportal": [
+                    "study_es_0",
+                    "ascn_test_study",
+                    "teststudy_genepanels",
+                    "lgg_ucsf_2014_test_generic_assay"
+                ]
+            }
+        }
+    ],
+    "roles": {
+        "client": {
+            "cbioportal": [
+                {
+                    "name": "study_es_0"
+                },
+                {
+                    "name": "ascn_test_study"
+                },
+                {
+                    "name": "teststudy_genepanels"
+                },
+                {
+                    "name": "lgg_ucsf_2014_test_generic_assay"
+                }
+            ]
+        }
+    }
 }

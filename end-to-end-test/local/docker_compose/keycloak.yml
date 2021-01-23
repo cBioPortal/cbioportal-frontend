@@ -12,7 +12,7 @@ services:
     ports:
     - "8081:8080"
     volumes:
-    - $PWD/../keycloak/keycloak-config.json:/tmp/realm.json:ro
+    - $PWD/../keycloak/keycloak-config-generated.json:/tmp/realm.json:ro
     environment:
     - KEYCLOAK_IMPORT=/tmp/realm.json
     - DB_VENDOR=mysql
