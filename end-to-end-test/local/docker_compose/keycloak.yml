@@ -11,10 +11,7 @@ services:
     - kcdb
     ports:
     - "8081:8080"
-    volumes:
-    - $PWD/../keycloak/keycloak-config-generated.json:/tmp/realm.json:ro
     environment:
-    - KEYCLOAK_IMPORT=/tmp/realm.json
     - DB_VENDOR=mysql
     - DB_ADDR=kcdb
     - DB_USER=keycloak
@@ -32,7 +29,7 @@ services:
     container_name: kcdb
     restart: unless-stopped
     volumes:
-    - /tmp/kcdb_data:/var/lib/mysql
+    - $E2E_WORKSPACE/kc_db_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root_password
       - MYSQL_USER=keycloak

@@ -117,10 +117,12 @@ function setDropdownOpen(
 function goToUrlAndSetLocalStorage(url) {
     if (!useExternalFrontend) {
         browser.url(url);
+        console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
+        console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
 
     browser.pause(1000);

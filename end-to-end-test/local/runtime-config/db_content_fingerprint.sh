@@ -11,7 +11,7 @@ if [[ -n $BACKEND_BUILD_URL ]]; then
   compose_extensions="$compose_extensions -f $PWD/../cbioportal-custombranch.yml"
 fi
 
-cd $TEST_HOME/local/docker_compose/cbioportal-docker-compose
+cd $TEST_HOME/docker_compose/cbioportal-docker-compose
 CHECKSUM_ES_0=$(docker-compose $compose_extensions run --rm cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/scripts/test_data/study_es_0/ 2> /dev/null | shasum -a 1')
 CHECKSUM_ES_0_GENESETS=$(docker-compose $compose_extensions run --rm cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/resources/genesets/study_es_0* 2> /dev/null | shasum -a 1')
 CHECKSUM_TEST_STUDIES=$(find "$TEST_HOME"/local/studies/ -type f -exec md5sum {} \; | shasum -a 1)

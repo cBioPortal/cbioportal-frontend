@@ -105,7 +105,7 @@ var config = {
     optimization: {
         minimizer: [
             new TerserPlugin({
-                parallel: !process.env.NO_PARALLEL,
+                parallel: !process.env.WEBPACK_NO_PARALLEL,
             }),
         ],
     },

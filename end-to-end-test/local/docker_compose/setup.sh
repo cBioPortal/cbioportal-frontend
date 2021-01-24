@@ -7,18 +7,20 @@ shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... d
 
 DIR=$PWD
 
-cd $TEST_HOME/local/docker_compose
+mkdir -p $E2E_WORKSPACE
+mkdir -p $E2E_WORKSPACE/keycloak
+cd $E2E_WORKSPACE
 git clone https://github.com/cBioPortal/cbioportal-docker-compose.git
 cd cbioportal-docker-compose
 
-compose_extensions="-f docker-compose.yml -f ../cbioportal.yml"
-if [[ -n "$BACKEND_BUILD_URL" ]]; then
-  compose_extensions="$compose_extensions -f ../cbioportal-custombranch.yml"
+compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml"
+if [[ -n $BACKEND_BUILD_URL ]]; then
+  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
 fi
 
-# add permissions for test studies to testuser
-config_json="$(cat ../keycloak/keycloak-config.json)"
-studies=$(find $TEST_HOME/local/studies -name meta_study.txt -exec grep cancer_study_identifier {} \; | awk 'NF>1{print $NF}')
+# update keycloak config with permissions for test studies
+config_json="$(cat $TEST_HOME/docker_compose/keycloak/keycloak-config.json)"
+studies=$(find $TEST_HOME/studies -name meta_study.txt -exec grep cancer_study_identifier {} \; | awk 'NF>1{print $NF}')
 studies=("study_es_0" $studies)
 studies_json_array=$(printf '%s\n' "${studies[@]}" | jq -R . | jq -s .)
 studies_json_object=$(jq '[.[] | {name: .}]' <<< $studies_json_array)
@@ -27,7 +29,6 @@ config_json=$(jq '(.groups[] | select (.name == "PUBLIC_STUDIES") | .clientRoles
 echo 'Creating realm ... (see keycloak-config-generated.json for settings)'
 echo "$config_json" > ../keycloak/keycloak-config-generated.json
 
-echo "docker-compose $compose_extensions build"
 docker-compose $compose_extensions build
 
 cd $PWD

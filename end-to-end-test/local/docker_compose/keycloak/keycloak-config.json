@@ -14,7 +14,7 @@
             "enabled": true,
             "protocol": "saml",
             "fullScopeAllowed": false,
-            "adminUrl": "http://localhost:8081/saml",
+            "adminUrl": "http://localhost:8080/saml",
             "redirectUris": [
                 "http://localhost:8080/*"
             ],
@@ -23,7 +23,7 @@
                 "saml.signing.certificate": "MIIDdzCCAl+gAwIBAgIEGqorxDANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMB4XDTIxMDExODE1MjcwOFoXDTMyMDEwMTE1MjcwOFowbDEQMA4GA1UEBhMHVW5rbm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEQMA4GA1UEChMHVW5rbm93bjEQMA4GA1UECxMHVW5rbm93bjEQMA4GA1UEAxMHVW5rbm93bjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOv9leYT7y6roAEeippaDCc/rZviMmN5tO+dv/w6LpbcOx9uLThPk7UZst2ZBExCRIMFFaEgH1w1tPP0BqGS1j3Ex+9rhcBEKIiFRoDH3LcWz4RVSkLiUizmo4lhspmj8zvDNX6dh86vNTsXt8GPFs1isBncYYpn8Z3MEDZn69mfxmg8iN2a1EnDVNm06kphXMh44tflRkPFfrVHDBYyTEwOkkTN70cpqeOvCq5W4t+EIWlzYWdSvVTg/8Duu8obCA68mLYERznXjsUw9s2905sW+uhAMv00XNbKVhxPSIE6/zKihltVu/2rS6x8dyk2oSvVb4cMwQ3H922AF5vuJtECAwEAAaMhMB8wHQYDVR0OBBYEFJVIBmuppKkII32TKakneUPCAmAiMA0GCSqGSIb3DQEBCwUAA4IBAQAFn7Zzi55MjB/Wh45EGJ6cOVb8YmE9W+Jv0N5hqMI7u6Tjetfj1K3OQEug86QFGb6aLl1wC0zPFTI1Ibn1NdTwqfz6uQMDoBDN/VSawccWHkimSA+uRxFC1VhZktyYmJibkfwoMDQ8i0TB0AVyypmPwbbmakAzBbCOd6JNe44YBSTv0dXuu+a09kZBc+UQMgzwpoFL3gJSY82kY5oiZr52kbp/56qca/4rTNx8wkfAO2MN8CXKAWjA9ETunA2Gm+MKvzhC+ho7ihYjIL7jeaIwaGacYQB6zffsjsOVSJHZywBVCCn/c+XjoHBZDrurkxNF1kuwSQALgVFOcPRAHFVK",
                 "saml.force.post.binding": "false",
                 "saml.signature.algorithm": "RSA_SHA256",
-                "saml_single_logout_service_url_post": "http://localhost:8081/saml/logout",
+                "saml_single_logout_service_url_post": "http://localhost:8080/saml/logout",
                 "saml_force_name_id_format": "true",
                 "saml.client.signature": "true",
                 "saml.authnstatement": "true",

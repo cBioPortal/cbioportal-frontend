@@ -7,11 +7,15 @@ shopt -s nullglob # allows files and dir globs to be null - needed in 'for ... d
 
 DIR=$PWD
 
-cd $TEST_HOME/local/docker_compose/cbioportal-docker-compose
+cd $E2E_WORKSPACE/cbioportal-docker-compose
 
-compose_extensions="-f docker-compose.yml -f ../cbioportal.yml -f ../keycloak.yml"
+compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
 if [[ -n $BACKEND_BUILD_URL ]]; then
-  compose_extensions="$compose_extensions -f ../cbioportal-custombranch.yml"
+  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
+fi
+
+if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then
+  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/keycloak_init.yml"
 fi
 
 # initiate keycloak and get idp-client-metadata
@@ -22,8 +26,8 @@ for i in {1..30}; do
 done
 [ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Successful deploy."
 
-rm -rf ../keycloak/idp-metadata.xml
-wget -O ../keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
+rm -rf $E2E_WORKSPACE/keycloak/idp-metadata.xml
+wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
 
 docker-compose $compose_extensions up -d
 

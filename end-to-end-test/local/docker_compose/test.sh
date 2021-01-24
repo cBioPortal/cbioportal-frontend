@@ -5,12 +5,12 @@ set -o pipefail # pipes fail when partial command fails
 
 CUR_DIR=$PWD
 
-cd $TEST_HOME/local/docker_compose/docker
+cd $TEST_HOME/docker_compose/docker
 docker build -f Dockerfile.screenshottest -t cbio-screenshottest .
 
 cd $PORTAL_SOURCE_DIR
 docker run -it --rm \
-    --network=cbioportal-docker-compose_cbio-net \
+    --network=host \
     -e CBIOPORTAL_URL="$CBIOPORTAL_URL" \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \

@@ -40,7 +40,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
-          NO_PARALLEL: true
+          WEBPACK_NO_PARALLEL: true
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
@@ -101,7 +101,7 @@ jobs:
           command: 'ls dist || yarn run build'
           environment:
             DISABLE_SOURCEMAP: true
-            NO_PARALLEL: true
+            WEBPACK_NO_PARALLEL: true
       - save_cache:
           paths:
             - node_modules
@@ -137,7 +137,7 @@ jobs:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
             DISABLE_SOURCEMAP: true
-            NO_PARALLEL: true
+            WEBPACK_NO_PARALLEL: true
           when: always
       - store_test_results:
           path: /tmp/repo/junit
@@ -197,7 +197,7 @@ jobs:
           name: Setup e2e-environment
           command: |
               source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-              cd $TEST_HOME/local/runtime-config && \
+              cd $TEST_HOME/runtime-config && \
               ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
 #      - restore_cache:
 #          keys:
@@ -205,25 +205,28 @@ jobs:
       - run:
           name: Create MySQL data directory
           command: |
-            mkdir -p $DB_DATA_DIR
+            mkdir -p $CBIO_DB_DATA_DIR
       - run:
           name: Setup docker compose assets
           command: |
-              $TEST_HOME/local/docker_compose/setup.sh
+              $TEST_HOME/docker_compose/setup.sh
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
           command: |
-              $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+              $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
           no_output_timeout: 25m
       - restore_cache:
           keys:
-          - v6-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - restore_cache:
+          keys:
+          - v1-keycloak-database-files-{{ checksum "$E2E_WORKSPACE/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database when no mysql data files present
           command: |
-            cd $TEST_HOME/local/docker_compose && \
-            if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
+            cd $TEST_HOME/docker_compose && \
+            if (ls $CBIO_DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
               echo "DB initialization is not needed."; \
             else \
               ./initdb.sh; \
@@ -231,16 +234,20 @@ jobs:
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
-              sudo chmod -R 777 $DB_DATA_DIR && \
-              sudo chown -R circleci:circleci $DB_DATA_DIR
+              sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
+              sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
       - run:
           name: Start cbioportal and other services
           command: |
-              $TEST_HOME/local/docker_compose/start.sh
+              $TEST_HOME/docker_compose/start.sh
       - save_cache:
           paths:
-            - /tmp/mysql
-          key: v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - $E2E_WORKSPACE/cbio_db_data
+          key: v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - save_cache:
+          paths:
+            - $E2E_WORKSPACE/kc_db_data
+          key: v1-keycloak-database-files-{{ checksum checksum "$E2E_WORKSPACE/keycloak/keycloak-config-generated.json" }}
 #      - save_cache:
 #          paths:
 #            - ~/.m2
@@ -249,10 +256,10 @@ jobs:
           name: Run end-2-end tests with studies in local database
           command: |
               cd $PORTAL_SOURCE_DIR && \
-              $TEST_HOME/local/runtime-config/run_test.sh
+              $TEST_HOME/docker_compose/test.sh
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-          command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+          command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
           path: /tmp/repo/end-to-end-test/local/screenshots
           destination: /screenshots
@@ -271,9 +278,10 @@ jobs:
           destination: /imageCompare.html
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo
-        TEST_HOME: /tmp/repo/end-to-end-test
+        TEST_HOME: /tmp/repo/end-to-end-test/local
+        E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
         FRONTEND_TEST_USE_LOCAL_DIST: true
-        NO_PARALLEL: true
+        WEBPACK_NO_PARALLEL: true
 
   prettier:
     <<: *defaults
