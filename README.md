@@ -118,11 +118,13 @@ or clear entire local storage
 ```
 localStorage.clear()
 ```
-You can also use a heroku deployed cbioportal-frontend pull request for serving the JS by setting localStorage to:
+You can also use a netlify deployed cbioportal-frontend pull request for serving the JS:
+1. Create the following bookmarklet: 
 ```
-localStorage.setItem("heroku", "cbioportal-frontend-pr-x")
+javascript:(function()%7Bvar pr %3D prompt("Please enter PR%23")%3Bif (pr %26%26 Number(pr)) %7B localStorage.netlify %3D %60deploy-preview-%24%7Bpr%7D--cbioportalfrontend%60%3Bwindow.location.reload()%3B %7D%7D)()
 ```
-Change `x` to the number of your pull request.
+2. Navigate to the cBioPortal installation that you want to test.
+3. Click the bookmarklet and enter your pull request number.
 
 ## Run e2e-tests
 
