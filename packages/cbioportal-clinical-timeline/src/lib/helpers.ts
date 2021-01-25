@@ -261,3 +261,10 @@ export function flattenTracks(
 ) {
     return _.flatMap(tracks, t => flattenTrack(t, 5, isTrackCollapsed));
 }
+
+export function isTrackVisible(
+    track: TimelineTrackSpecification,
+    visibleTracks: string[]
+) {
+    return visibleTracks.includes(track.type);
+}
