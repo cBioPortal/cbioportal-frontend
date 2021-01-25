@@ -85,7 +85,9 @@ export default class ComparisonGroupManager extends React.Component<
         this.addGroupPanelOpen = true;
         this._inputGroupName = getDefaultGroupName(
             this.props.store.filters,
-            _.fromPairs(this.props.store.customChartFilterSet.toJSON()),
+            _.fromPairs(
+                this.props.store.preDefinedCustomChartFilterSet.toJSON()
+            ),
             this.props.store.clinicalAttributeIdToDataType.result!
         );
     }
@@ -571,10 +573,7 @@ export default class ComparisonGroupManager extends React.Component<
             // Notify that shared and page-session groups are not saved for non-logged users
             if (
                 !this.props.store.isLoggedIn &&
-                AppConfig.serverConfig.authenticationMethod &&
-                AppConfig.serverConfig.authenticationMethod.includes(
-                    'social_auth'
-                )
+                this.props.store.appStore.isSocialAuthenticated
             ) {
                 notificationMessages.push(
                     <>

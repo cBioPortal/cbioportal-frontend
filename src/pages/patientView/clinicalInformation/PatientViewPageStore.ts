@@ -995,7 +995,7 @@ export class PatientViewPageStore {
                         this.mutationData,
                         this.uncalledMutationData
                     ),
-                    ['annotation_summary', 'hotspots'],
+                    ['annotation_summary', 'hotspots', 'signal'],
                     AppConfig.serverConfig.isoformOverrideSource,
                     this.genomeNexusClient
                 ),
@@ -2307,6 +2307,7 @@ export class PatientViewPageStore {
             this.getMutationPutativeDriverInfo,
             this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
+            this.getDiscreteCNAPutativeDriverInfo,
         ],
         invoke: () =>
             Promise.resolve(

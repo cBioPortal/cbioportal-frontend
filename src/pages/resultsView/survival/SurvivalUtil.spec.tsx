@@ -15,6 +15,7 @@ import {
     getSurvivalStatusBoolean,
     getStatusCasesHeaderText,
     isNullSurvivalClinicalDataValue,
+    createSurvivalAttributeIdsDict,
 } from './SurvivalUtil';
 
 const exampleAlteredPatientSurvivals = [
@@ -919,6 +920,35 @@ describe('SurvivalUtil', () => {
             values.forEach(value => {
                 assert.equal(isNullSurvivalClinicalDataValue(value), false);
             });
+        });
+    });
+
+    describe('createSurvivalAttributeIdsDict()', () => {
+        it('return empty values for empty list', () => {
+            const emptyList: string[] = [];
+            const emptyDict: {
+                [id: string]: string;
+            } = {};
+            assert.deepEqual(
+                createSurvivalAttributeIdsDict(emptyList),
+                emptyDict
+            );
+        });
+
+        it('return attribute ids', () => {
+            const prefixList = ['OS', 'DFS', 'PFS'];
+            const result = {
+                OS_MONTHS: 'OS_MONTHS',
+                OS_STATUS: 'OS_STATUS',
+                DFS_MONTHS: 'DFS_MONTHS',
+                DFS_STATUS: 'DFS_STATUS',
+                PFS_MONTHS: 'PFS_MONTHS',
+                PFS_STATUS: 'PFS_STATUS',
+            };
+            assert.deepEqual(
+                createSurvivalAttributeIdsDict(prefixList),
+                result
+            );
         });
     });
 });

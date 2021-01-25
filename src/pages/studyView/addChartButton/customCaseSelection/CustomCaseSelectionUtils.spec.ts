@@ -4,7 +4,7 @@ import {
     DEFAULT_GROUP_NAME_WITH_USER_INPUT,
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
     CodeEnum,
-    getGroups,
+    getData,
     getLine,
     getLines,
     InputLine,
@@ -16,7 +16,7 @@ import { ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import { Sample } from 'cbioportal-ts-api-client';
 
 describe('CustomCaseSelectionUtils', () => {
-    describe('getGroups', () => {
+    describe('getData', () => {
         const s1 = {
             studyId: 's1',
             sampleId: 'c1',
@@ -40,7 +40,7 @@ describe('CustomCaseSelectionUtils', () => {
         } as Sample;
 
         it("group name should be Selected when it's not specified by user", () => {
-            const groups = getGroups(
+            const sampleIdentifiersWithData = getData(
                 [
                     {
                         line: 's1:c1',
@@ -53,21 +53,22 @@ describe('CustomCaseSelectionUtils', () => {
                 [s1],
                 false
             );
-            assert.isTrue(groups.length === 1);
+            assert.isTrue(sampleIdentifiersWithData.length === 1);
             assert.isTrue(
-                groups[0].name === DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT
+                sampleIdentifiersWithData[0].value ===
+                    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT
             );
         });
 
         it("group name should be NA when it's specified by user", () => {
-            const groups = getGroups(
+            const sampleIdentifiersWithData = getData(
                 [
                     { line: 's1:c1', studyId: 's1', caseId: 'c1' },
                     {
                         line: 's1:c2',
                         studyId: 's1',
                         caseId: 'c2',
-                        groupName: 'Group1',
+                        value: 'Group1',
                     },
                 ],
                 's1',
@@ -75,11 +76,12 @@ describe('CustomCaseSelectionUtils', () => {
                 [s1, s2],
                 true
             );
-            assert.isTrue(groups.length === 2);
+            assert.isTrue(sampleIdentifiersWithData.length === 2);
             assert.isTrue(
-                groups[0].name === DEFAULT_GROUP_NAME_WITH_USER_INPUT
+                sampleIdentifiersWithData[0].value ===
+                    DEFAULT_GROUP_NAME_WITH_USER_INPUT
             );
-            assert.isTrue(groups[1].name === 'Group1');
+            assert.isTrue(sampleIdentifiersWithData[1].value === 'Group1');
         });
     });
 
@@ -97,13 +99,13 @@ describe('CustomCaseSelectionUtils', () => {
             const result = getLine('test:test1 group1');
             assert.equal(result.studyId, 'test');
             assert.equal(result.caseId, 'test1');
-            assert.equal(result.groupName, 'group1');
+            assert.equal(result.value, 'group1');
         });
         it('group name should be properly assigned when separate by tab', () => {
             const result = getLine('test:test1\tgroup1');
             assert.equal(result.studyId, 'test');
             assert.equal(result.caseId, 'test1');
-            assert.equal(result.groupName, 'group1');
+            assert.equal(result.value, 'group1');
         });
     });
 
@@ -332,12 +334,12 @@ describe('CustomCaseSelectionUtils', () => {
                 {
                     line: 's1',
                     caseId: 's1',
-                    groupName: 't1',
+                    value: 't1',
                 },
                 {
                     line: 's1',
                     caseId: 's1',
-                    groupName: 't2',
+                    value: 't2',
                 },
             ];
             const noGroupNameResult: ValidationResult = validateLines(
