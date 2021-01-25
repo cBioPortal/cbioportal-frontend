@@ -13,7 +13,10 @@ import { ChartDataCountSet } from '../../StudyViewUtils';
 import FixedHeaderTable from '../../table/FixedHeaderTable';
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
-import { EllipsisTextTooltip } from 'cbioportal-frontend-commons';
+import {
+    EllipsisTextTooltip,
+    DefaultTooltip,
+} from 'cbioportal-frontend-commons';
 import { Omit } from '../../../../shared/lib/TypeScriptUtils';
 import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 
@@ -29,6 +32,10 @@ export interface IAddChartByTypeProps {
     width?: number;
     firstColumnHeaderName?: string;
     hideControls?: boolean;
+    shareCharts?: (chartIds: string[]) => void;
+    deleteChart?: (chartId: string) => void;
+    restoreChart?: (chartId: string) => void;
+    markedForDeletion?: string[];
 }
 
 class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {}
@@ -63,6 +70,7 @@ export default class AddChartByType extends React.Component<
                         key: next.key,
                         disabled: disabled,
                         selected: next.selected,
+                        isSharedChart: next.isSharedChart,
                         freq: disabled
                             ? 0
                             : this.props.freqPromise.result![next.key],
@@ -90,91 +98,199 @@ export default class AddChartByType extends React.Component<
         }
     }
 
-    private _columns: Column<AddChartOption>[] = [
-        {
-            name: this.props.firstColumnHeaderName!,
-            render: (option: AddChartOption) => {
-                return (
-                    <Observer>
-                        {() => (
-                            <div
-                                className={classnames(
-                                    styles.option,
-                                    'add-chart-option'
-                                )}
-                                data-test={`add-chart-option-${option.label
-                                    .toLowerCase()
-                                    .replace(/\s/g, '-')}`}
-                            >
-                                <LabeledCheckbox
-                                    checked={option.selected}
-                                    disabled={option.disabled}
-                                    labelProps={{
-                                        className: classnames(
-                                            styles.label,
-                                            option.disabled
-                                                ? styles.labelDisabled
-                                                : ''
-                                        ),
-                                    }}
-                                    inputProps={{
-                                        className: styles.input,
-                                    }}
-                                    onChange={() => this.onOptionChange(option)}
+    @autobind
+    private onDeleteClick(option: AddChartOption) {
+        this.props.deleteChart!(option.key);
+    }
+
+    @autobind
+    private shareChart(option: AddChartOption) {
+        this.props.shareCharts!([option.key]);
+    }
+
+    @autobind
+    private onRestoreClick(option: AddChartOption) {
+        this.props.restoreChart!(option.key);
+    }
+
+    @computed get columns() {
+        const columns: Column<AddChartOption>[] = [
+            {
+                name: this.props.firstColumnHeaderName!,
+                render: (option: AddChartOption) => {
+                    return (
+                        <Observer>
+                            {() => (
+                                <div
+                                    className={classnames(
+                                        styles.option,
+                                        'add-chart-option',
+                                        {
+                                            [styles.markedForDeletion]:
+                                                this.props.markedForDeletion &&
+                                                this.props.markedForDeletion.includes(
+                                                    option.key
+                                                ),
+                                        }
+                                    )}
+                                    data-test={`add-chart-option-${option.label
+                                        .toLowerCase()
+                                        .replace(/\s/g, '-')}`}
                                 >
-                                    <EllipsisTextTooltip text={option.label} />
-                                </LabeledCheckbox>
-                            </div>
+                                    <LabeledCheckbox
+                                        checked={option.selected}
+                                        disabled={
+                                            option.disabled ||
+                                            (this.props.markedForDeletion &&
+                                                this.props.markedForDeletion.includes(
+                                                    option.key
+                                                ))
+                                        }
+                                        labelProps={{
+                                            className: classnames(
+                                                styles.label,
+                                                option.disabled
+                                                    ? styles.labelDisabled
+                                                    : ''
+                                            ),
+                                        }}
+                                        inputProps={{
+                                            className: styles.input,
+                                        }}
+                                        onChange={() =>
+                                            this.onOptionChange(option)
+                                        }
+                                    >
+                                        <EllipsisTextTooltip
+                                            text={option.label}
+                                        />
+                                    </LabeledCheckbox>
+                                </div>
+                            )}
+                        </Observer>
+                    );
+                },
+                filter: (
+                    d: AddChartOption,
+                    f: string,
+                    filterStringUpper: string
+                ) => d.label.toUpperCase().includes(filterStringUpper),
+                sortBy: (d: AddChartOption) => d.label,
+                // 250 for custom data tab
+                width:
+                    this.props.width! -
+                    80 -
+                    (this.props.shareCharts || this.props.deleteChart ? 70 : 0),
+                defaultSortDirection: 'asc' as 'asc',
+            },
+            {
+                name: 'Freq',
+                tooltip: (
+                    <span>
+                        {ifNotDefined(
+                            this.props.frequencyHeaderTooltip,
+                            '% samples with data'
                         )}
-                    </Observer>
-                );
-            },
-            filter: (d: AddChartOption, f: string, filterStringUpper: string) =>
-                d.label.toUpperCase().includes(filterStringUpper),
-            sortBy: (d: AddChartOption) => d.label,
-            width: this.props.width! - 80,
-            defaultSortDirection: 'asc' as 'asc',
-        },
-        {
-            name: 'Freq',
-            tooltip: (
-                <span>
-                    {ifNotDefined(
-                        this.props.frequencyHeaderTooltip,
-                        '% samples with data'
-                    )}
-                </span>
-            ),
-            render: (option: AddChartOption) => (
-                <span
-                    style={{ display: 'flex', flexDirection: 'row-reverse' }}
-                    className={classnames(
-                        option.disabled ? styles.labelDisabled : ''
-                    )}
-                >
-                    {this.props.freqPromise.isComplete
-                        ? getFrequencyStr(option.freq)
-                        : ''}
-                </span>
-            ),
-            sortBy: (d: AddChartOption) => d.freq,
-            headerRender: () => {
-                return (
-                    <span
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'row-reverse',
-                            flexGrow: 1,
-                        }}
-                    >
-                        Freq
                     </span>
-                );
+                ),
+                render: (option: AddChartOption) => (
+                    <span
+                        className={classnames(
+                            option.disabled ? styles.labelDisabled : '',
+                            {
+                                [styles.markedForDeletion]:
+                                    this.props.markedForDeletion &&
+                                    this.props.markedForDeletion.includes(
+                                        option.key
+                                    ),
+                            }
+                        )}
+                    >
+                        {this.props.freqPromise.isComplete
+                            ? getFrequencyStr(option.freq)
+                            : ''}
+                    </span>
+                ),
+                sortBy: (d: AddChartOption) => d.freq,
+                defaultSortDirection: 'desc' as 'desc',
+                width: 60,
             },
-            defaultSortDirection: 'desc' as 'desc',
-            width: 60,
-        },
-    ];
+        ];
+
+        if (this.props.shareCharts || this.props.deleteChart) {
+            columns.push({
+                name: ' ',
+                render: (option: AddChartOption) => {
+                    let content: JSX.Element = <></>;
+                    if (
+                        this.props.markedForDeletion &&
+                        this.props.markedForDeletion.includes(option.key)
+                    ) {
+                        content = (
+                            <button
+                                className="btn btn-xs btn-default"
+                                onClick={() => this.onRestoreClick(option)}
+                            >
+                                Restore
+                            </button>
+                        );
+                    } else {
+                        content = (
+                            <>
+                                {this.props.deleteChart && (
+                                    <DefaultTooltip
+                                        overlay={'Delete Chart'}
+                                        placement={'top'}
+                                    >
+                                        <span
+                                            onClick={() =>
+                                                this.onDeleteClick(option)
+                                            }
+                                            style={{ marginRight: '5px' }}
+                                        >
+                                            <i
+                                                className="fa fa-md fa-trash"
+                                                style={{
+                                                    cursor: 'pointer',
+                                                }}
+                                            />
+                                        </span>
+                                    </DefaultTooltip>
+                                )}
+                                {this.props.shareCharts && (
+                                    <span
+                                        onClick={() => this.shareChart(option)}
+                                    >
+                                        <i
+                                            className="fa fa-share-alt"
+                                            style={{
+                                                cursor: 'pointer',
+                                            }}
+                                        />
+                                    </span>
+                                )}
+                            </>
+                        );
+                    }
+                    return (
+                        <div
+                            style={{
+                                display: 'flex',
+                                justifyContent: 'flex-end',
+                            }}
+                            className={classnames({
+                                [styles.labelDisabled]: option.disabled,
+                            })}
+                        >
+                            {content}
+                        </div>
+                    );
+                },
+                width: 70,
+            });
+        }
+        return columns;
+    }
 
     @computed
     get tableHeight() {
@@ -212,6 +328,30 @@ export default class AddChartByType extends React.Component<
         this.props.onToggleOption(option.key);
     }
 
+    @action.bound
+    shareSelected() {
+        this.props.shareCharts!(
+            this.props.options
+                .filter(option => option.selected)
+                .map(option => option.key)
+        );
+    }
+
+    @computed get extraButtons() {
+        if (this.props.shareCharts) {
+            return [
+                {
+                    content: <>Share selected</>,
+                    onClick: this.shareSelected,
+                    isDisabled: () =>
+                        this.props.options.filter(option => option.selected)
+                            .length === 0,
+                },
+            ];
+        }
+        return [];
+    }
+
     render() {
         return (
             <div
@@ -222,7 +362,7 @@ export default class AddChartByType extends React.Component<
                     <AddChartTableComponent
                         width={this.props.width! - 20}
                         height={this.tableHeight}
-                        columns={this._columns}
+                        columns={this.columns}
                         data={this.options}
                         showControlsAtTop={true}
                         addAll={this.addAll}
@@ -234,6 +374,11 @@ export default class AddChartByType extends React.Component<
                             this.getCurrentSelectedRows().length
                         }
                         hideControls={this.props.hideControls}
+                        isSelectedRow={data => !!data.isSharedChart}
+                        highlightedRowClassName={data =>
+                            data.isSharedChart ? styles.sharedChart : ''
+                        }
+                        extraButtons={this.extraButtons}
                     />
                 )}
                 {this.props.freqPromise.isPending && (

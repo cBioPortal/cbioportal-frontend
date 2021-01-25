@@ -1,5 +1,4 @@
 import { PfamDomain, PfamDomainRange } from 'genome-nexus-ts-api-client';
-import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
@@ -12,64 +11,65 @@ export interface IDomainTooltipProps {
     pfamDomainId: string;
 }
 
-@observer
-export default class DomainTooltip extends React.Component<
-    IDomainTooltipProps,
-    {}
-> {
-    constructor(props: any) {
-        super(props);
-        makeObservable(this);
-    }
-    @computed
-    get mutationAlignerCacheData() {
-        return this.props.mutationAlignerCache &&
-            this.props.mutationAlignerCache.cache
-            ? this.props.mutationAlignerCache.cache[this.props.pfamDomainId]
+interface IMutationAlignerLinkProps {
+    mutationAlignerCache?: MobxCache<string>;
+    pfamAccession: string;
+}
+
+const MutationAlignerLink = observer((props: IMutationAlignerLinkProps) => {
+    function getMutationAlignerCacheData(pfamAccession: string) {
+        return props.mutationAlignerCache && props.mutationAlignerCache.cache
+            ? props.mutationAlignerCache.cache[pfamAccession]
             : null;
     }
 
-    public render(): JSX.Element {
-        const { range, domain, pfamDomainId } = this.props;
+    if (props.mutationAlignerCache) {
+        props.mutationAlignerCache.get(props.pfamAccession);
+    }
 
-        const pfamAccession = domain ? domain.pfamAccession : pfamDomainId;
+    const mutationAlignerCacheData = getMutationAlignerCacheData(
+        props.pfamAccession
+    );
 
-        // if no domain info, then just display the accession
-        const domainInfo = domain
-            ? `${domain.name}: ${domain.description}`
-            : pfamAccession;
+    return mutationAlignerCacheData &&
+        mutationAlignerCacheData.status === 'complete' &&
+        mutationAlignerCacheData.data ? (
+        <a href={mutationAlignerCacheData.data} target="_blank">
+            Mutation Aligner
+        </a>
+    ) : null;
+});
 
-        return (
-            <div style={{ maxWidth: 200 }}>
-                <div>
-                    {domainInfo} ({range.pfamDomainStart} -{' '}
-                    {range.pfamDomainEnd})
-                </div>
-                <div>
-                    <a
-                        style={{ marginRight: '5px' }}
-                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
-                        target="_blank"
-                    >
-                        PFAM
-                    </a>
-                    {this.mutationAlignerLink(pfamAccession)}
-                </div>
+const DomainTooltip = (props: IDomainTooltipProps) => {
+    const { range, domain, pfamDomainId } = props;
+
+    const pfamAccession = domain ? domain.pfamAccession : pfamDomainId;
+
+    // if no domain info, then just display the accession
+    const domainInfo = domain
+        ? `${domain.name}: ${domain.description}`
+        : pfamAccession;
+
+    return (
+        <div style={{ maxWidth: 200 }}>
+            <div>
+                {domainInfo} ({range.pfamDomainStart} - {range.pfamDomainEnd})
             </div>
-        );
-    }
+            <div>
+                <a
+                    style={{ marginRight: '5px' }}
+                    href={`http://pfam.xfam.org/family/${pfamAccession}`}
+                    target="_blank"
+                >
+                    PFAM
+                </a>
+                <MutationAlignerLink
+                    mutationAlignerCache={props.mutationAlignerCache}
+                    pfamAccession={pfamAccession}
+                />
+            </div>
+        </div>
+    );
+};
 
-    private mutationAlignerLink(pfamAccession: string): JSX.Element | null {
-        if (this.props.mutationAlignerCache) {
-            this.props.mutationAlignerCache.get(pfamAccession);
-        }
-
-        return this.mutationAlignerCacheData &&
-            this.mutationAlignerCacheData.status === 'complete' &&
-            this.mutationAlignerCacheData.data ? (
-            <a href={this.mutationAlignerCacheData.data} target="_blank">
-                Mutation Aligner
-            </a>
-        ) : null;
-    }
-}
+export default DomainTooltip;

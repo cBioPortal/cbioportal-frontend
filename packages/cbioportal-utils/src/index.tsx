@@ -34,3 +34,5 @@ export * from './oncokb/OncoKbUtils';
 export * from './promise/PromiseUtils';
 
 export * from './signal/SignalMutationUtils';
+
+export * from './table/ReactTableUtils';

@@ -173,7 +173,6 @@ export default class GeneLevelSelection extends React.Component<
                     <div style={{ display: 'flex', marginTop: '10px' }}>
                         <div
                             style={{
-                                minWidth: 310,
                                 flex: 1,
                                 marginRight: 15,
                             }}

@@ -5,6 +5,7 @@ import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 import { useLocalStore, useObserver } from 'mobx-react-lite';
 import { TruncatedText } from 'cbioportal-frontend-commons';
+import { isTrackVisible } from './lib/helpers';
 
 interface ITrackHeaderProps {
     store: TimelineStore;
@@ -36,38 +37,35 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
                 style={{
                     paddingLeft,
                     height,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    position: 'relative',
                 }}
                 onMouseEnter={handleTrackHover}
                 onMouseLeave={handleTrackHover}
             >
-                <span
-                    style={{
-                        opacity: store.isTrackCollapsed(track.uid) ? 0.5 : 1,
-                    }}
-                >
+                <span>
                     <TruncatedText text={getTrackLabel(track)} maxLength={20} />
                 </span>
                 {store.enableCollapseTrack &&
                     track.tracks &&
                     track.tracks.length > 0 && (
-                        <button
+                        <div
                             onClick={collapseCallback}
-                            className={'btn btn-xs btn-default'}
                             style={{
-                                fontSize: 10,
+                                cursor: 'pointer',
+                                fontSize: 15,
                                 lineHeight: 0.5,
                                 padding: 3,
+                                right: 2,
+                                top: 0,
+                                position: 'absolute',
                             }}
                         >
                             {store.isTrackCollapsed(track.uid) ? (
-                                <i className={'fa fa-plus fa-sm'} />
+                                <i className={'fa fa-caret-right fa-sm'} />
                             ) : (
-                                <i className={'fa fa-minus fa-sm'} />
+                                <i className={'fa fa-caret-down fa-sm'} />
                             )}
-                        </button>
+                        </div>
                     )}
             </div>
         </>
@@ -80,7 +78,8 @@ export const EXPORT_TRACK_HEADER_BORDER_CLASSNAME = 'track-header-border';
 
 export function getTrackHeadersG(
     store: TimelineStore,
-    customTracks?: CustomTrackSpecification[]
+    customTracks?: CustomTrackSpecification[],
+    visibleTracks?: string[]
 ) {
     const g = (document.createElementNS(
         'http://www.w3.org/2000/svg',
@@ -119,6 +118,9 @@ export function getTrackHeadersG(
 
     const tracks = store.data;
     for (const t of tracks) {
+        if (visibleTracks && !isTrackVisible(t.track, visibleTracks)) {
+            continue;
+        }
         const text = makeTextElement(t.indent, y);
         text.textContent = getTrackLabel(t.track);
         g.appendChild(text);
