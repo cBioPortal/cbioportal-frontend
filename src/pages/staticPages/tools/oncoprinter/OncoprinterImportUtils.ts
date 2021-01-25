@@ -144,10 +144,10 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 break;
         }
         if (parsed.trackName) {
-            line.push(sanitizeColumnData(parsed.trackName));
+            line.push(parsed.trackName);
         }
     }
-    return line.join('  ');
+    return line.map(sanitizeColumnData).join('  ');
 }
 
 export function generateUniqueLabel(
