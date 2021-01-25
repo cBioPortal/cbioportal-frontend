@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.2.0",
+    "version": "v1.2.1",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -1187,7 +1187,8 @@
           "type": "string",
           "enum": [
             "SOLID",
-            "LIQUID"
+            "LIQUID",
+            "MIXED"
           ]
         }
       },
@@ -1222,6 +1223,12 @@
     "Implication": {
       "type": "object",
       "properties": {
+        "abstracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArticleAbstract"
+          }
+        },
         "alterations": {
           "type": "array",
           "items": {
@@ -1253,6 +1260,12 @@
             "LEVEL_Dx3",
             "NO"
           ]
+        },
+        "pmids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "tumorType": {
           "$ref": "#/definitions/TumorType"
@@ -1421,7 +1434,8 @@
           "type": "string",
           "enum": [
             "SOLID",
-            "LIQUID"
+            "LIQUID",
+            "MIXED"
           ]
         }
       },

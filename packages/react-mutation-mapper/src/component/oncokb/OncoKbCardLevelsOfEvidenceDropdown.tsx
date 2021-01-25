@@ -15,23 +15,6 @@ export type LevelsOfEvidenceDropdownProps = {
     levelDes: { [level: string]: JSX.Element };
 };
 
-const ONCOKB_DATA_ACCESS_PAGE_LINK =
-    'https://docs.cbioportal.org/2.4-integration-with-other-webservices/oncokb-data-access';
-
-const publicInstanceDisclaimerOverLay = (
-    <div>
-        <p>
-            This instance of cBioPortal does not currently have a license for
-            full OncoKB content and is therefore missing therapeutic
-            implications. To obtain a license, please follow{' '}
-            <a href={ONCOKB_DATA_ACCESS_PAGE_LINK} target={'_blank'}>
-                these instructions
-            </a>
-            .
-        </p>
-    </div>
-);
-
 @observer
 export default class OncoKbCardLevelsOfEvidenceDropdown extends React.Component<
     LevelsOfEvidenceDropdownProps

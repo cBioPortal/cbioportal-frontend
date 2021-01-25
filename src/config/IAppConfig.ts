@@ -61,6 +61,7 @@ export interface IServerConfig {
     show_pathway_mapper: boolean;
     show_mutation_mapper_tool_grch38: boolean;
     show_transcript_dropdown: boolean;
+    show_signal: boolean;
     survival_initial_x_axis_limit: number;
     survival_show_p_q_values_in_survival_type_table: boolean;
     skin_documentation_about: string | null;

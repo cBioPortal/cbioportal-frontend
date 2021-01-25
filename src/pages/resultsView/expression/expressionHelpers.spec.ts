@@ -11,6 +11,7 @@ import {
     coverageInformation,
 } from './expressionHelpers.sample.js';
 import { Mutation, NumericGeneMolecularData } from 'cbioportal-ts-api-client';
+import { assertDeepEqualInAnyOrder } from 'shared/lib/SpecUtils';
 
 describe('getMolecularDataBuckets', () => {
     let expectedResult: any;
@@ -127,6 +128,47 @@ describe('getMolecularDataBuckets', () => {
                         value: 2711.30470514441,
                     },
                 ],
+                splice: [
+                    {
+                        uniqueSampleKey:
+                            'VENHQS1BQi0yODM4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        uniquePatientKey:
+                            'VENHQS1BQi0yODM4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        entrezGeneId: 7157,
+                        molecularProfileId:
+                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
+                        sampleId: 'TCGA-AB-2838-03',
+                        patientId: 'TCGA-AB-2838',
+                        studyId: 'laml_tcga_pan_can_atlas_2018',
+                        value: 666.898408595377,
+                    },
+                    {
+                        uniqueSampleKey:
+                            'VENHQS1BQi0yODY4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        uniquePatientKey:
+                            'VENHQS1BQi0yODY4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        entrezGeneId: 7157,
+                        molecularProfileId:
+                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
+                        sampleId: 'TCGA-AB-2868-03',
+                        patientId: 'TCGA-AB-2868',
+                        studyId: 'laml_tcga_pan_can_atlas_2018',
+                        value: 916.328015361695,
+                    },
+                    {
+                        uniqueSampleKey:
+                            'VENHQS1BQi0yODU3LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        uniquePatientKey:
+                            'VENHQS1BQi0yODU3OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
+                        entrezGeneId: 7157,
+                        molecularProfileId:
+                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
+                        sampleId: 'TCGA-AB-2857-03',
+                        patientId: 'TCGA-AB-2857',
+                        studyId: 'laml_tcga_pan_can_atlas_2018',
+                        value: 256.24401856776,
+                    },
+                ],
                 trunc: [
                     {
                         uniqueSampleKey:
@@ -143,32 +185,6 @@ describe('getMolecularDataBuckets', () => {
                     },
                     {
                         uniqueSampleKey:
-                            'VENHQS1BQi0yODM4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        uniquePatientKey:
-                            'VENHQS1BQi0yODM4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        entrezGeneId: 7157,
-                        molecularProfileId:
-                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
-                        sampleId: 'TCGA-AB-2838-03',
-                        patientId: 'TCGA-AB-2838',
-                        studyId: 'laml_tcga_pan_can_atlas_2018',
-                        value: 666.898408595377,
-                    },
-                    {
-                        uniqueSampleKey:
-                            'VENHQS1BQi0yODU3LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        uniquePatientKey:
-                            'VENHQS1BQi0yODU3OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        entrezGeneId: 7157,
-                        molecularProfileId:
-                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
-                        sampleId: 'TCGA-AB-2857-03',
-                        patientId: 'TCGA-AB-2857',
-                        studyId: 'laml_tcga_pan_can_atlas_2018',
-                        value: 256.24401856776,
-                    },
-                    {
-                        uniqueSampleKey:
                             'VENHQS1BQi0yODYwLTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
                         uniquePatientKey:
                             'VENHQS1BQi0yODYwOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
@@ -179,19 +195,6 @@ describe('getMolecularDataBuckets', () => {
                         patientId: 'TCGA-AB-2860',
                         studyId: 'laml_tcga_pan_can_atlas_2018',
                         value: 609.377468235893,
-                    },
-                    {
-                        uniqueSampleKey:
-                            'VENHQS1BQi0yODY4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        uniquePatientKey:
-                            'VENHQS1BQi0yODY4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg',
-                        entrezGeneId: 7157,
-                        molecularProfileId:
-                            'laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median',
-                        sampleId: 'TCGA-AB-2868-03',
-                        patientId: 'TCGA-AB-2868',
-                        studyId: 'laml_tcga_pan_can_atlas_2018',
-                        value: 916.328015361695,
                     },
                     {
                         uniqueSampleKey:
@@ -2187,7 +2190,7 @@ describe('getMolecularDataBuckets', () => {
             coverageInformation,
             hugoGeneSymbol
         );
-        assert.deepEqual(ret, expectedResult);
+        assertDeepEqualInAnyOrder(ret, expectedResult);
     });
 
     it('all items in unMutated collection if we are not showing mutations', () => {
@@ -2200,7 +2203,11 @@ describe('getMolecularDataBuckets', () => {
             coverageInformation,
             hugoGeneSymbol
         );
-        assert.deepEqual(ret.mutationBuckets, {}, 'no mutations recorded');
+        assertDeepEqualInAnyOrder(
+            ret.mutationBuckets,
+            {},
+            'no mutations recorded'
+        );
         assert.equal(
             ret.unsequencedBucket.length,
             0,
@@ -2222,7 +2229,7 @@ describe('getMolecularDataBuckets', () => {
             emptyCoverageInformation,
             hugoGeneSymbol
         );
-        assert.deepEqual(
+        assertDeepEqualInAnyOrder(
             ret.mutationBuckets,
             expectedResult.mutationBuckets,
             'mutations are recorded'

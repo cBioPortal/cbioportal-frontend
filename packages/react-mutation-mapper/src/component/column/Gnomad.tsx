@@ -3,7 +3,7 @@ import { MyVariantInfo, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { defaultSortMethod } from '../../util/ReactTableUtils';
+import { defaultSortMethod } from 'cbioportal-utils';
 import GnomadFrequency, {
     calculateAlleleFrequency,
 } from '../gnomad/GnomadFrequency';

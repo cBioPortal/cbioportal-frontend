@@ -23,6 +23,7 @@ import Dbsnp from '../column/Dbsnp';
 import Gnomad from '../column/Gnomad';
 import Hgvsc from '../column/Hgvsc';
 import Hgvsg from '../column/Hgvsg';
+import Signal, { getSignalData } from '../column/Signal';
 import { getHgvscColumnData, getHgvsgColumnData } from '../column/HgvsHelper';
 import { getMyVariantInfoData } from '../column/MyVariantInfoHelper';
 import { MutationFilterValue } from '../../filter/MutationFilter';
@@ -94,14 +95,14 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @computed
-    get hgvsgColumnDataStatus() {
+    get indexedVariantAnnotationDataStatus() {
         return this.props.indexedVariantAnnotations
             ? this.props.indexedVariantAnnotations.status
             : 'complete';
     }
 
     @computed
-    get gnomadColumnDataStatus() {
+    get myVariantInfoAnnotationsDataStatus() {
         return this.props.indexedMyVariantInfoAnnotations
             ? this.props.indexedMyVariantInfoAnnotations.status
             : 'complete';
@@ -126,7 +127,7 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get myVariantInfoAccessor() {
-        return this.gnomadColumnDataStatus === 'pending'
+        return this.myVariantInfoAnnotationsDataStatus === 'pending'
             ? () => undefined
             : (mutation: Mutation) =>
                   getMyVariantInfoData(
@@ -137,14 +138,14 @@ export default class DefaultMutationTable extends React.Component<
 
     @computed
     get hgvsgAccessor() {
-        return this.hgvsgColumnDataStatus === 'pending'
+        return this.indexedVariantAnnotationDataStatus === 'pending'
             ? () => undefined
             : (mutation: Mutation) => getHgvsgColumnData(mutation);
     }
 
     @computed
     get hgvscAccessor() {
-        return this.hgvsgColumnDataStatus === 'pending'
+        return this.indexedVariantAnnotationDataStatus === 'pending'
             ? () => undefined
             : (mutation: Mutation) =>
                   getHgvscColumnData(
@@ -152,6 +153,14 @@ export default class DefaultMutationTable extends React.Component<
                       this.props.indexedVariantAnnotations,
                       this.props.selectedTranscriptId
                   );
+    }
+
+    @computed
+    get signalAccessor() {
+        return this.indexedVariantAnnotationDataStatus === 'pending'
+            ? () => undefined
+            : (mutation: Mutation) =>
+                  getSignalData(mutation, this.props.indexedVariantAnnotations);
     }
 
     @computed
@@ -173,6 +182,8 @@ export default class DefaultMutationTable extends React.Component<
                 return this.myVariantInfoAccessor;
             case MutationColumn.DBSNP:
                 return this.myVariantInfoAccessor;
+            case MutationColumn.SIGNAL:
+                return this.signalAccessor;
             default:
                 return undefined;
         }
@@ -238,6 +249,15 @@ export default class DefaultMutationTable extends React.Component<
                         mutation={column.original}
                         indexedMyVariantInfoAnnotations={
                             this.props.indexedMyVariantInfoAnnotations
+                        }
+                    />
+                );
+            case MutationColumn.SIGNAL:
+                return (column: any) => (
+                    <Signal
+                        mutation={column.original}
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
                         }
                     />
                 );

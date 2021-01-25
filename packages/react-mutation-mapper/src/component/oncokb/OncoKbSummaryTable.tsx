@@ -10,7 +10,7 @@ import { calcProteinChangeSortValue } from 'cbioportal-utils';
 import {
     defaultSortMethod,
     defaultStringArraySortMethod,
-} from '../../util/ReactTableUtils';
+} from 'cbioportal-utils';
 import { levelIconClassNames } from '../../util/OncoKbUtils';
 
 export type OncoKbSummaryTableProps = {
