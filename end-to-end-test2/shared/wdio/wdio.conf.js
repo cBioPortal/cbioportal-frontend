@@ -12,52 +12,46 @@ const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
 const screenshotRoot =
-    process.env.SCREENSHOT_DIRECTORY || 'remote/screenshots/';
+    process.env.SCREENSHOT_DIRECTORY || '/remote/screenshots/';
 
-// var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
-// var refDir =
-//     process.env.SCREENSHOT_DIRECTORY + '/reference' || 'screenshots/reference/';
-// var screenDir =  process.env.SCREENSHOT_DIRECTORY ?  process.env.SCREENSHOT_DIRECTORY + '/screen' : 'remote/screenshots/screen/';
-//     //process.env.SCREENSHOT_DIRECTORY + '/screen' || 'screenshots/screen/';
-// var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+var diffDir = path.join(process.cwd(), `${screenshotRoot}diff/`);
+var refDir = path.join(process.cwd(), `${screenshotRoot}reference/`);
+var screenDir = path.join(process.cwd(), `${screenshotRoot}screen/`);
 
-var diffDir = `${screenshotRoot}/diff/`;
-var refDir = `${screenshotRoot}/reference/`;
-var screenDir = `${screenshotRoot}/screen/`;
+console.log(`ENV SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
+console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
+console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
 
-var errorDir = process.env.SCREENSHOT_DIRECTORY + '/error' || './errorShots/';
+console.log(`screenshot root: ${screenshotRoot}`);
+console.log(`diff dir: ${diffDir}`);
+console.log(`ref dir: ${refDir}`);
+console.log(`screen dir: ${screenDir}`);
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
-    referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
-    screenshotName: getScreenshotName(path.join(process.cwd(), screenDir)),
-    diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
+    referenceName: getScreenshotName(refDir),
+    screenshotName: getScreenshotName(screenDir),
+    diffName: getScreenshotName(diffDir),
     misMatchTolerance: 0.01,
 });
 
-console.log(`SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
+function proxyComparisonMethod(target) {
+    const oldProcessScreenshot = target.processScreenshot;
+    LocalCompare.processScreenshot = async function(context, base64Screenshot) {
+        const screenshotPath = this.getScreenshotFile(context);
+        const referencePath = this.getReferencefile(context);
+        const referenceExists = await fs.existsSync(referencePath);
+        const resp = oldProcessScreenshot.apply(this, arguments);
+        if (referenceExists === false) {
+            return {
+                ...this.createResultReport(1000, false, true),
+                referenceExists,
+            };
+        }
+        return resp;
+    };
+}
 
-console.log(`JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
-
-console.log(`JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
-
-// function proxyComparisonMethod(target) {
-//     const oldProcessScreenshot = target.processScreenshot;
-//     LocalCompare.processScreenshot = async function(context, base64Screenshot) {
-//         const screenshotPath = this.getScreenshotFile(context);
-//         const referencePath = this.getReferencefile(context);
-//         const referenceExists = await fs.existsSync(referencePath);
-//         const resp = oldProcessScreenshot.apply(this, arguments);
-//         if (referenceExists === false) {
-//             return {
-//                 ...this.createResultReport(1000, false, true),
-//                 referenceExists,
-//             };
-//         }
-//         return resp;
-//     };
-// }
-
-// proxyComparisonMethod(LocalCompare);
+proxyComparisonMethod(LocalCompare);
 
 exports.config = {
     //
@@ -242,7 +236,7 @@ exports.config = {
         [
             CustomReporter,
             {
-                outputDir: process.env.JUNIT_REPORT_PATH || './',
+                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
                 outputFileFormat: function(opts) {
                     // optional
                     return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
@@ -252,10 +246,9 @@ exports.config = {
         [
             'junit',
             {
-                outputDir: process.env.JUNIT_REPORT_PATH || './',
+                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
                 outputFileFormat: function(opts) {
-                    // optional
-                    return `results-${opts.cid}.${opts.capabilities}.xml`;
+                    return `results-${opts.cid}.${opts.capabilities.browserName}.xml`;
                 },
             },
         ],
@@ -340,16 +333,6 @@ exports.config = {
      * @param {Object} suite suite details
      */
     // beforeSuite: function (suite) {
-    //     console.log("dood");
-    //     console.log(browser.checkElement);
-    //
-    //     const oldFunc = browser.checkElement;
-    //
-    //     browser.checkElement = function(one){
-    //         console.log(this.currentTest);
-    //         console.log("snoop");
-    //         return oldFunc.apply(this, arguments);
-    //     }
     // },
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.

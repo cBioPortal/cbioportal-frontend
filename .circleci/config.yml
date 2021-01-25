@@ -190,6 +190,10 @@ jobs:
           name: Setup python libraries
           command: |
               pip3 install requests pyyaml
+#      - run:
+#          name: Install canvas deps [for screenshot comparison]
+#          command: |
+#              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       - run:
           name: Setup e2e-environment
           command: |

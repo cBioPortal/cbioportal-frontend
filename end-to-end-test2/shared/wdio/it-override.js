@@ -13,15 +13,25 @@ const ipc = require('node-ipc');
 //     });
 // });
 
+const oldIt = it;
+const oldSkip = oldIt.skip;
+
 context.it = function(...args) {
     ipc.connectTo('runnerProcess', () => {
         ipc.of['runnerProcess'].on('connect', () => {
             ipc.of['runnerProcess'].emit('test_it', args[0]);
         });
     });
-
-    return it.apply(this, args);
+    return oldIt.apply(this, args);
 };
 
-context.it.skip = it.skip;
+context.it.skip = function(...args) {
+    ipc.connectTo('runnerProcess', () => {
+        ipc.of['runnerProcess'].on('connect', () => {
+            ipc.of['runnerProcess'].emit('test_skipped', args[0]);
+        });
+    });
+    return oldSkip.apply(this, arguments);
+};
+
 context.it.only = it.only;
