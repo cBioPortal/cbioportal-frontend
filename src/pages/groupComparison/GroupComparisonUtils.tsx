@@ -247,24 +247,29 @@ export function getStudyIds(groups: Pick<SessionGroupData, 'studies'>[]) {
     );
 }
 
+/**
+ * Gets all unique sample identifiers from the groups
+ * provided. A unique key can be generated for a sample
+ * by appending the sample's study id to the sample's sample id, separated
+ * by a character not allowed in either id- in this case a newline symbol.
+ */
 export function getSampleIdentifiers(
     groups: Pick<SessionGroupData, 'studies'>[]
 ) {
-    return _.uniqWith(
-        _.flattenDeep<SampleIdentifier>(
-            groups.map(group =>
-                group.studies.map(study => {
-                    const studyId = study.id;
-                    return study.samples.map(sampleId => ({
-                        studyId,
-                        sampleId,
-                    }));
-                })
-            )
-        ),
-        (id1, id2) =>
-            id1.sampleId === id2.sampleId && id1.studyId === id2.studyId
-    );
+    const sampleIds: { [key: string]: SampleIdentifier } = {};
+
+    groups.forEach(group => {
+        group.studies.forEach(study => {
+            study.samples.forEach(sample => {
+                sampleIds[study.id + '\n' + sample] = {
+                    studyId: study.id,
+                    sampleId: sample,
+                };
+            });
+        });
+    });
+
+    return Object.values(sampleIds);
 }
 
 export function getNumSamples(
