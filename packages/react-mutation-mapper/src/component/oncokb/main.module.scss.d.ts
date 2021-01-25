@@ -1,5 +1,6 @@
 declare const styles: {
   readonly "oncokb-card": string;
+  readonly "tab-content": string;
   readonly "tooltip-refs": string;
   readonly "disclaimer": string;
   readonly "orange-icon": string;
