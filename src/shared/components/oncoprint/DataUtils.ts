@@ -85,6 +85,16 @@ export type OncoprintMutationType =
     | 'splice'
     | 'other';
 
+export enum OncoprintMutationTypeEnum {
+    MISSENSE = 'missense',
+    INFRAME = 'inframe',
+    FUSION = 'fusion',
+    PROMOTER = 'promoter',
+    TRUNC = 'trunc',
+    SPLICE = 'splice',
+    OTHER = 'other',
+}
+
 export function getOncoprintMutationType(
     d: Pick<Mutation, 'proteinChange' | 'mutationType'>
 ): OncoprintMutationType {
