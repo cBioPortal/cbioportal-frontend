@@ -5,6 +5,7 @@ import { CustomTrackSpecification } from './CustomTrack';
 import { TimelineStore } from './TimelineStore';
 import { useLocalStore, useObserver } from 'mobx-react-lite';
 import { TruncatedText } from 'cbioportal-frontend-commons';
+import { isTrackVisible } from './lib/helpers';
 
 interface ITrackHeaderProps {
     store: TimelineStore;
@@ -77,7 +78,8 @@ export const EXPORT_TRACK_HEADER_BORDER_CLASSNAME = 'track-header-border';
 
 export function getTrackHeadersG(
     store: TimelineStore,
-    customTracks?: CustomTrackSpecification[]
+    customTracks?: CustomTrackSpecification[],
+    visibleTracks?: string[]
 ) {
     const g = (document.createElementNS(
         'http://www.w3.org/2000/svg',
@@ -116,6 +118,9 @@ export function getTrackHeadersG(
 
     const tracks = store.data;
     for (const t of tracks) {
+        if (visibleTracks && !isTrackVisible(t.track, visibleTracks)) {
+            continue;
+        }
         const text = makeTextElement(t.indent, y);
         text.textContent = getTrackLabel(t.track);
         g.appendChild(text);
