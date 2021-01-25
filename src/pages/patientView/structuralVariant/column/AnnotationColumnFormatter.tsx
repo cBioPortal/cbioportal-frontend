@@ -15,6 +15,7 @@ import {
     RemoteData,
     IOncoKbData,
     generateQueryStructuralVariantId,
+    OncoKbCardDataType,
 } from 'cbioportal-utils';
 
 export default class AnnotationColumnFormatter {
@@ -71,6 +72,12 @@ export default class AnnotationColumnFormatter {
                     isSite1oncoKbCancerGene || isSite2oncoKbCancerGene;
             }
 
+            // Always show oncogenicity icon even when the indicatorMapResult is empty.
+            // We want to show an icon for genes that haven't been annotated by OncoKB
+            let oncoKbAvailableDataTypes: OncoKbCardDataType[] = [
+                OncoKbCardDataType.BIOLOGICAL,
+            ];
+
             // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
             if (oncoKbData && oncoKbData.result instanceof Error) {
                 oncoKbStatus = 'error';
@@ -123,6 +130,7 @@ export default class AnnotationColumnFormatter {
                 hotspotStatus: 'complete',
                 isHotspot: false,
                 is3dHotspot: false,
+                oncoKbAvailableDataTypes,
             };
         } else {
             value = DEFAULT_ANNOTATION_DATA;
