@@ -1,4 +1,5 @@
 import {
+    calculateOncoKbAvailableDataType,
     getCivicEntry,
     getMyCancerGenomeLinks,
     getRemoteDataGroupStatus,
@@ -12,6 +13,7 @@ import {
     isLinearClusterHotspot,
     MobxCache,
     Mutation,
+    OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
@@ -65,6 +67,7 @@ export interface IAnnotation {
     is3dHotspot: boolean;
     hotspotStatus: 'pending' | 'error' | 'complete';
     oncoKbIndicator?: IndicatorQueryResp;
+    oncoKbAvailableDataTypes: OncoKbCardDataType[];
     oncoKbStatus: 'pending' | 'error' | 'complete';
     oncoKbGeneExist: boolean;
     isOncoKbCancerGene: boolean;
@@ -80,6 +83,7 @@ export const DEFAULT_ANNOTATION_DATA: IAnnotation = {
     oncoKbStatus: 'complete',
     oncoKbGeneExist: false,
     isOncoKbCancerGene: false,
+    oncoKbAvailableDataTypes: [],
     usingPublicOncoKbInstance: false,
     isHotspot: false,
     is3dHotspot: false,
@@ -191,6 +195,12 @@ export function getAnnotationData(
         } else if (oncoKbGeneExist) {
             // actually, oncoKbData.result shouldn't be an instance of Error in this case (we already check it above),
             // but we need to check it again in order to avoid TS errors/warnings
+
+            // Always show oncogenicity icon even when the indicatorMapResult is empty.
+            // We want to show an icon for genes that haven't been annotated by OncoKB
+            let oncoKbAvailableDataTypes: OncoKbCardDataType[] = [
+                OncoKbCardDataType.BIOLOGICAL,
+            ];
             if (
                 oncoKbData &&
                 oncoKbData.result &&
@@ -203,12 +213,19 @@ export function getAnnotationData(
                     resolveTumorType,
                     resolveEntrezGeneId
                 );
+                oncoKbAvailableDataTypes = _.uniq([
+                    ...oncoKbAvailableDataTypes,
+                    ...calculateOncoKbAvailableDataType(
+                        _.values(oncoKbData.result.indicatorMap)
+                    ),
+                ]);
             }
 
             value = {
                 ...value,
                 oncoKbStatus: oncoKbData ? oncoKbData.status : 'pending',
                 oncoKbIndicator,
+                oncoKbAvailableDataTypes,
             };
         } else {
             value = {
@@ -261,6 +278,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     isCancerGene={annotation.isOncoKbCancerGene}
                     status={annotation.oncoKbStatus}
                     indicator={annotation.oncoKbIndicator}
+                    availableDataTypes={annotation.oncoKbAvailableDataTypes}
                     pubMedCache={pubMedCache}
                     userEmailAddress={userEmailAddress}
                 />
