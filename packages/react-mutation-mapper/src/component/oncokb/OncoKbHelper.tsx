@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { defaultArraySortMethod, defaultSortMethod } from '../..';
 import {
     normalizeLevel,
     levelIconClassNames,
@@ -8,7 +7,12 @@ import {
 } from '../../util/OncoKbUtils';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
-import { LEVELS, OncoKbCardDataType } from 'cbioportal-utils';
+import {
+    defaultArraySortMethod,
+    defaultSortMethod,
+    LEVELS,
+    OncoKbCardDataType,
+} from 'cbioportal-utils';
 
 export default class OncoKbHelper {
     public static get TX_LEVELS(): string[] {
@@ -144,7 +148,7 @@ export default class OncoKbHelper {
             case 'level':
                 return {
                     id: 'level',
-                    Header: <span>Level</span>,
+                    Header: <div style={{ textAlign: 'center' }}>Level</div>,
                     accessor: 'level',
                     maxWidth: 45,
                     sortMethod: (a: string, b: string) =>

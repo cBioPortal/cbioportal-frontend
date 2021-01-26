@@ -1,5 +1,5 @@
 import React from 'react';
-import { TIMELINE_TRACK_HEIGHT } from '..';
+import {TIMELINE_TRACK_HEIGHT} from "../lib/helpers";
 
 const HEIGHT_OVER_WIDTH = 0.52
 const SHEET_STROKE_WIDTH = 0.2;

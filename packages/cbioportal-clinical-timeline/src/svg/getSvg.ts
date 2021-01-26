@@ -3,7 +3,7 @@ import {CustomTrackSpecification} from "../CustomTrack";
 import {EXPORT_TRACK_HEADER_BORDER_CLASSNAME, getTrackHeadersG} from "../TrackHeader";
 import {TICK_AXIS_COLOR} from "../TickAxis";
 import jQuery from "jquery";
-import {REMOVE_FOR_DOWNLOAD_CLASSNAME} from "..";
+import {REMOVE_FOR_DOWNLOAD_CLASSNAME} from "../lib/helpers";
 
 export default function getSvg(
     store: TimelineStore,
