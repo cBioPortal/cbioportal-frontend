@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
 import {
     CNAProfilesEnum,
+    GeneSetProfilesEnum,
     MutationProfilesEnum,
     StructuralVariantProfilesEnum,
 } from 'shared/components/query/QueryStoreUtils';
@@ -111,6 +112,15 @@ export function getDefaultStructuralVariantProfile(
     );
 }
 
+export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
+    return _.find(
+        profiles,
+        profile =>
+            profile.molecularProfileId ===
+            profile.studyId + '_' + GeneSetProfilesEnum.gsva_scores
+    );
+}
+
 export function getFilteredMolecularProfiles(
     profiles: MolecularProfile[],
     profileFilterSet?: { [profileType: string]: boolean },
@@ -135,6 +145,9 @@ export function getFilteredMolecularProfiles(
             profileFilterSet[StructuralVariantProfilesEnum.structural_variants]
         ) {
             defaultProfiles.push(getDefaultStructuralVariantProfile(profiles));
+        }
+        if (profileFilterSet[GeneSetProfilesEnum.gsva_scores]) {
+            defaultProfiles.push(getDefaultGeneSetProfile(profiles));
         }
     } else {
         switch (dataPriority) {

@@ -24,6 +24,10 @@ export enum StructuralVariantProfilesEnum {
     structural_variants = 'structural_variants',
 }
 
+export enum GeneSetProfilesEnum {
+    gsva_scores = 'gsva_scores',
+}
+
 export function currentQueryParams(store: QueryStore) {
     const selectableSelectedStudyIds = store.selectableSelectedStudyIds;
 

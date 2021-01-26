@@ -425,6 +425,7 @@ describe('treatment feature', function() {
                     })
                 );
 
+                $('[data-test=ViewLimitValues]').waitForExist();
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
@@ -452,6 +453,7 @@ describe('treatment feature', function() {
                     })
                 );
 
+                $('[data-test=ViewLimitValues]').waitForExist();
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
@@ -550,7 +552,7 @@ var selectTreamentsBothAxes = () => {
             label: 'Name of AEW541',
         });
     });
-
+    $('[data-test=ViewLimitValues]').waitForExist();
     if (!$('[data-test=ViewLimitValues]').isSelected()) {
         $('[data-test=ViewLimitValues]').click();
     }
