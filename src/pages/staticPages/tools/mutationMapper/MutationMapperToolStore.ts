@@ -50,6 +50,7 @@ import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
 import defaultGenomeNexusInternalClient from 'shared/api/genomeNexusInternalClientInstance';
 import autobind from 'autobind-decorator';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
+import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -219,7 +220,13 @@ export default class MutationMapperToolStore {
             invoke: async () =>
                 await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
-                    ['annotation_summary', 'hotspots', 'signal'],
+                    [
+                        GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                        GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                        AppConfig.serverConfig.show_signal
+                            ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
+                            : '',
+                    ].filter(f => f),
                     AppConfig.serverConfig.isoformOverrideSource,
                     this.genomeNexusClient
                 ),
@@ -414,7 +421,7 @@ export default class MutationMapperToolStore {
     @cached @computed get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary'],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
                 this.genomeNexusClient
             )
         );
@@ -423,7 +430,10 @@ export default class MutationMapperToolStore {
     @cached @computed get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary', 'mutation_assessor'],
+                [
+                    GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                    GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+                ],
                 this.genomeNexusClient
             )
         );
