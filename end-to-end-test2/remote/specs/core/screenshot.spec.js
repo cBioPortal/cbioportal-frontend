@@ -344,18 +344,6 @@ describe.only('enrichments tab screenshot tests', function() {
 
         assertScreenShotMatch(res);
     });
-    //
-    it(' fdsafdsa enrichments tab coadread_tcga_pub mRNA profile', function() {
-        browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
-        //
-        // $('.comparisonTabSubTabs .tabAnchor_mrna').click();
-        // $('a=mRNA').click();
-        // $('b=MERTK').click();
-        //
-        // var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
-        //
-        // assertScreenShotMatch(res);
-    });
 });
 
 // describe('result page tabs, loading from session id', function() {

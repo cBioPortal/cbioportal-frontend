@@ -1,3 +1,5 @@
+const isLocalHost = window.location.hostname.includes('127.0.0.1');
+
 function getURLParameterByName(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
     var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
@@ -16,6 +18,10 @@ function getRootUrl(href) {
 }
 
 var rootUrl = getRootUrl(window.location.href);
+
+var reportUrl = isLocalHost
+    ? './results/customReport.json'
+    : './customReport.json';
 
 var diffSliderMode = true;
 
@@ -38,7 +44,7 @@ function buildData(reportData) {
     const data = reportData.map(test => {
         const testName = test.title.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
-        const rootUrl = './screenshots/';
+        const rootUrl = isLocalHost ? '/remote/screenshots/' : './screenshots/';
         return {
             screenImagePath: `${rootUrl}screen${imagePath}`,
             diffImagePath: `${rootUrl}diff${imagePath}`,
@@ -277,7 +283,7 @@ function buildDisplay(data, allData, rootUrl) {
 }
 
 function getResultsReport(reportRoot) {
-    return $.get(`./customReport.json`);
+    return $.get(reportUrl);
 }
 
 function buildPage() {

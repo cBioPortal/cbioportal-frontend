@@ -189,7 +189,7 @@ jobs:
       - run:
           name: Setup python libraries
           command: |
-              pip3 install requests pyyaml libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+              pip3 install requests pyyaml
 #      - run:
 #          name: Install canvas deps [for screenshot comparison]
 #          command: |
