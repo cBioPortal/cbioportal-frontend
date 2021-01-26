@@ -13,6 +13,7 @@ import jQuery from 'jquery';
 import {
     flattenTracks,
     getPointInTrimmedSpaceFromScreenRead,
+    isTrackVisible,
     REMOVE_FOR_DOWNLOAD_CLASSNAME,
 } from './lib/helpers';
 import intersect from './lib/intersect';
@@ -267,7 +268,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
         TICK_AXIS_HEIGHT +
         _.sumBy(tracks, t => {
             if (visibleTracks) {
-                return visibleTracks.includes(t.track.type) ? t.height : 0;
+                return isTrackVisible(t.track, visibleTracks) ? t.height : 0;
             } else {
                 return t.height;
             }
@@ -328,7 +329,7 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
     const filteredTracks =
         visibleTracks === undefined
             ? tracks
-            : tracks.filter(t => visibleTracks.includes(t.track.type));
+            : tracks.filter(t => isTrackVisible(t.track, visibleTracks));
 
     return (
         <div
@@ -481,7 +482,8 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
                         getSvg(
                             store,
                             refs.timelineTracksArea.current,
-                            customTracks
+                            customTracks,
+                            visibleTracks
                         )
                     }
                     additionalRightButtons={[
