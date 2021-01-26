@@ -101,6 +101,7 @@ import {
     generateUniqueSampleKeyToTumorTypeMap,
     getGenomeNexusUrl,
     getOtherBiomarkersQueryId,
+    getSampleClinicalDataMapByKeywords,
     getSampleClinicalDataMapByThreshold,
     getSampleTumorTypeMap,
     groupBySampleId,
@@ -178,6 +179,7 @@ import {
 } from 'shared/lib/oql/AccessorsForOqlFilter';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    MIS_TYPE_VALUE,
     GENOME_NEXUS_ARG_FIELD_ENUM,
     MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
@@ -2360,10 +2362,10 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleMsiHInfo() {
-        return getSampleClinicalDataMapByThreshold(
+        return getSampleClinicalDataMapByKeywords(
             this.clinicalDataForSamples.result,
-            CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE,
-            MSI_H_THRESHOLD
+            CLINICAL_ATTRIBUTE_ID_ENUM.MSI_TYPE,
+            [MIS_TYPE_VALUE.INSTABLE]
         );
     }
 
