@@ -6,6 +6,7 @@ import {
     OTHER_BIOMARKER_NAME,
 } from 'react-mutation-mapper';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
+import { calculateOncoKbAvailableDataType } from 'cbioportal-utils';
 
 export const OtherBiomarkerAnnotation: React.FunctionComponent<{
     type: OtherBiomarkersQueryType;
@@ -18,7 +19,7 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
             <span
                 style={{
                     marginLeft: 2,
-                    marginTop: -4,
+                    display: 'flex',
                 }}
             >
                 <OncoKB
@@ -27,6 +28,9 @@ export const OtherBiomarkerAnnotation: React.FunctionComponent<{
                     geneNotExist={false}
                     hugoGeneSymbol={OTHER_BIOMARKER_HUGO_SYMBOL}
                     status={'complete'}
+                    availableDataTypes={calculateOncoKbAvailableDataType([
+                        props.annotation,
+                    ])}
                     indicator={props.annotation}
                 />
             </span>

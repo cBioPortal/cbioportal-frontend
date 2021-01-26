@@ -8,9 +8,9 @@ import { ICache } from '../../model/SimpleCache';
 
 import oncoKbLogoImgSrc from '../../images/oncokb_logo.png';
 import mainStyles from './main.module.scss';
-import OncoKbCardBody from './OncoKbCardBody';
 import { OncoKbCardTitle } from './OncoKbCardTitle';
-import { OncoKbCardDataType } from './OncoKbHelper';
+import { OncoKbCardBody } from './OncoKbCardBody';
+import { OncoKbCardDataType } from 'cbioportal-utils';
 
 export type OncoKbCardProps = {
     type: OncoKbCardDataType;

@@ -13,6 +13,8 @@ export interface ISignalTumorTypeDecomposition extends CountByTumorType {
     msiScore: number | null;
     nCancerTypeCount: number | null;
     tmb: number | null;
+    biallelicTumorCount: number | null;
+    qcPassTumorCount: number | null;
 }
 
 export interface IExtendedSignalMutation extends SignalMutation {

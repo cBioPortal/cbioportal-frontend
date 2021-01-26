@@ -51,6 +51,12 @@ export {
     default as ProteinChange,
     proteinChangeSortMethod,
 } from './component/column/ProteinChange';
+export {
+    default as Signal,
+    getSignalData,
+    getSortValue as signalSortValue,
+    download as signalDownload,
+} from './component/column/Signal';
 
 export {
     default as DropdownSelector,
@@ -143,7 +149,7 @@ export { SequenceSpec } from './model/SequenceSpec';
 
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
-export * from './util/ReactTableUtils';
+export * from 'cbioportal-utils';
 export {
     MUTATION_TYPE_PRIORITY,
     mutationTypeSort,

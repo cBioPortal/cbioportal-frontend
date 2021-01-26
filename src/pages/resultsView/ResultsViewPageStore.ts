@@ -141,12 +141,12 @@ import {
     fetchQueriedStudies,
     FilteredAndAnnotatedMutationsReport,
     filterSubQueryData,
+    getExtendsClinicalAttributesFromCustomData,
     getMolecularProfiles,
     getSampleAlteredMap,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
     isRNASeqProfile,
-    makeCustomChartData,
     OncoprintAnalysisCaseType,
     parseGenericAssayGroups,
 } from './ResultsViewPageStoreUtils';
@@ -2384,38 +2384,22 @@ export class ResultsViewPageStore {
     });
 
     readonly clinicalAttributes_customCharts = remoteData({
-        await: () => [this.studies, this.sampleMap],
+        await: () => [this.sampleMap],
         invoke: async () => {
-            const studyIds = this.studies.result!.map(s => s.studyId);
             let ret: ExtendedClinicalAttribute[] = [];
-            try {
-                const userSettings = await sessionServiceClient.fetchUserSettings(
-                    studyIds
-                );
-                if (userSettings) {
-                    // Find custom charts.
-                    // TODO: Replace with specific API for custom charts. Current filter method is to just find charts with `groups` specification.
-                    ret = userSettings.chartSettings
-                        .filter(s => !!s.groups)
-                        .map(s => {
-                            const attr: ExtendedClinicalAttribute = {
-                                datatype: 'STRING',
-                                description: s.description || '',
-                                displayName: s.name || '',
-                                patientAttribute: s.patientAttribute,
-                                clinicalAttributeId: s.id,
-                                studyId: '',
-                                priority: '',
-                            };
-                            attr.data = makeCustomChartData(
-                                attr,
-                                s.groups!,
-                                this.sampleMap.result!
-                            );
-                            return attr;
-                        });
-                }
-            } catch (e) {}
+            if (this.appStore.isLoggedIn) {
+                try {
+                    //Add custom data from user profile
+                    const customChartSessions = await sessionServiceClient.getCustomDataForStudies(
+                        this.cancerStudyIds
+                    );
+
+                    ret = getExtendsClinicalAttributesFromCustomData(
+                        customChartSessions,
+                        this.sampleMap.result!
+                    );
+                } catch (e) {}
+            }
             return ret;
         },
     });
@@ -4560,6 +4544,7 @@ export class ResultsViewPageStore {
                           [
                               GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                               GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                              GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL,
                           ],
                           AppConfig.serverConfig.isoformOverrideSource,
                           this.genomeNexusClient

@@ -15,6 +15,7 @@ import MutationStatus from '../column/MutationStatus';
 import { dbsnpSortMethod } from '../column/Dbsnp';
 import { hgvscSortMethod } from '../column/Hgvsc';
 import { hgvsgSortMethod } from '../column/Hgvsg';
+import { signalSortMethod } from '../column/Signal';
 
 export enum MutationColumn {
     PROTEIN_CHANGE = 'proteinChange',
@@ -31,6 +32,7 @@ export enum MutationColumn {
     GNOMAD = 'gnomad',
     CLINVAR = 'clinVarId',
     DBSNP = 'dbsnp',
+    SIGNAL = 'signal',
 }
 
 export enum MutationColumnName {
@@ -48,6 +50,7 @@ export enum MutationColumnName {
     GNOMAD = 'gnomAD',
     CLINVAR = 'ClinVar ID',
     DBSNP = 'dbSNP',
+    SIGNAL = 'SIGNAL',
 }
 
 export function rightAlignedCell(cellProps: any) {
@@ -220,6 +223,24 @@ export const MUTATION_COLUMN_HEADERS = {
             }
         />
     ),
+    [MutationColumn.SIGNAL]: (
+        <ColumnHeader
+            headerContent={
+                <span className="pull-right mr-3">
+                    {MutationColumnName.SIGNAL}{' '}
+                    <i className="fa fa-info-circle" />
+                </span>
+            }
+            overlay={
+                <span>
+                    Prevalence of germline mutations in cancer patients from{' '}
+                    <a href="https://www.signaldb.org/" target="_blank">
+                        SIGNAL
+                    </a>
+                </span>
+            }
+        />
+    ),
 };
 
 /**
@@ -333,6 +354,13 @@ export const MUTATION_COLUMNS_DEFINITION = {
         sortMethod: dbsnpSortMethod,
         show: false,
     },
+    [MutationColumn.SIGNAL]: {
+        id: MutationColumn.SIGNAL,
+        name: MutationColumnName.SIGNAL,
+        Header: MUTATION_COLUMN_HEADERS[MutationColumn.SIGNAL],
+        sortMethod: signalSortMethod,
+        show: false,
+    },
 };
 
 export const DEFAULT_MUTATION_COLUMNS = [
@@ -349,6 +377,7 @@ export const DEFAULT_MUTATION_COLUMNS = [
     MUTATION_COLUMNS_DEFINITION[MutationColumn.CLINVAR],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.GNOMAD],
     MUTATION_COLUMNS_DEFINITION[MutationColumn.DBSNP],
+    MUTATION_COLUMNS_DEFINITION[MutationColumn.SIGNAL],
 ];
 
 export function mergeColumns(
