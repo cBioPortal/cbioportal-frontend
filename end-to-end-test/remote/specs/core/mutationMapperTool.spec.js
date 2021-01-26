@@ -40,11 +40,11 @@ describe('Mutation Mapper Tool', function() {
                 60000
             );
 
-            const mutationsT790M = browser.getText(
-                './/*[text()[contains(.,"T790M")]]'
-            );
+            // Waiting for Annotation column sorting
+            browser.waitForText('.//*[text()[contains(.,"T790M")]]');
+
             assert.equal(
-                mutationsT790M.length,
+                browser.getText('.//*[text()[contains(.,"T790M")]]').length,
                 2,
                 'there should be two samples with a T790M mutation'
             );
@@ -327,11 +327,11 @@ describe('Mutation Mapper Tool', function() {
                 60000
             );
 
-            const mutationsT790M = browser.getText(
-                './/*[text()[contains(.,"T790M")]]'
-            );
+            // Waiting for Annotation column sorting
+            browser.waitForText('.//*[text()[contains(.,"T790M")]]');
+
             assert.equal(
-                mutationsT790M.length,
+                browser.getText('.//*[text()[contains(.,"T790M")]]').length,
                 2,
                 'there should be two samples with a T790M mutation'
             );
