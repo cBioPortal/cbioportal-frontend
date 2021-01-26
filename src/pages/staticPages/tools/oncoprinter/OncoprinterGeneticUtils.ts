@@ -15,6 +15,7 @@ import { cna_profile_data_to_string } from '../../../../shared/lib/oql/Accessors
 import {
     fillGeneticTrackDatum,
     OncoprintMutationType,
+    OncoprintMutationTypeEnum,
 } from '../../../../shared/components/oncoprint/DataUtils';
 import {
     Gene,
@@ -384,7 +385,7 @@ export function makeGeneticTrackDatum_Data(
         }
     }
     switch (oncoprinterInputLine.alteration) {
-        case 'missense':
+        case OncoprintMutationTypeEnum.MISSENSE:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
@@ -392,7 +393,7 @@ export function makeGeneticTrackDatum_Data(
                 mutationType: 'missense_mutation',
             });
             break;
-        case 'inframe':
+        case OncoprintMutationTypeEnum.INFRAME:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
@@ -400,21 +401,29 @@ export function makeGeneticTrackDatum_Data(
                 mutationType: 'indel',
             });
             break;
-        case 'fusion':
+        case OncoprintMutationTypeEnum.FUSION:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
                 mutationType: 'fusion',
             });
             break;
-        case 'promoter':
+        case OncoprintMutationTypeEnum.PROMOTER:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
                 proteinChange: 'promoter',
             });
             break;
-        case 'trunc':
+        case OncoprintMutationTypeEnum.SPLICE:
+            ret = Object.assign(ret, {
+                molecularProfileAlterationType:
+                    AlterationTypeConstants.MUTATION_EXTENDED,
+                alterationSubType: 'splice',
+                mutationType: 'splice',
+            });
+            break;
+        case OncoprintMutationTypeEnum.TRUNC:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
@@ -422,7 +431,7 @@ export function makeGeneticTrackDatum_Data(
                 mutationType: 'nonsense',
             });
             break;
-        case 'other':
+        case OncoprintMutationTypeEnum.OTHER:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
                     AlterationTypeConstants.MUTATION_EXTENDED,
@@ -877,11 +886,12 @@ export function parseGeneticInput(
                                 'inframe',
                                 'promoter',
                                 'trunc',
+                                'splice',
                                 'other',
                             ].indexOf(lcMutationType) === -1
                         ) {
                             throw new Error(
-                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "PROMOTER", or "OTHER" for a mutation alteration.`
+                                `${errorPrefix}Type "${type}" is not valid - it must be "MISSENSE", "INFRAME", "TRUNC", "SPLICE", "PROMOTER", or "OTHER" for a mutation alteration.`
                             );
                         }
                         ret.alteration = lcMutationType as OncoprintMutationType;
