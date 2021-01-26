@@ -7,12 +7,9 @@ import { computed } from 'mobx';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
-    IExtendedSignalMutation,
     extendMutations,
-    isGermlineMutation,
-    isPathogenicMutation,
     isSomaticMutation,
-    SignalMutationStatus,
+    getSignalMutationStatus,
 } from 'cbioportal-utils';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
 
@@ -21,7 +18,7 @@ interface ISignalProps {
 }
 
 @observer
-class Signal extends React.Component<ISignalProps> {
+class SignalPrediction extends React.Component<ISignalProps> {
     @computed get mutationStatusData() {
         let content: string[] = [];
         if (
@@ -33,23 +30,11 @@ class Signal extends React.Component<ISignalProps> {
             );
             _.forEach(extendedSignalMutation, mutation => {
                 if (!isSomaticMutation(mutation)) {
-                    content.push(this.mutationStatusAccessor(mutation));
+                    content.push(getSignalMutationStatus(mutation));
                 }
             });
         }
         return content.length > 0 ? content.join(', ') : 'N/A';
-    }
-
-    private mutationStatusAccessor(mutation: IExtendedSignalMutation) {
-        // don't return somatic
-        if (isGermlineMutation(mutation)) {
-            if (isPathogenicMutation(mutation)) {
-                return SignalMutationStatus.PATHOGENIC_GERMLINE;
-            } else {
-                return SignalMutationStatus.BENIGN_GERMLINE;
-            }
-        }
-        return 'Unknown';
     }
 
     private penetranceTooltip() {
@@ -87,4 +72,4 @@ class Signal extends React.Component<ISignalProps> {
     }
 }
 
-export default Signal;
+export default SignalPrediction;

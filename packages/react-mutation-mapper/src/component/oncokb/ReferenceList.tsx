@@ -2,6 +2,8 @@ import { ICache } from 'cbioportal-frontend-commons';
 import { ArticleAbstract } from 'oncokb-ts-api-client';
 import * as React from 'react';
 import * as _ from 'lodash';
+import { observer } from 'mobx-react';
+import { computed } from 'mobx';
 
 import ArticleAbstractItem from './ArticleAbstractItem';
 import PmidItem from './PmidItem';
@@ -14,8 +16,25 @@ type ReferenceListProps = {
     abstracts: ArticleAbstract[];
 };
 
+@observer
 export default class ReferenceList extends React.Component<ReferenceListProps> {
+    @computed get isLoading() {
+        if (this.props.pmidData && this.props.pmids) {
+            const loadingItems = _.filter(this.props.pmids, uid => {
+                const cacheData = this.props.pmidData![uid.toString()];
+                // when the cacheData is undefined, the pmidData will fetch the uid info later which eventually results to an object with a status
+                return !cacheData || cacheData.status === 'pending';
+            });
+            return loadingItems.length > 0;
+        } else {
+            return false;
+        }
+    }
+
     render() {
+        if (this.isLoading) {
+            return <i className="fa fa-spinner fa-pulse fa-2x" />;
+        }
         const list: JSX.Element[] = [];
 
         if (this.props.pmidData) {

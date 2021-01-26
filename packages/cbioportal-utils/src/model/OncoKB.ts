@@ -11,6 +11,14 @@ export interface IOncoKbData {
     indicatorMap: { [id: string]: IndicatorQueryResp } | null;
 }
 
+export enum OncoKbCardDataType {
+    BIOLOGICAL,
+    TXS,
+    TXR,
+    DX,
+    PX,
+}
+
 export enum EvidenceType {
     GENE_SUMMARY = 'GENE_SUMMARY',
     MUTATION_SUMMARY = 'MUTATION_SUMMARY',

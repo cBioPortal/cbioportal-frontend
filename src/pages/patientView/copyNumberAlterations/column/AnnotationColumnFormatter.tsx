@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {
     buildCivicEntry,
+    calculateOncoKbAvailableDataType,
     generateQueryVariantId,
     ICivicEntry,
     ICivicGene,
@@ -9,6 +10,7 @@ import {
     ICivicVariant,
     ICivicVariantData,
     IOncoKbData,
+    OncoKbCardDataType,
     RemoteData,
 } from 'cbioportal-utils';
 import {
@@ -64,6 +66,12 @@ export default class AnnotationColumnFormatter {
                     ) !== undefined;
             }
 
+            // Always show oncogenicity icon even when the indicatorMapResult is empty.
+            // We want to show an icon for genes that haven't been annotated by OncoKB
+            let oncoKbAvailableDataTypes: OncoKbCardDataType[] = [
+                OncoKbCardDataType.BIOLOGICAL,
+            ];
+
             // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
             if (oncoKbData && oncoKbData.result instanceof Error) {
                 oncoKbStatus = 'error';
@@ -82,6 +90,12 @@ export default class AnnotationColumnFormatter {
                         uniqueSampleKeyToTumorType,
                         studyIdToStudy
                     );
+                    oncoKbAvailableDataTypes = _.uniq([
+                        ...oncoKbAvailableDataTypes,
+                        ...calculateOncoKbAvailableDataType(
+                            _.values(oncoKbData.result.indicatorMap)
+                        ),
+                    ]);
                 }
                 oncoKbStatus = oncoKbData ? oncoKbData.status : 'pending';
             }
@@ -90,6 +104,7 @@ export default class AnnotationColumnFormatter {
                 hugoGeneSymbol,
                 oncoKbStatus,
                 oncoKbIndicator,
+                oncoKbAvailableDataTypes,
                 oncoKbGeneExist,
                 isOncoKbCancerGene,
                 usingPublicOncoKbInstance:

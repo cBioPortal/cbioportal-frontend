@@ -46,9 +46,25 @@ const RESISTANCE_LEVEL_SCORE: { [level: string]: number } = {
     R1: 3,
 };
 
+// diagnostic level <-> score
+// (used for sorting purposes)
+const DIAGNOSTIC_LEVEL_SCORE: { [level: string]: number } = {
+    Dx3: 1,
+    Dx2: 2,
+    Dx1: 3,
+};
+
+// prognostic level <-> score
+// (used for sorting purposes)
+const PROGNOSTIC_LEVEL_SCORE: { [level: string]: number } = {
+    Px3: 1,
+    Px2: 2,
+    Px1: 3,
+};
+
 export function normalizeLevel(level: string | null): string | null {
     if (level) {
-        const matchArray = level.match(/LEVEL_(R?\d[AB]?)/);
+        const matchArray = level.match(/LEVEL_(.*)/);
 
         if (matchArray && matchArray.length >= 2) {
             return matchArray[1];
@@ -111,40 +127,21 @@ export function oncogenicYPosition(
     return -(7 + oncogenicityIndex * 120 + resistanceLevelIndex * 30);
 }
 
-export function annotationIconClassNames(
-    usingPublicOncoKbInstance: boolean,
-    indicatorQueryResp: IndicatorQueryResp | undefined
-): string {
-    const classNames = ['oncokb', 'annotation-icon', 'unknown', 'no-level'];
-
-    if (indicatorQueryResp) {
-        const sl = normalizeLevel(indicatorQueryResp.highestSensitiveLevel);
-        const rl = normalizeLevel(indicatorQueryResp.highestResistanceLevel);
-
-        classNames[2] =
-            ONCOGENIC_CLASS_NAMES[indicatorQueryResp.oncogenic] ||
-            (indicatorQueryResp.vus ? 'vus' : 'unknown');
-
-        if (!usingPublicOncoKbInstance && (sl || rl)) {
-            let levelName = 'level';
-
-            if (sl) {
-                levelName = `${levelName}-${sl}`;
-            }
-
-            if (rl) {
-                levelName = `${levelName}-${rl}`;
-            }
-
-            classNames[3] = levelName;
-        }
+export function levelIconClassNames(level: string) {
+    if (level) {
+        return `oncokb icon level-${level}`;
     }
-
-    return classNames.join(' ');
+    return '';
 }
 
-export function levelIconClassNames(level: string) {
-    return `oncokb level-icon level-${level}`;
+export function oncogenicityIconClassNames(oncogenicity: string) {
+    if (!oncogenicity) {
+        oncogenicity = 'unknown';
+    }
+    return `oncokb icon ${oncogenicity
+        .trim()
+        .toLowerCase()
+        .replace(/\s/, '-')}`;
 }
 
 export function calcOncogenicScore(oncogenic: string) {
@@ -157,6 +154,14 @@ export function calcSensitivityLevelScore(level: string) {
 
 export function calcResistanceLevelScore(level: string) {
     return RESISTANCE_LEVEL_SCORE[normalizeLevel(level) || ''] || 0;
+}
+
+export function calcDiagnosticLevelScore(level: string) {
+    return DIAGNOSTIC_LEVEL_SCORE[normalizeLevel(level) || ''] || 0;
+}
+
+export function calcPrognosticLevelScore(level: string) {
+    return PROGNOSTIC_LEVEL_SCORE[normalizeLevel(level) || ''] || 0;
 }
 
 export function generateOncogenicCitations(oncogenicRefs: any): number[] {
