@@ -5,7 +5,6 @@ import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import * as _ from 'lodash';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { computed, makeObservable } from 'mobx';
 
 export interface IStudyPageHeaderProps {
@@ -23,7 +22,9 @@ export default class StudyPageHeader extends React.Component<
         makeObservable(this);
     }
     @computed get customChartsFilter() {
-        return _.fromPairs(this.props.store.customChartFilterSet.toJSON());
+        return _.fromPairs(
+            this.props.store.preDefinedCustomChartFilterSet.toJSON()
+        );
     }
 
     render() {

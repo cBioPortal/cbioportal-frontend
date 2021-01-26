@@ -92,6 +92,7 @@ export default class GenericAssayEnrichments extends React.Component<
                         }
                         alwaysShow={true}
                         studies={this.props.store.studies.result!}
+                        showDescription={true}
                     />
                     <GenericAssayEnrichmentsContainer
                         data={

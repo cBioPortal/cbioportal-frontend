@@ -219,7 +219,7 @@ export default class MutationMapperToolStore {
             invoke: async () =>
                 await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
-                    ['annotation_summary', 'hotspots'],
+                    ['annotation_summary', 'hotspots', 'signal'],
                     AppConfig.serverConfig.isoformOverrideSource,
                     this.genomeNexusClient
                 ),

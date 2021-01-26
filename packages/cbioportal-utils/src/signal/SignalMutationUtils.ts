@@ -8,6 +8,7 @@ import {
     IExtendedSignalMutation,
     ISignalTumorTypeDecomposition,
 } from '../model/SignalMutation';
+import { SignalMutationStatus } from '../model/SignalMutationStatus';
 
 export function isGermlineMutation(mutation: SignalMutation) {
     return mutation.mutationStatus.toLowerCase() === 'germline';
@@ -41,7 +42,7 @@ export function extendMutations(
                 : null;
 
         const tumorTypeDecomposition: ISignalTumorTypeDecomposition[] = generateTumorTypeDecomposition(
-            mutation.mutationStatus,
+            mutation,
             mutation.countsByTumorType,
             mutation.biallelicCountsByTumorType,
             mutation.qcPassCountsByTumorType,
@@ -76,7 +77,7 @@ export function extendMutations(
 }
 
 export function generateTumorTypeDecomposition(
-    mutationStatus: string,
+    mutation: SignalMutation,
     countsByTumorType: CountByTumorType[],
     biallelicCountsByTumorType?: CountByTumorType[],
     qcPassCountsByTumorType?: CountByTumorType[],
@@ -153,7 +154,15 @@ export function generateTumorTypeDecomposition(
             statsTumorMap && statsTumorMap[counts.tumorType]
                 ? statsTumorMap[counts.tumorType].tmb
                 : null,
-        mutationStatus: mutationStatus,
+        mutationStatus: getSignalMutationStatus(mutation),
+        biallelicTumorCount:
+            biallelicTumorMap && biallelicTumorMap[counts.tumorType]
+                ? biallelicTumorMap[counts.tumorType].variantCount
+                : null,
+        qcPassTumorCount:
+            qcPassTumorMap && qcPassTumorMap[counts.tumorType]
+                ? qcPassTumorMap[counts.tumorType].variantCount
+                : null,
     }));
 }
 
@@ -194,4 +203,17 @@ export function calculateTotalVariantRatio(
     counts2: CountByTumorType[]
 ) {
     return totalVariants(counts1) / totalVariants(counts2);
+}
+
+export function getSignalMutationStatus(mutation: SignalMutation) {
+    if (isGermlineMutation(mutation)) {
+        if (isPathogenicMutation(mutation)) {
+            return SignalMutationStatus.PATHOGENIC_GERMLINE;
+        } else {
+            return SignalMutationStatus.BENIGN_GERMLINE;
+        }
+    } else if (isSomaticMutation(mutation)) {
+        return SignalMutationStatus.SOMATIC;
+    }
+    return SignalMutationStatus.UNKNOWN;
 }

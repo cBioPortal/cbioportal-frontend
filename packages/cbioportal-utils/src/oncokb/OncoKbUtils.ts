@@ -6,7 +6,7 @@ import {
     IndicatorQueryResp,
     LevelOfEvidence,
 } from 'oncokb-ts-api-client';
-import { EvidenceType } from '../model/OncoKB';
+import { EvidenceType, OncoKbCardDataType } from '../model/OncoKB';
 
 export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2', '1', '0'],
@@ -223,4 +223,29 @@ export function generateAnnotateStructuralVariantQuery(
         tumorType: tumorType,
         evidenceTypes: evidenceTypes,
     } as AnnotateStructuralVariantQuery;
+}
+
+export function calculateOncoKbAvailableDataType(
+    annotations: IndicatorQueryResp[]
+) {
+    // Always show oncogenicity icon as long as the annotation exists
+    const availableDataTypes = [];
+    if (annotations.length > 0) {
+        availableDataTypes.push(OncoKbCardDataType.BIOLOGICAL);
+    }
+    annotations.forEach(annotation => {
+        if (!!annotation.highestSensitiveLevel) {
+            availableDataTypes.push(OncoKbCardDataType.TXS);
+        }
+        if (!!annotation.highestResistanceLevel) {
+            availableDataTypes.push(OncoKbCardDataType.TXR);
+        }
+        if (!!annotation.highestPrognosticImplicationLevel) {
+            availableDataTypes.push(OncoKbCardDataType.PX);
+        }
+        if (!!annotation.highestDiagnosticImplicationLevel) {
+            availableDataTypes.push(OncoKbCardDataType.DX);
+        }
+    });
+    return _.uniq(availableDataTypes);
 }

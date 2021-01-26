@@ -21,6 +21,8 @@ import {
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_OTHER,
     MUT_COLOR_PROMOTER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
     PROT_COLOR_HIGH,
@@ -67,6 +69,8 @@ enum ShapeId {
     truncatingMutationVUSRectangle = 'truncatingMutationVUSRectangle',
     inframeMutationDriverRectangle = 'inframeMutationDriverRectangle',
     inframeMutationVUSRectangle = 'inframeMutationVUSRectangle',
+    spliceMutationDriverRectangle = 'spliceMutationDriverRectangle',
+    spliceMutationVUSRectangle = 'spliceMutationVUSRectangle',
 }
 
 const shapeBank = {
@@ -168,6 +172,24 @@ const shapeBank = {
         width: 100,
         height: 8,
         z: 7,
+    },
+    [ShapeId.spliceMutationDriverRectangle]: {
+        type: 'rectangle',
+        fill: MUT_COLOR_SPLICE,
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
+    },
+    [ShapeId.spliceMutationVUSRectangle]: {
+        type: 'rectangle',
+        fill: MUT_COLOR_SPLICE_PASSENGER,
+        x: 0,
+        y: 33.33,
+        width: 100,
+        height: 33.33,
+        z: 6,
     },
     [ShapeId.missenseMutationDriverRectangle]: {
         type: 'rectangle',
@@ -377,7 +399,7 @@ export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterati
             always: non_mutation_rule_params.always,
             conditional: _.assign({}, non_mutation_rule_params.conditional, {
                 disp_mut: {
-                    'trunc,inframe,missense,promoter,other,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
+                    'splice,trunc,inframe,missense,promoter,other,splice_rec,trunc_rec,inframe_rec,missense_rec,promoter_rec,other_rec': {
                         shapes: [
                             shapeBank[ShapeId.missenseMutationDriverRectangle],
                         ],
@@ -398,14 +420,14 @@ export const genetic_rule_set_same_color_for_all_recurrence: IGeneticAlterationR
             always: non_mutation_rule_params.always,
             conditional: _.assign({}, non_mutation_rule_params.conditional, {
                 disp_mut: {
-                    'missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec': {
+                    'splice_rec,missense_rec,inframe_rec,trunc_rec,promoter_rec,other_rec': {
                         shapes: [
                             shapeBank[ShapeId.missenseMutationDriverRectangle],
                         ],
                         legend_label: 'Mutation (putative driver)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
-                    'missense,inframe,trunc,promoter,other': {
+                    'splice,missense,inframe,trunc,promoter,other': {
                         shapes: [
                             shapeBank[ShapeId.missenseMutationVUSRectangle],
                         ],
@@ -434,6 +456,13 @@ export const genetic_rule_set_different_colors_no_recurrence: IGeneticAlteration
                     'promoter,promoter_rec': {
                         shapes: [shapeBank[ShapeId.promoterMutationRectangle]],
                         legend_label: 'Promoter Mutation',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    'splice,splice_rec': {
+                        shapes: [
+                            shapeBank[ShapeId.spliceMutationDriverRectangle],
+                        ],
+                        legend_label: 'Splice Mutation',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     'trunc,trunc_rec': {
@@ -481,6 +510,18 @@ export const genetic_rule_set_different_colors_recurrence: IGeneticAlterationRul
                     'promoter,promoter_rec': {
                         shapes: [shapeBank[ShapeId.promoterMutationRectangle]],
                         legend_label: 'Promoter Mutation',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    splice_rec: {
+                        shapes: [
+                            shapeBank[ShapeId.spliceMutationDriverRectangle],
+                        ],
+                        legend_label: 'Splice Mutation (putative driver)',
+                        legend_order: MUTATION_LEGEND_ORDER,
+                    },
+                    splice: {
+                        shapes: [shapeBank[ShapeId.spliceMutationVUSRectangle]],
+                        legend_label: 'Splice Mutation (unknown significance)',
                         legend_order: MUTATION_LEGEND_ORDER,
                     },
                     trunc_rec: {
