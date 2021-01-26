@@ -4,6 +4,9 @@ set -e
 set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
+echo INSTALL cavas deps [necessary for visual regression framework]
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+
 echo INSTALL SCREENSHOT DEPENDENCIES
 cd /cbioportal-frontend/end-to-end-test2
 yarn install --frozen-lockfile
