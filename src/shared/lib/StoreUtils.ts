@@ -1628,6 +1628,25 @@ export function getSampleClinicalDataMapByThreshold(
     );
 }
 
+export function getSampleClinicalDataMapByKeywords(
+    clinicalData: ClinicalData[],
+    clinicalAttributeId: string,
+    keywords: string[]
+) {
+    return _.reduce(
+        clinicalData,
+        (acc: { [key: string]: ClinicalData }, next) => {
+            if (next.clinicalAttributeId === clinicalAttributeId) {
+                if (keywords.includes(next.value)) {
+                    acc[next.sampleId] = next;
+                }
+            }
+            return acc;
+        },
+        {}
+    );
+}
+
 export function getNumericalClinicalDataValue(
     clinicalData: ClinicalData
 ): number | undefined {
