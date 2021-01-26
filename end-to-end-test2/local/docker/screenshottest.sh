@@ -19,13 +19,13 @@ yarn serveDistLocalDb &
 
 cd /cbioportal-frontend/end-to-end-test2
 
-# echo PROBE CBIOPORTAL
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 5s
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 5s
-# curl $CBIOPORTAL_URL > /dev/null
-# sleep 20s
+#echo PROBE CBIOPORTAL
+#curl $CBIOPORTAL_URL > /dev/null
+#sleep 5s
+#curl $CBIOPORTAL_URL > /dev/null
+#sleep 5s
+#curl $CBIOPORTAL_URL > /dev/null
+#sleep 20s
 
 echo PROBE FRONTEND SERVER
 (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null

@@ -44,7 +44,7 @@
     "updateHotspotGenes": "./scripts/get_hotspot_genes.sh > src/shared/static-data/hotspotGenes.json",
     "compileOqlParser": "cd src/shared/lib/oql && pegjs oql-parser.pegjs",
     "serveDist": "./scripts/serve_dist.sh",
-    "serveDistLocalDb": "./end-to-end-test/local/runtime-config/serve_dist.sh",
+    "serveDistLocalDb": "./end-to-end-test2/local/runtime-config/serve_dist.sh",
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
     "test": "yarn run testModules && yarn run testMain",
     "testMain": "export NODE_OPTIONS=--max-old-space-size=2048; karma start karma.conf.js",
