@@ -151,7 +151,7 @@ describe('shortenStudyName', () => {
             shortenStudyName(
                 'MSK-IMPACT Clinical Sequencing Cohort (MSKCC, Nat Med 2017)'
             ),
-            'MSK-IMPACT Clinical Sequencing Cohort (MSKCC, Nat Med 2017'
+            'MSK-IMPACT Clinical Sequencing Cohort (MSKCC, Nat Med 2017)'
         );
     });
 
