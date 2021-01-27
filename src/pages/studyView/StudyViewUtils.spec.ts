@@ -55,6 +55,7 @@ import {
     updateSavedUserPreferenceChartIds,
     getNonZeroUniqueBins,
     DataBin,
+    getPatientIdentifiers,
 } from 'pages/studyView/StudyViewUtils';
 import {
     Sample,
@@ -3440,6 +3441,110 @@ describe('StudyViewUtils', () => {
                 30,
                 40,
             ]);
+        });
+    });
+
+    describe('getPatientIdentifiers', () => {
+        it('should return all identifiers for 1 group and 1 study', () => {
+            const groups = [
+                {
+                    studies: [
+                        {
+                            id: 'S01',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                    ],
+                },
+            ];
+
+            const actual = getPatientIdentifiers(groups);
+            const expected = [
+                { studyId: 'S01', patientId: 'P01' },
+                { studyId: 'S01', patientId: 'P02' },
+                { studyId: 'S01', patientId: 'P03' },
+            ];
+
+            assert.deepEqual(actual.sort(), expected.sort());
+        });
+
+        it('should return all identifiers for 1 group and 2 studies', () => {
+            const groups = [
+                {
+                    studies: [
+                        {
+                            id: 'S01',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                        {
+                            id: 'S02',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                    ],
+                },
+            ];
+
+            const actual = getPatientIdentifiers(groups);
+            const expected = [
+                { studyId: 'S01', patientId: 'P01' },
+                { studyId: 'S01', patientId: 'P02' },
+                { studyId: 'S01', patientId: 'P03' },
+                { studyId: 'S02', patientId: 'P01' },
+                { studyId: 'S02', patientId: 'P02' },
+                { studyId: 'S02', patientId: 'P03' },
+            ];
+
+            assert.deepEqual(actual.sort(), expected.sort());
+        });
+
+        it('should return all identifiers for 2 groups and 3 studies', () => {
+            const groups = [
+                {
+                    studies: [
+                        {
+                            id: 'S01',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                        {
+                            id: 'S02',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                    ],
+                },
+                {
+                    studies: [
+                        {
+                            id: 'S01',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                        {
+                            id: 'S03',
+                            samples: [],
+                            patients: ['P01', 'P02', 'P03'],
+                        },
+                    ],
+                },
+            ];
+
+            const actual = getPatientIdentifiers(groups);
+            const expected = [
+                { studyId: 'S01', patientId: 'P01' },
+                { studyId: 'S01', patientId: 'P02' },
+                { studyId: 'S01', patientId: 'P03' },
+                { studyId: 'S02', patientId: 'P01' },
+                { studyId: 'S02', patientId: 'P02' },
+                { studyId: 'S02', patientId: 'P03' },
+                { studyId: 'S03', patientId: 'P01' },
+                { studyId: 'S03', patientId: 'P02' },
+                { studyId: 'S03', patientId: 'P03' },
+            ];
+
+            assert.deepEqual(actual.sort(), expected.sort());
         });
     });
 });

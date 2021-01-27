@@ -64,6 +64,7 @@ import { IGisticData } from 'shared/model/Gistic';
 import { IMutSigData } from 'shared/model/MutSig';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
     MOLECULAR_PROFILE_MUTATIONS_SUFFIX,
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
@@ -147,7 +148,7 @@ export async function fetchMutationData(
 
 export async function fetchVariantAnnotationsByMutation(
     mutations: Mutation[],
-    fields: string[] = ['annotation_summary'],
+    fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
     isoformOverrideSource: string = 'uniprot',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
@@ -161,7 +162,7 @@ export async function fetchVariantAnnotationsByMutation(
 
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(
     mutations: Mutation[],
-    fields: string[] = ['annotation_summary'],
+    fields: string[] = [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
     isoformOverrideSource: string = 'uniprot',
     client: GenomeNexusAPI = genomeNexusClient
 ) {
@@ -1624,6 +1625,25 @@ export function getSampleClinicalDataMapByThreshold(
             return acc;
         },
         {} as { [key: string]: ClinicalData }
+    );
+}
+
+export function getSampleClinicalDataMapByKeywords(
+    clinicalData: ClinicalData[],
+    clinicalAttributeId: string,
+    keywords: string[]
+) {
+    return _.reduce(
+        clinicalData,
+        (acc: { [key: string]: ClinicalData }, next) => {
+            if (next.clinicalAttributeId === clinicalAttributeId) {
+                if (keywords.includes(next.value)) {
+                    acc[next.sampleId] = next;
+                }
+            }
+            return acc;
+        },
+        {}
     );
 }
 
