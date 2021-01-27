@@ -15,7 +15,7 @@ import { computed, makeObservable } from 'mobx';
 import { HotspotFilterValue } from '../../filter/HotspotFilter';
 import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
-import HotspotInfo from '../hotspot/HotspotInfo';
+import { HotspotInfo } from '../hotspot/HotspotInfo';
 import Track, { TrackProps } from './Track';
 import { TrackItemSpec } from './TrackCircle';
 
