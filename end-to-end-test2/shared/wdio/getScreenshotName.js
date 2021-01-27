@@ -1,4 +1,5 @@
 var path = require('path');
+
 module.exports = function getScreenshotName(basePath) {
     return function(context) {
         var type = context.type;
