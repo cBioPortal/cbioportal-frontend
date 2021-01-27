@@ -10,24 +10,6 @@ export type HotspotInfoProps = {
     customInfo?: JSX.Element;
 };
 
-export function hotspotInfo(
-    isHotspot: boolean,
-    is3dHotspot: boolean,
-    count?: number,
-    customInfo?: JSX.Element
-) {
-    return (
-        <span className={hotspotStyles['hotspot-info']}>
-            {title(isHotspot, is3dHotspot, count, customInfo)}
-            <br />
-            {publication(isHotspot, is3dHotspot)}
-            <br />
-            <br />
-            {link(isHotspot, is3dHotspot)}
-        </span>
-    );
-}
-
 export function title(
     isHotspot: boolean,
     is3dHotspot: boolean,
@@ -119,10 +101,17 @@ export function link(isHotspot: boolean, is3dHotspot: boolean) {
     );
 }
 
-export default class HotspotInfo extends React.Component<HotspotInfoProps, {}> {
-    public render() {
-        const { isHotspot, is3dHotspot, count, customInfo } = this.props;
+export const HotspotInfo: React.FunctionComponent<HotspotInfoProps> = props => {
+    const { isHotspot, is3dHotspot, count, customInfo } = props;
 
-        return hotspotInfo(isHotspot, is3dHotspot, count, customInfo);
-    }
-}
+    return (
+        <span className={hotspotStyles['hotspot-info']}>
+            {title(isHotspot, is3dHotspot, count, customInfo)}
+            <br />
+            {publication(isHotspot, is3dHotspot)}
+            <br />
+            <br />
+            {link(isHotspot, is3dHotspot)}
+        </span>
+    );
+};
