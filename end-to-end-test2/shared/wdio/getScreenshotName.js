@@ -11,7 +11,7 @@ module.exports = function getScreenshotName(basePath) {
 
         return path.join(
             basePath,
-            `${testName}_${type}_${browserName}_${browserWidth}x${browserHeight}.png`
+            `${testName}_element_chrome_1600x1000.png`
                 .toLowerCase()
                 .replace(/ /g, '_')
         );
