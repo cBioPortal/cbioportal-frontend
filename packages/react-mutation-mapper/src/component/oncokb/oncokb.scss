@@ -46,4 +46,9 @@
         min-height: 50px;
         position: relative;
     }
+
+    // Default left align all react-table headers under oncokb-card-tabs
+    .rt-thead .rt-resizable-header-content {
+        text-align: left;
+    }
 }

@@ -82,14 +82,6 @@ import TimelineWrapper from './timeline2/TimelineWrapper';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
-import { OncoKB } from 'react-mutation-mapper';
-import {
-    getSampleNumericalClinicalDataValue,
-    OTHER_BIOMARKERS_CLINICAL_ATTR,
-} from 'shared/lib/StoreUtils';
-import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
-import { OtherBiomarkersQueryType } from 'react-mutation-mapper';
-import { OtherBiomarkerAnnotation } from 'pages/patientView/oncokb/OtherBiomarkerAnnotation';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
 
