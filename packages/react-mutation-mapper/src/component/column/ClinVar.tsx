@@ -1,11 +1,12 @@
-import autobind from 'autobind-decorator';
-import { getClinVarId } from 'cbioportal-utils';
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
-import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod } from 'cbioportal-utils';
-import ClinVarId from '../clinvar/ClinVarId';
+import ClinVarSummary, {
+    formatClinicalSignificanceText,
+    getRcvCountMap,
+    getRcvData,
+} from '../clinvar/ClinVarSummary';
 import {
     MyVariantInfoProps,
     renderMyVariantInfoContent,
@@ -17,28 +18,23 @@ export function download(myVariantInfo?: MyVariantInfo): string {
     return value ? value.toString() : '';
 }
 
-export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
-    const id = getClinVarId(myVariantInfo);
+export function sortValue(myVariantInfo?: MyVariantInfo): string | null {
+    const rcvData =
+        myVariantInfo && myVariantInfo.clinVar
+            ? getRcvData(getRcvCountMap(myVariantInfo.clinVar))
+            : undefined;
 
-    return id ? parseInt(id, 10) : null;
+    return rcvData ? formatClinicalSignificanceText(rcvData) : null;
 }
 
 export function clinVarSortMethod(a: MyVariantInfo, b: MyVariantInfo) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
-@observer
-export default class ClinVar extends React.Component<MyVariantInfoProps, {}> {
-    public static defaultProps: Partial<MyVariantInfoProps> = {
-        className: 'pull-right mr-1',
-    };
+const ClinVar = (props: MyVariantInfoProps) => {
+    return renderMyVariantInfoContent(props, (myVariantInfo: MyVariantInfo) => (
+        <ClinVarSummary myVariantInfo={myVariantInfo} />
+    ));
+};
 
-    public render() {
-        return renderMyVariantInfoContent(this.props, this.getContent);
-    }
-
-    @autobind
-    public getContent(myVariantInfo: MyVariantInfo) {
-        return <ClinVarId myVariantInfo={myVariantInfo} />;
-    }
-}
+export default ClinVar;

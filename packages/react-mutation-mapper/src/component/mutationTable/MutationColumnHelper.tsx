@@ -30,7 +30,7 @@ export enum MutationColumn {
     HGVSG = 'hgvsg',
     HGVSC = 'hgvsc',
     GNOMAD = 'gnomad',
-    CLINVAR = 'clinVarId',
+    CLINVAR = 'clinVar',
     DBSNP = 'dbsnp',
     SIGNAL = 'signal',
 }
@@ -48,7 +48,7 @@ export enum MutationColumnName {
     HGVSG = 'HGVSg',
     HGVSC = 'HGVSc',
     GNOMAD = 'gnomAD',
-    CLINVAR = 'ClinVar ID',
+    CLINVAR = 'ClinVar',
     DBSNP = 'dbSNP',
     SIGNAL = 'SIGNAL',
 }
@@ -181,7 +181,7 @@ export const MUTATION_COLUMN_HEADERS = {
     [MutationColumn.CLINVAR]: (
         <ColumnHeader
             headerContent={
-                <span className="pull-right mr-3">
+                <span className="pull-left">
                     {MutationColumnName.CLINVAR}{' '}
                     <i className="fa fa-info-circle" />
                 </span>
