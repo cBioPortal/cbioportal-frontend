@@ -20,6 +20,7 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import autobind from 'autobind-decorator';
 import { OncoprintAnalysisCaseType } from '../ResultsViewPageStoreUtils';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
+import { shortenStudyName } from '../../../shared/lib/FormatUtils';
 
 interface ICancerSummaryContainerProps {
     store: ResultsViewPageStore;
@@ -82,21 +83,12 @@ export default class CancerSummaryContainer extends React.Component<
     // this is used to map study id to study name
     private mapStudyIdToName(str: string) {
         if (str in this.props.store.physicalStudySet) {
-            return this.shortenStudyName(
+            return shortenStudyName(
                 this.props.store.physicalStudySet[str].name
             );
         } else {
             return str;
         }
-    }
-
-    private shortenStudyName(studyName: string) {
-        const parenIndex = studyName.indexOf('(');
-        if (parenIndex > 50) {
-            const studyNameRight: string = studyName.substring(parenIndex);
-            const studyNameLeft: string = studyName.substring(0, 49);
-            return studyNameLeft + '...' + studyNameRight;
-        } else return studyName;
     }
 
     @computed
