@@ -6,7 +6,7 @@ import { computed, makeObservable } from 'mobx';
 import { OncoKbFilterValue } from '../../filter/OncoKbFilter';
 import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
-import OncoKbTrackTooltip from './OncoKbTrackTooltip';
+import { OncoKbTrackTooltip } from './OncoKbTrackTooltip';
 import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackCircle';
 
@@ -28,6 +28,7 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
         super(props);
         makeObservable(this);
     }
+
     @computed get oncoKbSpecs(): TrackItemSpec[] {
         const filteredOncoKbDataByProteinPosStart = this.props.store
             .oncoKbDataByPosition;
