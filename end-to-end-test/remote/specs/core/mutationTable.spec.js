@@ -168,20 +168,20 @@ describe('Mutation Table', function() {
             );
         });
 
-        it('should show the ClinVar id after adding the ClinVar column', () => {
+        it('should show the ClinVar interpretation after adding the ClinVar column', () => {
             // click on column button
             browser.click('button*=Columns');
             // scroll down to activated "ClinVar" selection
             browser.scroll(1000, 1000);
             // click "clinvar"
-            browser.click('//*[text()="ClinVar ID"]');
+            browser.click('//*[text()="ClinVar"]');
             let res;
             browser.waitUntil(
                 () => {
                     res = executeInBrowser(
                         () => $('[data-test="clinvar-data"]').length
                     );
-                    return res == 25;
+                    return res === 25;
                 },
                 60000,
                 `Failed: There's 25 clinvar rows in table (${res} found)`
