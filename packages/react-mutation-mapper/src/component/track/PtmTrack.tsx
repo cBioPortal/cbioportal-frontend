@@ -26,12 +26,14 @@ type PtmTrackProps = TrackProps & {
     subTrackMargin?: number;
 };
 
-export function ptmTooltip(
-    ptms: PostTranslationalModification[],
-    pubMedCache?: MobxCache
-) {
-    return <PtmAnnotationTable data={ptms} pubMedCache={pubMedCache} />;
-}
+export const PtmTooltip: React.FunctionComponent<{
+    ptms: PostTranslationalModification[];
+    pubMedCache?: MobxCache;
+}> = props => {
+    return (
+        <PtmAnnotationTable data={props.ptms} pubMedCache={props.pubMedCache} />
+    );
+};
 
 export function ptmInfoTooltip(transcriptId?: string) {
     return (
@@ -102,9 +104,11 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                 .map(position => ({
                     codon: Number(position),
                     color: ptmColor(ptmDataByProteinPosStart[Number(position)]),
-                    tooltip: ptmTooltip(
-                        ptmDataByProteinPosStart[Number(position)],
-                        this.props.pubMedCache
+                    tooltip: (
+                        <PtmTooltip
+                            ptms={ptmDataByProteinPosStart[Number(position)]}
+                            pubMedCache={this.props.pubMedCache}
+                        />
                     ),
                 }));
         } else {
@@ -133,11 +137,15 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                                     Number(position)
                                 ]
                             ),
-                            tooltip: ptmTooltip(
-                                ptmDataByTypeAndProteinPosStart[type][
-                                    Number(position)
-                                ],
-                                this.props.pubMedCache
+                            tooltip: (
+                                <PtmTooltip
+                                    ptms={
+                                        ptmDataByTypeAndProteinPosStart[type][
+                                            Number(position)
+                                        ]
+                                    }
+                                    pubMedCache={this.props.pubMedCache}
+                                />
                             ),
                         })),
                 }));
