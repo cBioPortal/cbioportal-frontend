@@ -36,10 +36,9 @@ function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(() => {
         return (
-            !browser.isExisting('.oncoprintLoadingIndicator') && // wait for loading indicator to hide, and
-            browser.isExisting('#oncoprintDiv svg rect') && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-            browser.getCssProperty('.oncoprintContainer', 'opacity').value ===
-                1 && // oncoprint has faded in
+            !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
+            $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+            $('.oncoprintContainer').getCSSProperty('opacity').value === 1 && // oncoprint has faded in
             $('.oncoprint__controls').isExisting()
         ); // oncoprint controls are showing
     }, timeout);
