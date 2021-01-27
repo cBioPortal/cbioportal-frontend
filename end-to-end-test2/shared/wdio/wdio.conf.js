@@ -11,8 +11,9 @@ const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
-const screenshotRoot =
-    `${process.env.SCREENSHOT_DIRECTORY}/` || '/remote/screenshots/';
+const screenshotRoot = process.env.SCREENSHOT_DIRECTORY
+    ? `${process.env.SCREENSHOT_DIRECTORY}/`
+    : '/remote/screenshots/';
 
 var diffDir = path.join(process.cwd(), `${screenshotRoot}diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}reference/`);

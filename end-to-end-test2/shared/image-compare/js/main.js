@@ -50,6 +50,7 @@ function buildData(reportData) {
             diffImagePath: `${rootUrl}diff${imagePath}`,
             refImagePath: `${rootUrl}reference${imagePath}`,
             imageName: testName,
+            test,
         };
     });
 
@@ -60,11 +61,13 @@ function renderList(data) {
     var $list = $('<ul></ul>').prependTo('body');
 
     data.forEach((item, index) => {
+        var test = item.test;
         $(
-            `<li><a data-index='${index}' data-path='${item}' href="javascript:void">${item.imageName}</a></li>`
+            `<li><a data-index='${index}' href="javascript:void(0)">${item.imageName}</a></li>`
         )
             .appendTo($list)
             .click(() => {
+                console.log(test);
                 $list.find('a').removeClass('active');
                 $(this).addClass('active');
                 //clearSideBySideInterval();

@@ -23,7 +23,7 @@ function waitForAndCheckPlotsTab() {
 }
 
 function runResultsTestSuite(prefix, options = {}) {
-    it.only(`${prefix} render the oncoprint`, function() {
+    it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
         var res = browser.checkElement('.oncoprintContainer'); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
@@ -49,25 +49,22 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} mutex tab`, function() {
-        browser.click('a.tabAnchor_mutualExclusivity');
-        var res = browser.checkElement(
-            '[data-test="mutualExclusivityTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+    it.only(`${prefix} mutex tab`, function() {
+        $('a.tabAnchor_mutualExclusivity').click();
+        var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} plots tab`, function() {
-        browser.click('a.tabAnchor_plots');
+        $('a.tabAnchor_plots').click();
         waitForAndCheckPlotsTab();
     });
 
-    it(`${prefix} mutation tab`, function() {
-        browser.click('a.tabAnchor_mutations');
-        browser.waitForVisible('.borderedChart svg', 20000);
+    it.only(`${prefix} mutation tab`, function() {
+        $('a.tabAnchor_mutations').click();
+        $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
         var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
-            hide: [
+            hideElements: [
                 '.qtip',
                 '[data-test=view3DStructure]',
                 '[data-test=GeneSummaryUniProt]',
@@ -207,7 +204,7 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 }
 
-describe.only('result page screenshot tests', function() {
+describe('result page screenshot tests', function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         goToUrlAndSetLocalStorage(url);
@@ -330,7 +327,7 @@ describe('enrichments tab screenshot tests', function() {
         //browser.$('.fdsa').waitForDisplayed();
     });
 
-    it.only('enrichments tab coadread_tcga_pub mRNA profile', function() {
+    it('enrichments tab coadread_tcga_pub mRNA profile', function() {
         browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
 
         $('.comparisonTabSubTabs .tabAnchor_mrna').click();
