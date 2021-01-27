@@ -12,7 +12,11 @@ export const OncoKbCardTitle: React.FunctionComponent<OncoKbCardDefaultTitleProp
     props: OncoKbCardDefaultTitleProps
 ) => {
     const titleContent = [];
-    if (props.hugoSymbol && props.hugoSymbol !== OTHER_BIOMARKER_HUGO_SYMBOL) {
+    if (
+        props.hugoSymbol &&
+        props.hugoSymbol !== OTHER_BIOMARKER_HUGO_SYMBOL &&
+        (!props.variant || !props.variant.includes(props.hugoSymbol))
+    ) {
         titleContent.push(props.hugoSymbol);
     }
     if (props.variant) {
