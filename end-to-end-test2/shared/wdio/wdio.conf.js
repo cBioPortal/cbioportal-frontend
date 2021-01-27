@@ -12,7 +12,7 @@ const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
 const screenshotRoot =
-    process.env.SCREENSHOT_DIRECTORY || '/remote/screenshots/';
+    `${process.env.SCREENSHOT_DIRECTORY}/` || '/remote/screenshots/';
 
 var diffDir = path.join(process.cwd(), `${screenshotRoot}diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}reference/`);
@@ -41,6 +41,7 @@ function proxyComparisonMethod(target) {
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
         const resp = oldProcessScreenshot.apply(this, arguments);
+        console.log(`SEEKING REFERENCE SCREENSHOT: ${referencePath}`);
         if (referenceExists === false) {
             return {
                 ...this.createResultReport(1000, false, true),
