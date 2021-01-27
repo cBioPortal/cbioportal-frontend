@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { ClinVar } from 'genome-nexus-ts-api-client';
 import { Button } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -32,6 +32,11 @@ const ClinVarTooltip = () => {
 class ClinVarInterpretation extends React.Component<
     IClinVarInterpretationProps
 > {
+    constructor(props: IClinVarInterpretationProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get rcvCountMap() {
         if (this.props.clinVar) {
             return getRcvCountMap(this.props.clinVar);

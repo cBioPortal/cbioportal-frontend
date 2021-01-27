@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import * as React from 'react';
-
 import { observer } from 'mobx-react';
-import { action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
+
+import { MutationTumorTypeFrequencyTable } from 'cbioportal-frontend-commons';
 import { SignalAnnotation } from 'genome-nexus-ts-api-client';
 import {
     ISignalTumorTypeDecomposition,
     generateTumorTypeDecomposition,
 } from 'cbioportal-utils';
-import autobind from 'autobind-decorator';
+
 import { Pathogenicity } from '../../util/Constants';
-import { MutationTumorTypeFrequencyTable } from 'cbioportal-frontend-commons';
 
 interface IFrequencyTableProps {
     signalAnnotation?: SignalAnnotation;
@@ -19,11 +19,18 @@ interface IFrequencyTableProps {
 @observer
 class FrequencyTable extends React.Component<IFrequencyTableProps> {
     // only show tab when two signal annotations are returned
-    @observable selectedTab: string | undefined =
-        this.props.signalAnnotation &&
-        this.props.signalAnnotation.annotation.length > 1
-            ? Pathogenicity.GERMLINE
-            : undefined;
+    @observable selectedTab: string | undefined;
+
+    constructor(props: IFrequencyTableProps) {
+        super(props);
+        makeObservable(this);
+
+        this.selectedTab =
+            props.signalAnnotation &&
+            props.signalAnnotation.annotation.length > 1
+                ? Pathogenicity.GERMLINE
+                : undefined;
+    }
 
     private frequencyTable() {
         if (
@@ -133,8 +140,7 @@ class FrequencyTable extends React.Component<IFrequencyTableProps> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     private onTabSelect(tabId: string) {
         this.selectedTab = tabId;
     }
