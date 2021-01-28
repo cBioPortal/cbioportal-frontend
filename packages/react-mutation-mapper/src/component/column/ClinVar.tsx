@@ -1,4 +1,5 @@
 import { MyVariantInfo } from 'genome-nexus-ts-api-client';
+import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod } from 'cbioportal-utils';
@@ -31,10 +32,10 @@ export function clinVarSortMethod(a: MyVariantInfo, b: MyVariantInfo) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
-const ClinVar = (props: MyVariantInfoProps) => {
+const ClinVar: React.FunctionComponent<MyVariantInfoProps> = observer(props => {
     return renderMyVariantInfoContent(props, (myVariantInfo: MyVariantInfo) => (
         <ClinVarSummary myVariantInfo={myVariantInfo} />
     ));
-};
+});
 
 export default ClinVar;
