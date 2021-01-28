@@ -39,7 +39,7 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it.only(`${prefix} cancer type summary`, function() {
+    it(`${prefix} cancer type summary`, function() {
         $('a.tabAnchor_cancerTypesSummary').click();
         $('[data-test="cancerTypeSummaryChart"]', 10000).waitForDisplayed();
         $('[data-test="cancerTypeSummaryWrapper"]').waitForExist();
@@ -49,7 +49,7 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it.only(`${prefix} mutex tab`, function() {
+    it(`${prefix} mutex tab`, function() {
         $('a.tabAnchor_mutualExclusivity').click();
         var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]');
         assertScreenShotMatch(res);
@@ -60,12 +60,11 @@ function runResultsTestSuite(prefix, options = {}) {
         waitForAndCheckPlotsTab();
     });
 
-    it.only(`${prefix} mutation tab`, function() {
+    it(`${prefix} mutation tab`, function() {
         $('a.tabAnchor_mutations').click();
         $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
         var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
-            hideElements: [
-                '.qtip',
+            hide: [
                 '[data-test=view3DStructure]',
                 '[data-test=GeneSummaryUniProt]',
             ],
@@ -75,45 +74,36 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 
     it.skip(`${prefix} coexpression tab`, function() {
-        browser.click('a.tabAnchor_coexpression');
-        browser.waitForVisible(
-            'div[data-test="CoExpressionPlot"]',
-            COEXPRESSION_TIMEOUT
-        );
-        var res = browser.checkElement('[data-test="coExpressionTabDiv"]', {
-            hide: ['.qtip'],
+        $('a.tabAnchor_coexpression').click();
+        $('div[data-test="CoExpressionPlot"]').waitForDisplayed({
+            timeout: COEXPRESSION_TIMEOUT,
         });
+        var res = browser.checkElement('[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab overlap`, function() {
-        browser.click('a.tabAnchor_comparison');
-        browser.waitForVisible(
+        $('a.tabAnchor_comparison').click();
+        $(
             'div[data-test="ComparisonPageOverlapTabContent"]'
-        );
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        ).waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab clinical`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
-        browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        $('.comparisonTabSubTabs .tabAnchor_clinical').click();
+        $('div[data-test="ComparisonPageClinicalTabDiv"]').waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
-        browser.waitForVisible(
+        $('.comparisonTabSubTabs .tabAnchor_mutations').click();
+        $(
             'div[data-test="GroupComparisonMutationEnrichments"]'
-        );
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        ).waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
@@ -121,9 +111,9 @@ function runResultsTestSuite(prefix, options = {}) {
         browser.execute(function() {
             comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
-        browser.waitForVisible(
+        $(
             'div[data-test="GroupComparisonMutationEnrichments"]'
-        );
+        ).waitForDisplayed();
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
         });
@@ -131,67 +121,41 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 
     it(`${prefix} comparison tab mrna enrichments`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]'
-        );
-        browser.click(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
-        browser.waitForVisible('div[data-test="MiniBoxPlot"]');
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        $('div[data-test="GroupComparisonMRNAEnrichments"]').waitForDisplayed();
+        $(options.mrnaEnrichmentsRowSelector || 'b=ETV5').click();
+        $('div[data-test="MiniBoxPlot"]').waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} survival tab`, function() {
-        browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
-        browser.waitForVisible(
+        $('.comparisonTabSubTabs a.tabAnchor_survival').click();
+        $(
             '[data-test="ComparisonPageSurvivalTabDiv"] svg',
             10000
-        );
-        var res = browser.checkElement('[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        ).waitForDisplayed();
+        var res = browser.checkElement('[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} pathwaymapper tab`, function() {
-        browser.click('a.tabAnchor_pathways');
-        browser.waitForVisible('#cy', 10000);
-        browser.waitForExist('.Toastify__toast', 4000);
-        browser.waitUntil(() => !$('.Toastify__toast').isExisting());
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
-            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-        });
-        assertScreenShotMatch(res);
-    });
+        // go to pathways tab
+        $('a.tabAnchor_pathways').waitForDisplayed();
+        $('a.tabAnchor_pathways').click();
 
-    it.skip(`${prefix} network tab`, function() {
-        // TODO: unskip this when bug is fixed
+        $('#cy', 10000).waitForDisplayed();
+        $('div[data-test="pathwayMapperMessageBox"]').waitForExist(4000);
 
-        browser.click('a.tabAnchor_network');
-
-        browser.waitForExist('iframe#networkFrame', 10000);
-
-        browser.frame('networkFrame', function(err, result) {
-            if (err) console.log(err);
-        });
-        browser.waitForVisible('#cytoscapeweb canvas', 60000);
-        browser.execute(function() {
-            $('<style>canvas { visibility: hidden} </style>').appendTo('body');
-        });
-        browser.frame(null);
-        var res = browser.checkElement('#networkFrame', {
-            hide: ['.qtip', 'canvas'],
-        });
+        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {});
 
         assertScreenShotMatch(res);
     });
 
     it.skip(`${prefix} data_download tab`, function() {
-        browser.click('a.tabAnchor_download');
+        $('a.tabAnchor_download').click();
         //  browser.pause(1000);
-        browser.waitForExist('#text_area_gene_alteration_freq', 20000);
+        $('#text_area_gene_alteration_freq', 20000).waitForExist();
         browser.waitUntil(function() {
             return (
                 browser.getValue('#text_area_gene_alteration_freq').length > 0
@@ -204,7 +168,7 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 }
 
-describe('result page screenshot tests', function() {
+describe.only('result page screenshot tests', function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         goToUrlAndSetLocalStorage(url);
