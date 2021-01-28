@@ -44,6 +44,9 @@ import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
 import {Query, default as OncoKbAPI, Gene as OncoKbGene, CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import {
+    getTrialMatchVariants, getTrialMatchGenes
+} from "shared/lib/TrialMatchUtils";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise, MobxPromiseInputUnion} from "mobxpromise";
 import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -54,6 +57,7 @@ import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/MutationalSignature";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchGene} from "shared/model/TrialMatch.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "public-lib/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
@@ -742,6 +746,64 @@ export async function fetchCivicVariants(civicGenes: ICivicGene,
     }
 
     return civicVariants;
+}
+
+export async function fetchTrialMatchGenes(mutationData?:MobxPromise<Mutation[]>,
+                                      uncalledMutationData?:MobxPromise<Mutation[]>)
+{
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length === 0) {
+        return {};
+    }
+
+    let queryHugoSymbols: Set<string> = new Set([]);
+
+    mutationDataResult.forEach(function(mutation: Mutation) {
+        queryHugoSymbols.add(mutation.gene.hugoGeneSymbol);
+    });
+
+    let querySymbols: Array<string> = Array.from(queryHugoSymbols);
+
+    let trialMatchGenes: ITrialMatchGene = await getTrialMatchGenes(querySymbols);
+
+    return trialMatchGenes;
+}
+
+export async function fetchCnaTrialMatchGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
+{
+    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+        let queryHugoSymbols: Set<string> = new Set([]);
+
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            queryHugoSymbols.add(cna.gene.hugoGeneSymbol);
+        });
+
+        let querySymbols: Array<string> = Array.from(queryHugoSymbols);
+
+        let trialMatchGenes: ITrialMatchGene = (await getTrialMatchGenes(querySymbols));
+
+        return trialMatchGenes;
+    } else {
+        return {};
+    }
+}
+
+export async function fetchTrialMatchVariants(trialMatchGenes: ITrialMatchGene,
+                                              mutationData?:MobxPromise<Mutation[]>,
+                                              uncalledMutationData?:MobxPromise<Mutation[]>)
+{
+    let trialMatchVariants: ITrialMatchVariant = {};
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length > 0) {
+        trialMatchVariants = (await getTrialMatchVariants(trialMatchGenes, mutationDataResult));
+    }
+    else if (!_.isEmpty(trialMatchGenes)) {
+        trialMatchVariants = (await getTrialMatchVariants(trialMatchGenes));
+    }
+
+    return trialMatchVariants;
 }
 
 export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopyNumberFilter,

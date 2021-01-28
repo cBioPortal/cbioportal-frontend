@@ -1,17 +1,23 @@
-export interface ITrialMatchData {
-    nctID: string;
-    trialTitle: string;
-    code: string;
-    matchType: string;
-    matchLevel: string;
-    proteinChange: string;
-    dose: string;
-    trialStatus: string;
-    oncogenicity: string;
-    mutEffect: string;
+export interface ITrialMatchGeneData {
+    name: string;
+    variants: {[variantName: string]: string};
 }
 
-export interface ITrialMatchGeneData {[gene: string]: ITrialMatchData[];}
+export interface ITrialMatchVariantData {
+    id: string;
+    name: string;
+    gene: string;
+    match: {[title: string]: number};
+}
+
+export interface ITrialMatchGene {[name: string]: ITrialMatchGeneData;}
+
+export interface ITrialMatchVariant {[geneName: string]: {[variantName: string]: ITrialMatchVariantData};}
+
+export interface ITrialMatchEntry {
+    name: string;
+    variants: {[name: string]: ITrialMatchVariantData};
+};
 
 export type MobXStatus = "pending" | "error" | "complete";
 
@@ -22,5 +28,5 @@ export interface ITrialMatchGeneDataWrapper {
 
 export interface ITrialMatchVariantDataWrapper {
     status: MobXStatus;
-    result?: ITrialMatchGeneData;
+    result?: ITrialMatchVariant;
 }
