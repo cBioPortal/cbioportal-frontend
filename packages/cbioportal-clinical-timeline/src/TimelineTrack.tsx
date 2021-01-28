@@ -16,6 +16,7 @@ import {
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
 import { observer } from 'mobx-react';
+import { getTicksForLineChartAxis } from './lib/lineChartAxisUtils';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -40,7 +41,7 @@ export function groupEventsByPosition(events: TimelineEvent[]) {
     });
 }
 
-function getTrackValueRange(track: TimelineTrackSpecification) {
+export function getTrackValueRange(track: TimelineTrackSpecification) {
     // We are assuming this is a line chart track
 
     let min = Number.POSITIVE_INFINITY;
@@ -62,7 +63,22 @@ function getTrackValueRange(track: TimelineTrackSpecification) {
     return { min, max };
 }
 
-function getLineChartYCoordinate(
+export function getLineChartYCoordinateForValue(
+    value: number,
+    track: TimelineTrackSpecification,
+    trackHeight: number,
+    trackValueRange: { min: number; max: number }
+) {
+    const padding = Math.min(trackHeight / 7, 15); // pad proportionally but no more padding than 15
+    const plottingHeight = trackHeight - 2 * padding;
+    const plottingProportion =
+        (value - trackValueRange.min) /
+        (trackValueRange.max - trackValueRange.min);
+
+    return padding + (1 - plottingProportion) * plottingHeight; // 1-p because SVG y axis points down
+}
+
+function getLineChartYCoordinateForEvents(
     events: TimelineEvent[],
     track: TimelineTrackSpecification,
     trackHeight: number,
@@ -73,13 +89,12 @@ function getLineChartYCoordinate(
         return null;
     }
 
-    const padding = Math.min(TIMELINE_LINE_CHART_TRACK_HEIGHT / 7, 15); // pad proportionally but no more padding than 15
-    const plottingHeight = trackHeight - 2 * padding;
-    const plottingProportion =
-        (_.mean(values) - trackValueRange.min) /
-        (trackValueRange.max - trackValueRange.min);
-
-    return padding + (1 - plottingProportion) * plottingHeight; // 1-p because SVG y axis points down
+    return getLineChartYCoordinateForValue(
+        _.mean(values),
+        track,
+        trackHeight,
+        trackValueRange
+    );
 }
 
 export function renderSuperscript(number: number) {
@@ -102,7 +117,20 @@ export function renderSuperscript(number: number) {
     );
 }
 
-function renderLineChartLines(points: { x: number; y: number }[]) {
+function renderTickGridLines(track: TimelineTrackSpecification, width: number) {
+    const ticks = getTicksForLineChartAxis(track);
+    return ticks.map(tick => (
+        <line
+            className={'tl-axis-grid-line tl-track-highlight'}
+            x1={0}
+            x2={width}
+            y1={tick.offset}
+            y2={tick.offset}
+        />
+    ));
+}
+
+function renderLineChartConnectingLines(points: { x: number; y: number }[]) {
     if (points.length < 2) {
         return null;
     }
@@ -143,7 +171,7 @@ function getPointY(
     if (!trackValueRange) {
         y = trackHeight / 2;
     } else {
-        y = getLineChartYCoordinate(
+        y = getLineChartYCoordinateForEvents(
             events,
             trackData,
             trackHeight,
@@ -295,7 +323,9 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                     width={width}
                 />
                 {trackData.trackType === TimelineTrackType.LINE_CHART &&
-                    renderLineChartLines(linePoints)}
+                    renderTickGridLines(trackData, width)}
+                {trackData.trackType === TimelineTrackType.LINE_CHART &&
+                    renderLineChartConnectingLines(linePoints)}
                 {points}
                 <line
                     x1={0}

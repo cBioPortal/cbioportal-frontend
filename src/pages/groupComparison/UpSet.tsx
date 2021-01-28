@@ -22,7 +22,7 @@ import {
     pluralize,
     truncateWithEllipsis,
 } from 'cbioportal-frontend-commons';
-import { tickFormatNumeral } from 'shared/components/plots/TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import {
     joinGroupNames,
     regionIsSelected,
