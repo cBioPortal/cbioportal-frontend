@@ -21,7 +21,7 @@ import {
     VictoryLegend,
     VictoryGroup,
 } from 'victory';
-import { tickFormatNumeral } from './TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import { makeUniqueColorGetter } from './PlotUtils';
 import {
     makePlotData,
