@@ -136,3 +136,12 @@ export function getMutationalSignaturePercentage(
         return `${toFixedWithThreshold(100 * proportion, digits)}%`;
     }
 }
+
+export function shortenStudyName(studyName: string) {
+    const parenIndex = studyName.indexOf('(');
+    if (parenIndex > 50) {
+        const studyNameRight: string = studyName.substring(parenIndex);
+        const studyNameLeft: string = studyName.substring(0, 49);
+        return studyNameLeft + '...' + studyNameRight;
+    } else return studyName;
+}

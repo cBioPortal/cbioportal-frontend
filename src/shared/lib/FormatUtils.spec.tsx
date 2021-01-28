@@ -7,6 +7,7 @@ import {
     roundLogRatio,
     toFixedWithoutTrailingZeros,
     getPercentage,
+    shortenStudyName,
 } from 'shared/lib/FormatUtils';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -137,5 +138,29 @@ describe('toFixedWithoutTrailingZeros', () => {
     it('removes trailing zeros not right after decimal point', () => {
         assert.equal(toFixedWithoutTrailingZeros(2.25, 5), '2.25');
         assert.equal(toFixedWithoutTrailingZeros(2.5, 100), '2.5');
+    });
+});
+
+describe('shortenStudyName', () => {
+    it('returns the study name as is if the left parenthesis index is not found, less than or equal to 50', () => {
+        assert.equal(
+            shortenStudyName('MSK-IMPACT Clinical Sequencing Cohort'),
+            'MSK-IMPACT Clinical Sequencing Cohort'
+        );
+        assert.equal(
+            shortenStudyName(
+                'MSK-IMPACT Clinical Sequencing Cohort (MSKCC, Nat Med 2017)'
+            ),
+            'MSK-IMPACT Clinical Sequencing Cohort (MSKCC, Nat Med 2017)'
+        );
+    });
+
+    it('returns the study name truncated if the left parenthesis index is greater than 50', () => {
+        assert.equal(
+            shortenStudyName(
+                'Anaplastic Oligodendroglioma and Anaplastic Oligoastrocytoma (MSKCC, Neuro Oncol 2017)'
+            ),
+            'Anaplastic Oligodendroglioma and Anaplastic Oligo...(MSKCC, Neuro Oncol 2017)'
+        );
     });
 });

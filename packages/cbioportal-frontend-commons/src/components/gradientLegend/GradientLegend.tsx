@@ -61,6 +61,7 @@ export class GradientLegend extends React.Component<IGradientLegendProps> {
 
         return [
             <text
+                key="gradientLegendLabelMax"
                 fontSize={this.props.fontSize}
                 fontFamily={this.props.fontFamily}
                 x={this.rectX + rectWidth + 4}
@@ -70,6 +71,7 @@ export class GradientLegend extends React.Component<IGradientLegendProps> {
                 {this.props.max.toLocaleString()}
             </text>,
             <text
+                key="gradientLegendLabelMin"
                 fontSize={11}
                 x={this.rectX + rectWidth + 4}
                 y={this.rectY + rectHeight}

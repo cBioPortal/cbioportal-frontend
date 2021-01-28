@@ -5,6 +5,7 @@ import { LEVELS, Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 
 import OncoKbSummaryTable from '../oncokb/OncoKbSummaryTable';
+import { makeObservable } from 'mobx';
 
 type OncoKbTrackTooltipProps = {
     usingPublicOncoKbInstance: boolean;
@@ -104,16 +105,8 @@ export function generateLevelData(indicatorData: IndicatorQueryResp[]) {
         .map(level => ({ level: level, tumorTypes: _.uniq(levels[level]) }));
 }
 
-export default class OncoKbTrackTooltip extends React.Component<
-    OncoKbTrackTooltipProps,
-    {}
-> {
-    public render() {
-        return this.props.indicatorData
-            ? oncoKbTooltip(
-                  this.props.usingPublicOncoKbInstance,
-                  this.props.indicatorData
-              )
-            : null;
-    }
-}
+export const OncoKbTrackTooltip: React.FunctionComponent<OncoKbTrackTooltipProps> = props => {
+    return props.indicatorData
+        ? oncoKbTooltip(props.usingPublicOncoKbInstance, props.indicatorData)
+        : null;
+};
