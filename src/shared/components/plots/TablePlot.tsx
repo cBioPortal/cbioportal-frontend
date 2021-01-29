@@ -22,7 +22,7 @@ import {
     CBIOPORTAL_VICTORY_THEME,
     stringListToMap,
 } from 'cbioportal-frontend-commons';
-import { wrapTick } from './TickUtils';
+import { wrapTick } from 'cbioportal-frontend-commons';
 import { iterateOverEntries } from './TablePlotUtils';
 
 export interface ITablePlotProps {
