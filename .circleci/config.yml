@@ -222,7 +222,7 @@ jobs:
           - v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-          - v1-keycloak-database-files-{{ checksum "$E2E_WORKSPACE/keycloak/keycloak-config-generated.json" }}
+          - v1-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database when no mysql data files present
           command: |
@@ -248,7 +248,7 @@ jobs:
       - save_cache:
           paths:
             - $E2E_WORKSPACE/kc_db_data
-          key: v1-keycloak-database-files-{{ checksum checksum "$E2E_WORKSPACE/keycloak/keycloak-config-generated.json" }}
+          key: v1-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
 #      - save_cache:
 #          paths:
 #            - ~/.m2
