@@ -210,8 +210,7 @@ jobs:
       - run:
           name: Setup docker compose assets
           command: |
-              $TEST_HOME/docker_compose/setup.sh && \
-              mkdir -p $CBIO_DB_DATA_DIR
+              $TEST_HOME/docker_compose/setup.sh
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
@@ -282,6 +281,7 @@ jobs:
         PORTAL_SOURCE_DIR: /tmp/repo
         TEST_HOME: /tmp/repo/end-to-end-test/local
         E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
+        CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
         FRONTEND_TEST_USE_LOCAL_DIST: true
         WEBPACK_NO_PARALLEL: true
 

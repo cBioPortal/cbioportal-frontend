@@ -14,4 +14,4 @@ volumes:
     driver_opts:
       type: 'none'
       o: 'bind'
-      device: /home/pnp300/git/cbioportal-frontend/e2e-localdb-workspace/cbio_db_data
+      device: $CBIO_DB_DATA_DIR
