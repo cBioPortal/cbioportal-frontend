@@ -192,7 +192,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-              apt-get update && apt-get install jq
+              sudo apt-get update && \
+              sudo apt-get install jq
       - run:
           name: Setup e2e-environment
           command: |
