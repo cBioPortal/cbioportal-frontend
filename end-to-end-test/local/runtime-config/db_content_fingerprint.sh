@@ -19,7 +19,7 @@ CHECKSUM_MIGRATION_SQL=$(docker-compose $compose_extensions run --rm cbioportal 
 CHECKSUM_SEED_URL=$(echo "$DB_SEED_URL" | shasum -a 1)
 CHECKSUM_SCHEMA_URL=$(echo "$DB_CGDS_URL" | shasum -a 1)
 
-cd $TEST_HOME/docker_compose/ && docker-compose down --volumes
+docker-compose down --volumes
 
 cd $DIR
 CHECKSUM_ES_0=$(echo $CHECKSUM_ES_0 | cut -c 1-10)

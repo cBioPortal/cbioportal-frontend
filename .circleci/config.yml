@@ -80,15 +80,11 @@ jobs:
       # cache build artifacts. Use concatenation of all source files as cache
       # key. If there are no changes to src/ and yarn.lock, no need to rebuild
       - run:
-          name: "Concatenate all source files to use as hash key for caching dist folder"
-          command: |
-          cat $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed" && \
-          cat has_source_changed
+          name: "Fingerprint source files"
+          command: "cat $(find src/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - run:
-          name: "Concatenate all source files to use as hash key for caching dist folder"
-          command: |
-          cat $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > have_packages_changed" && \
-          cat have_packages_changed
+          name: "Fingerprint package files"
+          command: "cat $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > have_packages_changed"
       - restore_cache:
           keys:
           - v2-node-{{ checksum "yarn.lock" }}
@@ -105,7 +101,7 @@ jobs:
           command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
       - run:
           name: "Run build modules"
-          command: '([ -f modules/exist ] && echo "Build modules is not needed." ) || (yarn run buildModules && touch modules/exist)'
+          command: '([ -f modules/exist ] && echo "Build modules is not needed." ) || (yarn run buildModules && mkdir -p modules && touch modules/exist)'
           environment:
             DISABLE_SOURCEMAP: true
             WEBPACK_NO_PARALLEL: true
@@ -127,7 +123,7 @@ jobs:
       - save_cache:
           paths:
             - modules
-          key: v2-modules-{{ checksum "have_packages_changed" } }
+          key: v2-modules-{{ checksum "have_packages_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
