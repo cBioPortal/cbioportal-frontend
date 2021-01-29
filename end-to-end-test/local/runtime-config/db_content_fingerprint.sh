@@ -6,15 +6,15 @@ set -o pipefail
 
 DIR=$PWD
 
-compose_extensions="-f docker-compose.yml -f ../cbioportal.yml -f ../keycloak.yml"
+compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
 if [[ -n $BACKEND_BUILD_URL ]]; then
-  compose_extensions="$compose_extensions -f $PWD/../cbioportal-custombranch.yml"
+  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
 fi
 
-cd $TEST_HOME/docker_compose/cbioportal-docker-compose
+cd $E2E_WORKSPACE/cbioportal-docker-compose
 CHECKSUM_ES_0=$(docker-compose $compose_extensions run --rm cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/scripts/test_data/study_es_0/ 2> /dev/null | shasum -a 1')
 CHECKSUM_ES_0_GENESETS=$(docker-compose $compose_extensions run --rm cbioportal sh -c 'tar -cf - /cbioportal/core/src/test/resources/genesets/study_es_0* 2> /dev/null | shasum -a 1')
-CHECKSUM_TEST_STUDIES=$(find "$TEST_HOME"/local/studies/ -type f -exec md5sum {} \; | shasum -a 1)
+CHECKSUM_TEST_STUDIES=$(find "$TEST_HOME"/studies/ -type f -exec md5sum {} \; | shasum -a 1)
 CHECKSUM_MIGRATION_SQL=$(docker-compose $compose_extensions run --rm cbioportal sh -c 'shasum -a 1 /cbioportal/db-scripts/src/main/resources/migration.sql')
 CHECKSUM_SEED_URL=$(echo "$DB_SEED_URL" | shasum -a 1)
 CHECKSUM_SCHEMA_URL=$(echo "$DB_CGDS_URL" | shasum -a 1)
