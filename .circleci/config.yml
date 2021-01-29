@@ -204,10 +204,6 @@ jobs:
 #          keys:
 #            - maven-repo-v1
       - run:
-          name: Create MySQL data directory
-          command: |
-            mkdir -p $CBIO_DB_DATA_DIR
-      - run:
           name: Setup docker compose assets
           command: |
               $TEST_HOME/docker_compose/setup.sh
@@ -217,6 +213,10 @@ jobs:
           command: |
             $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
           no_output_timeout: 25m
+      - run:
+          name: Create MySQL data directory
+          command: |
+            mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
           - v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
@@ -226,12 +226,8 @@ jobs:
       - run:
           name: Init database when no mysql data files present
           command: |
-            cd $TEST_HOME/docker_compose && \
-            if (ls $CBIO_DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-              echo "DB initialization is not needed."; \
-            else \
-              ./initdb.sh; \
-            fi
+            cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
+            [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
@@ -244,11 +240,11 @@ jobs:
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-          key: v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          key: v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
-          key: v1-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          key: v2-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
 #      - save_cache:
 #          paths:
 #            - ~/.m2

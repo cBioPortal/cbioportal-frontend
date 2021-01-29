@@ -6,7 +6,7 @@ set -o pipefail
 
 DIR=$PWD
 
-compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml -f $TEST_HOME/docker_compose/keycloak.yml"
+compose_extensions="-f docker-compose.yml"
 if [[ -n $BACKEND_BUILD_URL ]]; then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
 fi

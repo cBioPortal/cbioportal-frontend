@@ -10,7 +10,7 @@ DIR=$PWD
 cd $E2E_WORKSPACE/cbioportal-docker-compose
 
 # If the mysql data dir is empty, download schema and seed before starting
-if (ls "$CBIO_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then
+if [ ! "$(ls -A $CBIO_DB_DATA_DIR)" ]; then
   rm -rf data/cgds.sql
   rm -rf data/seed.sql.gz
   curl $DB_CGDS_URL > data/cgds.sql
