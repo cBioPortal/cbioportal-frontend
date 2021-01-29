@@ -39,9 +39,9 @@ if [[ "$CIRCLECI" = true ]]; then
         GITHUB_PR_API_PATH="${CIRCLE_PULL_REQUEST/github\.com\//api\.github\.com\/repos/}"
         GITHUB_PR_API_PATH="${GITHUB_PR_API_PATH/\/pull\//\/pulls\/}"
 
-        python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH
-        eval $(python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH)
-        
+        python3 $TEST_HOME/../shared/get_pullrequest_info.py $GITHUB_PR_API_PATH
+        eval $(python3 $TEST_HOME/../shared/get_pullrequest_info.py $GITHUB_PR_API_PATH)
+
         # Only allow committing a BACKEND variable in custom.sh if the PR is in
         # draft state. We do allow setting custom.sh programmatically on CI (as
         # is done in the backend repo), which is why we use `git show`.
