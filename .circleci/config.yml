@@ -84,11 +84,10 @@ jobs:
           command: "cat $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-          - v1-modules-{{ checksum "yarn.lock" }}
-          - v1-dist-{{ checksum "has_source_changed" }}
+          - v2-modules-{{ checksum "yarn.lock" }}
+          - v2-dist-{{ checksum "has_source_changed" }}
       # Download and cache dependencies
       - run: ls node_modules || yarn
-      - run: ls dist || yarn buildModules
       - run:
           name: "Make sure lock file is still the same"
           command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
@@ -101,12 +100,12 @@ jobs:
       - save_cache:
           paths:
             - node_modules
-          key: v1-modules-{{ checksum "yarn.lock" }}
+          key: v2-modules-{{ checksum "yarn.lock" }}
       - save_cache:
           paths:
             - dist
             - common-dist
-          key: v1-dist-{{ checksum "has_source_changed" }}
+          key: v2-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
