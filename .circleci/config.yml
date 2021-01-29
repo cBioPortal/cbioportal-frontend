@@ -210,12 +210,13 @@ jobs:
       - run:
           name: Setup docker compose assets
           command: |
-              $TEST_HOME/docker_compose/setup.sh
+              $TEST_HOME/docker_compose/setup.sh && \
+              mkdir -p $CBIO_DB_DATA_DIR
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
           command: |
-              $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+            $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
           no_output_timeout: 25m
       - restore_cache:
           keys:
@@ -228,9 +229,9 @@ jobs:
           command: |
             cd $TEST_HOME/docker_compose && \
             if (ls $CBIO_DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-              echo "DB initialization is not needed."; \
+              echo "DB initialization is not needed." \
             else \
-              ./initdb.sh; \
+              ./initdb.sh \
             fi
       - run:
           name: Change owner of MySQL database files (needed by cache)
