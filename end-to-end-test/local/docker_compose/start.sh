@@ -29,7 +29,7 @@ done
 rm -rf $E2E_WORKSPACE/keycloak/idp-metadata.xml
 wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
 
-docker-compose $compose_extensions up -d
+docker-compose $compose_extensions up
 
 for i in {1..30}; do
     [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services..."
