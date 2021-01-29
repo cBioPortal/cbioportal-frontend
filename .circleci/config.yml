@@ -228,9 +228,9 @@ jobs:
           command: |
             cd $TEST_HOME/docker_compose && \
             if (ls $CBIO_DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-              echo "DB initialization is not needed." \
+              echo "DB initialization is not needed."; \
             else \
-              ./initdb.sh \
+              ./initdb.sh; \
             fi
       - run:
           name: Change owner of MySQL database files (needed by cache)
