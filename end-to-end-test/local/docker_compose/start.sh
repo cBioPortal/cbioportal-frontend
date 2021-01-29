@@ -31,6 +31,12 @@ wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/real
 
 docker-compose $compose_extensions up -d
 
+for i in {1..30}; do
+    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services..."
+    sleep 30s
+done
+[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Successful deploy."
+
 cd $PWD
 
 exit 0
