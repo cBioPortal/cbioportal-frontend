@@ -219,10 +219,10 @@ jobs:
           no_output_timeout: 25m
       - restore_cache:
           keys:
-          - v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-          - v1-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          - v2-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database when no mysql data files present
           command: |
