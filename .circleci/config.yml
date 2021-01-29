@@ -81,10 +81,14 @@ jobs:
       # key. If there are no changes to src/ and yarn.lock, no need to rebuild
       - run:
           name: "Concatenate all source files to use as hash key for caching dist folder"
-          command: "cat $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
+          command: |
+          cat $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed" && \
+          cat has_source_changed
       - restore_cache:
           keys:
           - v2-modules-{{ checksum "yarn.lock" }}
+      - restore_cache:
+          keys:
           - v2-dist-{{ checksum "has_source_changed" }}
       # Download and cache dependencies
       - run: ls node_modules || yarn
@@ -214,7 +218,7 @@ jobs:
       - run:
           name: Create MySQL data directory
           command: |
-            docker volume prune --force && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
+            docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
           - v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
