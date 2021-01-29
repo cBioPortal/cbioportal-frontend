@@ -84,32 +84,50 @@ jobs:
           command: |
           cat $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed" && \
           cat has_source_changed
+      - run:
+          name: "Concatenate all source files to use as hash key for caching dist folder"
+          command: |
+          cat $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > have_packages_changed" && \
+          cat have_packages_changed
       - restore_cache:
           keys:
-          - v2-modules-{{ checksum "yarn.lock" }}
+          - v2-node-{{ checksum "yarn.lock" }}
       - restore_cache:
           keys:
           - v2-dist-{{ checksum "has_source_changed" }}
+      - restore_cache:
+          keys:
+          - v2-modules-{{ checksum "have_packages_changed" }}
       # Download and cache dependencies
       - run: ls node_modules || yarn
       - run:
           name: "Make sure lock file is still the same"
           command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
       - run:
-          name: "Run build if no dist folder"
-          command: 'ls dist || yarn run build'
+          name: "Run build modules"
+          command: '([ -f modules/exist ] && echo "Build modules is not needed." ) || (yarn run buildModules && touch modules/exist)'
+          environment:
+            DISABLE_SOURCEMAP: true
+            WEBPACK_NO_PARALLEL: true
+      - run:
+          name: "Run build source"
+          command: 'ls dist || yarn run buildMain'
           environment:
             DISABLE_SOURCEMAP: true
             WEBPACK_NO_PARALLEL: true
       - save_cache:
           paths:
             - node_modules
-          key: v2-modules-{{ checksum "yarn.lock" }}
+          key: v2-node-{{ checksum "yarn.lock" }}
       - save_cache:
           paths:
             - dist
             - common-dist
           key: v2-dist-{{ checksum "has_source_changed" }}
+      - save_cache:
+          paths:
+            - modules
+          key: v2-modules-{{ checksum "have_packages_changed" } }
       - persist_to_workspace:
           root: /tmp
           paths:
