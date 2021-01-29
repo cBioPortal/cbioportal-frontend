@@ -215,7 +215,7 @@ jobs:
       - run:
           name: Create MySQL data directory
           command: |
-            mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
+            docker volume prune --force && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
           - v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
