@@ -243,11 +243,11 @@ jobs:
               $TEST_HOME/docker_compose/start.sh
       - save_cache:
           paths:
-            - $E2E_WORKSPACE/cbio_db_data
+            - /tmp/repo/e2e-localdb-workspace/cbio_db_data
           key: v1-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - save_cache:
           paths:
-            - $E2E_WORKSPACE/kc_db_data
+            - /tmp/repo/e2e-localdb-workspace/kc_db_data
           key: v1-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
 #      - save_cache:
 #          paths:
