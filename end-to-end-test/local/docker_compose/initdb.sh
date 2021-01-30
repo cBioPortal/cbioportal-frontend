@@ -26,11 +26,12 @@ sudo rm -rf $CBIO_DB_DATA_DIR/*
 mkdir -p $CBIO_DB_DATA_DIR
 docker-compose $compose_extensions up -d cbioportal
 # wait for up to 15m until all services are up and running
+echo
 for i in {1..30}; do
-    [[ $(curl -sf http://localhost:8080/api/health) ]] && { healthy=1; break; } || echo "Waiting for cBioPortal service..."
+    [[ $(curl -sf http://localhost:8080/api/health) ]] && { healthy=1; break; } || echo "Waiting for cBioPortal service                 ... running"
     sleep 10s
 done
-[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Successful deployment."
+[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal service                 ... done"
 
 # import study_es_0
 echo "Loading study_es_0"
@@ -51,9 +52,9 @@ for DIR in "$TEST_HOME"/studies/*/; do
     docker-compose $compose_extensions run --rm \
         -v "$DIR:/study-to-import:rw" \
         cbioportal \
-        sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./cbioportalImporter.py \
-          --command import-study \
-          --study_directory /study-to-import'
+        sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./metaImport.py \
+          -u http://cbioportal-container:8080
+          -s /study-to-import'
 
 done
 
