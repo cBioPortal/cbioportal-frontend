@@ -90,6 +90,9 @@ jobs:
           - v2-node-{{ checksum "yarn.lock" }}
       - restore_cache:
           keys:
+          - v2-node-e2e-{{ checksum "end-to-end-test/yarn.lock" }}
+      - restore_cache:
+          keys:
           - v2-dist-{{ checksum "has_source_changed" }}
       - restore_cache:
           keys:
@@ -115,6 +118,10 @@ jobs:
           paths:
             - node_modules
           key: v2-node-{{ checksum "yarn.lock" }}
+      - save_cache:
+          paths:
+            - end-to-end-test/node_modules
+          key: v2-node-e2e-{{ checksum "end-to-end-test/yarn.lock" }}
       - save_cache:
           paths:
             - dist

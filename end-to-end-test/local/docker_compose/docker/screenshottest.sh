@@ -10,7 +10,7 @@ yarn serveDistLocalDb &
 
 echo INSTALL SCREENSHOT DEPENDENCIES
 cd /cbioportal-frontend/end-to-end-test
-yarn install --frozen-lockfile
+ls node_modules || yarn install --frozen-lockfile
 
 echo UPDATE WEBDRIVER-MANAGER
 ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42"
