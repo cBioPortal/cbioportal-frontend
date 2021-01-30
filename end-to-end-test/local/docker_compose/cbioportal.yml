@@ -6,6 +6,7 @@ services:
     - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
     - $TEST_HOME/docker_compose/keycloak/samlKeystore.jks:/cbioportal-webapp/WEB-INF/classes/samlKeystore.jks:ro
     - $E2E_WORKSPACE/keycloak/idp-metadata.xml:/cbioportal-webapp/WEB-INF/classes/client-tailored-saml-idp-metadata.xml:ro
+    - $E2E_WORKSPACE/portalInfo:/portalInfo
     command: /bin/sh -c "java -Xms2g -Xmx4g -Dauthenticate=saml -Dsession.service.url=http://cbioportal_session:5000/api/sessions/my_portal/ -jar webapp-runner.jar -AmaxHttpHeaderSize=16384 -AconnectionTimeout=20000 --enable-compression /cbioportal-webapp"
 
 volumes:
