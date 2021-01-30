@@ -53,7 +53,7 @@ for DIR in "$TEST_HOME"/studies/*/; do
         -v "$DIR:/study-to-import:rw" \
         cbioportal \
         sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./metaImport.py \
-          -u http://cbioportal-container:8080
+          -u http://cbioportal-container:8080 \
           -s /study-to-import'
 
 done
