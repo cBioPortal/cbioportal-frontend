@@ -242,7 +242,7 @@ jobs:
             docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
-          - v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v3-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
           - v2-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
@@ -252,18 +252,20 @@ jobs:
             cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
             [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
       - run:
-          name: Change owner of MySQL database files (needed by cache)
-          command: |
-              sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
-              sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
-      - run:
           name: Start cbioportal and other services
           command: |
               $TEST_HOME/docker_compose/start.sh
+      - run:
+          name: Change owner of MySQL database files (needed by cache)
+          command: |
+              sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
+              sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR && \
+              sudo chmod -R 777 $KC_DB_DATA_DIR && \
+              sudo chown -R circleci:circleci $KC_DB_DATA_DIR
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/cbio_db_data
-          key: v2-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          key: v3-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
@@ -301,6 +303,7 @@ jobs:
         TEST_HOME: /tmp/repo/end-to-end-test/local
         E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
         CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
+        KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
         FRONTEND_TEST_USE_LOCAL_DIST: true
         WEBPACK_NO_PARALLEL: true
 
