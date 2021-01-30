@@ -21,10 +21,10 @@ fi
 # initiate keycloak and get idp-client-metadata
 docker-compose $compose_extensions up -d keycloak
 for i in {1..30}; do
-    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service..."
+    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8081) == 200 ]] && { healthy=1; break; } || echo "Waiting for Keycloak service                    ..."
     sleep 10s
 done
-[ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Successful deploy."
+[ -z "$healthy" ] && { echo "Error starting Keycloak service."; exit 1; } || echo "Waiting for Keycloak service                    ... done"
 
 rm -rf $E2E_WORKSPACE/keycloak/idp-metadata.xml
 wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
@@ -32,10 +32,10 @@ wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/real
 docker-compose $compose_extensions up -d
 
 for i in {1..30}; do
-    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services..."
+    [[ $(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:8080/api/health) == 200 ]] && { healthy=1; break; } || echo "Waiting for cBioPortal services                 ..."
     sleep 30s
 done
-[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Successful deploy."
+[ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal services                 ... done"
 
 cd $PWD
 
