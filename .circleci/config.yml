@@ -245,7 +245,7 @@ jobs:
           - v3-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-          - v2-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          - v3-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database
           command: |
@@ -269,7 +269,7 @@ jobs:
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
-          key: v2-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+          key: v3-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
 #      - save_cache:
 #          paths:
 #            - ~/.m2
