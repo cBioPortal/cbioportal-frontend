@@ -34,8 +34,10 @@ done
 [ -z "$healthy" ] && { echo "Error starting cBioPortal services."; exit 1; } || echo "Waiting for cBioPortal service                 ... done"
 
 # dump portalInfo
+echo "Exporting cBioPortal data                      ..."
 docker-compose $compose_extensions run --rm \
         cbioportal sh -c 'cd /cbioportal/core/src/main/scripts/ && ./dumpPortalInfo.pl /portalInfo/'
+echo "Exporting cBioPortal data                      ... done"
 
 # import study_es_0
 echo "Loading study_es_0"
@@ -46,7 +48,7 @@ docker-compose $compose_extensions run --rm cbioportal sh -c '\
   && ./importGenesetData.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_genesets.gmt --new-version msigdb_6.1 \
       --sup /cbioportal/core/src/test/resources/genesets/study_es_0_supp-genesets.txt --confirm-delete-all-genesets-hierarchy-genesetprofiles\
   && ./importGenesetHierarchy.pl --data /cbioportal/core/src/test/resources/genesets/study_es_0_tree.yaml \
-  && cd importer && ./metaImport.py -p /portalInfo -s /cbioportal/core/src/test/scripts/test_data/study_es_0'
+  && cd importer && ./metaImport.py -o -p /portalInfo -s /cbioportal/core/src/test/scripts/test_data/study_es_0'
 
 for DIR in "$TEST_HOME"/studies/*/; do
 
@@ -57,6 +59,7 @@ for DIR in "$TEST_HOME"/studies/*/; do
         -v "$DIR:/study-to-import:rw" \
         cbioportal \
         sh -c 'cd /cbioportal/core/src/main/scripts/importer && ./metaImport.py \
+          -o \
           -p /portalInfo \
           -s /study-to-import'
 
