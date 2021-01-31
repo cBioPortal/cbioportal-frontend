@@ -261,6 +261,7 @@ export default class AnnotationColumnFormatter
         }
 
         return indicator;
+        }
     }
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined

@@ -3,10 +3,6 @@ import { If, Then, Else } from 'react-if';
 import {ITrialMatchVariantData, TrialMatchData} from "shared/model/TrialMatch.ts";
 import "./styles/trialCard.scss";
 import * as _ from "lodash";
-import {ICache} from "../../lib/SimpleCache";
-import {ArticleAbstract} from "../../api/generated/OncoKbAPI";
-import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
-import {mergeAlterations} from "../../lib/OncoKbUtils";
 
 export interface ITrialCardProps {
     title: string;

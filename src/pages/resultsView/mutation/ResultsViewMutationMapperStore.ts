@@ -19,6 +19,7 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
 import { VariantAnnotation } from "public-lib/api/generated/GenomeNexusAPI";
 import {IServerConfig} from "../../../config/IAppConfig";
+import AppConfig from "appConfig";
 
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore
@@ -107,7 +108,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.show_civic? fetchTrialMatchGenes(this.mutationData) : {},
+        invoke: async() => AppConfig.serverConfig.show_trial_match? fetchTrialMatchGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -119,7 +120,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.show_civic && this.trialMatchGenes.result) {
+            if (AppConfig.serverConfig.show_trial_match && this.trialMatchGenes.result) {
                 return fetchTrialMatchVariants(this.trialMatchGenes.result as ITrialMatchGene, this.mutationData);
             }
             else {
