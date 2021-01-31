@@ -93,8 +93,8 @@ export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutation
             proteinChanges.push(split[0]);
             for (const proteinChange of proteinChanges) {
                 if (geneEntry && geneEntry.variants[proteinChange]) {
-                    if (!calledVariants.has(geneEntry.variants[proteinChange])) { //Avoid calling the same variant,
-                        calledVariants.add(geneEntry.variants[proteinChange]);
+                    if (!calledVariants.has(geneEntry.hugoSymbol + proteinChange)) { //Avoid calling the same variant,
+                        calledVariants.add(geneEntry.hugoSymbol + proteinChange);
                         const sampleIds = geneEntry.variants[proteinChange].split(",");
                         sampleIds.forEach(sampleId =>
                             promises.push(addTrialMatchVariant(trialMatchVariants, sampleId, proteinChange, geneSymbol))
