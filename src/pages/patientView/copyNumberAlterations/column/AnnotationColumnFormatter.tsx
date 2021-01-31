@@ -11,8 +11,7 @@ import {generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {CancerGene, IndicatorQueryResp, Query} from "public-lib/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData,
-        ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";
 import {ITrialMatchVariant, ITrialMatchGene, ITrialMatchEntry, ITrialMatchVariantData, ITrialMatchGeneData,
         ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
@@ -101,32 +100,31 @@ export default class AnnotationColumnFormatter
     * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns
     * an empty object.
     */
+    public static getCivicEntry(copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, 
+                                civicVariants:ICivicVariant): ICivicEntry | null
+    {
+        let civicEntry = null;
+        let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
+        let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
+        let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
+        //geneEntry must exists, and only return data for genes with variants or it has a description provided by the Civic API
+        if (geneEntry && (!_.isEmpty(geneVariants) || geneEntry.description !== "")) {
+            civicEntry = buildCivicEntry(geneEntry, geneVariants);
+        }
 
-   public static getCivicEntry(copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene,
-                               civicVariants:ICivicVariant): ICivicEntry | null
-   {
-       let civicEntry = null;
-       let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
-       let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
-       let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
-       //Only return data for genes with variants or it has a description provided by the Civic API
-       if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.description !== "") {
-           civicEntry = buildCivicEntry(geneEntry, geneVariants);
-       }
-
-       return civicEntry;
-   }
-
+        return civicEntry;
+    }
+    
     public static getCivicStatus(civicGenesStatus:"pending" | "error" | "complete", civicVariantsStatus:"pending" | "error" | "complete"): "pending" | "error" | "complete"
     {
-        if (civicGenesStatus === "error" || civicVariantsStatus === "error") {
-            return "error";
-        }
-        if (civicGenesStatus === "complete" && civicVariantsStatus === "complete") {
-            return "complete";
-        }
-
-        return "pending";
+    if (civicGenesStatus === "error" || civicVariantsStatus === "error") {
+        return "error";
+    }
+    if (civicGenesStatus === "complete" && civicVariantsStatus === "complete") {
+        return "complete";
+    }
+    
+    return "pending";
     }
 
     public static hasCivicVariants (copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, civicVariants:ICivicVariant): boolean
@@ -134,9 +132,9 @@ export default class AnnotationColumnFormatter
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
         let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
-        //geneEntry must exists, and only return data for genes with variants or it has a description provided by the Civic API
-        if (geneEntry && (!_.isEmpty(geneVariants) || geneEntry.description !== "")) {
-            civicEntry = buildCivicEntry(geneEntry, geneVariants);
+
+        if (geneEntry && _.isEmpty(geneVariants)) {
+            return false;
         }
 
         return true;
@@ -222,7 +220,7 @@ export default class AnnotationColumnFormatter
                             civicVariants?: ICivicVariantDataWrapper,
                             trialMatchGenes?: ITrialMatchGeneDataWrapper,
                             trialMatchVariants?: ITrialMatchVariantDataWrapper):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbAnnotatedGenes, oncoKbData, civicGenes, civicVariants);
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbCancerGenes, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([oncoKbAnnotationSortValue(annotationData.oncoKbIndicator), Civic.sortValue(annotationData.civicEntry), annotationData.isOncoKbCancerGene ? 1 : 0]);
     }

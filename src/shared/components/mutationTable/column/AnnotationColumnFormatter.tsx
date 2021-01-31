@@ -21,8 +21,7 @@ import {CancerGene, IndicatorQueryResp, Query} from "public-lib/api/generated/On
 import {getEvidenceQuery} from "shared/lib/OncoKbUtils";
 import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData,
-        ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {ITrialMatchVariant, ITrialMatchGene, ITrialMatchEntry, ITrialMatchVariantData,
         ITrialMatchGeneData, ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
@@ -317,7 +316,7 @@ export default class AnnotationColumnFormatter
             civicGenes, civicVariants, trialMatchGenes, trialMatchVariants);
 
         return _.flatten([
-            OncoKB.sortValue(annotationData.oncoKbIndicator),
+            oncoKbAnnotationSortValue(annotationData.oncoKbIndicator),
             Civic.sortValue(annotationData.civicEntry),
             Trial.sortValue(annotationData.trialMatchEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
@@ -340,7 +339,7 @@ export default class AnnotationColumnFormatter
             civicGenes, civicVariants, trialMatchGenes, trialMatchVariants);
 
         return [
-            `OncoKB: ${OncoKB.download(annotationData.oncoKbIndicator)}`,
+            `OncoKB: ${oncoKbAnnotationDownload(annotationData.oncoKbIndicator)}`,
             `CIViC: ${Civic.download(annotationData.civicEntry)}`,
             `TrialMatch: ${Trial.download(annotationData.trialMatchEntry)}`,
             `MyCancerGenome: ${MyCancerGenome.download(annotationData.myCancerGenomeLinks)}`,
@@ -420,7 +419,7 @@ export default class AnnotationColumnFormatter
                         status={annotation.hotspotStatus}
                     />
                 </If>
-                <If condition={columnProps.enableCivic || false}>
+                <If condition={columnProps.enableTrialMatch || false}>
                     <Trial
                         trialMatchEntry={annotation.trialMatchEntry}
                         trialMatchStatus={annotation.trialMatchStatus}
