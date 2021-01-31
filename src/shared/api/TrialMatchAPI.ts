@@ -102,7 +102,7 @@ export default class TrialMatchAPI {
      * Retrieves the gene entries for the ids given, if they are in the Civic API.
      */
     getTrialMatchGenesBatch(ids: string): Promise<Array<ITrialMatchGeneData>> {
-        return request.get('http://localhost:8081/web/api/matches/genes/' + ids)
+        return request.get('https://cbioportal.ca/web/api/matches/genes/' + ids)
             .then((res) => {
                 let response = res.body;
                 let result: Array<TrialMatchAPIGene>;
@@ -122,7 +122,7 @@ export default class TrialMatchAPI {
      * Returns a promise that resolves with the variants for the parameters given.
      */
     getVariant(id: string, name: string, gene: string): Promise<ITrialMatchVariantData> {
-        return request.get('http://localhost:8081/web/api/matches/' + gene + '/' + name + '?sample=' + id)
+        return request.get('https://cbioportal.ca/web/api/matches/' + gene + '/' + name + '?sample=' + id)
             .then((res) => {
                 const result = res.body;
                 return {
