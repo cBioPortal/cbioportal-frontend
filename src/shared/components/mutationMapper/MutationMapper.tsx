@@ -37,6 +37,7 @@ export interface IMutationMapperConfig {
     show_hotspot?: boolean;
     mycancergenome_show?: boolean;
     show_civic?: boolean;
+    show_trial_match?: boolean;
     isoformOverrideSource?: string;
     mygene_info_url: string | null;
     uniprot_id_url: string | null;

@@ -11,9 +11,10 @@ export interface ITrialCardProps {
 }
 
 export default class TrialCard extends React.Component<ITrialCardProps, {}> {
-    constructor() {
+    /*constructor() {
         super();
     }
+    */
 
     /**
      * Generate variants
