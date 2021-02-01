@@ -310,17 +310,27 @@ assert($('id=button'));
 ```
 - Reference screenshosts that are created on host system directly (not in dockerized process) differ from screenshots produced by the dockerized setup (e.g., on CircleCI) and cannot be used as references
 
-##### Create new e2e-test
+#### Create new e2e-test
 Making e2e-tests follows the current procedure for the e2e-tests:
 1. Create junit test file and place in the `./end-to-end-test/local/specs` or `./end-to-end-test/remote/specs` directory.
 2. [Optional] Add a folder with an uncompressed custom study in the `./end-to-end-test/local/studies` directory.
 
-##### Random notes
+#### Random notes
 * Study_es_0 is imported by default.
 * Gene panel and gene set matrix data of custom studies must comply with gene panel/sets imported as part of study_es_0.
 * Imports of custom seed data for gene panels and gene sets are not implemented at the moment of this writing.
 * In order to minimize time of local database e2e-tests the size of custom studies should be kept as small as possible.
 * When developing in _Local_ context port 8081 can be used to access the cbioportal instance ('http://localhost:8081/cbioportal').
+
+#### Debugging help
+Here are some errors that have been encountered and are hard to debug.
+
+##### "boundingRects.reduce is not a function"
+This error occurs when an e2e test tries to take a screenshot of an element that doesn't exist.
+
+##### "There are some read requests waitng on finished stream"
+This error occurs in CircleCI when the reference screenshot file is somehow corrupted. It can be fixed by deleting and updating the reference screenshot.
+
 
 ## Workspaces
 
