@@ -6,7 +6,7 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:8.12.0-browsers-legacy
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
