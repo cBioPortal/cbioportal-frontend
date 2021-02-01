@@ -23,9 +23,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
           ./node_modules/webdriver-manager/bin/webdriver-manager clean &&
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '86.0.4240.198' && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager status && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '86.0.4240.198' & \
+          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '86.0.4240.198' && \    
+          java -Dwebdriver.chrome.driver=/tmp/repo/end-to-end-test/node_modules/webdriver-manager/downloads/chromedriver_2.42 -Dwebdriver.gecko.driver=/tmp/repo/end-to-end-test/node_modules/webdriver-manager/downloads/geckodriver_0.29.0 -jar /tmp/repo/end-to-end-test/node_modules/webdriver-manager/downloads/selenium-server-standalone-4.0.0-alpha-1.jar -port 4444
           ./scripts/env_vars.sh && \
           eval "$(./scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
