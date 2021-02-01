@@ -5,7 +5,41 @@
     }
 }
 
+.oncoprintAddTracks {
+    .nav > li > a {
+        padding: 5px;
+    }
+    .nav .active a {
+        padding-top: 5px !important;
+    }
+    .tab-content {
+        min-height: 100px !important;
+        padding: 10px 0 10px 0 !important;
+        .msk-tab {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
+}
+
+.oncoprintAddTracksDropdown {
+    display: inline-block;
+}
+
+.oncoprintGenericAssayTab {
+    button {
+        width: auto !important;
+        margin-bottom: 0 !important;
+    }
+}
+
 .oncoprintAddClinicalTracks {
+    > ul {
+        border-bottom: none !important;
+        margin-top: -5px !important;
+        padding-left: 20px;
+        margin-left: -20px;
+    }
     > .tab-content {
         padding: 10px 0 5px 0 !important;
 
@@ -17,6 +51,10 @@
                 width: 100% !important;
             }
         }
+    }
+    button:first-child {
+        margin-bottom: 0px !important;
+        width: auto !important;
     }
 }
 

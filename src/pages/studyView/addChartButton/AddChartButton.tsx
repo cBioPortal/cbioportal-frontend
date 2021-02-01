@@ -430,6 +430,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     this.genericAssayChartOptionsByGenericAssayType[type] &&
                     this.genericAssayChartOptionsByGenericAssayType[type]
                         .length > 0;
+                const molecularProfileOptions = options.map(option => {
+                    return {
+                        ...option,
+                        label: `${option.label} (${option.count} samples)`,
+                        profileName: option.label,
+                    };
+                });
 
                 return (
                     <MSKTab
@@ -439,13 +446,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     >
                         <GenericAssaySelection
                             containerWidth={this.getTabsWidth}
-                            molecularProfileOptions={options}
+                            molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add Chart'}
                             genericAssayType={type}
                             genericAssayEntityOptions={
                                 genericAssayEntityOptions
                             }
-                            onSubmit={this.onGenericAssaySubmit}
+                            onChartSubmit={this.onGenericAssaySubmit}
                         />
                         {shouldShowChartOptionTable && (
                             <div style={{ marginTop: 10 }}>
