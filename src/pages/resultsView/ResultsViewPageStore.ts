@@ -154,6 +154,7 @@ import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
 import ClinicalDataCache, {
     clinicalAttributeIsINCOMPARISONGROUP,
+    clinicalAttributeIsPROFILEDIN,
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
 import { getDefaultMolecularProfiles } from '../../shared/lib/getDefaultMolecularProfiles';
@@ -3740,7 +3741,6 @@ export class ResultsViewPageStore {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
-            const GENERIC_ASSAY = AlterationTypeConstants.GENERIC_ASSAY;
             const selectedMolecularProfileIds = stringListToSet(
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
@@ -3750,16 +3750,17 @@ export class ResultsViewPageStore {
             const expressionHeatmaps = _.sortBy(
                 _.filter(this.molecularProfilesInStudies.result!, profile => {
                     return (
+                        // Select mrna and protein profiles only if showProfileInAnalysisTab is true
+                        // Select all methylation profiles
                         ((profile.molecularAlterationType === MRNA_EXPRESSION ||
-                            profile.molecularAlterationType === PROTEIN_LEVEL ||
                             profile.molecularAlterationType ===
-                                GENERIC_ASSAY) &&
+                                PROTEIN_LEVEL) &&
                             profile.showProfileInAnalysisTab) ||
                         profile.molecularAlterationType === METHYLATION
                     );
                 }),
                 profile => {
-                    // Sort order: selected and [mrna, protein, methylation, generic assay], unselected and [mrna, protein, meth, generic assay]
+                    // Sort order: selected and [mrna, protein, methylation], unselected and [mrna, protein, methylation]
                     if (
                         profile.molecularProfileId in
                         selectedMolecularProfileIds
@@ -3771,19 +3772,15 @@ export class ResultsViewPageStore {
                                 return 1;
                             case METHYLATION:
                                 return 2;
-                            case GENERIC_ASSAY:
-                                return 3;
                         }
                     } else {
                         switch (profile.molecularAlterationType) {
                             case MRNA_EXPRESSION:
-                                return 4;
+                                return 3;
                             case PROTEIN_LEVEL:
-                                return 5;
+                                return 4;
                             case METHYLATION:
-                                return 6;
-                            case GENERIC_ASSAY:
-                                return 7;
+                                return 5;
                         }
                     }
                 }
@@ -4010,14 +4007,17 @@ export class ResultsViewPageStore {
 
     readonly genericAssayEntitiesGroupByGenericAssayType = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
-    }>({
-        await: () => [this.molecularProfilesInStudies],
-        invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
-                this.molecularProfilesInStudies.result
-            );
+    }>(
+        {
+            await: () => [this.molecularProfilesInStudies],
+            invoke: async () => {
+                return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
+                    this.molecularProfilesInStudies.result
+                );
+            },
         },
-    });
+        {}
+    );
 
     readonly genericAssayEntitiesGroupByMolecularProfileId = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
