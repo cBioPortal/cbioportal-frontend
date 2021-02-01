@@ -6,7 +6,7 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers-legacy
+    - image: circleci/node:8.12.0-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
@@ -22,6 +22,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager clean &&
           ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '86.0.4240.198' && \
           ./node_modules/webdriver-manager/bin/webdriver-manager status && \
           ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '86.0.4240.198' & \
