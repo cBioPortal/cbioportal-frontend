@@ -3,11 +3,10 @@ import * as React from 'react';
 import classnames from 'classnames';
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SignalAnnotation, SignalMutation } from 'genome-nexus-ts-api-client';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
-import autobind from 'autobind-decorator';
 import mskImpactStyle from './MskImpact.module.scss';
 import { formatFrequencyValue } from 'cbioportal-utils';
 import { MskImpactFrequencyDigits } from '../../util/Constants';
@@ -19,6 +18,12 @@ interface IMskImpactProps {
 @observer
 class MskImpact extends React.Component<IMskImpactProps> {
     @observable private showFrequencies = false;
+
+    constructor(props: IMskImpactProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get mskImpactContent() {
         let mskImpactFrequency = (
             <div className={featureTableStyle['data-with-link']}>N/A</div>
@@ -142,8 +147,7 @@ class MskImpact extends React.Component<IMskImpactProps> {
         );
     }
 
-    @autobind
-    @action
+    @action.bound
     public onClick() {
         this.showFrequencies = !this.showFrequencies;
     }
