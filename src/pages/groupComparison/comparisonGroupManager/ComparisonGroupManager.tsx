@@ -110,14 +110,17 @@ export default class ComparisonGroupManager extends React.Component<
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, true);
         }
-        this.props.store.checkSelectedGroupsColors(undefined!, undefined!);
+        this.props.store.flagDuplicateColorsForSelectedGroups(
+            undefined!,
+            undefined!
+        );
     }
 
     @action.bound
     private deselectAllFiltered() {
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, false);
-            this.props.store.toggleComparisonGroupWarningSign(group.uid, false);
+            this.props.store.showComparisonGroupWarningSign(group.uid, false);
         }
     }
 
@@ -211,7 +214,7 @@ export default class ComparisonGroupManager extends React.Component<
                                     delete={this.deleteGroup}
                                     studyIds={this.props.store.studyIds}
                                     shareGroup={this.shareSingleGroup}
-                                    changeColor={this.groupColorChange}
+                                    changeColor={this.onGroupColorChange}
                                 />
                             ))
                         ) : (
@@ -317,17 +320,18 @@ export default class ComparisonGroupManager extends React.Component<
     }
 
     @action.bound
-    private async submitNewGroup() {
+    private async onSubmitNewGroup() {
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
             : undefined;
         const color = RESERVED_CLINICAL_VALUE_COLORS[this.inputGroupName];
+        // FIXME - update user session instead of group in session service
         const { id } = await comparisonClient.addGroup(
             getGroupParameters(
                 this.inputGroupName,
                 selectedSamples!,
                 this.props.store.studyIds,
-                color
+                color // FIXME <-- remove param here
             )
         );
         this.props.store.notifyComparisonGroupsChange();
@@ -335,12 +339,12 @@ export default class ComparisonGroupManager extends React.Component<
         this.cancelAddGroup();
     }
 
-    @autobind
-    @action
-    private async groupColorChange(
+    @action.bound
+    private async onGroupColorChange(
         group: StudyViewComparisonGroup,
         newColor: string
     ) {
+        // FIXME - update user session instead of group in session service
         const { color, ...rest } = group;
         await comparisonClient.updateGroup(group.uid, {
             color: newColor,
@@ -519,7 +523,7 @@ export default class ComparisonGroupManager extends React.Component<
                                         event.key == 'Enter' &&
                                         !this.submitNewGroupDisabled
                                     ) {
-                                        this.submitNewGroup();
+                                        this.onSubmitNewGroup();
                                     }
                                 }}
                             />
@@ -527,7 +531,7 @@ export default class ComparisonGroupManager extends React.Component<
                         <button
                             className="btn btn-sm btn-primary"
                             style={{ width: createOrAddButtonWidth }}
-                            onClick={this.submitNewGroup}
+                            onClick={this.onSubmitNewGroup}
                             disabled={this.submitNewGroupDisabled}
                         >
                             Create
