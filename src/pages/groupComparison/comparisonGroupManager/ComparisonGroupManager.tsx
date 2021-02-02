@@ -330,8 +330,7 @@ export default class ComparisonGroupManager extends React.Component<
             getGroupParameters(
                 this.inputGroupName,
                 selectedSamples!,
-                this.props.store.studyIds,
-                color // FIXME <-- remove param here
+                this.props.store.studyIds
             )
         );
         this.props.store.notifyComparisonGroupsChange();
@@ -345,11 +344,11 @@ export default class ComparisonGroupManager extends React.Component<
         newColor: string
     ) {
         // FIXME - update user session instead of group in session service
-        const { color, ...rest } = group;
-        await comparisonClient.updateGroup(group.uid, {
-            color: newColor,
-            ...rest,
-        });
+        // const { color, ...rest } = group;
+        // await comparisonClient.updateGroup(group.uid, {
+        //     color: newColor,
+        //     ...rest,
+        // });
 
         this.props.store.notifyComparisonGroupsChange();
     }
