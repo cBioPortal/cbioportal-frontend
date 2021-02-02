@@ -34,7 +34,7 @@ echo PROBE FRONTEND SERVER
 (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null
 
 echo PROBE SELENIUM
-until $(curl --output /dev/null --silent --head --fail http://localhost:4444); do
+until $(curl --output /dev/null --silent --fail http://localhost:4444); do
     printf '.'
     sleep 5
 done
