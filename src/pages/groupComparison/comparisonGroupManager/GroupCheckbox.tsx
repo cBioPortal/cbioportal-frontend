@@ -13,13 +13,12 @@ import { computed, makeObservable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 import { CirclePicker } from 'react-color';
-import { Popover, OverlayTrigger, Tooltip, Button } from 'react-bootstrap';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { COLORS } from '../../studyView/StudyViewUtils';
 import {
-    CLI_YES_COLOR,
-    CLI_NO_COLOR,
     CLI_FEMALE_COLOR,
-    CLI_MALE_COLOR,
+    CLI_NO_COLOR,
+    CLI_YES_COLOR,
     DARK_GREY,
 } from '../../../shared/lib/Colors';
 import {
@@ -27,6 +26,7 @@ import {
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
+import { ColorPickerIcon } from 'pages/groupComparison/comparisonGroupManager/ColorPickerIcon';
 
 export interface IGroupCheckboxProps {
     group: StudyViewComparisonGroup;
@@ -38,51 +38,6 @@ export interface IGroupCheckboxProps {
     delete: (group: StudyViewComparisonGroup) => void;
     shareGroup: (group: StudyViewComparisonGroup) => void;
     changeColor: (group: StudyViewComparisonGroup, color: string) => void;
-}
-
-interface IColorPickerIconProps {
-    color: string;
-}
-
-export class ColorPickerIcon extends React.Component<
-    IColorPickerIconProps,
-    {}
-> {
-    constructor(props: IColorPickerIconProps) {
-        super(props);
-        this.render = this.render.bind(this);
-    }
-
-    public render() {
-        const { color } = this.props;
-        return (
-            <svg
-                width="12"
-                height="12"
-                className="case-label-header"
-                data-test="color-picker-icon"
-            >
-                <rect
-                    width="12"
-                    height="12"
-                    fill={color == undefined ? '#FFFFFF' : color}
-                    stroke="#3786c2"
-                    stroke-width="4"
-                    cursor="pointer"
-                />
-                {color === '#FFFFFF' && (
-                    <line
-                        x1="10"
-                        y1="2"
-                        x2="2"
-                        y2="10"
-                        stroke="red"
-                        stroke-width="1"
-                    />
-                )}
-            </svg>
-        );
-    }
 }
 
 @observer
@@ -105,7 +60,7 @@ export default class GroupCheckbox extends React.Component<
     @autobind
     private onCheckboxClick() {
         this.props.store.toggleComparisonGroupSelected(this.props.group.uid);
-        this.props.store.checkSelectedGroupsColors(
+        this.props.store.flagDuplicateColorsForSelectedGroups(
             this.props.group.uid,
             this.props.group.color!
         );
@@ -164,41 +119,42 @@ export default class GroupCheckbox extends React.Component<
         if (color.hex === this.props.group.color) {
             this.setState({ groupColor: '#FFFFFFF' });
             this.props.changeColor(this.props.group, undefined!);
-            this.props.store.checkSelectedGroupsColors(
+            this.props.store.flagDuplicateColorsForSelectedGroups(
                 this.props.group.uid,
                 undefined!
             );
         } else {
             this.setState({ groupColor: color.hex });
             this.props.changeColor(this.props.group, color.hex);
-            this.props.store.checkSelectedGroupsColors(
+            this.props.store.flagDuplicateColorsForSelectedGroups(
                 this.props.group.uid,
                 color.hex
             );
         }
     };
 
+    buildColorChooserWidget = () => (
+        <Popover
+            id="popover-basic"
+            onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+        >
+            <div>
+                <CirclePicker
+                    colors={this.colorList}
+                    circleSize={20}
+                    circleSpacing={3}
+                    onChangeComplete={this.handleChangeComplete}
+                    color={this.state.groupColor}
+                    width="140px"
+                />
+            </div>
+        </Popover>
+    );
+
     render() {
-        const popover = (
-            <Popover
-                id="popover-basic"
-                onClick={e => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                }}
-            >
-                <div>
-                    <CirclePicker
-                        colors={this.colorList}
-                        circleSize={20}
-                        circleSpacing={3}
-                        onChangeComplete={this.handleChangeComplete}
-                        color={this.state.groupColor}
-                        width="140px"
-                    />
-                </div>
-            </Popover>
-        );
         const group = this.props.group;
         let checkboxAndLabel;
         if (this.props.markedForDeletion) {
@@ -269,7 +225,7 @@ export default class GroupCheckbox extends React.Component<
                                 containerPadding={40}
                                 trigger="click"
                                 placement="bottom"
-                                overlay={popover}
+                                overlay={this.buildColorChooserWidget()}
                                 onEnter={this.onOverlayEnter}
                                 onExit={this.onOverlayExit}
                             >
