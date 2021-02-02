@@ -17,10 +17,10 @@ yarn serveDistLocalDb &
 cd /cbioportal-frontend/end-to-end-test
 
 echo UPDATE WEBDRIVER-MANAGER
-./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome "2.42"
+./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59'
 
 echo START WEBDRIVER-MANAGER
-./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome "2.42" &
+./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' &
 
 # echo PROBE CBIOPORTAL
 # curl $CBIOPORTAL_URL > /dev/null
