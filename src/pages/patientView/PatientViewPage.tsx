@@ -200,6 +200,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return '';
     }
 
+    private getImageDriveId(data:Array<ClinicalData>):string {
+        for (const row in data) {
+            if (data[row]['clinicalAttributeId'] === 'IMAGE_DRIVE_ID') {
+                return data[row]['value'];
+            }
+        }
+        return '';
+    }
+
     private hideTissueImageTab(){
         return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
             || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
@@ -569,16 +578,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
                     )}
 
-                    <MSKTab key={6} id="pathSlidesTab" linkText="Pathology Slide"
-                            hide={/https/.test(window.location.protocol) ||
-                            patientViewPageStore.pathologySlides.isError ||
-                            (patientViewPageStore.pathologySlides.isComplete &&
-                                patientViewPageStore.pathologySlides.result.length===0)}
-                    >
-                        <div style={{position: "relative"}}>
-                            <IFrameLoader height={700} url={  `https://eslide1/eSlideTray.php?ImageIds=${patientViewPageStore.pathologySlides.result}` } />
-                        </div>
-                    </MSKTab>
+
 
                     {
                         this.shouldShowTrialMatch(patientViewPageStore) && (
@@ -612,6 +612,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         </MSKTab>)
                                     })
                                 }
+
+                                <MSKTab key={7} id="pathImageDriveTab" linkText="CT Scans"
+                                        hide={patientViewPageStore.clinicalDataPatient.isError ||
+                                            (patientViewPageStore.clinicalDataPatient.isComplete &&
+                                                this.getImageDriveId(patientViewPageStore.clinicalDataPatient.result)==='')}
+                                >
+                                    <div style={{position: "relative"}}>
+                                        <IFrameLoader height={700} url={  `https://imagedrive.bcgsc.ca/ImageDrive/#vfs/${this.getImageDriveId(patientViewPageStore.clinicalDataPatient.result)}` } />
+                                    </div>
+                                </MSKTab>
 
                                 <MSKTab key={8} id="pathSlidesTab" linkText="Pathology Slides"
                                         hide={patientViewPageStore.clinicalDataPatient.isError ||
