@@ -22,8 +22,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
+          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' & \
           ./scripts/env_vars.sh && \
           eval "$(./scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
