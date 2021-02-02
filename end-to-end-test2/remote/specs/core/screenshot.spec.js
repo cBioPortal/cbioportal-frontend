@@ -17,9 +17,9 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 var { COEXPRESSION_TIMEOUT } = require('../../../shared/specUtils');
 
 function waitForAndCheckPlotsTab() {
-    browser.waitForDisplayed('div[data-test="PlotsTabPlotDiv"]', 10000);
+    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timout: 100000 });
     var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]');
-    ///assertScreenShotMatch(res);
+    assertScreenShotMatch(res);
 }
 
 function runResultsTestSuite(prefix, options = {}) {
@@ -64,16 +64,12 @@ function runResultsTestSuite(prefix, options = {}) {
         $('a.tabAnchor_mutations').click();
         $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
         var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
-            hide: [
-                '[data-test=view3DStructure]',
-                '[data-test=GeneSummaryUniProt]',
-            ],
             viewportChangePause: 4000,
         }); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
 
-    it.skip(`${prefix} coexpression tab`, function() {
+    it(`${prefix} coexpression tab`, function() {
         $('a.tabAnchor_coexpression').click();
         $('div[data-test="CoExpressionPlot"]').waitForDisplayed({
             timeout: COEXPRESSION_TIMEOUT,
@@ -114,9 +110,7 @@ function runResultsTestSuite(prefix, options = {}) {
         $(
             'div[data-test="GroupComparisonMutationEnrichments"]'
         ).waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
@@ -178,7 +172,7 @@ describe.only('result page screenshot tests', function() {
     runResultsTestSuite('no session');
 });
 
-describe('download tab screenshot tests', function() {
+describe.only('download tab screenshot tests', function() {
     it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
