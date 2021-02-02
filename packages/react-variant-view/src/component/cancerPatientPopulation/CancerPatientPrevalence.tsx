@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
@@ -41,6 +41,11 @@ export const PathogenicityNameHelper = {
 class CancerPatientPopulation extends React.Component<
     ICancerPatientPopulationProps
 > {
+    constructor(props: ICancerPatientPopulationProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get frequenciesContent() {
         let contentMap: Map<string, JSX.Element> = new Map();
         let content: JSX.Element[] = [];

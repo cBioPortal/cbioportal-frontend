@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SignalAnnotation } from 'genome-nexus-ts-api-client';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
@@ -14,6 +14,11 @@ interface IMSKExpertReviewProps {
 
 @observer
 class MSKExpertReview extends React.Component<IMSKExpertReviewProps> {
+    constructor(props: IMSKExpertReviewProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get mskExpertReviewData() {
         let mskExpertReviewData: string = 'N/A';
         if (

@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
@@ -19,6 +19,11 @@ interface ISignalProps {
 
 @observer
 class SignalPrediction extends React.Component<ISignalProps> {
+    constructor(props: ISignalProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get mutationStatusData() {
         let content: string[] = [];
         if (
