@@ -564,7 +564,7 @@ export class StudyViewPageStore {
 
     @action public toggleComparisonGroupSelected(groupId: string): void {
         if (this.isComparisonGroupSelected(groupId))
-            this.toggleComparisonGroupWarningSign(groupId, false);
+            this.showComparisonGroupWarningSign(groupId, false);
         this.setComparisonGroupSelected(
             groupId,
             !this.isComparisonGroupSelected(groupId)
@@ -587,7 +587,7 @@ export class StudyViewPageStore {
         );
     }
 
-    @action public toggleComparisonGroupWarningSign(
+    @action public showComparisonGroupWarningSign(
         groupId: string,
         markedValue: boolean
     ) {
@@ -630,12 +630,10 @@ export class StudyViewPageStore {
     }
 
     public isComparisonGroupMarkedWithWarningSign(groupId: string): boolean {
-        if (!this._selectedComparisonGroups.has(groupId)) {
-            return false; // default to no
-        } else {
-            // otherwise, return value held in map
-            return this._selectedComparisonGroupsWarningSigns.get(groupId)!;
-        }
+        return !!(
+            this._selectedComparisonGroups.has(groupId) &&
+            this._selectedComparisonGroupsWarningSigns.get(groupId)!
+        );
     }
 
     @action public async deleteMarkedComparisonGroups(): Promise<void> {
@@ -682,7 +680,10 @@ export class StudyViewPageStore {
         }
     }
 
-    public checkSelectedGroupsColors(groupUid: string, color: string): void {
+    public flagDuplicateColorsForSelectedGroups(
+        groupUid: string,
+        color: string
+    ) {
         let colors: { [color: string]: number } = {};
 
         // check colors only for selected groups
@@ -706,13 +707,13 @@ export class StudyViewPageStore {
                     colors[groupColor] == undefined
                 ) {
                     if (groupColor != undefined) colors[groupColor] = 1;
-                    this.toggleComparisonGroupWarningSign(
+                    this.showComparisonGroupWarningSign(
                         selectedGroup.uid,
                         false
                     );
                 } else {
                     colors[groupColor] = colors[groupColor] + 1;
-                    this.toggleComparisonGroupWarningSign(
+                    this.showComparisonGroupWarningSign(
                         selectedGroup.uid,
                         true
                     );
