@@ -128,14 +128,16 @@ enum styleNames {
 export default class HeaderAnnotation extends React.Component<
     IHeaderAnnotationProps
 > {
+    static readonly defaultProps: Partial<IHeaderAnnotationProps> = {
+        isoformOverrideSource: 'mskcc',
+    };
+
+    @observable private showAllTranscripts = false;
+
     constructor(props: any) {
         super(props);
         makeObservable(this);
     }
-    @observable private showAllTranscripts = false;
-    static readonly defaultProps = {
-        isoformOverrideSource: 'mskcc',
-    };
 
     public render() {
         const haveTranscriptTable = this.haveTranscriptTable(

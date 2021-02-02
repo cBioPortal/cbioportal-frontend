@@ -1,7 +1,7 @@
 import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import { Col, Row } from 'react-bootstrap';
+import { Row } from 'react-bootstrap';
 import HeaderAnnotation from '../headerAnnotation/HeaderAnnotation';
 import FeatureTable from '../featureTable/FeatureTable';
 import { VariantStore } from '../../store/VariantStore';
