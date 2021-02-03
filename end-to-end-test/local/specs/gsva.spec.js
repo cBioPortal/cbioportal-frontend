@@ -246,7 +246,7 @@ describe('gsva feature', function() {
 
                 $('div.modal-dialog').waitForExist();
 
-                browser.waitUntil(() => $$('span*=GO_').length > 5);
+                browser.waitUntil(() => $$('span*=GO_').length >= 5);
 
                 const lengthBefore = $$('span*=GO_').length;
 

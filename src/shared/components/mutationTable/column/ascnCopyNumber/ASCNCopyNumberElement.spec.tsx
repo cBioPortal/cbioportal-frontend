@@ -1,5 +1,4 @@
-import * as _ from 'lodash';
-import { render, ReactWrapper, mount, shallow } from 'enzyme';
+import Enzyme, { ReactWrapper, mount } from 'enzyme';
 import * as React from 'react';
 import { expect } from 'chai';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -11,12 +10,12 @@ import {
 import {
     ASCN_AMP,
     ASCN_GAIN,
-    ASCN_LIGHTGREY,
     ASCN_HETLOSS,
     ASCN_HOMDEL,
     ASCN_BLACK,
     ASCN_WHITE,
 } from 'shared/lib/Colors';
+import Adapter from 'enzyme-adapter-react-16';
 
 /* Test Design:
 
@@ -45,6 +44,8 @@ import {
     - icon for sample (if multiple samples present) from samplemanager not tested
 
 */
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ASCNCopyNumberElement', () => {
     let nullSampleManager = new SampleManager([]);

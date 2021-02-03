@@ -2,28 +2,27 @@ import { assert } from 'chai';
 import React from 'react';
 import * as _ from 'lodash';
 import {
+    AlteredStatus,
     calculateAssociation,
-    countOccurences,
-    calculatePValue,
     calculateLogOddsRatio,
-    getMutuallyExclusiveCounts,
-    getTrackPairsCountText,
-    getData,
-    getFilteredData,
+    calculatePValue,
+    countOccurences,
+    formatLogOddsRatio,
     formatPValue,
     formatQValueWithStyle,
-    formatLogOddsRatio,
-    calculateAdjustedPValue,
-    AlteredStatus,
+    getData,
+    getFilteredData,
+    getTrackPairsCountText,
 } from './MutualExclusivityUtil';
-import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import { mount } from 'enzyme';
-import { Checkbox } from 'react-bootstrap';
+import Enzyme, { mount } from 'enzyme';
 import MutualExclusivityTable from './MutualExclusivityTable';
+import Adapter from 'enzyme-adapter-react-16';
 
 expect.extend(expectJSX);
+
+Enzyme.configure({ adapter: new Adapter() });
 
 const exampleData = [
     {

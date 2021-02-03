@@ -1,10 +1,10 @@
 import { MSKTab, MSKTabs } from './MSKTabs';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
-import { ThreeBounce } from 'better-react-spinkit';
-import { sleep } from '../../lib/TimeUtils';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('MSKTabs', () => {
     let tabs: any;

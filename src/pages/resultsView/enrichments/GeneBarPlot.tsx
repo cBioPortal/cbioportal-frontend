@@ -15,7 +15,6 @@ import {
     getEnrichmentBarPlotData,
     getGeneListOptions,
     CNA_TO_ALTERATION,
-    AlterationContainerType,
     GeneOptionLabel,
 } from './EnrichmentsUtil';
 import styles from './frequencyPlotStyles.module.scss';
@@ -33,7 +32,7 @@ export interface IGeneBarPlotProps {
     groupOrder?: string[];
     isTwoGroupAnalysis?: boolean;
     showCNAInTable?: boolean;
-    containerType: AlterationContainerType;
+    yAxisLabel: string;
     categoryToColor?: {
         [id: string]: string;
     };
@@ -173,7 +172,7 @@ export default class GeneBarPlot extends React.Component<
         return (
             <div>
                 <strong>
-                    {geneSymbol} {this.yAxislabel}
+                    {geneSymbol} {this.props.yAxisLabel}
                 </strong>
                 <br />
                 <table className="table table-bordered">
@@ -258,7 +257,6 @@ export default class GeneBarPlot extends React.Component<
                                         this.isGeneSelectionPopupVisible = false;
                                     }}
                                     defaultNumberOfGenes={DEFAULT_GENES_COUNT}
-                                    containerType={this.props.containerType}
                                 />
                             }
                             placement="bottomLeft"
@@ -293,12 +291,6 @@ export default class GeneBarPlot extends React.Component<
         return [];
     }
 
-    @computed private get yAxislabel() {
-        return this.props.containerType === AlterationContainerType.MUTATION
-            ? 'Mutation frequency'
-            : 'Copy-number alteration frequency';
-    }
-
     public render() {
         return (
             <div
@@ -321,7 +313,7 @@ export default class GeneBarPlot extends React.Component<
                         axisStyle={{ tickLabels: { fontSize: 10 } }}
                         horzCategoryOrder={this.horzCategoryOrder}
                         vertCategoryOrder={this.props.groupOrder}
-                        countAxisLabel={`${this.yAxislabel} (%)`}
+                        countAxisLabel={`${this.props.yAxisLabel} (%)`}
                         tooltip={this.getTooltip}
                         categoryToColor={this.props.categoryToColor}
                         svgRef={ref => (this.svgContainer = ref)}
@@ -342,7 +334,6 @@ interface IGeneSelectionProps {
     ) => void;
     defaultNumberOfGenes: number;
     maxNumberOfGenes?: number;
-    containerType: AlterationContainerType;
 }
 
 @observer
@@ -443,26 +434,23 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
     @computed get hasUnsupportedOQL() {
         const geneWithUnsupportedOql = _.find(this.genesToPlot, gene => {
             if (gene.alterations && gene.alterations.length > 0) {
-                if (
-                    this.props.containerType ===
-                    AlterationContainerType.COPY_NUMBER
-                ) {
-                    let unsupportedAlteration = _.find(
-                        gene.alterations,
-                        alteration => {
+                let unsupportedAlteration = _.find(
+                    gene.alterations,
+                    alteration => {
+                        // CNAs must have '=', and 'AMP or 'HOMDEL'
+                        if (alteration.alteration_type === 'cna') {
                             return (
-                                alteration.alteration_type !== 'cna' ||
                                 alteration.constr_rel !== '=' ||
                                 !ALLOWED_CNA_TYPES.includes(
                                     alteration.constr_val!
                                 )
                             );
                         }
-                    );
-                    return unsupportedAlteration !== undefined;
-                }
-                // return true if container type in mutation
-                return true;
+                        // For other alteration types anything is allowed
+                        return false;
+                    }
+                );
+                return unsupportedAlteration !== undefined;
             }
             return false;
         });
@@ -602,12 +590,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                                     }}
                                 >
                                     <span style={{ color: '#a71111' }}>
-                                        {`OQL ${
-                                            this.props.containerType ===
-                                            AlterationContainerType.MUTATION
-                                                ? ''
-                                                : 'except AMP and HOMDEL'
-                                        } is not allowed`}
+                                        {`OQL is not allowed`}
                                     </span>
                                 </strong>
                             )}
@@ -618,7 +601,7 @@ class GenesSelection extends React.Component<IGeneSelectionProps, {}> {
                     <button
                         key="addGenestoBarPlot"
                         data-test="addGenestoBarPlot"
-                        className="btn btn-sm btn-default"
+                        className="btn btn-sm btn-primary"
                         onClick={() => {
                             this.props.onSelectedGenesChange(
                                 this._geneQuery!,

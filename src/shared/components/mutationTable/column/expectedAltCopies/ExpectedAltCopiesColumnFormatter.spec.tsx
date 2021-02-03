@@ -1,9 +1,11 @@
-import * as _ from 'lodash';
-import { ReactWrapper, mount } from 'enzyme';
-import { assert, expect } from 'chai';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { expect } from 'chai';
+import Adapter from 'enzyme-adapter-react-16';
 import { initMutation } from 'test/MutationMockUtils';
 import { getDefaultExpectedAltCopiesColumnDefinition } from './ExpectedAltCopiesColumnFormatter';
-import { Mutation, AlleleSpecificCopyNumber } from 'cbioportal-ts-api-client';
+import { AlleleSpecificCopyNumber, Mutation } from 'cbioportal-ts-api-client';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ExpectedAltCopiesColumnFormatter', () => {
     function testExpectedExpectedAltCopiesElementProperties(

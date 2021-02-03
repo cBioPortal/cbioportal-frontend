@@ -45,6 +45,7 @@ import {
     Sample,
     SampleIdentifier,
     SampleTreatmentRow,
+    PatientTreatmentRow,
     StudyViewFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
@@ -189,8 +190,8 @@ import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescrip
 import {
     toPatientTreatmentFilter,
     toSampleTreatmentFilter,
-    treatmentUniqueKey,
     treatmentComparisonGroupName,
+    treatmentUniqueKey,
 } from './table/treatments/treatmentsTableUtil';
 import StudyViewURLWrapper from './StudyViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';

@@ -1,17 +1,17 @@
 import * as React from 'react';
-import { ReactWrapper, mount } from 'enzyme';
-import { assert, expect } from 'chai';
-import { getDefaultCancerCellFractionColumnDefinition } from './CancerCellFractionColumnFormatter';
+import Enzyme, { mount } from 'enzyme';
+import { expect } from 'chai';
 import {
-    default as CancerCellFractionElement,
     CancerCellFractionElementTooltip,
+    default as CancerCellFractionElement,
     maxBarHeight,
-    indexToBarLeft,
 } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
 import { getClonalCircleColor } from 'shared/components/mutationTable/column/clonal/ClonalElement';
 import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import SampleManager from 'pages/patientView/SampleManager';
-import { initMutation } from 'test/MutationMockUtils';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerCellFractionElement', () => {
     // For single sample test (only text displayed)
