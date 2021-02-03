@@ -114,9 +114,9 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+        browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
         browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
+            'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
@@ -124,12 +124,12 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} comparison tab mutation enrichments patient mode`, function() {
+    it(`${prefix} comparison tab alteration enrichments patient mode`, function() {
         browser.execute(function() {
             comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
         browser.waitForVisible(
-            'div[data-test="GroupComparisonMutationEnrichments"]'
+            'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],

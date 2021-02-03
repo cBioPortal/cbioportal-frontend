@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { computed, makeObservable } from 'mobx';
-import { observer } from 'mobx-react';
 import {
+    default as MutationTable,
     IMutationTableProps,
     MutationTableColumnType,
-    default as MutationTable,
 } from 'shared/components/mutationTable/MutationTable';
-import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
 import SampleManager from '../SampleManager';
 import { Mutation } from 'cbioportal-ts-api-client';
 import AlleleCountColumnFormatter from 'shared/components/mutationTable/column/AlleleCountColumnFormatter';
@@ -14,7 +12,6 @@ import AlleleFreqColumnFormatter from './column/AlleleFreqColumnFormatter';
 import TumorColumnFormatter from './column/TumorColumnFormatter';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import { isUncalled } from 'shared/lib/MutationUtils';
-import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
 import HeaderIconMenu from './HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
@@ -23,7 +20,6 @@ import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
-import { FrequencyTableColumnEnum } from 'cbioportal-frontend-commons';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;

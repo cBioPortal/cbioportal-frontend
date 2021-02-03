@@ -1,10 +1,11 @@
 import React from 'react';
-import { default as chai, assert } from 'chai';
-import chaiEnzyme from 'chai-enzyme';
-import { shallow, mount, ReactWrapper } from 'enzyme';
+import { assert } from 'chai';
+import Enzyme, { mount } from 'enzyme';
 import sinon from 'sinon';
 import ScrollBar from './ScrollBar';
-import { runInAction } from 'mobx';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('Scrollbar', () => {
     var wrapper;

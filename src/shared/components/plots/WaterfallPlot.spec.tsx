@@ -2,8 +2,10 @@ import React from 'react';
 import { assert } from 'chai';
 import { IBaseWaterfallPlotData, IWaterfallPlotProps } from './WaterfallPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
-import { shallow } from 'enzyme';
-import labelMobxPromises from 'mobxpromise';
+import Enzyme from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('WaterfallPlot', () => {
     let testData: IBaseWaterfallPlotData[] = [{ value: 2 }, { value: 4 }];

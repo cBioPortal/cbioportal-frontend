@@ -1,4 +1,5 @@
 declare const styles: {
+  readonly "buttonAlterationTypeSelectorMenu": string;
   readonly "buttonExcludedFromAnalysis": string;
   readonly "buttonUnselected": string;
   readonly "comparisonGroupManager": string;

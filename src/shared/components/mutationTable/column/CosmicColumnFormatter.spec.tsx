@@ -4,9 +4,11 @@ import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('CosmicColumnFormatter', () => {
     const cosmicMutations = [

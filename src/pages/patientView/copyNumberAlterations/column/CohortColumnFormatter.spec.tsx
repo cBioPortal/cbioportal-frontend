@@ -7,10 +7,13 @@ import {
 } from 'cbioportal-ts-api-client';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import sinon from 'sinon';
 import CopyNumberCountCache from '../../clinicalInformation/CopyNumberCountCache';
 import { CacheData } from '../../clinicalInformation/SampleGeneCache';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('CohortColumnFormatter', () => {
     const copyNumberData: DiscreteCopyNumberData[] = [
