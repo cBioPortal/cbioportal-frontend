@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, observable, makeObservable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 
 import $ from 'jquery';
 
@@ -31,9 +31,9 @@ export default class Domain extends React.Component<DomainProps, {}> {
             displayText: props.label || '',
         };
         this.handlers = {
-            textRef: (text: SVGTextElement | null) => {
+            textRef: action((text: SVGTextElement | null) => {
                 this.textElt = text;
-            },
+            }),
         };
     }
     public get hitRect() {
@@ -53,7 +53,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
         return this.props.y + this.props.height / 2;
     }
 
-    componentDidMount() {
+    @action componentDidMount() {
         this.isMounted = true;
     }
 
