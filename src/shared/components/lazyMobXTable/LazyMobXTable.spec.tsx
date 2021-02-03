@@ -1,30 +1,32 @@
 import React from 'react';
-import { default as chai, assert } from 'chai';
+import { assert, default as chai } from 'chai';
 import chaiEnzyme from 'chai-enzyme';
-import { shallow, mount, ReactWrapper } from 'enzyme';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import sinon from 'sinon';
 import {
-    lazyMobXTableSort,
-    default as LazyMobXTable,
     Column,
+    default as LazyMobXTable,
+    lazyMobXTableSort,
     LazyMobXTableStore,
 } from './LazyMobXTable';
 import SimpleTable from '../simpleTable/SimpleTable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import lolex from 'lolex';
-import { Clock } from 'lolex';
+import lolex, { Clock } from 'lolex';
 import {
     PaginationControls,
     SHOW_ALL_PAGE_SIZE,
 } from '../paginationControls/PaginationControls';
-import { Button, FormControl, Checkbox } from 'react-bootstrap';
+import { Button, Checkbox } from 'react-bootstrap';
 import { ColumnVisibilityControls } from '../columnVisibilityControls/ColumnVisibilityControls';
 import { SimpleLazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTableApplicationDataStore';
 import cloneJSXWithoutKeyAndRef from 'shared/lib/cloneJSXWithoutKeyAndRef';
 import { filterNumericalColumn, maxPage, parseNumericalFilter } from './utils';
 import _ from 'lodash';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());

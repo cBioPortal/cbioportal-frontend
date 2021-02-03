@@ -1,8 +1,10 @@
 import React from 'react';
 import { assert } from 'chai';
-import { mount } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount } from 'enzyme';
 import SimpleTable from './SimpleTable';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('SimpleTable', () => {
     let table: any;

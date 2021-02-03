@@ -1,8 +1,10 @@
-import * as _ from 'lodash';
-import { ReactWrapper, mount } from 'enzyme';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
 import { assert } from 'chai';
 import { initMutation } from 'test/MutationMockUtils';
 import { getDefaultASCNMethodColumnDefinition } from './ASCNMethodColumnFormatter';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ASCNMethodColumnFormatter', () => {
     const mutationWithAscnData = initMutation({
