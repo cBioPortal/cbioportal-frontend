@@ -1,9 +1,11 @@
 import GeneColumnFormatter from './GeneColumnFormatter';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
 import { initMutation } from 'test/MutationMockUtils';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('GeneColumnFormatter', () => {
     const mutation = initMutation({

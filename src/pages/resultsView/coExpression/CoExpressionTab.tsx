@@ -177,7 +177,7 @@ export default class CoExpressionTab extends React.Component<
     }
 
     @computed get hasMutationData() {
-        return !!_.find(
+        return _.some(
             this.props.store.molecularProfilesWithData.result,
             profile =>
                 profile.molecularAlterationType ===

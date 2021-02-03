@@ -453,15 +453,26 @@ export function MakeEnrichmentsTabUI(
             } else {
                 const content: any = [];
                 content.push(
-                    <OverlapExclusionIndicator
-                        store={store}
-                        only={
-                            patientAnalysisPossible &&
-                            store.usePatientLevelEnrichments
-                                ? 'patient'
-                                : 'sample'
-                        }
-                    />
+                    // The alteration type selector is shown to left of the
+                    // graph panels ('in-line'). This div element pushes the
+                    // graph elements to the right when the type selector
+                    // is shown 'in-line'.
+                    <div
+                        style={{
+                            marginLeft:
+                                enrichmentType == 'alterations' ? 244 : 0,
+                        }}
+                    >
+                        <OverlapExclusionIndicator
+                            store={store}
+                            only={
+                                patientAnalysisPossible &&
+                                store.usePatientLevelEnrichments
+                                    ? 'patient'
+                                    : 'sample'
+                            }
+                        />
+                    </div>
                 );
                 content.push(getEnrichmentsUI().component);
                 return content;

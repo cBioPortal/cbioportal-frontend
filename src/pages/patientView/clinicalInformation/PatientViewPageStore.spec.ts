@@ -6,13 +6,7 @@ import {
     PatientViewPageStore,
 } from './PatientViewPageStore';
 import { assert } from 'chai';
-// import { shallow, mount } from 'enzyme';
-import sinon from 'sinon';
-import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
-import { Mutation } from 'cbioportal-ts-api-client';
 import { AppStore } from 'AppStore';
-// //import AppConfig from 'appConfig';
-// import request from 'superagent';
 
 describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
