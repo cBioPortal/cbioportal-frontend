@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
+import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-
 import {
     ClinVar,
     MyVariantInfo,
@@ -10,15 +10,15 @@ import {
     VariantAnnotation,
     VariantAnnotationSummary,
 } from 'genome-nexus-ts-api-client';
-import featureTableStyle from './FeatureTable.module.scss';
+
 import FunctionalPrediction from '../functionalPrediction/FunctionalPrediction';
 import GeneralPopulationPrevalence from '../generalPopulationPrevalence/GeneralPopulationPrevalence';
 import TherapeuticImplication from '../therapeuticImplication/TherapeuticImplication';
 import Pathogenicity from '../pathogenicity/Pathogenicity';
-import { Mutation } from 'cbioportal-utils';
-import _ from 'lodash';
 import FrequencyTable from '../frequencyTable/FrequencyTable';
 import CancerPatientPopulation from '../cancerPatientPopulation/CancerPatientPrevalence';
+
+import featureTableStyle from './FeatureTable.module.scss';
 
 interface IFeatureTableProps {
     annotationInternal?: VariantAnnotationSummary;

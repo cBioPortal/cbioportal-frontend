@@ -1,6 +1,5 @@
 import { ISignalTumorTypeDecomposition } from 'cbioportal-utils';
-import _ from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import ReactTable, { Column } from 'react-table';
@@ -14,26 +13,15 @@ import './styles.scss';
 
 export interface ITumorTypeFrequencyTableProps {
     data: ISignalTumorTypeDecomposition[];
-    columns?: Column<ISignalTumorTypeDecomposition>[];
+    columns?: Partial<Column<ISignalTumorTypeDecomposition>>[];
 }
 
 @observer
 class MutationTumorTypeFrequencyTable extends React.Component<
     ITumorTypeFrequencyTableProps
 > {
-    @computed
-    private get defaultPageSize() {
-        if (this.props.data.length > 10) {
-            return 10;
-        } else if (this.props.data.length === 0) {
-            return 1;
-        } else {
-            return this.props.data.length;
-        }
-    }
-
-    static readonly defaultProps = {
-        frequencyTableColumns: [
+    static readonly defaultProps: Partial<ITumorTypeFrequencyTableProps> = {
+        columns: [
             FREQUENCY_COLUMNS_DEFINITION[FrequencyTableColumnEnum.TUMOR_TYPE],
             FREQUENCY_COLUMNS_DEFINITION[
                 FrequencyTableColumnEnum.MUTATION_STATUS
@@ -51,6 +39,22 @@ class MutationTumorTypeFrequencyTable extends React.Component<
             // TODO: add more columns after having additional columns data for pathogenic variants
         ],
     };
+
+    constructor(props: ITumorTypeFrequencyTableProps) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @computed
+    private get defaultPageSize() {
+        if (this.props.data.length > 10) {
+            return 10;
+        } else if (this.props.data.length === 0) {
+            return 1;
+        } else {
+            return this.props.data.length;
+        }
+    }
 
     public render() {
         return (

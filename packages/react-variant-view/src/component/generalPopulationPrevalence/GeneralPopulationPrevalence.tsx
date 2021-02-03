@@ -13,7 +13,7 @@ import {
     isLinearClusterHotspot,
     Mutation,
 } from 'cbioportal-utils';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import MskImpact from './MskImpact';
 
 interface IGenralPopulationPrevalenceProps {
@@ -34,6 +34,11 @@ interface IVcf {
 class GenralPopulationPrevalence extends React.Component<
     IGenralPopulationPrevalenceProps
 > {
+    constructor(props: IGenralPopulationPrevalenceProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get indexedHotspots() {
         const indexHotspot: IHotspotIndex = {};
         const genomicLocation = extractGenomicLocation(this.props.mutation);

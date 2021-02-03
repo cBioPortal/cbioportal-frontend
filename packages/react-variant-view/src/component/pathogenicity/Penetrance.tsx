@@ -3,7 +3,7 @@ import * as React from 'react';
 
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import { SignalAnnotation } from 'genome-nexus-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
@@ -14,6 +14,11 @@ interface IPenetranceProps {
 
 @observer
 class Penetrance extends React.Component<IPenetranceProps> {
+    constructor(props: IPenetranceProps) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get penetranceData() {
         if (
             this.props.signalAnnotation &&
