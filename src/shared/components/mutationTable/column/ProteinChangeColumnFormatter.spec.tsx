@@ -4,7 +4,10 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import styles from './proteinChange.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { mount, ReactWrapper } from 'enzyme';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 /**
  * @author Selcuk Onur Sumer

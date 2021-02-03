@@ -1,13 +1,14 @@
 import PaginationControls from './PaginationControls';
 import React from 'react';
-import { default as chai, assert, expect } from 'chai';
-import { shallow, mount } from 'enzyme';
+import { assert, default as chai, expect } from 'chai';
+import Enzyme, { mount } from 'enzyme';
 import chaiEnzyme from 'chai-enzyme';
-import sinon from 'sinon';
 import styles from './paginationControls.module.scss';
 import { Button } from 'react-bootstrap';
+import Adapter from 'enzyme-adapter-react-16';
 
 chai.use(chaiEnzyme());
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('PaginationControls', () => {
     describe.skip("'Show more' button", () => {

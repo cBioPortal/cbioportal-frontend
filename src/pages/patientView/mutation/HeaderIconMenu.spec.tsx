@@ -1,7 +1,10 @@
 import React from 'react';
-import { ReactWrapper, mount, shallow } from 'enzyme';
+import Enzyme, { mount } from 'enzyme';
 import { assert } from 'chai';
 import HeaderIconMenu from './HeaderIconMenu';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('HeaderIconMenu', () => {
     const headerName = 'MyName';

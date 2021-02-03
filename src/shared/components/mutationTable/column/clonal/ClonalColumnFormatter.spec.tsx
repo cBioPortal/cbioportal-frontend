@@ -1,12 +1,14 @@
-import * as _ from 'lodash';
-import { ReactWrapper, mount } from 'enzyme';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
 import { assert } from 'chai';
 import { initMutation } from 'test/MutationMockUtils';
 import {
-    getDefaultClonalColumnDefinition,
     ClonalValue,
+    getDefaultClonalColumnDefinition,
 } from './ClonalColumnFormatter';
 import { Mutation } from 'cbioportal-ts-api-client';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ClonalColumnFormatter', () => {
     function testExpectedClonalElementProperties(
