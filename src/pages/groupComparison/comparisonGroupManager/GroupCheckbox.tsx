@@ -9,7 +9,7 @@ import {
 } from '../GroupComparisonUtils';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
 import autobind from 'autobind-decorator';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
 import { CirclePicker } from 'react-color';
@@ -37,8 +37,13 @@ export interface IGroupCheckboxProps {
     restore: (group: StudyViewComparisonGroup) => void;
     delete: (group: StudyViewComparisonGroup) => void;
     shareGroup: (group: StudyViewComparisonGroup) => void;
-    changeColor: (group: StudyViewComparisonGroup, color: string) => void;
+    onChangeGroupColor: (
+        group: StudyViewComparisonGroup,
+        color: string | undefined
+    ) => void;
 }
+
+const COLOR_UNDEFINED = '#FFFFFF';
 
 @observer
 export default class GroupCheckbox extends React.Component<
@@ -49,13 +54,6 @@ export default class GroupCheckbox extends React.Component<
         super(props);
         makeObservable(this);
     }
-
-    state = {
-        groupColor:
-            this.props.group.color == undefined
-                ? '#FFFFFF'
-                : this.props.group.color,
-    };
 
     @autobind
     private onCheckboxClick() {
@@ -114,18 +112,17 @@ export default class GroupCheckbox extends React.Component<
         return colors;
     }
 
+    @action.bound
     handleChangeComplete = (color: any, event: any) => {
         // if same color is select, unselect it (go back to no color)
         if (color.hex === this.props.group.color) {
-            this.setState({ groupColor: '#FFFFFFF' });
-            this.props.changeColor(this.props.group, undefined!);
+            this.props.onChangeGroupColor(this.props.group, undefined);
             this.props.store.flagDuplicateColorsForSelectedGroups(
                 this.props.group.uid,
-                undefined!
+                undefined
             );
         } else {
-            this.setState({ groupColor: color.hex });
-            this.props.changeColor(this.props.group, color.hex);
+            this.props.onChangeGroupColor(this.props.group, color.hex);
             this.props.store.flagDuplicateColorsForSelectedGroups(
                 this.props.group.uid,
                 color.hex
@@ -147,7 +144,7 @@ export default class GroupCheckbox extends React.Component<
                     circleSize={20}
                     circleSpacing={3}
                     onChangeComplete={this.handleChangeComplete}
-                    color={this.state.groupColor}
+                    color={this.props.group.color}
                     width="140px"
                 />
             </div>
@@ -238,7 +235,10 @@ export default class GroupCheckbox extends React.Component<
                                         style={{ marginTop: 2, marginRight: 2 }}
                                     >
                                         <ColorPickerIcon
-                                            color={this.state.groupColor}
+                                            color={
+                                                this.props.group.color ||
+                                                COLOR_UNDEFINED
+                                            }
                                         />
                                     </span>
                                 </DefaultTooltip>

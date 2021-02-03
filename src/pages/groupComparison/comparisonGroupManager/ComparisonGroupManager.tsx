@@ -29,7 +29,6 @@ import { sleepUntil } from '../../../shared/lib/TimeUtils';
 import { LoadingPhase } from '../GroupComparisonLoading';
 import _ from 'lodash';
 import { serializeEvent } from 'shared/lib/tracking';
-import AppConfig from 'appConfig';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import classnames from 'classnames';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
@@ -37,6 +36,7 @@ import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 export interface IComparisonGroupManagerProps {
     store: StudyViewPageStore;
     shareGroups: (groups: StudyViewComparisonGroup[]) => void;
+    onGroupColorChange?: (groupId: string, color: string) => void;
 }
 
 @observer
@@ -214,7 +214,7 @@ export default class ComparisonGroupManager extends React.Component<
                                     delete={this.deleteGroup}
                                     studyIds={this.props.store.studyIds}
                                     shareGroup={this.shareSingleGroup}
-                                    changeColor={this.onGroupColorChange}
+                                    onChangeGroupColor={this.onGroupColorChange}
                                 />
                             ))
                         ) : (
@@ -325,7 +325,6 @@ export default class ComparisonGroupManager extends React.Component<
             ? this.props.store.selectedSamples.result
             : undefined;
         const color = RESERVED_CLINICAL_VALUE_COLORS[this.inputGroupName];
-        // FIXME - update user session instead of group in session service
         const { id } = await comparisonClient.addGroup(
             getGroupParameters(
                 this.inputGroupName,
@@ -343,14 +342,8 @@ export default class ComparisonGroupManager extends React.Component<
         group: StudyViewComparisonGroup,
         newColor: string
     ) {
-        // FIXME - update user session instead of group in session service
-        // const { color, ...rest } = group;
-        // await comparisonClient.updateGroup(group.uid, {
-        //     color: newColor,
-        //     ...rest,
-        // });
-
-        this.props.store.notifyComparisonGroupsChange();
+        this.props.onGroupColorChange &&
+            this.props.onGroupColorChange(group.uid, newColor);
     }
 
     private get compareButton() {

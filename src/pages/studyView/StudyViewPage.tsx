@@ -422,6 +422,9 @@ export default class StudyViewPage extends React.Component<
                             <ComparisonGroupManager
                                 store={this.store}
                                 shareGroups={this.openShareUrlModal}
+                                onGroupColorChange={
+                                    this.store.onGroupColorChange
+                                }
                             />
                         </div>
                     }
@@ -858,7 +861,7 @@ export default class StudyViewPage extends React.Component<
                                                         marginBottom: '0',
                                                     }}
                                                     onClick={() => {
-                                                        this.store.resetToDefaultSettings();
+                                                        this.store.resetToDefaultChartSettings();
                                                         this.showReturnToDefaultChartListModal = false;
                                                     }}
                                                 >
