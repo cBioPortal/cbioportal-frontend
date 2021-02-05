@@ -5,6 +5,7 @@ set -u # unset variables throw error
 set -o pipefail # pipes fail when partial command fails
 
 export FRONTEND_TEST_USE_LOCAL_DIST=true
+export HEADLESS_CHROME=true
 
 echo INSTALL SCREENSHOT DEPENDENCIES
 cd /cbioportal-frontend/end-to-end-test
@@ -44,4 +45,4 @@ echo PROBE SELENIUM - SUCCESS
 
 echo RUN E2E-TESTS
 cd /cbioportal-frontend/end-to-end-test
-yarn run test-webdriver-manager-debug
+yarn run test-webdriver-manager-local
