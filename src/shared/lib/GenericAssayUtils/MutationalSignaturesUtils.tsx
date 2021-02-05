@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { IMutationalSignature } from '../../model/MutationalSignature';
 import { GenericAssayTypeConstants } from './GenericAssayCommonUtils';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import { GenericAssayData } from 'cbioportal-ts-api-client';
 
 export enum MutationalSignaturesVersion {
     V2 = 'v2',
@@ -131,4 +132,34 @@ export function getSignificantMutationalSignatures(
             .sortBy(signature => -signature.value)
             .value()
     );
+}
+
+export function validateMutationalSignatureRawData(
+    mutationalSignatureData: GenericAssayData[]
+): boolean {
+    const regex = new RegExp(
+        `(${MutationalSignatureStableIdKeyWord.MutationalSignatureContributionKeyWord}|${MutationalSignatureStableIdKeyWord.MutationalSignatureConfidenceKeyWord})`
+    );
+    const profileIdsGroupByVersion: { [id: string]: string[] } = {};
+    _.reduce(
+        mutationalSignatureData,
+        (dict, data) => {
+            const id = data.molecularProfileId;
+            if (regex.test(id) && !(id in dict)) {
+                dict[id] = id;
+                // split by '_' and use the last word of molecularProfileId as version info
+                const version = _.last(id.split('_'))!;
+                if (version in profileIdsGroupByVersion) {
+                    profileIdsGroupByVersion[version].push(id);
+                } else {
+                    profileIdsGroupByVersion[version] = [id];
+                }
+            }
+            return dict;
+        },
+        {} as { [id: string]: string }
+    );
+
+    // we are expecting contribution and pvalue profiles are in pairs
+    return _.every(profileIdsGroupByVersion, ids => ids.length === 2);
 }
