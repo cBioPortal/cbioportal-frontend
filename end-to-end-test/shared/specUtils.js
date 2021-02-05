@@ -233,7 +233,7 @@ function waitForStudyView() {
 }
 
 function waitForGroupComparisonTabOpen() {
-    $('[data-test=ComparisonPageOverlapTabDiv]').waitForVisible(5000);
+    $('[data-test=ComparisonPageOverlapTabDiv]').waitForVisible(10000);
 }
 
 function getTextFromElement(element) {
