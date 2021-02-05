@@ -195,7 +195,9 @@ export interface IOncoprintProps {
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
     heatmapTracks: IHeatmapTrackSpec[];
     heatmapTracksOrder?: { [trackGroupIndex: number]: string[] }; // track keys
-    heatmapTrackHeaders?: { [trackGroupIndex: number]: TrackGroupHeader };
+    additionalTrackGroupHeaders?: {
+        [trackGroupIndex: number]: TrackGroupHeader;
+    };
     divId: string;
     width: number;
     initParams?: InitParams;

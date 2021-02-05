@@ -102,10 +102,13 @@ function transitionTrackHeaders(
     oncoprint: OncoprintJS
 ) {
     if (
-        !_.isEqual(nextProps.heatmapTrackHeaders, prevProps.heatmapTrackHeaders)
+        !_.isEqual(
+            nextProps.additionalTrackGroupHeaders,
+            prevProps.additionalTrackGroupHeaders
+        )
     ) {
-        const nextHeaders = nextProps.heatmapTrackHeaders || {};
-        const prevHeaders = prevProps.heatmapTrackHeaders || {};
+        const nextHeaders = nextProps.additionalTrackGroupHeaders || {};
+        const prevHeaders = prevProps.additionalTrackGroupHeaders || {};
 
         const nextIndexes = Object.keys(nextHeaders).map(x => parseInt(x, 10));
         const prevIndexes = Object.keys(prevHeaders).map(x => parseInt(x, 10));

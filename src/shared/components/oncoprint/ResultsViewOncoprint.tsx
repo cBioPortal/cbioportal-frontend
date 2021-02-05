@@ -47,7 +47,7 @@ import {
     makeHeatmapTracksMobxPromise,
 } from './OncoprintUtils';
 import _ from 'lodash';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+import onMobxPromise, { toPromise } from 'shared/lib/onMobxPromise';
 import AppConfig from 'appConfig';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
@@ -81,6 +81,7 @@ import {
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import '../../../globalStyles/oncoprintStyles.scss';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
+import { GenericAssayDataType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -111,11 +112,11 @@ export interface IGenesetExpansionRecord {
 
 const CLINICAL_TRACK_KEY_PREFIX = 'CLINICALTRACK_';
 
-/*  Each heatmap track group can hold tracks of a single entity type.
+/*  Each additional track group can hold tracks of a single entity type.
     Implemented entity types are genes and generic assay entites. In the
-    HeatmapTrackGroupRecord type the `entities` member refers to
+    AdditionalTrackGroupRecord type the `entities` member refers to
     hugo_gene_symbols (for genes) or to entity_id's (for generic assay entities). */
-export type HeatmapTrackGroupRecord = {
+export type AdditionalTrackGroupRecord = {
     trackGroupIndex: number;
     molecularAlterationType: string;
     entities: { [entity: string]: boolean }; // map of hugo_gene_symbols or entity_id's
@@ -229,7 +230,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
     private heatmapGeneInputValueUpdater: IReactionDisposer;
 
-    private molecularProfileIdToHeatmapTrackGroupIndex: {
+    private molecularProfileIdToTrackGroupIndex: {
         [molecularProfileId: string]: number;
     } = {};
 
@@ -277,13 +278,22 @@ export default class ResultsViewOncoprint extends React.Component<
         IGenesetExpansionRecord[]
     >();
 
-    @computed get molecularProfileIdToHeatmapTracks() {
-        // empty if no heatmap tracks param
+    @computed get molecularProfileIdToAdditionalTracks() {
+        // start with heatmap tracks param
         const groups = this.urlWrapper.query.heatmap_track_groups
             ? this.urlWrapper.query.heatmap_track_groups
                   .split(';')
                   .map((x: string) => x.split(','))
             : [];
+
+        if (this.urlWrapper.query.generic_assay_groups) {
+            // add generic assay tracks
+            groups.push(
+                ...this.urlWrapper.query.generic_assay_groups
+                    .split(';')
+                    .map((x: string) => x.split(','))
+            );
+        }
 
         const parsedGroups = groups.reduce(
             (acc: { [molecularProfileId: string]: string[] }, group) => {
@@ -294,17 +304,17 @@ export default class ResultsViewOncoprint extends React.Component<
         );
 
         const map: {
-            [molecularProfileId: string]: HeatmapTrackGroupRecord;
+            [molecularProfileId: string]: AdditionalTrackGroupRecord;
         } = {};
 
         let nextTrackGroupIndex: number;
-        // start next track group index based on existing heatmap track groups
-        if (_.isEmpty(this.molecularProfileIdToHeatmapTrackGroupIndex)) {
+        // start next track group index based on existing track groups
+        if (_.isEmpty(this.molecularProfileIdToTrackGroupIndex)) {
             nextTrackGroupIndex = 2;
         } else {
             nextTrackGroupIndex =
                 Math.max(
-                    ..._.values(this.molecularProfileIdToHeatmapTrackGroupIndex)
+                    ..._.values(this.molecularProfileIdToTrackGroupIndex)
                 ) + 1;
         }
         _.forEach(parsedGroups, (entities: string[], molecularProfileId) => {
@@ -316,18 +326,17 @@ export default class ResultsViewOncoprint extends React.Component<
                 if (
                     !(
                         profile.molecularProfileId in
-                        this.molecularProfileIdToHeatmapTrackGroupIndex
+                        this.molecularProfileIdToTrackGroupIndex
                     )
                 ) {
                     // set track group index if doesnt yet exist
-                    this.molecularProfileIdToHeatmapTrackGroupIndex[
+                    this.molecularProfileIdToTrackGroupIndex[
                         profile.molecularProfileId
                     ] = nextTrackGroupIndex;
                     nextTrackGroupIndex += 1;
                 }
-                const trackGroup: HeatmapTrackGroupRecord = {
-                    trackGroupIndex: this
-                        .molecularProfileIdToHeatmapTrackGroupIndex[
+                const trackGroup: AdditionalTrackGroupRecord = {
+                    trackGroupIndex: this.molecularProfileIdToTrackGroupIndex[
                         profile.molecularProfileId
                     ],
                     molecularProfileId: profile.molecularProfileId,
@@ -770,8 +779,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.selectedGenericAssayProfileId = id;
             },
             onClickAddGenericAssays: (info: GenericAssayTrackInfo[]) => {
-                // TODO: currently, add all tracks as heatmap tracks, later on when we have the support of categorical tracks, change here.
-                this.addHeatmapTracks(
+                this.addGenericAssayTracks(
                     // selectedGenericAssayProfileId will be updated in GenericAssaySelection component
                     this.selectedGenericAssayProfileId!,
                     info.map(d => d.genericAssayEntityId)
@@ -1022,12 +1030,42 @@ export default class ResultsViewOncoprint extends React.Component<
         invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
 
-    public addHeatmapTracks(molecularProfileId: string, entities: string[]) {
+    public addGenericAssayTracks(
+        molecularProfileId: string,
+        entities: string[]
+    ) {
+        const groups = this.urlWrapper.query.generic_assay_groups
+            ? this.urlWrapper.query.generic_assay_groups
+                .split(';')
+                .map((x: string) => x.split(','))
+            : [];
+
+        const targetGroup = groups.find(g => g[0] === molecularProfileId);
+
+        if (targetGroup) {
+            // if theres already a group for this profile, update entities
+            targetGroup.splice(1, targetGroup.length); // remove existing entities
+            targetGroup.push(...entities); // add new entities
+        } else {
+            // if not, add a group
+            groups.push([molecularProfileId, ...entities]);
+        }
+
+        const generic_assay_groups = groups
+            .map(group => group.join(','))
+            .join(';');
+
+        this.urlWrapper.updateURL({
+            generic_assay_groups,
+        });
+    }
+
+    public async addHeatmapTracks(molecularProfileId: string, entities: string[]) {
         const tracksMap = _.cloneDeep(
-            this.molecularProfileIdToHeatmapTracks
+            this.molecularProfileIdToAdditionalTracks
         ) as {
             [molecularProfileId: string]: Pick<
-                HeatmapTrackGroupRecord,
+                AdditionalTrackGroupRecord,
                 'entities' | 'molecularProfileId' | 'molecularAlterationType'
             >;
         };
@@ -1054,33 +1092,35 @@ export default class ResultsViewOncoprint extends React.Component<
             delete tracksMap[molecularProfileId];
         }
 
-        const heatmap_track_groups = _.map(
-            tracksMap,
-            (track, molecularProfileId) => {
+        const profileIdToProfile = await toPromise(
+            this.props.store.molecularProfileIdToMolecularProfile
+        );
+
+        const heatmap_track_groups = _.chain(tracksMap)
+            .filter((track, molecularProfileId) => {
+                const profile = profileIdToProfile[molecularProfileId];
+                if (
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY
+                ) {
+                    // only LIMIT-VALUE generic assay profiles are heatmap
+                    return (
+                        profile.datatype === GenericAssayDataType.LIMIT_VALUE
+                    );
+                } else {
+                    return true;
+                }
+            })
+            .map((track, molecularProfileId) => {
                 return `${molecularProfileId},${_.keys(track.entities).join(
                     ','
                 )}`;
-            }
-        ).join(';');
-
-        // derive generic assay from heatmap tracks since the only way to add generic assay entities right now
-        // is to use heatmap UI in oncoprint
-        const generic_assay_groups = _.filter(
-            tracksMap,
-            (x: HeatmapTrackGroupRecord) =>
-                x.molecularAlterationType ===
-                AlterationTypeConstants.GENERIC_ASSAY
-        )
-            .map(track => {
-                return `${track.molecularProfileId},${_.keys(
-                    track.entities
-                ).join(',')}`;
             })
+            .value()
             .join(';');
 
         this.urlWrapper.updateURL({
             heatmap_track_groups,
-            generic_assay_groups,
         });
     }
 
@@ -1349,7 +1389,7 @@ export default class ResultsViewOncoprint extends React.Component<
             if (clusteredHeatmapProfile === genesetHeatmapProfile) {
                 return this.genesetHeatmapTrackGroupIndex;
             } else {
-                const heatmapGroup = this.molecularProfileIdToHeatmapTracks[
+                const heatmapGroup = this.molecularProfileIdToAdditionalTracks[
                     clusteredHeatmapProfile
                 ];
                 return heatmapGroup && heatmapGroup.trackGroupIndex;
@@ -1382,7 +1422,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     .molecularProfileId;
         } else {
             const heatmapTrackGroup = _.values(
-                this.molecularProfileIdToHeatmapTracks
+                this.molecularProfileIdToAdditionalTracks
             ).find(trackGroup => trackGroup.trackGroupIndex === index);
             molecularProfileId = heatmapTrackGroup
                 ? heatmapTrackGroup.molecularProfileId
@@ -1400,7 +1440,7 @@ export default class ResultsViewOncoprint extends React.Component<
     @action.bound
     private removeHeatmapByIndex(index: TrackGroupIndex) {
         const groupEntry = _.values(
-            this.molecularProfileIdToHeatmapTracks
+            this.molecularProfileIdToAdditionalTracks
         ).find(group => group.trackGroupIndex === index);
         if (groupEntry) {
             this.removeHeatmapByMolecularProfileId(
@@ -1411,20 +1451,18 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @action.bound
     public removeHeatmapByMolecularProfileId(molecularProfileId: string) {
-        delete this.molecularProfileIdToHeatmapTrackGroupIndex[
-            molecularProfileId
-        ];
+        delete this.molecularProfileIdToTrackGroupIndex[molecularProfileId];
         this.addHeatmapTracks(molecularProfileId, []);
     }
 
-    readonly heatmapTrackHeaders = remoteData({
+    readonly additionalTrackGroupHeaders = remoteData({
         await: () => [this.props.store.molecularProfileIdToMolecularProfile],
         invoke: () => {
             return Promise.resolve(
                 makeTrackGroupHeaders(
                     this.props.store.molecularProfileIdToMolecularProfile
                         .result!,
-                    this.molecularProfileIdToHeatmapTracks,
+                    this.molecularProfileIdToAdditionalTracks,
                     this.genesetHeatmapTrackGroupIndex,
                     () => this.clusteredHeatmapTrackGroupIndex,
                     this.clusterHeatmapByIndex,
@@ -1483,7 +1521,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 this.props.store.molecularProfileIdToMolecularProfile,
                 this.alterationTypesInQuery,
                 this.alteredKeys,
-                this.heatmapTrackHeaders
+                this.additionalTrackGroupHeaders
             ) === 'pending'
         );
     }
@@ -1717,8 +1755,8 @@ export default class ResultsViewOncoprint extends React.Component<
                                     this.alterationTypesInQuery.result
                                 }
                                 showSublabels={this.showOqlInLabels}
-                                heatmapTrackHeaders={
-                                    this.heatmapTrackHeaders.result!
+                                additionalTrackGroupHeaders={
+                                    this.additionalTrackGroupHeaders.result!
                                 }
                                 horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={

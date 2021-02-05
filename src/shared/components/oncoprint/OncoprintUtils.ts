@@ -975,11 +975,11 @@ export function makeHeatmapTracksMobxPromise(
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
-            const molecularProfileIdToHeatmapTracks =
-                oncoprint.molecularProfileIdToHeatmapTracks;
+            const molecularProfileIdToAdditionalTracks =
+                oncoprint.molecularProfileIdToAdditionalTracks;
 
             const geneProfiles = _.filter(
-                _.values(molecularProfileIdToHeatmapTracks),
+                _.values(molecularProfileIdToAdditionalTracks),
                 d =>
                     d.molecularAlterationType !==
                     AlterationTypeConstants.GENERIC_ASSAY
@@ -1041,11 +1041,11 @@ export function makeHeatmapTracksMobxPromise(
                         data
                     ),
                     trackGroupIndex:
-                        molecularProfileIdToHeatmapTracks[molecularProfileId]
+                        molecularProfileIdToAdditionalTracks[molecularProfileId]
                             .trackGroupIndex,
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup =
-                            oncoprint.molecularProfileIdToHeatmapTracks[
+                            oncoprint.molecularProfileIdToAdditionalTracks[
                                 molecularProfileId
                             ];
                         if (trackGroup) {
@@ -1097,11 +1097,11 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
                 .molecularProfileIdToMolecularProfile.result!;
-            const molecularProfileIdToHeatmapTracks =
-                oncoprint.molecularProfileIdToHeatmapTracks;
+            const molecularProfileIdToAdditionalTracks =
+                oncoprint.molecularProfileIdToAdditionalTracks;
 
             const genericAssayProfiles = _.filter(
-                molecularProfileIdToHeatmapTracks,
+                molecularProfileIdToAdditionalTracks,
                 d =>
                     d.molecularAlterationType ===
                     AlterationTypeConstants.GENERIC_ASSAY
@@ -1205,12 +1205,12 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                     pivotThreshold: pivotThreshold,
                     sortOrder: sortOrder,
                     trackLinkUrl: entityLinkMap[entityId],
-                    trackGroupIndex: molecularProfileIdToHeatmapTracks[
+                    trackGroupIndex: molecularProfileIdToAdditionalTracks[
                         molecularProfileId
                     ]!.trackGroupIndex,
                     onClickRemoveInTrackMenu: action(() => {
                         const trackGroup = oncoprint
-                            .molecularProfileIdToHeatmapTracks[
+                            .molecularProfileIdToAdditionalTracks[
                             molecularProfileId
                         ]!;
                         if (trackGroup) {
