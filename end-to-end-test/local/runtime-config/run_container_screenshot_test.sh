@@ -8,6 +8,7 @@ cd $PORTAL_SOURCE_DIR
 docker run -it --rm \
     --name screenshot-e2e \
     --network="$DOCKER_NETWORK_NAME" \
+    --shm-size=1G \
     -e CBIOPORTAL_URL="$CBIOPORTAL_URL" \
     -e SCREENSHOT_DIRECTORY="$SCREENSHOT_DIRECTORY"\
     -e SPEC_FILE_PATTERN="$SPEC_FILE_PATTERN" \
