@@ -33,6 +33,12 @@ export const RESERVED_CATEGORY_ORDER_DICT: Dictionary<string[]> = {
     ],
 };
 
+export enum GenericAssayDataType {
+    LIMIT_VALUE = 'LIMIT-VALUE',
+    CATEGORICAL = 'CATEGORICAL',
+    BINARY = 'BINARY',
+}
+
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
     genericAssayProfiles: MolecularProfile[]
 ) {

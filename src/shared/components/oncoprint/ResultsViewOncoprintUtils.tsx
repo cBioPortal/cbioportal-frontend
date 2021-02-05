@@ -11,9 +11,13 @@ import naturalSort from 'javascript-natural-sort';
 import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
-import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    GenericAssayDataType,
+    makeGenericAssayOption,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
-import { HeatmapTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
+import { AdditionalTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
+import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;
@@ -248,7 +252,9 @@ export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(gen
 
 export function makeTrackGroupHeaders(
     molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
-    molecularProfileIdToHeatmapTracks: { [p: string]: HeatmapTrackGroupRecord },
+    molecularProfileIdToAdditionalTracks: {
+        [p: string]: AdditionalTrackGroupRecord;
+    },
     genesetHeatmapTrackGroupIndex: number | undefined,
     getClusteredTrackGroupIndex: () => number | undefined,
     onClickClusterCallback: (index: TrackGroupIndex) => void,
@@ -256,18 +262,32 @@ export function makeTrackGroupHeaders(
     onClickDeleteCallback: (index: TrackGroupIndex) => void
 ): { [trackGroupIndex: number]: TrackGroupHeader } {
     var headers = _.reduce(
-        molecularProfileIdToHeatmapTracks,
+        molecularProfileIdToAdditionalTracks,
         (headerMap, nextEntry) => {
+            let type: 'categorical' | 'heatmap';
+            const profile =
+                molecularProfileIdToMolecularProfile[
+                    nextEntry.molecularProfileId
+                ];
+            if (
+                profile.molecularAlterationType ===
+                    AlterationTypeConstants.GENERIC_ASSAY &&
+                profile.datatype !== GenericAssayDataType.LIMIT_VALUE
+            ) {
+                type = 'categorical';
+            } else {
+                type = 'heatmap';
+            }
             headerMap[nextEntry.trackGroupIndex] = makeTrackGroupHeader(
-                'heatmap',
+                type,
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
                 ].name,
                 nextEntry.trackGroupIndex,
+                onClickDeleteCallback,
                 getClusteredTrackGroupIndex,
                 onClickClusterCallback,
-                onClickDontClusterCallback,
-                onClickDeleteCallback
+                onClickDontClusterCallback
             );
             return headerMap;
         },
@@ -279,10 +299,10 @@ export function makeTrackGroupHeaders(
             'geneset',
             'GSVA Scores',
             genesetHeatmapTrackGroupIndex!,
+            onClickDeleteCallback,
             getClusteredTrackGroupIndex,
             onClickClusterCallback,
-            onClickDontClusterCallback,
-            onClickDeleteCallback
+            onClickDontClusterCallback
         );
     }
 
@@ -290,17 +310,20 @@ export function makeTrackGroupHeaders(
 }
 
 function makeTrackGroupHeader(
-    type: 'heatmap' | 'geneset',
+    type: 'heatmap' | 'geneset' | 'categorical',
     text: string,
     trackGroupIndex: number,
+    onClickDeleteCallback: (index: TrackGroupIndex) => void,
     getClusteredTrackGroupIndex: () => number | undefined,
-    onClickClusterCallback: (index: TrackGroupIndex) => void,
-    onClickDontClusterCallback: () => void,
-    onClickDeleteCallback: (index: TrackGroupIndex) => void
+    onClickClusterCallback?: (index: TrackGroupIndex) => void,
+    onClickDontClusterCallback?: () => void
 ): TrackGroupHeader {
     const header = {
         label: { text: text },
-        options: [
+        options: [],
+    } as TrackGroupHeader;
+    if (type !== 'categorical') {
+        header.options.push(
             {
                 label: 'Cluster',
                 onClick: onClickClusterCallback,
@@ -316,7 +339,7 @@ function makeTrackGroupHeader(
                 label: "Don't cluster",
                 onClick: () => {
                     if (getClusteredTrackGroupIndex() === trackGroupIndex) {
-                        onClickDontClusterCallback();
+                        onClickDontClusterCallback!();
                     }
                 },
                 weight: () => {
@@ -326,14 +349,16 @@ function makeTrackGroupHeader(
                         return 'bold';
                     }
                 },
-            },
-        ],
-    } as TrackGroupHeader;
+            }
+        );
+    }
 
     if (type !== 'geneset') {
-        header.options.push({
-            separator: true,
-        });
+        if (type !== 'categorical') {
+            header.options.push({
+                separator: true,
+            });
+        }
         header.options.push({
             label: 'Delete',
             onClick: onClickDeleteCallback,
