@@ -4699,6 +4699,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             position: 'relative',
                                             alignItems: 'center',
                                         }}
+                                        data-test={'GeneColoringMenu'}
                                         className="coloring-menu"
                                     >
                                         <label className="legend-label">
