@@ -71,7 +71,18 @@ var config = {
                 args: [
                     '--disable-composited-antialiasing',
                     '--allow-insecure-localhost',
-                ],
+                ].concat(
+                    (function() {
+                        return process.env.HEADLESS_CHROME
+                            ? [
+                                  '--headless',
+                                  '--no-sandbox',
+                                  '--disable-gpu',
+                                  '--disable-setuid-sandbox',
+                              ]
+                            : [];
+                    })()
+                ),
             },
 
             os: 'OS X',
