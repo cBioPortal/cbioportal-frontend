@@ -481,7 +481,10 @@ export default class AlterationEnrichmentContainer extends React.Component<
         }
 
         return (
-            <div className={styles.Container}>
+            <div
+                className={styles.Container}
+                data-test={'GroupComparisonAlterationEnrichments'}
+            >
                 <div
                     className={styles.ChartsPanel}
                     style={{

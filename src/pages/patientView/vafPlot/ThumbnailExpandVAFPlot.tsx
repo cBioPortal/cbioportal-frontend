@@ -1,7 +1,6 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import { VAFPlot, IVAFPlotProps, MutationFrequenciesBySample } from './VAFPlot';
-import Tooltip, { RCTooltip } from 'rc-tooltip';
 import { IKeyedIconData } from '../genomicOverview/GenomicOverviewUtils';
 import { DefaultTooltip, isWebdriver } from 'cbioportal-frontend-commons';
 
@@ -10,7 +9,7 @@ export type IThumbnailExpandVAFPlotProps = {
     order?: { [s: string]: number };
     colors?: { [s: string]: string };
     labels?: { [s: string]: string };
-    overlayPlacement?: RCTooltip.Placement;
+    overlayPlacement?: string;
     cssClass?: string;
     genePanelIconData?: IKeyedIconData;
 };

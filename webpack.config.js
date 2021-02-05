@@ -49,12 +49,15 @@ const resolve = path.resolve;
 const isDev = NODE_ENV === 'development';
 const isTest = NODE_ENV === 'test';
 
+console.log("NODE_ENV", NODE_ENV);
+
 // devServer config
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
 
 const root = resolve(__dirname);
 const src = join(root, 'src');
+const modules = join(root, 'node_modules');
 const common = join(src, 'common');
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
@@ -549,8 +552,8 @@ if (process.env.BUILD_REPORT_ERRORS_ONLY === 'true') {
 // END BOOTSTRAP LOADER
 
 // Roots
-// For 'node_modules' entry see https://github.com/ljharb/es-abstract/issues/84#issuecomment-573073944)
-config.resolve.modules = [src, common, 'node_modules'];
+
+config.resolve.modules = [src, common, "./node_modules"];
 
 // end Roots
 

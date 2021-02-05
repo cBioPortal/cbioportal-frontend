@@ -28,7 +28,8 @@ if (useExternalFrontend) {
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Structural Variants / Fusions');
             clickAlterationTypeCheckBox('Copy Number Alterations');
-            submitEnrichmentRequest();
+            $('[data-test=buttonSelectAlterations]').click();
+            $('div=No data/result available').waitForExist();
             assert($('div=No data/result available').isVisible());
         });
 
@@ -105,5 +106,5 @@ var clickAlterationTypeCheckBox = name => {
 
 var submitEnrichmentRequest = () => {
     $('[data-test=buttonSelectAlterations]').click();
-    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+    $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(10000);
 };

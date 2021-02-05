@@ -483,23 +483,21 @@ describe('treatment feature', function() {
                 var geneSelect = $('.gene-select-container');
 
                 geneSelect.click();
+                $('[data-test=GeneColoringMenu]')
+                    .$('div=Genes')
+                    .waitForVisible();
 
-                assert.equal(
-                    $('#react-select-12-option-1-0').getText(),
-                    'CDKN2A'
-                );
-                assert.equal(
-                    $('#react-select-12-option-1-1').getText(),
-                    'MDM2'
-                );
-                assert.equal(
-                    $('#react-select-12-option-1-2').getText(),
-                    'MDM4'
-                );
-                assert.equal(
-                    $('#react-select-12-option-1-3').getText(),
-                    'TP53'
-                );
+                // select gene menu entries
+                var geneMenuEntries = $('[data-test=GeneColoringMenu]')
+                    .$('div=Genes')
+                    .$('..')
+                    .$$('div')[1]
+                    .$$('div');
+
+                assert.strictEqual(geneMenuEntries[0].getText(), 'CDKN2A');
+                assert.strictEqual(geneMenuEntries[1].getText(), 'MDM2');
+                assert.strictEqual(geneMenuEntries[2].getText(), 'MDM4');
+                assert.strictEqual(geneMenuEntries[3].getText(), 'TP53');
             });
 
             it('shows sort order button for waterfall plot when `Ordered samples` selected', () => {
@@ -551,6 +549,7 @@ var selectTreamentsBothAxes = () => {
         });
     });
 
+    $('[data-test=ViewLimitValues]').waitForExist();
     if (!$('[data-test=ViewLimitValues]').isSelected()) {
         $('[data-test=ViewLimitValues]').click();
     }
