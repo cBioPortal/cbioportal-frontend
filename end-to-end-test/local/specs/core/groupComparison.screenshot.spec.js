@@ -20,10 +20,9 @@ describe('group comparison page screenshot tests', function() {
                 5000
             );
             browser.click('.tabAnchor_alterations');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonAlterationEnrichments"]',
-                10000
-            );
+            $(
+                '[data-test="GroupComparisonAlterationEnrichments"]'
+            ).waitForExist(20000);
         });
 
         it('group comparison page alteration enrichments tab several groups', function() {
@@ -37,10 +36,9 @@ describe('group comparison page screenshot tests', function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonAlterationEnrichments"]',
-                10000
-            );
+            $(
+                '[data-test="GroupComparisonAlterationEnrichments"]'
+            ).waitForExist(20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
@@ -120,10 +118,9 @@ describe('group comparison page screenshot tests', function() {
             goToUrlAndSetLocalStorage(
                 `${browser.getUrl()}&unselectedGroups=%5B"GB"%2C"OAST"%2C"ODG"%5D`
             );
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonAlterationEnrichments"]',
-                10000
-            );
+            $(
+                '[data-test="GroupComparisonAlterationEnrichments"]'
+            ).waitForExist(20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],

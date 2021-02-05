@@ -35,7 +35,7 @@ export function columnHeader(
             overlay={overlay}
             destroyTooltipOnHide={true}
         >
-            {headerContent}
+            <>{headerContent}</>
         </DefaultTooltip>
     );
 }
