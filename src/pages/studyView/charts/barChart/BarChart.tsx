@@ -4,6 +4,7 @@ import {
     VictoryAxis,
     VictoryBar,
     VictoryChart,
+    VictoryLabel,
     VictorySelectionContainer,
 } from 'victory';
 import { computed, observable, makeObservable } from 'mobx';
@@ -37,6 +38,7 @@ export interface IBarChartProps {
     height: number;
     filters: DataFilterValue[];
     onUserSelection: (dataBins: DataBin[]) => void;
+    showNAChecked: boolean;
 }
 
 export type BarDatum = {
@@ -75,18 +77,17 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @autobind
-    private onSelection(
-        bars: { data: BarDatum[] }[],
-        bounds: { x: number; y: number }[],
-        props: any
-    ) {
+    private onSelection(bars: { data: BarDatum[] }[]): void {
         const dataBins = _.flatten(
             bars.map(bar => bar.data.map(barDatum => barDatum.dataBin))
         );
         this.props.onUserSelection(dataBins);
     }
 
-    private isDataBinSelected(dataBin: DataBin, filters: DataFilterValue[]) {
+    private isDataBinSelected(
+        dataBin: DataBin,
+        filters: DataFilterValue[]
+    ): boolean {
         return _.some(filters, filter => {
             let isFiltered = false;
             if (filter.start !== undefined && filter.end !== undefined) {
@@ -110,12 +111,12 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @computed
-    get numericalBins() {
+    get numericalBins(): DataBin[] {
         return filterNumericalBins(this.props.data);
     }
 
     @computed
-    get categoryBins() {
+    get categoryBins(): DataBin[] {
         return filterCategoryBins(this.props.data);
     }
 
@@ -133,7 +134,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @computed
-    get numericalTickFormat() {
+    get numericalTickFormat(): (string | string[])[] {
         const formatted = formatNumericalTickValues(this.numericalBins);
 
         // if the value contains ^ we need to return an array of values, instead of a single value
@@ -149,7 +150,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @computed
-    get categories() {
+    get barDataBasedOnNA(): BarDatum[] {
+        return this.props.showNAChecked
+            ? this.barData
+            : this.barData.filter(doesNotContainNA);
+    }
+
+    @computed
+    get categories(): string[] {
         return this.categoryBins.map(dataBin =>
             dataBin.specialValue === undefined
                 ? `${dataBin.start}`
@@ -158,9 +166,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
     }
 
     @computed
-    get tickValues() {
-        const values: number[] = [];
-
+    get tickValues(): number[] {
+        const values = [];
         for (
             let i = 1;
             i <= this.numericalTickFormat.length + this.categories.length;
@@ -168,12 +175,30 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         ) {
             values.push(i);
         }
-
         return values;
     }
 
     @computed
-    get tickFormat() {
+    get barDataWithNA(): BarDatum[] {
+        return this.barData.filter(onlyContainsNA);
+    }
+
+    @computed
+    get numberOfNA(): number {
+        return this.barDataWithNA.length;
+    }
+
+    @computed
+    get tickValuesBasedOnNA(): number[] {
+        if (this.props.showNAChecked) {
+            return this.tickValues;
+        }
+        const tickValuesWithoutNA = this.tickValues.slice(0, -this.numberOfNA);
+        return tickValuesWithoutNA;
+    }
+
+    @computed
+    get tickFormat(): (string | string[])[] {
         // copy non-numerical categories as is
         return [...this.numericalTickFormat, ...this.categories];
     }
@@ -197,7 +222,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         const additionRatio = needAdditionShiftForLogScaleBarChart(
             this.numericalBins
         )
-            ? this.barData.length / (this.barData.length + 1)
+            ? this.barDataBasedOnNA.length / (this.barDataBasedOnNA.length + 1)
             : 1;
         return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
     }
@@ -254,6 +279,38 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         ];
     }
 
+    @computed
+    get maximumX(): number {
+        return (
+            this.tickValuesBasedOnNA[this.tickValuesBasedOnNA.length - 1] + 1
+        );
+    }
+
+    @computed
+    get maximumY(): number {
+        const barDataWithoutNA = this.barData.filter(doesNotContainNA);
+        return Math.max(
+            ...barDataWithoutNA.map((element: BarDatum) => element.y)
+        );
+    }
+
+    @computed
+    get labelShowingNA(): JSX.Element | null {
+        if (!this.props.showNAChecked) {
+            const labelNA = this.barDataWithNA
+                .map((element: BarDatum) => element.dataBin.count)
+                .join(', ');
+            return (
+                <VictoryLabel
+                    text={`n/a: ${labelNA}`}
+                    textAnchor="end"
+                    datum={{ x: this.maximumX, y: this.maximumY }}
+                />
+            );
+        }
+        return null;
+    }
+
     public render() {
         return (
             <div onMouseMove={this.onMouseMove}>
@@ -285,12 +342,9 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                         theme={VICTORY_THEME}
                     >
                         <VictoryAxis
-                            tickValues={this.tickValues}
+                            tickValues={this.tickValuesBasedOnNA}
                             tickFormat={(t: number) => this.tickFormat[t - 1]}
-                            domain={[
-                                0,
-                                this.tickValues[this.tickValues.length - 1] + 1,
-                            ]}
+                            domain={[0, this.maximumX]}
                             tickLabelComponent={<BarChartAxisLabel />}
                             style={{
                                 tickLabels: {
@@ -320,9 +374,10 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                                             : DEFAULT_NA_COLOR,
                                 },
                             }}
-                            data={this.barData}
+                            data={this.barDataBasedOnNA}
                             events={this.barPlotEvents}
                         />
+                        {this.labelShowingNA}
                     </VictoryChart>
                 )}
                 {ReactDOM.createPortal(
@@ -339,3 +394,11 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
         );
     }
 }
+
+const onlyContainsNA = (element: BarDatum): boolean => {
+    return element.dataBin.specialValue === 'NA';
+};
+
+const doesNotContainNA = (element: BarDatum): boolean => {
+    return !onlyContainsNA(element);
+};
