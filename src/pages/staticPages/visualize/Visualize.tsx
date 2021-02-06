@@ -103,7 +103,7 @@ export default class Visualize extends React.Component<{}, {}> {
                         </h2>
                         <p>
                             Generates oncoprints from your own data.{' '}
-                            <a href="/oncoprinter.jsp">Try it!</a>
+                            <a href="/oncoprinter">Try it!</a>
                         </p>
                         <a href="oncoprinter">
                             <img
