@@ -75,7 +75,6 @@ var config = {
                     (function() {
                         return process.env.HEADLESS_CHROME
                             ? [
-                                  '--headless',
                                   '--no-sandbox',
                                   '--disable-gpu',
                                   '--disable-setuid-sandbox',
