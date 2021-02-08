@@ -105,5 +105,5 @@ var clickAlterationTypeCheckBox = name => {
 
 var submitEnrichmentRequest = () => {
     $('[data-test=buttonSelectAlterations]').click();
-    $('[data-test=GroupComparisonAlterationEnrichments]').waitForVisible(10000);
+    $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(10000);
 };
