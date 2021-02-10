@@ -221,8 +221,8 @@ describe('results view comparison tab screenshot tests', function() {
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=PLA2G2F', 10000);
-            browser.click('b=PLA2G2F');
+            browser.waitForVisible('b=HOXB4', 10000);
+            browser.click('b=HOXB4');
             browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {

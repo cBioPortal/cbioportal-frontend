@@ -471,23 +471,24 @@ describe('Results Page', function() {
             browser.click('.tabAnchor_comparison');
             browser.waitForVisible('.tabAnchor_alterations');
             browser.click('.tabAnchor_alterations');
+
             browser.waitForVisible(
-                `${unaffectedBannerSelector}.mutations-oql-status-banner`,
+                `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
             );
             assert(
                 !browser.isVisible(
-                    `${yesBannerSelector}.mutations-oql-status-banner`
+                    `${unaffectedBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 !browser.isVisible(
-                    `${noBannerSelector}.mutations-oql-status-banner`
+                    `${noBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 browser.isVisible(
-                    `${unaffectedBannerSelector}.mutations-oql-status-banner`
+                    `${yesBannerSelector}.comparison-oql-status-banner`
                 )
             );
         });
