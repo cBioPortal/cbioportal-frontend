@@ -549,6 +549,7 @@ var selectTreamentsBothAxes = () => {
         });
     });
 
+    $('[data-test=ViewLimitValues]').waitForExist();
     if (!$('[data-test=ViewLimitValues]').isSelected()) {
         $('[data-test=ViewLimitValues]').click();
     }
