@@ -2429,13 +2429,13 @@ export class StudyViewPageStore {
     }
 
     @action.bound
-    addGenomicProfilesFilter(profiles: string[][]): void {
+    addGenomicProfilesFilter(chartMeta: ChartMeta, profiles: string[][]): void {
         let genomicProfilesFilter = toJS(this.genomicProfilesFilter) || [];
         this.setGenomicProfilesFilter(genomicProfilesFilter.concat(profiles));
     }
 
     @action.bound
-    addCaseListsFilter(caseLists: string[][]): void {
+    addCaseListsFilter(chartMeta: ChartMeta, caseLists: string[][]): void {
         let caseListsFilter = toJS(this.caseListsFilter) || [];
         this.setCaseListsFilter(caseListsFilter.concat(caseLists));
     }
