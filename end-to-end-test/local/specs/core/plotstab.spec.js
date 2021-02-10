@@ -75,7 +75,13 @@ describe('plots tab', function() {
                 );
                 selectTreatmentProfile();
                 $('.gene-select').click();
-                $('#react-select-4-option-0').click();
+                // select gene menu entries
+                var geneMenuEntries = $('[data-test=GeneColoringMenu]')
+                    .$('div=Genes')
+                    .$('..')
+                    .$$('div')[1]
+                    .$$('div');
+                geneMenuEntries[0].click();
                 $('[data-test=PlotsTabPlotDiv]').waitForVisible();
                 const res = browser.checkElement('[id=plots-tab-plot-svg]');
                 assertScreenShotMatch(res);
