@@ -45,4 +45,4 @@ echo PROBE SELENIUM - SUCCESS
 
 echo RUN E2E-TESTS
 cd /cbioportal-frontend/end-to-end-test
-yarn run test-webdriver-manager-local
+yarn run test-webdriver-manager-debug

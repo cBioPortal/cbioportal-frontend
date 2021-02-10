@@ -23,9 +23,9 @@ describe('results view comparison tab screenshot tests', function() {
             //     20000
             // );
 
-            waitForNetworkQuiet(20000);
+            //waitForNetworkQuiet(20000);
 
-            browser.pause(2000);
+            browser.pause(20000);
         });
 
         it('results view comparison tab alteration enrichments several groups', function() {
