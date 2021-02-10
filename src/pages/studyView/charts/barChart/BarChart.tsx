@@ -302,9 +302,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                 .join(', ');
             return (
                 <VictoryLabel
-                    text={`n/a: ${labelNA}`}
+                    text={`NA: ${labelNA}`}
                     textAnchor="end"
                     datum={{ x: this.maximumX, y: this.maximumY }}
+                    style={{
+                        fontFamily:
+                            VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                        fontSize: VICTORY_THEME.axis.style.tickLabels.fontSize,
+                    }}
                 />
             );
         }
