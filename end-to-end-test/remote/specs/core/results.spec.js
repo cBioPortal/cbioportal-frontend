@@ -468,7 +468,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in alterations tab with explicit query', function() {
-            browser.click('.tabAnchor_mutations');
+            browser.click('.tabAnchor_comparison');
             browser.waitForVisible('.tabAnchor_alterations');
             browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
