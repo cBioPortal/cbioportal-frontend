@@ -354,6 +354,6 @@ if (process.env.TEST_BROWSERSTACK === 'true') {
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
-config.specs = ['./local/specs/core/comparisonTab.screenshot.spec.js'];
+//config.specs = ['./local/specs/core/comparisonTab.screenshot.spec.js'];
 
 exports.config = config;
