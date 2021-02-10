@@ -1,5 +1,7 @@
 var CustomReporter = require('./customReporter');
 
+const errorshot = require('wdio-errorshot-reporter');
+
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
@@ -104,6 +106,8 @@ var config = {
         },
     ],
 
+    // wdio.conf.js
+
     //
     // ===================
     // Test Configurations
@@ -193,7 +197,7 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit', CustomReporter],
+    reporters: ['spec', 'junit', CustomReporter, errorshot],
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH || './',
@@ -207,6 +211,9 @@ var config = {
             outputFileFormat: function(opts) {
                 // optional
                 return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+            },
+            errorshotReporter: {
+                template: 'foobar-%capId%_%timestamp%_%parent%-%title%',
             },
         },
     },
