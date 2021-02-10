@@ -281,7 +281,7 @@ describe('group comparison page screenshot tests', function() {
         it('group comparison page cna enrichments tab two groups', function() {
             browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -296,7 +296,7 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
             browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 30000
             );
             browser.moveToObject('body', 0, 0);
