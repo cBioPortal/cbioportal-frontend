@@ -44,27 +44,23 @@ export default class AlterationEnrichments extends React.Component<
         render: () => {
             let headerName = 'Mutations/Fusions/CNAs';
             return (
-                <div data-test="GroupComparisonAlterationEnrichments">
-                    <AlterationEnrichmentContainer
-                        data={
-                            this.props.store.alterationsEnrichmentData.result!
-                        }
-                        groups={
-                            this.props.store.alterationsEnrichmentAnalysisGroups
-                                .result
-                        }
-                        alteredVsUnalteredMode={false}
-                        headerName={headerName}
-                        patientLevelEnrichments={
-                            this.props.store.usePatientLevelEnrichments
-                        }
-                        onSetPatientLevelEnrichments={
-                            this.props.store.setUsePatientLevelEnrichments
-                        }
-                        store={this.props.resultsViewStore}
-                        comparisonStore={this.props.store}
-                    />
-                </div>
+                <AlterationEnrichmentContainer
+                    data={this.props.store.alterationsEnrichmentData.result!}
+                    groups={
+                        this.props.store.alterationsEnrichmentAnalysisGroups
+                            .result
+                    }
+                    alteredVsUnalteredMode={false}
+                    headerName={headerName}
+                    patientLevelEnrichments={
+                        this.props.store.usePatientLevelEnrichments
+                    }
+                    onSetPatientLevelEnrichments={
+                        this.props.store.setUsePatientLevelEnrichments
+                    }
+                    store={this.props.resultsViewStore}
+                    comparisonStore={this.props.store}
+                />
             );
         },
         renderPending: () => (
