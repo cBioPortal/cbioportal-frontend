@@ -49,7 +49,6 @@ import {
     StudyViewFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
-    PatientTreatmentRow,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
