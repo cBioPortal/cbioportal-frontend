@@ -13,7 +13,7 @@ require.extensions['.txt'] = function(module, filename) {
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 1;
+var defaultMaxInstances = 3;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir =
@@ -361,6 +361,7 @@ if (process.env.TEST_BROWSERSTACK === 'true') {
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
-//config.specs = ['./local/specs/core/comparisonTab.screenshot.spec.js'];
+//config.specs = ['./remote/specs/core/results.spec.js'];
+//config.specs = ['./remote/specs/core/studyview.spec.js'];
 
 exports.config = config;
