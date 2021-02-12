@@ -16185,7 +16185,7 @@ oncokb-styles@~1.0.1:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.0.1.tgz#b82960016b0b10982f299b00fc34f99782ff6b5f"
   integrity sha512-zpicH/GbMAVJ0Kjw6fuLyiNQARJAQARcSD5W6ohNDQn5Ei11pZtKlRN7TVcDzjUjaTkUoQOPyYuanM+fk32Z4g==
 
-oncoprintjs@4.2.4:
+oncoprintjs@4.2.4, oncoprintjs@^4.2.3:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.2.4.tgz#ddfb3704b2a09a32585f3895622a5f5d3a6557aa"
   integrity sha512-YqFjtr4iDeW3mJPvPar2XUPiOac+pDfFtO0Q2UnA9XM4cAcjPQLsSsCIQ/LcfDEXLMpcRQDOkSXeGst6peLmgA==
@@ -16747,9 +16747,9 @@ pathval@^1.1.0:
   resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
   integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
 
-"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#921401e3a725fb4bb03bfde3d22c4d6238c6f2dc":
-  version "2.0.3"
-  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/921401e3a725fb4bb03bfde3d22c4d6238c6f2dc"
+"pathway-mapper@github:iVis-at-Bilkent/pathway-mapper#16e6b341b7e61bd603d7675350dd64eb10a6f91b":
+  version "2.1.3"
+  resolved "https://codeload.github.com/iVis-at-Bilkent/pathway-mapper/tar.gz/16e6b341b7e61bd603d7675350dd64eb10a6f91b"
   dependencies:
     "@datastructures-js/max-heap" "^2.0.0"
     autobind-decorator "^2.4.0"
@@ -16768,13 +16768,14 @@ pathval@^1.1.0:
     file-saver "^2.0.2"
     jquery-ui-dist "^1.12.1"
     konva "^1.6.3"
+    lodash "^4.17.11"
+    oncoprintjs "^4.2.3"
     react-loader-spinner "^2.3.0"
     react-scrollbar "^0.5.6"
     react-table "^6.10.0"
     react-toastify "^5.3.1"
     react-tooltip "^3.10.0"
     sharedb "^1.1.0"
-    underscore "~1.8.3"
 
 pbf@^3.0.5:
   version "3.2.0"
@@ -22907,11 +22908,6 @@ underscore@^1.8.3:
   version "1.9.1"
   resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.9.1.tgz#06dce34a0e68a7babc29b365b8e74b8925203961"
   integrity sha512-5/4etnCkd9c8gwgowi5/om/mYO5ajCaOgdzj/oW+0eQV9WxKBDZw5+ycmKmeaTXjInS/W0BzpGLo2xR2aBwZdg==
-
-underscore@~1.8.3:
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/underscore/-/underscore-1.8.3.tgz#4f3fb53b106e6097fcf9cb4109f2a5e9bdfa5022"
-  integrity sha1-Tz+1OxBuYJf8+ctBCfKl6b36UCI=
 
 unherit@^1.0.4:
   version "1.1.1"
