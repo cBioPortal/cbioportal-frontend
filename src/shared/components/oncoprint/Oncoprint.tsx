@@ -21,6 +21,18 @@ import {
 import './styles.scss';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
 
+export type CategoricalTrackDatum = {
+    entity: string;
+    profile_name: string;
+    study_id?: string;
+    sample?: string;
+    patient: string;
+    uid: string;
+    attr_val_counts: { [val: string]: number };
+    attr_val?: string | number | CategoricalTrackDatum['attr_val_counts'];
+    na?: boolean;
+};
+
 export type ClinicalTrackDatum = {
     attr_id: string;
     study_id?: string;
@@ -183,6 +195,24 @@ export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     expansionCallback: () => void;
 }
 
+export interface ICategoricalTrackSpec {
+    key: string;
+    label: string;
+    molecularProfileId: string;
+    molecularProfileName: string;
+    molecularAlterationType: MolecularProfile['molecularAlterationType'];
+    genericAssayType: string;
+    datatype: MolecularProfile['datatype'];
+    data: CategoricalTrackDatum[];
+    trackGroupIndex: number;
+    trackLinkUrl: string | undefined;
+    onRemove?: () => void;
+    onClickRemoveInTrackMenu?: () => void;
+    naLegendLabel?: string;
+    description?: string;
+    info?: string;
+}
+
 export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;
 
@@ -195,6 +225,7 @@ export interface IOncoprintProps {
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
     heatmapTracks: IHeatmapTrackSpec[];
     heatmapTracksOrder?: { [trackGroupIndex: number]: string[] }; // track keys
+    categoricalTracks: ICategoricalTrackSpec[];
     additionalTrackGroupHeaders?: {
         [trackGroupIndex: number]: TrackGroupHeader;
     };

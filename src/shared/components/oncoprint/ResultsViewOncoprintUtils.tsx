@@ -250,6 +250,20 @@ export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(gen
     );
 }
 
+export function isGenericAssayCategoricalProfile(m: MolecularProfile) {
+    return (
+        m.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY &&
+        m.datatype !== GenericAssayDataType.LIMIT_VALUE
+    );
+}
+
+export function isGenericAssayHeatmapProfile(m: MolecularProfile) {
+    return (
+        m.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY &&
+        m.datatype === GenericAssayDataType.LIMIT_VALUE
+    );
+}
+
 export function makeTrackGroupHeaders(
     molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
     molecularProfileIdToAdditionalTracks: {
@@ -269,11 +283,7 @@ export function makeTrackGroupHeaders(
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
                 ];
-            if (
-                profile.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY &&
-                profile.datatype !== GenericAssayDataType.LIMIT_VALUE
-            ) {
+            if (isGenericAssayCategoricalProfile(profile)) {
                 type = 'categorical';
             } else {
                 type = 'heatmap';

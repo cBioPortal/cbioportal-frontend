@@ -302,3 +302,11 @@ export const heatmapTrackSortComparator = (() => {
         mandatory: comparator,
     };
 })();
+
+export const categoricalTrackSortComparator = (() => {
+    const comparator = stringClinicalComparator;
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator,
+    };
+})();

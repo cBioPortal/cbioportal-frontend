@@ -14,8 +14,10 @@ import {
     Mutation,
     Patient,
     Sample,
+    GenericAssayData,
 } from 'cbioportal-ts-api-client';
 import {
+    CategoricalTrackDatum,
     ClinicalTrackDatum,
     GeneticTrackDatum,
     GeneticTrackDatum_Data,
@@ -478,6 +480,77 @@ function selectRepresentingDataPoint(
     } else {
         return selData[0];
     }
+}
+
+function fillCategoricalTrackDatum(
+    newDatum: Partial<CategoricalTrackDatum>,
+    data: GenericAssayData[],
+    entityId: string,
+    profile: MolecularProfile
+) {
+    newDatum.profile_name = profile.name;
+    newDatum.study_id = profile.studyId;
+    newDatum.entity = entityId;
+
+    newDatum.attr_val_counts = _.countBy(data, d => d.value);
+    const attr_vals = Object.keys(newDatum.attr_val_counts);
+    switch (attr_vals.length) {
+        case 0:
+            newDatum.na = true;
+            break;
+        case 1:
+            newDatum.attr_val = attr_vals[0];
+            break;
+        default:
+            newDatum.attr_val = 'Mixed';
+            break;
+    }
+}
+
+export function makeCategoricalTrackData(
+    profile: MolecularProfile,
+    entityId: string,
+    cases: Sample[] | Patient[],
+    data: GenericAssayData[]
+) {
+    let ret: CategoricalTrackDatum[];
+    let keyToData: { [uniqueKey: string]: GenericAssayData[] };
+    if (isSampleList(cases)) {
+        keyToData = _.groupBy(data, (d: GenericAssayData) => d.uniqueSampleKey);
+        ret = cases.map(c => {
+            const trackDatum: Partial<CategoricalTrackDatum> = {};
+            trackDatum.sample = c.sampleId;
+            trackDatum.patient = c.patientId;
+            trackDatum.uid = c.uniqueSampleKey;
+            fillCategoricalTrackDatum(
+                trackDatum,
+                keyToData[c.uniqueSampleKey],
+                entityId,
+                profile
+            );
+
+            return trackDatum as CategoricalTrackDatum;
+        });
+    } else {
+        keyToData = _.groupBy(
+            data,
+            (d: GenericAssayData) => d.uniquePatientKey
+        );
+        ret = cases.map(c => {
+            const trackDatum: Partial<CategoricalTrackDatum> = {};
+            trackDatum.patient = c.patientId;
+            trackDatum.uid = c.uniquePatientKey;
+            fillCategoricalTrackDatum(
+                trackDatum,
+                keyToData[c.uniquePatientKey],
+                entityId,
+                profile
+            );
+
+            return trackDatum as CategoricalTrackDatum;
+        });
+    }
+    return ret;
 }
 
 export function makeHeatmapTrackData<

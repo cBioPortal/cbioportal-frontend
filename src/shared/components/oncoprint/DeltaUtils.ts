@@ -4,6 +4,7 @@ import {
     GENETIC_TRACK_GROUP_INDEX,
     GeneticTrackSpec,
     IBaseHeatmapTrackDatum,
+    ICategoricalTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     IOncoprintProps,
@@ -11,6 +12,7 @@ import {
 import OncoprintJS, { SortConfig, TrackId, UserTrackSpec } from 'oncoprintjs';
 import _ from 'lodash';
 import {
+    getCategoricalTrackRuleSetParams,
     getClinicalTrackRuleSetParams,
     getGenesetHeatmapTrackRuleSetParams,
     getGeneticTrackRuleSetParams,
@@ -20,9 +22,11 @@ import {
     getClinicalTrackSortComparator,
     getGeneticTrackSortComparator,
     heatmapTrackSortComparator,
+    categoricalTrackSortComparator,
 } from './SortUtils';
 import {
     linebreakGenesetId,
+    makeCategoricalTrackTooltip,
     makeClinicalTrackTooltip,
     makeGeneticTrackTooltip,
     makeHeatmapTrackTooltip,
@@ -829,6 +833,34 @@ function transitionTracks(
         oncoprint,
         getTrackSpecKeyToTrackId
     );
+
+    // Transition categorical tracks
+    const prevCategoricalTracks = _.keyBy(
+        prevProps.categoricalTracks,
+        (track: ICategoricalTrackSpec) => track.key
+    );
+    for (const track of nextProps.categoricalTracks) {
+        transitionCategoricalTrack(
+            track,
+            prevCategoricalTracks[track.key],
+            getTrackSpecKeyToTrackId,
+            oncoprint,
+            nextProps
+        );
+        delete prevCategoricalTracks[track.key];
+    }
+    for (const track of prevProps.categoricalTracks || []) {
+        if (prevCategoricalTracks.hasOwnProperty(track.key)) {
+            // if its still there, then this track no longer exists
+            transitionCategoricalTrack(
+                undefined,
+                prevCategoricalTracks[track.key],
+                getTrackSpecKeyToTrackId,
+                oncoprint,
+                nextProps
+            );
+        }
+    }
 }
 
 function transitionGeneticTrackOrder(
@@ -1466,6 +1498,74 @@ export function transitionHeatmapTrack(
                     nextSpec,
                     nextProps.caseLinkOutInTooltips
                 )
+        );
+    }
+}
+
+function transitionCategoricalTrack(
+    nextSpec: ICategoricalTrackSpec | undefined,
+    prevSpec: ICategoricalTrackSpec | undefined,
+    getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
+    oncoprint: OncoprintJS,
+    nextProps: IOncoprintProps
+) {
+    const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+    if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
+        return;
+    } else if (nextSpec && !prevSpec) {
+        // Add track
+        const rule_set_params: any = getCategoricalTrackRuleSetParams(nextSpec);
+        rule_set_params.legend_label = nextSpec.label;
+        rule_set_params.na_legend_label = nextSpec.naLegendLabel;
+        const trackParams: UserTrackSpec<any> = {
+            rule_set_params,
+            data: nextSpec.data,
+            data_id_key: 'uid',
+            track_padding: 0,
+            label: nextSpec.label,
+            target_group: nextSpec.trackGroupIndex,
+            removable:
+                !!nextSpec.onRemove || !!nextSpec.onClickRemoveInTrackMenu,
+            removeCallback: () => {
+                delete getTrackSpecKeyToTrackId()[nextSpec.key];
+                nextSpec.onRemove && nextSpec.onRemove();
+            },
+            onClickRemoveInTrackMenu: () => {
+                nextSpec.onClickRemoveInTrackMenu &&
+                    nextSpec.onClickRemoveInTrackMenu();
+            },
+            sort_direction_changeable: true,
+            sortCmpFn: categoricalTrackSortComparator,
+            init_sort_direction: 0 as 0,
+            description: ifNotDefined(
+                nextSpec.description,
+                `${nextSpec.label} data from ${nextSpec.molecularProfileId}`
+            ),
+            link_url: nextSpec.trackLinkUrl,
+            tooltipFn: makeCategoricalTrackTooltip(
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
+            ),
+            track_info: nextSpec.info || '',
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+        };
+        trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([
+            trackParams,
+        ])[0];
+    } else if (nextSpec && prevSpec) {
+        // Transition track
+        const trackId = trackSpecKeyToTrackId[nextSpec.key];
+        if (nextSpec.data !== prevSpec.data) {
+            // shallow equality check
+            oncoprint.setTrackData(trackId, nextSpec.data, 'uid');
+        }
+        // set tooltip, its cheap
+        oncoprint.setTrackTooltipFn(
+            trackId,
+            makeCategoricalTrackTooltip(
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
+            )
         );
     }
 }

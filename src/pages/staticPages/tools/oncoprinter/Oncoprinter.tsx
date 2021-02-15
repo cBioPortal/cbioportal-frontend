@@ -442,6 +442,7 @@ export default class Oncoprinter extends React.Component<
                                 geneticTracks={
                                     this.props.store.geneticTracks.result
                                 }
+                                categoricalTracks={[]} // TODO: allow import of generic assay categorical tracks
                                 geneticTracksOrder={
                                     this.props.store.geneOrder &&
                                     this.props.store.geneOrder.map(
