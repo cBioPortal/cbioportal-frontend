@@ -1,4 +1,5 @@
 import OncoprintJS, {
+    ICategoricalRuleSetParams,
     IGeneticAlterationRuleSetParams,
     IGradientRuleSetParams,
     RuleSetParams,
@@ -13,6 +14,7 @@ import {
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     IGenericAssayHeatmapTrackDatum,
+    ICategoricalTrackSpec,
 } from './Oncoprint';
 import {
     genetic_rule_set_different_colors_no_recurrence,
@@ -31,6 +33,7 @@ import {
 import { CoverageInformation } from '../../lib/GenePanelUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
+    makeCategoricalTrackData,
     makeClinicalTrackData,
     makeGeneticTrackData,
     makeHeatmapTrackData,
@@ -61,9 +64,15 @@ import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
+    GenericAssayDataType,
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import ifNotDefined from '../../lib/ifNotDefined';
+import {
+    getGenericAssayTrackCacheQueries,
+    isGenericAssayCategoricalProfile,
+    isGenericAssayHeatmapProfile,
+} from 'shared/components/oncoprint/ResultsViewOncoprintUtils';
 
 interface IGenesetExpansionMap {
     [genesetTrackKey: string]: IHeatmapTrackSpec[];
@@ -486,6 +495,19 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
             break;
     }
     return params;
+}
+
+export function getCategoricalTrackRuleSetParams(
+    track: ICategoricalTrackSpec
+): ICategoricalRuleSetParams {
+    return {
+        type: RuleSetType.CATEGORICAL,
+        category_key: 'attr_val',
+        category_to_color: _.mapValues(
+            RESERVED_CLINICAL_VALUE_COLORS,
+            hexToRGBA
+        ),
+    };
 }
 
 export function percentAltered(altered: number, sequenced: number) {
@@ -1053,7 +1075,7 @@ export function makeHeatmapTracksMobxPromise(
                                 trackGroup.entities
                             ).filter(entity => entity !== gene);
                             if (newEntities.length === 0) {
-                                oncoprint.removeHeatmapByMolecularProfileId(
+                                oncoprint.removeHeatmapTracksByMolecularProfileId(
                                     molecularProfileId
                                 );
                             } else {
@@ -1075,6 +1097,112 @@ export function makeHeatmapTracksMobxPromise(
                     }),
                 };
             });
+        },
+        default: [],
+    });
+}
+
+export function makeGenericAssayProfileCategoricalTracksMobxPromise(
+    oncoprint: ResultsViewOncoprint,
+    sampleMode: boolean
+) {
+    return remoteData<ICategoricalTrackSpec[]>({
+        await: () => [
+            oncoprint.props.store.filteredSamples,
+            oncoprint.props.store.filteredPatients,
+            oncoprint.props.store.molecularProfileIdToMolecularProfile,
+            oncoprint.props.store.genericAssayMolecularDataCache,
+            oncoprint.props.store
+                .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap,
+            oncoprint.props.store.genericAssayEntitiesGroupedByGenericAssayType,
+        ],
+        invoke: async () => {
+            const molecularProfileIdToMolecularProfile = oncoprint.props.store
+                .molecularProfileIdToMolecularProfile.result!;
+            const molecularProfileIdToAdditionalTracks =
+                oncoprint.molecularProfileIdToAdditionalTracks;
+
+            const genericAssayProfiles = _.filter(
+                molecularProfileIdToAdditionalTracks,
+                groupInfo =>
+                    isGenericAssayCategoricalProfile(groupInfo.molecularProfile)
+            );
+
+            const cacheQueries = getGenericAssayTrackCacheQueries(
+                genericAssayProfiles,
+                molecularProfileIdToMolecularProfile,
+                oncoprint
+            );
+
+            await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(
+                cacheQueries.map(query => {
+                    return {
+                        molecularProfileId: query.molecularProfileId,
+                        stableId: query.stableId,
+                    };
+                }),
+                true
+            );
+
+            const samples = oncoprint.props.store.filteredSamples.result!;
+            const patients = oncoprint.props.store.filteredPatients.result!;
+
+            const tracks = cacheQueries.map(query => {
+                const molecularProfileId = query.molecularProfileId;
+                const profile =
+                    molecularProfileIdToMolecularProfile[molecularProfileId];
+                const dataCache = oncoprint.props.store
+                    .genericAssayMolecularDataCache.result!;
+
+                const entityId = query.stableId;
+                const genericAssayType = profile.genericAssayType;
+                const entityLinkMap = oncoprint.props.store
+                    .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                    .result![profile.genericAssayType];
+
+                return {
+                    key: `GENERICASSAYCATEGORICALTRACK_${molecularProfileId},${entityId}`,
+                    label: query.entityName,
+                    description: query.description,
+                    molecularProfileId: query.molecularProfileId,
+                    molecularProfileName:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .name,
+                    molecularAlterationType:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .molecularAlterationType,
+                    datatype:
+                        molecularProfileIdToMolecularProfile[molecularProfileId]
+                            .datatype,
+                    data: makeCategoricalTrackData(
+                        profile,
+                        entityId,
+                        sampleMode ? samples : patients,
+                        dataCache.get(query)!.data!
+                    ),
+                    genericAssayType: genericAssayType,
+                    trackLinkUrl: entityLinkMap[entityId],
+                    trackGroupIndex: molecularProfileIdToAdditionalTracks[
+                        molecularProfileId
+                    ]!.trackGroupIndex,
+                    onClickRemoveInTrackMenu: action(() => {
+                        const trackGroup = oncoprint
+                            .molecularProfileIdToAdditionalTracks[
+                            molecularProfileId
+                        ]!;
+                        if (trackGroup) {
+                            const newEntities = _.keys(
+                                trackGroup.entities
+                            ).filter(entity => entity !== entityId);
+                            oncoprint.addGenericAssayTracks(
+                                molecularProfileId,
+                                newEntities
+                            );
+                        }
+                    }),
+                };
+            });
+            return tracks;
         },
         default: [],
     });
@@ -1102,48 +1230,14 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
 
             const genericAssayProfiles = _.filter(
                 molecularProfileIdToAdditionalTracks,
-                d =>
-                    d.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY
+                groupInfo =>
+                    isGenericAssayHeatmapProfile(groupInfo.molecularProfile)
             );
 
-            const cacheQueries = _.flatten(
-                genericAssayProfiles.map(entry => {
-                    const type =
-                        molecularProfileIdToMolecularProfile[
-                            entry.molecularProfileId
-                        ].genericAssayType;
-                    const genericAssayEntitiesByEntityId = _.keyBy(
-                        oncoprint.props.store
-                            .genericAssayEntitiesGroupedByGenericAssayType
-                            .result![type],
-                        t => t.stableId
-                    );
-                    return _.keys(entry.entities).map(entityId => {
-                        const entity = genericAssayEntitiesByEntityId[entityId];
-                        const entityName = getGenericAssayMetaPropertyOrDefault(
-                            entity,
-                            COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                            entityId
-                        );
-                        const description =
-                            ('DESCRIPTION' in entity.genericEntityMetaProperties
-                                ? `${entityName} (${entity.genericEntityMetaProperties['DESCRIPTION']})`
-                                : entityName) +
-                            ` data from ${
-                                molecularProfileIdToMolecularProfile[
-                                    entry.molecularProfileId
-                                ].name
-                            }`;
-
-                        return {
-                            molecularProfileId: entry.molecularProfileId,
-                            stableId: entityId,
-                            entityName,
-                            description,
-                        };
-                    });
-                })
+            const cacheQueries = getGenericAssayTrackCacheQueries(
+                genericAssayProfiles,
+                molecularProfileIdToMolecularProfile,
+                oncoprint
             );
 
             await oncoprint.props.store.genericAssayMolecularDataCache.result!.getPromise(

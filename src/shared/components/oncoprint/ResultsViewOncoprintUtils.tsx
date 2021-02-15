@@ -12,11 +12,15 @@ import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import {
+    COMMON_GENERIC_ASSAY_PROPERTY,
     GenericAssayDataType,
+    getGenericAssayMetaPropertyOrDefault,
     makeGenericAssayOption,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
-import { AdditionalTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
+import ResultsViewOncoprint, {
+    AdditionalTrackGroupRecord,
+} from 'shared/components/oncoprint/ResultsViewOncoprint';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 
 export const alterationTypeToProfiledForText: {
@@ -250,6 +254,61 @@ export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(gen
     );
 }
 
+export function getGenericAssayTrackCacheQueries(
+    groups: AdditionalTrackGroupRecord[],
+    molecularProfileIdToMolecularProfile: { [id: string]: MolecularProfile },
+    oncoprint: ResultsViewOncoprint
+) {
+    return _.flatten(
+        groups.map(entry => {
+            const type =
+                molecularProfileIdToMolecularProfile[entry.molecularProfileId]
+                    .genericAssayType;
+            const genericAssayEntitiesByEntityId = _.keyBy(
+                oncoprint.props.store
+                    .genericAssayEntitiesGroupedByGenericAssayType.result![
+                    type
+                ],
+                t => t.stableId
+            );
+            return _.keys(entry.entities).map(entityId => {
+                const entity = genericAssayEntitiesByEntityId[entityId];
+                const entityName = getGenericAssayMetaPropertyOrDefault(
+                    entity,
+                    COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                    entityId
+                );
+                const description = getGenericAssayMetaPropertyOrDefault(
+                    entity,
+                    COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+                    entityName
+                );
+
+                return {
+                    molecularProfileId: entry.molecularProfileId,
+                    stableId: entityId,
+                    entityName,
+                    description,
+                };
+            });
+        })
+    );
+}
+
+export function isGenericAssayCategoricalProfile(m: MolecularProfile) {
+    return (
+        m.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY &&
+        m.datatype !== GenericAssayDataType.LIMIT_VALUE
+    );
+}
+
+export function isGenericAssayHeatmapProfile(m: MolecularProfile) {
+    return (
+        m.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY &&
+        m.datatype === GenericAssayDataType.LIMIT_VALUE
+    );
+}
+
 export function makeTrackGroupHeaders(
     molecularProfileIdToMolecularProfile: { [p: string]: MolecularProfile },
     molecularProfileIdToAdditionalTracks: {
@@ -269,11 +328,7 @@ export function makeTrackGroupHeaders(
                 molecularProfileIdToMolecularProfile[
                     nextEntry.molecularProfileId
                 ];
-            if (
-                profile.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY &&
-                profile.datatype !== GenericAssayDataType.LIMIT_VALUE
-            ) {
+            if (isGenericAssayCategoricalProfile(profile)) {
                 type = 'categorical';
             } else {
                 type = 'heatmap';
