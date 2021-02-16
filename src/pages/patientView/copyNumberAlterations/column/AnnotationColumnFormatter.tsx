@@ -231,6 +231,7 @@ export default class AnnotationColumnFormatter
             columnProps,
             columnProps.oncoKbEvidenceCache,
             evidenceQuery,
-            columnProps.pubMedCache);
+            columnProps.pubMedCache,
+            columnProps.pharmacoDBCnaCache);
     }
 }

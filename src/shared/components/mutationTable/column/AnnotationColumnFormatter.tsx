@@ -18,6 +18,7 @@ import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneDat
 import {buildCivicEntry} from "shared/lib/CivicUtils";
 import { IPharmacoDBCnaEntry, IPharmacoDBView, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
 import PharmacoDB from 'shared/components/annotation/PharmacoDB';
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
 
 
 export interface IAnnotationColumnProps {
@@ -37,6 +38,7 @@ export interface IAnnotationColumnProps {
     civicVariants?: ICivicVariantDataWrapper;
     uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string};
     cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
+    pharmacoDBCnaCache?: PharmacoDBCnaCache;
     studyIdToStudy?: {[studyId:string]:CancerStudy};
 }
 
@@ -319,7 +321,8 @@ export default class AnnotationColumnFormatter
                               columnProps:IAnnotationColumnProps,
                               evidenceCache?: OncoKbEvidenceCache,
                               evidenceQuery?: Query,
-                              pubMedCache?:OncokbPubMedCache)
+                              pubMedCache?:OncokbPubMedCache,
+                              pharmacoDBCnaCache?:PharmacoDBCnaCache)
     {
         return (
             <span style={{display:'inline-block', minWidth:100}}>
@@ -346,6 +349,7 @@ export default class AnnotationColumnFormatter
                     <PharmacoDB
                         pharmacoDBEntry={annotation.pharmacoDBView}
                         pharmacoDBStatus={annotation.pharmacoDBStatus}
+                        pharmacoDBCnaCache={pharmacoDBCnaCache}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>

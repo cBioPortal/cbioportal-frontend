@@ -7,10 +7,12 @@ import annotationStyles from "./styles/annotation.module.scss";
 import {IPharmacoDBView} from "shared/model/PharmacoDB.ts";
 import {observable} from "mobx";
 import  PharmacoDBTooltip from "./PharmacoDBTooltip";
+import PharmacoDBCnaCache from "../../cache/PharmacoDBCnaCache";
 
 export interface IPharmacoDBProps { 
     pharmacoDBEntry: IPharmacoDBView | null | undefined;
     pharmacoDBStatus: "pending" | "error" | "complete";
+    pharmacoDBCnaCache?: PharmacoDBCnaCache;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -128,8 +130,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
         let oncoTreeCode:string = pharmacoDBEntry.onco_tree_code;
         let direction:string = 'NA';
         let geneName:string = pharmacoDBEntry.gene;
-        let contentURL :string = "https://cbioapi.pharmacodb.ca/v1/genes/cna/" + oncoTreeCode + "?gene=" + geneName
-        + "&cna=" + status + "&retrieveData=true" ;
+
 
 
         return(
@@ -138,6 +139,7 @@ export default class PharmacoDB extends React.Component<IPharmacoDBProps, {}>
             geneName={geneName}
             cna={status}
             direction={direction}
+            pharmacoDBCnaCache={this.props.pharmacoDBCnaCache}
         />
         );
 

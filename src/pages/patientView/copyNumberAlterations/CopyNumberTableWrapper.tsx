@@ -19,6 +19,7 @@ import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import { IPharmacoDBCnaEntry, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -41,6 +42,7 @@ type ICopyNumberTableWrapperProps = {
     enableCivic?:boolean;
     enablePharmacoDB?:boolean;
     pubMedCache?:PubMedCache;
+    pharmacoDBCnaCache?: PharmacoDBCnaCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -113,6 +115,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 enableCivic: this.props.enableCivic as boolean,
                 uniqueSampleKeyToOncoTreeCode: this.props.uniqueSampleKeyToOncoTreeCode,
                 cnaPharmacoDBViewListDW: this.props.cnaPharmacoDBViewListDW,
+                pharmacoDBCnaCache: this.props.pharmacoDBCnaCache,
                 enablePharmacoDB: this.props.enablePharmacoDB as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false,

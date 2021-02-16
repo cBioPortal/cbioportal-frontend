@@ -22,6 +22,7 @@ import {
 } from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
@@ -746,6 +747,10 @@ export class PatientViewPageStore {
 
     @cached get pubMedCache() {
         return new PubMedCache();
+    }
+
+    @cached get pharmacoDBCnaCache() {
+        return new PharmacoDBCnaCache();
     }
 
     @cached get copyNumberCountCache() {

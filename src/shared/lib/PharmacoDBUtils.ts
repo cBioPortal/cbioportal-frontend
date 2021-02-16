@@ -3,10 +3,15 @@ import {IPharmacoDBGeneDrugAssociationData, IPharmacoDBView,IPharmacoDBViewList,
 import pharmacoDBClient from "shared/api/PharmacoDBClientInstance";
 import { DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 
-export function getPharmacoDBCnaDetails(cnareq: IPharmacoDBCnaRequest): Promise<IPharmacoDBCnaEntry> {
+export function getPharmacoDBCnaDetails(cnareq: IPharmacoDBCnaRequest): Promise<IPharmacoDBCnaEntry[]> {
     return pharmacoDBClient.getCNACardData(cnareq.oncotreecode,cnareq.gene,cnareq.cna);
 }
 
+export async function fetchPharmacoDBCnaDetails(cnareqs: IPharmacoDBCnaRequest[])
+{
+    const cnaCardData = cnareqs.length > 0 ? await getPharmacoDBCnaDetails(cnareqs[0]): [];
+    return cnaCardData;    
+}
 
 /**
  * Asynchronously return a map with PharmacoDB information from the oncoTreeCode, genes and CNA Viewdata given.

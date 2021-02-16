@@ -493,6 +493,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             enablePharmacoDB={AppConfig.serverConfig.show_pharmacodb}
                                             userEmailAddress={AppConfig.serverConfig.user_email_address}
                                             pubMedCache={patientViewPageStore.pubMedCache}
+                                            pharmacoDBCnaCache={patientViewPageStore.pharmacoDBCnaCache}
                                             data={patientViewPageStore.mergedDiscreteCNAData}
                                             copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                             mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}

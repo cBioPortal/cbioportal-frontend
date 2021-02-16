@@ -18,7 +18,7 @@ export default class PharmacoDBAPI {
               });
     }
     
-    getCNACardData(oncoTreeCode: string, geneName: string, cna: string): Promise<IPharmacoDBCnaEntry> {
+    getCNACardData(oncoTreeCode: string, geneName: string, cna: string): Promise<IPharmacoDBCnaEntry[]> {
         return request.get('https://cbioapi.pharmacodb.ca/v1/genes/cna/' + oncoTreeCode)
         .query({gene: geneName})
         .query({cna: cna})
