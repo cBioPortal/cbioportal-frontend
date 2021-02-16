@@ -1,0 +1,21 @@
+// Mutation colors
+export const MUT_COLOR_MISSENSE = '#008000';
+export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
+export const MUT_COLOR_INFRAME = '#993404';
+export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
+export const MUT_COLOR_TRUNC = '#000000';
+export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
+export const MUT_COLOR_SPLICE = '#e5802b';
+export const MUT_COLOR_SPLICE_PASSENGER = '#f0b87b';
+export const MUT_COLOR_FUSION = '#8B00C9';
+export const MUT_COLOR_PROMOTER = '#00B7CE';
+export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
+export const MRNA_COLOR_HIGH = '#ff9999';
+export const MRNA_COLOR_LOW = '#6699cc';
+export const MUT_COLOR_GERMLINE = '#FFFFFF';
+export const PROT_COLOR_HIGH = '#ff3df8';
+export const PROT_COLOR_LOW = '#00E1FF';
+export const CNA_COLOR_AMP = '#ff0000';
+export const CNA_COLOR_GAIN = '#ffb6c1';
+export const CNA_COLOR_HETLOSS = '#8fd8d8';
+export const CNA_COLOR_HOMDEL = '#0000ff';

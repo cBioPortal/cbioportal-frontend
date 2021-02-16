@@ -49,12 +49,7 @@ import {
     getTextWidth,
     stringListToIndexSet,
 } from 'cbioportal-frontend-commons';
-import {
-    CNA_COLOR_AMP,
-    CNA_COLOR_HOMDEL,
-    DEFAULT_NA_COLOR,
-    getClinicalValueColor,
-} from 'shared/lib/Colors';
+import { DEFAULT_NA_COLOR, getClinicalValueColor } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
@@ -69,6 +64,7 @@ import {
     ClinicalDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
+import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {

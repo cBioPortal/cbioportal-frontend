@@ -1,16 +1,18 @@
 import * as React from 'react';
 import {
-    MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
-    MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
+    MUT_COLOR_INFRAME,
     MUT_COLOR_FUSION,
-} from '../../util/MutationTypeUtils';
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_OTHER,
+} from 'cbioportal-frontend-commons';
 
 type DefaultLollipopPlotLegendProps = {
     missenseColor?: string;
     truncatingColor?: string;
     inframeColor?: string;
+    spliceColor?: string;
     fusionColor?: string;
     otherColor?: string;
 };
@@ -22,6 +24,7 @@ export default class DefaultLollipopPlotLegend extends React.Component<
         missenseColor: MUT_COLOR_MISSENSE,
         truncatingColor: MUT_COLOR_TRUNC,
         inframeColor: MUT_COLOR_INFRAME,
+        spliceColor: MUT_COLOR_SPLICE,
         fusionColor: MUT_COLOR_FUSION,
         otherColor: MUT_COLOR_OTHER,
     };

@@ -4,23 +4,23 @@ import {
     getCanonicalMutationType,
     getProteinImpactTypeFromCanonical,
     ProteinImpactType,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_OTHER,
 } from 'cbioportal-frontend-commons';
 import { Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 
 import { IProteinImpactTypeColors } from '../model/ProteinImpact';
 
-// Default Protein Impact Type colors
-export const MUT_COLOR_MISSENSE = '#008000';
-export const MUT_COLOR_INFRAME = '#993404';
-export const MUT_COLOR_TRUNC = '#000000';
-export const MUT_COLOR_FUSION = '#8b00c9';
-export const MUT_COLOR_OTHER = '#CF58BC';
-
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
     inframeColor: MUT_COLOR_INFRAME,
     truncatingColor: MUT_COLOR_TRUNC,
+    spliceColor: MUT_COLOR_SPLICE,
     fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
@@ -88,14 +88,16 @@ export function getColorForProteinImpactType(
         );
 
         switch (proteinImpactType) {
-            case 'missense':
+            case ProteinImpactType.MISSENSE:
                 return colors.missenseColor;
-            case 'truncating':
+            case ProteinImpactType.TRUNCATING:
                 return colors.truncatingColor;
-            case 'inframe':
+            case ProteinImpactType.INFRAME:
                 return colors.inframeColor;
-            case 'fusion':
+            case ProteinImpactType.FUSION:
                 return colors.fusionColor;
+            case ProteinImpactType.SPLICE:
+                return colors.spliceColor;
             default:
                 return colors.otherColor;
         }
