@@ -20,6 +20,7 @@ import {
     uniqueGenomicLocations,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
+import memoize from 'memoize-weak-decorator';
 
 import {
     CancerGene,
@@ -226,15 +227,35 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         }
     }
 
-    public getAnnotatedMutations(transcriptId: string): Mutation[] {
+    @memoize
+    protected getAnnotatedMutationsByTranscriptId(
+        mutations: Mutation[],
+        transcriptId: string,
+        indexedVariantAnnotations: {
+            [genomicLocation: string]: VariantAnnotation;
+        }
+    ) {
         // by default annotate every mutation, no check for canonical transcript
-        return this.indexedVariantAnnotations.result
-            ? getMutationsByTranscriptId(
-                  this.getMutations(),
-                  transcriptId,
-                  this.indexedVariantAnnotations.result
-              )
-            : this.getMutations();
+        return getMutationsByTranscriptId(
+            mutations,
+            transcriptId,
+            indexedVariantAnnotations
+        );
+    }
+
+    public getAnnotatedMutations(transcriptId: string): Mutation[] {
+        // in case we don't have any annotation for the given set of mutations or the annotation fails due to an error
+        // (external service error, etc.) we just return the input set of mutations as is. Ideally this function
+        // should not be invoked when this.indexedVariantAnnotations.result is undefined
+        if (this.indexedVariantAnnotations.result) {
+            return this.getAnnotatedMutationsByTranscriptId(
+                this.getMutations(),
+                transcriptId,
+                this.indexedVariantAnnotations.result
+            );
+        } else {
+            return this.getMutations();
+        }
     }
 
     @computed
@@ -895,7 +916,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         { [genomicLocation: string]: VariantAnnotation } | undefined
     > = remoteData({
         invoke: async () =>
-            this.getMutations()
+            !_.isEmpty(this.getMutations())
                 ? await this.dataFetcher.fetchVariantAnnotationsIndexedByGenomicLocation(
                       this.getMutations(),
                       this.annotationFields,
@@ -912,7 +933,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     > = remoteData({
         await: () => [this.mutationData],
         invoke: async () =>
-            this.getMutations()
+            !_.isEmpty(this.getMutations())
                 ? await this.dataFetcher.fetchMyVariantInfoAnnotationsIndexedByGenomicLocation(
                       this.getMutations(),
                       this.isoformOverrideSource
@@ -923,16 +944,8 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         },
     });
 
-    protected getMutationsByTranscriptId?: () => {
-        [transcriptId: string]: Mutation[];
-    };
-
     @computed
     get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
-        if (this.getMutationsByTranscriptId) {
-            return this.getMutationsByTranscriptId();
-        }
-
         if (
             this.indexedVariantAnnotations.result &&
             this.transcriptsWithAnnotations.result &&
