@@ -10,17 +10,16 @@ import autobind from "autobind-decorator";
 
 export const TOOLTIP_MOUSE_ENTER_DELAY_MS = 0.5;
 
-export interface SomePoo extends Omit<TooltipProps,"builtinPlacements" | "onPopupAlign"> {
+export interface DefaultTooltipProps extends TooltipProps {
     disabled?: boolean;
     getTooltipContainer?: () => HTMLElement;
-    builtinPlacements?:any;
     children:any;
-    onPopupAlign?:(toolTipEl:any)=>void;
 };
+
 
 @observer
 export default class DefaultTooltip extends React.Component<
-    SomePoo,
+    DefaultTooltipProps,
     {}
 > {
     static readonly defaultProps = {
