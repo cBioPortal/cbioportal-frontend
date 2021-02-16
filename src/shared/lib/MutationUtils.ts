@@ -9,7 +9,7 @@ import {
     Mutation,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { stringListToSet } from 'cbioportal-frontend-commons';
+import { MUT_COLOR_SPLICE, stringListToSet } from 'cbioportal-frontend-commons';
 import { extractGenomicLocation } from 'cbioportal-utils';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {
@@ -17,20 +17,21 @@ import {
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
 import { toSampleUuid } from './UuidUtils';
+import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
+import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
 import {
     MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
-} from 'shared/lib/Colors';
-import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
-import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
+} from 'cbioportal-frontend-commons';
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
     inframeColor: MUT_COLOR_INFRAME,
     truncatingColor: MUT_COLOR_TRUNC,
+    spliceColor: MUT_COLOR_SPLICE,
     fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };

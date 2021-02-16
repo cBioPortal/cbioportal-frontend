@@ -13,7 +13,7 @@ import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'shared/lib/Colors';
+import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
 
 export interface IAlterationEnrichmentTableProps {
     visibleOrderedColumnNames?: string[];
