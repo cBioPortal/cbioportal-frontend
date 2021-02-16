@@ -1,6 +1,7 @@
-import * as _ from 'lodash';
+import autobind from 'autobind-decorator';
 import { computed, makeObservable } from 'mobx';
-import MobxPromise, { cached, labelMobxPromises } from 'mobxpromise';
+import MobxPromise, { cached } from 'mobxpromise';
+import memoize from 'memoize-weak-decorator';
 
 import {
     applyDataFilters,
@@ -9,6 +10,7 @@ import {
     groupDataByProteinImpactType,
     groupOncoKbIndicatorDataByMutations,
     DefaultMutationMapperStore,
+    ONCOKB_DEFAULT_INFO,
 } from 'react-mutation-mapper';
 import {
     defaultOncoKbIndicatorFilter,
@@ -16,24 +18,23 @@ import {
     getMutationsByTranscriptId,
     Mutation as SimpleMutation,
 } from 'cbioportal-utils';
-
-import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
-import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
-import oncoKBClient from 'shared/api/oncokbClientInstance';
-import { Gene, Mutation } from 'cbioportal-ts-api-client';
-
-import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
-import {
-    fetchPdbAlignmentData,
-    indexPdbAlignmentData,
-} from 'shared/lib/StoreUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
+import { Gene, Mutation } from 'cbioportal-ts-api-client';
 import {
     VariantAnnotation,
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene, OncoKBInfo } from 'oncokb-ts-api-client';
+
+import defaultGenomeNexusClient from 'shared/api/genomeNexusClientInstance';
+import defaultInternalGenomeNexusClient from 'shared/api/genomeNexusInternalClientInstance';
+import oncoKBClient from 'shared/api/oncokbClientInstance';
+import ResidueMappingCache from 'shared/cache/ResidueMappingCache';
+import {
+    fetchPdbAlignmentData,
+    indexPdbAlignmentData,
+} from 'shared/lib/StoreUtils';
 import { IPdbChain, PdbAlignmentIndex } from 'shared/model/Pdb';
 import {
     calcPdbIdNumericalValue,
@@ -42,22 +43,15 @@ import {
 } from 'shared/lib/PdbUtils';
 import { lazyMobXTableSort } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
-
-import PdbChainDataStore from './PdbChainDataStore';
-import MutationMapperDataStore from './MutationMapperDataStore';
 import {
     groupMutationsByProteinStartPos,
     countUniqueMutations,
 } from 'shared/lib/MutationUtils';
-
+import PdbChainDataStore from './PdbChainDataStore';
+import MutationMapperDataStore from './MutationMapperDataStore';
 import { IMutationMapperConfig } from './MutationMapperConfig';
-import autobind from 'autobind-decorator';
 import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
-import {
-    ONCOKB_DEFAULT_INFO,
-    USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
-} from 'react-mutation-mapper';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
@@ -121,22 +115,26 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
         );
     };
 
-    public getAnnotatedMutations(transcriptId: string): SimpleMutation[] {
-        // overriding the base method (DefaultMutationMapperStore.getAnnotatedMutations)
+    @memoize
+    protected getAnnotatedMutationsByTranscriptId(
+        mutations: SimpleMutation[],
+        transcriptId: string,
+        indexedVariantAnnotations: {
+            [genomicLocation: string]: VariantAnnotation;
+        }
+    ) {
+        // overriding the base method (DefaultMutationMapperStore.getAnnotatedMutationsByTranscriptId)
         // to skip annotating mutations for canonical transcript.
         // we want to use the values from database for canonical transcript
-        return this.indexedVariantAnnotations.result
-            ? getMutationsByTranscriptId(
-                  this.getMutations(),
-                  transcriptId,
-                  this.indexedVariantAnnotations.result,
-                  this.canonicalTranscript.result
-                      ? this.canonicalTranscript.result!.transcriptId ===
-                            transcriptId
-                      : false,
-                  true
-              )
-            : this.getMutations();
+        return getMutationsByTranscriptId(
+            mutations,
+            transcriptId,
+            indexedVariantAnnotations,
+            this.canonicalTranscript.result
+                ? this.canonicalTranscript.result!.transcriptId === transcriptId
+                : false,
+            true
+        );
     }
 
     readonly oncoKbInfo: MobxPromise<OncoKBInfo> = remoteData(
@@ -179,7 +177,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
                     return [];
                 }
             },
-            onError: (err: Error) => {
+            onError: () => {
                 // fail silently
             },
         },
@@ -276,34 +274,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore {
 
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
     }
-
-    protected getMutationsByTranscriptId: () => {
-        [transcriptId: string]: SimpleMutation[];
-    } = () => {
-        if (
-            this.indexedVariantAnnotations.result &&
-            this.transcriptsWithAnnotations.result &&
-            this.canonicalTranscript.isComplete
-        ) {
-            return _.fromPairs(
-                this.transcriptsWithAnnotations.result.map((t: string) => [
-                    t,
-                    getMutationsByTranscriptId(
-                        this.getMutations(),
-                        t,
-                        this.indexedVariantAnnotations.result!,
-                        this.canonicalTranscript.result
-                            ? this.canonicalTranscript.result!.transcriptId ===
-                                  t
-                            : false,
-                        true
-                    ),
-                ])
-            );
-        } else {
-            return {};
-        }
-    };
 
     @computed get numberOfMutationsTotal(): number {
         // number of mutations regardless of transcript
