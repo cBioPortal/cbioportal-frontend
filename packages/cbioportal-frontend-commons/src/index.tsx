@@ -55,3 +55,5 @@ export * from './lib/TickUtils';
 export { default as CBIOPORTAL_VICTORY_THEME } from './theme/cBioPortalTheme';
 export * from './theme/cBioPortalTheme';
 export { default as TruncatedText } from './components/truncatedText/TruncatedText';
+
+export * from './lib/AlterationColors';

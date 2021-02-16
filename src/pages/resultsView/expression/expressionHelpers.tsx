@@ -15,6 +15,9 @@ import {
     tooltipCnaSection,
     tooltipMutationsSection,
 } from '../plots/PlotsTabUtils';
+import { getJitterForCase } from '../../../shared/components/plots/PlotUtils';
+import * as React from 'react';
+import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
 import {
     MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
@@ -22,10 +25,7 @@ import {
     MUT_COLOR_PROMOTER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_TRUNC,
-} from 'shared/lib/Colors';
-import { getJitterForCase } from '../../../shared/components/plots/PlotUtils';
-import * as React from 'react';
-import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
+} from 'cbioportal-frontend-commons';
 
 export type ExpressionStyle = {
     typeName: string;
