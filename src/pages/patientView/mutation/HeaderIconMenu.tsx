@@ -34,8 +34,6 @@ export default class HeaderIconMenu extends React.Component<
                 <span style={{ marginRight: '5px' }}>{this.props.name}</span>
                 {this.props.showIcon && (
                     <Tooltip trigger={['click']} overlay={this.props.children}
-                            builtinPlacements
-                             onPopupAlign={()=>{}}
                     >
                         <i
                             className="fa fa-filter"

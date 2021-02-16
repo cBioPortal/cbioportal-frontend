@@ -50,4 +50,3 @@ declare module 'reactour';
 declare module 'react-reveal';
 declare module 'react-column-resizer';
 declare module 'linear-algebra';
-declare module 'rc-trigger';
