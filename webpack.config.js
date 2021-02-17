@@ -49,7 +49,7 @@ const resolve = path.resolve;
 const isDev = NODE_ENV === 'development';
 const isTest = NODE_ENV === 'test';
 
-console.log("NODE_ENV", NODE_ENV);
+console.log('NODE_ENV', NODE_ENV);
 
 // devServer config
 const devHost = process.env.HOST || 'localhost';
@@ -553,7 +553,7 @@ if (process.env.BUILD_REPORT_ERRORS_ONLY === 'true') {
 
 // Roots
 
-config.resolve.modules = [src, common, "./node_modules"];
+config.resolve.modules = [src, common, './node_modules'];
 
 // end Roots
 
