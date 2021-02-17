@@ -42,7 +42,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments 20 genes with highest frequency in any group', function() {
+        it('results view comparison tab alteration enrichments 2 genes with highest frequency in any group', function() {
             browser.execute(function() {
                 comparisonTab.store.setUsePatientLevelEnrichments(false);
             });
@@ -129,5 +129,6 @@ function openGeneSelectorMenu() {
     const selectGenesDropdownButton = '[data-test="selectGenes"]';
     $(selectGenesDropdownButton).waitForExist(30000);
     browser.click(selectGenesDropdownButton);
-    $('[data-test=genesSelector]').waitForExist();
+    $('input[data-test=numberOfGenes]').waitForExist();
+    browser.pause(3);
 }
