@@ -49,6 +49,7 @@ export type LollipopMutationPlotProps = {
     pubMedCache?: MobxCache;
     mutationAlignerCache?: MobxCache<string>;
     getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
+    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean;
     getMutationCount?: (mutation: Partial<Mutation>) => number;
     topYAxisSymbol?: string;
     bottomYAxisSymbol?: string;
@@ -319,7 +320,8 @@ export default class LollipopMutationPlot extends React.Component<
                     : getColorForProteinImpactType(
                           mutations,
                           DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-                          this.props.getMutationCount
+                          this.props.getMutationCount,
+                          this.props.isPutativeDriver
                       ),
                 label,
             });

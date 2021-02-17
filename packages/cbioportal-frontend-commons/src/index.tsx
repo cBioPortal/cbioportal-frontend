@@ -37,6 +37,7 @@ export { default as MutationTumorTypeFrequencyTable } from './components/signal/
 export * from './components/signal/SignalHelper';
 export * from './api/remoteData';
 
+export * from './lib/AlterationColors';
 export * from './lib/ColumnVisibilityResolver';
 export * from './lib/findFirstMostCommonElt';
 export { default as getBrowserWindow } from './lib/getBrowserWindow';
@@ -55,5 +56,3 @@ export * from './lib/TickUtils';
 export { default as CBIOPORTAL_VICTORY_THEME } from './theme/cBioPortalTheme';
 export * from './theme/cBioPortalTheme';
 export { default as TruncatedText } from './components/truncatedText/TruncatedText';
-
-export * from './lib/AlterationColors';

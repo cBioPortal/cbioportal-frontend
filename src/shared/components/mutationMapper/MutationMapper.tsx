@@ -6,6 +6,7 @@ import {
     DataFilterType,
     FilterResetPanel,
     LollipopMutationPlot,
+    Mutation,
     MutationMapper as DefaultMutationMapper,
     onFilterOptionSelect,
     ProteinImpactTypeBadgeSelector,
@@ -37,9 +38,11 @@ import MutationMapperDataStore, {
 import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
+import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
+    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean;
     trackVisibility?: TrackVisibility;
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
@@ -211,7 +214,14 @@ export default class MutationMapper<
                 trackVisibility={this.trackVisibility}
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
-                getLollipopColor={getColorForProteinImpactType}
+                getLollipopColor={(mutations: any) =>
+                    getColorForProteinImpactType(
+                        mutations,
+                        undefined,
+                        this.props.isPutativeDriver
+                    )
+                }
+                isPutativeDriver={this.props.isPutativeDriver}
                 filterResetPanel={
                     !(this.props.store.dataStore as MutationMapperDataStore)
                         .showingAllData && this.filterResetPanel !== null

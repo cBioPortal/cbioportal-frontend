@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';
-import { ResultsViewPageStore } from '../ResultsViewPageStore';
+import {
+    AnnotatedMutation,
+    ResultsViewPageStore,
+} from '../ResultsViewPageStore';
 import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
@@ -210,6 +213,12 @@ export default class Mutations extends React.Component<
                         })}
                         oncoKbPublicApiUrl={getOncoKbApiUrl()}
                         store={mutationMapperStore}
+                        isPutativeDriver={
+                            this.props.store.driverAnnotationSettings
+                                .driversAnnotated
+                                ? (m: AnnotatedMutation) => m.putativeDriver
+                                : undefined
+                        }
                         trackVisibility={
                             this.userSelectionStore.trackVisibility
                         }
