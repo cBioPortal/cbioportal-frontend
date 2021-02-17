@@ -287,7 +287,7 @@ describe('results view comparison tab screenshot tests', function() {
             );
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
-                10000
+                20000
             );
             browser.waitForVisible('b=HDAC1', 10000);
             browser.click('b=HDAC1');
@@ -305,7 +305,7 @@ describe('results view comparison tab screenshot tests', function() {
 
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
-                10000
+                20000
             );
             browser.waitForVisible('b=RER1', 10000);
             browser.click('b=RER1');
