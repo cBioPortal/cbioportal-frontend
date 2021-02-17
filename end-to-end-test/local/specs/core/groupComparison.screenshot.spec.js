@@ -46,12 +46,13 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab 20 genes with highest frequency in any group', function() {
+        it('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             $(selectGenesDropdownButton).waitForVisible(10000);
             browser.click(selectGenesDropdownButton);
+
             var input = $('input[data-test=numberOfGenes]');
             input.setValue('2\n');
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
