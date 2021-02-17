@@ -553,7 +553,7 @@ if (process.env.BUILD_REPORT_ERRORS_ONLY === 'true') {
 
 // Roots
 
-config.resolve.modules = ["./src", "./common", './node_modules'];
+config.resolve.modules = [src, common, "./node_modules"];
 
 // end Roots
 
