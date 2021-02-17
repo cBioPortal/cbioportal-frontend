@@ -131,10 +131,10 @@ th.reactable-header-sort-asc:after {
 /* override for rc-tooltip */
 
 .rc-tooltip {
-    opacity: 1 !important;
     border-radius: $border-radius-base;
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
     padding: 0;
+    opacity: 1;
 
     &.hideTooltipArrow {
         .rc-tooltip-arrow {
