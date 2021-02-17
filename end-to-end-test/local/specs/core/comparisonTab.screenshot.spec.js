@@ -15,17 +15,9 @@ describe('results view comparison tab screenshot tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_test_generic_assay_mutations&cancer_study_list=lgg_ucsf_2014_test_generic_assay&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=lgg_ucsf_2014_test_generic_assay_sequenced&gene_list=TOPAZ1%2520ANK1%2520ACAN%2520INTS4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=alterations&comparison_selectedGroups=%5B"TOPAZ1"%2C"ANK1"%2C"ACAN"%2C"INTS4"%5D`
             );
-            // $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(
-            //     20000
-            // );
-
-            // $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(
-            //     20000
-            // );
-
-            //waitForNetworkQuiet(20000);
-
-            browser.pause(20000);
+            $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(
+                20000
+            );
         });
 
         it('results view comparison tab alteration enrichments several groups', function() {
@@ -56,8 +48,8 @@ describe('results view comparison tab screenshot tests', function() {
             });
             $(selectGenesDropdownButton).waitForExist(30000);
             browser.click(selectGenesDropdownButton);
-            var input = $('input[data-test=numberOfGenes]');
-            input.setValue('2\n');
+            $('[data-test=genesSelector]').waitForExist();
+            $('input[data-test=numberOfGenes]').setValue('2\n');
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 30000);
             browser.click('[data-test="addGenestoBarPlot"]');
             browser.waitForExist('div[data-test="GeneBarPlotDiv"]', 30000);
