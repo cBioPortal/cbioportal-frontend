@@ -95,6 +95,7 @@ describe('patient view page', function() {
 
             it('opens selection menu when filter icon clicked', () => {
                 filterIcon.click();
+                $('.rc-tooltip').waitForExist();
                 selectMenu = $('.rc-tooltip');
                 assert(selectMenu.isVisible());
             });
@@ -156,6 +157,7 @@ describe('patient view page', function() {
 
             it('opens selection menu when filter icon clicked', () => {
                 filterIcon.click();
+                $('.rc-tooltip').waitForExist();
                 selectMenu = $('.rc-tooltip');
                 assert(selectMenu.isVisible());
             });
