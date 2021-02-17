@@ -7,8 +7,11 @@ import {
 } from '../../../../shared/constants';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import Enzyme, { shallow, mount } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import sinon from 'sinon';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('AlleleFreqColumnFormatter', () => {
     it('uncalled mutations component w/o reads should have 0 opacity', () => {

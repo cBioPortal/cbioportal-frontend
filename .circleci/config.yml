@@ -102,6 +102,7 @@ jobs:
           environment:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
+          no_output_timeout: 25m
       - save_cache:
           paths:
             - node_modules

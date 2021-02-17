@@ -1,6 +1,22 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AlterationCountByGene = {
+    'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'matchingGenePanelIds': Array < string >
+
+        'numberOfAlteredCases': number
+
+        'numberOfProfiledCases': number
+
+        'qValue': number
+
+        'totalCount': number
+
+};
 export type AlterationEnrichment = {
     'counts': Array < CountSummary >
 
@@ -11,6 +27,12 @@ export type AlterationEnrichment = {
         'hugoGeneSymbol': string
 
         'pValue': number
+
+};
+export type AlterationEventTypeFilter = {
+    'copyNumberAlterationEventTypes': {}
+
+    'mutationEventTypes': {}
 
 };
 export type AndedPatientTreatmentFilters = {
@@ -466,6 +488,12 @@ export type MolecularProfileCaseIdentifier = {
         'molecularProfileId': string
 
 };
+export type MolecularProfileCasesGroupAndAlterationTypeFilter = {
+    'alterationEventTypes': AlterationEventTypeFilter
+
+        'molecularProfileCasesGroupFilter': Array < MolecularProfileCasesGroupFilter >
+
+};
 export type MolecularProfileCasesGroupFilter = {
     'molecularProfileCaseIdentifiers': Array < MolecularProfileCaseIdentifier >
 
@@ -506,22 +534,6 @@ export type MutSig = {
         'rank': number
 
         'studyId': string
-
-};
-export type MutationCountByGene = {
-    'entrezGeneId': number
-
-        'hugoGeneSymbol': string
-
-        'matchingGenePanelIds': Array < string >
-
-        'numberOfAlteredCases': number
-
-        'numberOfProfiledCases': number
-
-        'qValue': number
-
-        'totalCount': number
 
 };
 export type MutationSpectrum = {
@@ -705,6 +717,95 @@ export default class CBioPortalAPIInternal {
         });
     }
 
+    fetchAlterationEnrichmentsUsingPOSTURL(parameters: {
+        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/alteration-enrichments/fetch';
+        if (parameters['enrichmentType'] !== undefined) {
+            queryParameters['enrichmentType'] = parameters['enrichmentType'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch alteration enrichments in molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationEnrichmentsUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groupsAndAlterationTypes - List of groups containing sample identifiers and list of Alteration Types
+     */
+    fetchAlterationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
+        'enrichmentType' ? : "SAMPLE" | "PATIENT",
+        'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/alteration-enrichments/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['enrichmentType'] !== undefined) {
+                queryParameters['enrichmentType'] = parameters['enrichmentType'];
+            }
+
+            if (parameters['groupsAndAlterationTypes'] !== undefined) {
+                body = parameters['groupsAndAlterationTypes'];
+            }
+
+            if (parameters['groupsAndAlterationTypes'] === undefined) {
+                reject(new Error('Missing required  parameter: groupsAndAlterationTypes'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch alteration enrichments in molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationEnrichmentsUsingPOST
+     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
+     * @param {} groupsAndAlterationTypes - List of groups containing sample identifiers and list of Alteration Types
+     */
+    fetchAlterationEnrichmentsUsingPOST(parameters: {
+            'enrichmentType' ? : "SAMPLE" | "PATIENT",
+            'groupsAndAlterationTypes': MolecularProfileCasesGroupAndAlterationTypeFilter,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < AlterationEnrichment >
+        > {
+            return this.fetchAlterationEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
@@ -1218,7 +1319,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
-        'copyNumberEventType' ? : "HOMDEL" | "AMP",
+        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
@@ -1252,7 +1353,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'copyNumberEventType' ? : "HOMDEL" | "AMP",
+        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
@@ -1308,7 +1409,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOST(parameters: {
-            'copyNumberEventType' ? : "HOMDEL" | "AMP",
+            'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,
@@ -3129,7 +3230,7 @@ export default class CBioPortalAPIInternal {
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < MutationCountByGene >
+        }): Promise < Array < AlterationCountByGene >
         > {
             return this.fetchFusionGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
@@ -4761,7 +4862,7 @@ export default class CBioPortalAPIInternal {
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < MutationCountByGene >
+        }): Promise < Array < AlterationCountByGene >
         > {
             return this.fetchMutatedGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;

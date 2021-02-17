@@ -2134,6 +2134,11 @@ wdio-dot-reporter@~0.0.8:
   resolved "https://registry.yarnpkg.com/wdio-dot-reporter/-/wdio-dot-reporter-0.0.8.tgz#36195576da0d998210c71948cbb65f5bf11bfc65"
   integrity sha1-NhlVdtoNmYIQxxlIy7ZfW/Eb/GU=
 
+wdio-errorshot-reporter@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/wdio-errorshot-reporter/-/wdio-errorshot-reporter-0.2.1.tgz#ce2e76413bbc904f85335d1fc7197ab7879d6558"
+  integrity sha512-fQUw3zww+BtZ/l7IBjekgfz3qeKB33UV0zkYOq7hyjQnwcO1kVtBhwub66rArFzBmGP+Os/HS5qhymz0xALZ1g==
+
 wdio-junit-reporter@^0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/wdio-junit-reporter/-/wdio-junit-reporter-0.3.1.tgz#77b1bf4450d31b0f95bacc16dc1ba7bfcbd8fe09"

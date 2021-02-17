@@ -11,6 +11,8 @@ var checkElementWithTemporaryClass = require('../../../shared/specUtils')
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
 var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
+var assertScreenShotMatch = require('../../../shared/lib/testUtils')
+    .assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -213,175 +215,15 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab mutation enrichments tab several groups', function() {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"KRAS"%2C"NRAS"%2C"BRAF"%5D&comparison_subtab=mutations&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
-            );
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab patient mode', function() {
-            browser.execute(function() {
-                comparisonTab.store.setUsePatientLevelEnrichments(true);
-            });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab 20 genes with highest frequency in any group', function() {
-            browser.execute(function() {
-                comparisonTab.store.setUsePatientLevelEnrichments(false);
-            });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.click('[data-test="selectGenes"]');
-            var input = $('input[data-test=numberOfGenes]');
-            input.setValue('20\n');
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab gene box highest average frequency', function() {
-            browser.click('[data-test="selectGenes"]');
-            browser.execute(function() {
-                genesSelection.onGeneListOptionChange({
-                    label: 'Genes with highest average frequency',
-                });
-            });
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab gene box most significant pValues', function() {
-            browser.click('[data-test="selectGenes"]');
-            browser.execute(function() {
-                genesSelection.onGeneListOptionChange({
-                    label: 'Genes with most significant p-value',
-                });
-            });
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab gene box user-defined genes', function() {
-            browser.click('[data-test="selectGenes"]');
-            setInputText(
-                'textarea[data-test="geneSet"]',
-                'MUC16 MUC4 ERCC2 TP53 ZNRF3 CTNNB1'
-            );
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab cna enrichments tab several groups', function() {
-            browser.click('.comparisonTabSubTabs .tabAnchor_cna');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
         it('results view comparison tab mrna enrichments tab several groups', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
                 10000
             );
-            browser.waitForVisible('b=PLA2G2F', 10000);
-            browser.click('b=PLA2G2F');
+            browser.waitForVisible('b=HOXB4', 10000);
+            browser.click('b=HOXB4');
             browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab mutation enrichments tab two groups', function() {
-            goToUrlAndSetLocalStorage(
-                `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B"Altered%20group"%2C"Unaltered%20group"%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&comparison_subtab=mutations`
-            );
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab cna enrichments tab two groups', function() {
-            browser.click('.comparisonTabSubTabs .tabAnchor_cna');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
-                30000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('results view comparison tab cna enrichments tab patient mode', function() {
-            browser.execute(function() {
-                comparisonTab.store.setUsePatientLevelEnrichments(true);
-            });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
-                30000
-            );
             browser.moveToObject('body', 0, 0);
             var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
                 hide: ['.qtip'],
@@ -445,7 +287,7 @@ describe('results view comparison tab screenshot tests', function() {
             );
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
-                10000
+                20000
             );
             browser.waitForVisible('b=HDAC1', 10000);
             browser.click('b=HDAC1');
@@ -463,7 +305,7 @@ describe('results view comparison tab screenshot tests', function() {
 
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMethylationEnrichments"]',
-                10000
+                20000
             );
             browser.waitForVisible('b=RER1', 10000);
             browser.click('b=RER1');
@@ -798,3 +640,14 @@ describe('results view comparison tab screenshot tests', function() {
         });
     });
 });
+
+var clickCheckBox = name => {
+    $('label=' + name)
+        .$('input')
+        .click();
+};
+
+var submit = () => {
+    $('[data-test=changeSortOrderButton]').click();
+    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+};

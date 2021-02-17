@@ -1,5 +1,7 @@
 var CustomReporter = require('./customReporter');
 
+const errorshot = require('wdio-errorshot-reporter');
+
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
@@ -71,7 +73,17 @@ var config = {
                 args: [
                     '--disable-composited-antialiasing',
                     '--allow-insecure-localhost',
-                ],
+                ].concat(
+                    (function() {
+                        return process.env.HEADLESS_CHROME
+                            ? [
+                                  '--no-sandbox',
+                                  '--disable-gpu',
+                                  '--disable-setuid-sandbox',
+                              ]
+                            : [];
+                    })()
+                ),
             },
 
             os: 'OS X',
@@ -93,6 +105,8 @@ var config = {
             'browserstack.local': true,
         },
     ],
+
+    // wdio.conf.js
 
     //
     // ===================
@@ -183,7 +197,7 @@ var config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: http://webdriver.io/guide/testrunner/reporters.html
-    reporters: ['spec', 'junit', CustomReporter],
+    reporters: ['spec', 'junit', CustomReporter, errorshot],
     reporterOptions: {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH || './',
@@ -197,6 +211,9 @@ var config = {
             outputFileFormat: function(opts) {
                 // optional
                 return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+            },
+            errorshotReporter: {
+                template: 'foobar-%capId%_%timestamp%_%parent%-%title%',
             },
         },
     },
@@ -344,6 +361,7 @@ if (process.env.TEST_BROWSERSTACK === 'true') {
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
+//config.specs = ['./remote/specs/core/results.spec.js'];
 //config.specs = ['./remote/specs/core/studyview.spec.js'];
 
 exports.config = config;

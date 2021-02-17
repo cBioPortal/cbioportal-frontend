@@ -6,7 +6,6 @@
 
 .ChartsPanel {
     display: flex;
-    justify-content: flex-start;
 
     > div {
         margin-right: $standardMargin;
@@ -134,6 +133,12 @@
     height: 350px;
     min-width: 350px;
     display: flex;
+}
+
+.inlineAlterationTypeSelectorMenuDash {
+    height: 545px;
+    min-width: 229px;
+    margin-right: 0px;
 }
 
 .ProfileTooltip {
