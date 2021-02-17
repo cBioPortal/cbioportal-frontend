@@ -5,17 +5,16 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import $ from 'jquery';
 import './styles.scss';
 import { observer } from 'mobx-react';
-import {TooltipProps} from "rc-tooltip/es/Tooltip";
-import autobind from "autobind-decorator";
+import { TooltipProps } from 'rc-tooltip/es/Tooltip';
+import autobind from 'autobind-decorator';
 
 export const TOOLTIP_MOUSE_ENTER_DELAY_MS = 0.5;
 
 export interface DefaultTooltipProps extends TooltipProps {
     disabled?: boolean;
     getTooltipContainer?: () => HTMLElement;
-    children:any;
-};
-
+    children: any;
+}
 
 @observer
 export default class DefaultTooltip extends React.Component<
@@ -63,13 +62,13 @@ export default class DefaultTooltip extends React.Component<
         if (typeof visible !== 'undefined') {
             tooltipProps.visible = visible;
         }
-        return <Tooltip {...tooltipProps} onPopupAlign={ this.defaultSetArrowLeft }>
-            {this.props.children as any}
-        </Tooltip>;
+        return (
+            <Tooltip {...tooltipProps} onPopupAlign={this.defaultSetArrowLeft}>
+                {this.props.children as any}
+            </Tooltip>
+        );
     }
 }
-
-
 
 export function setArrowLeft(tooltipEl: any, left: string) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');

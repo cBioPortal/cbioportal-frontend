@@ -33,8 +33,7 @@ export default class HeaderIconMenu extends React.Component<
             <React.Fragment>
                 <span style={{ marginRight: '5px' }}>{this.props.name}</span>
                 {this.props.showIcon && (
-                    <Tooltip trigger={['click']} overlay={this.props.children}
-                    >
+                    <Tooltip trigger={['click']} overlay={this.props.children}>
                         <i
                             className="fa fa-filter"
                             onClick={this.iconClicked}
