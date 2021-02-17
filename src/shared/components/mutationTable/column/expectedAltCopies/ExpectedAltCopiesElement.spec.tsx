@@ -1,13 +1,14 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-import { ReactWrapper, mount } from 'enzyme';
-import { assert, expect } from 'chai';
+import Enzyme, { mount } from 'enzyme';
+import { expect } from 'chai';
 import {
     default as ExpectedAltCopiesElement,
-    ExpectedAltCopiesElementTooltip,
     ExpectedAltCopiesColor,
+    ExpectedAltCopiesElementTooltip,
 } from './ExpectedAltCopiesElement';
-import { Mutation, AlleleSpecificCopyNumber } from 'cbioportal-ts-api-client';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ExpectedAltCopiesElement', () => {
     function getExpectedAltCopiesProps(
@@ -33,13 +34,13 @@ describe('ExpectedAltCopiesElement', () => {
             />
         );
         expect(
-            expectedAltCopiesElementTooltip.findWhere(
-                node =>
-                    node.type() === 'span' &&
-                    node.children().length == 0 &&
-                    node.text() ==
+            expectedAltCopiesElementTooltip
+                .find('span span')
+                .findWhere(
+                    node =>
+                        node.text() ==
                         ' 2 out of 4 copies of this gene are mutated.'
-            )
+                )
         ).to.exist;
     }
 
@@ -53,12 +54,9 @@ describe('ExpectedAltCopiesElement', () => {
             />
         );
         expect(
-            expectedAltCopiesElementTooltip.findWhere(
-                node =>
-                    node.type() === 'span' &&
-                    node.children().length == 0 &&
-                    node.text() == 'Indeterminate sample'
-            )
+            expectedAltCopiesElementTooltip
+                .find('span span')
+                .findWhere(node => node.text() == 'Indeterminate sample')
         ).to.exist;
     }
 
@@ -69,7 +67,7 @@ describe('ExpectedAltCopiesElement', () => {
                 {...getExpectedAltCopiesProps('S001', '4', '2')}
             />
         );
-        expect(expectedAltCopiesElementTest.find('span').text()).to.equal('2');
+        expect(expectedAltCopiesElementTest.find('text').text()).to.equal('2');
         expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
             ExpectedAltCopiesColor.WHITE
         );
@@ -83,7 +81,7 @@ describe('ExpectedAltCopiesElement', () => {
                 {...getExpectedAltCopiesProps('S001', '3', 'INDETERMINATE')}
             />
         );
-        expect(expectedAltCopiesElementTest.find('span').text()).to.equal('-');
+        expect(expectedAltCopiesElementTest.find('text').text()).to.equal('-');
         expect(expectedAltCopiesElementTest.find('rect').prop('fill')).to.equal(
             ExpectedAltCopiesColor.LIGHTGREY
         );
