@@ -21,7 +21,7 @@ describe('group comparison page screenshot tests', function() {
             );
             browser.waitForVisible(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
-                20000
+                100000
             );
         });
         it('group comparison page overlap tab upset plot view', function() {
