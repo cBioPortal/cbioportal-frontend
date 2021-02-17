@@ -1,11 +1,13 @@
 import React from 'react';
 import { assert } from 'chai';
-import { mount } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount } from 'enzyme';
 import {
-    IColumnVisibilityDef,
     ColumnVisibilityControls,
+    IColumnVisibilityDef,
 } from './ColumnVisibilityControls';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('ColumnVisibilityControls', () => {
     beforeEach(() => {});

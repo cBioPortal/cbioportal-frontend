@@ -1,9 +1,11 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import Enzyme, { shallow } from 'enzyme';
 import { assert } from 'chai';
 import GeneFilterMenu, { GeneFilterOption } from './GeneFilterMenu';
+import Adapter from 'enzyme-adapter-react-16';
 import sinon from 'sinon';
-import { debug } from 'util';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('GeneFilterOptions', () => {
     const callback = sinon.spy();

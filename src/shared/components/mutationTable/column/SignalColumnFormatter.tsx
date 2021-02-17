@@ -3,9 +3,9 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation, RemoteData } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
+    getSignalData,
     Signal,
     signalDownload,
-    getSignalData,
     signalSortValue,
 } from 'react-mutation-mapper';
 

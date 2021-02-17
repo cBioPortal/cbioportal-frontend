@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { mount } from 'enzyme';
+import Enzyme, { mount } from 'enzyme';
 import * as React from 'react';
 import OQLTextArea, {
     IGeneSelectionBoxProps,
@@ -7,6 +7,9 @@ import OQLTextArea, {
 } from './OQLTextArea';
 import client from 'shared/api/cbioportalClientInstance';
 import sinon from 'sinon';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('GeneSelectionBox', () => {
     beforeEach(() => {
