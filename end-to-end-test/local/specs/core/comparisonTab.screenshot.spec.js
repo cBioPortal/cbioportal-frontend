@@ -7,7 +7,6 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils')
 var setInputText = require('../../../shared/specUtils').setInputText;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-const selectGenesDropdownButton = '[data-test="selectGenes"]';
 
 describe('results view comparison tab screenshot tests', function() {
     describe('general screenshot tests', function() {
@@ -46,9 +45,7 @@ describe('results view comparison tab screenshot tests', function() {
             browser.execute(function() {
                 comparisonTab.store.setUsePatientLevelEnrichments(false);
             });
-            $(selectGenesDropdownButton).waitForExist(30000);
-            browser.click(selectGenesDropdownButton);
-            $('[data-test=genesSelector]').waitForExist();
+            openGeneSelectorMenu();
             $('input[data-test=numberOfGenes]').setValue('2\n');
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 30000);
             browser.click('[data-test="addGenestoBarPlot"]');
@@ -61,7 +58,7 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab alteration enrichments gene box highest average frequency', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with highest average frequency',
@@ -79,7 +76,7 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab alteration enrichments gene box most significant pValues', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with most significant p-value',
@@ -97,7 +94,7 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab alteration enrichments gene box user-defined genes', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             waitForNetworkQuiet();
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 30000);
@@ -125,3 +122,10 @@ describe('results view comparison tab screenshot tests', function() {
         });
     });
 });
+
+function openGeneSelectorMenu() {
+    const selectGenesDropdownButton = '[data-test="selectGenes"]';
+    $(selectGenesDropdownButton).waitForExist(30000);
+    browser.click(selectGenesDropdownButton);
+    $('[data-test=genesSelector]').waitForExist();
+}
