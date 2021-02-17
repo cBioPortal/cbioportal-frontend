@@ -9,7 +9,14 @@ import {
     Mutation,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { MUT_COLOR_SPLICE, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
+    MUT_COLOR_TRUNC_PASSENGER,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import { extractGenomicLocation } from 'cbioportal-utils';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {
@@ -29,9 +36,13 @@ import {
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
+    missenseVusColor: MUT_COLOR_MISSENSE_PASSENGER,
     inframeColor: MUT_COLOR_INFRAME,
+    inframeVusColor: MUT_COLOR_INFRAME_PASSENGER,
     truncatingColor: MUT_COLOR_TRUNC,
+    truncatingVusColor: MUT_COLOR_TRUNC_PASSENGER,
     spliceColor: MUT_COLOR_SPLICE,
+    spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
     fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
@@ -47,11 +58,14 @@ export function isUncalled(molecularProfileId: string) {
 
 export function getColorForProteinImpactType(
     mutations: Mutation[],
-    colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS
+    colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean
 ): string {
     return getDefaultColorForProteinImpactType(
         normalizeMutations(mutations),
-        colors
+        colors,
+        undefined,
+        isPutativeDriver
     );
 }
 
