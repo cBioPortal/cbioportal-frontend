@@ -30,7 +30,7 @@ export interface IAddTrackProps {
     heatmapMenu: JSX.Element | null;
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState;
-    selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl?: {
+    selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
     oncoprinterMode?: boolean;
@@ -259,8 +259,8 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
     private get genericAssayTabs() {
         let tabs = [];
         if (this.isGenericAssayDataComplete && this.showGenericAssayTabs) {
-            const genericAssayEntitiesGroupByGenericAssayType = this.props.store
-                .genericAssayEntitiesGroupByGenericAssayType.result;
+            const genericAssayEntitiesGroupedByGenericAssayType = this.props
+                .store.genericAssayEntitiesGroupedByGenericAssayType.result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
                 const profileOptions = _.map(profiles, profile => {
@@ -270,7 +270,7 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
                     };
                 });
                 const entityOptions = _.map(
-                    genericAssayEntitiesGroupByGenericAssayType[type],
+                    genericAssayEntitiesGroupedByGenericAssayType[type],
                     entity => makeGenericAssayOption(entity, false)
                 );
                 const linkText = (
@@ -296,13 +296,13 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
                             genericAssayEntityOptions={entityOptions}
                             initialGenericAssayEntityIds={
                                 this.props
-                                    .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl &&
+                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
                                 this.props
-                                    .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                    .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
                                     type
                                 ]
                                     ? this.props
-                                          .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                                          .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
                                           type
                                       ]
                                     : []

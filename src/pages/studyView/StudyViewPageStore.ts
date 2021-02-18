@@ -211,7 +211,7 @@ import {
     GenericAssayDataBinFilter,
     GenericAssayDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
 
 type ChartUniqueKey = string;
@@ -4459,12 +4459,12 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly genericAssayEntitiesGroupByGenericAssayType = remoteData<{
+    readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
     }>({
         await: () => [this.molecularProfiles],
         invoke: async () => {
-            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
                 this.molecularProfiles.result
             );
         },
@@ -4473,10 +4473,12 @@ export class StudyViewPageStore {
     readonly genericAssayStableIdToMeta = remoteData<{
         [genericAssayStableId: string]: GenericAssayMeta;
     }>({
-        await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
+        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
         invoke: () => {
             return Promise.resolve(
-                _.chain(this.genericAssayEntitiesGroupByGenericAssayType.result)
+                _.chain(
+                    this.genericAssayEntitiesGroupedByGenericAssayType.result
+                )
                     .values()
                     .flatten()
                     .uniqBy(meta => meta.stableId)
