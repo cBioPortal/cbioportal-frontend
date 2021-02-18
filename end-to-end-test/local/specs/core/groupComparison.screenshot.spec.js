@@ -116,7 +116,8 @@ describe('group comparison page screenshot tests', function() {
 
         it('group comparison alteration enrichments two groups', function() {
             goToUrlAndSetLocalStorage(
-                `${browser.getUrl()}&unselectedGroups=%5B"GB"%2C"OAST"%2C"ODG"%5D`
+                `${browser.getUrl()}&unselectedGroups=%5B"GB"%2C"OAST"%2C"ODG"%5D`,
+                true
             );
             $(
                 '[data-test="GroupComparisonAlterationEnrichments"]'
