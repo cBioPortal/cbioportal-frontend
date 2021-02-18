@@ -362,6 +362,6 @@ if (process.env.TEST_BROWSERSTACK === 'true') {
 }
 
 //config.specs = ['./remote/specs/core/results.spec.js'];
-config.specs = ['./local/specs/core/groupComparison.screenshot.spec.js'];
+// config.specs = ['./local/specs/core/groupComparison.screenshot.spec.js'];
 
 exports.config = config;

@@ -458,10 +458,11 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     console.log(1, browser.windowHandles());
     console.log(2, browser.getTabIds());
     console.log(3, studyViewTabId);
-    console.log(4, groupComparisonTabId);
     const groupComparisonTabId = browser
         .getTabIds()
-        .value.filter(id => id !== studyViewTabId)[0];
+        .filter(id => id !== studyViewTabId)[0];
+    console.log('studyViewTabId:', studyViewTabId);
+    console.log('groupComparisonTabId:', groupComparisonTabId);
     browser.switchTab(groupComparisonTabId);
     waitForGroupComparisonTabOpen();
 }
