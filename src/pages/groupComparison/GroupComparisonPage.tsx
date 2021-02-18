@@ -131,7 +131,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
-            this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
+            this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
         ],
         render: () => {
             return (
@@ -237,7 +237,7 @@ export default class GroupComparisonPage extends React.Component<
                     {this.store.showGenericAssayTab &&
                         _.keys(
                             this.store
-                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result
                         ).map(genericAssayType => {
                             return (

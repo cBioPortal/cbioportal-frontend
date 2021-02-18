@@ -232,11 +232,11 @@ export function makeProfiledInClinicalAttributes(
     return attributes;
 }
 
-export function genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(genericAssayEntitiesGroupByGenericAssayType: {
+export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(genericAssayEntitiesGroupedByGenericAssayType: {
     [genericAssayType: string]: GenericAssayMeta[];
 }): { [genericAssayType: string]: ISelectOption[] } {
     return _.mapValues(
-        genericAssayEntitiesGroupByGenericAssayType,
+        genericAssayEntitiesGroupedByGenericAssayType,
         genericAssayEntities => {
             return _.map(genericAssayEntities, entity =>
                 makeGenericAssayOption(entity)
