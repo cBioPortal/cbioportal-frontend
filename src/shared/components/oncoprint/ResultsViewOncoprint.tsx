@@ -175,7 +175,8 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
+    @computed
+    get selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl() {
         const result = _.reduce(
             this.props.store
                 .selectedGenericAssayEntitiesGroupByMolecularProfileId,
@@ -492,9 +493,9 @@ export default class ResultsViewOncoprint extends React.Component<
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
-            get genericAssayEntitiesGroupByGenericAssayTypePromise() {
+            get genericAssayEntitiesGroupedByGenericAssayTypePromise() {
                 return self.props.store
-                    .genericAssayEntitiesGroupByGenericAssayType;
+                    .genericAssayEntitiesGroupedByGenericAssayType;
             },
             get selectedHeatmapProfileId() {
                 return self.selectedHeatmapProfileId;
@@ -1533,9 +1534,9 @@ export default class ResultsViewOncoprint extends React.Component<
                             this.props.store
                                 .molecularProfileIdToMolecularProfile.result
                         }
-                        selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={
+                        selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl={
                             this
-                                .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl
+                                .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
                     />
                 </FadeInteraction>

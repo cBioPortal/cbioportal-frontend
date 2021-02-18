@@ -206,7 +206,7 @@ import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
     fetchGenericAssayDataByStableIdsAndMolecularIds,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
     COMMON_GENERIC_ASSAY_PROPERTY,
     getGenericAssayMetaPropertyOrDefault,
@@ -4005,13 +4005,13 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly genericAssayEntitiesGroupByGenericAssayType = remoteData<{
+    readonly genericAssayEntitiesGroupedByGenericAssayType = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
     }>(
         {
             await: () => [this.molecularProfilesInStudies],
             invoke: async () => {
-                return await fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
+                return await fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
                     this.molecularProfilesInStudies.result
                 );
             },
@@ -4030,14 +4030,14 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly selectedGenericAssayEntitiesGroupByGenericAssayType = remoteData<{
+    readonly selectedGenericAssayEntitiesGroupedByGenericAssayType = remoteData<{
         [genericAssayType: string]: GenericAssayMeta[];
     }>({
-        await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
+        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
         invoke: () => {
             return Promise.resolve(
                 _.mapValues(
-                    this.genericAssayEntitiesGroupByGenericAssayType.result,
+                    this.genericAssayEntitiesGroupedByGenericAssayType.result,
                     (value, profileId) => {
                         const selectedEntityIds = this
                             .selectedGenericAssayEntitiesGroupByMolecularProfileId[
@@ -4077,18 +4077,18 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly genericAssayEntitiesGroupByGenericAssayTypeLinkMap = remoteData<{
+    readonly genericAssayEntitiesGroupedByGenericAssayTypeLinkMap = remoteData<{
         [genericAssayType: string]: { [stableId: string]: string };
     }>({
-        await: () => [this.genericAssayEntitiesGroupByGenericAssayType],
+        await: () => [this.genericAssayEntitiesGroupedByGenericAssayType],
         invoke: async () => {
             if (
                 !_.isEmpty(
-                    this.genericAssayEntitiesGroupByGenericAssayType.result
+                    this.genericAssayEntitiesGroupedByGenericAssayType.result
                 )
             ) {
                 return _.mapValues(
-                    this.genericAssayEntitiesGroupByGenericAssayType.result,
+                    this.genericAssayEntitiesGroupedByGenericAssayType.result,
                     genericAssayEntities => {
                         const linkMap: { [stableId: string]: string } = {};
                         genericAssayEntities.forEach(entity => {

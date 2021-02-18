@@ -1091,8 +1091,8 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.genericAssayMolecularDataCache,
             oncoprint.props.store
-                .genericAssayEntitiesGroupByGenericAssayTypeLinkMap,
-            oncoprint.props.store.genericAssayEntitiesGroupByGenericAssayType,
+                .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap,
+            oncoprint.props.store.genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
@@ -1115,7 +1115,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                         ].genericAssayType;
                     const genericAssayEntitiesByEntityId = _.keyBy(
                         oncoprint.props.store
-                            .genericAssayEntitiesGroupByGenericAssayType
+                            .genericAssayEntitiesGroupedByGenericAssayType
                             .result![type],
                         t => t.stableId
                     );
@@ -1171,9 +1171,8 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
                 const entityLinkMap = oncoprint.props.store
-                    .genericAssayEntitiesGroupByGenericAssayTypeLinkMap.result![
-                    profile.genericAssayType
-                ];
+                    .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
+                    .result![profile.genericAssayType];
 
                 return {
                     key: `GENERICASSAYHEATMAPTRACK_${molecularProfileId},${entityId}`,

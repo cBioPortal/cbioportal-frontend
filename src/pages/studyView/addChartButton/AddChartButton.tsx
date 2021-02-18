@@ -277,7 +277,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             this.props.disableGenericAssayTabs ||
             !this.props.store.genericAssayProfileOptionsByType.isComplete ||
-            !this.props.store.genericAssayEntitiesGroupByGenericAssayType
+            !this.props.store.genericAssayEntitiesGroupedByGenericAssayType
                 .isComplete ||
             (this.props.store.genericAssayProfileOptionsByType.isComplete &&
                 _.isEmpty(
@@ -422,8 +422,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.props.store.genericAssayProfileOptionsByType.result,
             (options, type) => {
                 const genericAssayEntityOptions = _.map(
-                    this.props.store.genericAssayEntitiesGroupByGenericAssayType
-                        .result![type],
+                    this.props.store
+                        .genericAssayEntitiesGroupedByGenericAssayType.result![
+                        type
+                    ],
                     entity => makeGenericAssayOption(entity, false)
                 );
                 const shouldShowChartOptionTable =
@@ -838,7 +840,7 @@ export default class AddChartButton extends React.Component<
         return (
             this.props.store.genericAssayProfileOptionsByType.isPending ||
             this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupByGenericAssayType
+            this.props.store.genericAssayEntitiesGroupedByGenericAssayType
                 .isPending
         );
     }

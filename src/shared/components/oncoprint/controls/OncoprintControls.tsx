@@ -120,7 +120,7 @@ export interface IOncoprintControlsState {
     }>;
     selectedClinicalAttributeIds?: string[];
     heatmapProfilesPromise?: MobxPromise<MolecularProfile[]>;
-    genericAssayEntitiesGroupByGenericAssayTypePromise?: MobxPromise<{
+    genericAssayEntitiesGroupedByGenericAssayTypePromise?: MobxPromise<{
         [genericAssayType: string]: GenericAssayMeta[];
     }>;
     selectedHeatmapProfileId?: string;
@@ -150,7 +150,7 @@ export interface IOncoprintControlsProps {
     molecularProfileIdToMolecularProfile?: {
         [molecularProfileId: string]: MolecularProfile;
     };
-    selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl?: {
+    selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl?: {
         [genericAssayType: string]: string[];
     };
 }
@@ -521,9 +521,9 @@ export default class OncoprintControls extends React.Component<
                     heatmapMenu={this.heatmapMenu}
                     handlers={this.props.handlers}
                     state={this.props.state}
-                    selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={
+                    selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl={
                         this.props
-                            .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl
+                            .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                     }
                 />
             );
