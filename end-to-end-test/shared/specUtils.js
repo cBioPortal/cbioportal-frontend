@@ -459,7 +459,7 @@ function keycloakLogin(timeout) {
 }
 
 function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
-    goToUrlAndSetLocalStorage(studyViewUrl);
+    goToUrlAndSetLocalStorage(studyViewUrl, true);
     $('[data-test=summary-tab-content]').waitForVisible();
     waitForNetworkQuiet();
     const chart = '[data-test=' + chartDataTest + ']';
