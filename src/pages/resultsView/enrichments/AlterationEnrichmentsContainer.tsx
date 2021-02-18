@@ -3,18 +3,17 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import numeral from 'numeral';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { observable, computed, action, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import AlterationEnrichmentTable, {
     AlterationEnrichmentTableColumnType,
 } from 'pages/resultsView/enrichments/AlterationEnrichmentsTable';
 import styles from './styles.module.scss';
 import {
-    getAlterationScatterData,
-    getAlterationRowData,
-    getAlterationFrequencyScatterData,
     AlterationEnrichmentWithQ,
     getAlterationEnrichmentColumns,
-    AlterationContainerType,
+    getAlterationFrequencyScatterData,
+    getAlterationRowData,
+    getAlterationScatterData,
     getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -33,6 +32,11 @@ import GeneBarPlot from './GeneBarPlot';
 import WindowStore from 'shared/components/window/WindowStore';
 import ReactSelect from 'react-select';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import {
+    CopyNumberEnrichmentEventType,
+    MutationEnrichmentEventType,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -41,9 +45,9 @@ export interface IAlterationEnrichmentContainerProps {
     headerName: string;
     store?: ResultsViewPageStore;
     showCNAInTable?: boolean;
-    containerType: AlterationContainerType;
     patientLevelEnrichments: boolean;
     onSetPatientLevelEnrichments: (patientLevel: boolean) => void;
+    comparisonStore?: ComparisonStore;
 }
 
 @observer
@@ -397,21 +401,108 @@ export default class AlterationEnrichmentContainer extends React.Component<
         );
     }
 
+    @computed private get geneBarplotYAxislabel() {
+        if (
+            this.isAnyMutationTypeSelected &&
+            !this.isAnyFusionTypeSelected &&
+            !this.isAnyCnaTypeSelected
+        )
+            return 'Mutation frequency';
+        if (
+            !this.isAnyMutationTypeSelected &&
+            this.isAnyFusionTypeSelected &&
+            this.isAnyCnaTypeSelected
+        )
+            return 'Fusion event frequency';
+        if (
+            !this.isAnyMutationTypeSelected &&
+            !this.isAnyFusionTypeSelected &&
+            !this.isAnyCnaTypeSelected
+        )
+            return 'Copy-number alteration frequency';
+        return 'Alteration event frequency';
+    }
+
+    @computed get isAnyMutationTypeSelected() {
+        if (
+            !this.props.comparisonStore ||
+            !this.props.comparisonStore!.selectedMutationEnrichmentEventTypes
+        )
+            return false;
+        const typeMap = this.props.comparisonStore!
+            .selectedMutationEnrichmentEventTypes;
+        return _.some(
+            _.keys(typeMap),
+            type => typeMap[type as MutationEnrichmentEventType]
+        );
+    }
+
+    @computed get isAnyFusionTypeSelected() {
+        if (
+            this.props.comparisonStore &&
+            this.props.comparisonStore!.selectedMutationEnrichmentEventTypes &&
+            MutationEnrichmentEventType.fusion in
+                this.props.comparisonStore!.selectedMutationEnrichmentEventTypes
+        ) {
+            return !!this.props.comparisonStore!
+                .selectedMutationEnrichmentEventTypes[
+                MutationEnrichmentEventType.fusion
+            ];
+        }
+        return false;
+    }
+
+    @computed get isAnyCnaTypeSelected() {
+        if (
+            !this.props.comparisonStore ||
+            !this.props.comparisonStore!.selectedCopyNumberEnrichmentEventTypes
+        )
+            return false;
+        const typeMap = this.props.comparisonStore!
+            .selectedCopyNumberEnrichmentEventTypes;
+        return _.some(
+            _.keys(typeMap),
+            type => typeMap[type as CopyNumberEnrichmentEventType]
+        );
+    }
+
     public render() {
         if (this.props.data.length === 0) {
             return (
-                <div className={'alert alert-info'}>
+                <div
+                    className={'alert alert-info'}
+                    style={{
+                        marginLeft: 244,
+                    }}
+                >
                     No data/result available
                 </div>
             );
         }
 
         return (
-            <div className={styles.Container}>
+            <div
+                className={styles.Container}
+                data-test={'GroupComparisonAlterationEnrichments'}
+            >
                 <div
                     className={styles.ChartsPanel}
-                    style={{ maxWidth: WindowStore.size.width - 60 }}
+                    style={{
+                        maxWidth: WindowStore.size.width - 60,
+                        position: 'relative',
+                        zIndex: 1,
+                    }}
                 >
+                    {
+                        // The alteration type selector is shown to left of the
+                        // graph panels ('in-line'). This div element pushes the
+                        // graph elements to the right when the type selector
+                        // is shown 'in-line'.
+                    }
+                    <div
+                        className={styles.inlineAlterationTypeSelectorMenuDash}
+                    />
+
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(
@@ -436,7 +527,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             onSelectionCleared={this.onSelectionCleared}
                         />
                     )}
-
                     {this.isTwoGroupAnalysis && (
                         <MiniFrequencyScatterChart
                             data={getAlterationFrequencyScatterData(
@@ -463,8 +553,8 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             groupOrder={this.props.groups.map(
                                 group => group.name
                             )}
+                            yAxisLabel={this.geneBarplotYAxislabel}
                             showCNAInTable={this.props.showCNAInTable}
-                            containerType={this.props.containerType}
                             categoryToColor={this.categoryToColor}
                             dataStore={this.dataStore}
                         />

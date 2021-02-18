@@ -582,40 +582,45 @@ export function makeEnrichmentDataPromise<
         qValue?: number;
     }
 >(params: {
-    storeForExcludingQueryGenes?: ResultsViewPageStore;
+    resultsViewPageStore?: ResultsViewPageStore;
     await: MobxPromise_await;
     referenceGenesPromise: MobxPromise<{
         [hugoGeneSymbol: string]: ReferenceGenomeGene;
     }>;
-    getSelectedProfileMap: () => { [studyId: string]: MolecularProfile };
+    getSelectedProfileMaps: () => { [studyId: string]: MolecularProfile }[];
     fetchData: () => Promise<T[]>;
 }): MobxPromise<(T & { qValue: number })[]> {
     return remoteData({
         await: () => {
             const ret = params.await();
-            if (params.storeForExcludingQueryGenes) {
-                ret.push(
-                    params.storeForExcludingQueryGenes.selectedMolecularProfiles
-                );
+            if (params.resultsViewPageStore) {
+                ret.push(params.resultsViewPageStore.selectedMolecularProfiles);
             }
             ret.push(params.referenceGenesPromise);
             return ret;
         },
         invoke: async () => {
-            const profileMap = params.getSelectedProfileMap();
-            if (profileMap) {
+            const profileMaps = params.getSelectedProfileMaps();
+            if (profileMaps) {
                 let data = await params.fetchData();
                 // filter out query genes, if looking at a queried profile
                 // its important that we filter out *before* calculating Q values
-                if (
-                    params.storeForExcludingQueryGenes &&
-                    params.storeForExcludingQueryGenes.selectedMolecularProfiles.result!.findIndex(
-                        molecularProfile =>
-                            profileMap[molecularProfile.studyId] !== undefined
-                    ) > -1
-                ) {
+                const doFilterQueryGenes =
+                    params.resultsViewPageStore &&
+                    _.some(
+                        params.resultsViewPageStore.selectedMolecularProfiles
+                            .result!,
+                        selectedMolProfile =>
+                            _.some(
+                                profileMaps,
+                                profileMap =>
+                                    profileMap[selectedMolProfile.studyId] !==
+                                    undefined
+                            )
+                    );
+                if (doFilterQueryGenes) {
                     const queryGenes = _.keyBy(
-                        params.storeForExcludingQueryGenes.hugoGeneSymbols,
+                        params.resultsViewPageStore!.hugoGeneSymbols,
                         x => x.toUpperCase()
                     );
                     data = data.filter(

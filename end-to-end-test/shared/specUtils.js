@@ -228,6 +228,14 @@ function waitForStudyViewSelectedInfo() {
     browser.pause(2000);
 }
 
+function waitForStudyView() {
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, 10000);
+}
+
+function waitForGroupComparisonTabOpen() {
+    $('[data-test=ComparisonPageOverlapTabDiv]').waitForVisible(100000);
+}
+
 function getTextFromElement(element) {
     return browser
         .element(element)
@@ -423,6 +431,37 @@ function postDataToUrl(url, data) {
     );
 }
 
+function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
+    goToUrlAndSetLocalStorage(studyViewUrl);
+    $('[data-test=summary-tab-content]').waitForVisible();
+    waitForNetworkQuiet();
+    const chart = '[data-test=' + chartDataTest + ']';
+    browser.waitForVisible(chart, timeout || 10000);
+    browser.moveToObject(chart);
+    browser.waitUntil(() => {
+        return browser.isExisting(chart + ' .controls');
+    }, timeout || 10000);
+
+    // move to hamburger icon
+    const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
+    browser.moveToObject(hamburgerIcon);
+
+    // wait for the menu available
+    browser.waitForVisible(hamburgerIcon, timeout || 10000);
+
+    // open comparison session
+    const studyViewTabId = browser.getCurrentTabId();
+    $(chart)
+        .$(hamburgerIcon)
+        .$$('li')[1]
+        .click();
+    const groupComparisonTabId = browser
+        .windowHandles()
+        .value.filter(id => id !== studyViewTabId)[0];
+    browser.window(groupComparisonTabId);
+    waitForGroupComparisonTabOpen();
+}
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -441,6 +480,8 @@ module.exports = {
     toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
     removeAllStudyViewFilters: removeAllStudyViewFilters,
     waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
+    waitForStudyView: waitForStudyView,
+    waitForGroupComparisonTabOpen: waitForGroupComparisonTabOpen,
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
@@ -465,4 +506,5 @@ module.exports = {
     setDropdownOpen: setDropdownOpen,
     postDataToUrl: postDataToUrl,
     getPortalUrlFromEnv: getPortalUrlFromEnv,
+    openGroupComparison: openGroupComparison,
 };

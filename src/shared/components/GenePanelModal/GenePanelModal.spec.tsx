@@ -1,7 +1,10 @@
 import GenePanelModal from './GenePanelModal';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import Enzyme, { mount } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('GenePanelModal', () => {
     let wrapper: any;

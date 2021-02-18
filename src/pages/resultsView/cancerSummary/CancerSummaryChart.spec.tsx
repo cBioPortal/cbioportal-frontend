@@ -1,12 +1,14 @@
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import Enzyme, { shallow } from 'enzyme';
 import * as React from 'react';
-import * as _ from 'lodash';
 import {
     CancerSummaryChart,
     HORIZONTAL_SCROLLING_THRESHOLD,
     mergeAlterationDataAcrossAlterationTypes,
 } from './CancerSummaryChart';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerSummaryChart', () => {
     it('Allows chart container to be horizontally scrolled when bar threshold is reached', () => {

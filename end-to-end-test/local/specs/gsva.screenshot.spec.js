@@ -64,7 +64,7 @@ describe('gsva feature', () => {
             waitForPlotsTab(20000);
         });
 
-        it.skip('shows gsva profile data on horizontal and vertical axes', () => {
+        it('shows gsva profile data on horizontal and vertical axes', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             horzDataSelect.$('.Select-arrow-zone').click();
             horzDataSelect.$('.Select-option=Gene Sets').click();
