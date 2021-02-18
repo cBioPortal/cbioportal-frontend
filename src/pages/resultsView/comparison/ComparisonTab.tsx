@@ -1,13 +1,10 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, computed, observable, makeObservable } from 'mobx';
-import autobind from 'autobind-decorator';
+import { action, computed, makeObservable, observable } from 'mobx';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import Overlap from '../../groupComparison/Overlap';
 import ClinicalData from '../../groupComparison/ClinicalData';
-import MutationEnrichments from '../../groupComparison/MutationEnrichments';
-import CopyNumberEnrichments from '../../groupComparison/CopyNumberEnrichments';
 import MRNAEnrichments from '../../groupComparison/MRNAEnrichments';
 import ProteinEnrichments from '../../groupComparison/ProteinEnrichments';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
@@ -26,12 +23,19 @@ import AlterationFilterWarning from '../../../shared/components/banners/Alterati
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import _ from 'lodash';
 import groupComparisonStyles from '../../../pages/groupComparison/styles.module.scss';
-import styles from '../../groupComparison/styles.module.scss';
 import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
+import AlterationEnrichments from 'pages/groupComparison/AlterationEnrichments';
+import AlterationEnrichmentTypeSelector, {
+    IAlterationEnrichmentTypeSelectorHandlers,
+} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
+import {
+    buildAlterationEnrichmentTypeSelectorHandlers,
+    buildAlterationsTabName,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -45,6 +49,7 @@ export default class ComparisonTab extends React.Component<
     {}
 > {
     @observable.ref private store: ResultsViewComparisonStore;
+    private alterationEnrichmentTypeSelectorHandlers: IAlterationEnrichmentTypeSelectorHandlers;
 
     constructor(props: IComparisonTabProps) {
         super(props);
@@ -54,6 +59,9 @@ export default class ComparisonTab extends React.Component<
             this.props.appStore,
             this.props.urlWrapper,
             this.props.store
+        );
+        this.alterationEnrichmentTypeSelectorHandlers = buildAlterationEnrichmentTypeSelectorHandlers(
+            this.store
         );
     }
 
@@ -107,6 +115,10 @@ export default class ComparisonTab extends React.Component<
             }
         },
     });
+
+    @computed get alterationEnrichmentTabName() {
+        return buildAlterationsTabName(this.store);
+    }
 
     @action.bound
     public onOverlapStrategySelect(option: any) {
@@ -166,33 +178,36 @@ export default class ComparisonTab extends React.Component<
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
-                    {this.store.showMutationsTab && (
+                    {this.store.showAlterationsTab && (
                         <MSKTab
-                            id={ResultsViewComparisonSubTab.MUTATIONS}
-                            linkText="Mutations"
+                            id={ResultsViewComparisonSubTab.ALTERATIONS}
+                            linkText={this.alterationEnrichmentTabName}
                             anchorClassName={
-                                this.store.mutationsTabUnavailable
+                                this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
                                     : ''
                             }
                         >
-                            <MutationEnrichments
-                                store={this.store}
-                                resultsViewStore={this.props.store}
-                            />
-                        </MSKTab>
-                    )}
-                    {this.store.showCopyNumberTab && (
-                        <MSKTab
-                            id={ResultsViewComparisonSubTab.CNA}
-                            linkText="Copy-number"
-                            anchorClassName={
-                                this.store.copyNumberUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <CopyNumberEnrichments
+                            {this.store.activeGroups.isComplete &&
+                                this.store.activeGroups.result!.length > 1 && (
+                                    <AlterationEnrichmentTypeSelector
+                                        store={this.store}
+                                        handlers={
+                                            this
+                                                .alterationEnrichmentTypeSelectorHandlers!
+                                        }
+                                        showMutations={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                        showCnas={
+                                            this.store.hasCnaEnrichmentData
+                                        }
+                                        showFusions={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                    />
+                                )}
+                            <AlterationEnrichments
                                 store={this.store}
                                 resultsViewStore={this.props.store}
                             />

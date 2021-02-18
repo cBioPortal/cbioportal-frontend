@@ -108,7 +108,7 @@ describe('treatment feature', () => {
             assertScreenShotMatch(res);
         });
 
-        it.skip('updates title of watefall plot when selecting a new gene', () => {
+        it('updates title of watefall plot when selecting a new gene', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
@@ -118,7 +118,13 @@ describe('treatment feature', () => {
 
             $('.gene-select').click();
 
-            $('#react-select-13-option-1-3').click();
+            // select gene menu entries
+            var geneMenuEntries = $('[data-test=GeneColoringMenu]')
+                .$('div=Genes')
+                .$('..')
+                .$$('div')[1]
+                .$$('div');
+            geneMenuEntries[3].click();
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);

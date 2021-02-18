@@ -11,7 +11,7 @@ import { IColumnVisibilityDef } from '../../../shared/components/columnVisibilit
 import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import PatientViewMutationsDataStore from './PatientViewMutationsDataStore';
-import { Mutation, ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
+import { ClinicalDataBySampleId, Mutation } from 'cbioportal-ts-api-client';
 import MutationOncoprint from './oncoprint/MutationOncoprint';
 import LabeledCheckbox from '../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import PatientViewMutationTable from './PatientViewMutationTable';
@@ -19,7 +19,6 @@ import { GeneFilterOption } from './GeneFilterMenu';
 import { isFusion } from '../../../shared/lib/MutationUtils';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
-import Timeline from '../timeline/Timeline';
 import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
 import VAFChartWrapperStore from '../timeline2/VAFChartWrapperStore';

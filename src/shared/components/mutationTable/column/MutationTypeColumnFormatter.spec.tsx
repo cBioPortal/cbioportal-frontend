@@ -3,8 +3,10 @@ import styles from './mutationType.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('MutationTypeColumnFormatter', () => {
     const missenseVariant = initMutation({

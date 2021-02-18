@@ -7,14 +7,12 @@ import {
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import {
-    getGeneColumnCellOverlaySimple,
     FreqColumnTypeEnum,
+    getGeneColumnCellOverlaySimple,
 } from '../TableUtils';
-import { getQValue } from '../StudyViewUtils';
 import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import autobind from 'autobind-decorator';
-import { If, Then, Else } from 'react-if';
+import { Else, If, Then } from 'react-if';
 import GisticAnnotation from 'shared/components/annotation/Gistic';
 import MutSigAnnotation from 'shared/components/annotation/MutSig';
 
