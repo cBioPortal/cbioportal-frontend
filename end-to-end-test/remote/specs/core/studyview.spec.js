@@ -758,4 +758,41 @@ describe('study view treatments table', () => {
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
+
+    it('can filter a study by sample treatments', function() {
+        const sampleTreatmentsFirstCheckbox =
+            '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const sampleTreatmentsSelectSamplesButton =
+            '[data-test="SAMPLE_TREATMENTS-table"] button';
+        var url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        goToUrlAndSetLocalStorage(url);
+
+        $(sampleTreatmentsFirstCheckbox).waitForExist();
+        browser.click(sampleTreatmentsFirstCheckbox);
+        $(sampleTreatmentsSelectSamplesButton).waitForExist();
+        browser.click(sampleTreatmentsSelectSamplesButton);
+        waitForNetworkQuiet();
+
+        const res = checkElementWithMouseDisabled('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+
+    it('can filter a study by patient treatments', function() {
+        var url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
+        goToUrlAndSetLocalStorage(url);
+
+        const patientTreatmentsFirstCheckbox =
+            '[data-test="PATIENT_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
+        const patientTreatmentsSelectSamplesButton =
+            '[data-test="PATIENT_TREATMENTS-table"] button';
+
+        $(patientTreatmentsFirstCheckbox).waitForExist();
+        browser.click(patientTreatmentsFirstCheckbox);
+        $(patientTreatmentsSelectSamplesButton).waitForExist();
+        browser.click(patientTreatmentsSelectSamplesButton);
+        waitForNetworkQuiet();
+
+        const res = checkElementWithMouseDisabled('#mainColumn');
+        assertScreenShotMatch(res);
+    });
 });

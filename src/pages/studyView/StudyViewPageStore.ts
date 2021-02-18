@@ -8076,7 +8076,10 @@ export class StudyViewPageStore {
     });
 
     @action.bound
-    public onSampleTreatmentSelection(values: string[][]): void {
+    public onSampleTreatmentSelection(
+        ignored: ChartMeta,
+        values: string[][]
+    ): void {
         const filters = values.map(outerFilter => {
             return {
                 filters: outerFilter.map(innerFilter => {
@@ -8089,7 +8092,10 @@ export class StudyViewPageStore {
     }
 
     @action.bound
-    public onPatientTreatmentSelection(values: string[][]): void {
+    public onPatientTreatmentSelection(
+        ignored: ChartMeta,
+        values: string[][]
+    ): void {
         const filters = values.map(outerFilter => {
             return {
                 filters: outerFilter.map(innerFilter => {
