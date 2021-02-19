@@ -128,6 +128,7 @@ export default class GroupCheckbox extends React.Component<
                 color.hex
             );
         }
+        this.props.store.groupColorChanged = false;
     };
 
     buildColorChooserWidget = () => (
