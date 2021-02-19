@@ -462,6 +462,10 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     waitForGroupComparisonTabOpen();
 }
 
+function selectElementByText(text) {
+    return $(`//*[text()="${text}"]`);
+}
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -507,4 +511,5 @@ module.exports = {
     postDataToUrl: postDataToUrl,
     getPortalUrlFromEnv: getPortalUrlFromEnv,
     openGroupComparison: openGroupComparison,
+    selectElementByText: selectElementByText,
 };

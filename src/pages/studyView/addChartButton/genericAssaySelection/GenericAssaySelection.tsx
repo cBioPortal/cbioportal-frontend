@@ -8,13 +8,27 @@ import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/P
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
 
 export interface IGenericAssaySelectionProps {
-    molecularProfileOptions: MolecularProfileOption[];
+    molecularProfileOptions:
+        | (MolecularProfileOption & {
+              profileName: string;
+          })[]
+        | ISelectOption[];
     genericAssayEntityOptions: ISelectOption[];
     genericAssayType: string;
     submitButtonText: string;
-    onSubmit: (charts: GenericAssayChart[]) => void;
-    containerWidth: number;
+    containerWidth?: number;
+    initialGenericAssayEntityIds?: string[];
+    allowEmptySubmission?: boolean;
+    onSelectGenericAssayProfile?: (molecularProfileId: string) => void;
+    onTrackSubmit?: (data: GenericAssayTrackInfo[]) => void;
+    onChartSubmit?: (data: GenericAssayChart[]) => void;
 }
+
+export type GenericAssayTrackInfo = {
+    profileId: string;
+    genericAssayType: string;
+    genericAssayEntityId: string;
+};
 
 interface ISelectOption {
     value: string;
@@ -29,36 +43,69 @@ export default class GenericAssaySelection extends React.Component<
     constructor(props: any) {
         super(props);
         makeObservable(this);
+        if (this.props.initialGenericAssayEntityIds) {
+            this._selectedGenericAssayEntityIds = this.props.initialGenericAssayEntityIds;
+        }
     }
+
+    public static defaultProps: Partial<IGenericAssaySelectionProps> = {
+        allowEmptySubmission: false,
+    };
+
     @observable private _selectedProfileOption:
         | (MolecularProfileOption & {
               profileName: string;
           })
+        | ISelectOption
         | undefined = undefined;
 
     @observable.ref private _selectedGenericAssayEntityIds: string[] = [];
     @observable private _genericAssaySearchText: string = '';
 
     @action.bound
-    private onAddChart() {
+    private onSubmit() {
         if (this.selectedProfileOption !== undefined) {
-            const charts = this._selectedGenericAssayEntityIds.map(entityId => {
-                return {
-                    name:
-                        entityId +
-                        ': ' +
-                        this.selectedProfileOption!.profileName,
-                    description: this.selectedProfileOption!.description,
-                    profileType: this.selectedProfileOption!.value,
-                    genericAssayType: this.props.genericAssayType,
-                    dataType: this.selectedProfileOption!.dataType!,
-                    genericAssayEntityId: entityId,
+            // Generic Assay chart submit (StudyView)
+            if (this.props.onChartSubmit) {
+                const option = this
+                    .selectedProfileOption as MolecularProfileOption & {
+                    profileName: string;
                 };
-            });
-            this.props.onSubmit(charts);
-            // clear selected entities after submit new charts
-            this.clearSelectedEntities();
+                const charts = this._selectedGenericAssayEntityIds.map(
+                    entityId => {
+                        return {
+                            name: entityId + ': ' + option.profileName,
+                            description: option.description,
+                            profileType: option.value,
+                            genericAssayType: this.props.genericAssayType,
+                            dataType: option.dataType,
+                            genericAssayEntityId: entityId,
+                        };
+                    }
+                );
+                this.props.onChartSubmit(charts);
+                // clear selected entities after submit new charts
+                this.clearSelectedEntities();
+            }
+            // Generic Assay track submit (OncoPrint)
+            if (this.props.onTrackSubmit) {
+                const option = this.selectedProfileOption as ISelectOption;
+                // select profile if onSelectGenericAssayProfile exists
+                this.props.onSelectGenericAssayProfile &&
+                    this.props.onSelectGenericAssayProfile(option.value);
+                const info = this._selectedGenericAssayEntityIds.map(
+                    entityId => {
+                        return {
+                            profileId: option.value,
+                            genericAssayType: this.props.genericAssayType,
+                            genericAssayEntityId: entityId,
+                        };
+                    }
+                );
+                this.props.onTrackSubmit(info);
+            }
         }
+        // fail silently
     }
 
     @action.bound
@@ -78,29 +125,20 @@ export default class GenericAssaySelection extends React.Component<
         if (this._selectedProfileOption !== undefined) {
             return this._selectedProfileOption;
         } else if (this.props.molecularProfileOptions) {
-            return this.molecularProfileOptions[0];
+            return this.props.molecularProfileOptions[0];
         } else {
             return undefined;
         }
     }
 
     @computed
-    private get entityNotSelected() {
-        return _.isEmpty(this._selectedGenericAssayEntityIds);
-    }
-
-    @computed
-    private get molecularProfileOptions() {
-        if (this.props.molecularProfileOptions) {
-            return this.props.molecularProfileOptions.map(option => {
-                return {
-                    ...option,
-                    label: `${option.label} (${option.count} samples)`,
-                    profileName: option.label,
-                };
-            });
+    private get buttonDisabled() {
+        // disable button only when we don't allow empty submissions and has zero selected entities
+        if (this.props.allowEmptySubmission) {
+            return false;
+        } else {
+            return _.isEmpty(this._selectedGenericAssayEntityIds);
         }
-        return [];
     }
 
     @computed get genericAssayEntitiesOptionsByValueMap(): {
@@ -236,9 +274,13 @@ export default class GenericAssaySelection extends React.Component<
         return (
             <div
                 data-test="GenericAssaySelection"
-                style={{ width: this.props.containerWidth - 20 }}
+                style={{
+                    width: this.props.containerWidth
+                        ? this.props.containerWidth - 20
+                        : 'auto',
+                }}
             >
-                <div>
+                <div data-test="GenericAssayEntitySelection">
                     {/* {this.isSelectedGenericAssayOptionsOverLimit && (
                         <div className="alert alert-warning">
                             <i
@@ -274,6 +316,7 @@ export default class GenericAssaySelection extends React.Component<
                 </div>
                 <div style={{ display: 'flex', marginTop: 10 }}>
                     <div
+                        data-test="GenericAssayProfileSelection"
                         style={{
                             flex: 1,
                             marginRight: 15,
@@ -282,16 +325,16 @@ export default class GenericAssaySelection extends React.Component<
                         <ReactSelect
                             value={this.selectedProfileOption}
                             onChange={this.handleProfileSelect}
-                            options={this.molecularProfileOptions}
+                            options={this.props.molecularProfileOptions}
                             isClearable={false}
                             isSearchable={false}
                         />
                     </div>
                     <button
-                        disabled={this.entityNotSelected}
+                        disabled={this.buttonDisabled}
                         className="btn btn-primary btn-sm"
                         data-test="GenericAssaySelectionSubmitButton"
-                        onClick={this.onAddChart}
+                        onClick={this.onSubmit}
                     >
                         {this.props.submitButtonText}
                     </button>
