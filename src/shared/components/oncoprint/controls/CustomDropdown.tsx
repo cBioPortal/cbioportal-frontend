@@ -4,10 +4,11 @@ import { RootCloseWrapper } from 'react-overlays';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import { observable, makeObservable } from 'mobx';
+import _ from 'lodash';
 
 export interface ICustomDropdownProps extends ButtonProps {
-    title: string;
-    className?: string;
+    titleElement?: JSX.Element;
+    styles?: any;
 }
 
 class CustomButton extends React.Component<any, {}> {
@@ -23,12 +24,12 @@ class CustomButton extends React.Component<any, {}> {
 }
 class CustomMenu extends React.Component<any, {}> {
     render() {
-        const { className, children } = this.props;
+        const { className, styles, children } = this.props;
 
         return (
             <div
                 className={classNames('dropdown-menu', className)}
-                style={{ padding: '6px' }}
+                style={{ ...styles, padding: '6px' }}
             >
                 {children}
             </div>
@@ -38,7 +39,7 @@ class CustomMenu extends React.Component<any, {}> {
 
 @observer
 export default class CustomDropdown extends React.Component<
-    ButtonProps & { titleElement?: JSX.Element },
+    ICustomDropdownProps,
     {}
 > {
     @observable private open: boolean = false;
@@ -58,7 +59,7 @@ export default class CustomDropdown extends React.Component<
     }
 
     render() {
-        const { children, id, className, ref, ...props } = this.props;
+        const { children, id, className, styles, ref, ...props } = this.props;
         return (
             <RootCloseWrapper onRootClose={this.hide}>
                 <Dropdown id={id + ''} open={this.open}>
@@ -69,7 +70,11 @@ export default class CustomDropdown extends React.Component<
                         onClick={this.toggle}
                         {...props}
                     />
-                    <CustomMenu bsRole="menu" className={classNames(className)}>
+                    <CustomMenu
+                        bsRole="menu"
+                        className={className}
+                        styles={styles}
+                    >
                         {children}
                     </CustomMenu>
                 </Dropdown>

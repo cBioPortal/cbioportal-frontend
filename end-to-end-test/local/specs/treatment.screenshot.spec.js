@@ -11,9 +11,12 @@ var oncoprintTabUrl = require('./treatment.spec').oncoprintTabUrl;
 var plotsTabUrl = require('./treatment.spec').plotsTabUrl;
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
-var openHeatmapMenu = require('./treatment.spec').openHeatmapMenu;
+var goToTreatmentTab = require('./treatment.spec').goToTreatmentTab;
 var selectTreamentsBothAxes = require('./treatment.spec')
     .selectTreamentsBothAxes;
+
+const GENERIC_ASSAY_ENTITY_SELECTOR =
+    '[data-test="GenericAssayEntitySelection"]';
 
 describe('treatment feature', () => {
     describe('oncoprint tab', () => {
@@ -23,26 +26,29 @@ describe('treatment feature', () => {
         });
 
         it('shows treatment profile heatmap track for treatment', () => {
-            openHeatmapMenu();
-            selectReactSelectOption(
-                $('.oncoprint__controls__heatmap_menu'),
-                'IC50 values of compounds on cellular phenotype readout'
+            goToTreatmentTab();
+            $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+            $('[data-test="GenericAssayEntitySelection"] input').setValue(
+                '17-AAG'
             );
-            // wait for generic assay data loading complete
-            $(
-                '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-            ).waitForExist();
-            $('.oncoprint__controls__heatmap_menu input').setValue('17-AAG');
-            var options = $$('div[class$="option"]');
+            var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                'div[class$="option"]'
+            );
             options[0].click();
-            var indicators = $$('div[class$="indicatorContainer"]');
+            var indicators = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                'div[class$="indicatorContainer"]'
+            );
             // close the dropdown
-            indicators[1].click();
-            var selectedOptions = $$('div[class$="multiValue"]');
+            indicators[0].click();
+            var selectedOptions = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                'div[class$="multiValue"]'
+            );
             assert.equal(selectedOptions.length, 1);
 
-            $('button=Add Treatment Responses to Heatmap').click();
-            openHeatmapMenu();
+            $('button=Add Track').click();
+            // close add tracks menu
+            var addTracksButton = browser.$('button[id=addTracksDropdown]');
+            addTracksButton.click();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');
             assertScreenShotMatch(res);

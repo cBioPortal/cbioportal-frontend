@@ -474,7 +474,7 @@ export default abstract class ComparisonStore {
             ),
     });
 
-    public readonly genericAssayEnrichmentProfilesGroupByGenericAssayType = remoteData(
+    public readonly genericAssayEnrichmentProfilesGroupedByGenericAssayType = remoteData(
         {
             await: () => [this.molecularProfilesInActiveStudies],
             invoke: () =>
@@ -505,7 +505,7 @@ export default abstract class ComparisonStore {
         [studyId: string]: MolecularProfile;
     } = {};
     @observable.ref
-    private _genericAssayEnrichmentProfileMapGroupByGenericAssayType: {
+    private _genericAssayEnrichmentProfileMapGroupedByGenericAssayType: {
         [geneircAssayType: string]: {
             [studyId: string]: MolecularProfile;
         };
@@ -641,22 +641,22 @@ export default abstract class ComparisonStore {
         },
     });
 
-    readonly selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType = remoteData(
+    readonly selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = remoteData(
         {
             await: () => [
-                this.genericAssayEnrichmentProfilesGroupByGenericAssayType,
+                this.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
             ],
             invoke: () => {
                 if (
                     _.isEmpty(
                         this
-                            ._genericAssayEnrichmentProfileMapGroupByGenericAssayType
+                            ._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
                     )
                 ) {
                     return Promise.resolve(
                         _.mapValues(
                             this
-                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result!,
                             genericAssayEnrichmentProfiles => {
                                 const molecularProfilesbyStudyId = _.groupBy(
@@ -674,7 +674,7 @@ export default abstract class ComparisonStore {
                 } else {
                     return Promise.resolve(
                         this
-                            ._genericAssayEnrichmentProfileMapGroupByGenericAssayType
+                            ._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
                     );
                 }
             },
@@ -723,14 +723,14 @@ export default abstract class ComparisonStore {
         },
         genericAssayType: string
     ) {
-        this._genericAssayEnrichmentProfileMapGroupByGenericAssayType[
+        this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType[
             genericAssayType
         ] = profileMap;
         // trigger the function to recompute
         const clonedMap = _.clone(
-            this._genericAssayEnrichmentProfileMapGroupByGenericAssayType
+            this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
         );
-        this._genericAssayEnrichmentProfileMapGroupByGenericAssayType = clonedMap;
+        this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
     }
 
     readonly alterationsEnrichmentAnalysisGroups = remoteData({
@@ -1172,14 +1172,14 @@ export default abstract class ComparisonStore {
     readonly gaEnrichmentGroupsByAssayType = remoteData({
         await: () => [
             this
-                .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType,
+                .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType,
             this.enrichmentAnalysisGroups,
         ],
         invoke: () => {
             return Promise.resolve(
                 _.mapValues(
                     this
-                        .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                        .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                         .result!,
                     selectedGenericAssayEnrichmentProfileMap => {
                         let studyIds = Object.keys(
@@ -1224,7 +1224,7 @@ export default abstract class ComparisonStore {
         await: () => [
             this.gaEnrichmentGroupsByAssayType,
             this
-                .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType,
+                .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1240,7 +1240,7 @@ export default abstract class ComparisonStore {
                                     sample => ({
                                         caseId: sample.sampleId,
                                         molecularProfileId: this
-                                            .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                                            .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                                             .result![genericAssayType][
                                             sample.studyId
                                         ].molecularProfileId,
@@ -1272,7 +1272,7 @@ export default abstract class ComparisonStore {
                             await: () => [],
                             getSelectedProfileMap: () =>
                                 this
-                                    .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                                    .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                                     .result![genericAssayType], // returns an empty array if the selected study doesn't have any generic assay profiles
                             fetchData: () => {
                                 if (
@@ -1437,10 +1437,10 @@ export default abstract class ComparisonStore {
 
     @computed get genericAssayTabShowable() {
         return (
-            this.genericAssayEnrichmentProfilesGroupByGenericAssayType
+            this.genericAssayEnrichmentProfilesGroupedByGenericAssayType
                 .isComplete &&
             _.size(
-                this.genericAssayEnrichmentProfilesGroupByGenericAssayType
+                this.genericAssayEnrichmentProfilesGroupedByGenericAssayType
                     .result!
             ) > 0
         );

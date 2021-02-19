@@ -22,7 +22,7 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
     MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
 };
 
-export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAssayType(
+export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {
     const genericAssayProfiles = molecularProfiles.filter(profile => {
@@ -32,15 +32,15 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAs
         );
     });
 
-    const genericAssayProfilesGroupByGenericAssayType = _.groupBy(
+    const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
         genericAssayProfiles,
         'genericAssayType'
     );
     const genericAssayTypes = _.keys(
-        genericAssayProfilesGroupByGenericAssayType
+        genericAssayProfilesGroupedByGenericAssayType
     );
 
-    const genericAssayMetaGroupByGenericAssayType: {
+    const genericAssayMetaGroupedByGenericAssayType: {
         [genericAssayType: string]: GenericAssayMeta[];
     } = {};
 
@@ -48,19 +48,19 @@ export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByGenericAs
         genericAssayTypes.map(genericAssayType =>
             fetchGenericAssayMetaByProfileIds(
                 _.map(
-                    genericAssayProfilesGroupByGenericAssayType[
+                    genericAssayProfilesGroupedByGenericAssayType[
                         genericAssayType
                     ],
                     profile => profile.molecularProfileId
                 )
             ).then(genericAssayMeta => {
-                genericAssayMetaGroupByGenericAssayType[
+                genericAssayMetaGroupedByGenericAssayType[
                     genericAssayType
                 ] = genericAssayMeta;
             })
         )
     );
-    return genericAssayMetaGroupByGenericAssayType;
+    return genericAssayMetaGroupedByGenericAssayType;
 }
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(

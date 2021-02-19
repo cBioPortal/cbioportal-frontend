@@ -277,7 +277,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             this.props.disableGenericAssayTabs ||
             !this.props.store.genericAssayProfileOptionsByType.isComplete ||
-            !this.props.store.genericAssayEntitiesGroupByGenericAssayType
+            !this.props.store.genericAssayEntitiesGroupedByGenericAssayType
                 .isComplete ||
             (this.props.store.genericAssayProfileOptionsByType.isComplete &&
                 _.isEmpty(
@@ -422,14 +422,23 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             this.props.store.genericAssayProfileOptionsByType.result,
             (options, type) => {
                 const genericAssayEntityOptions = _.map(
-                    this.props.store.genericAssayEntitiesGroupByGenericAssayType
-                        .result![type],
+                    this.props.store
+                        .genericAssayEntitiesGroupedByGenericAssayType.result![
+                        type
+                    ],
                     entity => makeGenericAssayOption(entity, false)
                 );
                 const shouldShowChartOptionTable =
                     this.genericAssayChartOptionsByGenericAssayType[type] &&
                     this.genericAssayChartOptionsByGenericAssayType[type]
                         .length > 0;
+                const molecularProfileOptions = options.map(option => {
+                    return {
+                        ...option,
+                        label: `${option.label} (${option.count} samples)`,
+                        profileName: option.label,
+                    };
+                });
 
                 return (
                     <MSKTab
@@ -439,13 +448,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     >
                         <GenericAssaySelection
                             containerWidth={this.getTabsWidth}
-                            molecularProfileOptions={options}
+                            molecularProfileOptions={molecularProfileOptions}
                             submitButtonText={'Add Chart'}
                             genericAssayType={type}
                             genericAssayEntityOptions={
                                 genericAssayEntityOptions
                             }
-                            onSubmit={this.onGenericAssaySubmit}
+                            onChartSubmit={this.onGenericAssaySubmit}
                         />
                         {shouldShowChartOptionTable && (
                             <div style={{ marginTop: 10 }}>
@@ -831,7 +840,7 @@ export default class AddChartButton extends React.Component<
         return (
             this.props.store.genericAssayProfileOptionsByType.isPending ||
             this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupByGenericAssayType
+            this.props.store.genericAssayEntitiesGroupedByGenericAssayType
                 .isPending
         );
     }
