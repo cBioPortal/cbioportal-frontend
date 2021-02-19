@@ -7,6 +7,7 @@ var waitForPlotsTab = require('../../shared/specUtils').waitForPlotsTab;
 var reactSelectOption = require('../../shared/specUtils').reactSelectOption;
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
+var selectElementByText = require('../../shared/specUtils').selectElementByText;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -15,6 +16,14 @@ const oncoprintTabUrl =
 const plotsTabUrl =
     CBIOPORTAL_URL +
     '/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&clinicallist=PROFILED_IN_study_es_0_mutations%2CPROFILED_IN_study_es_0_gistic&data_priority=0&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&show_samples=false&tab_index=tab_visualize&generic_assay_groups=study_es_0_treatment_ic50,Afatinib-1,Afatinib-2';
+const ADD_TRACKS_TREATMENT_TAB =
+    '.oncoprintAddTracks a.tabAnchor_TREATMENT_RESPONSE';
+const TREATMENT_IC50_PROFILE_NAME =
+    'IC50 values of compounds on cellular phenotype readout';
+const TREATMENT_EC50_PROFILE_NAME =
+    'EC50 values of compounds on cellular phenotype readout';
+const GENERIC_ASSAY_ENTITY_SELECTOR =
+    '[data-test="GenericAssayEntitySelection"]';
 
 describe('treatment feature', function() {
     //this.retries(2);
@@ -27,118 +36,99 @@ describe('treatment feature', function() {
             });
 
             it('shows treatment data type option in heatmap menu', () => {
-                openHeatmapMenu();
-                assert(
-                    reactSelectOption(
-                        $('.oncoprint__controls__heatmap_menu'),
-                        'EC50 values of compounds on cellular phenotype readout'
-                    )
-                );
-                assert(
-                    reactSelectOption(
-                        $('.oncoprint__controls__heatmap_menu'),
-                        'IC50 values of compounds on cellular phenotype readout'
-                    )
-                );
+                goToTreatmentTab();
+                // change profile to IC50
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+                selectElementByText(TREATMENT_IC50_PROFILE_NAME).waitForExist();
+                selectElementByText(TREATMENT_IC50_PROFILE_NAME).click();
+                assert($(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`));
+                // change profile to EC50
+                selectElementByText(TREATMENT_IC50_PROFILE_NAME).waitForExist();
+                selectElementByText(TREATMENT_IC50_PROFILE_NAME).click();
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+                assert($(`//*[text()="${TREATMENT_EC50_PROFILE_NAME}"]`));
             });
 
             it('shows treatment selection box in heatmap menu when treatment data type is selected', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
-                );
-                assert(
-                    $(
-                        '.oncoprint__controls__heatmap_menu.generic-assay-selector'
-                    )
-                );
+                goToTreatmentTab();
+                // open profile dropdown menu
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).waitForExist();
+                selectElementByText(TREATMENT_EC50_PROFILE_NAME).click();
+                assert($(`//*[text()="${TREATMENT_IC50_PROFILE_NAME}"]`));
             });
 
             it('shows all treatments in generic assay selector', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
+                goToTreatmentTab();
+                // open entity dropdown menu
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
                 );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.generic-assay-selector div[class$="control"]').click();
-                var options = $$('div[class$="option"]');
                 assert.equal(options.length, 10);
             });
 
             it('select one treatment in generic assay selector', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
-                );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.oncoprint__controls__heatmap_menu input').setValue(
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                $('[data-test="GenericAssayEntitySelection"] input').setValue(
                     '17-AAG'
                 );
-                var options = $$('div[class$="option"]');
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
+                );
                 options[1].click();
-                $('div[class$="multiValue"]').waitForExist();
-                var selectedOptions = $$('div[class$="multiValue"]');
+                $(GENERIC_ASSAY_ENTITY_SELECTOR)
+                    .$('div[class$="multiValue"]')
+                    .waitForExist();
+                var selectedOptions = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="multiValue"]'
+                );
                 assert.equal(selectedOptions.length, 1);
             });
 
             it('show multiple filtered treatments', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                $('[data-test="GenericAssayEntitySelection"] input').setValue(
+                    'AZD'
                 );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.oncoprint__controls__heatmap_menu input').setValue('AZD');
-                var options = $$('div[class$="option"]');
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
+                );
                 assert.equal(options.length, 3);
             });
 
             it('select multiple filtered treatments in generic assay selector', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                $('[data-test="GenericAssayEntitySelection"] input').setValue(
+                    'AZD'
                 );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.oncoprint__controls__heatmap_menu input').setValue('AZD');
-                var options = $$('div[class$="option"]');
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
+                );
                 options[0].click();
                 $('div[class$="multiValue"]').waitForExist();
-                var selectedOptions = $$('div[class$="multiValue"]');
+                var selectedOptions = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="multiValue"]'
+                );
                 assert.equal(selectedOptions.length, 2);
             });
 
             it('keeps the filtered treatments list open after selecting an option', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
                 );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.generic-assay-selector div[class$="control"]').click();
-                var options = $$('div[class$="option"]');
                 assert.equal(options.length, 10);
 
                 options[0].click();
-                options = $$('div[class$="option"]');
+                options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
+                );
                 assert.equal(options.length, 9);
             });
 
@@ -149,18 +139,13 @@ describe('treatment feature', function() {
                     )
                 );
                 waitForOncoprint();
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR)
+                    .$('div[class$="multiValue"]')
+                    .waitForExist();
+                var selectedOptions = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="multiValue"]'
                 );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-
-                $('div[class$="multiValue"]').waitForExist();
-                var selectedOptions = $$('div[class$="multiValue"]');
                 assert.equal(selectedOptions.length, 1);
                 assert.equal(
                     selectedOptions[0].getText(),
@@ -169,30 +154,29 @@ describe('treatment feature', function() {
             });
 
             it('sets `generic_assay_groups` URL parameter', () => {
-                openHeatmapMenu();
-                selectReactSelectOption(
-                    $('.oncoprint__controls__heatmap_menu'),
-                    'IC50 values of compounds on cellular phenotype readout'
-                );
-                // wait for generic assay data loading complete
-                $(
-                    '.oncoprint__controls__heatmap_menu .generic-assay-selector'
-                ).waitForExist();
-                $('.oncoprint__controls__heatmap_menu input').setValue(
+                goToTreatmentTab();
+                $(GENERIC_ASSAY_ENTITY_SELECTOR).click();
+                $('[data-test="GenericAssayEntitySelection"] input').setValue(
                     '17-AAG'
                 );
-                var options = $$('div[class$="option"]');
+                var options = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="option"]'
+                );
                 options[0].click();
-                var indicators = $$('div[class$="indicatorContainer"]');
+                var indicators = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="indicatorContainer"]'
+                );
                 // close the dropdown
-                indicators[1].click();
-                var selectedOptions = $$('div[class$="multiValue"]');
+                indicators[0].click();
+                var selectedOptions = $(GENERIC_ASSAY_ENTITY_SELECTOR).$$(
+                    'div[class$="multiValue"]'
+                );
                 assert.equal(selectedOptions.length, 1);
 
-                $('button=Add Treatment Responses to Heatmap').click();
+                $('button=Add Track').click();
                 waitForOncoprint();
                 var url = browser.url().value;
-                var regex = /generic_assay_groups=study_es_0_treatment_ic50%2C17-AAG/;
+                var regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
                 assert(url.match(regex));
             });
         });
@@ -512,9 +496,13 @@ describe('treatment feature', function() {
     }
 });
 
-var openHeatmapMenu = () => {
-    var heatmapButton = browser.$('button[id=heatmapDropdown]');
-    heatmapButton.click();
+var goToTreatmentTab = () => {
+    var addTracksButton = browser.$('button[id=addTracksDropdown]');
+    addTracksButton.click();
+
+    var addTracksMenu = browser.$(ADD_TRACKS_TREATMENT_TAB);
+    addTracksMenu.waitForExist();
+    browser.click(ADD_TRACKS_TREATMENT_TAB);
 };
 
 var selectTreamentsBothAxes = () => {
@@ -565,7 +553,7 @@ var selectTreamentsBothAxes = () => {
 
 module.exports = {
     oncoprintTabUrl: oncoprintTabUrl,
-    openHeatmapMenu: openHeatmapMenu,
+    goToTreatmentTab: goToTreatmentTab,
     queryPageUrl: CBIOPORTAL_URL,
     plotsTabUrl: plotsTabUrl,
     selectTreamentsBothAxes: selectTreamentsBothAxes,

@@ -3,24 +3,16 @@ import { Observer, observer } from 'mobx-react';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import AddChartByType from '../../studyView/addChartButton/addChartByType/AddChartByType';
 import { action, computed, observable, makeObservable } from 'mobx';
-import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
-import classNames from 'classnames';
-import { serializeEvent } from '../../../shared/lib/tracking';
+import { remoteData } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
-import {
-    clinicalAttributeIsINCOMPARISONGROUP,
-    clinicalAttributeIsPROFILEDIN,
-    SpecialAttribute,
-} from '../../../shared/cache/ClinicalDataCache';
+import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
 import * as _ from 'lodash';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { toggleIncluded } from '../../../shared/lib/ArrayUtils';
-import OncoprintDropdownCount from './OncoprintDropdownCount';
-import { ChartUserSetting } from 'pages/studyView/StudyViewPageStore';
-import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import MobxPromise from 'mobxpromise';
+import { ChartDataCountSet } from 'pages/studyView/StudyViewUtils';
 
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
@@ -34,6 +26,27 @@ export interface IAddClinicalTrackProps {
     onChangeSelectedClinicalTracks: (
         ids: (string | SpecialAttribute)[]
     ) => void;
+    clinicalTrackOptionsPromise: MobxPromise<{
+        clinical: {
+            label: string;
+            key: string;
+            selected: boolean;
+        }[];
+        groups: {
+            label: string;
+            key: string;
+            selected: boolean;
+        }[];
+        customCharts: {
+            label: string;
+            key: string;
+            selected: boolean;
+        }[];
+    }>;
+    clinicalAttributeIdToAvailableFrequencyPromise: MobxPromise<
+        ChartDataCountSet
+    >;
+    width?: number;
 }
 
 enum Tab {
@@ -95,108 +108,18 @@ export default class AddClinicalTracks extends React.Component<
     }
 
     readonly options = remoteData({
-        await: () => [
-            this.props.store.clinicalAttributes,
-            this.clinicalAttributeIdToAvailableFrequency,
-            this.props.store.clinicalAttributes_customCharts,
-        ],
+        await: () => [this.props.clinicalTrackOptionsPromise],
         invoke: () => {
-            const uniqueAttributes = _.uniqBy(
-                this.props.store.clinicalAttributes.result!,
-                a => a.clinicalAttributeId
-            );
-            const availableFrequency = this
-                .clinicalAttributeIdToAvailableFrequency.result!;
-            const sortedAttributes = {
-                clinical: [] as ExtendedClinicalAttribute[],
-                groups: [] as ExtendedClinicalAttribute[],
-                customCharts: [] as ExtendedClinicalAttribute[],
-            };
-
-            const customChartClinicalAttributeIds = _.keyBy(
-                this.props.store.clinicalAttributes_customCharts.result!,
-                a => a.clinicalAttributeId
-            );
-
-            for (const attr of uniqueAttributes) {
-                if (clinicalAttributeIsINCOMPARISONGROUP(attr)) {
-                    sortedAttributes.groups.push(attr);
-                } else if (
-                    attr.clinicalAttributeId in customChartClinicalAttributeIds
-                ) {
-                    sortedAttributes.customCharts.push(attr);
-                } else {
-                    sortedAttributes.clinical.push(attr);
-                }
-            }
-            sortedAttributes.clinical = _.sortBy<ExtendedClinicalAttribute>(
-                sortedAttributes.clinical,
-                [
-                    (x: ClinicalAttribute) => {
-                        if (
-                            x.clinicalAttributeId ===
-                            SpecialAttribute.StudyOfOrigin
-                        ) {
-                            return 0;
-                        } else if (
-                            x.clinicalAttributeId ===
-                            SpecialAttribute.MutationSpectrum
-                        ) {
-                            return 1;
-                        } else if (clinicalAttributeIsPROFILEDIN(x)) {
-                            return 2;
-                        } else {
-                            return 3;
-                        }
-                    },
-                    (x: ClinicalAttribute) => {
-                        let freq = availableFrequency[x.clinicalAttributeId];
-                        if (freq === undefined) {
-                            freq = 0;
-                        }
-                        return -freq;
-                    },
-                    (x: ClinicalAttribute) => -x.priority,
-                    (x: ClinicalAttribute) => x.displayName.toLowerCase(),
-                ]
-            );
-
-            sortedAttributes.groups = _.sortBy<ExtendedClinicalAttribute>(
-                sortedAttributes.groups,
-                x => x.displayName.toLowerCase()
-            );
-
-            sortedAttributes.customCharts = _.sortBy<ExtendedClinicalAttribute>(
-                sortedAttributes.customCharts,
-                x => x.displayName.toLowerCase()
-            );
-
-            return Promise.resolve(
-                _.mapValues(sortedAttributes, attrs => {
-                    return attrs.map(attr => ({
-                        label: attr.displayName,
-                        key: attr.clinicalAttributeId,
-                        selected:
-                            attr.clinicalAttributeId in
-                            this.selectedClinicalAttributeIds,
-                    }));
-                })
-            );
-        },
-    });
-
-    readonly clinicalAttributeIdToAvailableFrequency = remoteData({
-        await: () => [
-            this.props.store.clinicalAttributeIdToAvailableSampleCount,
-            this.props.store.samples,
-        ],
-        invoke: () => {
-            const numSamples = this.props.store.samples.result!.length;
             return Promise.resolve(
                 _.mapValues(
-                    this.props.store.clinicalAttributeIdToAvailableSampleCount
-                        .result!,
-                    count => (100 * count) / numSamples
+                    this.props.clinicalTrackOptionsPromise.result,
+                    options => {
+                        return options.map(option => ({
+                            ...option,
+                            selected:
+                                option.key in this.selectedClinicalAttributeIds,
+                        }));
+                    }
                 )
             );
         },
@@ -207,11 +130,14 @@ export default class AddClinicalTracks extends React.Component<
         render: () => (
             <AddChartByType
                 options={this.options.result!.clinical}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                freqPromise={
+                    this.props.clinicalAttributeIdToAvailableFrequencyPromise
+                }
                 onAddAll={this.addAll}
                 onClearAll={this.clear}
                 onToggleOption={this.toggleClinicalTrack}
                 optionsGivenInSortedOrder={true}
+                width={this.props.width}
             />
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -223,12 +149,15 @@ export default class AddClinicalTracks extends React.Component<
         render: () => (
             <AddChartByType
                 options={this.options.result!.groups}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                freqPromise={
+                    this.props.clinicalAttributeIdToAvailableFrequencyPromise
+                }
                 onAddAll={this.addAll}
                 onClearAll={this.clear}
                 onToggleOption={this.toggleClinicalTrack}
                 optionsGivenInSortedOrder={true}
                 frequencyHeaderTooltip="% samples in group"
+                width={this.props.width}
             />
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -240,12 +169,15 @@ export default class AddClinicalTracks extends React.Component<
         render: () => (
             <AddChartByType
                 options={this.options.result!.customCharts}
-                freqPromise={this.clinicalAttributeIdToAvailableFrequency}
+                freqPromise={
+                    this.props.clinicalAttributeIdToAvailableFrequencyPromise
+                }
                 onAddAll={this.addAll}
                 onClearAll={this.clear}
                 onToggleOption={this.toggleClinicalTrack}
                 optionsGivenInSortedOrder={true}
                 frequencyHeaderTooltip="% samples in group"
+                width={this.props.width}
             />
         ),
         renderPending: () => <LoadingIndicator isLoading={true} small={true} />,
@@ -253,7 +185,7 @@ export default class AddClinicalTracks extends React.Component<
     });
 
     @autobind
-    private getDropdown() {
+    private getMenu() {
         const numberOfMenus = this.options.isComplete
             ? _.sum(
                   _.map(
@@ -268,7 +200,7 @@ export default class AddClinicalTracks extends React.Component<
                 <MSKTabs
                     activeTabId={this.tabId}
                     onTabClick={this.updateTabId}
-                    className="mainTabs oncoprintAddClinicalTracks"
+                    className="secondaryNavigation oncoprintAddClinicalTracks"
                 >
                     <MSKTab
                         key={0}
@@ -307,59 +239,18 @@ export default class AddClinicalTracks extends React.Component<
             );
         } else {
             return (
-                <div className="tab-content">
-                    <div className="msk-tab">
-                        {this.addClinicalTracksMenu.component}
-                    </div>
+                <div className="oncoprintAddClinicalTracks">
+                    {this.addClinicalTracksMenu.component}
                 </div>
             );
         }
     }
 
-    @action.bound
-    private onDropdownChange(visible: boolean) {
-        this.open = visible;
-    }
-
     render() {
         return (
-            <DefaultTooltip
-                visible={this.open}
-                trigger={['click']}
-                onVisibleChange={this.onDropdownChange}
-                placement={'bottomRight'}
-                destroyTooltipOnHide={true}
-                overlay={<Observer>{this.getDropdown}</Observer>}
-                align={{
-                    overflow: { adjustX: true, adjustY: false },
-                }}
-                arrowContent={<span />}
-                overlayClassName="oncoprintAddClinicalTracksDropdown"
-            >
-                <button
-                    className={classNames('btn btn-default btn-md', {
-                        active: this.open,
-                    })}
-                    data-event={serializeEvent({
-                        category: 'resultsView',
-                        action: 'addClinicalTrackMenuOpen',
-                        label: this.props.store.studyIds.result!.join(','),
-                    })}
-                    data-test="add-clinical-track-button"
-                >
-                    Add Clinical Tracks{' '}
-                    <OncoprintDropdownCount
-                        count={
-                            this.options.isComplete
-                                ? this.options.result!.clinical.length
-                                : undefined
-                        }
-                    />
-                    &nbsp;
-                    <span className="caret" />
-                    &nbsp;
-                </button>
-            </DefaultTooltip>
+            <div>
+                <Observer>{this.getMenu}</Observer>
+            </div>
         );
     }
 }
