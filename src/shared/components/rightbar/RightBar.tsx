@@ -295,39 +295,6 @@ export default class RightBar extends React.Component<
         ) : null;
     }
 
-    // public getDataSetsSection() {
-    //     return AppConfig.serverConfig.skin_right_nav_show_data_sets ? (
-    //         <div className="rightBarSection">
-    //             <h3>Cancer Studies</h3>
-    //             {this.studyStore.cancerStudies.isComplete &&
-    //                 this.studyStore.cancerTypes.isComplete && (
-    //                     <div>
-    //                         <p>
-    //                             The portal contains{' '}
-    //                             {this.studyStore.cancerStudies.result.length}{' '}
-    //                             cancer studies{' '}
-    //                             <Link to={'/datasets'}>(details)</Link>
-    //                         </p>
-    //
-    //                         <BarGraph
-    //                             data={this.CancerTypeDescendantStudies(
-    //                                 this.CancerTypeList()
-    //                             )}
-    //                             openStudy={studyId => {
-    //                                 redirectToStudyView(studyId);
-    //                             }}
-    //                         />
-    //                     </div>
-    //                 )}
-    //             {this.studyStore.cancerStudies.isPending && (
-    //                 <span style={{ textAlign: 'center' }}>
-    //                     <LoadingIndicator isLoading={true} small={true} />
-    //                 </span>
-    //             )}
-    //         </div>
-    //     ) : null;
-    // }
-
     render() {
         return (
             <div>
