@@ -1,35 +1,16 @@
 import * as React from 'react';
-import { observer, inject, Observer } from 'mobx-react';
+import { observer, inject } from 'mobx-react';
 import { observable, makeObservable } from 'mobx';
-import Chart from 'chart.js';
 import AppConfig from 'appConfig';
 import 'react-select1/dist/react-select.css';
-import {
-    CancerStudyQueryUrlParams,
-    QueryStore,
-} from '../../shared/components/query/QueryStore';
+import { QueryStore } from '../../shared/components/query/QueryStore';
 import QueryAndDownloadTabs from '../../shared/components/query/QueryAndDownloadTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import RightBar from '../../shared/components/rightbar/RightBar';
 // tslint:disable-next-line:no-import-side-effect
 import './homePage.scss';
 import autobind from 'autobind-decorator';
-import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
-import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { createQueryStore } from 'shared/lib/createQueryStore';
-
-(Chart as any).plugins.register({
-    beforeDraw: function(chartInstance: any) {
-        const ctx = chartInstance.chart.ctx;
-        ctx.fillStyle = 'white';
-        ctx.fillRect(
-            0,
-            0,
-            chartInstance.chart.width,
-            chartInstance.chart.height
-        );
-    },
-});
 
 const win = window as any;
 
