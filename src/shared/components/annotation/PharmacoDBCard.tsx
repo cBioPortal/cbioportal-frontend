@@ -30,13 +30,35 @@ export default class PharmacoDBCard extends React.Component<IPharmacoDBCardProps
         + "&cna=" + this.props.cna + "&retrieveData=true";
     }
 
+    private CNA2Text(cna:string):string {
+        let status:string='';
+        switch (cna) {
+            case 'DEEPDEL':
+                status ='Deep Deletion';
+            break;
+            case 'SHALLOWDEL':
+                status ='Shallow Deletion';
+            break;
+            case 'GAIN':
+                status ='Gain';
+            break;
+            case 'AMP':
+                status ='Amplification';
+            break;
+            default:
+                status='';
+            break;
+        }
+        return status;
+    }
+
     public render() {
         return (
             <div className="pharmacodb-card">
                  <span>
                     <div className="col s12 tip-header">
-                        Preclinical Associations for {this.props.geneName} <br/> CNA: {this.props.cna} OTC: {this.props.oncoTreeCode}
-                        &nbsp;Tissue: {this.props.cardCnaData.tissue_name}
+                        Preclinical Associations for <a href={this.props.cardCnaData.gene_url} target="_blank" >{this.props.geneName}</a>  {this.CNA2Text(this.props.cna)} <br/> Cancer: {this.props.cardCnaData.cancer_type}
+                        <br/>Tissue: {this.props.cardCnaData.tissue_name}
                     </div>
                     <div className="treatments-wrapper">
                         <table className="table" style={{marginTop:6}}>

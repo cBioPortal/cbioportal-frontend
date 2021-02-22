@@ -52,7 +52,7 @@ export default class PharmacoDBTooltip extends React.Component<IPharmacoDBToolti
 
         if (!cacheData)
         {
-            tooltipContent =<span>Loading...</span>;
+            tooltipContent =<TableCellStatusIndicator status={TableCellStatus.LOADING} />;
             return tooltipContent;
         }
 

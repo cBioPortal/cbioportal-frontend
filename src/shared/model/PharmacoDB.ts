@@ -27,6 +27,7 @@ export interface IPharmacoDBCnaEntry {
     onco_tree_code: string;
     tissue_name: string;
     status: string;
+    cancer_type: string;
     gene_url: string;
     gene_drug_associations: IPharmacoDBGeneDrugAssociationData[];
 }
