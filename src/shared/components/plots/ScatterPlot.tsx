@@ -23,7 +23,11 @@ import {
     getLegendItemsPerRow,
 } from './PlotUtils';
 import { toConditionalPrecision } from '../../lib/NumberUtils';
-import { getRegressionComputations } from './ScatterPlotUtils';
+import {
+    getNumberOfNewlines,
+    getRegressionComputations,
+    makeMultilineAxisLabel,
+} from './ScatterPlotUtils';
 import {
     IAxisLogScaleParams,
     IPlotSampleData,
@@ -95,7 +99,9 @@ const DEFAULT_FONT_FAMILY = 'Verdana,Arial,sans-serif';
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
-const LEFT_PADDING = 25;
+const BASE_LEFT_PADDING = 25;
+const VICTORY_LABEL_TEXT_HEIGHT = 15.02;
+const VICTORY_LABEL_CUSTOM_CHAR_LIMIT = 60;
 
 @observer
 export default class ScatterPlot<
@@ -505,12 +511,44 @@ export default class ScatterPlot<
         }
     }
 
-    @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
+    @computed get leftPadding(): number {
+        return BASE_LEFT_PADDING + this.axisLabelYHeight;
     }
 
-    @computed get svgHeight() {
-        return this.props.chartHeight + this.bottomLegendHeight;
+    @computed get svgWidth(): number {
+        return this.leftPadding + this.props.chartWidth + this.rightPadding;
+    }
+
+    @computed get svgHeight(): number {
+        return (
+            this.props.chartHeight +
+            this.bottomLegendHeight +
+            this.axisLabelXHeight
+        );
+    }
+
+    @computed get axisLabelYHeight(): number {
+        return VICTORY_LABEL_TEXT_HEIGHT * getNumberOfNewlines(this.axisLabelY);
+    }
+
+    @computed get axisLabelXHeight(): number {
+        return VICTORY_LABEL_TEXT_HEIGHT * getNumberOfNewlines(this.axisLabelX);
+    }
+
+    @computed get axisLabelX(): string {
+        const label = makeMultilineAxisLabel(
+            this.props.axisLabelX,
+            VICTORY_LABEL_CUSTOM_CHAR_LIMIT
+        );
+        return label;
+    }
+
+    @computed get axisLabelY(): string {
+        const label = makeMultilineAxisLabel(
+            this.props.axisLabelY,
+            VICTORY_LABEL_CUSTOM_CHAR_LIMIT
+        );
+        return label;
     }
 
     @autobind
@@ -646,7 +684,7 @@ export default class ScatterPlot<
                     role="img"
                     viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                 >
-                    <g transform={`translate(${LEFT_PADDING},0)`}>
+                    <g transform={`translate(${this.leftPadding},0)`}>
                         <VictoryChart
                             theme={CBIOPORTAL_VICTORY_THEME}
                             width={this.props.chartWidth}
@@ -665,7 +703,7 @@ export default class ScatterPlot<
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormatX}
                                 axisLabelComponent={<VictoryLabel dy={25} />}
-                                label={this.props.axisLabelX}
+                                label={this.axisLabelX}
                             />
                             <VictoryAxis
                                 domain={this.plotDomain.y}
@@ -676,7 +714,7 @@ export default class ScatterPlot<
                                 tickFormat={this.tickFormatY}
                                 dependentAxis={true}
                                 axisLabelComponent={<VictoryLabel dy={-35} />}
-                                label={this.props.axisLabelY}
+                                label={this.axisLabelY}
                             />
                             {this.data.map(dataWithAppearance => (
                                 <VictoryScatter
@@ -723,7 +761,7 @@ export default class ScatterPlot<
                         container={this.container}
                         targetHovered={this.pointHovered}
                         targetCoords={{
-                            x: this.tooltipModel.x + LEFT_PADDING,
+                            x: this.tooltipModel.x + BASE_LEFT_PADDING,
                             y: this.tooltipModel.y,
                         }}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
