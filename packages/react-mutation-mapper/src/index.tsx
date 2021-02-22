@@ -3,7 +3,14 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export { default as ClinVarId } from './component/clinvar/ClinVarId';
+export {
+    default as ClinVarSummary,
+    ClinVarRcvInterpretation,
+    getRcvCountMap,
+    getRcvData,
+    RcvCountMap,
+    RcvData,
+} from './component/clinvar/ClinVarSummary';
 export {
     AnnotationProps,
     default as Annotation,
@@ -112,7 +119,7 @@ export {
 export { default as DefaultMutationTable } from './component/mutationTable/DefaultMutationTable';
 export * from './component/mutationTable/MutationColumnHelper';
 export { default as Domain } from './component/lollipopPlot/Domain';
-export { default as HotspotInfo } from './component/hotspot/HotspotInfo';
+export { HotspotInfo } from './component/hotspot/HotspotInfo';
 export { default as Lollipop } from './component/lollipopPlot/Lollipop';
 export { default as LollipopMutationPlot } from './component/lollipopMutationPlot/LollipopMutationPlot';
 export { default as LollipopPlot } from './component/lollipopPlot/LollipopPlot';

@@ -50,6 +50,7 @@ export * from './lib/StringUtils';
 export * from './lib/TextTruncationUtils';
 export * from './lib/urls';
 export * from './lib/webdriverUtils';
+export * from './lib/TickUtils';
 
 export { default as CBIOPORTAL_VICTORY_THEME } from './theme/cBioPortalTheme';
 export * from './theme/cBioPortalTheme';

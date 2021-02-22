@@ -17,7 +17,6 @@ import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import Oncoprint, {
     ClinicalTrackSpec,
     GENETIC_TRACK_GROUP_INDEX,
-    GeneticTrackDatum_Data,
     GeneticTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
@@ -25,7 +24,6 @@ import Oncoprint, {
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState,
-    ISelectOption,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import {
     ClinicalAttribute,
@@ -52,11 +50,7 @@ import _ from 'lodash';
 import onMobxPromise from 'shared/lib/onMobxPromise';
 import AppConfig from 'appConfig';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import OncoprintJS, {
-    TrackGroupHeader,
-    TrackGroupIndex,
-    TrackId,
-} from 'oncoprintjs';
+import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import tabularDownload from './tabularDownload';
 import classNames from 'classnames';
@@ -66,7 +60,6 @@ import {
 } from '../../cache/ClinicalDataCache';
 import OqlStatusBanner from '../banners/OqlStatusBanner';
 import {
-    genericAssayEntitiesToSelectOptionsGroupByGenericAssayType,
     getAnnotatingProgressMessage,
     makeTrackGroupHeaders,
 } from './ResultsViewOncoprintUtils';
@@ -87,6 +80,7 @@ import {
 } from '../../../pages/staticPages/tools/oncoprinter/OncoprinterImportUtils';
 import { buildCBioPortalPageUrl } from '../../api/urls';
 import '../../../globalStyles/oncoprintStyles.scss';
+import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -181,7 +175,8 @@ export default class ResultsViewOncoprint extends React.Component<
         );
     }
 
-    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
+    @computed
+    get selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl() {
         const result = _.reduce(
             this.props.store
                 .selectedGenericAssayEntitiesGroupByMolecularProfileId,
@@ -223,6 +218,8 @@ export default class ResultsViewOncoprint extends React.Component<
 
     @observable selectedHeatmapProfileId = '';
     @observable heatmapGeneInputValue = '';
+
+    @observable selectedGenericAssayProfileId: string | null = null;
 
     @observable horzZoom: number = 0.5;
 
@@ -496,18 +493,12 @@ export default class ResultsViewOncoprint extends React.Component<
             get heatmapProfilesPromise() {
                 return self.props.store.heatmapMolecularProfiles;
             },
-            get genericAssayEntitiesGroupByGenericAssayTypePromise() {
+            get genericAssayEntitiesGroupedByGenericAssayTypePromise() {
                 return self.props.store
-                    .genericAssayEntitiesGroupByGenericAssayType;
+                    .genericAssayEntitiesGroupedByGenericAssayType;
             },
             get selectedHeatmapProfileId() {
                 return self.selectedHeatmapProfileId;
-            },
-            get selectedHeatmapProfileAlterationType() {
-                return self.selectedHeatmapProfileAlterationType;
-            },
-            get selectedHeatmapProfileGenericAssayType() {
-                return self.selectedHeatmapProfileGenericAssayType;
             },
             get heatmapIsDynamicallyQueried() {
                 return self.heatmapIsDynamicallyQueried;
@@ -603,18 +594,6 @@ export default class ResultsViewOncoprint extends React.Component<
 
     onMouseLeave() {
         this.mouseInsideBounds = false;
-    }
-
-    @action
-    public selectHeatmapProfile(index: number) {
-        onMobxPromise(
-            this.props.store.heatmapMolecularProfiles,
-            (profiles: MolecularProfile[]) => {
-                this.selectedHeatmapProfileId = this.props.store.heatmapMolecularProfiles.result![
-                    index
-                ].molecularProfileId;
-            }
-        );
     }
 
     @action
@@ -787,8 +766,16 @@ export default class ResultsViewOncoprint extends React.Component<
                 ).map(q => q.gene);
                 this.addHeatmapTracks(this.selectedHeatmapProfileId, genes);
             },
-            onClickAddGenericAssaysToHeatmap: (entityIds: string[]) => {
-                this.addHeatmapTracks(this.selectedHeatmapProfileId, entityIds);
+            onSelectGenericAssayProfile: (id: string) => {
+                this.selectedGenericAssayProfileId = id;
+            },
+            onClickAddGenericAssays: (info: GenericAssayTrackInfo[]) => {
+                // TODO: currently, add all tracks as heatmap tracks, later on when we have the support of categorical tracks, change here.
+                this.addHeatmapTracks(
+                    // selectedGenericAssayProfileId will be updated in GenericAssaySelection component
+                    this.selectedGenericAssayProfileId!,
+                    info.map(d => d.genericAssayEntityId)
+                );
             },
             onClickNGCHM: () => {
                 window.open(this.props.store.remoteNgchmUrl.result, '_blank');
@@ -1034,61 +1021,6 @@ export default class ResultsViewOncoprint extends React.Component<
         await: () => [this.geneticTracks],
         invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
-
-    readonly genericAssayEntitiesSelectOptionsGroupByGenericAssayType = remoteData<{
-        [genericAssayType: string]: ISelectOption[];
-    }>({
-        await: () => [
-            this.props.store.genericAssayEntitiesGroupByGenericAssayType,
-        ],
-        invoke: async () => {
-            return Promise.resolve(
-                genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(
-                    this.props.store.genericAssayEntitiesGroupByGenericAssayType
-                        .result!
-                )
-            );
-        },
-    });
-
-    readonly genericAssayEntitiesSelectOptionsGroupByMolecularProfileId = remoteData<{
-        [genericAssayType: string]: ISelectOption[];
-    }>({
-        await: () => [
-            this.props.store.genericAssayEntitiesGroupByMolecularProfileId,
-        ],
-        invoke: async () => {
-            return Promise.resolve(
-                genericAssayEntitiesToSelectOptionsGroupByGenericAssayType(
-                    this.props.store
-                        .genericAssayEntitiesGroupByMolecularProfileId.result!
-                )
-            );
-        },
-    });
-
-    @computed get selectedHeatmapProfileAlterationType(): string | undefined {
-        let molecularProfile = this.props.store
-            .molecularProfileIdToMolecularProfile.result[
-            this.selectedHeatmapProfileId
-        ];
-        return molecularProfile
-            ? molecularProfile.molecularAlterationType
-            : undefined;
-    }
-
-    @computed get selectedHeatmapProfileGenericAssayType(): string | undefined {
-        if (
-            this.props.store.molecularProfileIdToMolecularProfile.result &&
-            this.selectedHeatmapProfileAlterationType ===
-                AlterationTypeConstants.GENERIC_ASSAY
-        ) {
-            return this.props.store.molecularProfileIdToMolecularProfile.result[
-                this.selectedHeatmapProfileId
-            ].genericAssayType;
-        }
-        return undefined;
-    }
 
     public addHeatmapTracks(molecularProfileId: string, entities: string[]) {
         const tracksMap = _.cloneDeep(
@@ -1602,17 +1534,9 @@ export default class ResultsViewOncoprint extends React.Component<
                             this.props.store
                                 .molecularProfileIdToMolecularProfile.result
                         }
-                        genericAssayEntitiesSelectOptionsGroupByGenericAssayTypePromise={
+                        selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl={
                             this
-                                .genericAssayEntitiesSelectOptionsGroupByGenericAssayType
-                        }
-                        genericAssayEntitiesSelectOptionsGroupByMolecularProfileIdPromise={
-                            this
-                                .genericAssayEntitiesSelectOptionsGroupByMolecularProfileId
-                        }
-                        selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl={
-                            this
-                                .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl
+                                .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl
                         }
                     />
                 </FadeInteraction>

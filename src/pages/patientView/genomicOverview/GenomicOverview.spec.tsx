@@ -1,12 +1,13 @@
 import GenomicOverview from './GenomicOverview';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ShallowWrapper, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { shallow, ShallowWrapper } from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
 import SampleManager from '../SampleManager';
 import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
-import { Mutation } from 'cbioportal-ts-api-client';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('GenomicOverview', () => {
     let genomicOverview: ShallowWrapper<any, any>;

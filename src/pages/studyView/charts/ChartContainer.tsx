@@ -20,7 +20,6 @@ import SurvivalChart, {
     LegendLocation,
 } from '../../resultsView/survival/SurvivalChart';
 
-import autobind from 'autobind-decorator';
 import BarChart from './barChart/BarChart';
 import {
     ChartMeta,
@@ -31,7 +30,6 @@ import {
     getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin,
-    SpecialChartsUniqueKeyEnum,
     NumericalGroupComparisonType,
     DataBin,
 } from '../StudyViewUtils';
@@ -45,8 +43,6 @@ import {
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
-import { MAX_GROUPS_IN_SESSION } from '../../groupComparison/GroupComparisonUtils';
-import { Modal } from 'react-bootstrap';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import Timer = NodeJS.Timer;
@@ -56,7 +52,6 @@ import {
     MultiSelectionTable,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
-import { Dimensions } from 'react-virtualized';
 import {
     SampleTreatmentsTable,
     SampleTreatmentsTableColumnKey,
@@ -66,10 +61,7 @@ import {
     PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
 } from '../table/treatments/PatientTreatmentsTable';
-import {
-    doesChartHaveComparisonGroupsLimit,
-    getComparisonParamsForTable,
-} from 'pages/studyView/StudyViewComparisonUtils';
+import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 
 export interface AbstractChart {
@@ -113,9 +105,12 @@ export interface IChartContainerProps {
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
-    onToggleLogScale?: any;
+    onToggleLogScale: (chartMeta: ChartMeta) => void;
+    onToggleNAValue: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
+    isShowNAChecked?: boolean;
+    showNAToggle?: boolean;
     selectedGenes?: any;
     cancerGenes: number[];
     onGeneSelect?: any;
@@ -173,6 +168,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onToggleLogScale: action(() => {
                 if (this.props.onToggleLogScale) {
                     this.props.onToggleLogScale(this.props.chartMeta);
+                }
+            }),
+            onToggleNAValue: action(() => {
+                if (this.props.onToggleNAValue) {
+                    this.props.onToggleNAValue(this.props.chartMeta);
                 }
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
@@ -236,6 +236,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 controls = {
                     showLogScaleToggle: this.props.showLogScaleToggle,
                     logScaleChecked: this.props.logScaleChecked,
+                    isShowNAChecked: this.props.isShowNAChecked,
+                    showNAToggle: this.props.showNAToggle,
                 };
                 break;
             }
@@ -258,13 +260,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @action.bound
-    changeChartType(chartType: ChartType) {
+    changeChartType(chartType: ChartType): void {
         this.chartType = chartType;
         this.handlers.onChangeChartType(chartType);
     }
 
     @computed
-    get comparisonPagePossible() {
+    get comparisonPagePossible(): boolean {
         return (
             this.props.promise.isComplete &&
             this.props.promise.result!.length > 1 &&
@@ -411,6 +413,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onUserSelection={this.handlers.onDataBinSelection}
                         filters={this.props.filters}
                         data={this.props.promise.result}
+                        showNAChecked={this.props.store.isShowNAChecked(
+                            this.props.chartMeta.uniqueKey
+                        )}
                     />
                 );
             }
@@ -911,6 +916,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     deleteChart={this.handlers.onDeleteChart}
                     selectedRowsKeys={this.selectedRowsKeys}
                     toggleLogScale={this.handlers.onToggleLogScale}
+                    toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
                     getSVG={() => Promise.resolve(this.toSVGDOMNode())}

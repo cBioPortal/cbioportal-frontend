@@ -46,7 +46,7 @@ export default class GenericAssayEnrichments extends React.Component<
             const ret: any[] = [
                 this.props.store.gaEnrichmentDataByAssayType,
                 this.props.store
-                    .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType,
+                    .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType,
                 this.props.store.gaEnrichmentGroupsByAssayType,
                 this.props.store.studies,
             ];
@@ -69,25 +69,25 @@ export default class GenericAssayEnrichments extends React.Component<
             // would contain only one key.
             const studyId = Object.keys(
                 this.props.store
-                    .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                    .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                     .result![this.props.genericAssayType]
             )[0];
             // select the first found profile in the study as the default selection for selected genericAssayType
             const selectedProfile = this.props.store
-                .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                 .result![this.props.genericAssayType][studyId];
             return (
                 <div data-test="GroupComparisonGenericAssayEnrichments">
                     <EnrichmentsDataSetDropdown
                         dataSets={
                             this.props.store
-                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result![this.props.genericAssayType]
                         }
                         onChange={this.onChangeProfile}
                         selectedProfileByStudyId={
                             this.props.store
-                                .selectedGenericAssayEnrichmentProfileMapGroupByGenericAssayType
+                                .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                                 .result![this.props.genericAssayType]
                         }
                         alwaysShow={true}

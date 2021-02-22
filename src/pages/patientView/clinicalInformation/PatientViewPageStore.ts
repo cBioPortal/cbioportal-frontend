@@ -100,6 +100,7 @@ import {
     generateUniqueSampleKeyToTumorTypeMap,
     getGenomeNexusUrl,
     getOtherBiomarkersQueryId,
+    getSampleClinicalDataMapByKeywords,
     getSampleClinicalDataMapByThreshold,
     getSampleTumorTypeMap,
     groupBySampleId,
@@ -181,6 +182,8 @@ import {
 } from 'shared/lib/oql/AccessorsForOqlFilter';
 import {
     CLINICAL_ATTRIBUTE_ID_ENUM,
+    MIS_TYPE_VALUE,
+    GENOME_NEXUS_ARG_FIELD_ENUM,
     MSI_H_THRESHOLD,
     TMB_H_THRESHOLD,
 } from 'shared/constants';
@@ -197,6 +200,7 @@ import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericA
 import {
     MutationalSignaturesVersion,
     MutationalSignatureStableIdKeyWord,
+    validateMutationalSignatureRawData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 
 type PageMode = 'patient' | 'sample';
@@ -479,7 +483,7 @@ export class PatientViewPageStore {
                 this.samples,
                 this.mutationalSignatureMolecularProfiles,
             ],
-            invoke: () => {
+            invoke: async () => {
                 const mutationalSignatureMolecularProfileIds = this.mutationalSignatureMolecularProfiles.result.map(
                     profile => profile.molecularProfileId
                 );
@@ -495,13 +499,18 @@ export class PatientViewPageStore {
                             });
                         }
                     );
-                    return client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
+                    const genericAssayRawData = await client.fetchGenericAssayDataInMultipleMolecularProfilesUsingPOST(
                         {
                             genericAssayDataMultipleStudyFilter: {
                                 sampleMolecularIdentifiers,
                             } as GenericAssayDataMultipleStudyFilter,
                         }
                     );
+                    if (
+                        validateMutationalSignatureRawData(genericAssayRawData)
+                    ) {
+                        return Promise.resolve(genericAssayRawData);
+                    }
                 }
                 return Promise.resolve([]);
             },
@@ -1018,7 +1027,13 @@ export class PatientViewPageStore {
                         this.mutationData,
                         this.uncalledMutationData
                     ),
-                    ['annotation_summary', 'hotspots', 'signal'],
+                    [
+                        GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                        GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                        AppConfig.serverConfig.show_signal
+                            ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
+                            : '',
+                    ].filter(f => f),
                     AppConfig.serverConfig.isoformOverrideSource,
                     this.genomeNexusClient
                 ),
@@ -1039,7 +1054,7 @@ export class PatientViewPageStore {
                     this.mutationData,
                     this.uncalledMutationData
                 ),
-                ['my_variant_info'],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.MY_VARIANT_INFO],
                 AppConfig.serverConfig.isoformOverrideSource,
                 this.genomeNexusClient
             );
@@ -2282,7 +2297,7 @@ export class PatientViewPageStore {
     @cached @computed get genomeNexusCache() {
         return new GenomeNexusCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary'],
+                [GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY],
                 this.genomeNexusClient
             )
         );
@@ -2291,7 +2306,10 @@ export class PatientViewPageStore {
     @cached @computed get genomeNexusMutationAssessorCache() {
         return new GenomeNexusMutationAssessorCache(
             createVariantAnnotationsByMutationFetcher(
-                ['annotation_summary', 'mutation_assessor'],
+                [
+                    GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
+                    GENOME_NEXUS_ARG_FIELD_ENUM.MUTATION_ASSESSOR,
+                ],
                 this.genomeNexusClient
             )
         );
@@ -2581,10 +2599,10 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleMsiHInfo() {
-        return getSampleClinicalDataMapByThreshold(
+        return getSampleClinicalDataMapByKeywords(
             this.clinicalDataForSamples.result,
-            CLINICAL_ATTRIBUTE_ID_ENUM.MSI_SCORE,
-            MSI_H_THRESHOLD
+            CLINICAL_ATTRIBUTE_ID_ENUM.MSI_TYPE,
+            [MIS_TYPE_VALUE.INSTABLE]
         );
     }
 

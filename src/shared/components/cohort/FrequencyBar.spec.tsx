@@ -1,9 +1,11 @@
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount, ReactWrapper } from 'enzyme';
-import sinon from 'sinon';
+import Enzyme, { mount, ReactWrapper } from 'enzyme';
 import FrequencyBar from './FrequencyBar';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import Adapter from 'enzyme-adapter-react-16';
+
+Enzyme.configure({ adapter: new Adapter() });
 
 describe('FrequencyBar', () => {
     const props = {

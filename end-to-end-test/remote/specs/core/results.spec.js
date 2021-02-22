@@ -283,7 +283,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in cancer types summary with simple query', function() {
-            browser.click('a.tabAnchor_cancerTypesSummary');
+            browser.click('.tabAnchor_cancerTypesSummary');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -297,7 +297,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in mutual exclusivity tab with simple query', function() {
-            browser.click('a.tabAnchor_mutualExclusivity');
+            browser.click('.tabAnchor_mutualExclusivity');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -311,7 +311,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in plots tab with simple query', function() {
-            browser.click('a.tabAnchor_plots');
+            browser.click('.tabAnchor_plots');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -325,7 +325,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in mutations tab with simple query', function() {
-            browser.click('a.tabAnchor_mutations');
+            browser.click('.tabAnchor_mutations');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -344,7 +344,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in coexpression tab with simple query', function() {
-            browser.click('a.tabAnchor_coexpression');
+            browser.click('.tabAnchor_coexpression');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -357,12 +357,12 @@ describe('Results Page', function() {
                 )
             );
         });
-        it('should not be present in enrichments tab with simple query', function() {
-            browser.click('a.tabAnchor_comparison');
+        it('should not be present in alteration enrichments tab with simple query', function() {
+            browser.click('.tabAnchor_comparison');
             browser.waitForVisible(
-                '.comparisonTabSubTabs .tabAnchor_mutations'
+                '.comparisonTabSubTabs .tabAnchor_alterations'
             );
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -376,7 +376,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in survival tab with simple query', function() {
-            browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
+            browser.click('.comparisonTabSubTabs .tabAnchor_survival');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -390,7 +390,7 @@ describe('Results Page', function() {
             );
         });
         it('should not be present in download tab with simple query', function() {
-            browser.click('a.tabAnchor_download');
+            browser.click('.tabAnchor_download');
             browser.pause(500);
             assert(
                 !browser.isVisible(
@@ -419,7 +419,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in cancer types summary with explicit query', function() {
-            browser.click('a.tabAnchor_cancerTypesSummary');
+            browser.click('.tabAnchor_cancerTypesSummary');
             browser.waitForVisible(
                 `${yesBannerSelector}.cancer-types-summary-oql-status-banner`,
                 10000
@@ -436,7 +436,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in mutual exclusivity tab with explicit query', function() {
-            browser.click('a.tabAnchor_mutualExclusivity');
+            browser.click('.tabAnchor_mutualExclusivity');
             browser.waitForVisible(
                 `${yesBannerSelector}.mutex-oql-status-banner`,
                 10000
@@ -453,7 +453,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in plots tab with explicit query', function() {
-            browser.click('a.tabAnchor_plots');
+            browser.click('.tabAnchor_plots');
             browser.waitForVisible(
                 `${noBannerSelector}.plots-oql-status-banner`,
                 10000
@@ -467,30 +467,33 @@ describe('Results Page', function() {
                 browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`)
             );
         });
-        it('should be present in mutations tab with explicit query', function() {
-            browser.click('a.tabAnchor_mutations');
+        it('should be present in alterations tab with explicit query', function() {
+            browser.click('.tabAnchor_comparison');
+            browser.waitForVisible('.tabAnchor_alterations');
+            browser.click('.tabAnchor_alterations');
+
             browser.waitForVisible(
-                `${unaffectedBannerSelector}.mutations-oql-status-banner`,
+                `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
             );
             assert(
                 !browser.isVisible(
-                    `${yesBannerSelector}.mutations-oql-status-banner`
+                    `${unaffectedBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 !browser.isVisible(
-                    `${noBannerSelector}.mutations-oql-status-banner`
+                    `${noBannerSelector}.comparison-oql-status-banner`
                 )
             );
             assert(
                 browser.isVisible(
-                    `${unaffectedBannerSelector}.mutations-oql-status-banner`
+                    `${yesBannerSelector}.comparison-oql-status-banner`
                 )
             );
         });
         it('should be present in coexpression tab with explicit query', function() {
-            browser.click('a.tabAnchor_coexpression');
+            browser.click('.tabAnchor_coexpression');
             browser.waitForVisible(
                 `${noBannerSelector}.coexp-oql-status-banner`,
                 10000
@@ -504,12 +507,12 @@ describe('Results Page', function() {
                 browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`)
             );
         });
-        it('should be present in enrichments tab with explicit query', function() {
-            browser.click('a.tabAnchor_comparison');
+        it('should be present in alteration enrichments tab with explicit query', function() {
+            browser.click('.tabAnchor_comparison');
             browser.waitForVisible(
-                '.comparisonTabSubTabs .tabAnchor_mutations'
+                '.comparisonTabSubTabs .tabAnchor_alterations'
             );
-            browser.click('.comparisonTabSubTabs .tabAnchor_mutations');
+            browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
             browser.waitForVisible(
                 `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
@@ -526,7 +529,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in survival tab with explicit query', function() {
-            browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
+            browser.click('.comparisonTabSubTabs .tabAnchor_survival');
             browser.waitForVisible(
                 `${yesBannerSelector}.comparison-oql-status-banner`,
                 10000
@@ -543,7 +546,7 @@ describe('Results Page', function() {
             );
         });
         it('should be present in download tab with explicit query', function() {
-            browser.click('a.tabAnchor_download');
+            browser.click('.tabAnchor_download');
             browser.waitForVisible(
                 `${yesBannerSelector}.download-oql-status-banner`,
                 10000

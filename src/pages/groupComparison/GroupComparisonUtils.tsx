@@ -247,24 +247,29 @@ export function getStudyIds(groups: Pick<SessionGroupData, 'studies'>[]) {
     );
 }
 
+/**
+ * Gets all unique sample identifiers from the groups
+ * provided. A unique key can be generated for a sample
+ * by appending the sample's study id to the sample's sample id, separated
+ * by a character not allowed in either id- in this case a newline symbol.
+ */
 export function getSampleIdentifiers(
     groups: Pick<SessionGroupData, 'studies'>[]
 ) {
-    return _.uniqWith(
-        _.flattenDeep<SampleIdentifier>(
-            groups.map(group =>
-                group.studies.map(study => {
-                    const studyId = study.id;
-                    return study.samples.map(sampleId => ({
-                        studyId,
-                        sampleId,
-                    }));
-                })
-            )
-        ),
-        (id1, id2) =>
-            id1.sampleId === id2.sampleId && id1.studyId === id2.studyId
-    );
+    const sampleIds: { [key: string]: SampleIdentifier } = {};
+
+    groups.forEach(group => {
+        group.studies.forEach(study => {
+            study.samples.forEach(sample => {
+                sampleIds[study.id + '\n' + sample] = {
+                    studyId: study.id,
+                    sampleId: sample,
+                };
+            });
+        });
+    });
+
+    return Object.values(sampleIds);
 }
 
 export function getNumSamples(
@@ -448,15 +453,26 @@ export function MakeEnrichmentsTabUI(
             } else {
                 const content: any = [];
                 content.push(
-                    <OverlapExclusionIndicator
-                        store={store}
-                        only={
-                            patientAnalysisPossible &&
-                            store.usePatientLevelEnrichments
-                                ? 'patient'
-                                : 'sample'
-                        }
-                    />
+                    // The alteration type selector is shown to left of the
+                    // graph panels ('in-line'). This div element pushes the
+                    // graph elements to the right when the type selector
+                    // is shown 'in-line'.
+                    <div
+                        style={{
+                            marginLeft:
+                                enrichmentType == 'alterations' ? 244 : 0,
+                        }}
+                    >
+                        <OverlapExclusionIndicator
+                            store={store}
+                            only={
+                                patientAnalysisPossible &&
+                                store.usePatientLevelEnrichments
+                                    ? 'patient'
+                                    : 'sample'
+                            }
+                        />
+                    </div>
                 );
                 content.push(getEnrichmentsUI().component);
                 return content;

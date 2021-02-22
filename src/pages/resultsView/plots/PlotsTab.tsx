@@ -3313,13 +3313,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         let selectedEntities: string[] = [];
         if (
             axisSelection.dataType &&
-            this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl &&
-            this.selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+            this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl &&
+            this.selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
                 axisSelection.dataType
             ]
         ) {
             selectedEntities = this
-                .selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl[
+                .selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl[
                 axisSelection.dataType
             ];
         }
@@ -3730,7 +3730,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    @computed get selectedGenericAssayEntitiesGroupByGenericAssayTypeFromUrl() {
+    @computed
+    get selectedGenericAssayEntitiesGroupedByGenericAssayTypeFromUrl() {
         const result = _.reduce(
             this.props.store
                 .selectedGenericAssayEntitiesGroupByMolecularProfileId,
@@ -4944,6 +4945,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                             position: 'relative',
                                             alignItems: 'center',
                                         }}
+                                        data-test={'GeneColoringMenu'}
                                         className="coloring-menu"
                                     >
                                         <label className="legend-label">

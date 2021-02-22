@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { inject, observer } from 'mobx-react';
 import GroupComparisonStore from './GroupComparisonStore';
-import MutationEnrichments from './MutationEnrichments';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import Survival from './Survival';
 import Overlap from './Overlap';
-import CopyNumberEnrichments from './CopyNumberEnrichments';
 import MRNAEnrichments from './MRNAEnrichments';
 import ProteinEnrichments from './ProteinEnrichments';
 import { MakeMobxView } from '../../shared/components/MobxView';
@@ -29,9 +27,7 @@ import ClinicalData from './ClinicalData';
 import ReactSelect from 'react-select';
 import { trackEvent } from 'shared/lib/tracking';
 import URL from 'url';
-import GroupComparisonURLWrapper, {
-    GroupComparisonURLQuery,
-} from './GroupComparisonURLWrapper';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 
 import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
@@ -41,6 +37,14 @@ import StructuralVariantEnrichments from './StructuralVariantEnrichments';
 import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
+import AlterationEnrichments from './AlterationEnrichments';
+import AlterationEnrichmentTypeSelector, {
+    IAlterationEnrichmentTypeSelectorHandlers,
+} from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import {
+    buildAlterationEnrichmentTypeSelectorHandlers,
+    buildAlterationsTabName,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -56,6 +60,7 @@ export default class GroupComparisonPage extends React.Component<
     @observable.ref private store: GroupComparisonStore;
     private queryReaction: IReactionDisposer;
     private urlWrapper: GroupComparisonURLWrapper;
+    private alterationEnrichmentTypeSelectorHandlers: IAlterationEnrichmentTypeSelectorHandlers;
 
     constructor(props: IGroupComparisonPageProps) {
         super(props);
@@ -85,7 +90,15 @@ export default class GroupComparisonPage extends React.Component<
             { fireImmediately: true }
         );
 
+        this.alterationEnrichmentTypeSelectorHandlers = buildAlterationEnrichmentTypeSelectorHandlers(
+            this.store
+        );
+
         (window as any).groupComparisonPage = this;
+    }
+
+    @computed get alterationEnrichmentTabName() {
+        return buildAlterationsTabName(this.store);
     }
 
     @autobind
@@ -119,7 +132,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store.proteinEnrichmentProfiles,
             this.store.methylationEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
-            this.store.genericAssayEnrichmentProfilesGroupByGenericAssayType,
+            this.store.genericAssayEnrichmentProfilesGroupedByGenericAssayType,
         ],
         render: () => {
             return (
@@ -158,43 +171,31 @@ export default class GroupComparisonPage extends React.Component<
                     >
                         <ClinicalData store={this.store} />
                     </MSKTab>
-                    {this.store.showMutationsTab && (
+                    {this.store.showAlterationsTab && (
                         <MSKTab
-                            id={GroupComparisonTab.MUTATIONS}
-                            linkText="Mutations"
+                            id={GroupComparisonTab.ALTERATIONS}
+                            linkText={this.alterationEnrichmentTabName}
                             anchorClassName={
-                                this.store.mutationsTabUnavailable
+                                this.store.alterationsTabUnavailable
                                     ? 'greyedOut'
                                     : ''
                             }
                         >
-                            <MutationEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
-                    {this.store.showStructuralVariantsTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.STRUCTURAL_VARIANTS}
-                            linkText="Structural Variants"
-                            anchorClassName={
-                                this.store.structuralVariantsTabUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <StructuralVariantEnrichments store={this.store} />
-                        </MSKTab>
-                    )}
-                    {this.store.showCopyNumberTab && (
-                        <MSKTab
-                            id={GroupComparisonTab.CNA}
-                            linkText="Copy-number"
-                            anchorClassName={
-                                this.store.copyNumberUnavailable
-                                    ? 'greyedOut'
-                                    : ''
-                            }
-                        >
-                            <CopyNumberEnrichments store={this.store} />
+                            <AlterationEnrichmentTypeSelector
+                                store={this.store}
+                                handlers={
+                                    this
+                                        .alterationEnrichmentTypeSelectorHandlers!
+                                }
+                                showMutations={
+                                    this.store.hasMutationEnrichmentData
+                                }
+                                showCnas={this.store.hasCnaEnrichmentData}
+                                showStructuralVariants={
+                                    this.store.hasStructuralVariantData
+                                }
+                            />
+                            <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
@@ -237,7 +238,7 @@ export default class GroupComparisonPage extends React.Component<
                     {this.store.showGenericAssayTab &&
                         _.keys(
                             this.store
-                                .genericAssayEnrichmentProfilesGroupByGenericAssayType
+                                .genericAssayEnrichmentProfilesGroupedByGenericAssayType
                                 .result
                         ).map(genericAssayType => {
                             return (

@@ -1,7 +1,4 @@
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
-import * as React from 'react';
-import * as _ from 'lodash';
 import { countAlterationOccurences } from './alterationCountHelpers';
 
 describe('alterationCountHelpers', () => {

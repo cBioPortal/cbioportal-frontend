@@ -2294,24 +2294,29 @@ export function getSelectedGroupNames(
     }
 }
 
+/**
+ * Gets all unique patient identifiers from the groups
+ * provided. A unique key can be generated for a patient
+ * by appending the patient's study id to the patient's patient id, separated
+ * by a character not allowed in either id- in this case a newline symbol.
+ */
 export function getPatientIdentifiers(
     groups: Pick<StudyViewComparisonGroup, 'studies'>[]
 ) {
-    return _.uniqWith(
-        _.flattenDeep<PatientIdentifier>(
-            groups.map(group =>
-                group.studies.map(study => {
-                    const studyId = study.id;
-                    return study.patients.map(patientId => ({
-                        studyId,
-                        patientId,
-                    }));
-                })
-            )
-        ),
-        (id1, id2) =>
-            id1.patientId === id2.patientId && id1.studyId === id2.studyId
-    );
+    const patientIdentifiers: { [key: string]: PatientIdentifier } = {};
+
+    groups.forEach(group => {
+        group.studies.forEach(study => {
+            study.patients.forEach(patientId => {
+                patientIdentifiers[study.id + '\n' + patientId] = {
+                    studyId: study.id,
+                    patientId: patientId,
+                };
+            });
+        });
+    });
+
+    return Object.values(patientIdentifiers);
 }
 
 export function isSpecialChart(chartMeta: ChartMeta) {
@@ -2328,7 +2333,9 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
-    clinicalDataBinFilter: { [uniqueId: string]: ClinicalDataBinFilter },
+    clinicalDataBinFilterSet: {
+        [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
+    },
     filterMutatedGenesTableByCancerGenes: boolean = true,
     filterSVGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
@@ -2352,12 +2359,16 @@ export function getChartSettingsMap(
             chartType,
             patientAttribute: attribute.patientAttribute, // add chart attribute type
         } as any;
-        if (chartType === ChartTypeEnum.MUTATED_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
-        } else if (chartType === ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterSVGenesTableByCancerGenes;
-        } else if (chartType === ChartTypeEnum.CNA_GENES_TABLE) {
-            chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+        switch (chartType) {
+            case ChartTypeEnum.MUTATED_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
+                break;
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterSVGenesTableByCancerGenes;
+                break;
+            case ChartTypeEnum.CNA_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
+                break;
         }
         const genomicChart = genomicChartSet[id];
         if (genomicChart) {
@@ -2376,12 +2387,16 @@ export function getChartSettingsMap(
             chartSetting.profileType = genericAssayChart.profileType;
             chartSetting.dataType = genericAssayChart.dataType;
         }
-        if (clinicalDataBinFilter[id]) {
-            if (clinicalDataBinFilter[id].disableLogScale) {
+        if (clinicalDataBinFilterSet[id]) {
+            if (clinicalDataBinFilterSet[id].disableLogScale) {
                 chartSetting.disableLogScale = true;
             }
-            if (!_.isEmpty(clinicalDataBinFilter[id].customBins)) {
-                chartSetting.customBins = clinicalDataBinFilter[id].customBins;
+            if (clinicalDataBinFilterSet[id].showNA !== undefined) {
+                chartSetting.showNA = clinicalDataBinFilterSet[id].showNA;
+            }
+            if (!_.isEmpty(clinicalDataBinFilterSet[id].customBins)) {
+                chartSetting.customBins =
+                    clinicalDataBinFilterSet[id].customBins;
             }
         }
         chartSettingsMap[id] = chartSetting;

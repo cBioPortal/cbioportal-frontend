@@ -97,7 +97,6 @@ function getColumnVisibilityDef<T>(
     return colVisProp;
 }
 
-@observer
 export default class DataTable<T> extends React.Component<
     DataTableProps<T>,
     {}

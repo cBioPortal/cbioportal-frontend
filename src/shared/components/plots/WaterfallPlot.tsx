@@ -21,7 +21,7 @@ import {
     makeScatterPlotSizeFunction as makePlotSizeFunction,
 } from './PlotUtils';
 import WaterfallPlotTooltip from './WaterfallPlotTooltip';
-import { tickFormatNumeral } from './TickUtils';
+import { tickFormatNumeral } from 'cbioportal-frontend-commons';
 import {
     IAxisLogScaleParams,
     waterfallSearchIndicatorAppearance,

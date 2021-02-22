@@ -25,7 +25,12 @@ export const enum CLINICAL_ATTRIBUTE_ID_ENUM {
     ASCN_PURITY = 'ASCN_PURITY',
     ASCN_WGD = 'ASCN_WGD',
     MSI_SCORE = 'MSI_SCORE',
+    MSI_TYPE = 'MSI_TYPE',
     TMB_SCORE = 'CVR_TMB_SCORE',
+}
+
+export const enum MIS_TYPE_VALUE {
+    INSTABLE = 'Instable',
 }
 
 export const MSI_H_THRESHOLD = 10;

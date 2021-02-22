@@ -21,7 +21,7 @@ describe('group comparison page screenshot tests', function() {
             );
             browser.waitForVisible(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
-                20000
+                100000
             );
         });
         it('group comparison page overlap tab upset plot view', function() {
@@ -206,121 +206,6 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page mutation enrichments tab several groups', function() {
-            browser.click('.tabAnchor_mutations');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page mutation enrichments tab patient mode', function() {
-            browser.execute(function() {
-                groupComparisonStore.setUsePatientLevelEnrichments(true);
-            });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page mutation enrichments tab 20 genes with highest frequency in any group', function() {
-            browser.execute(function() {
-                groupComparisonStore.setUsePatientLevelEnrichments(false);
-            });
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
-                10000
-            );
-            browser.click('[data-test="selectGenes"]');
-            var input = $('input[data-test=numberOfGenes]');
-            input.setValue('20\n');
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page mutation enrichments tab gene box highest average frequency', function() {
-            browser.click('[data-test="selectGenes"]');
-            browser.execute(function() {
-                genesSelection.onGeneListOptionChange({
-                    label: 'Genes with highest average frequency',
-                });
-            });
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page mutation enrichments tab gene box most significant pValues', function() {
-            browser.click('[data-test="selectGenes"]');
-            browser.execute(function() {
-                genesSelection.onGeneListOptionChange({
-                    label: 'Genes with most significant p-value',
-                });
-            });
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page mutation enrichments tab gene box user-defined genes', function() {
-            browser.click('[data-test="selectGenes"]');
-            setInputText(
-                'textarea[data-test="geneSet"]',
-                'MUC16 MUC4 ERCC2 TP53 ZNRF3 CTNNB1'
-            );
-            waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
-        it('group comparison page cna enrichments tab several groups', function() {
-            browser.click('.tabAnchor_cna');
-            browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
-                10000
-            );
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
-            assertScreenShotMatch(res);
-        });
-
         it('group comparison page mrna enrichments tab several groups', function() {
             browser.click('.tabAnchor_mrna');
             browser.waitForVisible(
@@ -369,7 +254,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page mutation enrichments tab two groups', function() {
+        it('group comparison page alteration enrichments tab two groups', function() {
             // deselect two groups
             browser.click('button[data-test="groupSelectorButtonGARS mutant"]');
             browser.waitForExist(
@@ -380,10 +265,10 @@ describe('group comparison page screenshot tests', function() {
                 'button[data-test="groupSelectorButtonZNF517 mutant"]'
             );
             // go back to mutations tab
-            browser.waitForExist('.tabAnchor_mutations', 10000);
-            browser.click('.tabAnchor_mutations');
+            browser.waitForExist('.tabAnchor_alterations', 10000);
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
-                'div[data-test="GroupComparisonMutationEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -394,9 +279,9 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page cna enrichments tab two groups', function() {
-            browser.click('.tabAnchor_cna');
+            browser.click('.tabAnchor_alterations');
             browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
             browser.moveToObject('body', 0, 0);
@@ -411,7 +296,7 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
             browser.waitForVisible(
-                'div[data-test="GroupComparisonCopyNumberEnrichments"]',
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
                 30000
             );
             browser.moveToObject('body', 0, 0);
@@ -797,3 +682,14 @@ describe('group comparison page screenshot tests', function() {
         });
     });
 });
+
+var clickTypeSelectorCheckBox = name => {
+    $('label=' + name)
+        .$('input')
+        .click();
+};
+
+var submitEnrichmentRequest = () => {
+    $('[data-test=changeSortOrderButton]').click();
+    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+};

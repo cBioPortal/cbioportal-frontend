@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import { toJS } from 'mobx';
 
 import {
     TranscriptConsequenceSummary,
@@ -226,7 +225,10 @@ export function getMutationsByTranscriptId(
 ): Mutation[] {
     const fusionMutation = getFusionMutations(mutations);
     // only non-fusion mutations need to get mutation with transcript id
-    const annotatableMutations = _.difference(mutations, fusionMutation);
+    const annotatableMutations: Mutation[] = _.difference(
+        mutations,
+        fusionMutation
+    );
     return _.concat(
         _.compact(
             annotatableMutations.map(mutation =>
@@ -290,17 +292,15 @@ export function annotateMutation(
 export function initAnnotatedMutation(
     mutation: Partial<Mutation>
 ): Partial<Mutation> {
-    const deepClone = toJS(mutation);
-
     return {
-        ...deepClone,
+        ...mutation,
         // set some default values in case annotation fails
-        variantType: deepClone.variantType || '',
-        gene: deepClone.gene || {
+        variantType: mutation.variantType || '',
+        gene: mutation.gene || {
             hugoGeneSymbol: '',
         },
-        proteinChange: deepClone.proteinChange || '',
-        mutationType: deepClone.mutationType || '',
+        proteinChange: mutation.proteinChange || '',
+        mutationType: mutation.mutationType || '',
     };
 }
 

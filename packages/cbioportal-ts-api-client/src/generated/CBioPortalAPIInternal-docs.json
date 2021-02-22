@@ -16,6 +16,10 @@
   },
   "tags": [
     {
+      "name": "Alteration Enrichments",
+      "description": " "
+    },
+    {
       "name": "Clinical Data Enrichments",
       "description": " "
     },
@@ -101,6 +105,57 @@
     }
   ],
   "paths": {
+    "/alteration-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Alteration Enrichments"
+        ],
+        "summary": "Fetch alteration enrichments in molecular profiles",
+        "operationId": "fetchAlterationEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "enrichmentType",
+            "in": "query",
+            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "allowEmptyValue": false,
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "groupsAndAlterationTypes",
+            "description": "List of groups containing sample identifiers and list of Alteration Types",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileCasesGroupAndAlterationTypeFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationEnrichment"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/clinical-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -395,8 +450,11 @@
             "default": "HOMDEL",
             "allowEmptyValue": false,
             "enum": [
-              "HOMDEL",
-              "AMP"
+              "AMP",
+              "GAIN",
+              "DIPLOID",
+              "HETLOSS",
+              "HOMDEL"
             ]
           },
           {
@@ -2068,7 +2126,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MutationCountByGene"
+                "$ref": "#/definitions/AlterationCountByGene"
               }
             }
           }
@@ -2252,7 +2310,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/StructuralVariantCountByGene"
+                "$ref": "#/definitions/AlterationCountByGene"
               }
             }
           }
@@ -2492,6 +2550,40 @@
     }
   },
   "definitions": {
+    "AlterationCountByGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "matchingGenePanelIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "numberOfAlteredCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProfiledCases": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "AlterationCountByGene"
+    },
     "AlterationEnrichment": {
       "type": "object",
       "required": [
@@ -2521,6 +2613,24 @@
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "AlterationEventTypeFilter": {
+      "type": "object",
+      "properties": {
+        "copyNumberAlterationEventTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "mutationEventTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "AlterationEventTypeFilter"
     },
     "AndedPatientTreatmentFilters": {
       "type": "object",
@@ -3532,6 +3642,24 @@
       },
       "title": "MolecularProfileCaseIdentifier"
     },
+    "MolecularProfileCasesGroupAndAlterationTypeFilter": {
+      "type": "object",
+      "required": [
+        "molecularProfileCasesGroupFilter"
+      ],
+      "properties": {
+        "alterationEventTypes": {
+          "$ref": "#/definitions/AlterationEventTypeFilter"
+        },
+        "molecularProfileCasesGroupFilter": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
+          }
+        }
+      },
+      "title": "MolecularProfileCasesGroupAndAlterationTypeFilter"
+    },
     "MolecularProfileCasesGroupFilter": {
       "type": "object",
       "properties": {
@@ -3628,40 +3756,6 @@
         }
       },
       "title": "MutSig"
-    },
-    "MutationCountByGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "matchingGenePanelIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "numberOfAlteredCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfProfiledCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "qValue": {
-          "type": "number"
-        },
-        "totalCount": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "MutationCountByGene"
     },
     "MutationSpectrum": {
       "type": "object",
@@ -3854,40 +3948,6 @@
         }
       },
       "title": "ServerStatusMessage"
-    },
-    "StructuralVariantCountByGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "matchingGenePanelIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "numberOfAlteredCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfProfiledCases": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "qValue": {
-          "type": "number"
-        },
-        "totalCount": {
-          "type": "integer",
-          "format": "int32"
-        }
-      },
-      "title": "StructuralVariantCountByGene"
     },
     "StudyViewFilter": {
       "type": "object",
