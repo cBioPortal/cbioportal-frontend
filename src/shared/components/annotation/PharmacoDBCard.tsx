@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
 import {IPharmacoDBView,IPharmacoDBCnaEntry,IPharmacoDBGeneDrugAssociationData} from "shared/model/PharmacoDB.ts";
-import "./styles/pharmacoDbCard.scss";
+import 'shared/components/annotation/styles/pharmacoDBCard.scss';
 import * as _ from "lodash";
 import {observer} from "mobx-react";
 

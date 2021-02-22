@@ -3,7 +3,6 @@ import { If, Then, Else } from 'react-if';
 import {IPharmacoDBView, IPharmacoDBCnaRequest, IPharmacoDBCnaEntry} from "shared/model/PharmacoDB.ts";
 import {observer} from "mobx-react";
 import {observable} from "mobx";
-import "./styles/pharmacoDbCard.scss";
 import * as _ from "lodash";
 import { getPharmacoDBCnaDetails } from 'shared/lib/PharmacoDBUtils';
 import {remoteData} from "../../../shared/api/remoteData";
