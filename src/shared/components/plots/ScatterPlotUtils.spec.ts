@@ -1,5 +1,9 @@
 import { assert } from 'chai';
-import { getRegressionComputations } from './ScatterPlotUtils';
+import {
+    getNumberOfNewlines,
+    getRegressionComputations,
+    makeMultilineAxisLabel,
+} from './ScatterPlotUtils';
 
 describe('ScatterPlotUtils', () => {
     describe('getRegressionComputations', () => {
@@ -91,6 +95,37 @@ describe('ScatterPlotUtils', () => {
             }
             // test R^2
             assert.approximately(computations.r2, r2, 0.05, 'R^2');
+        });
+    });
+
+    describe('makeMultilineAxisLabel', () => {
+        it('generates a multi-line label for label text given a char limit', () => {
+            assert.equal(
+                makeMultilineAxisLabel(
+                    'mRNA Expression, RSEM (Batch normalized from Illumina HiSeq_RNASeqV2): TRIM24 ',
+                    30
+                ),
+                'mRNA Expression, RSEM (Batch \nnormalized from Illumina \nHiSeq_RNASeqV2): TRIM24 '
+            );
+        });
+        it('generates a normal label for label text under a given char limit', () => {
+            assert.equal(
+                makeMultilineAxisLabel(
+                    'mRNA Expression, RSEM (Batch normalized from Illumina HiSeq_RNASeqV2): TRIM24 ',
+                    80
+                ),
+                'mRNA Expression, RSEM (Batch normalized from Illumina HiSeq_RNASeqV2): TRIM24 '
+            );
+        });
+        it('generates an empty label for a nonexistent label', () => {
+            assert.equal(makeMultilineAxisLabel(undefined, 80), '');
+        });
+    });
+
+    describe('getNumberOfNewlines', () => {
+        it('gives the correct number of newline chars in some text', () => {
+            assert.equal(getNumberOfNewlines('hello\nworld\n'), 2);
+            assert.equal(getNumberOfNewlines('hello world'), 0);
         });
     });
 });
