@@ -5,6 +5,7 @@ import classnames from 'classnames';
 import {
     DataFilterType,
     FilterResetPanel,
+    getColorForProteinImpactType,
     LollipopMutationPlot,
     Mutation,
     MutationMapper as DefaultMutationMapper,
@@ -25,10 +26,7 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
-import {
-    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-    getColorForProteinImpactType,
-} from 'shared/lib/MutationUtils';
+import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from 'shared/lib/MutationUtils';
 import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
 import MutationMapperStore from './MutationMapperStore';
 import MutationMapperDataStore, {
@@ -42,7 +40,7 @@ import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
-    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean;
+    isPutativeDriver?: (mutation: Partial<AnnotatedMutation>) => boolean;
     trackVisibility?: TrackVisibility;
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
@@ -214,9 +212,10 @@ export default class MutationMapper<
                 trackVisibility={this.trackVisibility}
                 trackDataStatus={this.trackDataStatus}
                 onTrackVisibilityChange={this.onTrackVisibilityChange}
-                getLollipopColor={(mutations: any) =>
+                getLollipopColor={mutations =>
                     getColorForProteinImpactType(
                         mutations,
+                        undefined,
                         undefined,
                         this.props.isPutativeDriver
                     )
