@@ -4,23 +4,31 @@ import {
     getCanonicalMutationType,
     getProteinImpactTypeFromCanonical,
     ProteinImpactType,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_TRUNC_PASSENGER,
+    MUT_COLOR_SPLICE_PASSENGER,
 } from 'cbioportal-frontend-commons';
 import { Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
 
 import { IProteinImpactTypeColors } from '../model/ProteinImpact';
 
-// Default Protein Impact Type colors
-export const MUT_COLOR_MISSENSE = '#008000';
-export const MUT_COLOR_INFRAME = '#993404';
-export const MUT_COLOR_TRUNC = '#000000';
-export const MUT_COLOR_FUSION = '#8b00c9';
-export const MUT_COLOR_OTHER = '#CF58BC';
-
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
+    missenseVusColor: MUT_COLOR_MISSENSE_PASSENGER,
     inframeColor: MUT_COLOR_INFRAME,
+    inframeVusColor: MUT_COLOR_INFRAME_PASSENGER,
     truncatingColor: MUT_COLOR_TRUNC,
+    truncatingVusColor: MUT_COLOR_TRUNC_PASSENGER,
+    spliceColor: MUT_COLOR_SPLICE,
+    spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
     fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
@@ -60,42 +68,68 @@ export function mutationTypeSort(
     }
 }
 
-export function getColorForProteinImpactType(
-    mutations: Partial<Mutation>[],
+export function getColorForProteinImpactType<T extends Mutation>(
+    mutations: Partial<T>[],
     colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-    getMutationCount: (mutation: Partial<Mutation>) => number = () => 1
+    getMutationCount: (mutation: Partial<T>) => number = () => 1,
+    isPutativeDriver?: (mutation: Partial<T>) => boolean
 ): string {
-    const sortedCanonicalMutationTypes: CanonicalMutationType[] =
-        // need to flatten before sorting, since we map a single mutation to an array of elements
-        _.flatten(
-            mutations.map(m =>
-                // create an array of elements for a single mutation, since the mutation count may be different than 1,
-                // this adjusts the weight of a particular mutation with a high count
-                _.fill(
-                    Array(Math.ceil(getMutationCount(m))),
-                    getCanonicalMutationType(m.mutationType || '')
-                )
-            )
-        ).sort(mutationTypeSort);
+    const processedMutations = mutations.map(m => {
+        return {
+            count: Math.ceil(getMutationCount(m)),
 
-    const chosenCanonicalType:
-        | CanonicalMutationType
-        | undefined = findFirstMostCommonElt(sortedCanonicalMutationTypes);
+            // if not coloring drivers vs vus, color everything as driver
+            isPutativeDriver: !!(!isPutativeDriver || isPutativeDriver(m)),
 
-    if (chosenCanonicalType) {
+            canonicalType: getCanonicalMutationType(
+                (m.mutationType || '') as string
+            ),
+        };
+    });
+    // aggregate counts by type + driver status
+    const counts: any = {};
+    for (const pMut of processedMutations) {
+        const key = `${pMut.canonicalType}_${pMut.isPutativeDriver}`;
+        counts[key] = counts[key] || {
+            count: 0,
+            isPutativeDriver: pMut.isPutativeDriver,
+            canonicalType: pMut.canonicalType,
+        };
+        counts[key].count += pMut.count;
+    }
+
+    const sortedMutations = _.sortBy(_.values(counts), [
+        pMut => (pMut.isPutativeDriver ? 0 : 1), // putative driver preferred non putative driver
+        pMut => -pMut.count, // sort descending by count - higher count preferred to lower count
+        pMut => MUTATION_TYPE_PRIORITY[pMut.canonicalType], // finally, sort by specified priority
+    ]);
+
+    if (sortedMutations.length > 0) {
+        const chosenMutation = sortedMutations[0];
+
         const proteinImpactType: ProteinImpactType = getProteinImpactTypeFromCanonical(
-            chosenCanonicalType
+            chosenMutation.canonicalType
         );
 
         switch (proteinImpactType) {
-            case 'missense':
-                return colors.missenseColor;
-            case 'truncating':
-                return colors.truncatingColor;
-            case 'inframe':
-                return colors.inframeColor;
-            case 'fusion':
+            case ProteinImpactType.MISSENSE:
+                return chosenMutation.isPutativeDriver
+                    ? colors.missenseColor
+                    : colors.missenseVusColor;
+            case ProteinImpactType.TRUNCATING:
+                return chosenMutation.isPutativeDriver
+                    ? colors.truncatingColor
+                    : colors.truncatingVusColor;
+            case ProteinImpactType.INFRAME:
+                return chosenMutation.isPutativeDriver
+                    ? colors.inframeColor
+                    : colors.inframeVusColor;
+            case ProteinImpactType.FUSION:
                 return colors.fusionColor;
+            case ProteinImpactType.SPLICE:
+                return chosenMutation.isPutativeDriver
+                    ? colors.spliceColor
+                    : colors.spliceVusColor;
             default:
                 return colors.otherColor;
         }

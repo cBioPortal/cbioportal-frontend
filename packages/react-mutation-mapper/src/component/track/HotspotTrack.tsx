@@ -22,7 +22,7 @@ import { TrackItemSpec } from './TrackCircle';
 import hotspotImg from '../../images/cancer-hotspots.svg';
 
 type HotspotTrackProps = TrackProps & {
-    store: MutationMapperStore;
+    store: MutationMapperStore<Mutation>;
     hotspotIndex: IHotspotIndex;
 };
 

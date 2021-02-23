@@ -9,7 +9,14 @@ import {
     Mutation,
     SampleIdentifier,
 } from 'cbioportal-ts-api-client';
-import { stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
+    MUT_COLOR_TRUNC_PASSENGER,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import { extractGenomicLocation } from 'cbioportal-utils';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
 import {
@@ -17,20 +24,25 @@ import {
     MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
 } from 'shared/constants';
 import { toSampleUuid } from './UuidUtils';
+import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
+import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
 import {
     MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
-} from 'shared/lib/Colors';
-import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
-import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
+} from 'cbioportal-frontend-commons';
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     missenseColor: MUT_COLOR_MISSENSE,
+    missenseVusColor: MUT_COLOR_MISSENSE_PASSENGER,
     inframeColor: MUT_COLOR_INFRAME,
+    inframeVusColor: MUT_COLOR_INFRAME_PASSENGER,
     truncatingColor: MUT_COLOR_TRUNC,
+    truncatingVusColor: MUT_COLOR_TRUNC_PASSENGER,
+    spliceColor: MUT_COLOR_SPLICE,
+    spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
     fusionColor: MUT_COLOR_FUSION,
     otherColor: MUT_COLOR_OTHER,
 };
@@ -46,11 +58,14 @@ export function isUncalled(molecularProfileId: string) {
 
 export function getColorForProteinImpactType(
     mutations: Mutation[],
-    colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS
+    colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean
 ): string {
     return getDefaultColorForProteinImpactType(
         normalizeMutations(mutations),
-        colors
+        colors,
+        undefined,
+        isPutativeDriver
     );
 }
 

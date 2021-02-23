@@ -1,4 +1,17 @@
 import * as _ from 'lodash';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
+    CNA_COLOR_HOMDEL,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_TRUNC,
+} from 'cbioportal-frontend-commons';
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
@@ -8,31 +21,6 @@ export const DARK_GREY = '#A9A9A9';
 // icon colors
 export const ICON_FILTER_ON = BLACK;
 export const ICON_FILTER_OFF = DEFAULT_GREY;
-
-// Mutation colors
-export const MUT_COLOR_MISSENSE = '#008000';
-export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
-export const MUT_COLOR_INFRAME = '#993404';
-export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
-export const MUT_COLOR_TRUNC = BLACK;
-export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
-export const MUT_COLOR_SPLICE = '#e5802b';
-export const MUT_COLOR_SPLICE_PASSENGER = '#f0b87b';
-export const MUT_COLOR_FUSION = '#8B00C9';
-export const MUT_COLOR_PROMOTER = '#00B7CE';
-export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
-
-export const MRNA_COLOR_HIGH = '#ff9999';
-export const MRNA_COLOR_LOW = '#6699cc';
-export const MUT_COLOR_GERMLINE = '#FFFFFF';
-
-export const PROT_COLOR_HIGH = '#ff3df8';
-export const PROT_COLOR_LOW = '#00E1FF';
-
-export const CNA_COLOR_AMP = '#ff0000';
-export const CNA_COLOR_GAIN = '#ffb6c1';
-export const CNA_COLOR_HETLOSS = '#8fd8d8';
-export const CNA_COLOR_HOMDEL = '#0000ff';
 
 // colors of ASCNCopyNumber icon
 export const ASCN_AMP = '#ff0000';
