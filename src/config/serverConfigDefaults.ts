@@ -37,6 +37,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_oncokb: true,
     show_civic: false,
     show_trial_match: true,
+    show_pharmacodb:true,
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,

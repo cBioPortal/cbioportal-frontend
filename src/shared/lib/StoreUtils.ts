@@ -47,6 +47,9 @@ import {
     getTrialMatchVariants, getTrialMatchGenes
 } from "shared/lib/TrialMatchUtils";
 import {Query, default as OncoKbAPI, Gene as OncoKbGene, CancerGene} from "public-lib/api/generated/OncoKbAPI";
+import {getPharmacoDBCnaView} from "shared/lib/PharmacoDBUtils";
+import {IPharmacoDBCnaRequest, IPharmacoDBViewList} from "shared/model/PharmacoDB.ts"; 
+
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise, MobxPromiseInputUnion} from "mobxpromise";
 import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -67,6 +70,7 @@ import {normalizeMutations} from "../components/mutationMapper/MutationMapperUti
 import AppConfig from "appConfig";
 import { getFrontendAssetUrl } from "shared/api/urls";
 import client from 'shared/api/cbioportalClientInstance';
+import PharmacoDB from 'shared/components/annotation/PharmacoDB';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -785,6 +789,50 @@ export async function fetchCnaTrialMatchGenes(discreteCNAData:MobxPromise<Discre
 
         return trialMatchGenes;
     } else {
+            return {};
+        }
+    }
+    
+/*
+PharmacoDB CNA View
+*/ 
+
+export async function fetchPharmacoDbCnaView(uniqueSampleKeyToOncoTreeCode:{[uniqueSampleKey: string]: string},
+                                             discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
+{
+    
+
+    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+         
+        let querySymbols: Array<IPharmacoDBCnaRequest> = [];
+        let alteration:string ='';
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            if(cna.alteration != 0){
+                switch (cna.alteration) {
+                    case -2:
+                        alteration ='DEEPDEL';
+                    break;
+                    case -1:
+                        alteration ='SHALLOWDEL';
+                    break;
+                    case 1:
+                        alteration ='GAIN';
+                    break;
+                    case 2:
+                        alteration ='AMP';
+                    break;
+                } 
+                const otc = uniqueSampleKeyToOncoTreeCode[cna.uniqueSampleKey] || '';
+                const pharmacoDBCnaRequest:IPharmacoDBCnaRequest = {oncotreecode:otc, gene:cna.gene.hugoGeneSymbol,cna:alteration};
+                querySymbols.push(pharmacoDBCnaRequest);
+                alteration ='';
+            }
+        });
+    
+        let pharmacoDBViewList: IPharmacoDBViewList = (await getPharmacoDBCnaView(querySymbols));
+    
+        return pharmacoDBViewList;
+    } else {
         return {};
     }
 }
@@ -881,7 +929,21 @@ export function findMrnaRankMolecularProfileId(molecularProfilesInStudy: MobxPro
     }
 }
 
+export function generateUniqueSampleKeyToOncoTreeCodeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>): {[sampleId: string]: string}
+{
+    const map: { [uniqueSampleKey: string]: string } = {};
 
+    if (clinicalDataForSamples.result) {
+        //  only ONCOTREE_CODE in clinical data can be used for each sample
+        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
+            if (clinicalData.clinicalAttributeId === "ONCOTREE_CODE") {
+                map[clinicalData.uniqueSampleKey] = clinicalData.value;
+            }
+        });
+    }
+
+    return map;
+}
 
 export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                                                studies?: MobxPromise<CancerStudy[]>,

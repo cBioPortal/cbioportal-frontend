@@ -20,6 +20,8 @@ import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
+import { IPharmacoDBCnaEntry, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -36,13 +38,17 @@ type ICopyNumberTableWrapperProps = {
     cnaCivicVariants?: ICivicVariantDataWrapper;
     cnaTrialMatchGenes?: ITrialMatchGeneDataWrapper;
     cnaTrialMatchVariants?: ITrialMatchVariantDataWrapper;
+    uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string};
+    cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     oncoKbCancerGenes?:IOncoKbCancerGenesWrapper;
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     enableTrialMatch?: boolean;
-    pubMedCache?:PubMedCache;
     referenceGenes:ReferenceGenomeGene[];
+    enablePharmacoDB?:boolean;
+    pubMedCache?:PubMedCache;
+    pharmacoDBCnaCache?: PharmacoDBCnaCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -59,7 +65,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
     public static defaultProps = {
         enableOncoKb: true,
         enableCivic: false,
-        enableTrialMatch: false
+        enableTrialMatch: false,
+        enablePharmacoDB: true
     };
 
     @computed get hugoGeneSymbolToCytoband() {
@@ -129,6 +136,10 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 trialMatchGenes: this.props.cnaTrialMatchGenes,
                 trialMatchVariants: this.props.cnaTrialMatchVariants,
                 enableTrialMatch: false,
+                uniqueSampleKeyToOncoTreeCode: this.props.uniqueSampleKeyToOncoTreeCode,
+                cnaPharmacoDBViewListDW: this.props.cnaPharmacoDBViewListDW,
+                pharmacoDBCnaCache: this.props.pharmacoDBCnaCache,
+                enablePharmacoDB: this.props.enablePharmacoDB as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false,
                 userEmailAddress: this.props.userEmailAddress,
@@ -136,7 +147,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaTrialMatchGenes, this.props.cnaTrialMatchVariants);
+                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaTrialMatchGenes, this.props.cnaTrialMatchVariants, this.props.cnaPharmacoDBViewListDW);
             },
             order: 50
         });

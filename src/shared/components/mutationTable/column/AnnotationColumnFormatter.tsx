@@ -26,6 +26,10 @@ import {ITrialMatchVariant, ITrialMatchGene, ITrialMatchEntry, ITrialMatchVarian
         ITrialMatchGeneData, ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
 import {buildTrialMatchEntry} from "shared/lib/TrialMatchUtils";
+import { IPharmacoDBCnaEntry, IPharmacoDBView, IPharmacoDBViewList, IPharmacoDBViewListDataWrapper } from 'shared/model/PharmacoDB';
+import PharmacoDB from 'shared/components/annotation/PharmacoDB';
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
+
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
@@ -33,6 +37,7 @@ export interface IAnnotationColumnProps {
     enableHotspot: boolean;
     enableCivic: boolean;
     enableTrialMatch: boolean;
+    enablePharmacoDB?: boolean;
     hotspotData?: IHotspotDataWrapper;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
@@ -44,6 +49,9 @@ export interface IAnnotationColumnProps {
     civicVariants?: ICivicVariantDataWrapper;
     trialMatchGenes?: ITrialMatchGeneDataWrapper;
     trialMatchVariants?: ITrialMatchVariantDataWrapper;
+    uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string};
+    cnaPharmacoDBViewListDW? : IPharmacoDBViewListDataWrapper;
+    pharmacoDBCnaCache?: PharmacoDBCnaCache;
     studyIdToStudy?: {[studyId:string]:CancerStudy};
 }
 
@@ -62,6 +70,8 @@ export interface IAnnotation {
     trialMatchEntry?: ITrialMatchEntry | null;
     trialMatchStatus: "pending" | "error" | "complete";
     hasTrialMatchVariants: boolean;
+    pharmacoDBView?: IPharmacoDBView| null;
+    pharmacoDBStatus: "pending" | "error" | "complete";
     hugoGeneSymbol:string;
 }
 
@@ -81,6 +91,7 @@ export default class AnnotationColumnFormatter
             is3dHotspot: false,
             hotspotStatus: "complete",
             hasCivicVariants: true,
+            pharmacoDBStatus: "complete",
             hugoGeneSymbol: '',
             civicStatus: "complete",
             hasTrialMatchVariants: true,
@@ -384,7 +395,8 @@ export default class AnnotationColumnFormatter
                               columnProps:IAnnotationColumnProps,
                               evidenceCache?: OncoKbEvidenceCache,
                               evidenceQuery?: Query,
-                              pubMedCache?:OncokbPubMedCache)
+                              pubMedCache?:OncokbPubMedCache,
+                              pharmacoDBCnaCache?:PharmacoDBCnaCache)
     {
         return (
             <span style={{display:'flex', minWidth:100}}>
@@ -406,6 +418,13 @@ export default class AnnotationColumnFormatter
                         civicEntry={annotation.civicEntry}
                         civicStatus={annotation.civicStatus}
                         hasCivicVariants={annotation.hasCivicVariants}
+                    />
+                </If>
+                <If condition={columnProps.enablePharmacoDB || false}>
+                    <PharmacoDB
+                        pharmacoDBEntry={annotation.pharmacoDBView}
+                        pharmacoDBStatus={annotation.pharmacoDBStatus}
+                        pharmacoDBCnaCache={pharmacoDBCnaCache}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>

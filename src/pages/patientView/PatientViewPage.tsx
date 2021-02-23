@@ -503,12 +503,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                             cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
                                             cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
                                             cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                                            uniqueSampleKeyToOncoTreeCode={patientViewPageStore.uniqueSampleKeyToOncoTreeCode}
+                                            cnaPharmacoDBViewListDW={patientViewPageStore.cnaPharmacoDBViewList}
                                             oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                             oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
                                             enableOncoKb={AppConfig.serverConfig.show_oncokb}
                                             enableCivic={AppConfig.serverConfig.show_civic}
+                                            enablePharmacoDB={AppConfig.serverConfig.show_pharmacodb}
                                             userEmailAddress={AppConfig.serverConfig.user_email_address}
                                             pubMedCache={patientViewPageStore.pubMedCache}
+                                            pharmacoDBCnaCache={patientViewPageStore.pharmacoDBCnaCache}
                                             referenceGenes={patientViewPageStore.referenceGenes.result}
                                             data={patientViewPageStore.mergedDiscreteCNAData}
                                             copyNumberCountCache={patientViewPageStore.copyNumberCountCache}

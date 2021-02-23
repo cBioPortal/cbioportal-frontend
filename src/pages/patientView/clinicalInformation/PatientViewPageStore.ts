@@ -23,6 +23,7 @@ import {
 } from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import GenomeNexusMyVariantInfoCache from "shared/cache/GenomeNexusMyVariantInfoCache";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -30,6 +31,7 @@ import {IHotspotIndex, indexHotspotsData} from "react-mutation-mapper";
 import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ITrialMatchGene, ITrialMatchVariant} from "shared/model/TrialMatch";
+import {IPharmacoDBViewList} from "shared/model/PharmacoDB";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
@@ -68,6 +70,8 @@ import {
     fetchTrialMatchGenes,
     fetchTrialMatchVariants,
     fetchCnaTrialMatchGenes, 
+    fetchPharmacoDbCnaView,
+    generateUniqueSampleKeyToOncoTreeCodeMap,
     groupBySampleId,
     findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
@@ -815,6 +819,18 @@ export class PatientViewPageStore {
         }
     }, undefined);
 
+    readonly cnaPharmacoDBViewList = remoteData<IPharmacoDBViewList | undefined>({
+        await: () => [
+            this.discreteCNAData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => AppConfig.serverConfig.show_pharmacodb ? fetchPharmacoDbCnaView(this.uniqueSampleKeyToOncoTreeCode,this.discreteCNAData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, undefined);
+
+
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
         await: () => [
             this.discreteCNAData
@@ -920,6 +936,10 @@ export class PatientViewPageStore {
             this.samplesWithoutCancerTypeClinicalData);
     }
 
+    @computed get uniqueSampleKeyToOncoTreeCode(): {[uniqueSampleKey: string]: string} {
+        return generateUniqueSampleKeyToOncoTreeCodeMap(this.clinicalDataForSamples);
+    }
+
     @action("SetSampleId") setSampleId(newId: string) {
         if (newId)
             this._patientId = '';
@@ -958,6 +978,10 @@ export class PatientViewPageStore {
 
     @cached get pubMedCache() {
         return new PubMedCache();
+    }
+
+    @cached get pharmacoDBCnaCache() {
+        return new PharmacoDBCnaCache();
     }
 
     @cached get copyNumberCountCache() {
