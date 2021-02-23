@@ -68,11 +68,11 @@ export function mutationTypeSort(
     }
 }
 
-export function getColorForProteinImpactType(
-    mutations: Partial<Mutation>[],
+export function getColorForProteinImpactType<T extends Mutation>(
+    mutations: Partial<T>[],
     colors: IProteinImpactTypeColors = DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-    getMutationCount: (mutation: Partial<Mutation>) => number = () => 1,
-    isPutativeDriver?: (mutation: Partial<Mutation>) => boolean
+    getMutationCount: (mutation: Partial<T>) => number = () => 1,
+    isPutativeDriver?: (mutation: Partial<T>) => boolean
 ): string {
     const processedMutations = mutations.map(m => {
         return {
@@ -81,7 +81,9 @@ export function getColorForProteinImpactType(
             // if not coloring drivers vs vus, color everything as driver
             isPutativeDriver: !!(!isPutativeDriver || isPutativeDriver(m)),
 
-            canonicalType: getCanonicalMutationType(m.mutationType || ''),
+            canonicalType: getCanonicalMutationType(
+                (m.mutationType || '') as string
+            ),
         };
     });
     // aggregate counts by type + driver status

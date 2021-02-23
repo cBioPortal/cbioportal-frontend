@@ -9,11 +9,12 @@ import MutationMapperStore from '../../model/MutationMapperStore';
 import { OncoKbTrackTooltip } from './OncoKbTrackTooltip';
 import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackCircle';
+import { Mutation } from 'cbioportal-utils';
 
 import oncoKbImg from '../../images/oncogenic-only.svg';
 
 type OncoKbTrackProps = TrackProps & {
-    store: MutationMapperStore;
+    store: MutationMapperStore<Mutation>;
 };
 
 const ONCOKB_ID_CLASS_PREFIX = 'onco-kb-';
