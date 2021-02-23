@@ -35,7 +35,7 @@ export type MutationMapperProps = {
     hugoSymbol?: string;
     entrezGeneId?: number;
     data?: Partial<Mutation>[];
-    store?: MutationMapperStore;
+    store?: MutationMapperStore<Mutation>;
     lollipopPlotControlsConfig?: LollipopPlotControlsConfig;
     windowWrapper?: { size: { width: number; height: number } };
     trackVisibility?: TrackVisibility;
@@ -216,7 +216,7 @@ export default class MutationMapper<
     }
 
     @computed
-    protected get store(): MutationMapperStore {
+    protected get store(): MutationMapperStore<Mutation> {
         return this.props.store
             ? this.props.store!
             : initDefaultMutationMapperStore(this.props);

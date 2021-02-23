@@ -29,11 +29,7 @@ import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
 import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
-import {
-    DEFAULT_NA_COLOR,
-    MUT_COLOR_FUSION,
-    MUT_COLOR_MISSENSE,
-} from 'shared/lib/Colors';
+import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import {
     caseCounts,
     getSampleIdentifiers,
@@ -45,6 +41,10 @@ import {
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
+import {
+    MUT_COLOR_FUSION,
+    MUT_COLOR_MISSENSE,
+} from 'cbioportal-frontend-commons';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;

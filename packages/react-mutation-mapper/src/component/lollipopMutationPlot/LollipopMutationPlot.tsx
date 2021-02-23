@@ -43,13 +43,14 @@ import DomainTooltip from '../lollipopPlot/DomainTooltip';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
-export type LollipopMutationPlotProps = {
-    store: MutationMapperStore;
+export type LollipopMutationPlotProps<T extends Mutation> = {
+    store: MutationMapperStore<T>;
     controlsConfig?: LollipopPlotControlsConfig;
     pubMedCache?: MobxCache;
     mutationAlignerCache?: MobxCache<string>;
-    getLollipopColor?: (mutations: Partial<Mutation>[]) => string;
-    getMutationCount?: (mutation: Partial<Mutation>) => number;
+    getLollipopColor?: (mutations: Partial<T>[]) => string;
+    isPutativeDriver?: (mutation: Partial<T>) => boolean;
+    getMutationCount?: (mutation: Partial<T>) => number;
     topYAxisSymbol?: string;
     bottomYAxisSymbol?: string;
     topYAxisDefaultMax?: number;
@@ -63,7 +64,7 @@ export type LollipopMutationPlotProps = {
     yAxisLabelPadding?: number;
     lollipopTooltipCountInfo?: (
         count: number,
-        mutations?: Partial<Mutation>[]
+        mutations?: Partial<T>[]
     ) => JSX.Element;
     customControls?: JSX.Element;
     onXAxisOffset?: (offset: number) => void;
@@ -84,11 +85,10 @@ export type LollipopMutationPlotProps = {
 };
 
 @observer
-export default class LollipopMutationPlot extends React.Component<
-    LollipopMutationPlotProps,
-    {}
-> {
-    public static defaultProps: Partial<LollipopMutationPlotProps> = {
+export default class LollipopMutationPlot<
+    T extends Mutation
+> extends React.Component<LollipopMutationPlotProps<T>, {}> {
+    public static defaultProps: Partial<LollipopMutationPlotProps<any>> = {
         yMaxFractionDigits: 1,
         yAxisSameScale: true,
     };
@@ -119,7 +119,7 @@ export default class LollipopMutationPlot extends React.Component<
     }
 
     private lollipopTooltip(
-        mutationsAtPosition: Mutation[],
+        mutationsAtPosition: T[],
         countsByPosition: { [pos: number]: number }
     ): JSX.Element {
         const codon = mutationsAtPosition[0].proteinPosStart;
@@ -200,7 +200,7 @@ export default class LollipopMutationPlot extends React.Component<
     }
 
     protected getLollipopSpecs(
-        mutationsByPosition: { [pos: number]: Mutation[] },
+        mutationsByPosition: { [pos: number]: T[] },
         countsByPosition: { [pos: number]: number },
         group?: string,
         placement?: LollipopPlacement
@@ -319,7 +319,8 @@ export default class LollipopMutationPlot extends React.Component<
                     : getColorForProteinImpactType(
                           mutations,
                           DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-                          this.props.getMutationCount
+                          this.props.getMutationCount,
+                          this.props.isPutativeDriver
                       ),
                 label,
             });
@@ -487,11 +488,11 @@ export default class LollipopMutationPlot extends React.Component<
         );
     }
 
-    constructor(props: LollipopMutationPlotProps) {
+    constructor(props: LollipopMutationPlotProps<T>) {
         super(props);
 
         makeObservable<
-            LollipopMutationPlot,
+            LollipopMutationPlot<T>,
             | 'mouseInPlot'
             | 'yMaxInputFocused'
             | 'geneXOffset'
