@@ -147,7 +147,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaTrialMatchGenes, this.props.cnaTrialMatchVariants, this.props.cnaPharmacoDBViewListDW);
+                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaTrialMatchGenes, this.props.cnaTrialMatchVariants,this.props.uniqueSampleKeyToOncoTreeCode, this.props.cnaPharmacoDBViewListDW);
             },
             order: 50
         });

@@ -15,9 +15,9 @@ export interface IPharmacoDBCardProps {
 
 @observer
 export default class PharmacoDBCard extends React.Component<IPharmacoDBCardProps, {}> {
-    constructor() {
+    /*constructor() {
         super();
-    }
+    }*/
 
     /**
      * Render PharmacoDB card component

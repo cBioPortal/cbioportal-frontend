@@ -273,7 +273,7 @@ export default class AnnotationColumnFormatter
                             trialMatchVariants?: ITrialMatchVariantDataWrapper,
                             uniqueSampleKeyToOncoTreeCode?:{[uniqueSampleKey: string]: string},
                             cnaPharmacoDBViewListDW?:IPharmacoDBViewListDataWrapper):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbCancerGenes, oncoKbData, civicGenes, civicVariants, uniqueSampleKeyToOncoTreeCode, cnaPharmacoDBViewListDW);
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbCancerGenes, oncoKbData, civicGenes, civicVariants, trialMatchGenes, trialMatchVariants, uniqueSampleKeyToOncoTreeCode, cnaPharmacoDBViewListDW);
 
         return _.flatten([oncoKbAnnotationSortValue(annotationData.oncoKbIndicator), Civic.sortValue(annotationData.civicEntry), annotationData.isOncoKbCancerGene ? 1 : 0,
             PharmacoDB.sortValue(annotationData.pharmacoDBView)]);

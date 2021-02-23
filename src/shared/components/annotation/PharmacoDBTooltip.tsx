@@ -5,10 +5,9 @@ import {observer} from "mobx-react";
 import {observable} from "mobx";
 import * as _ from "lodash";
 import { getPharmacoDBCnaDetails } from 'shared/lib/PharmacoDBUtils';
-import {remoteData} from "../../../shared/api/remoteData";
 import PharmacoDBCard from './PharmacoDBCard';
 import PharmacoDBCnaCache from "shared/cache/PharmacoDBCnaCache";
-import {ICache, ICacheData} from "shared/lib/SimpleCache";
+import {ICache, ICacheData} from "public-lib/lib/SimpleCache";
 import {CacheData} from "shared/lib/LazyMobXCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "public-lib/components/TableCellStatus";
 
