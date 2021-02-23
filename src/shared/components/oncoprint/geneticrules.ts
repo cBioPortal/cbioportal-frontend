@@ -5,12 +5,13 @@ import {
     RuleSetParams,
     RuleSetType,
 } from 'oncoprintjs';
+import { DEFAULT_GREY } from 'shared/lib/Colors';
+import _ from 'lodash';
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
-    DEFAULT_GREY,
     MRNA_COLOR_HIGH,
     MRNA_COLOR_LOW,
     MUT_COLOR_FUSION,
@@ -27,8 +28,7 @@ import {
     MUT_COLOR_TRUNC_PASSENGER,
     PROT_COLOR_HIGH,
     PROT_COLOR_LOW,
-} from 'shared/lib/Colors';
-import _ from 'lodash';
+} from 'cbioportal-frontend-commons';
 // Feed this in as
 
 const MUTATION_LEGEND_ORDER = 0;

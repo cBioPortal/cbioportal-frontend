@@ -57,7 +57,9 @@ export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
 }
 
-export default class MutationMapperStore extends DefaultMutationMapperStore {
+export default class MutationMapperStore extends DefaultMutationMapperStore<
+    SimpleMutation
+> {
     constructor(
         protected mutationMapperConfig: IMutationMapperConfig,
         protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
