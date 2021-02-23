@@ -10,9 +10,11 @@ const STUDY_VIEW_WARNING_PERSISTENCE_KEY =
 export function shouldShowStudyViewWarning() {
     // we want to show a warning message on private cbioportal instances
     // to prevent users from adding links in manuscripts
-    const showStudyViewWarning = ['triage-portal', 'mskcc-portal'].includes(
-        AppConfig.serverConfig.app_name!
-    );
+    // we don't want to show this in MSK CIS setting (iframe)
+    const showStudyViewWarning =
+        ['triage-portal', 'mskcc-portal'].includes(
+            AppConfig.serverConfig.app_name!
+        ) && !getBrowserWindow().isMSKCIS;
 
     return (
         showStudyViewWarning &&
