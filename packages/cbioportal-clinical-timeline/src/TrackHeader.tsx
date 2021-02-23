@@ -21,7 +21,7 @@ interface ITrackHeaderProps {
 }
 
 export function getTrackLabel(track: TimelineTrackSpecification) {
-    return (track.label || track.type).toLowerCase().replace(/_/g, '');
+    return (track.label || track.type).replace(/_/g, '');
 }
 
 const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
@@ -92,8 +92,7 @@ const TrackHeader: React.FunctionComponent<ITrackHeaderProps> = function({
     ));
 };
 
-export const EXPORT_TRACK_HEADER_STYLE =
-    'font-size: 12px;text-transform: uppercase; font-family:Arial';
+export const EXPORT_TRACK_HEADER_STYLE = 'font-size: 12px;font-family:Arial';
 export const EXPORT_TRACK_HEADER_BORDER_CLASSNAME = 'track-header-border';
 
 export function getTrackHeadersG(
