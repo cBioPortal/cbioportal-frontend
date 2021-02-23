@@ -13,7 +13,6 @@ import {
     frameshiftDeletionGroup,
     frameshiftGroup,
     frameshiftInsertionGroup,
-    fusionGroup,
     inframeDeletionGroup,
     inframeGroup,
     inframeInsertionGroup,
@@ -35,6 +34,7 @@ export interface IAlterationEnrichmentTypeSelectorHandlers {
     updateSelectedCopyNumber: (
         selectedCopyNumber: CopyNumberEnrichmentEventType[]
     ) => void;
+    updateStructuralVariantSelection: (selected: boolean) => void;
 }
 
 export interface IAlterationEnrichmentTypeSelectorProps {
@@ -84,6 +84,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         [key in CopyNumberEnrichmentEventType]?: boolean;
     };
 
+    private isStructuralVariantSelected?: boolean;
+
     componentWillMount() {
         this.currentSelectedMutations = observable(
             toJS(this.props.store.selectedMutationEnrichmentEventTypes)
@@ -91,6 +93,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         this.currentSelectedCopyNumber = observable(
             toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
         );
+        this.isStructuralVariantSelected = this.props.store.isStructuralVariantEnrichmentSelected;
     }
 
     @computed get isAnyMutationsSelected() {
@@ -147,10 +150,6 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @computed get isAnyOtherSelected() {
         return this.isAnySelectedMut(otherGroup);
-    }
-
-    @computed get isAnyFusionsSelected() {
-        return this.isAnySelectedMut(fusionGroup);
     }
 
     @computed get isAnyCopyNumberSelected() {
@@ -240,7 +239,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 this.toggleMutGroup(otherGroup, !this.isAnyOtherSelected);
                 break;
             case checkbox.structvar:
-                this.toggleMutGroup(fusionGroup, !this.isAnyFusionsSelected);
+                this.isStructuralVariantSelected = !this
+                    .isStructuralVariantSelected;
                 break;
             case checkbox.cna:
                 this.toggleCnaGroup(cnaGroup, !this.isAnyCopyNumberSelected);
@@ -297,6 +297,9 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         );
         this.props.handlers.updateSelectedCopyNumber(
             selectedCopyNumber as CopyNumberEnrichmentEventType[]
+        );
+        this.props.handlers.updateStructuralVariantSelection(
+            !!this.isStructuralVariantSelected
         );
     }
 
@@ -546,7 +549,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                                 data-test="Fusion"
                                 type="checkbox"
                                 value={checkbox.structvar}
-                                checked={this.isAnyFusionsSelected}
+                                checked={this.isStructuralVariantSelected}
                                 onClick={this.onInputClick}
                             />{' '}
                             <b>Structural Variants / Fusions</b>

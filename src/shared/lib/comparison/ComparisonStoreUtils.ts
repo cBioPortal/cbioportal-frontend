@@ -52,7 +52,6 @@ export enum MutationEnrichmentEventType {
     inframe = 'inframe',
     truncating = 'truncating',
     feature_truncation = 'feature_truncation',
-    fusion = 'fusion',
     silent = 'silent',
     synonymous_variant = 'synonymous_variant',
     any = 'any',
@@ -144,7 +143,6 @@ export const otherGroup = [
     MutationEnrichmentEventType.any,
     MutationEnrichmentEventType.other,
 ];
-export const fusionGroup = [MutationEnrichmentEventType.fusion];
 export const mutationGroup = [
     ...missenseGroup,
     ...inframeGroup,
@@ -175,6 +173,9 @@ export function buildAlterationEnrichmentTypeSelectorHandlers(
                 );
             }
         ),
+        updateStructuralVariantSelection: action((selected: boolean) => {
+            self.isStructuralVariantEnrichmentSelected = selected;
+        }),
     };
     return handlers;
 }

@@ -127,6 +127,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store._activeGroupsNotOverlapRemoved,
             this.store.activeGroups,
             this.store.mutationEnrichmentProfiles,
+            this.store.structuralVariantEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,

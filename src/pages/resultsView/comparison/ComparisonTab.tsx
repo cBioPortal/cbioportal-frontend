@@ -135,6 +135,7 @@ export default class ComparisonTab extends React.Component<
             this.store._activeGroupsNotOverlapRemoved,
             this.store.activeGroups,
             this.store.mutationEnrichmentProfiles,
+            this.store.structuralVariantEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
@@ -200,7 +201,7 @@ export default class ComparisonTab extends React.Component<
                                             this.store.hasCnaEnrichmentData
                                         }
                                         showStructuralVariants={
-                                            this.store.hasMutationEnrichmentData
+                                            this.store.hasStructuralVariantData
                                         }
                                     />
                                 )}

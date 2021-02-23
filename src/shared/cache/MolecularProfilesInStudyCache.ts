@@ -5,8 +5,10 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
 import * as _ from 'lodash';
-import { AlterationContainerType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import {
+    DataTypeConstants,
+    AlterationTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
 
 function queryToKey(studyId: string) {
     return studyId;
@@ -31,7 +33,7 @@ async function fetch(
     profiles = profiles.map(profile => {
         if (
             profile.molecularAlterationType ===
-                AlterationContainerType.STRUCTURAL_VARIANT &&
+                AlterationTypeConstants.STRUCTURAL_VARIANT &&
             profile.datatype === DataTypeConstants.SV
         ) {
             profile.showProfileInAnalysisTab = false;

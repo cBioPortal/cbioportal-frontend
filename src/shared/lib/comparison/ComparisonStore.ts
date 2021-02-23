@@ -60,7 +60,10 @@ import {
     getClinicalDataOfPatientSurvivalStatus,
     getPatientSurvivals,
 } from 'pages/resultsView/SurvivalStoreHelper';
-import { getPatientIdentifiers } from 'pages/studyView/StudyViewUtils';
+import {
+    getFilteredMolecularProfilesByAlterationType,
+    getPatientIdentifiers,
+} from 'pages/studyView/StudyViewUtils';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -73,7 +76,11 @@ import {
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
-import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+    ResultsViewPageStore,
+} from '../../../pages/resultsView/ResultsViewPageStore';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
@@ -95,6 +102,8 @@ export default abstract class ComparisonStore {
     public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
     @observable.ref
     public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
+    @observable.ref
+    public isStructuralVariantEnrichmentSelected = true;
 
     constructor(
         protected appStore: AppStore,
@@ -560,22 +569,30 @@ export default abstract class ComparisonStore {
         await: () => [this.structuralVariantEnrichmentProfiles],
         invoke: () => {
             // set default enrichmentProfileMap if not selected yet
-            if (_.isEmpty(this._structuralVariantEnrichmentProfileMap)) {
-                const molecularProfilesbyStudyId = _.groupBy(
-                    this.structuralVariantEnrichmentProfiles.result!,
-                    profile => profile.studyId
-                );
-                // Select only one molecular profile for each study
-                return Promise.resolve(
-                    _.mapValues(
-                        molecularProfilesbyStudyId,
-                        molecularProfiles => molecularProfiles[0]
-                    )
-                );
+            if (this.isStructuralVariantEnrichmentSelected) {
+                if (_.isEmpty(this._structuralVariantEnrichmentProfileMap)) {
+                    const structuralVariantProfiles = getFilteredMolecularProfilesByAlterationType(
+                        _.groupBy(
+                            this.structuralVariantEnrichmentProfiles.result!,
+                            profile => profile.studyId
+                        ),
+                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                        [DataTypeConstants.FUSION, DataTypeConstants.SV]
+                    );
+
+                    return Promise.resolve(
+                        _.keyBy(
+                            structuralVariantProfiles,
+                            profile => profile.studyId
+                        )
+                    );
+                } else {
+                    return Promise.resolve(
+                        this._structuralVariantEnrichmentProfileMap
+                    );
+                }
             } else {
-                return Promise.resolve(
-                    this._structuralVariantEnrichmentProfileMap
-                );
+                return Promise.resolve({});
             }
         },
     });
@@ -783,6 +800,7 @@ export default abstract class ComparisonStore {
             this.enrichmentAnalysisGroups,
             this.selectedStudyMutationEnrichmentProfileMap,
             this.selectedStudyCopyNumberEnrichmentProfileMap,
+            this.selectedStudyStructuralVariantEnrichmentProfileMap,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -801,6 +819,25 @@ export default abstract class ComparisonStore {
                                     sample =>
                                         this
                                             .selectedStudyMutationEnrichmentProfileMap
+                                            .result![sample.studyId] !==
+                                        undefined
+                                )
+                            );
+                        }
+
+                        // filter samples having structural variant profile
+                        if (
+                            !_.isEmpty(
+                                this
+                                    .selectedStudyStructuralVariantEnrichmentProfileMap
+                                    .result
+                            )
+                        ) {
+                            filteredSamples = filteredSamples.concat(
+                                group.samples.filter(
+                                    sample =>
+                                        this
+                                            .selectedStudyStructuralVariantEnrichmentProfileMap
                                             .result![sample.studyId] !==
                                         undefined
                                 )
@@ -850,6 +887,7 @@ export default abstract class ComparisonStore {
             this.alterationsEnrichmentAnalysisGroups,
             this.selectedStudyMutationEnrichmentProfileMap,
             this.selectedStudyCopyNumberEnrichmentProfileMap,
+            this.selectedStudyStructuralVariantEnrichmentProfileMap,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -871,6 +909,24 @@ export default abstract class ComparisonStore {
                                     : sample.sampleId,
                                 molecularProfileId: this
                                     .selectedStudyMutationEnrichmentProfileMap
+                                    .result![sample.studyId].molecularProfileId,
+                            }))
+                        );
+                    }
+                    if (
+                        !_.isEmpty(
+                            this
+                                .selectedStudyStructuralVariantEnrichmentProfileMap
+                                .result
+                        )
+                    ) {
+                        molecularProfileCaseIdentifiers = molecularProfileCaseIdentifiers.concat(
+                            group.samples.map(sample => ({
+                                caseId: this.usePatientLevelEnrichments
+                                    ? sample.patientId
+                                    : sample.sampleId,
+                                molecularProfileId: this
+                                    .selectedStudyStructuralVariantEnrichmentProfileMap
                                     .result![sample.studyId].molecularProfileId,
                             }))
                         );
@@ -907,6 +963,7 @@ export default abstract class ComparisonStore {
         getSelectedProfileMaps: () => [
             this.selectedStudyMutationEnrichmentProfileMap.result!,
             this.selectedStudyCopyNumberEnrichmentProfileMap.result!,
+            this.selectedStudyStructuralVariantEnrichmentProfileMap.result!,
         ],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
@@ -940,19 +997,6 @@ export default abstract class ComparisonStore {
             }
         },
     });
-
-    private getCopyNumberEnrichmentData(
-        groups: MolecularProfileCasesGroupFilter[],
-        copyNumberEventType: 'HOMDEL' | 'AMP'
-    ): Promise<AlterationEnrichment[]> {
-        return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
-            copyNumberEventType: copyNumberEventType,
-            enrichmentType: this.usePatientLevelEnrichments
-                ? 'PATIENT'
-                : 'SAMPLE',
-            groups,
-        });
-    }
 
     readonly mrnaEnrichmentAnalysisGroups = remoteData({
         await: () => [
@@ -1979,7 +2023,7 @@ export default abstract class ComparisonStore {
         );
     }
 
-    @computed get hasStructuralVariantData() {
+    @computed get hasStructuralVariantData(): boolean {
         return (
             this.structuralVariantEnrichmentProfiles.isComplete &&
             this.structuralVariantEnrichmentProfiles.result!.length > 0
