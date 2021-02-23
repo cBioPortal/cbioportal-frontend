@@ -219,6 +219,7 @@ export const ONCOKB_ONCOGENIC_LOWERCASE = [
     'likely oncogenic',
     'predicted oncogenic',
     'oncogenic',
+    'resistance',
 ];
 
 export async function fetchQueriedStudies(
