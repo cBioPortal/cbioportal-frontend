@@ -50,4 +50,7 @@ declare module 'reactour';
 declare module 'react-reveal';
 declare module 'react-column-resizer';
 declare module 'linear-algebra';
-declare module 'cheerio';
+declare module 'Cheerio';
+
+// this is to silence annoying Cheerio ts error from enzyme
+type Cheerio = any;

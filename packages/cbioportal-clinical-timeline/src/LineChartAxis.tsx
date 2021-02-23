@@ -1,11 +1,6 @@
-import {
-    getLineChartYCoordinateForValue,
-    getTrackValueRange,
-} from './TimelineTrack';
 import { TimelineTrackSpecification } from './types';
 import { getTrackHeight } from './lib/helpers';
 import React from 'react';
-import _ from 'lodash';
 import { getTicksForLineChartAxis } from './lib/lineChartAxisUtils';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 

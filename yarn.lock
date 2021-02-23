@@ -16336,10 +16336,10 @@ oncokb-styles@~0.1.2:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.2.tgz#8b26c0a0829787cdc1b595d3a021b3266607102b"
   integrity sha512-tuy5s3qFxgf1ogMATQSRPNgLlAMrvOOTCAN1dm/wJ+VZoStbJ7g36/qHwc99UPfh3vrB05broLodF+k58p5tUw==
 
-oncokb-styles@~1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.0.1.tgz#b82960016b0b10982f299b00fc34f99782ff6b5f"
-  integrity sha512-zpicH/GbMAVJ0Kjw6fuLyiNQARJAQARcSD5W6ohNDQn5Ei11pZtKlRN7TVcDzjUjaTkUoQOPyYuanM+fk32Z4g==
+oncokb-styles@~1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.1.0.tgz#2817ed1ed18720e18384ebf1e99c7706bac514e4"
+  integrity sha512-GSfqB2uGfJD9HefZJXlmNHXYJe0TbfKwAE1y0E5xc/ZKuL2Wle+KoesLL0iIxCyOc89uovnCXDYxSbIBxzgLGA==
 
 oncoprintjs@4.2.4, oncoprintjs@^4.2.3:
   version "4.2.4"
