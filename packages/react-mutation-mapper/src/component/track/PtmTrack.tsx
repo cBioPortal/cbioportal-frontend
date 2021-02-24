@@ -8,7 +8,7 @@ import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
-import { MobxCache } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
 
 import MutationMapperStore from '../../model/MutationMapperStore';
@@ -20,7 +20,7 @@ import { TrackItemSpec } from './TrackCircle';
 import styles from './ptmTrackStyles.module.scss';
 
 type PtmTrackProps = TrackProps & {
-    store: MutationMapperStore;
+    store: MutationMapperStore<Mutation>;
     pubMedCache?: MobxCache;
     ensemblTranscriptId?: string;
     subTrackMargin?: number;

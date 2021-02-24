@@ -89,7 +89,8 @@ interface DefaultMutationMapperStoreConfig {
     groupFilters?: { group: string; filter: DataFilter }[];
 }
 
-class DefaultMutationMapperStore implements MutationMapperStore {
+class DefaultMutationMapperStore<T extends Mutation>
+    implements MutationMapperStore<T> {
     protected getDataFetcher?: () => MutationMapperDataFetcher;
 
     @observable
@@ -110,11 +111,11 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     constructor(
         public gene: Gene,
         protected config: DefaultMutationMapperStoreConfig,
-        protected getMutations: () => Mutation[],
+        protected getMutations: () => T[],
         public getTranscriptId?: () => string | undefined
     ) {
         makeObservable<
-            DefaultMutationMapperStore,
+            DefaultMutationMapperStore<T>,
             '_selectedTranscript' | 'mutationsGroupedByProteinImpactType'
         >(this);
     }
@@ -206,7 +207,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     public readonly myCancerGenomeData: IMyCancerGenomeData = getMyCancerGenomeData();
 
     @computed
-    public get mutations(): Mutation[] {
+    public get mutations(): T[] {
         if (
             this.canonicalTranscript.isPending ||
             (this.config.filterMutationsBySelectedTranscript &&
@@ -229,12 +230,12 @@ class DefaultMutationMapperStore implements MutationMapperStore {
 
     @memoize
     protected getAnnotatedMutationsByTranscriptId(
-        mutations: Mutation[],
+        mutations: T[],
         transcriptId: string,
         indexedVariantAnnotations: {
             [genomicLocation: string]: VariantAnnotation;
         }
-    ) {
+    ): T[] {
         // by default annotate every mutation, no check for canonical transcript
         return getMutationsByTranscriptId(
             mutations,
@@ -243,7 +244,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         );
     }
 
-    public getAnnotatedMutations(transcriptId: string): Mutation[] {
+    public getAnnotatedMutations(transcriptId: string): T[] {
         // in case we don't have any annotation for the given set of mutations or the annotation fails due to an error
         // (external service error, etc.) we just return the input set of mutations as is. Ideally this function
         // should not be invoked when this.indexedVariantAnnotations.result is undefined
@@ -288,7 +289,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     @computed
-    public get mutationsByPosition(): { [pos: number]: Mutation[] } {
+    public get mutationsByPosition(): { [pos: number]: T[] } {
         return groupMutationsByProteinStartPos(
             _.flatten(this.dataStore.sortedFilteredData)
         );
@@ -297,7 +298,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     @computed
     public get groupedMutationsByPosition(): {
         group: string;
-        mutations: { [pos: number]: Mutation[] };
+        mutations: { [pos: number]: T[] };
     }[] {
         return this.dataStore.sortedFilteredGroupedData.map(groupedData => ({
             group: groupedData.group,
@@ -378,7 +379,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     public countUniqueMutationsByPosition(mutationsByPosition: {
-        [pos: number]: Mutation[];
+        [pos: number]: T[];
     }): { [pos: number]: number } {
         const map: { [pos: number]: number } = {};
 
@@ -394,7 +395,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
         return map;
     }
 
-    public countUniqueMutations(mutations: Mutation[]): number {
+    public countUniqueMutations(mutations: T[]): number {
         // assume by default all mutations are unique
         // child classes need to override this method to have a custom way of counting unique mutations
         return this.config.getMutationCount
@@ -403,17 +404,15 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     protected getMutationCount(
-        mutations: Mutation[],
-        getMutationCount: (mutation: Partial<Mutation>) => number
+        mutations: T[],
+        getMutationCount: (mutation: Partial<T>) => number
     ) {
         return mutations
             .map(m => getMutationCount(m))
             .reduce((sum, count) => sum + count);
     }
 
-    readonly mutationData: MobxPromise<
-        Partial<Mutation>[] | undefined
-    > = remoteData(
+    readonly mutationData: MobxPromise<Partial<T>[] | undefined> = remoteData(
         {
             await: () => {
                 if (this.config.filterMutationsBySelectedTranscript) {
@@ -945,7 +944,7 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     });
 
     @computed
-    get mutationsByTranscriptId(): { [transcriptId: string]: Mutation[] } {
+    get mutationsByTranscriptId(): { [transcriptId: string]: T[] } {
         if (
             this.indexedVariantAnnotations.result &&
             this.transcriptsWithAnnotations.result &&
@@ -963,14 +962,14 @@ class DefaultMutationMapperStore implements MutationMapperStore {
     }
 
     @autobind
-    protected getDefaultTumorType(mutation: Mutation): string {
+    protected getDefaultTumorType(mutation: T): string {
         return this.config.getTumorType
             ? this.config.getTumorType(mutation)
             : 'Unknown';
     }
 
     @autobind
-    protected getDefaultEntrezGeneId(mutation: Mutation): number {
+    protected getDefaultEntrezGeneId(mutation: T): number {
         // assuming all mutations in this store is for the same gene
         return (
             this.gene.entrezGeneId ||

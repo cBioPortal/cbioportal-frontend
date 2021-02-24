@@ -23,20 +23,20 @@ import {
 } from 'oncokb-ts-api-client';
 import DataStore from './DataStore';
 
-export interface MutationMapperStore {
+export interface MutationMapperStore<T extends Mutation> {
     gene: Gene;
     dataStore: DataStore;
     uniprotId: RemoteData<string | undefined>;
     activeTranscript?: RemoteData<string | undefined>;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
-    mutationData: RemoteData<Partial<Mutation>[] | undefined>;
+    mutationData: RemoteData<Partial<T>[] | undefined>;
     pfamDomainData: RemoteData<PfamDomain[] | undefined>;
     allTranscripts: RemoteData<EnsemblTranscript[] | undefined>;
     transcriptsByTranscriptId: { [transcriptId: string]: EnsemblTranscript };
-    mutationsByPosition: { [pos: number]: Mutation[] };
+    mutationsByPosition: { [pos: number]: T[] };
     groupedMutationsByPosition: {
         group: string;
-        mutations: { [pos: number]: Mutation[] };
+        mutations: { [pos: number]: T[] };
     }[];
     mutationCountsByProteinImpactType: { [proteinImpactType: string]: number };
     uniqueMutationCountsByPosition: { [pos: number]: number };
@@ -73,7 +73,7 @@ export interface MutationMapperStore {
     >;
     transcriptsWithAnnotations: RemoteData<string[] | undefined>;
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
-    mutationsByTranscriptId: { [transcriptId: string]: Mutation[] };
+    mutationsByTranscriptId: { [transcriptId: string]: T[] };
     setSelectedTranscript?: (id: string | undefined) => void;
     getTranscriptId?: () => string | undefined;
     selectedTranscript?: string | undefined;

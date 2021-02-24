@@ -34,23 +34,7 @@ import {
     OncoprintMutationType,
     selectDisplayValue,
 } from '../../../shared/components/oncoprint/DataUtils';
-import {
-    CNA_COLOR_AMP,
-    CNA_COLOR_HOMDEL,
-    DEFAULT_GREY,
-    LIGHT_GREY,
-    MUT_COLOR_FUSION,
-    MUT_COLOR_INFRAME,
-    MUT_COLOR_INFRAME_PASSENGER,
-    MUT_COLOR_MISSENSE,
-    MUT_COLOR_MISSENSE_PASSENGER,
-    MUT_COLOR_OTHER,
-    MUT_COLOR_PROMOTER,
-    MUT_COLOR_SPLICE,
-    MUT_COLOR_SPLICE_PASSENGER,
-    MUT_COLOR_TRUNC,
-    MUT_COLOR_TRUNC_PASSENGER,
-} from 'shared/lib/Colors';
+import { DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
@@ -79,6 +63,21 @@ import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
 import jStat from 'jStat';
+import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_INFRAME_PASSENGER,
+    MUT_COLOR_MISSENSE,
+    MUT_COLOR_MISSENSE_PASSENGER,
+    MUT_COLOR_OTHER,
+    MUT_COLOR_PROMOTER,
+    MUT_COLOR_SPLICE,
+    MUT_COLOR_SPLICE_PASSENGER,
+    MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER,
+} from 'cbioportal-frontend-commons';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';

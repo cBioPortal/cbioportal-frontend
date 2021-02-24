@@ -96,6 +96,7 @@ window.FRONTEND_COMMIT = COMMIT;
 // portal header
 window.postLoadForMskCIS = function() {
     AppConfig.hide_login = true;
+    window.isMSKCIS = true;
 };
 
 // this is the only supported way to disable tracking for the $3Dmol.js

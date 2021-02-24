@@ -37,6 +37,7 @@ export { default as MutationTumorTypeFrequencyTable } from './components/signal/
 export * from './components/signal/SignalHelper';
 export * from './api/remoteData';
 
+export * from './lib/AlterationColors';
 export * from './lib/ColumnVisibilityResolver';
 export * from './lib/findFirstMostCommonElt';
 export { default as getBrowserWindow } from './lib/getBrowserWindow';
