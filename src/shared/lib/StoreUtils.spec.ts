@@ -1427,6 +1427,14 @@ describe('StoreUtils', () => {
                 'Predicted Oncogenic'
             );
         });
+        it('should return Resistance if thats the input', () => {
+            assert.equal(
+                getOncoKbOncogenic({
+                    oncogenic: 'Resistance',
+                } as IndicatorQueryResp),
+                'Resistance'
+            );
+        });
         it('should return empty string for any other case', () => {
             assert.equal(
                 getOncoKbOncogenic({
