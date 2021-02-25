@@ -127,5 +127,5 @@ function openGeneSelectorMenu() {
     const selectGenesDropdownButton = '[data-test="selectGenes"]';
     $(selectGenesDropdownButton).waitForExist(30000);
     browser.click(selectGenesDropdownButton);
-    $('[data-test=genesSelector]').waitForExist();
+    $('input[data-test=numberOfGenes]').waitForExist();
 }
