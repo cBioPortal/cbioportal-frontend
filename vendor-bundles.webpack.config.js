@@ -18,6 +18,7 @@ const config = {
             'lodash',
             'mobx',
             'mobx-react',
+            'chart.js',
             'victory',
             'react-select',
             'react-rangeslider',
