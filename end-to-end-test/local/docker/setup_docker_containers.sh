@@ -154,15 +154,15 @@ download_db_seed() {
 }
 
 run_session_service() {
-    docker stop mongoDB && docker rm mongoDB
-    docker run -d --name=mongoDB --net=$DOCKER_NETWORK_NAME \
+    docker stop cbioportal-session-database && docker rm cbioportal-session-database
+    docker run -d --name=cbioportal-session-database --net=$DOCKER_NETWORK_NAME \
         -e MONGO_INITDB_DATABASE=session_service \
         mongo:4.0
 
     docker stop $SESSION_SERVICE_HOST_NAME && docker rm $SESSION_SERVICE_HOST_NAME
     docker run -d --name=$SESSION_SERVICE_HOST_NAME --net=$DOCKER_NETWORK_NAME \
         -e SERVER_PORT=5000 \
-        -e JAVA_OPTS="-Dspring.data.mongodb.uri=mongodb://mongoDB:27017/session-service" \
+        -e JAVA_OPTS="-Dspring.data.mongodb.uri=mongodb://cbioportal-session-database:27017/session-service" \
     cbioportal/session-service:latest
 }
 
