@@ -125,7 +125,11 @@ describe('results view comparison tab screenshot tests', function() {
 
 function openGeneSelectorMenu() {
     const selectGenesDropdownButton = '[data-test="selectGenes"]';
+    console.log(1);
     $(selectGenesDropdownButton).waitForExist(30000);
+    console.log(2);
     browser.click(selectGenesDropdownButton);
+    console.log(3);
     $('input[data-test=numberOfGenes]').waitForExist();
+    console.log(4);
 }

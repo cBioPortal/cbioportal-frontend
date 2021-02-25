@@ -50,11 +50,8 @@ describe('group comparison page screenshot tests', function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
-            $(selectGenesDropdownButton).waitForVisible(10000);
-            browser.click(selectGenesDropdownButton);
-
-            var input = $('input[data-test=numberOfGenes]');
-            input.setValue('2\n');
+            openGeneSelectorMenu();
+            $('input[data-test=numberOfGenes]').setValue('2\n');
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
             browser.click('[data-test="addGenestoBarPlot"]');
             browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
@@ -66,7 +63,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page alteration enrichments tab gene box highest average frequency', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with highest average frequency',
@@ -84,7 +81,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page alteration enrichments tab gene box most significant pValues', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
                     label: 'Genes with most significant p-value',
@@ -102,7 +99,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page alteration enrichments tab gene box user-defined genes', function() {
-            browser.click(selectGenesDropdownButton);
+            openGeneSelectorMenu();
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             waitForNetworkQuiet();
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
@@ -130,3 +127,14 @@ describe('group comparison page screenshot tests', function() {
         });
     });
 });
+
+function openGeneSelectorMenu() {
+    const selectGenesDropdownButton = '[data-test="selectGenes"]';
+    console.log(1);
+    $(selectGenesDropdownButton).waitForExist(30000);
+    console.log(2);
+    browser.click(selectGenesDropdownButton);
+    console.log(3);
+    $('input[data-test=numberOfGenes]').waitForExist();
+    console.log(4);
+}
