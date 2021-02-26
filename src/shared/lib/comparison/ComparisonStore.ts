@@ -73,7 +73,10 @@ import {
     getSurvivalClinicalAttributesPrefix,
 } from 'shared/lib/StoreUtils';
 import MobxPromise from 'mobxpromise';
-import { ResultsViewPageStore } from '../../../pages/resultsView/ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    ResultsViewPageStore,
+} from '../../../pages/resultsView/ResultsViewPageStore';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
@@ -101,6 +104,8 @@ export default abstract class ComparisonStore {
         protected resultsViewStore?: ResultsViewPageStore
     ) {
         makeObservable(this);
+
+        (window as any).compStore = this;
 
         setTimeout(() => {
             // When groups in the comparison are updated by the user
@@ -1924,6 +1929,14 @@ export default abstract class ComparisonStore {
 
     // TODO refactor when fusions have been reworked in cBioPortal backend
     @computed get hasFusionEnrichmentData(): boolean {
-        return this.hasMutationEnrichmentData;
+        return (
+            this.molecularProfilesInActiveStudies.isComplete &&
+            _.some(
+                this.molecularProfilesInActiveStudies.result,
+                profile =>
+                    profile.molecularAlterationType ===
+                    AlterationTypeConstants.STRUCTURAL_VARIANT
+            )
+        );
     }
 }
