@@ -206,7 +206,7 @@ export default class ComparisonTab extends React.Component<
                                             this.store.hasCnaEnrichmentData
                                         }
                                         showFusions={
-                                            this.store.hasMutationEnrichmentData
+                                            this.store.hasFusionEnrichmentData
                                         }
                                     />
                                 )}
