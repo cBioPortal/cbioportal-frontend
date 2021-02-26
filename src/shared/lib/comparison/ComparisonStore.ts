@@ -743,7 +743,7 @@ export default abstract class ComparisonStore {
             return Promise.resolve(
                 this.enrichmentAnalysisGroups.result!.reduce(
                     (acc: EnrichmentAnalysisComparisonGroup[], group) => {
-                        let filteredSamples: Sample[] = [];
+                        let filteredSamples: Sample[] = group.samples;
                         // filter samples having mutation profile
                         if (
                             !_.isEmpty(
@@ -751,14 +751,11 @@ export default abstract class ComparisonStore {
                                     .result
                             )
                         ) {
-                            filteredSamples = filteredSamples.concat(
-                                group.samples.filter(
-                                    sample =>
-                                        this
-                                            .selectedStudyMutationEnrichmentProfileMap
-                                            .result![sample.studyId] !==
-                                        undefined
-                                )
+                            filteredSamples = filteredSamples.filter(
+                                sample =>
+                                    this
+                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
                             );
                         }
                         // filter samples having copy number profile and append it to filteredSamples
@@ -768,14 +765,11 @@ export default abstract class ComparisonStore {
                                     .result
                             )
                         ) {
-                            filteredSamples = filteredSamples.concat(
-                                group.samples.filter(
-                                    sample =>
-                                        this
-                                            .selectedStudyCopyNumberEnrichmentProfileMap
-                                            .result![sample.studyId] !==
-                                        undefined
-                                )
+                            filteredSamples = filteredSamples.filter(
+                                sample =>
+                                    this
+                                        .selectedStudyCopyNumberEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
                             );
                         }
                         if (filteredSamples.length > 0) {
