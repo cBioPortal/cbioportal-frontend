@@ -14,6 +14,7 @@ import {
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     findFirstMostCommonElt,
+    getBrowserWindow,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import {
@@ -1418,8 +1419,6 @@ export default abstract class ComparisonStore {
         return (
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length < 2) || //less than two active groups
-            (this.activeStudyIds.isComplete &&
-                this.activeStudyIds.result.length > 1) || //more than one active study
             !this.alterationsTabShowable
         );
     }
