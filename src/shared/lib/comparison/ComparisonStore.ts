@@ -775,7 +775,6 @@ export default abstract class ComparisonStore {
                         if (filteredSamples.length > 0) {
                             acc.push({
                                 ...group,
-                                count: filteredSamples.length,
                                 samples: filteredSamples,
                                 description: `Number (percentage) of ${
                                     this.usePatientLevelEnrichments
@@ -926,7 +925,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1013,7 +1011,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1100,7 +1097,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1196,7 +1192,6 @@ export default abstract class ComparisonStore {
                                     if (filteredSamples.length > 0) {
                                         acc.push({
                                             ...group,
-                                            count: filteredSamples.length,
                                             samples: filteredSamples,
                                             description: `samples in ${group.name}`,
                                         });

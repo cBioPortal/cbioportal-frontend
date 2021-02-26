@@ -30,6 +30,7 @@ import { ExtendedAlteration } from '../ResultsViewPageStore';
 import { getSampleViewUrl } from 'shared/api/urls';
 import classNames from 'classnames';
 import { getGeneSummary } from '../querySummary/QuerySummaryUtils';
+import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 
 class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
     IBoxScatterPlotPoint
@@ -37,14 +38,7 @@ class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
 
 export interface IExpressionEnrichmentsBoxPlotProps {
     selectedProfile: MolecularProfile;
-    groups: {
-        name: string;
-        description: string;
-        nameOfEnrichmentDirection?: string;
-        count: number;
-        color?: string;
-        samples: Pick<Sample, 'uniqueSampleKey'>[];
-    }[];
+    groups: EnrichmentAnalysisComparisonGroup[];
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
