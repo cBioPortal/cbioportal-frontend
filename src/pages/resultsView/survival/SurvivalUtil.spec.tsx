@@ -950,5 +950,31 @@ describe('SurvivalUtil', () => {
                 result
             );
         });
+
+        it('do not return months attributes if months get excluded', () => {
+            const prefixList = ['OS', 'DFS', 'PFS'];
+            const result = {
+                OS_STATUS: 'OS_STATUS',
+                DFS_STATUS: 'DFS_STATUS',
+                PFS_STATUS: 'PFS_STATUS',
+            };
+            assert.deepEqual(
+                createSurvivalAttributeIdsDict(prefixList, true),
+                result
+            );
+        });
+
+        it('do not return status attributes if status get excluded', () => {
+            const prefixList = ['OS', 'DFS', 'PFS'];
+            const result = {
+                OS_MONTHS: 'OS_MONTHS',
+                DFS_MONTHS: 'DFS_MONTHS',
+                PFS_MONTHS: 'PFS_MONTHS',
+            };
+            assert.deepEqual(
+                createSurvivalAttributeIdsDict(prefixList, false, true),
+                result
+            );
+        });
     });
 });

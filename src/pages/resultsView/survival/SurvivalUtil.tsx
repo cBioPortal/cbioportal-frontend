@@ -423,14 +423,22 @@ export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
         .value();
 }
 
-export function createSurvivalAttributeIdsDict(prefixList: string[]) {
+export function createSurvivalAttributeIdsDict(
+    prefixList: string[],
+    excludeMonths: boolean = false,
+    excludeStatus: boolean = false
+) {
     return _.reduce(
         prefixList,
         (dict, prefix) => {
-            const monthsAttrId = `${prefix}_MONTHS`;
-            const statusAttrId = `${prefix}_STATUS`;
-            dict[monthsAttrId] = monthsAttrId;
-            dict[statusAttrId] = statusAttrId;
+            if (!excludeMonths) {
+                const monthsAttrId = `${prefix}_MONTHS`;
+                dict[monthsAttrId] = monthsAttrId;
+            }
+            if (!excludeStatus) {
+                const statusAttrId = `${prefix}_STATUS`;
+                dict[statusAttrId] = statusAttrId;
+            }
             return dict;
         },
         {} as { [id: string]: string }
