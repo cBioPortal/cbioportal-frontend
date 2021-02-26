@@ -8,6 +8,7 @@ import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 import { makeObservable } from 'mobx';
+import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
 
 export interface IAlterationEnrichmentsProps {
     store: ComparisonStore;
@@ -42,7 +43,7 @@ export default class AlterationEnrichments extends React.Component<
             this.props.store.studies,
         ],
         render: () => {
-            let headerName = 'Mutations/Fusions/CNAs';
+            let headerName = GENOMIC_ALTERATIONS_TAB_NAME;
             return (
                 <AlterationEnrichmentContainer
                     data={this.props.store.alterationsEnrichmentData.result!}
