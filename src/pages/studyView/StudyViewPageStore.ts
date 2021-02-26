@@ -6025,90 +6025,19 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    private readonly sampleIdentifiersFromGenomicProfileFilter = remoteData({
-        await: () => [this.samples, this.initialMolecularProfileSampleCounts],
-        invoke: async () => {
-            const molecularProfileSampleCountSet = _.keyBy(
-                this.initialMolecularProfileSampleCounts.result,
-                molecularProfileSampleCount => molecularProfileSampleCount.value
-            );
-            const filteredSamplesLists = _.map(
-                this.genomicProfilesFilter,
-                profiles =>
-                    _.flatMap(profiles, profile =>
-                        molecularProfileSampleCountSet[profile]
-                            ? molecularProfileSampleCountSet[profile]
-                                  .sampleUniqueKeys
-                            : []
-                    )
-            );
-
-            const sampleSetByKey = this.sampleSetByKey.result || {};
-            const filteredSampleKeys: string[] = _.intersection(
-                ...filteredSamplesLists
-            );
-            return _.reduce(
-                filteredSampleKeys,
-                (acc, next) => {
-                    const sample = sampleSetByKey[next];
-                    if (sample) {
-                        acc.push({
-                            sampleId: sample.sampleId,
-                            studyId: sample.studyId,
-                        });
-                    }
-                    return acc;
-                },
-                [] as SampleIdentifier[]
-            );
-        },
-        default: [],
-    });
     @observable blockLoading = false;
 
     readonly selectedSamples = remoteData<Sample[]>({
-        await: () => [
-            this.samples,
-            this.sampleIdentifiersFromGenomicProfileFilter,
-        ],
+        await: () => [this.samples],
         invoke: () => {
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
                 if (!this.hasSampleIdentifiersInFilter) {
                     return Promise.resolve([] as Sample[]);
                 }
-                const studyViewFilter = _.clone(this.filters);
-                // if genomicProfilesFilter is present there replace it with equivalent sample identifiers
-                // we do this to save lot of processing time and resources on the backend
-                if (!_.isEmpty(this.genomicProfilesFilter)) {
-                    const sampleIdentifiersFromGenomicProfileFilter = this
-                        .sampleIdentifiersFromGenomicProfileFilter.result;
-                    // if there are already sample identifiers in the filter the find intersection
-                    if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
-                        const sampleIdentifiers = _.intersectionWith(
-                            studyViewFilter.sampleIdentifiers,
-                            sampleIdentifiersFromGenomicProfileFilter,
-                            ((a: SampleIdentifier, b: SampleIdentifier) => {
-                                return (
-                                    a.sampleId === b.sampleId &&
-                                    a.studyId === b.studyId
-                                );
-                            }) as any
-                        );
-                        studyViewFilter.sampleIdentifiers = sampleIdentifiers;
-                    } else {
-                        studyViewFilter.sampleIdentifiers = sampleIdentifiersFromGenomicProfileFilter;
-                        // only one of [studyIds, sampleIdentifiers] should present in studyViewFilter.
-                        // sending both would throw error.
-                        delete (studyViewFilter as Partial<StudyViewFilter>)
-                            .studyIds;
-                    }
-                    delete (studyViewFilter as Partial<StudyViewFilter>)
-                        .genomicProfiles;
-                }
 
                 return internalClient.fetchFilteredSamplesUsingPOST({
-                    studyViewFilter,
+                    studyViewFilter: this.filters,
                 });
             } else {
                 return Promise.resolve(this.samples.result);
