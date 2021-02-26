@@ -20,18 +20,12 @@ import { GenericAssayEnrichmentsTableDataStore } from './GenericAssayEnrichments
 import { GenericAssayEnrichmentRow } from 'shared/model/EnrichmentRow';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
 import MiniScatterChart from './MiniScatterChart';
+import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IGenericAssayEnrichmentsContainerProps {
     data: GenericAssayEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    groups: {
-        name: string;
-        description: string;
-        nameOfEnrichmentDirection?: string;
-        count: number;
-        color?: string;
-        samples: Pick<Sample, 'uniqueSampleKey'>[];
-    }[];
+    groups: EnrichmentAnalysisComparisonGroup[];
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };
