@@ -189,7 +189,8 @@ export const cnaEventTypeSelectInit: {
 export function mutationEventTypeSelectInit() {
     const object = {} as { [key in MutationEnrichmentEventType]?: boolean };
     Object.keys(MutationEnrichmentEventType).forEach(type => {
-        object[type as MutationEnrichmentEventType] = true;
+        object[type as MutationEnrichmentEventType] =
+            type === MutationEnrichmentEventType.any ? false : true;
     });
     return object;
 }
