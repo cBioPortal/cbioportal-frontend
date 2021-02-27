@@ -11,7 +11,10 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import GroupSelector from './groupSelector/GroupSelector';
-import { GroupComparisonTab } from './GroupComparisonTabs';
+import {
+    GENOMIC_ALTERATIONS_TAB_NAME,
+    GroupComparisonTab,
+} from './GroupComparisonTabs';
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 import {
     action,
@@ -97,7 +100,7 @@ export default class GroupComparisonPage extends React.Component<
     }
 
     @computed get alterationEnrichmentTabName() {
-        return buildAlterationsTabName(this.store);
+        return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
     @autobind
@@ -190,9 +193,7 @@ export default class GroupComparisonPage extends React.Component<
                                     this.store.hasMutationEnrichmentData
                                 }
                                 showCnas={this.store.hasCnaEnrichmentData}
-                                showFusions={
-                                    this.store.hasMutationEnrichmentData
-                                }
+                                showFusions={this.store.hasFusionEnrichmentData}
                             />
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
