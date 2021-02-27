@@ -17,7 +17,10 @@ import ResultsViewComparisonStore from './ResultsViewComparisonStore';
 import { AppStore } from '../../../AppStore';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
-import { GroupComparisonTab } from '../../groupComparison/GroupComparisonTabs';
+import {
+    GENOMIC_ALTERATIONS_TAB_NAME,
+    GroupComparisonTab,
+} from '../../groupComparison/GroupComparisonTabs';
 import Survival from '../../groupComparison/Survival';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
@@ -117,7 +120,7 @@ export default class ComparisonTab extends React.Component<
     });
 
     @computed get alterationEnrichmentTabName() {
-        return buildAlterationsTabName(this.store);
+        return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
     @action.bound
@@ -203,7 +206,7 @@ export default class ComparisonTab extends React.Component<
                                             this.store.hasCnaEnrichmentData
                                         }
                                         showFusions={
-                                            this.store.hasMutationEnrichmentData
+                                            this.store.hasFusionEnrichmentData
                                         }
                                     />
                                 )}
