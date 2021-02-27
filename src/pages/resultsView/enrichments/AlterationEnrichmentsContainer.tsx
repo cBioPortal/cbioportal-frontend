@@ -40,7 +40,7 @@ import {
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
-    groups: Omit<EnrichmentAnalysisComparisonGroup, 'samples'>[];
+    groups: EnrichmentAnalysisComparisonGroup[];
     alteredVsUnalteredMode?: boolean;
     headerName: string;
     store?: ResultsViewPageStore;
@@ -86,6 +86,28 @@ export default class AlterationEnrichmentContainer extends React.Component<
     //used in 2 groups analysis
     @computed get group2() {
         return this.props.groups[1];
+    }
+
+    @computed get group1QueriedCasesCount() {
+        let caseIds: Set<string> = new Set(
+            this.group1.samples.map(sample =>
+                this.props.patientLevelEnrichments
+                    ? sample.uniquePatientKey
+                    : sample.uniqueSampleKey
+            )
+        );
+        return caseIds.size;
+    }
+
+    @computed get group2QueriedCasesCount() {
+        let caseIds: Set<string> = new Set(
+            this.group2.samples.map(sample =>
+                this.props.patientLevelEnrichments
+                    ? sample.uniquePatientKey
+                    : sample.uniqueSampleKey
+            )
+        );
+        return caseIds.size;
     }
 
     @computed get data(): AlterationEnrichmentRow[] {
@@ -171,8 +193,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         return <span>-</span>;
                     }
                     const groups = _.map(data.groupsSet);
-                    const queriedGroup1 = this.props.groups[0];
-                    const queriedGroup2 = this.props.groups[1];
                     // we want to order groups according to order in prop.groups
                     const group1 = groups.find(
                         group => group.name === this.props.groups[0].name
@@ -186,12 +206,14 @@ export default class AlterationEnrichmentContainer extends React.Component<
                     }
 
                     const totalQueriedCases =
-                        queriedGroup1.count + queriedGroup2.count;
+                        this.group1QueriedCasesCount +
+                        this.group2QueriedCasesCount;
                     const group1Width =
-                        (queriedGroup1.count / totalQueriedCases) * 100;
+                        (this.group1QueriedCasesCount / totalQueriedCases) *
+                        100;
                     const group2Width = 100 - group1Width;
                     const group1Unprofiled =
-                        ((queriedGroup1.count - group1.profiledCount) /
+                        ((this.group1QueriedCasesCount - group1.profiledCount) /
                             totalQueriedCases) *
                         100;
                     const group1Unaltered =
@@ -199,7 +221,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                             totalQueriedCases) *
                         100;
                     const group2Unprofiled =
-                        ((queriedGroup2.count - group2.profiledCount) /
+                        ((this.group2QueriedCasesCount - group2.profiledCount) /
                             totalQueriedCases) *
                         100;
                     const group1Altered =

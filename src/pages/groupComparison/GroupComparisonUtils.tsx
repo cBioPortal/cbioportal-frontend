@@ -46,7 +46,6 @@ export type ComparisonGroup = Omit<SessionGroupData, 'studies' | 'color'> & {
 export type EnrichmentAnalysisComparisonGroup = {
     name: string;
     description: string;
-    count: number;
     color: string;
     samples: Sample[];
     nameOfEnrichmentDirection: string | undefined;
