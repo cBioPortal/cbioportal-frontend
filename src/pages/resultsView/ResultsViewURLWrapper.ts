@@ -3,11 +3,22 @@ import ExtendedRouterStore from '../../shared/lib/ExtendedRouterStore';
 import { computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {
+    LegacyResultsViewComparisonSubTab,
     oldTabToNewTabRoute,
     ResultsViewComparisonSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
 import AppConfig from 'appConfig';
+import {
+    cnaGroup,
+    CopyNumberEnrichmentEventType,
+    EnrichmentEventType,
+    MutationEnrichmentEventType,
+    mutationGroup,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
+import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
+import _ from 'lodash';
+import { MapValues } from 'shared/lib/TypeScriptUtils';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -70,6 +81,7 @@ export enum ResultsViewURLQueryEnum {
     comparison_selectedGroups = 'comparison_selectedGroups',
     comparison_groupOrder = 'comparison_groupOrder',
     comparison_createdGroupsSessionId = 'comparison_createdGroupsSessionId',
+    comparison_selectedEnrichmentEventTypes = 'comparison_selectedEnrichmentEventTypes',
 
     plots_horz_selection = 'plots_horz_selection',
     plots_vert_selection = 'plots_vert_selection',
@@ -100,93 +112,123 @@ export type ResultsViewURLQuery = {
     plots_coloring_selection: PlotsColoringParam;
 };
 
-export default class ResultsViewURLWrapper extends URLWrapper<
-    ResultsViewURLQuery
-> {
+const propertiesMap = {
+    // NON session props here
+    // oncoprint props
+    clinicallist: { isSessionProp: false },
+    show_samples: { isSessionProp: false },
+    heatmap_track_groups: { isSessionProp: false },
+    oncoprint_sortby: { isSessionProp: false },
+    oncoprint_cluster_profile: { isSessionProp: false },
+    oncoprint_sort_by_mutation_type: { isSessionProp: false },
+    oncoprint_sort_by_drivers: { isSessionProp: false },
+    generic_assay_groups: { isSessionProp: false },
+    exclude_germline_mutations: { isSessionProp: false },
+    hide_unprofiled_samples: { isSessionProp: false },
+    patient_enrichments: { isSessionProp: false },
+
+    comparison_subtab: { isSessionProp: false },
+    comparison_overlapStrategy: { isSessionProp: false },
+    comparison_selectedGroups: { isSessionProp: false },
+    comparison_groupOrder: { isSessionProp: false },
+    comparison_selectedEnrichmentEventTypes: {
+        isSessionProp: true,
+    },
+
+    // plots
+    plots_horz_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsSelectionParamProps,
+    },
+    plots_vert_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsSelectionParamProps,
+    },
+    plots_coloring_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsColoringParamProps,
+    },
+
+    // mutations
+    mutations_gene: {
+        isSessionProp: false,
+    },
+    mutations_transcript_id: {
+        isSessionProp: false,
+    },
+
+    // session props here
+    gene_list: { isSessionProp: true, doubleURIEncode: true },
+    cancer_study_list: {
+        isSessionProp: true,
+        aliases: ['cancer_study_id'],
+    },
+    case_ids: { isSessionProp: true },
+    sample_list_ids: { isSessionProp: true },
+    case_set_id: { isSessionProp: true },
+    profileFilter: {
+        isSessionProp: true,
+        aliases: ['data_priority'],
+    },
+    RPPA_SCORE_THRESHOLD: { isSessionProp: true },
+    Z_SCORE_THRESHOLD: { isSessionProp: true },
+    geneset_list: { isSessionProp: true },
+    genetic_profile_ids_PROFILE_MUTATION_EXTENDED: {
+        isSessionProp: true,
+    },
+    genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: {
+        isSessionProp: true,
+    },
+    genetic_profile_ids_PROFILE_MRNA_EXPRESSION: {
+        isSessionProp: true,
+    },
+    genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: {
+        isSessionProp: true,
+    },
+    genetic_profile_ids_PROFILE_GENESET_SCORE: {
+        isSessionProp: true,
+    },
+    genetic_profile_ids_GENERIC_ASSAY: { isSessionProp: true },
+    genetic_profile_ids: { isSessionProp: true },
+    comparison_createdGroupsSessionId: { isSessionProp: true },
+};
+
+function backwardsCompatibilityMapping(oldParams: any) {
+    const newParams: MapValues<
+        ResultsViewURLQuery,
+        string | undefined
+    > = _.cloneDeep(oldParams);
+    if (
+        newParams.comparison_subtab ===
+        LegacyResultsViewComparisonSubTab.MUTATIONS
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...mutationGroup,
+        ]);
+    } else if (
+        newParams.comparison_subtab === LegacyResultsViewComparisonSubTab.CNA
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...cnaGroup,
+        ]);
+    }
+    return newParams;
+}
+
+export default class ResultsViewURLWrapper
+    extends URLWrapper<ResultsViewURLQuery>
+    implements IComparisonURLWrapper {
     constructor(routing: ExtendedRouterStore) {
         super(
             routing,
-            {
-                // NON session props here
-                // oncoprint props
-                clinicallist: { isSessionProp: false },
-                show_samples: { isSessionProp: false },
-                heatmap_track_groups: { isSessionProp: false },
-                oncoprint_sortby: { isSessionProp: false },
-                oncoprint_cluster_profile: { isSessionProp: false },
-                oncoprint_sort_by_mutation_type: { isSessionProp: false },
-                oncoprint_sort_by_drivers: { isSessionProp: false },
-                generic_assay_groups: { isSessionProp: false },
-                exclude_germline_mutations: { isSessionProp: false },
-                hide_unprofiled_samples: { isSessionProp: false },
-                patient_enrichments: { isSessionProp: false },
-
-                comparison_subtab: { isSessionProp: false },
-                comparison_overlapStrategy: { isSessionProp: false },
-                comparison_selectedGroups: { isSessionProp: false },
-                comparison_groupOrder: { isSessionProp: false },
-
-                // plots
-                plots_horz_selection: {
-                    isSessionProp: false,
-                    nestedObjectProps: PlotsSelectionParamProps,
-                },
-                plots_vert_selection: {
-                    isSessionProp: false,
-                    nestedObjectProps: PlotsSelectionParamProps,
-                },
-                plots_coloring_selection: {
-                    isSessionProp: false,
-                    nestedObjectProps: PlotsColoringParamProps,
-                },
-
-                // mutations
-                mutations_gene: {
-                    isSessionProp: false,
-                },
-                mutations_transcript_id: {
-                    isSessionProp: false,
-                },
-
-                // session props here
-                gene_list: { isSessionProp: true, doubleURIEncode: true },
-                cancer_study_list: {
-                    isSessionProp: true,
-                    aliases: ['cancer_study_id'],
-                },
-                case_ids: { isSessionProp: true },
-                sample_list_ids: { isSessionProp: true },
-                case_set_id: { isSessionProp: true },
-                profileFilter: {
-                    isSessionProp: true,
-                    aliases: ['data_priority'],
-                },
-                RPPA_SCORE_THRESHOLD: { isSessionProp: true },
-                Z_SCORE_THRESHOLD: { isSessionProp: true },
-                geneset_list: { isSessionProp: true },
-                genetic_profile_ids_PROFILE_MUTATION_EXTENDED: {
-                    isSessionProp: true,
-                },
-                genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: {
-                    isSessionProp: true,
-                },
-                genetic_profile_ids_PROFILE_MRNA_EXPRESSION: {
-                    isSessionProp: true,
-                },
-                genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: {
-                    isSessionProp: true,
-                },
-                genetic_profile_ids_PROFILE_GENESET_SCORE: {
-                    isSessionProp: true,
-                },
-                genetic_profile_ids_GENERIC_ASSAY: { isSessionProp: true },
-                genetic_profile_ids: { isSessionProp: true },
-                comparison_createdGroupsSessionId: { isSessionProp: true },
-            },
+            propertiesMap,
             true,
             AppConfig.serverConfig.session_url_length_threshold
                 ? parseInt(AppConfig.serverConfig.session_url_length_threshold)
-                : undefined
+                : undefined,
+            backwardsCompatibilityMapping
         );
         makeObservable(this);
     }
@@ -217,5 +259,25 @@ export default class ResultsViewURLWrapper extends URLWrapper<
     @autobind
     public setComparisonSubTabId(tabId: ResultsViewComparisonSubTab) {
         this.updateURL({ comparison_subtab: tabId });
+    }
+
+    @computed public get selectedEnrichmentEventTypes() {
+        if (this.query.comparison_selectedEnrichmentEventTypes) {
+            return JSON.parse(
+                this.query.comparison_selectedEnrichmentEventTypes
+            ) as (
+                | MutationEnrichmentEventType
+                | CopyNumberEnrichmentEventType
+            )[];
+        } else {
+            return undefined;
+        }
+    }
+
+    @autobind
+    public updateSelectedEnrichmentEventTypes(t: EnrichmentEventType[]) {
+        this.updateURL({
+            comparison_selectedEnrichmentEventTypes: JSON.stringify(t),
+        });
     }
 }

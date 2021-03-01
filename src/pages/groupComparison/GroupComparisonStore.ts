@@ -21,7 +21,9 @@ import {
 import { AppStore } from '../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
-import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
+import GroupComparisonURLWrapper, {
+    GroupComparisonURLQuery,
+} from './GroupComparisonURLWrapper';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
@@ -37,9 +39,9 @@ export default class GroupComparisonStore extends ComparisonStore {
     constructor(
         sessionId: string,
         appStore: AppStore,
-        private urlWrapper: GroupComparisonURLWrapper
+        protected urlWrapper: GroupComparisonURLWrapper
     ) {
-        super(appStore);
+        super(appStore, urlWrapper);
 
         makeObservable(this);
 
@@ -128,7 +130,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     @action
     protected async saveAndGoToSession(newSession: Session) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
-        this.urlWrapper.updateURL({ sessionId: id });
+        this.urlWrapper.updateURL({ comparisonId: id });
     }
 
     get _session() {

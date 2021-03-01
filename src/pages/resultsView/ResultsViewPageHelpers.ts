@@ -22,12 +22,15 @@ export enum ResultsViewTab {
     DOWNLOAD = 'download',
 }
 
+export enum LegacyResultsViewComparisonSubTab {
+    MUTATIONS = 'mutations',
+    CNA = 'cna',
+}
+
 export enum ResultsViewComparisonSubTab {
     OVERLAP = 'overlap',
     SURVIVAL = 'survival',
     CLINICAL = 'clinical',
-    MUTATIONS = 'mutations',
-    CNA = 'cna',
     MRNA = 'mrna',
     PROTEIN = 'protein',
     DNAMETHYLATION = 'dna_methylation',
