@@ -141,7 +141,6 @@ export const otherGroup = [
     MutationEnrichmentEventType.silent,
     MutationEnrichmentEventType.synonymous_variant,
     MutationEnrichmentEventType.targeted_region,
-    MutationEnrichmentEventType.any,
     MutationEnrichmentEventType.other,
 ];
 export const fusionGroup = [MutationEnrichmentEventType.fusion];
