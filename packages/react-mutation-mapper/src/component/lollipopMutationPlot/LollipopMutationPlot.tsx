@@ -11,11 +11,18 @@ import $ from 'jquery';
 
 import { DomainSpec } from '../../model/DomainSpec';
 import { LollipopPlotControlsConfig } from '../../model/LollipopPlotControlsConfig';
-import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
+import {
+    LollipopLabel,
+    LollipopPlacement,
+    LollipopSpec,
+} from '../../model/LollipopSpec';
 import { MutationMapperStore } from '../../model/MutationMapperStore';
 import { SequenceSpec } from '../../model/SequenceSpec';
 import { DefaultLollipopPlotControlsConfig } from '../../store/DefaultLollipopPlotControlsConfig';
 import {
+    byMiddlemostPosition,
+    byMutationCount,
+    byWhetherExistsInADomain,
     calcCountRange,
     calcYMaxInput,
     getYAxisMaxInputValue,
@@ -215,6 +222,74 @@ export default class LollipopMutationPlot<
                     : -1
             );
 
+        const specs: LollipopSpec[] = this.createInitialSpecs(
+            positionMutations,
+            countsByPosition,
+            group,
+            placement
+        );
+
+        const noLabelsAreShown = specs.every(spec => !spec.label!.show);
+        if (noLabelsAreShown) {
+            this.labelOneLollipopByDefault(
+                this.getRemainingDomains(positionMutations),
+                specs
+            );
+        }
+
+        return specs;
+    }
+
+    private createInitialSpecs(
+        positionMutations: T[][],
+        countsByPosition: { [pos: number]: number },
+        group?: string,
+        placement?: LollipopPlacement
+    ): LollipopSpec[] {
+        const specs: LollipopSpec[] = [];
+        const numLabelsToShow = this.getNumLabelsToShow(
+            positionMutations,
+            countsByPosition
+        );
+        const minMutationsToShowLabel = 0;
+
+        positionMutations.forEach((mutations, index) => {
+            const codon = mutations[0].proteinPosStart;
+            if (this.isInvalidPosition(codon)) {
+                return;
+            }
+
+            const mutationCount = countsByPosition[codon];
+            const showLabel =
+                index < numLabelsToShow &&
+                mutationCount > minMutationsToShowLabel;
+            const label = this.createLabel(mutations, codon, showLabel);
+
+            specs.push({
+                codon,
+                group,
+                placement,
+                count: mutationCount,
+                tooltip: this.lollipopTooltip(mutations, countsByPosition),
+                color: this.props.getLollipopColor
+                    ? this.props.getLollipopColor(mutations)
+                    : getColorForProteinImpactType(
+                          mutations,
+                          DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
+                          this.props.getMutationCount,
+                          this.props.isPutativeDriver
+                      ),
+                label,
+            });
+        });
+
+        return specs;
+    }
+
+    private getNumLabelCandidates(
+        positionMutations: T[][],
+        countsByPosition: { [pos: number]: number }
+    ): number {
         // maxCount: max number of mutations at a position
         const maxCount =
             positionMutations && positionMutations[0]
@@ -235,98 +310,120 @@ export default class LollipopMutationPlot<
                 ? positionMutations.length
                 : 0;
         }
+        return numLabelCandidates;
+    }
 
-        // now we decide whether we'll show a label at all
+    private labelOneLollipopByDefault(
+        remainingDomains: PfamDomainRange[],
+        specs: LollipopSpec[]
+    ): void {
+        const codons = specs.map(spec => spec.codon);
+        const averageCodon = (Math.max(...codons) + Math.min(...codons)) / 2;
+        const candidateIndex = 0;
+        specs = specs
+            .sort(byMiddlemostPosition(averageCodon))
+            .sort(byWhetherExistsInADomain(remainingDomains))
+            .sort(byMutationCount);
+        specs[candidateIndex].label!.show = true;
+    }
+
+    private getNumLabelsToShow(
+        positionMutations: T[][],
+        countsByPosition: { [pos: number]: number }
+    ): number {
+        let numLabelCandidates = this.getNumLabelCandidates(
+            positionMutations,
+            countsByPosition
+        );
+
         const maxAllowedTies = 2;
         const maxLabels = 1;
-        const minMutationsToShowLabel = 0;
 
-        let numLabelsToShow;
+        const areMoreCandidatesThanShowable = numLabelCandidates > maxLabels;
+        const areMoreCandidatesThanAllowedForATie =
+            numLabelCandidates > maxAllowedTies;
+        const shouldNotShowLabels =
+            areMoreCandidatesThanShowable &&
+            areMoreCandidatesThanAllowedForATie;
+
+        return shouldNotShowLabels
+            ? 0
+            : Math.min(numLabelCandidates, maxLabels);
+    }
+
+    private isInvalidPosition(codon: number): boolean | '' | undefined {
+        const notInDomain = isNaN(codon) || codon < 0;
+        const isBeyondStopCodon =
+            this.props.store.allTranscripts.isComplete &&
+            this.props.store.allTranscripts.result &&
+            this.props.store.activeTranscript &&
+            this.props.store.activeTranscript.isComplete &&
+            this.props.store.activeTranscript.result &&
+            this.props.store.transcriptsByTranscriptId[
+                this.props.store.activeTranscript.result
+            ] &&
+            // we want to show the stop codon too (so we allow proteinLength +1 as well)
+            codon >
+                this.props.store.transcriptsByTranscriptId[
+                    this.props.store.activeTranscript.result
+                ].proteinLength +
+                    1;
+
+        return notInDomain || isBeyondStopCodon;
+    }
+
+    private getRemainingDomains(positionMutations: T[][]): PfamDomainRange[] {
         if (
-            numLabelCandidates > maxLabels && // if there are more candidates than we can show,
-            numLabelCandidates > maxAllowedTies
+            this.props.store.activeTranscript &&
+            this.props.store.activeTranscript.result &&
+            this.props.store.transcriptsByTranscriptId[
+                this.props.store.activeTranscript.result
+            ].pfamDomains.length !== 0
         ) {
-            // and more candidates than are allowed for a tie
-            numLabelsToShow = 0; // then we dont show any label
-        } else {
-            numLabelsToShow = Math.min(numLabelCandidates, maxLabels); // otherwise, we show labels
+            const pfamDomains = this.props.store.transcriptsByTranscriptId[
+                this.props.store.activeTranscript!.result!
+            ].pfamDomains;
+
+            const domainHasMutations = (domain: PfamDomainRange) =>
+                positionMutations.some(mutation => {
+                    const codon = mutation[0].proteinPosStart;
+                    return (
+                        codon >= domain.pfamDomainStart &&
+                        codon <= domain.pfamDomainEnd
+                    );
+                });
+
+            return pfamDomains.filter(domainHasMutations);
         }
 
-        const specs: LollipopSpec[] = [];
+        return [];
+    }
 
-        for (let i = 0; i < positionMutations.length; i++) {
-            const mutations = positionMutations[i];
-            const codon = mutations[0].proteinPosStart;
-            const mutationCount = countsByPosition[codon];
+    private createLabel(
+        mutations: T[],
+        codon: number,
+        show: boolean
+    ): LollipopLabel {
+        const fontSize = 10;
+        const fontFamily = 'arial';
+        // limit number of protein changes to 3
+        const text = lollipopLabelText(mutations, 3);
+        const textAnchor = lollipopLabelTextAnchor(
+            text,
+            codon,
+            fontFamily,
+            fontSize,
+            this.props.geneWidth,
+            this.proteinLength
+        );
 
-            if (
-                isNaN(codon) ||
-                codon < 0 ||
-                (this.props.store.allTranscripts.isComplete &&
-                    this.props.store.allTranscripts.result &&
-                    this.props.store.activeTranscript &&
-                    this.props.store.activeTranscript.isComplete &&
-                    this.props.store.activeTranscript.result &&
-                    this.props.store.transcriptsByTranscriptId[
-                        this.props.store.activeTranscript.result
-                    ] &&
-                    // we want to show the stop codon too (so we allow proteinLength +1 as well)
-                    codon >
-                        this.props.store.transcriptsByTranscriptId[
-                            this.props.store.activeTranscript.result
-                        ].proteinLength +
-                            1)
-            ) {
-                // invalid position
-                continue;
-            }
-            let label:
-                | {
-                      text: string;
-                      textAnchor?: string;
-                      fontSize?: number;
-                      fontFamily?: string;
-                  }
-                | undefined;
-            if (
-                i < numLabelsToShow &&
-                mutationCount > minMutationsToShowLabel
-            ) {
-                const fontSize = 10;
-                const fontFamily = 'arial';
-                // limit number of protein changes to 3
-                const text = lollipopLabelText(mutations, 3);
-                const textAnchor = lollipopLabelTextAnchor(
-                    text,
-                    codon,
-                    fontFamily,
-                    fontSize,
-                    this.props.geneWidth,
-                    this.proteinLength
-                );
-                label = { text, textAnchor, fontSize, fontFamily };
-            } else {
-                label = undefined;
-            }
-            specs.push({
-                codon,
-                group,
-                placement,
-                count: mutationCount,
-                tooltip: this.lollipopTooltip(mutations, countsByPosition),
-                color: this.props.getLollipopColor
-                    ? this.props.getLollipopColor(mutations)
-                    : getColorForProteinImpactType(
-                          mutations,
-                          DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
-                          this.props.getMutationCount,
-                          this.props.isPutativeDriver
-                      ),
-                label,
-            });
-        }
-
-        return specs;
+        return {
+            text,
+            textAnchor,
+            fontSize,
+            fontFamily,
+            show,
+        };
     }
 
     @computed private get domains(): DomainSpec[] {
