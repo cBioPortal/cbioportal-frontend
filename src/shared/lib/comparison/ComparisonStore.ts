@@ -788,7 +788,7 @@ export default abstract class ComparisonStore {
                                         : 'samples'
                                 } in ${
                                     group.name
-                                } that have a mutation in the listed gene.`,
+                                } that have an alteration in the listed gene.`,
                             });
                         }
                         return acc;
