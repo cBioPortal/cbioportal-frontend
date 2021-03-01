@@ -329,11 +329,8 @@ export default class AlterationEnrichmentContainer extends React.Component<
                                 {this.props.patientLevelEnrichments
                                     ? 'Patients'
                                     : 'Samples'}{' '}
-                                with{' '}
-                                {this.props.showCNAInTable
-                                    ? 'the listed alteration'
-                                    : 'a mutation'}{' '}
-                                in the listed gene are highlighted.
+                                with an alteration in the listed gene are
+                                highlighted.
                             </td>
                         </tr>
                     </table>
