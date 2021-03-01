@@ -40,13 +40,8 @@ import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationEnrichments from './AlterationEnrichments';
-import AlterationEnrichmentTypeSelector, {
-    IAlterationEnrichmentTypeSelectorHandlers,
-} from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import {
-    buildAlterationEnrichmentTypeSelectorHandlers,
-    buildAlterationsTabName,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
+import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import { buildAlterationsTabName } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -62,14 +57,13 @@ export default class GroupComparisonPage extends React.Component<
     @observable.ref private store: GroupComparisonStore;
     private queryReaction: IReactionDisposer;
     private urlWrapper: GroupComparisonURLWrapper;
-    private alterationEnrichmentTypeSelectorHandlers: IAlterationEnrichmentTypeSelectorHandlers;
 
     constructor(props: IGroupComparisonPageProps) {
         super(props);
         makeObservable(this);
         this.urlWrapper = new GroupComparisonURLWrapper(props.routing);
         this.queryReaction = reaction(
-            () => this.urlWrapper.query.sessionId,
+            () => this.urlWrapper.query.comparisonId,
             sessionId => {
                 if (
                     !props.routing.location.pathname.includes('/comparison') ||
@@ -90,10 +84,6 @@ export default class GroupComparisonPage extends React.Component<
                 (window as any).groupComparisonStore = this.store;
             },
             { fireImmediately: true }
-        );
-
-        this.alterationEnrichmentTypeSelectorHandlers = buildAlterationEnrichmentTypeSelectorHandlers(
-            this.store
         );
 
         (window as any).groupComparisonPage = this;
@@ -184,25 +174,18 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            {this.store.activeGroups.isComplete &&
-                                this.store.activeGroups.result.length > 1 && (
-                                    <AlterationEnrichmentTypeSelector
-                                        store={this.store}
-                                        handlers={
-                                            this
-                                                .alterationEnrichmentTypeSelectorHandlers!
-                                        }
-                                        showMutations={
-                                            this.store.hasMutationEnrichmentData
-                                        }
-                                        showCnas={
-                                            this.store.hasCnaEnrichmentData
-                                        }
-                                        showFusions={
-                                            this.store.hasFusionEnrichmentData
-                                        }
-                                    />
-                                )}
+                            <AlterationEnrichmentTypeSelector
+                                store={this.store}
+                                updateSelectedEnrichmentEventTypes={
+                                    this.store
+                                        .updateSelectedEnrichmentEventTypes
+                                }
+                                showMutations={
+                                    this.store.hasMutationEnrichmentData
+                                }
+                                showCnas={this.store.hasCnaEnrichmentData}
+                                showFusions={this.store.hasFusionEnrichmentData}
+                            />
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}

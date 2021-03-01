@@ -104,11 +104,18 @@ import {
     PatientViewPageTabs,
     PatientViewResourceTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
-import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
+import {
+    GroupComparisonTab,
+    LegacyGroupComparisonTab,
+} from 'pages/groupComparison/GroupComparisonTabs';
 import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import {
+    cnaGroup,
+    mutationGroup,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
 
 function SuspenseWrapper(Component) {
     return props => (
@@ -340,6 +347,33 @@ export const makeRoutes = routing => {
                             tabParamValidator(StudyViewPageTabKeyEnum)
                         )
                     )}
+                />
+
+                <Route
+                    path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            {
+                                selectedEnrichmentEventTypes: JSON.stringify([
+                                    ...mutationGroup,
+                                ]),
+                            },
+                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                        );
+                    })}
+                />
+                <Route
+                    path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            {
+                                selectedEnrichmentEventTypes: JSON.stringify([
+                                    ...cnaGroup,
+                                ]),
+                            },
+                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                        );
+                    })}
                 />
                 <Route
                     path="/comparison/:tab?"
