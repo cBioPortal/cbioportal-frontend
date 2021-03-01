@@ -229,9 +229,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
                     const group2Altered =
                         (group2.alteredCount / totalQueriedCases) * 100;
 
-                    const alterationLanguage = this.props.showCNAInTable
-                        ? 'copy number alterations'
-                        : 'mutations';
+                    const alterationLanguage = 'alterations';
 
                     const overlay = () => {
                         return (
