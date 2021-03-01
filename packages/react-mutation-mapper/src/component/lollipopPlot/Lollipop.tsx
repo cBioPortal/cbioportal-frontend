@@ -2,7 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
 
-import { LollipopPlacement, LollipopSpec } from '../../model/LollipopSpec';
+import {
+    LollipopLabel,
+    LollipopPlacement,
+    LollipopSpec,
+} from '../../model/LollipopSpec';
 
 type LollipopProps = {
     x: number;
@@ -12,12 +16,7 @@ type LollipopProps = {
     hoverHeadRadius: number;
     headColor?: string;
     stickColor?: string;
-    label?: {
-        text: string;
-        textAnchor?: string;
-        fontSize?: number;
-        fontFamily?: string;
-    };
+    label?: LollipopLabel;
     hitzoneClassName?: string;
     spec: LollipopSpec;
 };
@@ -90,7 +89,7 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                     x={this.props.x}
                     y={this.textY}
                 >
-                    {this.props.label.text}
+                    {this.props.label.show ? this.props.label.text : ''}
                 </text>
             );
         }
