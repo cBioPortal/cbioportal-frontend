@@ -186,12 +186,10 @@ export const cnaEventTypeSelectInit: {
 };
 
 export function mutationEventTypeSelectInit() {
-    const object = {} as { [key in MutationEnrichmentEventType]?: boolean };
-    Object.keys(MutationEnrichmentEventType).forEach(type => {
-        object[type as MutationEnrichmentEventType] =
-            type === MutationEnrichmentEventType.any ? false : true;
-    });
-    return object;
+    return [...mutationGroup, ...fusionGroup].reduce((acc, type) => {
+        acc[type] = true;
+        return acc;
+    }, {} as { [key in MutationEnrichmentEventType]?: boolean });
 }
 
 export function buildAlterationsTabName(store: ComparisonStore) {
