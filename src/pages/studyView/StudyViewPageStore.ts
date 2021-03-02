@@ -337,7 +337,7 @@ export class StudyViewPageStore {
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
-    @observable groupColorChanged = false;
+    @observable isColorChooserModalVisible = false;
     @observable userGroupColors: { [groupId: string]: string };
 
     @action

@@ -81,12 +81,12 @@ export default class GroupCheckbox extends React.Component<
 
     @autobind
     private onOverlayEnter() {
-        this.props.store.groupColorChanged = true;
+        this.props.store.isColorChooserModalVisible = true;
     }
 
     @autobind
     private onOverlayExit() {
-        this.props.store.groupColorChanged = false;
+        this.props.store.isColorChooserModalVisible = false;
     }
 
     @computed get label() {
@@ -128,7 +128,7 @@ export default class GroupCheckbox extends React.Component<
                 color.hex
             );
         }
-        this.props.store.groupColorChanged = false;
+        this.props.store.isColorChooserModalVisible = false;
     };
 
     buildColorChooserWidget = () => (
