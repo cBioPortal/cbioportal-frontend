@@ -7,6 +7,7 @@ const {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     sessionServiceIsEnabled,
+    checkElementWithMouseDisabled,
 } = require('../../../shared/specUtils');
 
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
@@ -107,9 +108,13 @@ function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} comparison tab clinical`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
         browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = checkElementWithMouseDisabled(
+            'div[data-test="ComparisonTabDiv"]',
+            0,
+            {
+                hide: ['.qtip'],
+            }
+        );
         assertScreenShotMatch(res);
     });
 
