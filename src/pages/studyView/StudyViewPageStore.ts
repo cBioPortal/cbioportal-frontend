@@ -182,6 +182,7 @@ import {
     DataTypeConstants,
 } from 'pages/resultsView/ResultsViewPageStore';
 import {
+    createSurvivalAttributeIdsDict,
     generateStudyViewSurvivalPlotTitle,
     getSurvivalStatusBoolean,
 } from 'pages/resultsView/survival/SurvivalUtil';
@@ -4781,10 +4782,24 @@ export class StudyViewPageStore {
             _.fromPairs(this._genericAssayCharts.toJSON())
         );
 
+        // filter out survival attributes (months attributes only)
+        const survivalMonthAttributeIdsDict = createSurvivalAttributeIdsDict(
+            this.survivalClinicalAttributesPrefix.result,
+            false,
+            true
+        );
+        const filteredClinicalAttributes = _.filter(
+            this.clinicalAttributes.result,
+            attribute =>
+                !(
+                    attribute.clinicalAttributeId in
+                    survivalMonthAttributeIdsDict
+                )
+        );
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            this.clinicalAttributes.result,
+            filteredClinicalAttributes,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
