@@ -48,6 +48,7 @@ import {
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
+    pickStructuralVariantEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     makeEnrichmentDataPromise,
@@ -80,8 +81,11 @@ import {
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    cnaEventTypeSelectInit,
-    mutationEventTypeSelectInit,
+    MutationEnrichmentEventType,
+    CopyNumberEnrichmentEventType,
+    mutationGroup,
+    fusionGroup,
+    cnaGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export enum OverlapStrategy {
@@ -95,9 +99,13 @@ export default abstract class ComparisonStore {
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
+    public selectedCopyNumberEnrichmentEventTypes: {
+        [key in CopyNumberEnrichmentEventType]?: boolean;
+    } = {};
     @observable.ref
-    public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
+    public selectedMutationEnrichmentEventTypes: {
+        [key in MutationEnrichmentEventType]?: boolean;
+    } = {};
 
     constructor(
         protected appStore: AppStore,
@@ -438,6 +446,30 @@ export default abstract class ComparisonStore {
                     this.molecularProfilesInActiveStudies.result!
                 )
             ),
+        onResult: profiles => {
+            if (!_.isEmpty(profiles)) {
+                mutationGroup.forEach(eventType => {
+                    this.selectedMutationEnrichmentEventTypes[eventType] = true;
+                });
+            }
+        },
+    });
+
+    public readonly structuralVariantProfiles = remoteData({
+        await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () =>
+            Promise.resolve(
+                pickStructuralVariantEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                )
+            ),
+        onResult: profiles => {
+            if (!_.isEmpty(profiles)) {
+                fusionGroup.forEach(eventType => {
+                    this.selectedMutationEnrichmentEventTypes[eventType] = true;
+                });
+            }
+        },
     });
 
     public readonly copyNumberEnrichmentProfiles = remoteData({
@@ -448,6 +480,15 @@ export default abstract class ComparisonStore {
                     this.molecularProfilesInActiveStudies.result!
                 )
             ),
+        onResult: profiles => {
+            if (!_.isEmpty(profiles)) {
+                cnaGroup.forEach(eventType => {
+                    this.selectedCopyNumberEnrichmentEventTypes[
+                        eventType
+                    ] = true;
+                });
+            }
+        },
     });
 
     public readonly mRNAEnrichmentProfiles = remoteData({
@@ -1930,13 +1971,8 @@ export default abstract class ComparisonStore {
     // TODO refactor when fusions have been reworked in cBioPortal backend
     @computed get hasFusionEnrichmentData(): boolean {
         return (
-            this.molecularProfilesInActiveStudies.isComplete &&
-            _.some(
-                this.molecularProfilesInActiveStudies.result,
-                profile =>
-                    profile.molecularAlterationType ===
-                    AlterationTypeConstants.STRUCTURAL_VARIANT
-            )
+            this.structuralVariantProfiles.isComplete &&
+            this.structuralVariantProfiles.result!.length > 0
         );
     }
 }
