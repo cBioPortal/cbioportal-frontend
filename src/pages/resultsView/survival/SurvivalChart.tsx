@@ -83,6 +83,7 @@ export interface ISurvivalChartProps {
     xAxisTickCount?: number;
 }
 
+const MIN_GROUP_SIZE_FOR_LOGRANK = 10;
 // Start to down sampling when there are more than 1000 dots in the plot.
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
@@ -287,7 +288,15 @@ export default class SurvivalChart
     }
 
     @computed get logRankTestPVal(): number | null {
-        if (this.analysisGroupsWithData.length > 1) {
+        if (
+            this.analysisGroupsWithData.length > 1 &&
+            _.every(
+                this.analysisGroupsWithData,
+                group =>
+                    this.props.sortedGroupedSurvivals[group.value].length >
+                    MIN_GROUP_SIZE_FOR_LOGRANK
+            )
+        ) {
             return logRankTest(
                 ...this.analysisGroupsWithData.map(group => {
                     return this.props.sortedGroupedSurvivals[group.value];

@@ -6,15 +6,24 @@ import LazyMobXTable, {
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { ClinicalDataEnrichmentTableColumnType } from 'pages/groupComparison/ClinicalDataEnrichmentsTable';
 import autobind from 'autobind-decorator';
-import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
+import {
+    getSortedFilteredData,
+    SimpleGetterLazyMobXTableApplicationDataStore,
+} from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { filterNumericalColumn } from 'shared/components/lazyMobXTable/utils';
 import _ from 'lodash';
-import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
+import {
+    EditableSpan,
+    pluralize,
+    toggleColumnVisibility,
+} from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import { observable, computed, makeObservable } from 'mobx';
+import { observable, computed, makeObservable, action } from 'mobx';
 import AppConfig from 'appConfig';
+import Slider from 'react-rangeslider';
+import styles from 'pages/resultsView/survival/styles.module.scss';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -33,18 +42,101 @@ export type SurvivalPrefixSummary = {
     qValue: number | null;
 };
 
+interface INumPatientsSliderProps {
+    maxNumPatients: number;
+    minNumPatients: number;
+    patientMinThreshold: number;
+    onPatientMinThresholdChange: (val: number) => void;
+}
+
+@observer
+class NumPatientsSlider extends React.Component<INumPatientsSliderProps, any> {
+    constructor(props: any) {
+        super(props);
+        makeObservable(this);
+    }
+
+    @action.bound
+    onSliderTextChange(text: string) {
+        // check if not a number then send to callback
+        const val = Number.parseFloat(text);
+        if (!isNaN(val)) {
+            this.props.onPatientMinThresholdChange(val);
+        }
+    }
+
+    render() {
+        return (
+            <div
+                className="small"
+                style={{
+                    float: 'left',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginTop: 5,
+                }}
+            >
+                <span>Min. # Patients:</span>
+                <div
+                    className={'RangeSliderContainer'}
+                    style={{
+                        width: 75,
+                        marginLeft: 10,
+                        marginRight: 10,
+                    }}
+                >
+                    <Slider
+                        min={this.props.minNumPatients}
+                        max={this.props.maxNumPatients}
+                        value={this.props.patientMinThreshold}
+                        onChange={this.props.onPatientMinThresholdChange}
+                        tooltip={false}
+                        step={1}
+                    />
+                </div>
+                <EditableSpan
+                    className={styles['XmaxNumberInput']}
+                    value={this.props.patientMinThreshold.toString()}
+                    setValue={this.onSliderTextChange}
+                    numericOnly={true}
+                />
+            </div>
+        );
+    }
+}
+
 class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataStore<
     SurvivalPrefixSummary
 > {
     constructor(
         getData: () => SurvivalPrefixSummary[],
-        getSelectedPrefix: () => string | undefined
+        getSelectedPrefix: () => string | undefined,
+        private getPatientMinThreshold: () => number
     ) {
         super(getData);
         this.dataHighlighter = (d: SurvivalPrefixSummary) => {
             return d.prefix === getSelectedPrefix();
         };
     }
+
+    protected getSortedFilteredData = () => {
+        const dataFilterWithThreshold = (
+            d: SurvivalPrefixSummary,
+            s: string,
+            sU: string,
+            sL: string
+        ) => {
+            return (
+                d.numPatients >= this.getPatientMinThreshold() &&
+                this.dataFilter(d, s, sU, sL)
+            );
+        };
+        return getSortedFilteredData(
+            this.sortedData,
+            this.filterString,
+            dataFilterWithThreshold
+        );
+    };
 }
 
 enum ColumnName {
@@ -111,10 +203,6 @@ const COLUMNS = [
         name: '# Patients With Data',
         render: (d: SurvivalPrefixSummary) => <span>{d.numPatients}</span>,
         sortBy: (d: SurvivalPrefixSummary) => d.numPatients,
-        filter: filterNumericalColumn(
-            (d: SurvivalPrefixSummary) => d.numPatients,
-            '# Patients With Data'
-        ),
         download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
         visible: true,
     },
@@ -175,16 +263,24 @@ export default class SurvivalPrefixTable extends React.Component<
 > {
     private dataStore: SurvivalPrefixTableStore;
     @observable private columnVisibility: { [group: string]: boolean };
+    @observable private patientMinThreshold = 10;
 
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
         makeObservable(this);
         this.dataStore = new SurvivalPrefixTableStore(
             () => this.props.survivalPrefixes,
-            this.props.getSelectedPrefix
+            this.props.getSelectedPrefix,
+            this.getPatientMinThreshold
         );
         this.columnVisibility = this.initColumnVisibility();
     }
+
+    @autobind
+    private getPatientMinThreshold() {
+        return this.patientMinThreshold;
+    }
+
     private initColumnVisibility() {
         return _.mapValues(
             _.keyBy(this.columns, c => c.name),
@@ -224,6 +320,19 @@ export default class SurvivalPrefixTable extends React.Component<
         return cols;
     }
 
+    @computed get minNumPatients() {
+        return Math.min(...this.dataStore.allData.map(v => v.numPatients));
+    }
+
+    @computed get maxNumPatients() {
+        return Math.max(...this.dataStore.allData.map(v => v.numPatients));
+    }
+
+    @action.bound
+    private onPatientMinThresholdChange(val: number) {
+        this.patientMinThreshold = val;
+    }
+
     public render() {
         return (
             <LazyMobXTable
@@ -233,7 +342,16 @@ export default class SurvivalPrefixTable extends React.Component<
                 columnVisibilityProps={{
                     onColumnToggled: this.onColumnToggled,
                 }}
-                initialFilterString={'patients>10'}
+                headerComponent={
+                    <NumPatientsSlider
+                        maxNumPatients={this.maxNumPatients}
+                        minNumPatients={this.minNumPatients}
+                        patientMinThreshold={this.patientMinThreshold}
+                        onPatientMinThresholdChange={
+                            this.onPatientMinThresholdChange
+                        }
+                    />
+                }
                 initialSortColumn={ColumnName.P_VALUE}
                 initialSortDirection={'asc'}
                 dataStore={this.dataStore}
@@ -243,6 +361,7 @@ export default class SurvivalPrefixTable extends React.Component<
                 copyDownloadProps={{
                     showCopy: false,
                 }}
+                filterBoxWidth={120}
             />
         );
     }
