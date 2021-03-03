@@ -183,18 +183,25 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            <AlterationEnrichmentTypeSelector
-                                store={this.store}
-                                handlers={
-                                    this
-                                        .alterationEnrichmentTypeSelectorHandlers!
-                                }
-                                showMutations={
-                                    this.store.hasMutationEnrichmentData
-                                }
-                                showCnas={this.store.hasCnaEnrichmentData}
-                                showFusions={this.store.hasFusionEnrichmentData}
-                            />
+                            {this.store.activeGroups.isComplete &&
+                                this.store.activeGroups.result.length > 1 && (
+                                    <AlterationEnrichmentTypeSelector
+                                        store={this.store}
+                                        handlers={
+                                            this
+                                                .alterationEnrichmentTypeSelectorHandlers!
+                                        }
+                                        showMutations={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                        showCnas={
+                                            this.store.hasCnaEnrichmentData
+                                        }
+                                        showFusions={
+                                            this.store.hasFusionEnrichmentData
+                                        }
+                                    />
+                                )}
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
