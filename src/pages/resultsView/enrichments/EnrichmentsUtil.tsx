@@ -489,7 +489,7 @@ export function pickStructuralVariantEnrichmentProfiles(
         (profile: MolecularProfile) =>
             profile.molecularAlterationType ===
                 AlterationTypeConstants.STRUCTURAL_VARIANT ||
-            AlterationTypeConstants.FUSION
+            profile.molecularAlterationType === AlterationTypeConstants.FUSION
     );
 }
 

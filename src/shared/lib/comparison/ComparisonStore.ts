@@ -37,6 +37,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    runInAction,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -438,57 +439,74 @@ export default abstract class ComparisonStore {
         },
     });
 
-    public readonly mutationEnrichmentProfiles = remoteData({
+    public readonly alterationEnrichmentProfiles = remoteData({
         await: () => [this.molecularProfilesInActiveStudies],
-        invoke: () =>
-            Promise.resolve(
-                pickMutationEnrichmentProfiles(
+        invoke: () => {
+            return Promise.resolve({
+                mutationProfiles: pickMutationEnrichmentProfiles(
                     this.molecularProfilesInActiveStudies.result!
-                )
-            ),
+                ),
+                structuralVariantProfiles: pickStructuralVariantEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+                copyNumberEnrichmentProfiles: pickCopyNumberEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+            });
+        },
         onResult: profiles => {
-            if (!_.isEmpty(profiles)) {
-                mutationGroup.forEach(eventType => {
-                    this.selectedMutationEnrichmentEventTypes[eventType] = true;
-                });
-            }
+            runInAction(() => {
+                if (profiles) {
+                    if (!_.isEmpty(profiles.mutationProfiles)) {
+                        mutationGroup.forEach(eventType => {
+                            this.selectedMutationEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                    if (!_.isEmpty(profiles.structuralVariantProfiles)) {
+                        fusionGroup.forEach(eventType => {
+                            this.selectedMutationEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                    if (!_.isEmpty(profiles.copyNumberEnrichmentProfiles)) {
+                        cnaGroup.forEach(eventType => {
+                            this.selectedCopyNumberEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                }
+            });
         },
     });
 
-    public readonly structuralVariantProfiles = remoteData({
-        await: () => [this.molecularProfilesInActiveStudies],
+    public readonly mutationEnrichmentProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickStructuralVariantEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!.mutationProfiles
             ),
-        onResult: profiles => {
-            if (!_.isEmpty(profiles)) {
-                fusionGroup.forEach(eventType => {
-                    this.selectedMutationEnrichmentEventTypes[eventType] = true;
-                });
-            }
-        },
+    });
+    //
+    public readonly structuralVariantProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
+        invoke: () =>
+            Promise.resolve(
+                this.alterationEnrichmentProfiles.result!
+                    .structuralVariantProfiles
+            ),
     });
 
     public readonly copyNumberEnrichmentProfiles = remoteData({
-        await: () => [this.molecularProfilesInActiveStudies],
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickCopyNumberEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!
+                    .copyNumberEnrichmentProfiles
             ),
-        onResult: profiles => {
-            if (!_.isEmpty(profiles)) {
-                cnaGroup.forEach(eventType => {
-                    this.selectedCopyNumberEnrichmentEventTypes[
-                        eventType
-                    ] = true;
-                });
-            }
-        },
     });
 
     public readonly mRNAEnrichmentProfiles = remoteData({
