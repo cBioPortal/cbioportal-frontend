@@ -37,6 +37,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    runInAction,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -48,6 +49,7 @@ import {
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles,
     pickProteinEnrichmentProfiles,
+    pickStructuralVariantEnrichmentProfiles,
 } from '../../../pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     makeEnrichmentDataPromise,
@@ -80,8 +82,11 @@ import {
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    cnaEventTypeSelectInit,
-    mutationEventTypeSelectInit,
+    MutationEnrichmentEventType,
+    CopyNumberEnrichmentEventType,
+    mutationGroup,
+    fusionGroup,
+    cnaGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export enum OverlapStrategy {
@@ -95,9 +100,13 @@ export default abstract class ComparisonStore {
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
+    public selectedCopyNumberEnrichmentEventTypes: {
+        [key in CopyNumberEnrichmentEventType]?: boolean;
+    } = {};
     @observable.ref
-    public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
+    public selectedMutationEnrichmentEventTypes: {
+        [key in MutationEnrichmentEventType]?: boolean;
+    } = {};
 
     constructor(
         protected appStore: AppStore,
@@ -430,23 +439,73 @@ export default abstract class ComparisonStore {
         },
     });
 
-    public readonly mutationEnrichmentProfiles = remoteData({
+    public readonly alterationEnrichmentProfiles = remoteData({
         await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () => {
+            return Promise.resolve({
+                mutationProfiles: pickMutationEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+                structuralVariantProfiles: pickStructuralVariantEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+                copyNumberEnrichmentProfiles: pickCopyNumberEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+            });
+        },
+        onResult: profiles => {
+            runInAction(() => {
+                if (profiles) {
+                    if (!_.isEmpty(profiles.mutationProfiles)) {
+                        mutationGroup.forEach(eventType => {
+                            this.selectedMutationEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                    if (!_.isEmpty(profiles.structuralVariantProfiles)) {
+                        fusionGroup.forEach(eventType => {
+                            this.selectedMutationEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                    if (!_.isEmpty(profiles.copyNumberEnrichmentProfiles)) {
+                        cnaGroup.forEach(eventType => {
+                            this.selectedCopyNumberEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                }
+            });
+        },
+    });
+
+    public readonly mutationEnrichmentProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickMutationEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!.mutationProfiles
+            ),
+    });
+    //
+    public readonly structuralVariantProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
+        invoke: () =>
+            Promise.resolve(
+                this.alterationEnrichmentProfiles.result!
+                    .structuralVariantProfiles
             ),
     });
 
     public readonly copyNumberEnrichmentProfiles = remoteData({
-        await: () => [this.molecularProfilesInActiveStudies],
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickCopyNumberEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!
+                    .copyNumberEnrichmentProfiles
             ),
     });
 
@@ -1930,13 +1989,8 @@ export default abstract class ComparisonStore {
     // TODO refactor when fusions have been reworked in cBioPortal backend
     @computed get hasFusionEnrichmentData(): boolean {
         return (
-            this.molecularProfilesInActiveStudies.isComplete &&
-            _.some(
-                this.molecularProfilesInActiveStudies.result,
-                profile =>
-                    profile.molecularAlterationType ===
-                    AlterationTypeConstants.STRUCTURAL_VARIANT
-            )
+            this.structuralVariantProfiles.isComplete &&
+            this.structuralVariantProfiles.result!.length > 0
         );
     }
 }

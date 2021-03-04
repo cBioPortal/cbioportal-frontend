@@ -8,9 +8,11 @@ import { assert } from 'chai';
 import _ from 'lodash';
 import sinon from 'sinon';
 import {
-    cnaEventTypeSelectInit,
-    mutationEventTypeSelectInit,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
+    CopyNumberEnrichmentEventType,
+    fusionGroup,
+    MutationEnrichmentEventType,
+    mutationGroup,
+} from './ComparisonStoreUtils';
 
 describe('AlterationEnrichmentTypeSelector', () => {
     let menu: any;
@@ -134,9 +136,22 @@ describe('AlterationEnrichmentTypeSelector', () => {
     };
 
     function createStore() {
+        let selectedMutationEnrichmentEventTypes = [
+            ...mutationGroup,
+            ...fusionGroup,
+        ].reduce((acc, type) => {
+            acc[type] = true;
+            return acc;
+        }, {} as { [key in MutationEnrichmentEventType]?: boolean });
+
+        let selectedCopyNumberEnrichmentEventTypes = {
+            [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            [CopyNumberEnrichmentEventType.AMP]: true,
+        };
+
         return {
-            selectedCopyNumberEnrichmentEventTypes: cnaEventTypeSelectInit,
-            selectedMutationEnrichmentEventTypes: mutationEventTypeSelectInit(),
+            selectedCopyNumberEnrichmentEventTypes,
+            selectedMutationEnrichmentEventTypes,
         } as ComparisonStore;
     }
 

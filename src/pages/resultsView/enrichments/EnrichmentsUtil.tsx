@@ -481,6 +481,18 @@ export function pickMutationEnrichmentProfiles(profiles: MolecularProfile[]) {
     );
 }
 
+export function pickStructuralVariantEnrichmentProfiles(
+    profiles: MolecularProfile[]
+) {
+    return _.filter(
+        profiles,
+        (profile: MolecularProfile) =>
+            profile.molecularAlterationType ===
+                AlterationTypeConstants.STRUCTURAL_VARIANT ||
+            profile.molecularAlterationType === AlterationTypeConstants.FUSION
+    );
+}
+
 export function pickCopyNumberEnrichmentProfiles(profiles: MolecularProfile[]) {
     return _.filter(
         profiles,
