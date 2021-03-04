@@ -190,7 +190,7 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
     {
         uniqueKey: SpecialChartsUniqueKeyEnum.CANCER_STUDIES,
         displayName: 'Cancer Studies',
-        description: 'Cancer Studies',
+        description: 'The cancer study id for each sample in the cohort',
         dataType: ChartMetaDataTypeEnum.CLINICAL,
         patientAttribute: false,
         chartType: ChartTypeEnum.PIE_CHART,

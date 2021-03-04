@@ -85,8 +85,10 @@ type LazyMobXTableProps<T> = {
     initialFilterString?: string;
     showFilter?: boolean;
     showFilterClearButton?: boolean;
+    filterBoxWidth?: number;
     showCopyDownload?: boolean;
     copyDownloadProps?: ICopyDownloadControlsProps;
+    headerComponent?: JSX.Element;
     showPagination?: boolean;
     // used only when showPagination === true (show pagination at bottom otherwise)
     showPaginationAtTop?: boolean;
@@ -757,6 +759,7 @@ export default class LazyMobXTable<T> extends React.Component<
     public static defaultProps = {
         showFilter: true,
         showFilterClearButton: false,
+        filterBoxWidth: 200,
         showCopyDownload: true,
         showPagination: true,
         showColumnVisibility: true,
@@ -945,6 +948,7 @@ export default class LazyMobXTable<T> extends React.Component<
     private getTopToolbar() {
         return (
             <div>
+                {this.props.headerComponent}
                 {this.props.showCountHeader && this.countHeader}
                 <ButtonToolbar
                     style={{ marginLeft: 0 }}
@@ -965,7 +969,7 @@ export default class LazyMobXTable<T> extends React.Component<
                                 type="text"
                                 onInput={this.handlers.onFilterTextChange}
                                 className="form-control tableSearchInput"
-                                style={{ width: 200 }}
+                                style={{ width: this.props.filterBoxWidth }}
                             />
                             {this.props.showFilterClearButton &&
                             this.store.filterString ? (
