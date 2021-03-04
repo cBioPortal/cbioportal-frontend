@@ -178,20 +178,6 @@ export function buildAlterationEnrichmentTypeSelectorHandlers(
     return handlers;
 }
 
-export const cnaEventTypeSelectInit: {
-    [key in CopyNumberEnrichmentEventType]?: boolean;
-} = {
-    [CopyNumberEnrichmentEventType.HOMDEL]: true,
-    [CopyNumberEnrichmentEventType.AMP]: true,
-};
-
-export function mutationEventTypeSelectInit() {
-    return [...mutationGroup, ...fusionGroup].reduce((acc, type) => {
-        acc[type] = true;
-        return acc;
-    }, {} as { [key in MutationEnrichmentEventType]?: boolean });
-}
-
 export function buildAlterationsTabName(store: ComparisonStore) {
     const nameElements = [];
     store.hasMutationEnrichmentData && nameElements.push('Mutations');
