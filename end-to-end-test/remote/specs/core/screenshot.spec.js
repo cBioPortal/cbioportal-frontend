@@ -98,9 +98,15 @@ function runResultsTestSuite(prefix, options = {}) {
         browser.waitForVisible(
             'div[data-test="ComparisonPageOverlapTabContent"]'
         );
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+
+        checkElementWithMouseDisabled(
+            'div[data-test="ComparisonTabDiv"]',
+            1000,
+            {}
+        );
+        // var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
+        //     hide: ['.qtip'],
+        // });
         assertScreenShotMatch(res);
     });
 

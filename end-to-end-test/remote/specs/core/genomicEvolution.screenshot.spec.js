@@ -50,7 +50,10 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         );
         assertScreenShotMatch(res);
     });
-    it('pvge hover a mutation with line chart', function() {
+
+    // skipping because mouse hover interaction is so flakey
+    // try again after we upgrade to wdio 6 and we have new api for mouse
+    it.skip('pvge hover a mutation with line chart', function() {
         browser.moveToObject(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
