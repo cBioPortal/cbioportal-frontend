@@ -7,6 +7,7 @@ const {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     sessionServiceIsEnabled,
+    checkElementWithMouseDisabled,
 } = require('../../../shared/specUtils');
 
 const { assertScreenShotMatch } = require('../../../shared/lib/testUtils');
