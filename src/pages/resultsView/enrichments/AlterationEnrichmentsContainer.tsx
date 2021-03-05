@@ -419,24 +419,6 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     @computed private get geneBarplotYAxislabel() {
-        if (
-            this.isAnyMutationTypeSelected &&
-            !this.isAnyFusionTypeSelected &&
-            !this.isAnyCnaTypeSelected
-        )
-            return 'Mutation frequency';
-        if (
-            !this.isAnyMutationTypeSelected &&
-            this.isAnyFusionTypeSelected &&
-            this.isAnyCnaTypeSelected
-        )
-            return 'Fusion event frequency';
-        if (
-            !this.isAnyMutationTypeSelected &&
-            !this.isAnyFusionTypeSelected &&
-            !this.isAnyCnaTypeSelected
-        )
-            return 'Copy-number alteration frequency';
         return 'Alteration event frequency';
     }
 
