@@ -96,3 +96,20 @@ export function filterTreatmentCell(
 ): boolean {
     return cell.treatment.toUpperCase().includes(filter.toUpperCase());
 }
+
+/**
+ * toNumericValue gives a string an approximate value between 0 - 1.
+ * This doesn't have to be perfect, I just need it for sorting
+ * @param words
+ */
+export function toNumericValue(words: string) {
+    return words
+        .toLocaleLowerCase()
+        .substring(0, Math.min(5, words.length))
+        .split('')
+        .map(c => Math.min(c.charCodeAt(0), 127))
+        .filter(num => num !== NaN)
+        .reduce((acc, v, i) => {
+            return acc + v / Math.pow(128, i + 1);
+        }, 0);
+}
