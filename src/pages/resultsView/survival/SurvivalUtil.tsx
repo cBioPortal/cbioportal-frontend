@@ -49,15 +49,10 @@ export const survivalCasesHeaderText: { [prefix: string]: string } = {
     DSS: 'DECEASED',
 };
 
-export const survivalPlotTooltipxLabelWithEvent: {
-    [prefix: string]: string;
-} = {
-    // TODO text for PFS DSS?
-    OS: 'Time of Death',
-    PFS: 'Time of Death',
-    DFS: 'Time of relapse',
-    DSS: 'Time of Death',
-};
+export const SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP = 'Time of event';
+export const SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP =
+    'Time of last observation';
+export const SURVIVAL_PLOT_Y_LABEL_TOOLTIP = '% event free';
 
 // OS, DFS, PFS, DSS are four reserved KM plot types
 // use priority from RESERVED_SURVIVAL_PLOT_PRIORITY for these four types
