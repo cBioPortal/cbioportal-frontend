@@ -100,7 +100,7 @@ function runResultsTestSuite(prefix, options = {}) {
             'div[data-test="ComparisonPageOverlapTabContent"]'
         );
 
-        checkElementWithMouseDisabled(
+        var res = checkElementWithMouseDisabled(
             'div[data-test="ComparisonTabDiv"]',
             1000,
             {}
