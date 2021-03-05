@@ -114,6 +114,7 @@ function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} comparison tab clinical`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
         browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
+        browser.pause(500); // allow for highlight
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
         });
