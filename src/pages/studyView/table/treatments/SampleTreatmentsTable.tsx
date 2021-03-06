@@ -21,6 +21,7 @@ import {
     TreatmentGenericColumnHeader,
     TreatmentColumnCell,
     filterTreatmentCell,
+    toNumericValue,
 } from './treatmentsTableUtil';
 import { TreatmentsTable } from './AbstractTreatmentsTable';
 import { MultiSelectionTableRow } from 'pages/studyView/table/MultiSelectionTable';
@@ -165,7 +166,8 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                 ),
                 render: (data: SampleTreatmentRow) =>
                     this.createNubmerColumnCell(data, 28),
-                sortBy: (data: SampleTreatmentRow) => data.count,
+                sortBy: (data: SampleTreatmentRow) =>
+                    data.count + toNumericValue(data.time + data.treatment),
                 defaultSortDirection: 'desc' as 'desc',
                 filter: filterTreatmentCell,
                 width: columnWidth,
