@@ -338,7 +338,7 @@ export class StudyViewPageStore {
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
     @observable isColorChooserModalVisible = false;
-    @observable userGroupColors: { [groupId: string]: string };
+    @observable userGroupColors: { [groupId: string]: string } = {};
 
     @action
     updateNAValue = (uniqueKey: string): void => {
@@ -823,10 +823,11 @@ export class StudyViewPageStore {
     readonly userSavedGroups = remoteData<StudyViewComparisonGroup[]>({
         await: () => [this.userGroupsFromRemote, this.userSettings],
         invoke: async () => {
+            const colors = this.userGroupColors;
             return this.userGroupsFromRemote.result!.map(group =>
                 Object.assign(group, {
                     // add group color from session
-                    color: getUserGroupColor(this.userGroupColors, group.uid),
+                    color: getUserGroupColor(colors, group.uid),
                 })
             );
         },
@@ -5267,7 +5268,10 @@ export class StudyViewPageStore {
                 this.userSettings.isComplete && this.userSettings.result
                     ? this.userSettings.result.groupColors
                     : {};
-            this.userGroupColors = observable(groupColorFromSession);
+            _.forIn(
+                groupColorFromSession,
+                (value, key) => (this.userGroupColors[key] = value)
+            );
         },
     });
 
