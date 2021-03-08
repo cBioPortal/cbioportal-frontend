@@ -39,6 +39,10 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         echo -e "${GREEN}COPY+PASTE in BROWSER TO COMPARE FAILED SCREENSHOTS: ${YELLOW}${repo_url}/end-to-end-test/shared/imageCompare.html${NC}";
     fi
 
+    # set a variable for localdb or remote tests (needed for image download links)
+    RUNMODE=$((grep -q local <<< $DIR && echo local) || echo remote)
+
+    echo "var runMode = '$RUNMODE'" > ${DIR}/runmode.js
 
 fi
 exit 1 # always exit 1 since we are assuming that you call this when screenshots have failed

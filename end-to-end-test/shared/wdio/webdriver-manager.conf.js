@@ -13,7 +13,7 @@ require.extensions['.txt'] = function(module, filename) {
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 3;
+var defaultMaxInstances = process.env.MANAGER_MAX_INSTANCES || 3;
 
 var diffDir = process.env.SCREENSHOT_DIRECTORY + '/diff' || 'screenshots/diff/';
 var refDir =
@@ -77,6 +77,7 @@ var config = {
                     (function() {
                         return process.env.HEADLESS_CHROME
                             ? [
+                                  '--headless',
                                   '--no-sandbox',
                                   '--disable-gpu',
                                   '--disable-setuid-sandbox',
@@ -172,13 +173,24 @@ var config = {
 
     services: ['visual-regression'],
 
+    // FIXME: the browser name 'chrome' is passed for screenshot name evaluation
+    // Reason is a bug with headless chrome reporting as 'safari'. This should be
+    // changed when adding tests for other browsers.
+    // See: https://github.com/zinserjan/wdio-visual-regression-service/issues/81
     visualRegression: {
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(path.join(process.cwd(), refDir)),
-            screenshotName: getScreenshotName(
-                path.join(process.cwd(), screenDir)
+            referenceName: getScreenshotName(
+                path.join(process.cwd(), refDir),
+                'chrome'
             ),
-            diffName: getScreenshotName(path.join(process.cwd(), diffDir)),
+            screenshotName: getScreenshotName(
+                path.join(process.cwd(), screenDir),
+                'chrome'
+            ),
+            diffName: getScreenshotName(
+                path.join(process.cwd(), diffDir),
+                'chrome'
+            ),
             misMatchTolerance: 0.01,
             ignoreComparison: 'antialiasing',
         }),
@@ -361,7 +373,6 @@ if (process.env.TEST_BROWSERSTACK === 'true') {
     config.key = process.env.BROWSERSTACK_KEY;
 }
 
-//config.specs = ['./remote/specs/core/results.spec.js'];
 //config.specs = ['./remote/specs/core/studyview.spec.js'];
 
 exports.config = config;

@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  cbioportal:
+    volumes:
+      - $E2E_WORKSPACE/cbioportal:/cbioportal
+      - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
+      - $E2E_WORKSPACE/cbioportal/portal/target/war-exploded:/cbioportal-webapp
