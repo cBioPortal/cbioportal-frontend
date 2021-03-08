@@ -21,7 +21,7 @@ var showGsva = require('../../shared/specUtils').showGsva;
 describe('gsva feature', () => {
     describe('GenesetVolcanoPlotSelector', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(queryPageUrl);
+            goToUrlAndSetLocalStorage(queryPageUrl, true);
             showGsva();
             waitForStudyQueryPage(20000);
             checkTestStudy();
@@ -48,7 +48,7 @@ describe('gsva feature', () => {
 
     describe('oncoprint tab', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl);
+            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
             waitForOncoprint(20000);
         });
 
@@ -60,7 +60,7 @@ describe('gsva feature', () => {
 
     describe('plots tab', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(plotsTabUrl);
+            goToUrlAndSetLocalStorage(plotsTabUrl, true);
             waitForPlotsTab(20000);
         });
 
@@ -79,7 +79,7 @@ describe('gsva feature', () => {
 
     describe('co-expression tab', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(coexpressionTabUrl);
+            goToUrlAndSetLocalStorage(coexpressionTabUrl, true);
             waitForCoExpressionTab(20000);
         });
 

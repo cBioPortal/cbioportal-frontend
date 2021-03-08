@@ -4,16 +4,12 @@ set -e
 
 # -+-+-+-+-+-+-+ ENVIRONMENTAL VARIABLES +-+-+-+-+-+-+-
 
-echo export E2E_CBIOPORTAL_HOST_NAME=cbioportal
-echo export CBIOPORTAL_URL="http://cbioportal:8080"
-echo export DOCKER_NETWORK_NAME=endtoend_localdb_network
-echo export SESSION_SERVICE_HOST_NAME=cbio-session-service
-echo export SCREENSHOT_IMAGE_NAME=cbio-screenshot
-echo export CUSTOM_BACKEND_IMAGE_NAME=cbioportal-endtoend-image
+echo export CBIOPORTAL_URL="http://localhost:8080"
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
-echo export DB_DATA_DIR=/tmp/mysql
+echo export CBIO_DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
+echo export KC_DB_DATA_DIR=$E2E_WORKSPACE/kc_db_data
 
 echo export DB_CGDS_URL=https://raw.githubusercontent.com/cBioPortal/cbioportal/v2.0.0/db-scripts/src/main/resources/cgds.sql
 echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/master/seedDB/seed-cbioportal_hg19_v2.7.3.sql.gz
@@ -22,7 +18,6 @@ echo export DB_SEED_URL=https://raw.githubusercontent.com/cBioPortal/datahub/mas
 
 parse_custom_backend_var() {
     # Parse BACKEND environmental variable. This must occur after PR evaluation
-    # because this possibly overwrites variables extracted from the GitHub pull request.
     if [[ $BACKEND =~ (.+):(.+) ]]; then
         BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}
         echo "export BACKEND_PROJECT_USERNAME=${BASH_REMATCH[1]}"
@@ -44,9 +39,9 @@ if [[ "$CIRCLECI" = true ]]; then
         GITHUB_PR_API_PATH="${CIRCLE_PULL_REQUEST/github\.com\//api\.github\.com\/repos/}"
         GITHUB_PR_API_PATH="${GITHUB_PR_API_PATH/\/pull\//\/pulls\/}"
 
-        python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH
-        eval $(python3 $TEST_HOME/shared/get_pullrequest_info.py $GITHUB_PR_API_PATH)
-        
+        python3 $TEST_HOME/../shared/get_pullrequest_info.py $GITHUB_PR_API_PATH
+        eval $(python3 $TEST_HOME/../shared/get_pullrequest_info.py $GITHUB_PR_API_PATH)
+
         # Only allow committing a BACKEND variable in custom.sh if the PR is in
         # draft state. We do allow setting custom.sh programmatically on CI (as
         # is done in the backend repo), which is why we use `git show`.
@@ -99,19 +94,8 @@ else
     echo export FRONTEND_GROUPID=com.github.$FRONTEND_PROJECT_USERNAME
 fi
 
-python3 $TEST_HOME/shared/read_portalproperties.py portal.properties
-# retrieves
-    # DB_USER                       ->  (e.g. 'cbio_user')
-    # DB_PASSWORD                   ->  (e.g. 'cbio_pass')
-    # DB_PORTAL_DB_NAME             ->  (e.g. 'endtoend_local_cbiodb')
-    # DB_CONNECTION_STRING          ->  (e.g. 'jdbc:mysql://cbiodb-endtoend:3306/')
-    # DB_HOST                       ->  (e.g. 'cbiodb-endtoend')
-
-# Evaluate what backend docker image to use
+# Evaluate whether a custom backend image should be built
 # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
 # update the reference to the corresponding image name when prebuilt image exists
-if [[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] ); then
-    echo export BACKEND_IMAGE_NAME="cbioportal/cbioportal:$BACKEND_BRANCH"
-else
-    echo export BACKEND_IMAGE_NAME=cbioportal-endtoend-image
-fi
+(([[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] )) && echo export CUSTOM_BACKEND=0) || echo export CUSTOM_BACKEND=1
+echo export DOCKER_IMAGE_CBIOPORTAL="cbioportal/cbioportal:master"

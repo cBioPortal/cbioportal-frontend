@@ -31,7 +31,7 @@ describe('treatment feature', function() {
     if (useExternalFrontend) {
         describe('oncoprint tab', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(oncoprintTabUrl);
+                goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint();
             });
 
@@ -136,7 +136,8 @@ describe('treatment feature', function() {
                 goToUrlAndSetLocalStorage(
                     oncoprintTabUrl.concat(
                         '&generic_assay_groups=study_es_0_treatment_ic50,17-AAG'
-                    )
+                    ),
+                    true
                 );
                 waitForOncoprint();
                 goToTreatmentTab();
@@ -183,7 +184,7 @@ describe('treatment feature', function() {
 
         describe('plots tab', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(plotsTabUrl);
+                goToUrlAndSetLocalStorage(plotsTabUrl, true);
                 waitForPlotsTab();
             });
 
@@ -385,7 +386,7 @@ describe('treatment feature', function() {
                 assert($('[data-test=VerticalLogCheckbox]'));
             });
 
-            it('shows checkbox for limit values (e.g., >8.00) checkbox when such profile selected on horz. axis', () => {
+            it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on horz. axis', () => {
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
                 );
@@ -399,7 +400,7 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                $('[data-test=generic-assay-info-icon]').waitForExist();
+                $('[data-test=generic-assay-info-icon]').waitForExist(10000);
                 assert(
                     browser.execute(function() {
                         resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
@@ -412,7 +413,7 @@ describe('treatment feature', function() {
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
-            it('shows checkbox for limit values (e.g., >8.00) checkbox when such profile selected on vert. axis', () => {
+            it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', () => {
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
                 );
@@ -425,8 +426,7 @@ describe('treatment feature', function() {
                     vertProfileSelect,
                     'EC50 values of compounds on cellular phenotype readout'
                 );
-
-                $('[data-test=generic-assay-info-icon]').waitForExist();
+                $('[data-test=generic-assay-info-icon]').waitForExist(10000);
                 assert(
                     browser.execute(function() {
                         resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({

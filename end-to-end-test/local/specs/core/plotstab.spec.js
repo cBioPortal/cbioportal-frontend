@@ -91,7 +91,7 @@ describe('plots tab', function() {
 });
 
 var loadPlotsTab = url => {
-    goToUrlAndSetLocalStorage(url);
+    goToUrlAndSetLocalStorage(url, true);
     browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]');
 };
 

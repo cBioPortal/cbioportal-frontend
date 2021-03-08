@@ -114,14 +114,21 @@ function setDropdownOpen(
     );
 }
 
-function goToUrlAndSetLocalStorage(url) {
+function goToUrlAndSetLocalStorage(url, authenticated = false) {
+    const currentUrl = browser.getUrl();
+    const needToLogin =
+        authenticated && (!currentUrl || !currentUrl.includes('http'));
     if (!useExternalFrontend) {
         browser.url(url);
+        console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
+        console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
+    if (needToLogin) keycloakLogin();
+
     browser.setViewportSize({ height: 1000, width: 1600 });
 
     // move mouse out of the way
@@ -401,7 +408,10 @@ function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
     };
 }
 
-function postDataToUrl(url, data) {
+function postDataToUrl(url, data, authenticated = true) {
+    const currentUrl = browser.getUrl();
+    const needToLogin =
+        authenticated && (!currentUrl || !currentUrl.includes('http'));
     browser.execute(
         (url, data) => {
             function formSubmit(url, params) {
@@ -429,10 +439,27 @@ function postDataToUrl(url, data) {
         url,
         data
     );
+    if (needToLogin) keycloakLogin();
+}
+
+function keycloakLogin(timeout) {
+    browser.waitUntil(
+        () => browser.getUrl().includes('/auth/realms/cbio'),
+        timeout,
+        'No redirect to Keycloak could be detected.'
+    );
+    $('body').waitForVisible(timeout);
+
+    $('#username').setValue('testuser');
+    $('#password').setValue('P@ssword1');
+    $('#kc-login').click();
+
+    browser.waitUntil(() => !browser.getUrl().includes('/auth/realms/cbio'));
+    $('body').waitForVisible(timeout);
 }
 
 function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
-    goToUrlAndSetLocalStorage(studyViewUrl);
+    goToUrlAndSetLocalStorage(studyViewUrl, true);
     $('[data-test=summary-tab-content]').waitForVisible();
     waitForNetworkQuiet();
     const chart = '[data-test=' + chartDataTest + ']';
