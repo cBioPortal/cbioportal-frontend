@@ -233,7 +233,8 @@ describe('track group headers', function() {
         setDropdownOpen(
             true,
             mrnaElements.button_selector,
-            mrnaElements.dropdown_selector + ' li:nth-child(2)'
+            mrnaElements.dropdown_selector + ' li:nth-child(2)',
+            'could not open mrna group options dropdown'
         );
         browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't Cluster
         browser.pause(500); // give it time to sort
