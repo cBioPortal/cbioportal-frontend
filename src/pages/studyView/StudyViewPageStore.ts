@@ -423,7 +423,14 @@ export class StudyViewPageStore {
                             // this is because the user setting session is going to be updated for every operation once the user is logged in
                             this.hideRestoreSettingsMsg = true;
                         }
-                        this.updateUserSettingsDebounce();
+                        const groupColorSettingsChanged = !_.isEqual(
+                            toJS(this.userGroupColors),
+                            this.userSettings.result!.groupColors
+                        );
+                        // for group collor update immediately, for the rest wait 3 sec
+                        if (groupColorSettingsChanged)
+                            this.updateUserSettings();
+                        else this.updateUserSettingsDebounce();
                     }
                 }
             )
@@ -5185,22 +5192,28 @@ export class StudyViewPageStore {
         return pending;
     }
 
+    public updateUserSettings() {
+        const groupColorSettingsChanged = !_.isEqual(
+            toJS(this.userGroupColors),
+            this.userSettings.result!.groupColors
+        );
+        if (groupColorSettingsChanged) {
+            sessionServiceClient.updateUserSettings({
+                origin: toJS(this.studyIds),
+                chartSettings: _.values(this.currentChartSettingsMap),
+                groupColors: toJS(this.userGroupColors),
+            });
+        }
+    }
+
     public updateUserSettingsDebounce = _.debounce(() => {
         const chartSettingsChanged = !_.isEqual(
             this.previousSettings,
             this.currentChartSettingsMap
         );
-        const groupColorSettingsChanged = !_.isEqual(
-            toJS(this.userGroupColors),
-            this.userSettings.result!.groupColors
-        );
-        if (chartSettingsChanged)
+        if (chartSettingsChanged) {
             this.previousSettings = this.currentChartSettingsMap;
-        if (chartSettingsChanged || groupColorSettingsChanged) {
-            if (
-                !_.isEmpty(this.currentChartSettingsMap) ||
-                groupColorSettingsChanged
-            ) {
+            if (!_.isEmpty(this.currentChartSettingsMap)) {
                 sessionServiceClient.updateUserSettings({
                     origin: toJS(this.studyIds),
                     chartSettings: _.values(this.currentChartSettingsMap),
