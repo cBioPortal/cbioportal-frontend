@@ -51,8 +51,6 @@ export default class GroupCheckbox extends React.Component<
     IGroupCheckboxProps,
     {}
 > {
-    @observable showColorPicker = false;
-
     constructor(props: IGroupCheckboxProps) {
         super(props);
         makeObservable(this);
