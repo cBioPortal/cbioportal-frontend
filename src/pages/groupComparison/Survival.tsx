@@ -24,11 +24,13 @@ import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
-    survivalPlotTooltipxLabelWithEvent,
     generateSurvivalPlotTitleFromDisplayName,
     getStatusCasesHeaderText,
     getMedian,
     getEstimates,
+    SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -623,15 +625,15 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             .result![key]
                                     )}`}
                                     medianMonthsHeader={`Median Months ${survivalTitleText[key]}`}
-                                    yLabelTooltip={`${_.startCase(
-                                        _.toLower(survivalTitleText[key])
-                                    )} estimate`}
-                                    xLabelWithEventTooltip={
-                                        survivalPlotTooltipxLabelWithEvent[
-                                            key
-                                        ] || 'Time of Death'
+                                    yLabelTooltip={
+                                        SURVIVAL_PLOT_Y_LABEL_TOOLTIP
                                     }
-                                    xLabelWithoutEventTooltip="Time of last observation"
+                                    xLabelWithEventTooltip={
+                                        SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP
+                                    }
+                                    xLabelWithoutEventTooltip={
+                                        SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP
+                                    }
                                     fileName={survivalTitleText[key].replace(
                                         ' ',
                                         '_'

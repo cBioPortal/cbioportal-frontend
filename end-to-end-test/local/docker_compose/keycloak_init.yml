@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  keycloak:
+    volumes:
+    - $E2E_WORKSPACE/keycloak/keycloak-config-generated.json:/tmp/realm.json:ro
+    environment:
+    - KEYCLOAK_IMPORT=/tmp/realm.json

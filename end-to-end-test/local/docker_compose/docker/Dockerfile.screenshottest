@@ -7,4 +7,4 @@ USER root
 
 RUN npm install --global yarn@1.22.4
 
-CMD /cbioportal-frontend/end-to-end-test/local/docker/screenshottest.sh
+CMD /cbioportal-frontend/end-to-end-test/local/docker_compose/docker/screenshottest.sh

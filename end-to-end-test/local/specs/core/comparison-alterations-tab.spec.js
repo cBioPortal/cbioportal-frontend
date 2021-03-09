@@ -67,7 +67,7 @@ if (useExternalFrontend) {
 var loadAlterationsTab = () => {
     var timeIntervals = [3000, 4000, 5000, 5000, 10000];
     for (const timeInterval of timeIntervals) {
-        goToUrlAndSetLocalStorage(resultsViewComparisonTab);
+        goToUrlAndSetLocalStorage(resultsViewComparisonTab, true);
         browser.pause(timeInterval);
         if ($('[data-test=GroupComparisonAlterationEnrichments]').isVisible())
             break;

@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  cbioportal:
+    volumes:
+    - $TEST_HOME/runtime-config/portal.properties:/cbioportal/portal.properties:ro
+    - $E2E_WORKSPACE/portalInfo:/portalInfo
+
+volumes:
+  cbioportal_mysql_data:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: $CBIO_DB_DATA_DIR

@@ -22,7 +22,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' && \
+          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' --gekko false && \
           ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' & \
           ./scripts/env_vars.sh && \
           eval "$(./scripts/env_vars.sh)" && \
@@ -40,7 +40,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
-          NO_PARALLEL: true
+          WEBPACK_PARALLEL: false
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
@@ -103,6 +103,7 @@ jobs:
             DISABLE_SOURCEMAP: true
             NO_PARALLEL: true
           no_output_timeout: 25m
+      - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile)
       - save_cache:
           paths:
             - node_modules
@@ -138,7 +139,7 @@ jobs:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
             DISABLE_SOURCEMAP: true
-            NO_PARALLEL: true
+            WEBPACK_PARALLEL: false
           when: always
       - store_test_results:
           path: /tmp/repo/junit
@@ -191,56 +192,89 @@ jobs:
           command: |
               pip3 install requests pyyaml
       - run:
+          name: Install dependencies
+          command: |
+              sudo apt-get update && \
+              sudo apt-get install jq unzip
+      - run:
           name: Setup e2e-environment
           command: |
               source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-              cd $TEST_HOME/local/runtime-config && \
-              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV            
+              cd $TEST_HOME/runtime-config && \
+              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
       - run:
-          name: Build or pull backend image
+          name: Check build whether custom backend is needed
           command: |
-              cd $TEST_HOME/local/docker && \
-              ./build_portal_image.sh
+            echo "$CUSTOM_BACKEND" > /tmp/repo/custom_backend_switch
+      - restore_cache:
+          # when custom_backend_switch file has '1' a custom backend
+          # is used and the more extended set of maven repo's will be attached
+          keys:
+            - maven-repo-v1-{{ checksum "custom_backend_switch" }}
+      - run:
+          name: Build custom backend
+          command: |
+              (grep -q 0 /tmp/repo/custom_backend_switch && echo "Build of custom backend is not needed.") || $TEST_HOME/docker_compose/build.sh
+          no_output_timeout: 25m
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: maven-repo-v1-{{ checksum "custom_backend_switch" }}
+      - run:
+          name: Setup docker compose assets
+          command: |
+              $TEST_HOME/docker_compose/setup.sh
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
           command: |
-              $TEST_HOME/local/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
+            $TEST_HOME/runtime-config/db_content_fingerprint.sh > /tmp/db_data_md5key
           no_output_timeout: 25m
+      - run:
+          name: Create MySQL data directory
+          command: |
+            docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
-          - v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+          - v3-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - restore_cache:
+          keys:
+          - v3-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
-          name: Create MySQL data directory when no cache found
+          name: Init database
           command: |
-              mkdir -p $DB_DATA_DIR
-      - run:
-          name: Setup docker images and containers
-          command: |
-              docker network create $DOCKER_NETWORK_NAME && \
-              cd $TEST_HOME/local/docker && \
-              if (ls $DB_DATA_DIR/* 2> /dev/null > /dev/null); then \
-                ./setup_docker_containers.sh -p -e; \
-              else \
-                ./setup_docker_containers.sh -p -e -d; \
-              fi
-          no_output_timeout: 25m
+            cd $TEST_HOME/docker_compose && echo $CBIO_DB_DATA_DIR && ls -la $CBIO_DB_DATA_DIR && \
+            [ "$(ls -A $CBIO_DB_DATA_DIR)" ] && echo "DB initialization is not needed." || ./initdb.sh
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
-              sudo chmod -R 777 $DB_DATA_DIR && \
-              sudo chown -R circleci:circleci $DB_DATA_DIR
+              sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
+              sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
       - save_cache:
           paths:
-            - /tmp/mysql
-          key: v5-e2e-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - /tmp/repo/e2e-localdb-workspace/cbio_db_data
+          key: v3-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+      - run:
+          name: Start cbioportal and other services
+          command: |
+              $TEST_HOME/docker_compose/start.sh
+      - run:
+          name: Change owner of MySQL database files (needed by cache)
+          command: |
+            sudo chmod -R 777 $KC_DB_DATA_DIR && \
+            sudo chown -R circleci:circleci $KC_DB_DATA_DIR
+      - save_cache:
+          paths:
+            - /tmp/repo/e2e-localdb-workspace/kc_db_data
+          key: v3-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
-              cd $PORTAL_SOURCE_DIR && $TEST_HOME/local/runtime-config/run_container_screenshot_test.sh
+              cd $PORTAL_SOURCE_DIR && \
+              $TEST_HOME/docker_compose/test.sh
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
-          command: 'for f in $TEST_HOME/local/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
+          command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
           path: /tmp/repo/end-to-end-test/local/screenshots
           destination: /screenshots
@@ -259,9 +293,10 @@ jobs:
           destination: /imageCompare.html
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo
-        TEST_HOME: /tmp/repo/end-to-end-test
-        FRONTEND_TEST_USE_LOCAL_DIST: true
-        NO_PARALLEL: true
+        TEST_HOME: /tmp/repo/end-to-end-test/local
+        E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
+        CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
+        KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
 
   prettier:
     <<: *defaults

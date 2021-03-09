@@ -1,0 +1,142 @@
+{
+    "id": "cbio",
+    "realm": "cbio",
+    "displayName": "cBioPortal",
+    "enabled": true,
+    "defaultGroups": [
+        "PUBLIC_STUDIES"
+    ],
+    "loginWithEmailAllowed": false,
+    "sslRequired": "none",
+    "clients": [
+        {
+            "clientId": "cbioportal",
+            "enabled": true,
+            "protocol": "saml",
+            "fullScopeAllowed": false,
+            "adminUrl": "http://localhost:8080/saml",
+            "redirectUris": [
+                "http://localhost:8080/*"
+            ],
+            "attributes": {
+                "saml.assertion.signature": "false",
+                "saml.signing.certificate": "MIIDdzCCAl+gAwIBAgIEGqorxDANBgkqhkiG9w0BAQsFADBsMRAwDgYDVQQGEwdVbmtub3duMRAwDgYDVQQIEwdVbmtub3duMRAwDgYDVQQHEwdVbmtub3duMRAwDgYDVQQKEwdVbmtub3duMRAwDgYDVQQLEwdVbmtub3duMRAwDgYDVQQDEwdVbmtub3duMB4XDTIxMDExODE1MjcwOFoXDTMyMDEwMTE1MjcwOFowbDEQMA4GA1UEBhMHVW5rbm93bjEQMA4GA1UECBMHVW5rbm93bjEQMA4GA1UEBxMHVW5rbm93bjEQMA4GA1UEChMHVW5rbm93bjEQMA4GA1UECxMHVW5rbm93bjEQMA4GA1UEAxMHVW5rbm93bjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOv9leYT7y6roAEeippaDCc/rZviMmN5tO+dv/w6LpbcOx9uLThPk7UZst2ZBExCRIMFFaEgH1w1tPP0BqGS1j3Ex+9rhcBEKIiFRoDH3LcWz4RVSkLiUizmo4lhspmj8zvDNX6dh86vNTsXt8GPFs1isBncYYpn8Z3MEDZn69mfxmg8iN2a1EnDVNm06kphXMh44tflRkPFfrVHDBYyTEwOkkTN70cpqeOvCq5W4t+EIWlzYWdSvVTg/8Duu8obCA68mLYERznXjsUw9s2905sW+uhAMv00XNbKVhxPSIE6/zKihltVu/2rS6x8dyk2oSvVb4cMwQ3H922AF5vuJtECAwEAAaMhMB8wHQYDVR0OBBYEFJVIBmuppKkII32TKakneUPCAmAiMA0GCSqGSIb3DQEBCwUAA4IBAQAFn7Zzi55MjB/Wh45EGJ6cOVb8YmE9W+Jv0N5hqMI7u6Tjetfj1K3OQEug86QFGb6aLl1wC0zPFTI1Ibn1NdTwqfz6uQMDoBDN/VSawccWHkimSA+uRxFC1VhZktyYmJibkfwoMDQ8i0TB0AVyypmPwbbmakAzBbCOd6JNe44YBSTv0dXuu+a09kZBc+UQMgzwpoFL3gJSY82kY5oiZr52kbp/56qca/4rTNx8wkfAO2MN8CXKAWjA9ETunA2Gm+MKvzhC+ho7ihYjIL7jeaIwaGacYQB6zffsjsOVSJHZywBVCCn/c+XjoHBZDrurkxNF1kuwSQALgVFOcPRAHFVK",
+                "saml.force.post.binding": "false",
+                "saml.signature.algorithm": "RSA_SHA256",
+                "saml_single_logout_service_url_post": "http://localhost:8080/saml/logout",
+                "saml_force_name_id_format": "true",
+                "saml.client.signature": "true",
+                "saml.authnstatement": "true",
+                "saml_name_id_format": "email",
+                "saml.server.signature": "true",
+                "saml_signature_canonicalization_method": "http://www.w3.org/2001/10/xml-exc-c14n#"
+            },
+            "protocolMappers": [
+                {
+                    "name": "role list",
+                    "protocol": "saml",
+                    "protocolMapper": "saml-role-list-mapper",
+                    "consentRequired": false,
+                    "config": {
+                        "single": "false",
+                        "attribute.name": "Role",
+                        "attribute.nameformat": "Basic"
+                    }
+                },
+                {
+                    "name": "X500 email",
+                    "protocol": "saml",
+                    "protocolMapper": "saml-user-property-mapper",
+                    "consentRequired": false,
+                    "consentText": "${email}",
+                    "config": {
+                        "user.attribute": "email",
+                        "friendly.name": "email",
+                        "attribute.name": "email",
+                        "attribute.nameformat": "Basic"
+                    }
+                }
+            ],
+            "defaultClientScopes": [],
+            "optionalClientScopes": []
+        },
+        {
+            "clientId": "cbioportal_api",
+            "name": "cBioPortal OIDC client",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "fullScopeAllowed": true,
+            "redirectUris": [
+                "http://localhost:8080/api/data-access-token/oauth2"
+            ],
+            "protocolMappers": [
+                {
+                    "name": "cbioportal_api_audience",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-audience-mapper",
+                    "config": {
+                        "included.client.audience": "cbioportal_api",
+                        "id.token.claim": "false",
+                        "access.token.claim": "true"
+                    }
+                }
+            ],
+            "defaultClientScopes": [
+                "roles"
+            ],
+            "optionalClientScopes": [
+                "offline_access"
+            ]
+        }
+    ],
+    "users": [
+        {
+            "username": "testuser",
+            "enabled": true,
+            "email": "testuser@thehyve.nl",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "P@ssword1"
+                }
+            ],
+            "realmRoles": [
+                "offline_access"
+            ],
+            "groups": [
+                "/PUBLIC_STUDIES"
+            ]
+        }
+    ],
+    "groups": [
+        {
+            "name": "PUBLIC_STUDIES",
+            "clientRoles": {
+                "cbioportal": [
+                    "study_es_0",
+                    "ascn_test_study",
+                    "teststudy_genepanels",
+                    "lgg_ucsf_2014_test_generic_assay"
+                ]
+            }
+        }
+    ],
+    "roles": {
+        "client": {
+            "cbioportal": [
+                {
+                    "name": "study_es_0"
+                },
+                {
+                    "name": "ascn_test_study"
+                },
+                {
+                    "name": "teststudy_genepanels"
+                },
+                {
+                    "name": "lgg_ucsf_2014_test_generic_assay"
+                }
+            ]
+        }
+    }
+}

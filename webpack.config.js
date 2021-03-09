@@ -72,6 +72,11 @@ const sourceMap = process.env.DISABLE_SOURCEMAP ? '' : 'source-map';
 
 var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 
+// extract number of cores, or boolean value from WEBPACK_PARALLEL env var
+const parallel = isNaN(parseInt(process.env.WEBPACK_PARALLEL))
+    ? process.env.WEBPACK_PARALLEL
+    : parseInt(process.env.WEBPACK_PARALLEL);
+
 var sassResourcesLoader = {
     loader: 'sass-resources-loader',
     options: {
@@ -107,7 +112,7 @@ var config = {
     optimization: {
         minimizer: [
             new TerserPlugin({
-                parallel: !process.env.NO_PARALLEL,
+                parallel,
             }),
         ],
     },

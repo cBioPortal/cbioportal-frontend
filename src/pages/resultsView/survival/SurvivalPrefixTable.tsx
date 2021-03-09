@@ -198,6 +198,7 @@ const COLUMNS = [
         sortBy: (d: SurvivalPrefixSummary) => d.displayText,
         download: (d: SurvivalPrefixSummary) => d.displayText,
         visible: true,
+        togglable: false,
     },
     {
         name: '# Patients With Data',
@@ -341,6 +342,7 @@ export default class SurvivalPrefixTable extends React.Component<
                 columnVisibility={this.columnVisibility}
                 columnVisibilityProps={{
                     onColumnToggled: this.onColumnToggled,
+                    className: 'pull-right SurvivalPrefixTableVisibilityColumn',
                 }}
                 headerComponent={
                     <NumPatientsSlider
