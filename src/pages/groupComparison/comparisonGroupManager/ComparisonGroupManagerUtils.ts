@@ -15,9 +15,11 @@ export function getSelectedGroups(
     allGroups: StudyViewComparisonGroup[],
     store: StudyViewPageStore
 ) {
-    return allGroups.filter(group =>
+    const groups = allGroups.filter(group =>
         store.isComparisonGroupSelected(group.uid)
     );
+    groups.forEach(group => (group.color = store.userGroupColors[group.uid]));
+    return groups;
 }
 
 export function getStudiesAttr(

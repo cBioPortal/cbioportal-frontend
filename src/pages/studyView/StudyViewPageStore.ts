@@ -703,7 +703,7 @@ export class StudyViewPageStore {
                 let groupColor =
                     selectedGroup.uid === groupUid
                         ? color
-                        : selectedGroup.color;
+                        : this.userGroupColors[selectedGroup.uid];
                 if (groupColor != undefined)
                     groupColor = groupColor.toLowerCase();
 
@@ -820,20 +820,6 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly userSavedGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.userGroupsFromRemote, this.userSettings],
-        invoke: async () => {
-            const colors = this.userGroupColors;
-            return this.userGroupsFromRemote.result!.map(group =>
-                Object.assign(group, {
-                    // add group color from session
-                    color: getUserGroupColor(colors, group.uid),
-                })
-            );
-        },
-        default: [],
-    });
-
     readonly sharedGroups = remoteData<StudyViewComparisonGroup[]>({
         await: () => [
             this.sampleSet,
@@ -876,10 +862,10 @@ export class StudyViewPageStore {
     });
 
     readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.userSavedGroups, this.sharedGroups],
+        await: () => [this.userGroupsFromRemote, this.sharedGroups],
         invoke: async () => {
             let groups: StudyViewComparisonGroup[] = _.cloneDeep(
-                this.userSavedGroups.result
+                this.userGroupsFromRemote.result
             );
             let groupIdSet: { [s: string]: boolean } = stringListToSet(
                 groups.map(group => group.uid)

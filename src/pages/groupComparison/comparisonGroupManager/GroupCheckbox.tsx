@@ -37,6 +37,7 @@ export interface IGroupCheckboxProps {
     restore: (group: StudyViewComparisonGroup) => void;
     delete: (group: StudyViewComparisonGroup) => void;
     shareGroup: (group: StudyViewComparisonGroup) => void;
+    color: string;
     onChangeGroupColor: (
         group: StudyViewComparisonGroup,
         color: string | undefined
@@ -60,7 +61,7 @@ export default class GroupCheckbox extends React.Component<
         this.props.store.toggleComparisonGroupSelected(this.props.group.uid);
         this.props.store.flagDuplicateColorsForSelectedGroups(
             this.props.group.uid,
-            this.props.group.color!
+            this.props.color!
         );
     }
 
@@ -115,7 +116,7 @@ export default class GroupCheckbox extends React.Component<
     @action.bound
     handleChangeComplete = (color: any, event: any) => {
         // if same color is select, unselect it (go back to no color)
-        if (color.hex === this.props.group.color) {
+        if (color.hex === this.props.color) {
             this.props.onChangeGroupColor(this.props.group, undefined);
             this.props.store.flagDuplicateColorsForSelectedGroups(
                 this.props.group.uid,
@@ -145,7 +146,7 @@ export default class GroupCheckbox extends React.Component<
                     circleSize={20}
                     circleSpacing={3}
                     onChangeComplete={this.handleChangeComplete}
-                    color={this.props.group.color}
+                    color={this.props.color}
                     width="140px"
                 />
             </div>
@@ -237,7 +238,7 @@ export default class GroupCheckbox extends React.Component<
                                     >
                                         <ColorPickerIcon
                                             color={
-                                                this.props.group.color ||
+                                                this.props.color ||
                                                 COLOR_UNDEFINED
                                             }
                                         />

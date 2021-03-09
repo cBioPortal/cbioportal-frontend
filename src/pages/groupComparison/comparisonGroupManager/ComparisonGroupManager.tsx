@@ -203,6 +203,11 @@ export default class ComparisonGroupManager extends React.Component<
                             this.filteredGroups.result!.map(group => (
                                 <GroupCheckbox
                                     group={group}
+                                    color={
+                                        this.props.store.userGroupColors[
+                                            group.uid
+                                        ]
+                                    }
                                     store={this.props.store}
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(
                                         group.uid
