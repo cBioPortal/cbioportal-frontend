@@ -51,6 +51,8 @@ export default class GroupCheckbox extends React.Component<
     IGroupCheckboxProps,
     {}
 > {
+    @observable showColorPicker = false;
+
     constructor(props: IGroupCheckboxProps) {
         super(props);
         makeObservable(this);
@@ -227,6 +229,7 @@ export default class GroupCheckbox extends React.Component<
                                 overlay={this.buildColorChooserWidget()}
                                 onEnter={this.onOverlayEnter}
                                 onExit={this.onOverlayExit}
+                                rootClose={true}
                             >
                                 <DefaultTooltip
                                     overlay={
