@@ -1,6 +1,8 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
+const {
+    goToUrlAndSetLocalStorage,
+    COEXPRESSION_TIMEOUT,
+} = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
@@ -40,6 +42,34 @@ describe('results view mutation table', function() {
         res = browser.checkElement(
             'table[class="simple-table table table-striped table-border-top"]'
         );
+        assertScreenShotMatch(res);
+    });
+});
+
+describe('cnsegments tab', () => {
+    it('renders cnsegments tab', () => {
+        var url = `${CBIOPORTAL_URL}/results/cnSegments?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url, true);
+        browser.waitForExist('.igvControlDiv', 30000);
+        var res = browser.checkElement('.cnSegmentsMSKTab', {
+            hide: ['.qtip'],
+        });
+        assertScreenShotMatch(res);
+    });
+});
+
+describe('coexpression tab', () => {
+    it('renders coexpression tab', () => {
+        var url = `${CBIOPORTAL_URL}/results/coexpression?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=ERCC5&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize`;
+        goToUrlAndSetLocalStorage(url, true);
+        browser.setViewportSize({ height: 2000, width: 1600 });
+        browser.waitForVisible(
+            'div[data-test="CoExpressionPlot"]',
+            COEXPRESSION_TIMEOUT
+        );
+        var res = browser.checkElement('[data-test="coExpressionTabDiv"]', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 });

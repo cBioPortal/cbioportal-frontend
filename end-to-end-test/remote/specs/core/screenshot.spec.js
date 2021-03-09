@@ -37,7 +37,7 @@ function runResultsTestSuite(prefix, options = {}) {
     it.skip(`${prefix} igv_tab tab`, function() {
         browser.click('a.tabAnchor_cnSegments');
         browser.waitForExist('#cnSegmentsFrame', 20000);
-        var res = browser.checkElement('.cnSegmentsMSKTabs', {
+        var res = browser.checkElement('.cnSegmentsMSKTab', {
             hide: ['.qtip'],
         });
         assertScreenShotMatch(res);
