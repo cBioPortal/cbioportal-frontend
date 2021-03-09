@@ -406,7 +406,7 @@ export default class StudyViewPage extends React.Component<
                     }}
                     onVisibleChange={visible => {
                         if (
-                            !this.store.isColorChooserModalVisible &&
+                            this.store.numberOfVisibleColorChooserModals == 0 &&
                             !this.shareLinkModal
                         ) {
                             this.store.showComparisonGroupUI = !!visible;
