@@ -34,7 +34,9 @@ function runResultsTestSuite(prefix, options = {}) {
     it.skip(`${prefix} igv_tab tab`, function() {
         $('a.tabAnchor_cnSegments').click();
         $('#cnSegmentsFrame').waitForExist({ timeout: 20000 });
-        var res = browser.checkElement('.cnSegmentsMSKTabs');
+        var res = browser.checkElement('.cnSegmentsMSKTabs', {
+            hide: ['.qtip'],
+        });
         assertScreenShotMatch(res);
     });
 
