@@ -8,7 +8,9 @@ DIR=$PWD
 
 mkdir -p $E2E_WORKSPACE
 cd $E2E_WORKSPACE
-git clone --depth 1 --branch $BACKEND_BRANCH --single-branch https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git
+git clone --depth 1 --branch $BACKEND_BRANCH --single-branch https://github.com/$BACKEND_PROJECT_USERNAME/cbioportal.git || \
+    git fetch --depth 1 origin $BACKEND_BRANCH
+git checkout $BACKEND_BRANCH
 cd cbioportal
 mvn -DskipTests clean install
 unzip portal/target/cbioportal*.war -d portal/target/war-exploded
