@@ -3,6 +3,7 @@ import {
     longestCommonStartingSubstring,
 } from 'cbioportal-frontend-commons';
 import { countMutationsByProteinChange, Mutation } from 'cbioportal-utils';
+import { PfamDomainRange } from 'genome-nexus-ts-api-client';
 
 import { LollipopSpec } from '../model/LollipopSpec';
 
@@ -61,6 +62,7 @@ export function lollipopLabelTextAnchor(
         fontFamily,
         `${fontSize}px`
     );
+    debugger;
     const lollipopDistanceToOrigin = codon * (geneWidth / proteinLength);
     const lollipopDistanceToXMax = geneWidth - lollipopDistanceToOrigin;
 
@@ -152,4 +154,50 @@ export function calcCountRange(
 
         return [min, Math.max(min, max)];
     }
+}
+
+function isInThisDomain(codon: number) {
+    return (range: PfamDomainRange): boolean => {
+        return codon >= range.pfamDomainStart && codon <= range.pfamDomainEnd;
+    };
+}
+
+export function byMiddlemostPosition(averageCodon: number) {
+    return (x: LollipopSpec, y: LollipopSpec): 1 | -1 | 0 => {
+        const yDistance = Math.abs(y.codon - averageCodon);
+        const xDistance = Math.abs(x.codon - averageCodon);
+        if (yDistance > xDistance) {
+            return -1;
+        } else if (xDistance > yDistance) {
+            return 1;
+        } else {
+            return 0;
+        }
+    };
+}
+
+export function byWhetherExistsInADomain(remainingDomains: PfamDomainRange[]) {
+    return (x: LollipopSpec, y: LollipopSpec): 0 | 1 | -1 => {
+        const isYInADomain = remainingDomains.some(isInThisDomain(y.codon));
+        const isXInADomain = remainingDomains.some(isInThisDomain(x.codon));
+        if (
+            (isYInADomain && isXInADomain) ||
+            (!isYInADomain && !isXInADomain)
+        ) {
+            return 0;
+        } else if (isYInADomain) {
+            return 1;
+        } else {
+            return -1;
+        }
+    };
+}
+
+export function byMutationCount(x: LollipopSpec, y: LollipopSpec): number {
+    if (y.count > x.count) {
+        return 1;
+    } else if (y.count < x.count) {
+        return -1;
+    }
+    return 0;
 }
