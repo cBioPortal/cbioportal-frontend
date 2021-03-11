@@ -8,12 +8,15 @@ export type LollipopSpec = {
     count: number;
     group?: string;
     placement?: LollipopPlacement;
-    label?: {
-        text: string;
-        textAnchor?: string;
-        fontSize?: number;
-        fontFamily?: string;
-    };
+    label?: LollipopLabel;
     color?: string;
     tooltip?: JSX.Element;
+};
+
+export type LollipopLabel = {
+    text: string;
+    textAnchor?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    show: boolean;
 };
