@@ -79,6 +79,22 @@ const exampleClinicalData: { [patientKey: string]: any[] } = {
             uniquePatientKey: '5',
         },
     ],
+    '6': [
+        {
+            clinicalAttributeId: 'OS_MONTHS',
+            value: '-2.0',
+            patientId: 'patient_6',
+            studyId: 'study_1',
+            uniquePatientKey: '6',
+        },
+        {
+            clinicalAttributeId: 'OS_STATUS',
+            value: 'LIVING',
+            patientId: 'patient_6',
+            studyId: 'study_1',
+            uniquePatientKey: '6',
+        },
+    ],
 };
 
 const exampleTargetKeys = ['1', '2', '3', '5'];
