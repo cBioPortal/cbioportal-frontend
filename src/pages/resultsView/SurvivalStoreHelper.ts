@@ -35,7 +35,8 @@ export function getPatientSurvivals(
                         !isNullSurvivalClinicalDataValue(
                             monthsClinicalData.value
                         ) &&
-                        !Number.isNaN(Number(monthsClinicalData.value))
+                        !Number.isNaN(Number(monthsClinicalData.value)) &&
+                        Number(monthsClinicalData.value) >= 0
                     ) {
                         patientSurvivals.push({
                             uniquePatientKey,
