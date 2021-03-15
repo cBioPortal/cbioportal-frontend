@@ -37,19 +37,19 @@ describe('ProteinChangeColumnFormatter', () => {
 
         // mount a single cell component (Td) for a germline mutation
         germlineComponent = mount(
-            ProteinChangeColumnFormatter.renderWithMutationStatus(data)
+            ProteinChangeColumnFormatter.renderWithMutationStatus()(data)
         );
 
         data = [somaticMutation];
 
         // mount a single cell component (Td) for a somatic mutation
         somaticComponent = mount(
-            ProteinChangeColumnFormatter.renderWithMutationStatus(data)
+            ProteinChangeColumnFormatter.renderWithMutationStatus()(data)
         );
 
         data = [mutationWithLongProteinChangeValue];
         longProteinChangeComponent = mount(
-            ProteinChangeColumnFormatter.renderWithMutationStatus(data)
+            ProteinChangeColumnFormatter.renderWithMutationStatus()(data)
         );
     });
 
