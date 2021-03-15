@@ -135,6 +135,30 @@ export default class Signal extends React.Component<SignalProps, {}> {
                                                 FrequencyTableColumnEnum
                                                     .BIALLELIC_RATIO
                                             ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MEDIAN_AGE_AT_DX
+                                            ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MEDIAN_TMB
+                                            ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MSI_SCORE
+                                            ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MEDIAN_HRD_LST
+                                            ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MEDIAN_HRD_NTELOMERIC_AI
+                                            ],
+                                            FREQUENCY_COLUMNS_DEFINITION[
+                                                FrequencyTableColumnEnum
+                                                    .MEDIAN_HRD_FRACTION_LOH
+                                            ],
                                         ]}
                                     />
                                 }
