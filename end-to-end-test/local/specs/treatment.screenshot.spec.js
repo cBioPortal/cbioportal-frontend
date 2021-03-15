@@ -21,7 +21,7 @@ const GENERIC_ASSAY_ENTITY_SELECTOR =
 describe('treatment feature', () => {
     describe('oncoprint tab', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrl);
+            goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
             waitForOncoprint();
         });
 
@@ -57,18 +57,18 @@ describe('treatment feature', () => {
 
     describe('plots tab', () => {
         beforeEach(() => {
-            goToUrlAndSetLocalStorage(plotsTabUrl);
+            goToUrlAndSetLocalStorage(plotsTabUrl, true);
             waitForPlotsTab();
             selectTreamentsBothAxes();
         });
 
-        it('shows `value >8.00` in figure legend and indicates sub-threshold data points in plot', () => {
+        it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
-        it('when option deselected, hides `value >8.00` in figure legend and sub-threshold data points in plot', () => {
-            $('[data-test=ViewLimitValues]').waitForExist();
+        it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', () => {
+            $('[data-test=ViewLimitValues]').waitForExist(10000);
             $('[data-test=ViewLimitValues]').click();
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
@@ -79,14 +79,14 @@ describe('treatment feature', () => {
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
             // make sure bars become visible (no mut data is available)
-            $('[data-test=ViewCopyNumber]').waitForExist();
+            $('[data-test=ViewCopyNumber]').waitForExist(10000);
             $('[data-test=ViewCopyNumber]').click();
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
-        it('when option deselected, hides `value >8.00` in figure legend and sub-threshold data point indicators in waterfall plot', () => {
+        it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data point indicators in waterfall plot', () => {
             var horzDataSelect = $('[name=h-profile-type-selector]').$('..');
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 

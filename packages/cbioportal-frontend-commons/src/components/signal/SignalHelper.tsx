@@ -175,12 +175,12 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
                     sum + row.variantCount,
                 0
             );
-            const frequency =
-                (formatNumberValueInSignificantDigits(
-                    variantCount / tumorTypeCount,
+            const percent =
+                formatNumberValueInSignificantDigits(
+                    (variantCount * 100) / tumorTypeCount,
                     2
-                ) || 0) * 100;
-            return <strong className="pull-right">{frequency}</strong>;
+                ) || 0;
+            return <strong className="pull-right">{percent}</strong>;
         },
     },
     [FrequencyTableColumnEnum.BIALLELIC_RATIO]: {
@@ -202,12 +202,12 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
                 (sum: any, row: any) => sum + row._original.qcPassTumorCount,
                 0
             );
-            const frequency =
-                (formatNumberValueInSignificantDigits(
-                    biallelicTumorCount / qcPassTumorCount,
+            const percent =
+                formatNumberValueInSignificantDigits(
+                    (biallelicTumorCount * 100) / qcPassTumorCount,
                     2
-                ) || 0) * 100;
-            return <strong className="pull-right">{frequency}</strong>;
+                ) || 0;
+            return <strong className="pull-right">{percent}</strong>;
         },
     },
     [FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX]: {

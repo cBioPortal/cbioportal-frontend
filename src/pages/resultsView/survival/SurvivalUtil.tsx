@@ -49,15 +49,10 @@ export const survivalCasesHeaderText: { [prefix: string]: string } = {
     DSS: 'DECEASED',
 };
 
-export const survivalPlotTooltipxLabelWithEvent: {
-    [prefix: string]: string;
-} = {
-    // TODO text for PFS DSS?
-    OS: 'Time of Death',
-    PFS: 'Time of Death',
-    DFS: 'Time of relapse',
-    DSS: 'Time of Death',
-};
+export const SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP = 'Time of event';
+export const SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP =
+    'Time of last observation';
+export const SURVIVAL_PLOT_Y_LABEL_TOOLTIP = '% event free';
 
 // OS, DFS, PFS, DSS are four reserved KM plot types
 // use priority from RESERVED_SURVIVAL_PLOT_PRIORITY for these four types
@@ -423,14 +418,22 @@ export function getSurvivalAttributes(clinicalAttributes: ClinicalAttribute[]) {
         .value();
 }
 
-export function createSurvivalAttributeIdsDict(prefixList: string[]) {
+export function createSurvivalAttributeIdsDict(
+    prefixList: string[],
+    excludeMonths: boolean = false,
+    excludeStatus: boolean = false
+) {
     return _.reduce(
         prefixList,
         (dict, prefix) => {
-            const monthsAttrId = `${prefix}_MONTHS`;
-            const statusAttrId = `${prefix}_STATUS`;
-            dict[monthsAttrId] = monthsAttrId;
-            dict[statusAttrId] = statusAttrId;
+            if (!excludeMonths) {
+                const monthsAttrId = `${prefix}_MONTHS`;
+                dict[monthsAttrId] = monthsAttrId;
+            }
+            if (!excludeStatus) {
+                const statusAttrId = `${prefix}_STATUS`;
+                dict[statusAttrId] = statusAttrId;
+            }
             return dict;
         },
         {} as { [id: string]: string }

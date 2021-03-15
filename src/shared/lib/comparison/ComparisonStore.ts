@@ -14,6 +14,7 @@ import {
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     findFirstMostCommonElt,
+    getBrowserWindow,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import {
@@ -36,6 +37,7 @@ import {
     IReactionDisposer,
     makeObservable,
     observable,
+    runInAction,
 } from 'mobx';
 import client from '../../api/cbioportalClientInstance';
 import comparisonClient from '../../api/comparisonGroupClientInstance';
@@ -84,8 +86,10 @@ import {
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    cnaEventTypeSelectInit,
-    mutationEventTypeSelectInit,
+    MutationEnrichmentEventType,
+    CopyNumberEnrichmentEventType,
+    mutationGroup,
+    cnaGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export enum OverlapStrategy {
@@ -99,17 +103,23 @@ export default abstract class ComparisonStore {
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
     @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes = cnaEventTypeSelectInit;
+    public selectedCopyNumberEnrichmentEventTypes: {
+        [key in CopyNumberEnrichmentEventType]?: boolean;
+    } = {};
     @observable.ref
-    public selectedMutationEnrichmentEventTypes = mutationEventTypeSelectInit();
+    public selectedMutationEnrichmentEventTypes: {
+        [key in MutationEnrichmentEventType]?: boolean;
+    } = {};
     @observable.ref
-    public isStructuralVariantEnrichmentSelected = true;
+    public isStructuralVariantEnrichmentSelected?: boolean;
 
     constructor(
         protected appStore: AppStore,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
         makeObservable(this);
+
+        (window as any).compStore = this;
 
         setTimeout(() => {
             // When groups in the comparison are updated by the user
@@ -434,13 +444,60 @@ export default abstract class ComparisonStore {
         },
     });
 
-    public readonly mutationEnrichmentProfiles = remoteData({
+    public readonly alterationEnrichmentProfiles = remoteData({
         await: () => [this.molecularProfilesInActiveStudies],
+        invoke: () => {
+            return Promise.resolve({
+                mutationProfiles: pickMutationEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+                structuralVariantProfiles: pickStructuralVariantEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+                copyNumberEnrichmentProfiles: pickCopyNumberEnrichmentProfiles(
+                    this.molecularProfilesInActiveStudies.result!
+                ),
+            });
+        },
+        onResult: profiles => {
+            runInAction(() => {
+                if (profiles) {
+                    if (!_.isEmpty(profiles.mutationProfiles)) {
+                        mutationGroup.forEach(eventType => {
+                            this.selectedMutationEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                    if (!_.isEmpty(profiles.structuralVariantProfiles)) {
+                        this.isStructuralVariantEnrichmentSelected = true;
+                    }
+                    if (!_.isEmpty(profiles.copyNumberEnrichmentProfiles)) {
+                        cnaGroup.forEach(eventType => {
+                            this.selectedCopyNumberEnrichmentEventTypes[
+                                eventType
+                            ] = true;
+                        });
+                    }
+                }
+            });
+        },
+    });
+
+    public readonly mutationEnrichmentProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickMutationEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!.mutationProfiles
+            ),
+    });
+    //
+    public readonly structuralVariantProfiles = remoteData({
+        await: () => [this.alterationEnrichmentProfiles],
+        invoke: () =>
+            Promise.resolve(
+                this.alterationEnrichmentProfiles.result!
+                    .structuralVariantProfiles
             ),
     });
 
@@ -455,12 +512,11 @@ export default abstract class ComparisonStore {
     });
 
     public readonly copyNumberEnrichmentProfiles = remoteData({
-        await: () => [this.molecularProfilesInActiveStudies],
+        await: () => [this.alterationEnrichmentProfiles],
         invoke: () =>
             Promise.resolve(
-                pickCopyNumberEnrichmentProfiles(
-                    this.molecularProfilesInActiveStudies.result!
-                )
+                this.alterationEnrichmentProfiles.result!
+                    .copyNumberEnrichmentProfiles
             ),
     });
 
@@ -806,7 +862,7 @@ export default abstract class ComparisonStore {
             return Promise.resolve(
                 this.enrichmentAnalysisGroups.result!.reduce(
                     (acc: EnrichmentAnalysisComparisonGroup[], group) => {
-                        let filteredSamples: Sample[] = [];
+                        let filteredSamples: Sample[] = group.samples;
                         // filter samples having mutation profile
                         if (
                             !_.isEmpty(
@@ -814,14 +870,11 @@ export default abstract class ComparisonStore {
                                     .result
                             )
                         ) {
-                            filteredSamples = filteredSamples.concat(
-                                group.samples.filter(
-                                    sample =>
-                                        this
-                                            .selectedStudyMutationEnrichmentProfileMap
-                                            .result![sample.studyId] !==
-                                        undefined
-                                )
+                            filteredSamples = filteredSamples.filter(
+                                sample =>
+                                    this
+                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
                             );
                         }
 
@@ -850,20 +903,16 @@ export default abstract class ComparisonStore {
                                     .result
                             )
                         ) {
-                            filteredSamples = filteredSamples.concat(
-                                group.samples.filter(
-                                    sample =>
-                                        this
-                                            .selectedStudyCopyNumberEnrichmentProfileMap
-                                            .result![sample.studyId] !==
-                                        undefined
-                                )
+                            filteredSamples = filteredSamples.filter(
+                                sample =>
+                                    this
+                                        .selectedStudyCopyNumberEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
                             );
                         }
                         if (filteredSamples.length > 0) {
                             acc.push({
                                 ...group,
-                                count: filteredSamples.length,
                                 samples: filteredSamples,
                                 description: `Number (percentage) of ${
                                     this.usePatientLevelEnrichments
@@ -871,7 +920,7 @@ export default abstract class ComparisonStore {
                                         : 'samples'
                                 } in ${
                                     group.name
-                                } that have a mutation in the listed gene.`,
+                                } that have an alteration in the listed gene.`,
                             });
                         }
                         return acc;
@@ -1021,7 +1070,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1108,7 +1156,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1195,7 +1242,6 @@ export default abstract class ComparisonStore {
                             if (filteredSamples.length > 0) {
                                 acc.push({
                                     ...group,
-                                    count: filteredSamples.length,
                                     samples: filteredSamples,
                                     description: `samples in ${group.name}`,
                                 });
@@ -1291,7 +1337,6 @@ export default abstract class ComparisonStore {
                                     if (filteredSamples.length > 0) {
                                         acc.push({
                                             ...group,
-                                            count: filteredSamples.length,
                                             samples: filteredSamples,
                                             description: `samples in ${group.name}`,
                                         });
@@ -1518,8 +1563,6 @@ export default abstract class ComparisonStore {
         return (
             (this.activeGroups.isComplete &&
                 this.activeGroups.result.length < 2) || //less than two active groups
-            (this.activeStudyIds.isComplete &&
-                this.activeStudyIds.result.length > 1) || //more than one active study
             !this.alterationsTabShowable
         );
     }

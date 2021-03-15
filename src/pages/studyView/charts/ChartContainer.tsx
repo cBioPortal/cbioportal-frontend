@@ -63,6 +63,11 @@ import {
 } from '../table/treatments/PatientTreatmentsTable';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
+import {
+    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
+} from 'pages/resultsView/survival/SurvivalUtil';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -696,9 +701,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             totalCasesHeader="Number of Cases, Total"
                             statusCasesHeader="Number of Cases, Deceased"
                             medianMonthsHeader="Median Months Survival"
-                            yLabelTooltip="Survival estimate"
-                            xLabelWithEventTooltip="Time of death"
-                            xLabelWithoutEventTooltip="Time of last observation"
+                            yLabelTooltip={SURVIVAL_PLOT_Y_LABEL_TOOLTIP}
+                            xLabelWithEventTooltip={
+                                SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP
+                            }
+                            xLabelWithoutEventTooltip={
+                                SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP
+                            }
                             showDownloadButtons={false}
                             showSlider={false}
                             showTable={false}

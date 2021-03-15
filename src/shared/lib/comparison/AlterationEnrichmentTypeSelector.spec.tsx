@@ -8,15 +8,17 @@ import { assert } from 'chai';
 import _ from 'lodash';
 import sinon from 'sinon';
 import {
-    cnaEventTypeSelectInit,
-    mutationEventTypeSelectInit,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
+    CopyNumberEnrichmentEventType,
+    MutationEnrichmentEventType,
+    mutationGroup,
+} from './ComparisonStoreUtils';
 
 describe('AlterationEnrichmentTypeSelector', () => {
     let menu: any;
     const handlers: IAlterationEnrichmentTypeSelectorHandlers = {
         updateSelectedCopyNumber: sinon.spy(),
         updateSelectedMutations: sinon.spy(),
+        updateStructuralVariantSelection: sinon.spy(),
     };
 
     const inframeCheckboxRefs = [
@@ -134,9 +136,22 @@ describe('AlterationEnrichmentTypeSelector', () => {
     };
 
     function createStore() {
+        let selectedMutationEnrichmentEventTypes = [...mutationGroup].reduce(
+            (acc, type) => {
+                acc[type] = true;
+                return acc;
+            },
+            {} as { [key in MutationEnrichmentEventType]?: boolean }
+        );
+
+        let selectedCopyNumberEnrichmentEventTypes = {
+            [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            [CopyNumberEnrichmentEventType.AMP]: true,
+        };
+
         return {
-            selectedCopyNumberEnrichmentEventTypes: cnaEventTypeSelectInit,
-            selectedMutationEnrichmentEventTypes: mutationEventTypeSelectInit(),
+            selectedCopyNumberEnrichmentEventTypes,
+            selectedMutationEnrichmentEventTypes,
         } as ComparisonStore;
     }
 

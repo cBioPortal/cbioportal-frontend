@@ -16,7 +16,11 @@ import { OverlapStrategy } from '../../../shared/lib/comparison/ComparisonStore'
 import ResultsViewComparisonStore from './ResultsViewComparisonStore';
 import { AppStore } from '../../../AppStore';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
-import { GroupComparisonTab } from '../../groupComparison/GroupComparisonTabs';
+import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
+import {
+    GENOMIC_ALTERATIONS_TAB_NAME,
+    GroupComparisonTab,
+} from '../../groupComparison/GroupComparisonTabs';
 import Survival from '../../groupComparison/Survival';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
@@ -25,7 +29,6 @@ import groupComparisonStyles from '../../../pages/groupComparison/styles.module.
 import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
-import { ResultsViewComparisonSubTab } from '../ResultsViewPageHelpers';
 import AlterationEnrichments from 'pages/groupComparison/AlterationEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
@@ -117,7 +120,7 @@ export default class ComparisonTab extends React.Component<
     });
 
     @computed get alterationEnrichmentTabName() {
-        return buildAlterationsTabName(this.store);
+        return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
     @action.bound

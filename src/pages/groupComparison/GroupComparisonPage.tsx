@@ -11,7 +11,10 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import GroupSelector from './groupSelector/GroupSelector';
-import { GroupComparisonTab } from './GroupComparisonTabs';
+import {
+    GENOMIC_ALTERATIONS_TAB_NAME,
+    GroupComparisonTab,
+} from './GroupComparisonTabs';
 import { StudyLink } from 'shared/components/StudyLink/StudyLink';
 import {
     action,
@@ -33,7 +36,6 @@ import styles from './styles.module.scss';
 import { OverlapStrategy } from '../../shared/lib/comparison/ComparisonStore';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
-import StructuralVariantEnrichments from './StructuralVariantEnrichments';
 import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
@@ -98,7 +100,7 @@ export default class GroupComparisonPage extends React.Component<
     }
 
     @computed get alterationEnrichmentTabName() {
-        return buildAlterationsTabName(this.store);
+        return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
     @autobind
@@ -182,20 +184,25 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            <AlterationEnrichmentTypeSelector
-                                store={this.store}
-                                handlers={
-                                    this
-                                        .alterationEnrichmentTypeSelectorHandlers!
-                                }
-                                showMutations={
-                                    this.store.hasMutationEnrichmentData
-                                }
-                                showCnas={this.store.hasCnaEnrichmentData}
-                                showStructuralVariants={
-                                    this.store.hasStructuralVariantData
-                                }
-                            />
+                            {this.store.activeGroups.isComplete &&
+                                this.store.activeGroups.result.length > 1 && (
+                                    <AlterationEnrichmentTypeSelector
+                                        store={this.store}
+                                        handlers={
+                                            this
+                                                .alterationEnrichmentTypeSelectorHandlers!
+                                        }
+                                        showMutations={
+                                            this.store.hasMutationEnrichmentData
+                                        }
+                                        showCnas={
+                                            this.store.hasCnaEnrichmentData
+                                        }
+                                        showStructuralVariants={
+                                            this.store.hasStructuralVariantData
+                                        }
+                                    />
+                                )}
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}

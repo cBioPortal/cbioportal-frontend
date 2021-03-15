@@ -27,18 +27,12 @@ import {
 } from 'cbioportal-frontend-commons';
 import { ExtendedAlteration } from '../ResultsViewPageStore';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
+import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    groups: {
-        name: string;
-        description: string;
-        nameOfEnrichmentDirection?: string;
-        count: number;
-        color?: string;
-        samples: Pick<Sample, 'uniqueSampleKey'>[];
-    }[];
+    groups: EnrichmentAnalysisComparisonGroup[];
     sampleKeyToSample: {
         [uniqueSampleKey: string]: Sample;
     };

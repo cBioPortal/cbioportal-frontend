@@ -22,6 +22,7 @@ export enum ProteinImpactType {
     MISSENSE = CanonicalMutationType.MISSENSE,
     TRUNCATING = CanonicalMutationType.TRUNCATING,
     INFRAME = CanonicalMutationType.INFRAME,
+    SPLICE = CanonicalMutationType.SPLICE_SITE,
     FUSION = CanonicalMutationType.FUSION,
     OTHER = CanonicalMutationType.OTHER,
 }
@@ -98,11 +99,12 @@ export function getProteinImpactTypeFromCanonical(
         case CanonicalMutationType.FRAME_SHIFT_DEL:
         case CanonicalMutationType.FRAMESHIFT:
         case CanonicalMutationType.NONSENSE:
-        case CanonicalMutationType.SPLICE_SITE:
         case CanonicalMutationType.NONSTART:
         case CanonicalMutationType.NONSTOP:
         case CanonicalMutationType.TRUNCATING:
             return ProteinImpactType.TRUNCATING;
+        case CanonicalMutationType.SPLICE_SITE:
+            return ProteinImpactType.SPLICE;
         case CanonicalMutationType.IN_FRAME_INS:
         case CanonicalMutationType.IN_FRAME_DEL:
         case CanonicalMutationType.INFRAME:

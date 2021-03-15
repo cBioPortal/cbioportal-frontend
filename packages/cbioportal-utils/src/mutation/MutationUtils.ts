@@ -23,10 +23,10 @@ export function countMutationsByProteinChange(
     );
 }
 
-export function groupMutationsByProteinStartPos(
-    mutations: Mutation[]
-): { [pos: number]: Mutation[] } {
-    const map: { [pos: number]: Mutation[] } = {};
+export function groupMutationsByProteinStartPos<T extends Mutation>(
+    mutations: T[]
+): { [pos: number]: T[] } {
+    const map: { [pos: number]: T[] } = {};
 
     for (const mutation of mutations) {
         const codon = mutation.proteinPosStart;

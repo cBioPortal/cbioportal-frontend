@@ -315,7 +315,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                     padding: '10px',
                 }}
             >
-                <h5>Select Alteration Types</h5>
+                <h5>Alteration Types</h5>
 
                 {this.props.showMutations && (
                     <div>
@@ -612,7 +612,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                         type="button"
                         onClick={this.updateSelectedAlterations}
                     >
-                        Select Alterations
+                        Select
                     </button>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
-import { MobxCache } from 'cbioportal-utils';
+import { MobxCache, Mutation } from 'cbioportal-utils';
 
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
@@ -12,7 +12,7 @@ import PtmTrack from './PtmTrack';
 import './defaultTrackTooltipTable.scss';
 
 type TrackPanelProps = {
-    store: MutationMapperStore;
+    store: MutationMapperStore<Mutation>;
     pubMedCache?: MobxCache;
     geneWidth: number;
     proteinLength?: number;

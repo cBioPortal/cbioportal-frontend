@@ -140,7 +140,6 @@ export const otherGroup = [
     MutationEnrichmentEventType.silent,
     MutationEnrichmentEventType.synonymous_variant,
     MutationEnrichmentEventType.targeted_region,
-    MutationEnrichmentEventType.any,
     MutationEnrichmentEventType.other,
 ];
 export const mutationGroup = [
@@ -178,21 +177,6 @@ export function buildAlterationEnrichmentTypeSelectorHandlers(
         }),
     };
     return handlers;
-}
-
-export const cnaEventTypeSelectInit: {
-    [key in CopyNumberEnrichmentEventType]?: boolean;
-} = {
-    [CopyNumberEnrichmentEventType.HOMDEL]: true,
-    [CopyNumberEnrichmentEventType.AMP]: true,
-};
-
-export function mutationEventTypeSelectInit() {
-    const object = {} as { [key in MutationEnrichmentEventType]?: boolean };
-    Object.keys(MutationEnrichmentEventType).forEach(type => {
-        object[type as MutationEnrichmentEventType] = true;
-    });
-    return object;
 }
 
 export function buildAlterationsTabName(store: ComparisonStore) {
