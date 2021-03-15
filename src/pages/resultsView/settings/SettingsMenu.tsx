@@ -5,22 +5,12 @@ import {
     IDriverSettingsProps,
     IDriverAnnotationControlsHandlers,
     IDriverAnnotationControlsState,
-    buildDriverAnnotationControlsHandlers,
-    buildDriverAnnotationControlsState,
-    IExclusionSettings,
-    IAnnotationFilteringSettings,
-} from '../../alterationFiltering/AnnotationFilteringSettings';
-import TierAnnotationControlsResultsView from '../driverAnnotations/TierAnnotationControlsResultsView';
-import InfoIcon from '../InfoIcon';
-import styles from './styles.module.scss';
+} from '../../../shared/alterationFiltering/AnnotationFilteringSettings';
+import DriverAnnotationControls from '../../../shared/components/driverAnnotations/DriverAnnotationControls';
+import InfoIcon from '../../../shared/components/InfoIcon';
+import styles from '../../../shared/components/driverAnnotations/styles.module.scss';
 import classNames from 'classnames';
-import { OncoprintAnalysisCaseType } from '../ResultsViewPageStoreUtils';
-
-export interface SettingsMenuResultsViewProps {
-    store: IAnnotationFilteringSettings;
-    resultsView?: boolean;
-    disabled?: boolean;
-}
+import { BoldedSpanList } from 'pages/resultsView/ResultsViewPageHelpers';
 
 enum EVENT_KEY {
     hidePutativePassengers = '0',
@@ -31,15 +21,21 @@ enum EVENT_KEY {
     dataTypePatient = '3',
 }
 
+export interface SettingsMenuProps {
+    store: IAnnotationFilterSettings;
+    resultsView?: boolean;
+    disabled?: boolean;
+}
+
 @observer
-export default class ResultsPageSettings extends React.Component<
-    SettingsMenuResultsViewProps,
+export default class SettingsMenu extends React.Component<
+    SettingsMenuProps,
     {}
 > {
     private driverSettingsState: IDriverAnnotationControlsState;
     private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
 
-    constructor(props: SettingsMenuResultsViewProps) {
+    constructor(props: SettingsMenuProps) {
         super(props);
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
@@ -104,12 +100,14 @@ export default class ResultsPageSettings extends React.Component<
                         <span>
                             Putative driver vs VUS setings apply to every tab
                             except{' '}
-                            {boldedTabList(['Co-expression', 'CN Segments'])}
+                            <BoldedSpanList
+                                words={['Co-expression', 'CN Segments']}
+                            />
                         </span>
                     }
                 />
                 <div style={{ marginLeft: 10 }}>
-                    <TierAnnotationControlsResultsView
+                    <DriverAnnotationControls
                         state={this.driverSettingsState}
                         handlers={this.driverSettingsHandlers}
                         resultsView={this.props.resultsView}

@@ -14,6 +14,8 @@ import {
     ChartMeta,
     ChartType,
     DataType,
+    FilterIconMessage,
+    geneFilterQueryToOql,
     getUniqueKeyFromMolecularProfileIds,
     ChartType,
     getGenomicChartUniqueKey,

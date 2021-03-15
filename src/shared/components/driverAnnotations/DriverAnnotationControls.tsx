@@ -13,12 +13,6 @@ import {
 } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
 
-export interface IDriverAnnotationControlsProps {
-    state: IDriverAnnotationControlsState;
-    handlers: IDriverAnnotationControlsHandlers;
-    resultsView?: boolean;
-}
-
 enum EVENT_KEY {
     distinguishDrivers = '0',
     annotateOncoKb = '1',
@@ -28,9 +22,15 @@ enum EVENT_KEY {
     customDriverBinaryAnnotation = '5',
 }
 
+export interface DriverAnnotationControlsProps {
+    state: IDriverAnnotationControlsState;
+    handlers: IDriverAnnotationControlsHandlers;
+    resultsView?: boolean;
+}
+
 @observer
-export default class TierAnnotationControlsResultsView extends React.Component<
-    IDriverAnnotationControlsProps,
+export default class DriverAnnotationControls extends React.Component<
+    DriverAnnotationControlsProps,
     {}
 > {
     @autobind

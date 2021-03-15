@@ -60,7 +60,11 @@ export default class OncoprinterStore {
 
     @observable.ref _inputSampleIdOrder: string | undefined = undefined;
     @observable.ref _geneOrder: string | undefined = undefined;
+
+    // FIXME make sure the observable defined in constructor is registered
+    // with new MobX version
     @observable driverAnnotationSettings: DriverAnnotationSettings;
+
     @observable.ref _geneticDataInput: string | undefined = undefined;
     @observable.ref _clinicalDataInput: string | undefined = undefined;
     @observable.ref _heatmapDataInput: string | undefined = undefined;

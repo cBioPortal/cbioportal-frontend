@@ -43,10 +43,9 @@ import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
-import {
-    buildAlterationEnrichmentTypeSelectorHandlers,
-    buildAlterationsTabName,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
+import { buildAlterationEnrichmentTypeSelectorHandlers } from 'shared/lib/comparison/ComparisonStoreUtils';
+import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
+import AppConfig from 'appConfig';
 
 export interface IGroupComparisonPageProps {
     routing: any;

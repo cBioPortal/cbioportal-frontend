@@ -88,13 +88,22 @@ import {
     fusionGroup,
     cnaGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IAnnotationFilterSettings,
+    IDriverAnnotationReport,
+} from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import AppConfig from 'appConfig';
+import { AlterationFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
     EXCLUDE = 'Exclude',
 }
 
-export default abstract class ComparisonStore implements IAnnotationFilteringSettings {
+export default abstract class ComparisonStore
+    implements IAnnotationFilterSettings {
     private tabHasBeenShown = observable.map<GroupComparisonTab, boolean>();
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
@@ -1966,21 +1975,23 @@ export default abstract class ComparisonStore implements IAnnotationFilteringSet
     readonly customDriverAnnotationProfiles = remoteData<MolecularProfile[]>(
         {
             await: () => [this.molecularProfilesInStudies],
-            invoke: async () => {
-                return _.filter(
-                    this.molecularProfilesInStudies.result,
-                    (molecularProfile: MolecularProfile) =>
-                        // discrete CNA's
-                        (molecularProfile.molecularAlterationType ===
-                            AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
-                            molecularProfile.datatype ===
-                                DataTypeConstants.DISCRETE) ||
-                        // mutations
-                        molecularProfile.molecularAlterationType ===
-                            AlterationTypeConstants.MUTATION_EXTENDED ||
-                        // structural variants
-                        molecularProfile.molecularAlterationType ===
-                            AlterationTypeConstants.STRUCTURAL_VARIANT
+            invoke: () => {
+                return Promise.resolve(
+                    _.filter(
+                        this.molecularProfilesInStudies.result,
+                        (molecularProfile: MolecularProfile) =>
+                            // discrete CNA's
+                            (molecularProfile.molecularAlterationType ===
+                                AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                                molecularProfile.datatype ===
+                                    DataTypeConstants.DISCRETE) ||
+                            // mutations
+                            molecularProfile.molecularAlterationType ===
+                                AlterationTypeConstants.MUTATION_EXTENDED ||
+                            // structural variants
+                            molecularProfile.molecularAlterationType ===
+                                AlterationTypeConstants.STRUCTURAL_VARIANT
+                    )
                 );
             },
         },

@@ -4,12 +4,12 @@ import { assert } from 'chai';
 import _ from 'lodash';
 import {
     DriverAnnotationSettings,
-    IAnnotationFilteringSettings,
+    IAnnotationFilterSettings,
     IDriverAnnotationReport,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { MobxPromiseUnionType } from 'mobxpromise';
 import { observable } from 'mobx';
-import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 
 describe('SettingsMenu', () => {
     let menu: any;
@@ -136,7 +136,7 @@ describe('SettingsMenu', () => {
             includeGermlineMutations: true,
             includeSomaticMutations: true,
             includeUnknownStatusMutations: true,
-        } as IAnnotationFilteringSettings);
+        } as IAnnotationFilterSettings);
     }
 
     describe('checkbox logic', () => {

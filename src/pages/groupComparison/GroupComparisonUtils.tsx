@@ -37,7 +37,7 @@ import {
     getButtonNameWithDownPointer,
 } from 'pages/studyView/StudyViewUtils';
 import styles from 'pages/groupComparison/styles.module.scss';
-import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import AlterationEnrichmentTypeSelector, {
     IAlterationEnrichmentTypeSelectorHandlers,
 } from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';

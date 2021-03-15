@@ -3012,7 +3012,7 @@ export function geneFilterQueryFromOql(
     };
 }
 
-const AlterationMenuHeader: React.FunctionComponent<{
+export const AlterationMenuHeader: React.FunctionComponent<{
     includeCnaTable: boolean;
 }> = observer(({ includeCnaTable }) => {
     if (includeCnaTable) {

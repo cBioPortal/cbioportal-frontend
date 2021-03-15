@@ -241,7 +241,7 @@ import {
     IDriverSettingsProps,
     IExclusionSettings,
 } from '../../shared/alterationFiltering/AnnotationFilteringSettings';
-import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
+import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
 import oql_parser, {
     Alteration,
     SingleGeneQuery,

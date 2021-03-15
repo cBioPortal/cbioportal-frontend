@@ -44,6 +44,7 @@ import AppConfig from 'appConfig';
 import SocialAuthButton from '../../shared/components/SocialAuthButton';
 import { ServerConfigHelpers } from '../../config/config';
 import {
+    AlterationMenuHeader,
     getButtonNameWithDownPointer,
     ChartMetaDataTypeEnum,
 } from './StudyViewUtils';
@@ -65,7 +66,7 @@ import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { CustomChart } from 'shared/api/sessionServiceAPI';
 import { parse } from 'query-string';
-import SettingsMenu from 'shared/components/settings/SettingsMenu';
+import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -789,12 +790,16 @@ export default class StudyViewPage extends React.Component<
                                                 overlay={
                                                     <SettingsMenu
                                                         store={this.store}
-                                                        infoElement={alterationMenuHeader(
-                                                            this.store
-                                                                .doShowDriverAnnotationSectionInGlobalMenu ||
-                                                                this.store
-                                                                    .doShowTierAnnotationSectionInGlobalMenu
-                                                        )}
+                                                        infoElement={
+                                                            <AlterationMenuHeader
+                                                                includeCnaTable={
+                                                                    this.store
+                                                                        .doShowDriverAnnotationSectionInGlobalMenu ||
+                                                                    this.store
+                                                                        .doShowTierAnnotationSectionInGlobalMenu
+                                                                }
+                                                            />
+                                                        }
                                                         customDriverSourceName={
                                                             getBrowserWindow()
                                                                 .frontendConfig

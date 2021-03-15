@@ -2,7 +2,7 @@ import { action, observable, ObservableMap } from 'mobx';
 import AppConfig from 'appConfig';
 import { MobxPromiseUnionType } from 'mobxpromise';
 
-export interface IAnnotationFilteringSettings
+export interface IAnnotationFilterSettings
     extends IDriverSettingsProps,
         IExclusionSettings {}
 

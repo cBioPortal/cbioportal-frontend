@@ -9,19 +9,30 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import _ from 'lodash';
 import { computed } from 'mobx';
 
-export interface IDriverAnnotationControlsProps {
-    state: IDriverAnnotationControlsState;
-    handlers: IDriverAnnotationControlsHandlers;
-}
-
 enum EVENT_KEY {
     distinguishDrivers = '0',
     customDriverBinaryAnnotation = '5',
 }
 
+export interface DriverTierControlsProps {
+    state: Pick<
+        IDriverAnnotationControlsState,
+        | 'distinguishDrivers'
+        | 'annotateCustomDriverBinary'
+        | 'customDriverAnnotationTiers'
+        | 'selectedCustomDriverAnnotationTiers'
+    >;
+    handlers: Pick<
+        IDriverAnnotationControlsHandlers,
+        | 'onSelectDistinguishDrivers'
+        | 'onSelectCustomDriverAnnotationBinary'
+        | 'onSelectCustomDriverAnnotationTier'
+    >;
+}
+
 @observer
-export default class TierAnnotationControls extends React.Component<
-    IDriverAnnotationControlsProps,
+export default class DriverTierControls extends React.Component<
+    DriverTierControlsProps,
     {}
 > {
     @autobind

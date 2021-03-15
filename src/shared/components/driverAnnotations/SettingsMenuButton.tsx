@@ -1,5 +1,5 @@
 import { DefaultTooltip, setArrowLeft } from 'cbioportal-frontend-commons';
-import SettingsMenuResultsView from './SettingsMenuResultsView';
+import SettingsMenu from '../../../pages/resultsView/settings/SettingsMenu';
 import * as React from 'react';
 import {
     IDriverSettingsProps,
@@ -8,7 +8,7 @@ import {
 import { observer } from 'mobx-react';
 import { computed, observable } from 'mobx';
 
-export interface ISettingsMenu {
+export interface SettingsButtonProps {
     store: IDriverSettingsProps &
         IExclusionSettings &
         ISettingsMenuButtonVisible;
@@ -17,22 +17,16 @@ export interface ISettingsMenu {
 }
 
 export interface ISettingsMenuButtonVisible {
-    settingsMenuVisible?: boolean;
+    isSettingsMenuVisible?: boolean;
 }
 
 @observer
 export default class SettingsMenuButton extends React.Component<
-    ISettingsMenu,
+    SettingsButtonProps,
     {}
 > {
-    @computed get marginLeft() {
-        if (this.props.resultsView) return 5;
-        return 0;
-    }
-
-    @computed get marginRight() {
-        if (!this.props.resultsView) return 5;
-        return 0;
+    @computed get margin() {
+        return this.props.resultsView ? 5 : 0;
     }
 
     @observable visible = false;
@@ -41,22 +35,22 @@ export default class SettingsMenuButton extends React.Component<
     // by a store component or by local state
     // by a store component or by local state
     @computed get visibilityState() {
-        if (this.props.store.settingsMenuVisible !== undefined)
-            return this.props.store.settingsMenuVisible;
+        if (this.props.store.isSettingsMenuVisible !== undefined)
+            return this.props.store.isSettingsMenuVisible;
         return this.visible;
     }
 
     private setVisibilityState(visible: boolean | undefined) {
         if (visible !== undefined) {
-            if (this.props.store.settingsMenuVisible !== undefined)
-                this.props.store.settingsMenuVisible = !!visible;
+            if (this.props.store.isSettingsMenuVisible !== undefined)
+                this.props.store.isSettingsMenuVisible = !!visible;
             else this.visible = !!visible;
         }
     }
 
     @computed get overlay() {
         return (
-            <SettingsMenuResultsView
+            <SettingsMenu
                 store={this.props.store}
                 resultsView={this.props.resultsView}
                 disabled={this.props.disabled}
@@ -88,8 +82,8 @@ export default class SettingsMenuButton extends React.Component<
                     data-test="GlobalSettingsButton"
                     style={{
                         height: 38,
-                        marginRight: this.marginRight,
-                        marginLeft: this.marginLeft,
+                        marginRight: this.margin,
+                        marginLeft: this.margin,
                     }}
                     className="btn btn-primary"
                 >

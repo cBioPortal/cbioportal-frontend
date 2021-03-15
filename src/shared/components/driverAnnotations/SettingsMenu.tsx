@@ -4,14 +4,14 @@ import autobind from 'autobind-decorator';
 import {
     buildDriverAnnotationControlsHandlers,
     buildDriverAnnotationControlsState,
-    IAnnotationFilteringSettings,
+    IAnnotationFilterSettings,
     IDriverAnnotationControlsHandlers,
     IDriverAnnotationControlsState,
 } from '../../alterationFiltering/AnnotationFilteringSettings';
 import InfoIcon from '../InfoIcon';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
-import TierAnnotationControls from 'shared/components/driverAnnotations/TierAnnotationControls';
+import DriverTierControls from 'shared/components/driverAnnotations/DriverTierControls';
 import { computed, observable } from 'mobx';
 
 enum EVENT_KEY {
@@ -28,21 +28,8 @@ enum EVENT_KEY {
     toggleAllDriverTiers = '10',
 }
 
-function boldedTabList(tabs: string[]) {
-    return (
-        <span>
-            {tabs.map((tab, index) => (
-                <span>
-                    <strong>{tab}</strong>
-                    {index < tabs.length - 1 ? ', ' : ''}
-                </span>
-            ))}
-        </span>
-    );
-}
-
-export interface IAlterationFilterSettings {
-    store: IAnnotationFilteringSettings;
+export interface SettingsMenuProps {
+    store: IAnnotationFilterSettings;
     infoElement?: JSX.Element | undefined;
     disabled?: boolean;
     customDriverSourceName?: string;
@@ -52,7 +39,7 @@ export interface IAlterationFilterSettings {
 
 @observer
 export default class SettingsMenu extends React.Component<
-    IAlterationFilterSettings,
+    SettingsMenuProps,
     {}
 > {
     private driverSettingsState: IDriverAnnotationControlsState;
@@ -60,7 +47,7 @@ export default class SettingsMenu extends React.Component<
     @observable _driverAnnotationsCheckboxToggle = true;
     @observable _driverTiersCheckboxToggle = false;
 
-    constructor(props: IAlterationFilterSettings) {
+    constructor(props: SettingsMenuProps) {
         super(props);
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
@@ -400,7 +387,7 @@ export default class SettingsMenu extends React.Component<
                             />
                         </div>
                         <div style={{ marginLeft: 20 }}>
-                            <TierAnnotationControls
+                            <DriverTierControls
                                 state={this.driverSettingsState}
                                 handlers={this.driverSettingsHandlers}
                             />

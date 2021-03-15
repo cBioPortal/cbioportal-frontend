@@ -342,7 +342,10 @@ export class StudyViewPageStore
     private chartToUsedColors: Map<string, Set<string>>;
 
     public studyViewQueryFilter: StudyViewURLQuery;
-    @observable driverAnnotationSettings: DriverAnnotationSettings;
+    @observable
+    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
+        () => false
+    );
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
