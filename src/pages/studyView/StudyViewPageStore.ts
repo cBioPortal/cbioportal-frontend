@@ -1931,9 +1931,9 @@ export class StudyViewPageStore {
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
     @observable _filterComparisonGroups: StudyViewComparisonGroup[] = [];
 
-    @observable private _filterMutatedGenesTableByCancerGenes: boolean = true;
-    @observable private _filterFusionGenesTableByCancerGenes: boolean = true;
-    @observable private _filterCNAGenesTableByCancerGenes: boolean = true;
+    @observable private _filterMutatedGenesTableByCancerGenes: boolean = false;
+    @observable private _filterFusionGenesTableByCancerGenes: boolean = false;
+    @observable private _filterCNAGenesTableByCancerGenes: boolean = false;
 
     @action.bound
     updateMutatedGenesTableByCancerGenesFilter(filtered: boolean): void {
