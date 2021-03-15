@@ -679,7 +679,9 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: 'Protein Change',
-            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
+            render: ProteinChangeColumnFormatter.renderWithMutationStatus(
+                this.props.dataStore
+            ),
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
                 ProteinChangeColumnFormatter.getSortValue(d),
