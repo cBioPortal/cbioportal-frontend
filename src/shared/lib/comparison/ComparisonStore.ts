@@ -886,14 +886,11 @@ export default abstract class ComparisonStore {
                                     .result
                             )
                         ) {
-                            filteredSamples = filteredSamples.concat(
-                                group.samples.filter(
-                                    sample =>
-                                        this
-                                            .selectedStudyStructuralVariantEnrichmentProfileMap
-                                            .result![sample.studyId] !==
-                                        undefined
-                                )
+                            filteredSamples = filteredSamples.filter(
+                                sample =>
+                                    this
+                                        .selectedStudyStructuralVariantEnrichmentProfileMap
+                                        .result![sample.studyId] !== undefined
                             );
                         }
                         // filter samples having copy number profile and append it to filteredSamples
@@ -1017,14 +1014,16 @@ export default abstract class ComparisonStore {
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
-                this.alterationsEnrichmentDataRequestGroups.result &&
-                this.alterationsEnrichmentDataRequestGroups.result.length > 1 &&
-                (_(this.selectedMutationEnrichmentEventTypes)
-                    .values()
-                    .some() ||
-                    _(this.selectedCopyNumberEnrichmentEventTypes)
+                (this.alterationsEnrichmentDataRequestGroups.result &&
+                    this.alterationsEnrichmentDataRequestGroups.result.length >
+                        1 &&
+                    (_(this.selectedMutationEnrichmentEventTypes)
                         .values()
-                        .some())
+                        .some() ||
+                        _(this.selectedCopyNumberEnrichmentEventTypes)
+                            .values()
+                            .some())) ||
+                !!this.isStructuralVariantEnrichmentSelected
             ) {
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
