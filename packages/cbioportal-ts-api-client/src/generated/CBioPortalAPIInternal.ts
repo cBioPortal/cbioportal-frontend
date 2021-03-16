@@ -34,6 +34,8 @@ export type AlterationEventTypeFilter = {
 
     'mutationEventTypes': {}
 
+    'structuralVariants': boolean
+
 };
 export type AndedPatientTreatmentFilters = {
     'filters': Array < OredPatientTreatmentFilters >
@@ -4957,101 +4959,12 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
-    fetchStructuralVariantEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/structural-variant-enrichments/fetch';
-        if (parameters['enrichmentType'] !== undefined) {
-            queryParameters['enrichmentType'] = parameters['enrichmentType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch structural variant enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchStructuralVariantEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchStructuralVariantEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/structural-variant-enrichments/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['enrichmentType'] !== undefined) {
-                queryParameters['enrichmentType'] = parameters['enrichmentType'];
-            }
-
-            if (parameters['groups'] !== undefined) {
-                body = parameters['groups'];
-            }
-
-            if (parameters['groups'] === undefined) {
-                reject(new Error('Missing required  parameter: groups'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch structural variant enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchStructuralVariantEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchStructuralVariantEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroupFilter > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationEnrichment >
-        > {
-            return this.fetchStructuralVariantEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     fetchStructuralVariantGenesUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/structural-variant-genes/fetch';
+        let path = '/structuralvariant-genes/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -5077,7 +4990,7 @@ export default class CBioPortalAPIInternal {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/structural-variant-genes/fetch';
+        let path = '/structuralvariant-genes/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};

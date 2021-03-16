@@ -84,10 +84,6 @@
       "description": " "
     },
     {
-      "name": "Structural Variant Enrichments",
-      "description": " "
-    },
-    {
       "name": "Study View",
       "description": " "
     },
@@ -2226,61 +2222,7 @@
         "deprecated": false
       }
     },
-    "/structural-variant-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Structural Variant Enrichments"
-        ],
-        "summary": "Fetch structural variant enrichments in a molecular profile",
-        "operationId": "fetchStructuralVariantEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "allowEmptyValue": false,
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "groups",
-            "description": "List of groups containing sample identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/structural-variant-genes/fetch": {
+    "/structuralvariant-genes/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -2628,6 +2570,9 @@
           "additionalProperties": {
             "type": "boolean"
           }
+        },
+        "structuralVariants": {
+          "type": "boolean"
         }
       },
       "title": "AlterationEventTypeFilter"

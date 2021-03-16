@@ -1037,6 +1037,8 @@ export default abstract class ComparisonStore {
                                 .selectedCopyNumberEnrichmentEventTypes,
                             mutationEventTypes: this
                                 .selectedMutationEnrichmentEventTypes,
+                            structuralVariants: !!this
+                                .isStructuralVariantEnrichmentSelected,
                         },
                     },
                 });
