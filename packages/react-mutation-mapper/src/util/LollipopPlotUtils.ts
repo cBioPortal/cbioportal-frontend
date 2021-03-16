@@ -62,7 +62,6 @@ export function lollipopLabelTextAnchor(
         fontFamily,
         `${fontSize}px`
     );
-    debugger;
     const lollipopDistanceToOrigin = codon * (geneWidth / proteinLength);
     const lollipopDistanceToXMax = geneWidth - lollipopDistanceToOrigin;
 
