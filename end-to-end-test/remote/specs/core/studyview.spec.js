@@ -360,7 +360,7 @@ describe('cancer gene filter', () => {
         goToUrlAndSetLocalStorage(url);
     });
 
-    it('the cancer gene filter should be, by default, enabled', () => {
+    it('the cancer gene filter should be, by default, disabled', () => {
         browser.waitForVisible(
             `${CNA_GENES_TABLE} [data-test='gene-column-header']`,
             WAIT_FOR_VISIBLE_TIMEOUT
@@ -374,23 +374,23 @@ describe('cancer gene filter', () => {
                 `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
                 'color'
             ).parsed.hex,
-            '#000000'
+            '#bebebe'
         );
     });
 
-    it('the cancer gene filter should remove non cancer gene', () => {
+    it('non cancer gene should show up when the cancer gene filter is disabled', () => {
         assertScreenShotMatch(checkElementWithMouseDisabled(CNA_GENES_TABLE));
     });
 
-    it('non cancer gene should show up when the cancer gene filter is disabled', () => {
-        // disable the filter and check
+    it('the cancer gene filter should remove non cancer gene', () => {
+        // enable the filter and check
         browser.click(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`);
         assert.equal(
             browser.getCssProperty(
                 `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
                 'color'
             ).parsed.hex,
-            '#bebebe'
+            '#000000'
         );
         assertScreenShotMatch(checkElementWithMouseDisabled(CNA_GENES_TABLE));
     });
