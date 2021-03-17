@@ -30,7 +30,7 @@ export interface DriverAnnotationSettings {
     cosmicCountThreshold: number;
     customBinary: boolean;
     customTiersDefault: boolean;
-    driverTiers: ObservableMap<boolean>;
+    driverTiers: ObservableMap<string, boolean>;
     includeUnknownTier: boolean;
     hotspots: boolean;
     oncoKb: boolean;
@@ -56,7 +56,7 @@ export interface IDriverAnnotationControlsState {
     customDriverAnnotationBinaryMenuLabel?: string;
     customDriverAnnotationTiersMenuLabel?: string;
     customDriverAnnotationTiers?: string[];
-    selectedCustomDriverAnnotationTiers?: ObservableMap<boolean>;
+    selectedCustomDriverAnnotationTiers?: ObservableMap<string, boolean>;
     anyCustomDriverAnnotationTiersSelected?: boolean;
     annotateCustomDriverBinary?: boolean;
 }

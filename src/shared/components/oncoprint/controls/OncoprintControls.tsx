@@ -379,13 +379,14 @@ export default class OncoprintControls extends React.Component<
     private onCustomDriverTierCheckboxClick(
         event: React.MouseEvent<HTMLInputElement>
     ) {
+        const tier = (event.target as HTMLInputElement).value;
         this.props.handlers.onSelectCustomDriverAnnotationTier &&
             this.props.handlers.onSelectCustomDriverAnnotationTier(
-                (event.target as HTMLInputElement).value,
+                tier,
                 !(
                     this.props.state.selectedCustomDriverAnnotationTiers &&
                     this.props.state.selectedCustomDriverAnnotationTiers.get(
-                        (event.target as HTMLInputElement).value
+                        tier
                     )
                 )
             );
