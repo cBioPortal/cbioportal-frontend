@@ -1,24 +1,17 @@
 import * as React from 'react';
-import { observer, Observer } from 'mobx-react';
+import { observer } from 'mobx-react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import CustomDropdown from './CustomDropdown';
 import ConfirmNgchmModal from './ConfirmNgchmModal';
 import ReactSelect from 'react-select1';
 import { MobxPromise } from 'mobxpromise';
-import {
-    action,
-    computed,
-    observable,
-    ObservableMap,
-    reaction,
-    makeObservable,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import _ from 'lodash';
 import { SortMode } from '../ResultsViewOncoprint';
 import {
     Gene,
-    MolecularProfile,
     GenericAssayMeta,
+    MolecularProfile,
 } from 'cbioportal-ts-api-client';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import { DefaultTooltip, EditableSpan } from 'cbioportal-frontend-commons';
@@ -29,19 +22,19 @@ import classNames from 'classnames';
 import { SpecialAttribute } from '../../../cache/ClinicalDataCache';
 import { ResultsViewPageStore } from '../../../../pages/resultsView/ResultsViewPageStore';
 import {
-    OncoprintAnalysisCaseType,
     ExtendedClinicalAttribute,
+    OncoprintAnalysisCaseType,
 } from '../../../../pages/resultsView/ResultsViewPageStoreUtils';
 import OQLTextArea, { GeneBoxType } from '../../GeneSelectionBox/OQLTextArea';
 import autobind from 'autobind-decorator';
 import { SingleGeneQuery } from '../../../lib/oql/oql-parser';
 import AddTracks from 'pages/resultsView/oncoprint/AddTracks';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
-import DriverAnnotationControlsResultsView from '../../driverAnnotations/TierAnnotationControls';
 import {
     IDriverAnnotationControlsHandlers,
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
@@ -765,7 +758,7 @@ export default class OncoprintControls extends React.Component<
                 <>
                     <h5>Annotate</h5>
                     <div style={{ marginLeft: 10 }}>
-                        <DriverAnnotationControlsResultsView
+                        <DriverAnnotationControls
                             state={this.props.state}
                             handlers={Object.assign(
                                 {
@@ -842,7 +835,7 @@ export default class OncoprintControls extends React.Component<
                             }}
                             className="btn btn-primary"
                             onClick={() => {
-                                store.settingsMenuVisible = !store.settingsMenuVisible;
+                                store.isSettingsMenuVisible = !store.isSettingsMenuVisible;
                             }}
                         >
                             <i className="fa fa-sliders" />

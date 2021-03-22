@@ -35,14 +35,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
-import {
-    action,
-    computed,
-    observable,
-    ObservableMap,
-    reaction,
-    makeObservable,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import {
     getProteinPositionFromProteinChange,
     IHotspotIndex,
@@ -55,7 +48,7 @@ import {
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
+import { cached, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -154,7 +147,6 @@ import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
 import ClinicalDataCache, {
     clinicalAttributeIsINCOMPARISONGROUP,
-    clinicalAttributeIsPROFILEDIN,
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
 import { getDefaultMolecularProfiles } from '../../shared/lib/getDefaultMolecularProfiles';
@@ -205,10 +197,9 @@ import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
-    fetchGenericAssayDataByStableIdsAndMolecularIds,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
     COMMON_GENERIC_ASSAY_PROPERTY,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -236,10 +227,8 @@ import {
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
-    IAnnotationFilteringSettings,
+    IAnnotationFilterSettings,
     IDriverAnnotationReport,
-    IDriverSettingsProps,
-    IExclusionSettings,
 } from '../../shared/alterationFiltering/AnnotationFilteringSettings';
 import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
 import oql_parser, {
@@ -476,7 +465,7 @@ export type ModifyQueryParams = {
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore
-    implements IAnnotationFilteringSettings, ISettingsMenuButtonVisible {
+    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
         makeObservable(this);
         //labelMobxPromises(this);
@@ -565,7 +554,7 @@ export class ResultsViewPageStore
         return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
     }
 
-    @observable public settingsMenuVisible = false;
+    @observable public isSettingsMenuVisible = false;
 
     @observable public checkingVirtualStudies = false;
 

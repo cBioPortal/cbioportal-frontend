@@ -7,12 +7,13 @@ import {
     action,
     computed,
     IReactionDisposer,
+    makeObservable,
     observable,
     reaction,
     toJS,
-    makeObservable,
 } from 'mobx';
 import {
+    AlterationFilter,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
     CancerStudy,
@@ -31,6 +32,8 @@ import {
     DensityPlotBin,
     GeneFilter,
     GenePanel,
+    GenericAssayDataFilter,
+    GenericAssayMeta,
     GenomicDataBin,
     GenomicDataBinFilter,
     GenomicDataFilter,
@@ -40,16 +43,13 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
+    PatientTreatmentRow,
     ResourceData,
     ResourceDefinition,
     Sample,
     SampleIdentifier,
     SampleTreatmentRow,
-    PatientTreatmentRow,
     StudyViewFilter,
-    GenericAssayDataFilter,
-    GenericAssayMeta,
-    AlterationFilter,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -61,6 +61,8 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
+    annotationFilterActive,
+    buildSelectedTiersMap,
     calculateLayout,
     ChartDataCountSet,
     ChartMeta,
@@ -70,8 +72,13 @@ import {
     clinicalAttributeComparator,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
+    convertClinicalDataBinsToDataBins,
+    convertGenericAssayDataBinsToDataBins,
     convertGenomicDataBinsToDataBins,
+    DataBin,
     DataType,
+    geneFilterQueryFromOql,
+    geneFilterQueryToOql,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
     getChartMetaDataType,
@@ -87,6 +94,8 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenericAssayChartUniqueKey,
+    getGenericAssayDataAsClinicalData,
     getGenomicChartUniqueKey,
     getGenomicDataAsClinicalData,
     getGroupsFromBins,
@@ -94,6 +103,7 @@ import {
     getMolecularProfileIdsFromUniqueKey,
     getMolecularProfileOptions,
     getMolecularProfileSamplesSet,
+    getNonZeroUniqueBins,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
@@ -110,15 +120,11 @@ import {
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
     SpecialChartsUniqueKeyEnum,
+    statusFilterActive,
     StudyWithSamples,
     submitToPage,
+    tierFilterActive,
     updateSavedUserPreferenceChartIds,
-    getGenericAssayChartUniqueKey,
-    getGenericAssayDataAsClinicalData,
-    convertGenericAssayDataBinsToDataBins,
-    getNonZeroUniqueBins,
-    DataBin,
-    convertClinicalDataBinsToDataBins,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -210,23 +216,24 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
-    GenericAssayDataBinFilter,
+    GeneFilterQuery,
     GenericAssayDataBin,
+    GenericAssayDataBinFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IAnnotationFilterSettings,
+    IDriverAnnotationReport,
+} from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
+
 type ChartUniqueKey = string;
 type ResourceId = string;
 type ComparisonGroupId = string;
 type AttributeId = string;
-import {
-    buildDriverAnnotationSettings,
-    DriverAnnotationSettings,
-    IAnnotationFilteringSettings,
-    IDriverAnnotationReport,
-} from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import { ISettingsMenuButtonVisible } from 'shared/components/settings/SettingsMenuButton';
-import { GeneFilterQuery } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export type ChartUserSetting = {
     id: string;
@@ -335,7 +342,7 @@ export type OncokbCancerGene = {
 };
 
 export class StudyViewPageStore
-    implements IAnnotationFilteringSettings, ISettingsMenuButtonVisible {
+    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
@@ -349,7 +356,7 @@ export class StudyViewPageStore
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
-    @observable settingsMenuVisible = false;
+    @observable isSettingsMenuVisible = false;
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
@@ -1588,11 +1595,8 @@ export class StudyViewPageStore
     >();
 
     @observable.ref private _geneFilterSet = observable.map<
-        GeneFilterQuery[][]
-    >();
-    @observable.ref private _geneFilterSet = observable.map<
         string,
-        string[][]
+        GeneFilterQuery[][]
     >();
 
     // TODO: make it computed
@@ -8266,7 +8270,7 @@ export class StudyViewPageStore
 
     @computed get isTiersFilterActive(): boolean {
         return tierFilterActive(
-            this.driverAnnotationSettings.driverTiers.toJS(),
+            _.fromPairs(this.driverAnnotationSettings.driverTiers.toJSON()),
             this.driverAnnotationSettings.includeUnknownTier
         );
     }

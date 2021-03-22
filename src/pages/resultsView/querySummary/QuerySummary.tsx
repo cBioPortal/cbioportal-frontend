@@ -5,15 +5,9 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import classNames from 'classnames';
 import './styles.scss';
-import {
-    DefaultTooltip,
-    getBrowserWindow,
-    setArrowLeft,
-} from 'cbioportal-frontend-commons';
-import Loader, {
-    default as LoadingIndicator,
-} from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import { default as LoadingIndicator } from '../../../shared/components/loadingIndicator/LoadingIndicator';
+import { action, computed, makeObservable } from 'mobx';
 import QueryAndDownloadTabs from '../../../shared/components/query/QueryAndDownloadTabs';
 import autobind from 'autobind-decorator';
 import ExtendedRouterStore from '../../../shared/lib/ExtendedRouterStore';
@@ -30,11 +24,10 @@ import {
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { getGAInstance } from '../../../shared/lib/tracking';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
-import SettingsMenuResultsView from '../../../shared/components/settings/SettingsMenuResultsView';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
-import SettingsMenuButton from 'shared/components/settings/SettingsMenuButton';
+import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;

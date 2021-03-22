@@ -4,9 +4,10 @@ import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import styles from './styles.module.scss';
 import {
-    DataFilterValue,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
+    DataFilterValue,
+    GeneFilterQuery,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
 } from 'cbioportal-ts-api-client';
@@ -16,30 +17,20 @@ import {
     DataType,
     FilterIconMessage,
     geneFilterQueryToOql,
-    getUniqueKeyFromMolecularProfileIds,
-    ChartType,
-    getGenomicChartUniqueKey,
-    getGenericAssayChartUniqueKey,
-} from 'pages/studyView/StudyViewUtils';
-import {
-    ChartMeta,
     getCNAColorByAlteration,
+    getGenericAssayChartUniqueKey,
+    getGenomicChartUniqueKey,
     getPatientIdentifiers,
     getSelectedGroupNames,
+    getUniqueKeyFromMolecularProfileIds,
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
 } from 'pages/studyView/StudyViewUtils';
 import { PillTag } from '../../shared/components/PillTag/PillTag';
 import { GroupLogic } from './filters/groupLogic/GroupLogic';
 import classnames from 'classnames';
-import { STUDY_VIEW_CONFIG, ChartTypeEnum } from './StudyViewConfig';
-import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import { ChartTypeEnum, STUDY_VIEW_CONFIG } from './StudyViewConfig';
-import {
-    DEFAULT_NA_COLOR,
-    MUT_COLOR_FUSION,
-    MUT_COLOR_MISSENSE,
-} from 'shared/lib/Colors';
+import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import {
     caseCounts,
     getSampleIdentifiers,
@@ -55,7 +46,6 @@ import {
     MUT_COLOR_FUSION,
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
-import { GeneFilterQuery } from 'cbioportal-ts-api-client';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;

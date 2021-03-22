@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import {
     ChartControls,
@@ -11,12 +11,7 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import {
-    ClinicalDataBin,
-    GenePanel,
-    StudyViewFilter,
-} from 'cbioportal-ts-api-client';
-import { StudyViewFilter } from 'cbioportal-ts-api-client';
+import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -30,13 +25,13 @@ import {
     ChartMeta,
     ChartType,
     ClinicalDataCountSummary,
+    DataBin,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
-    DataBin,
 } from '../StudyViewUtils';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
@@ -68,10 +63,11 @@ import {
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import {
-    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
+import Timer = NodeJS.Timer;
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;

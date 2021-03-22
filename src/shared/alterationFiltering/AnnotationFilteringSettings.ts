@@ -81,13 +81,13 @@ export interface IDriverAnnotationReport {
 export function buildDriverAnnotationSettings(
     didOncoKbFailInOncoprint: () => boolean,
     config = AppConfig.serverConfig
-) {
+): DriverAnnotationSettings {
     return observable({
         cbioportalCount: false,
         cbioportalCountThreshold: 0,
         cosmicCount: false,
         cosmicCountThreshold: 0,
-        driverTiers: observable.map<boolean>(),
+        driverTiers: observable.map<string, boolean>(),
 
         _hotspots: false,
         _oncoKb: false,
@@ -180,7 +180,7 @@ export function buildDriverAnnotationSettings(
 export function buildDriverAnnotationControlsHandlers(
     driverAnnotationSettings: DriverAnnotationSettings,
     state: IDriverAnnotationControlsState
-) {
+): IDriverAnnotationControlsHandlers {
     const handlers = {
         onSelectDistinguishDrivers: action((s: boolean) => {
             if (!s) {

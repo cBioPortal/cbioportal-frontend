@@ -105,7 +105,7 @@ describe('SettingsMenu', () => {
                 includeUnknownOncogenicity: true,
                 customBinary: true,
                 customTiersDefault: true,
-                driverTiers: observable.map<boolean>({
+                driverTiers: observable.map<string, boolean>({
                     'Class 1': false,
                     'Class 2': false,
                     'Class 3': false,

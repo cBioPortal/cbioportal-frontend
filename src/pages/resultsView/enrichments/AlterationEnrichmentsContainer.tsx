@@ -14,6 +14,7 @@ import {
     getAlterationFrequencyScatterData,
     getAlterationRowData,
     getAlterationScatterData,
+    AlterationContainerType,
     getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -37,7 +38,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
-import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
+import AppConfig from 'appConfig';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -505,8 +506,8 @@ export default class AlterationEnrichmentContainer extends React.Component<
             );
         }
 
-        const useInlineTypeSelectorMenu = AppConfig.
-            .serverConfig.skin_show_settings_menu;
+        const useInlineTypeSelectorMenu =
+            AppConfig.serverConfig.skin_show_settings_menu;
 
         return (
             <div

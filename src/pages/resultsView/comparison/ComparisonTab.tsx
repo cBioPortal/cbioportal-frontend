@@ -223,7 +223,7 @@ export default class ComparisonTab extends React.Component<
                                     }
                                 />
                             )}
-                            <AlterationsEnrichments
+                            <AlterationEnrichments
                                 store={this.store}
                                 resultsViewStore={this.props.store}
                             />

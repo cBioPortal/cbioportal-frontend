@@ -5,6 +5,9 @@ import {
     IDriverSettingsProps,
     IDriverAnnotationControlsHandlers,
     IDriverAnnotationControlsState,
+    buildDriverAnnotationControlsState,
+    buildDriverAnnotationControlsHandlers,
+    IAnnotationFilterSettings,
 } from '../../../shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from '../../../shared/components/driverAnnotations/DriverAnnotationControls';
 import InfoIcon from '../../../shared/components/InfoIcon';

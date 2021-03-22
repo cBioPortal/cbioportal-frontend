@@ -1,22 +1,20 @@
 import {
-    DriverAnnotationSettings,
     buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
 } from '../../../../shared/alterationFiltering/AnnotationFilteringSettings';
-import { action, computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import AppConfig from 'appConfig';
 import {
     annotateGeneticTrackData,
     fetchOncoKbDataForCna,
     fetchOncoKbDataForMutations,
     getGeneSymbols,
-    getGeneticTracks,
     getGeneticOncoprintData,
+    getGeneticTracks,
     getSampleGeneticTrackData,
     getSampleIds,
     isAltered,
     isType2,
-    OncoprinterGeneticInputLine,
-    OncoprinterGeneticInputLineType2,
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { remoteData } from 'cbioportal-frontend-commons';

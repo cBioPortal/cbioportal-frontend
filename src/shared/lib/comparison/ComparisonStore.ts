@@ -14,7 +14,6 @@ import {
 import { GroupComparisonTab } from '../../../pages/groupComparison/GroupComparisonTabs';
 import {
     findFirstMostCommonElt,
-    getBrowserWindow,
     remoteData,
 } from 'cbioportal-frontend-commons';
 import {
@@ -62,7 +61,10 @@ import {
     getClinicalDataOfPatientSurvivalStatus,
     getPatientSurvivals,
 } from 'pages/resultsView/SurvivalStoreHelper';
-import { getPatientIdentifiers } from 'pages/studyView/StudyViewUtils';
+import {
+    buildSelectedTiersMap,
+    getPatientIdentifiers,
+} from 'pages/studyView/StudyViewUtils';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
@@ -77,16 +79,17 @@ import {
 import MobxPromise from 'mobxpromise';
 import {
     AlterationTypeConstants,
+    DataTypeConstants,
     ResultsViewPageStore,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    MutationEnrichmentEventType,
-    CopyNumberEnrichmentEventType,
-    mutationGroup,
-    fusionGroup,
     cnaGroup,
+    CopyNumberEnrichmentEventType,
+    fusionGroup,
+    MutationEnrichmentEventType,
+    mutationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import {
     buildDriverAnnotationSettings,
@@ -95,7 +98,6 @@ import {
     IDriverAnnotationReport,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import AppConfig from 'appConfig';
-import { AlterationFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -1960,11 +1962,15 @@ export default abstract class ComparisonStore
 
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
         {
-            await: () => [this.studyIds],
-            invoke: async () => {
+            await: () => [this.studies],
+            invoke: () => {
+                const studyIds = _.map(
+                    this.studies.result,
+                    (s: CancerStudy) => s.studyId
+                );
                 return client.fetchMolecularProfilesUsingPOST({
                     molecularProfileFilter: {
-                        studyIds: this.studyIds.result,
+                        studyIds: studyIds,
                     } as MolecularProfileFilter,
                 });
             },

@@ -20,9 +20,9 @@ import {
     action,
     computed,
     IReactionDisposer,
+    makeObservable,
     observable,
     reaction,
-    makeObservable,
 } from 'mobx';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../AppStore';
@@ -211,7 +211,7 @@ export default class GroupComparisonPage extends React.Component<
                                     }
                                 />
                             )}
-                            <AlterationsEnrichments store={this.store} />
+                            <AlterationEnrichments store={this.store} />
                         </MSKTab>
                     )}
                     {this.store.showMRNATab && (
