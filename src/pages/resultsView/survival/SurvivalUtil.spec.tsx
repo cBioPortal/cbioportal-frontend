@@ -13,7 +13,6 @@ import {
     ScatterData,
     parseSurvivalData,
     getSurvivalStatusBoolean,
-    getStatusCasesHeaderText,
     isNullSurvivalClinicalDataValue,
     createSurvivalAttributeIdsDict,
 } from './SurvivalUtil';
@@ -848,35 +847,6 @@ describe('SurvivalUtil', () => {
             assert.equal(
                 getSurvivalStatusBoolean(survivalStatus3, prefix3),
                 true
-            );
-        });
-    });
-
-    describe('getStatusCasesHeaderText()', () => {
-        it('predix has been defined in survivalCasesHeaderText', () => {
-            const prefix = 'OS';
-            const clinicalData: string[] = [];
-            assert.equal(
-                getStatusCasesHeaderText(prefix, clinicalData),
-                'Deceased'
-            );
-        });
-
-        it('predix has not been defined in survivalCasesHeaderText, but has data with prefix 1:', () => {
-            const prefix = 'EFS';
-            const clinicalData: string[] = ['1:Relapse'];
-            assert.equal(
-                getStatusCasesHeaderText(prefix, clinicalData),
-                'Relapse'
-            );
-        });
-
-        it('predix has not been defined in survivalCasesHeaderText, and has no data with prefix 1:, return default Event', () => {
-            const prefix = 'EFS';
-            const clinicalData: string[] = ['0:Censored', '0:No Relapse'];
-            assert.equal(
-                getStatusCasesHeaderText(prefix, clinicalData),
-                'Event'
             );
         });
     });
