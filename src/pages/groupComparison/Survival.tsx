@@ -25,7 +25,6 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
     generateSurvivalPlotTitleFromDisplayName,
-    getStatusCasesHeaderText,
     getMedian,
     getEstimates,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
@@ -618,12 +617,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     }
                                     yAxisLabel={survivalTitleText[key]}
                                     totalCasesHeader="Number of Cases, Total"
-                                    statusCasesHeader={`Number of Cases, ${getStatusCasesHeaderText(
-                                        key,
-                                        this.props.store
-                                            .patientSurvivalUniqueStatusText
-                                            .result![key]
-                                    )}`}
+                                    statusCasesHeader="Number of Events"
                                     medianMonthsHeader={`Median Months ${survivalTitleText[key]}`}
                                     yLabelTooltip={
                                         SURVIVAL_PLOT_Y_LABEL_TOOLTIP
