@@ -31,6 +31,9 @@ class MutationTumorTypeFrequencyTable extends React.Component<
                 FrequencyTableColumnEnum.VARIANT_COUNT
             ],
             FREQUENCY_COLUMNS_DEFINITION[
+                FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS
+            ],
+            FREQUENCY_COLUMNS_DEFINITION[
                 FrequencyTableColumnEnum.PREVALENCE_FREQUENCY
             ],
             FREQUENCY_COLUMNS_DEFINITION[
