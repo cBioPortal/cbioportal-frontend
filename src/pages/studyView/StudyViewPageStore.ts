@@ -31,6 +31,7 @@ import {
     DataFilterValue,
     DensityPlotBin,
     GeneFilter,
+    GeneFilterQuery,
     GenePanel,
     GenericAssayDataFilter,
     GenericAssayMeta,
@@ -216,9 +217,8 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
-    GeneFilterQuery,
-    GenericAssayDataBin,
     GenericAssayDataBinFilter,
+    GenericAssayDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';

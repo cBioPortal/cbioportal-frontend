@@ -24,7 +24,7 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute, MolecularProfile } from 'cbioportal-ts-api-client';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -263,12 +263,15 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
                 .store.genericAssayEntitiesGroupedByGenericAssayType.result;
             // create one tab for each generic assay type
             tabs = _.map(this.profilesByGenericAssayType, (profiles, type) => {
-                const profileOptions = _.map(profiles, profile => {
-                    return {
-                        value: profile.molecularProfileId,
-                        label: profile.name,
-                    };
-                });
+                const profileOptions = _.map(
+                    profiles,
+                    (profile: MolecularProfile) => {
+                        return {
+                            value: profile.molecularProfileId,
+                            label: profile.name,
+                        };
+                    }
+                );
                 const entityOptions = _.map(
                     genericAssayEntitiesGroupedByGenericAssayType[type],
                     entity => makeGenericAssayOption(entity, false)
