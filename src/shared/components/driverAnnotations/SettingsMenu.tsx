@@ -12,7 +12,7 @@ import InfoIcon from '../InfoIcon';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import DriverTierControls from 'shared/components/driverAnnotations/DriverTierControls';
-import { computed, observable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 
 enum EVENT_KEY {
     showPutativeDrivers = '0',
@@ -42,13 +42,17 @@ export default class SettingsMenu extends React.Component<
     SettingsMenuProps,
     {}
 > {
-    private driverSettingsState: IDriverAnnotationControlsState;
-    private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
+    public driverSettingsState: IDriverAnnotationControlsState;
+    public driverSettingsHandlers: IDriverAnnotationControlsHandlers;
     @observable _driverAnnotationsCheckboxToggle = true;
     @observable _driverTiersCheckboxToggle = false;
 
     constructor(props: SettingsMenuProps) {
         super(props);
+        makeObservable(this, {
+            driverSettingsState: observable,
+            driverSettingsHandlers: observable,
+        });
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
             props.store.customDriverAnnotationReport.result,

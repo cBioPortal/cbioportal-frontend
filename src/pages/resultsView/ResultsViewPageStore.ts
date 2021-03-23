@@ -466,8 +466,12 @@ export type ModifyQueryParams = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
+    public driverAnnotationSettings: DriverAnnotationSettings;
+
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
-        makeObservable(this);
+        makeObservable(this, {
+            driverAnnotationSettings: observable,
+        });
         //labelMobxPromises(this);
 
         this.urlWrapper = urlWrapper;
@@ -586,8 +590,6 @@ export class ResultsViewPageStore
     @observable public modifyQueryParams:
         | ModifyQueryParams
         | undefined = undefined;
-
-    public driverAnnotationSettings: DriverAnnotationSettings;
 
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {

@@ -6,7 +6,7 @@ import {
     IExclusionSettings,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { observer } from 'mobx-react';
-import { computed, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
 export interface SettingsButtonProps {
     store: IDriverSettingsProps &
@@ -25,6 +25,11 @@ export default class SettingsMenuButton extends React.Component<
     SettingsButtonProps,
     {}
 > {
+    constructor(props: Readonly<SettingsButtonProps>) {
+        super(props);
+        makeObservable(this);
+    }
+
     @computed get margin() {
         return this.props.resultsView ? 5 : 0;
     }
@@ -33,13 +38,13 @@ export default class SettingsMenuButton extends React.Component<
 
     // determine whether visibility is controlled
     // by a store component or by local state
-    // by a store component or by local state
     @computed get visibilityState() {
         if (this.props.store.isSettingsMenuVisible !== undefined)
             return this.props.store.isSettingsMenuVisible;
         return this.visible;
     }
 
+    @action
     private setVisibilityState(visible: boolean | undefined) {
         if (visible !== undefined) {
             if (this.props.store.isSettingsMenuVisible !== undefined)

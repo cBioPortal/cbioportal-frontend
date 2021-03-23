@@ -192,8 +192,4 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     public get studies() {
         return this.resultsViewStore.studies;
     }
-
-    public get studyIds() {
-        return this.resultsViewStore.studyIds;
-    }
 }

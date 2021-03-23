@@ -14,6 +14,7 @@ import InfoIcon from '../../../shared/components/InfoIcon';
 import styles from '../../../shared/components/driverAnnotations/styles.module.scss';
 import classNames from 'classnames';
 import { BoldedSpanList } from 'pages/resultsView/ResultsViewPageHelpers';
+import { makeObservable, observable } from 'mobx';
 
 enum EVENT_KEY {
     hidePutativePassengers = '0',
@@ -35,11 +36,15 @@ export default class SettingsMenu extends React.Component<
     SettingsMenuProps,
     {}
 > {
-    private driverSettingsState: IDriverAnnotationControlsState;
-    private driverSettingsHandlers: IDriverAnnotationControlsHandlers;
+    public driverSettingsState: IDriverAnnotationControlsState;
+    public driverSettingsHandlers: IDriverAnnotationControlsHandlers;
 
     constructor(props: SettingsMenuProps) {
         super(props);
+        makeObservable(this, {
+            driverSettingsState: observable,
+            driverSettingsHandlers: observable,
+        });
         this.driverSettingsState = buildDriverAnnotationControlsState(
             props.store.driverAnnotationSettings,
             props.store.customDriverAnnotationReport.result,

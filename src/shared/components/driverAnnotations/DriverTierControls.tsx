@@ -7,7 +7,7 @@ import {
 } from '../../alterationFiltering/AnnotationFilteringSettings';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import _ from 'lodash';
-import { computed } from 'mobx';
+import { computed, makeObservable } from 'mobx';
 
 enum EVENT_KEY {
     distinguishDrivers = '0',
@@ -35,6 +35,11 @@ export default class DriverTierControls extends React.Component<
     DriverTierControlsProps,
     {}
 > {
+    constructor(props: Readonly<DriverTierControlsProps>) {
+        super(props);
+        makeObservable(this);
+    }
+
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
         switch ((event.target as HTMLInputElement).value) {
