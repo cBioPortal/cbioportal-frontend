@@ -201,7 +201,7 @@ const COLUMNS = [
         togglable: false,
     },
     {
-        name: '# Patients With Data',
+        name: 'Number of Patients',
         render: (d: SurvivalPrefixSummary) => <span>{d.numPatients}</span>,
         sortBy: (d: SurvivalPrefixSummary) => d.numPatients,
         download: (d: SurvivalPrefixSummary) => d.numPatients.toString(),
