@@ -18,6 +18,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import {
     AlterationEnrichment,
+    AlterationFilter,
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
@@ -953,20 +954,34 @@ export default abstract class ComparisonStore
                         .values()
                         .some())
             ) {
+                const groupsAndAlterationTypes = {
+                    molecularProfileCasesGroupFilter: this
+                        .alterationsEnrichmentDataRequestGroups.result!,
+                    alterationFilter: {
+                        cnaBooleanMap: this
+                            .selectedCopyNumberEnrichmentEventTypes,
+                        mutationBooleanMap: this
+                            .selectedMutationEnrichmentEventTypes,
+                        includeDriver: this.driverAnnotationSettings
+                            .includeDriver,
+                        includeVUS: this.driverAnnotationSettings.includeVUS,
+                        includeUnknownOncogenicity: this
+                            .driverAnnotationSettings
+                            .includeUnknownOncogenicity,
+                        tiersBooleanMap: this.selectedTiersMap,
+                        includeUnknownTier: this.driverAnnotationSettings
+                            .includeUnknownTier,
+                        includeGermline: this.includeGermlineMutations,
+                        includeSomatic: this.includeSomaticMutations,
+                        includeUnknownStatus: this
+                            .includeUnknownStatusMutations,
+                    } as AlterationFilter,
+                };
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    groupsAndAlterationTypes: {
-                        molecularProfileCasesGroupFilter: this
-                            .alterationsEnrichmentDataRequestGroups.result!,
-                        alterationEventTypes: {
-                            copyNumberAlterationEventTypes: this
-                                .selectedCopyNumberEnrichmentEventTypes,
-                            mutationEventTypes: this
-                                .selectedMutationEnrichmentEventTypes,
-                        },
-                    },
+                    groupsAndAlterationTypes,
                 });
             } else {
                 return Promise.resolve([]);
