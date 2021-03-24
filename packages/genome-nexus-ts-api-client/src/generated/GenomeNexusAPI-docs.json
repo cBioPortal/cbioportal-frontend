@@ -3052,7 +3052,7 @@
         "numberWithSig": {
           "type": "integer",
           "format": "int32",
-          "description": "Number With Signature"
+          "description": "Number of Variants with Signature"
         },
         "tmb": {
           "type": "number",
