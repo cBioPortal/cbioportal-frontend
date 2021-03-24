@@ -18,7 +18,7 @@ import {
     VictoryZoomContainer,
 } from 'victory';
 import {
-    getEstimates,
+    getSurvivalSummaries,
     getLineData,
     getScatterData,
     getScatterDataWithOpacity,
@@ -27,6 +27,7 @@ import {
     GroupedScatterData,
     filterScatterData,
     SurvivalPlotFilters,
+    SurvivalSummary,
 } from './SurvivalUtil';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { getPatientViewUrl } from '../../../shared/api/urls';
@@ -224,9 +225,11 @@ export default class SurvivalChart
         };
     }
 
-    @computed get estimates(): { [groupValue: string]: number[] } {
+    @computed get survivalSummaries(): {
+        [groupValue: string]: SurvivalSummary[];
+    } {
         return _.mapValues(this.props.sortedGroupedSurvivals, survivals =>
-            getEstimates(survivals)
+            getSurvivalSummaries(survivals)
         );
     }
 
@@ -236,17 +239,30 @@ export default class SurvivalChart
         return _.mapValues(
             this.props.sortedGroupedSurvivals,
             (survivals, group) => {
-                const estimates = this.estimates[group];
+                const survivalSummaries = this.survivalSummaries[group];
                 const groupName = this.analysisGroupsMap[group].name;
                 return {
                     numOfCases: survivals.length,
-                    line: getLineData(survivals, estimates),
+                    line: getLineData(
+                        survivals,
+                        survivalSummaries.map(
+                            summary => summary.survivalFunctionEstimate
+                        )
+                    ),
                     scatterWithOpacity: getScatterDataWithOpacity(
                         survivals,
-                        estimates,
+                        survivalSummaries.map(
+                            summary => summary.survivalFunctionEstimate
+                        ),
                         groupName
                     ),
-                    scatter: getScatterData(survivals, estimates, groupName),
+                    scatter: getScatterData(
+                        survivals,
+                        survivalSummaries.map(
+                            summary => summary.survivalFunctionEstimate
+                        ),
+                        groupName
+                    ),
                 };
             }
         );
@@ -389,7 +405,9 @@ export default class SurvivalChart
             data.push({
                 scatterData: getScatterData(
                     this.props.sortedGroupedSurvivals[group.value],
-                    this.estimates[group.value],
+                    this.survivalSummaries[group.value].map(
+                        summary => summary.survivalFunctionEstimate
+                    ),
                     group.value
                 ),
                 title: group.name !== undefined ? group.name : group.value,
@@ -720,7 +738,7 @@ export default class SurvivalChart
                 <td>{!!grp.name ? grp.name : grp.value}</td>
                 {getStats(
                     this.props.sortedGroupedSurvivals[grp.value],
-                    this.estimates[grp.value]
+                    this.survivalSummaries[grp.value]
                 ).map(stat => (
                     <td>
                         <b>{stat}</b>
