@@ -3198,21 +3198,21 @@ describe('SurvivalUtil', () => {
             assert.deepEqual(getSurvivalSummaries([]), []);
         });
 
-        it('returns correct survival summaries for the example data', () => {
+        it('returns correct survival summaries for the example data, compare with R survival package result', () => {
             assert.deepEqual(
                 getSurvivalSummaries(examplePatientSurvivals),
                 exampleSurvivalSummaries
             );
         });
 
-        it('return correct survival summaries for the example data from cbioportal, compare with R survival package result', () => {
+        it('returns correct survival summaries for the example data from cbioportal, compare with R survival package result', () => {
             assert.deepEqual(
                 getSurvivalSummaries(cbioExamplePatientSurvivals),
                 cbioExampleSurvivalSummaries
             );
         });
 
-        it('return correct survival summaries for the large example data from R survival package', () => {
+        it('returns correct survival summaries for the large example data from R survival package, compare with R survival package result', () => {
             assert.deepEqual(
                 getSurvivalSummaries(
                     largeExamplePatientSurvivalsFromRSurvivalPackage
