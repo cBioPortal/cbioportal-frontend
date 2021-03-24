@@ -228,8 +228,8 @@ export default class LollipopMutationPlot<
             group,
             placement
         );
-
-        const noLabelsAreShown = specs.every(spec => !spec.label!.show);
+        const noLabelsAreShown =
+            !_.isEmpty(specs) && specs.every(spec => !spec.label!.show);
         if (noLabelsAreShown) {
             this.labelOneLollipopByDefault(
                 this.getRemainingDomains(positionMutations),
