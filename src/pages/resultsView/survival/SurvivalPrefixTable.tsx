@@ -161,7 +161,7 @@ function makeGroupColumn(groupName: string) {
     };
 }
 function makeGroupMedianSurvivalColumn(groupName: string) {
-    const name = `Median survival in ${groupName}`;
+    const name = `Median months survival in ${groupName} (95% CI)`;
     return {
         name,
         render: (d: SurvivalPrefixSummary) => (
