@@ -1,8 +1,9 @@
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
 import { tsvFormat } from 'd3-dsv';
-import jStat from 'jStat';
 import * as _ from 'lodash';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { Dictionary } from 'lodash';
+import { calculateLogConfidenceIntervals } from './SurvivalHelper';
 
 export type ScatterData = {
     x: number;
@@ -23,6 +24,13 @@ export type DownSamplingOpts = {
 
 export type GroupedScatterData = {
     [key: string]: SurvivalCurveData;
+};
+
+export type SurvivalSummary = {
+    survivalFunctionEstimate: number;
+    standardError?: number;
+    low95ConfidenceInterval?: number;
+    high95ConfidenceInterval?: number;
 };
 
 export type SurvivalCurveData = {
@@ -77,20 +85,94 @@ export const survivalClinicalDataNullValueSet = new Set([
     'na',
 ]);
 
-export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
-    let estimates: number[] = [];
+export function getSurvivalSummaries(
+    patientSurvivals: PatientSurvival[]
+): SurvivalSummary[] {
+    let summaries: SurvivalSummary[] = [];
     let previousEstimate: number = 1;
+    let numberOfEvents: number = 0;
+    let previousMonths: number | undefined = undefined;
+    let errorAccumulator: number = 0;
+    let isErrorCalculatable: boolean = false;
+
+    // calculate number of events
+    const eventCountsByMonths: Dictionary<number> = _.reduce(
+        patientSurvivals,
+        (dict, patientSurvival) => {
+            if (patientSurvival.months in dict && patientSurvival.status) {
+                dict[patientSurvival.months] = dict[patientSurvival.months] + 1;
+            } else {
+                dict[patientSurvival.months] = 1;
+            }
+            return dict;
+        },
+        {} as Dictionary<number>
+    );
+
     patientSurvivals.forEach((patientSurvival, index) => {
+        // we may see multiple data points at the same time
+        // only calculate the error for the last data point of the same months
+        if (
+            previousMonths === patientSurvival.months &&
+            patientSurvival.status
+        ) {
+            numberOfEvents++;
+        } else {
+            numberOfEvents = 1;
+        }
+        previousMonths = patientSurvival.months;
+        if (eventCountsByMonths[patientSurvival.months] === numberOfEvents) {
+            isErrorCalculatable = true;
+        } else {
+            isErrorCalculatable = false;
+        }
+        // only calculate standard error and confidence intervals for event data
         if (patientSurvival.status) {
             const atRisk = patientSurvivals.length - index;
             const estimate = previousEstimate * ((atRisk - 1) / atRisk);
             previousEstimate = estimate;
-            estimates.push(estimate);
+            // define calculate standard error and confidence intervals
+            // undefined is default value, means it's not found
+            let standardError: number | undefined = undefined;
+            let low95ConfidenceInterval: number | undefined = undefined;
+            let high95ConfidenceInterval: number | undefined = undefined;
+
+            if (isErrorCalculatable) {
+                // calculate standard error
+                // adjustedAtRisk need to add number of events back since we may have multiple events at the same time
+                const adjustedAtRisk =
+                    atRisk + eventCountsByMonths[patientSurvival.months] - 1;
+                const toBeAccumulated =
+                    eventCountsByMonths[patientSurvival.months] /
+                    (adjustedAtRisk *
+                        (adjustedAtRisk -
+                            eventCountsByMonths[patientSurvival.months]));
+                errorAccumulator = errorAccumulator + toBeAccumulated;
+                const error = estimate * estimate * errorAccumulator;
+                standardError = Math.sqrt(error);
+
+                // calculate confidence intervals
+                const confidenceSet = calculateLogConfidenceIntervals(
+                    estimate,
+                    standardError
+                );
+                low95ConfidenceInterval = confidenceSet.low;
+                high95ConfidenceInterval = confidenceSet.high;
+            }
+            summaries.push({
+                survivalFunctionEstimate: estimate,
+                standardError,
+                low95ConfidenceInterval,
+                high95ConfidenceInterval,
+            } as SurvivalSummary);
         } else {
-            estimates.push(previousEstimate);
+            summaries.push({
+                survivalFunctionEstimate: previousEstimate,
+            });
         }
     });
-    return estimates;
+
+    return summaries;
 }
 
 export function parseSurvivalData(s: string) {
@@ -151,16 +233,55 @@ export function isNullSurvivalClinicalDataValue(value: string) {
 
 export function getMedian(
     patientSurvivals: PatientSurvival[],
-    estimates: number[]
+    survivalSummaries: SurvivalSummary[]
 ): string {
-    let median: string = 'NA';
-    for (let i = 0; i < estimates.length; i++) {
-        if (estimates[i] <= 0.5) {
+    let median: string | undefined = undefined;
+    let lowerControlLimit: string | undefined = undefined;
+    let upperControlLimit: string | undefined = undefined;
+
+    for (let i = 0; i < survivalSummaries.length; i++) {
+        if (
+            median === undefined &&
+            survivalSummaries[i].survivalFunctionEstimate <= 0.5
+        ) {
             median = patientSurvivals[i].months.toFixed(2);
-            break;
+        }
+        if (
+            lowerControlLimit === undefined &&
+            survivalSummaries[i].low95ConfidenceInterval &&
+            survivalSummaries[i].low95ConfidenceInterval! <= 0.5
+        ) {
+            lowerControlLimit = patientSurvivals[i].months.toFixed(2);
+        }
+        if (
+            upperControlLimit === undefined &&
+            survivalSummaries[i].high95ConfidenceInterval &&
+            survivalSummaries[i].high95ConfidenceInterval! <= 0.5
+        ) {
+            upperControlLimit = patientSurvivals[i].months.toFixed(2);
         }
     }
-    return median;
+
+    if (median === undefined) {
+        return 'NA';
+    } else if (
+        lowerControlLimit !== undefined &&
+        upperControlLimit === undefined
+    ) {
+        return `${median} (${lowerControlLimit} - NA)`;
+    } else if (
+        lowerControlLimit === undefined &&
+        upperControlLimit !== undefined
+    ) {
+        return `${median} (NA - ${upperControlLimit})`;
+    } else if (
+        lowerControlLimit !== undefined &&
+        upperControlLimit !== undefined
+    ) {
+        return `${median} (${lowerControlLimit} - ${upperControlLimit})`;
+    } else {
+        return median;
+    }
 }
 
 export function getLineData(
@@ -225,15 +346,15 @@ export function getScatterDataWithOpacity(
 
 export function getStats(
     patientSurvivals?: PatientSurvival[],
-    estimates?: number[]
+    survivalSummaries?: SurvivalSummary[]
 ): [number, number, string] {
-    if (patientSurvivals && estimates) {
+    if (patientSurvivals && survivalSummaries) {
         return [
             patientSurvivals.length,
             patientSurvivals.filter(
                 patientSurvival => patientSurvival.status === true
             ).length,
-            getMedian(patientSurvivals, estimates),
+            getMedian(patientSurvivals, survivalSummaries),
         ];
     } else {
         return [0, 0, 'N/A'];
