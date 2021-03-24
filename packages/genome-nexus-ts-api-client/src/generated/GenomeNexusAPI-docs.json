@@ -1280,6 +1280,46 @@
         }
       }
     },
+    "Clinvar": {
+      "type": "object",
+      "properties": {
+        "alternateAllele": {
+          "type": "string"
+        },
+        "chromosome": {
+          "type": "string"
+        },
+        "clinicalSignificance": {
+          "type": "string"
+        },
+        "clinvarId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "conflictingClinicalSignificance": {
+          "type": "string"
+        },
+        "endPosition": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceAllele": {
+          "type": "string"
+        },
+        "startPosition": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "ClinvarAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "$ref": "#/definitions/Clinvar"
+        }
+      }
+    },
     "ColocatedVariant": {
       "type": "object",
       "required": [
@@ -2887,6 +2927,10 @@
           "type": "string",
           "description": "Mutation Status"
         },
+        "overallNumberOfGermlineHomozygous": {
+          "type": "integer",
+          "format": "int32"
+        },
         "pathogenic": {
           "type": "string",
           "description": "Pathogenic"
@@ -3000,9 +3044,15 @@
           "format": "int32",
           "description": "Number Of Cancer Type Count"
         },
-        "nwithSig": {
+        "numberOfGermlineHomozygous": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "Number Of Germline Homozygous Per Tumor Type"
+        },
+        "numberWithSig": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Variants with Signature"
         },
         "tmb": {
           "type": "number",
@@ -3300,6 +3350,9 @@
         "assembly_name": {
           "type": "string",
           "description": "NCBI build number"
+        },
+        "clinvarAnnotation": {
+          "$ref": "#/definitions/ClinvarAnnotation"
         },
         "colocatedVariants": {
           "type": "array",
