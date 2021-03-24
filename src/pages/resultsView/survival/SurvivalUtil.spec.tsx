@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import _ from 'lodash';
+import { PatientSurvival } from 'shared/model/PatientSurvival';
 import {
     convertScatterDataToDownloadData,
     downSampling,
@@ -106,6 +107,253 @@ const allScatterData: ScatterData[] = [
         uniquePatientKey: '',
         studyId: '',
         status: true,
+    },
+];
+
+// data from gbm_columbia_2019 study
+const cbioExamplePatientSurvivals = [
+    {
+        months: 1.4,
+        status: false,
+    },
+    {
+        months: 4.3,
+        status: false,
+    },
+    {
+        months: 4.5,
+        status: false,
+    },
+    {
+        months: 8,
+        status: false,
+    },
+    {
+        months: 8.9,
+        status: true,
+    },
+    {
+        months: 9.2,
+        status: false,
+    },
+    {
+        months: 13.1,
+        status: false,
+    },
+    {
+        months: 14.4,
+        status: true,
+    },
+    {
+        months: 14.8,
+        status: false,
+    },
+    {
+        months: 14.8,
+        status: false,
+    },
+    {
+        months: 15.3,
+        status: false,
+    },
+    {
+        months: 15.9,
+        status: false,
+    },
+    {
+        months: 19.6,
+        status: false,
+    },
+    {
+        months: 20.6,
+        status: true,
+    },
+    {
+        months: 23,
+        status: false,
+    },
+    {
+        months: 23,
+        status: false,
+    },
+    {
+        months: 24,
+        status: true,
+    },
+    {
+        months: 25.4,
+        status: true,
+    },
+    {
+        months: 26.6,
+        status: true,
+    },
+    {
+        months: 31.3,
+        status: false,
+    },
+    {
+        months: 34,
+        status: false,
+    },
+    {
+        months: 36.6,
+        status: true,
+    },
+    {
+        months: 36.9,
+        status: false,
+    },
+    {
+        months: 43.1,
+        status: false,
+    },
+    {
+        months: 45.4,
+        status: true,
+    },
+    {
+        months: 45.6,
+        status: false,
+    },
+    {
+        months: 46.5,
+        status: true,
+    },
+    {
+        months: 46.8,
+        status: true,
+    },
+    {
+        months: 55.6,
+        status: false,
+    },
+] as PatientSurvival[];
+
+// ground truth from R survival package
+/*
+library(survival)
+time = c(1.4,4.3,4.5,8,8.9,9.2,13.1,14.4,14.8,14.8,15.3,15.9,19.6,20.6,23,23,24,25.4,26.6,31.3,34,36.6,36.9,43.1,45.4,45.6,46.5,46.8,55.6)
+status = c(1,1,1,1,2,1,1,2,1,1,1,1,1,2,1,1,2,2,2,1,1,2,1,1,2,1,2,2,1)
+summary(survfit(Surv(time, status) ~ 1))
+*/
+const cbioExampleSurvivalSummaries = [
+    {
+        survivalFunctionEstimate: 1,
+    },
+    {
+        survivalFunctionEstimate: 1,
+    },
+    {
+        survivalFunctionEstimate: 1,
+    },
+    {
+        survivalFunctionEstimate: 1,
+    },
+    {
+        survivalFunctionEstimate: 0.96,
+        standardError: 0.03919183588453085,
+        low95ConfidenceInterval: 0.8861782272999308,
+        high95ConfidenceInterval: 1,
+    },
+    {
+        survivalFunctionEstimate: 0.96,
+    },
+    {
+        survivalFunctionEstimate: 0.96,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+        standardError: 0.05671964347934269,
+        low95ConfidenceInterval: 0.8116737574073527,
+        high95ConfidenceInterval: 1,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+    },
+    {
+        survivalFunctionEstimate: 0.9163636363636364,
+    },
+    {
+        survivalFunctionEstimate: 0.8590909090909091,
+        standardError: 0.07682903121584796,
+        low95ConfidenceInterval: 0.7209674254729507,
+        high95ConfidenceInterval: 1,
+    },
+    {
+        survivalFunctionEstimate: 0.8590909090909091,
+    },
+    {
+        survivalFunctionEstimate: 0.8590909090909091,
+    },
+    {
+        survivalFunctionEstimate: 0.7930069930069931,
+        standardError: 0.09518757265448993,
+        low95ConfidenceInterval: 0.6267641342567718,
+        high95ConfidenceInterval: 1,
+    },
+    {
+        survivalFunctionEstimate: 0.7269230769230769,
+        standardError: 0.10778053305175259,
+        low95ConfidenceInterval: 0.5436022117301463,
+        high95ConfidenceInterval: 0.9720658753052113,
+    },
+    {
+        survivalFunctionEstimate: 0.6608391608391608,
+        standardError: 0.11649295252831449,
+        low95ConfidenceInterval: 0.4677843335458505,
+        high95ConfidenceInterval: 0.9335678114491659,
+    },
+    {
+        survivalFunctionEstimate: 0.6608391608391608,
+    },
+    {
+        survivalFunctionEstimate: 0.6608391608391608,
+    },
+    {
+        survivalFunctionEstimate: 0.5782342657342657,
+        standardError: 0.12790863672863112,
+        low95ConfidenceInterval: 0.37481184465886863,
+        high95ConfidenceInterval: 0.8920605654113074,
+    },
+    {
+        survivalFunctionEstimate: 0.5782342657342657,
+    },
+    {
+        survivalFunctionEstimate: 0.5782342657342657,
+    },
+    {
+        survivalFunctionEstimate: 0.4625874125874126,
+        standardError: 0.1454996635668725,
+        low95ConfidenceInterval: 0.24972477313930544,
+        high95ConfidenceInterval: 0.8568918157148447,
+    },
+    {
+        survivalFunctionEstimate: 0.4625874125874126,
+    },
+    {
+        survivalFunctionEstimate: 0.3083916083916084,
+        standardError: 0.15893348873798227,
+        low95ConfidenceInterval: 0.11231173743871747,
+        high95ConfidenceInterval: 0.8467982625436375,
+    },
+    {
+        survivalFunctionEstimate: 0.1541958041958042,
+        standardError: 0.13491899968648588,
+        low95ConfidenceInterval: 0.0277513466677814,
+        high95ConfidenceInterval: 0.8567636848843272,
+    },
+    {
+        survivalFunctionEstimate: 0.1541958041958042,
     },
 ];
 
@@ -1709,6 +1957,11 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     },
 ];
 
+// ground truth from R survival package
+/*
+library(survival)
+summary(survfit(Surv(time, status) ~ 1, data=lung))
+*/
 const largeExampleSurvivalSummaries = [
     {
         survivalFunctionEstimate: 0.9956140350877193,
@@ -2949,6 +3202,13 @@ describe('SurvivalUtil', () => {
             assert.deepEqual(
                 getSurvivalSummaries(examplePatientSurvivals),
                 exampleSurvivalSummaries
+            );
+        });
+
+        it('return correct survival summaries for the example data from cbioportal, compare with R survival package result', () => {
+            assert.deepEqual(
+                getSurvivalSummaries(cbioExamplePatientSurvivals),
+                cbioExampleSurvivalSummaries
             );
         });
 
