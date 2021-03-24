@@ -495,7 +495,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
-            this.props.store.patientSurvivalUniqueStatusText,
             this.survivalTitleText,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
