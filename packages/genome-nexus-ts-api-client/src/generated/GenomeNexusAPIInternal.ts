@@ -430,6 +430,8 @@ export type SignalMutation = {
 
         'mutationStatus': string
 
+        'overallNumberOfGermlineHomozygous': number
+
         'pathogenic': string
 
         'penetrance': string
@@ -496,7 +498,9 @@ export type StatsByTumorType = {
 
         'nCancerTypeCount': number
 
-        'nwithSig': number
+        'numberOfGermlineHomozygous': number
+
+        'numberWithSig': number
 
         'tmb': number
 

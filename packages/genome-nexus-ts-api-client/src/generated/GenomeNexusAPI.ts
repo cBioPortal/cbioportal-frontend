@@ -101,6 +101,28 @@ export type ClinVar = {
         'variantId': number
 
 };
+export type Clinvar = {
+    'alternateAllele': string
+
+        'chromosome': string
+
+        'clinicalSignificance': string
+
+        'clinvarId': number
+
+        'conflictingClinicalSignificance': string
+
+        'endPosition': number
+
+        'referenceAllele': string
+
+        'startPosition': number
+
+};
+export type ClinvarAnnotation = {
+    'annotation': Clinvar
+
+};
 export type ColocatedVariant = {
     'dbSnpId': string
 
@@ -724,6 +746,8 @@ export type SignalMutation = {
 
         'mutationStatus': string
 
+        'overallNumberOfGermlineHomozygous': number
+
         'pathogenic': string
 
         'penetrance': string
@@ -770,7 +794,9 @@ export type StatsByTumorType = {
 
         'nCancerTypeCount': number
 
-        'nwithSig': number
+        'numberOfGermlineHomozygous': number
+
+        'numberWithSig': number
 
         'tmb': number
 
@@ -901,6 +927,8 @@ export type VariantAnnotation = {
         'annotation_summary': VariantAnnotationSummary
 
         'assembly_name': string
+
+        'clinvarAnnotation': ClinvarAnnotation
 
         'colocatedVariants': Array < ColocatedVariant >
 

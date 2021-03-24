@@ -1835,6 +1835,10 @@
           "type": "string",
           "description": "Mutation Status"
         },
+        "overallNumberOfGermlineHomozygous": {
+          "type": "integer",
+          "format": "int32"
+        },
         "pathogenic": {
           "type": "string",
           "description": "Pathogenic"
@@ -2005,9 +2009,15 @@
           "format": "int32",
           "description": "Number Of Cancer Type Count"
         },
-        "nwithSig": {
+        "numberOfGermlineHomozygous": {
           "type": "integer",
-          "format": "int32"
+          "format": "int32",
+          "description": "Number Of Germline Homozygous Per Tumor Type"
+        },
+        "numberWithSig": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Variants with Signature"
         },
         "tmb": {
           "type": "number",
