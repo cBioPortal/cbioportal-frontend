@@ -12,7 +12,7 @@ import autobind from 'autobind-decorator';
 import { action, computed, makeObservable, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
-import { CirclePicker } from 'react-color';
+import { CirclePicker, CirclePickerProps } from 'react-color';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 import { COLORS } from '../../studyView/StudyViewUtils';
 import {
@@ -27,6 +27,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
 import { ColorPickerIcon } from 'pages/groupComparison/comparisonGroupManager/ColorPickerIcon';
+import { ColorChooserWidget } from './ColorChooserWidget';
 
 export interface IGroupCheckboxProps {
     group: StudyViewComparisonGroup;
@@ -131,27 +132,6 @@ export default class GroupCheckbox extends React.Component<
         }
     };
 
-    buildColorChooserWidget = () => (
-        <Popover
-            id="popover-basic"
-            onClick={e => {
-                e.stopPropagation();
-                e.preventDefault();
-            }}
-        >
-            <div>
-                <CirclePicker
-                    colors={this.colorList}
-                    circleSize={20}
-                    circleSpacing={3}
-                    onChangeComplete={this.handleChangeComplete}
-                    color={this.props.color}
-                    width="140px"
-                />
-            </div>
-        </Popover>
-    );
-
     render() {
         const group = this.props.group;
         let checkboxAndLabel;
@@ -223,7 +203,18 @@ export default class GroupCheckbox extends React.Component<
                                 containerPadding={40}
                                 trigger="click"
                                 placement="bottom"
-                                overlay={this.buildColorChooserWidget()}
+                                overlay={
+                                    <ColorChooserWidget
+                                        colors={this.colorList}
+                                        circleSize={20}
+                                        circleSpacing={3}
+                                        onChangeComplete={
+                                            this.handleChangeComplete
+                                        }
+                                        color={this.props.color}
+                                        width="140px"
+                                    />
+                                }
                                 onEnter={this.onOverlayEnter}
                                 onExit={this.onOverlayExit}
                                 rootClose={true}
@@ -231,6 +222,11 @@ export default class GroupCheckbox extends React.Component<
                                 <DefaultTooltip
                                     overlay={
                                         'Select color for group used in group comparison'
+                                    }
+                                    disabled={
+                                        this.props.store
+                                            .numberOfVisibleColorChooserModals >
+                                        0
                                     }
                                 >
                                     <span

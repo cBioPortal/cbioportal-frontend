@@ -31,7 +31,7 @@ import _ from 'lodash';
 import { serializeEvent } from 'shared/lib/tracking';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import classnames from 'classnames';
-import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import { getReservedGroupColor } from 'shared/lib/Colors';
 
 export interface IComparisonGroupManagerProps {
     store: StudyViewPageStore;
@@ -198,7 +198,10 @@ export default class ComparisonGroupManager extends React.Component<
             if (this.props.store.comparisonGroups.result!.length > 0) {
                 // show this component if there are groups, and if filteredGroups is complete
                 return (
-                    <div className={styles.groupCheckboxes}>
+                    <div
+                        className={styles.groupCheckboxes}
+                        data-test="group-checkboxes"
+                    >
                         {this.filteredGroups.result!.length > 0 ? (
                             this.filteredGroups.result!.map(group => (
                                 <GroupCheckbox
@@ -329,7 +332,6 @@ export default class ComparisonGroupManager extends React.Component<
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
             : undefined;
-        const color = RESERVED_CLINICAL_VALUE_COLORS[this.inputGroupName];
         const { id } = await comparisonClient.addGroup(
             getGroupParameters(
                 this.inputGroupName,
@@ -337,6 +339,10 @@ export default class ComparisonGroupManager extends React.Component<
                 this.props.store.studyIds
             )
         );
+        // check if there is any predefined color for this group and set the color
+        const reservedColor = getReservedGroupColor(this.inputGroupName);
+        if (reservedColor != undefined)
+            this.props.store.onGroupColorChange(id, reservedColor);
         this.props.store.notifyComparisonGroupsChange();
         this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.cancelAddGroup();
@@ -545,6 +551,7 @@ export default class ComparisonGroupManager extends React.Component<
                         label: '',
                         category: 'groupComparison',
                     })}
+                    data-test="create-new-group-btn"
                     onClick={this.showAddGroupPanel}
                     disabled={!selectedSamples}
                     style={{ width: '100%' }}

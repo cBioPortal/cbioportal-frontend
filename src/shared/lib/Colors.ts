@@ -12,6 +12,7 @@ import {
     MUT_COLOR_SPLICE,
     MUT_COLOR_TRUNC,
 } from 'cbioportal-frontend-commons';
+import { group } from 'yargs';
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
@@ -149,4 +150,24 @@ export function getClinicalValueColor(value: string): string | undefined {
     return RESERVED_CLINICAL_VALUE_COLORS[
         value.replace(/\s/g, '').toLowerCase()
     ];
+}
+
+export function getReservedGroupColor(value: string): string | undefined {
+    // if group is composed of multiple predefined colors (ex: 0:Living, Female) then return undefined
+    console.info('getting color for group ' + value);
+    let groupColor: string | undefined = undefined;
+    const words: string[] = value.split(',');
+    words.forEach((word, index) => {
+        const color = getClinicalValueColor(word);
+        console.info('word:' + word + '-' + color);
+        if (color != undefined) {
+            if (groupColor == undefined) groupColor = color;
+            else {
+                groupColor = undefined;
+                return groupColor;
+            }
+        }
+    });
+    console.info(groupColor);
+    return groupColor;
 }

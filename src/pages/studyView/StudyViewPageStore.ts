@@ -423,10 +423,13 @@ export class StudyViewPageStore {
                             // this is because the user setting session is going to be updated for every operation once the user is logged in
                             this.hideRestoreSettingsMsg = true;
                         }
-                        const groupColorSettingsChanged = !_.isEqual(
-                            toJS(this.userGroupColors),
-                            this.userSettings.result!.groupColors
-                        );
+                        const groupColorSettingsChanged =
+                            this.userSettings.result &&
+                            (!this.userSettings.result!.groupColors ||
+                                !_.isEqual(
+                                    toJS(this.userGroupColors!),
+                                    this.userSettings.result!.groupColors
+                                ));
                         // for group collor update immediately, for the rest wait 3 sec
                         if (groupColorSettingsChanged)
                             this.updateUserSettings();
@@ -1055,7 +1058,9 @@ export class StudyViewPageStore {
 
     @action.bound
     public onGroupColorChange(groupId: string, color: string) {
-        this.userGroupColors[groupId] = color;
+        if (color == undefined && this.userGroupColors[groupId]) {
+            delete this.userGroupColors[groupId];
+        } else this.userGroupColors[groupId] = color;
     }
 
     private async createNumberAttributeComparisonSession(
