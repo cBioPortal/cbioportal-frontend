@@ -22,6 +22,8 @@ export enum FrequencyTableColumnEnum {
     MEDIAN_HRD_LST = 'lst',
     MEDIAN_HRD_NTELOMERIC_AI = 'ntelomericAi',
     MEDIAN_HRD_FRACTION_LOH = 'fractionLoh',
+    OVERALL_NUMBER_OF_GERMLINE_HOMOZYGOUS = 'overallNumberOfGermlineHomozygous',
+    NUMBER_OF_GERMLINE_HOMOZYGOUS = 'numberOfGermlineHomozygous',
 }
 
 export function columnHeader(
@@ -56,6 +58,10 @@ export const FREQUENCY_TABLE_HEADER_COMPONENT: { [id: string]: JSX.Element } = {
     [FrequencyTableColumnEnum.VARIANT_COUNT]: columnHeader(
         <strong className="table-header"># Carriers</strong>,
         'Total number of patients harboring a germline pathogenic variant'
+    ),
+    [FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS]: columnHeader(
+        <strong className="table-header"># Germline Homozygous</strong>,
+        'Number of germline homozygous'
     ),
     [FrequencyTableColumnEnum.PREVALENCE_FREQUENCY]: columnHeader(
         <strong className="table-header">% Prevalence</strong>,
@@ -147,6 +153,29 @@ export const FREQUENCY_COLUMNS_DEFINITION = {
                 0
             );
             return <strong className="pull-right">{variantCount}</strong>;
+        },
+    },
+    [FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS]: {
+        id: FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS,
+        Cell: renderNumber,
+        Header:
+            FREQUENCY_TABLE_HEADER_COMPONENT[
+                FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS
+            ],
+        accessor: FrequencyTableColumnEnum.NUMBER_OF_GERMLINE_HOMOZYGOUS,
+        sortMethod: defaultSortMethod,
+        minWidth: 100,
+        Footer: (col: any) => {
+            const numberOfGermlineHomozygous = col.data.reduce(
+                (sum: any, row: ISignalTumorTypeDecomposition) =>
+                    sum + row.numberOfGermlineHomozygous,
+                0
+            );
+            return (
+                <strong className="pull-right">
+                    {numberOfGermlineHomozygous}
+                </strong>
+            );
         },
     },
     [FrequencyTableColumnEnum.PREVALENCE_FREQUENCY]: {
@@ -286,7 +315,7 @@ export function renderPercentage(cellProps: any, styles?: any) {
 
 export function renderNumber(cellProps: any, fractionDigits?: number) {
     let displayValue;
-    if (cellProps.value !== null) {
+    if (cellProps.value !== undefined && cellProps.value !== null) {
         if (fractionDigits) {
             displayValue = cellProps.value.toFixed(fractionDigits);
         } else {
