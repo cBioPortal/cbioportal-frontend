@@ -1751,38 +1751,6 @@ export default abstract class ComparisonStore {
         },
     });
 
-    readonly patientSurvivalUniqueStatusText = remoteData<{
-        [prefix: string]: string[];
-    }>({
-        await: () => [
-            this.survivalClinicalDataGroupByUniquePatientKey,
-            this.activePatientKeysNotOverlapRemoved,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: () => {
-            return Promise.resolve(
-                _.reduce(
-                    this.survivalClinicalAttributesPrefix.result!,
-                    (acc, key) => {
-                        const clinicalDataOfPatientSurvivalStatus = getClinicalDataOfPatientSurvivalStatus(
-                            this.survivalClinicalDataGroupByUniquePatientKey
-                                .result!,
-                            this.activePatientKeysNotOverlapRemoved.result!,
-                            `${key}_STATUS`,
-                            `${key}_MONTHS`
-                        );
-                        acc[key] = _.chain(clinicalDataOfPatientSurvivalStatus)
-                            .map(clinicalData => clinicalData.value)
-                            .uniq()
-                            .value();
-                        return acc;
-                    },
-                    {} as { [prefix: string]: string[] }
-                )
-            );
-        },
-    });
-
     readonly uidToGroup = remoteData({
         await: () => [this._originalGroups],
         invoke: () => {

@@ -15,6 +15,7 @@ export interface ISignalTumorTypeDecomposition extends CountByTumorType {
     tmb: number | null;
     biallelicTumorCount: number | null;
     qcPassTumorCount: number | null;
+    numberOfGermlineHomozygous: number | null;
 }
 
 export interface IExtendedSignalMutation extends SignalMutation {
