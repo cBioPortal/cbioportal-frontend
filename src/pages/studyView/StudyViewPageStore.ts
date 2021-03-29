@@ -513,9 +513,6 @@ export class StudyViewPageStore
                 }
             }
         );
-        this.driverAnnotationSettings = buildDriverAnnotationSettings(
-            () => false
-        );
     }
 
     @computed get isLoggedIn() {

@@ -466,12 +466,10 @@ export type ModifyQueryParams = {
 /* tslint:disable: member-ordering */
 export class ResultsViewPageStore
     implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
-    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable driverAnnotationSettings: DriverAnnotationSettings;
 
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
-        makeObservable(this, {
-            driverAnnotationSettings: observable,
-        });
+        makeObservable(this);
         //labelMobxPromises(this);
 
         this.urlWrapper = urlWrapper;

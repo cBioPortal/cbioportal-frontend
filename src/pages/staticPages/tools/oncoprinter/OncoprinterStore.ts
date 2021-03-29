@@ -69,9 +69,7 @@ export default class OncoprinterStore {
     @observable customDriverWarningHidden: boolean;
 
     constructor() {
-        makeObservable(this, {
-            driverAnnotationSettings: observable,
-        });
+        makeObservable(this);
         this.initialize();
     }
 

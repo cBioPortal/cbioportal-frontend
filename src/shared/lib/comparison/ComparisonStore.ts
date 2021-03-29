@@ -120,7 +120,10 @@ export default abstract class ComparisonStore
         [key in MutationEnrichmentEventType]?: boolean;
     } = {};
 
-    public driverAnnotationSettings: DriverAnnotationSettings;
+    @observable
+    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
+        () => false
+    );
     @observable includeGermlineMutations = true;
     @observable includeSomaticMutations = true;
     @observable includeUnknownStatusMutations = true;
@@ -176,10 +179,6 @@ export default abstract class ComparisonStore
                 );
             });
         }); // do this after timeout so that all subclasses have time to construct
-
-        this.driverAnnotationSettings = buildDriverAnnotationSettings(
-            () => false
-        );
     }
 
     public destroy() {
