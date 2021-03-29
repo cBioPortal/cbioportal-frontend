@@ -699,7 +699,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             legendLocation={LegendLocation.TOOLTIP}
                             title={this.props.title}
                             totalCasesHeader="Number of Cases, Total"
-                            statusCasesHeader="Number of Cases, Deceased"
+                            statusCasesHeader="Number of Events"
                             medianMonthsHeader="Median Months Survival"
                             yLabelTooltip={SURVIVAL_PLOT_Y_LABEL_TOOLTIP}
                             xLabelWithEventTooltip={

@@ -25,9 +25,8 @@ import ComparisonStore, {
 } from '../../shared/lib/comparison/ComparisonStore';
 import {
     generateSurvivalPlotTitleFromDisplayName,
-    getStatusCasesHeaderText,
     getMedian,
-    getEstimates,
+    getSurvivalSummaries,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
     SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
@@ -442,7 +441,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             );
                                             return getMedian(
                                                 sorted,
-                                                getEstimates(sorted)
+                                                getSurvivalSummaries(sorted)
                                             );
                                         }
                                     ),
@@ -496,7 +495,6 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.analysisGroupsComputations,
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
-            this.props.store.patientSurvivalUniqueStatusText,
             this.survivalTitleText,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
@@ -618,13 +616,8 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                     }
                                     yAxisLabel={survivalTitleText[key]}
                                     totalCasesHeader="Number of Cases, Total"
-                                    statusCasesHeader={`Number of Cases, ${getStatusCasesHeaderText(
-                                        key,
-                                        this.props.store
-                                            .patientSurvivalUniqueStatusText
-                                            .result![key]
-                                    )}`}
-                                    medianMonthsHeader={`Median Months ${survivalTitleText[key]}`}
+                                    statusCasesHeader="Number of Events"
+                                    medianMonthsHeader={`Median Months ${survivalTitleText[key]} (95% CI)`}
                                     yLabelTooltip={
                                         SURVIVAL_PLOT_Y_LABEL_TOOLTIP
                                     }

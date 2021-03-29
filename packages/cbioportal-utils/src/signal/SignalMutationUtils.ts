@@ -163,6 +163,10 @@ export function generateTumorTypeDecomposition(
             qcPassTumorMap && qcPassTumorMap[counts.tumorType]
                 ? qcPassTumorMap[counts.tumorType].variantCount
                 : null,
+        numberOfGermlineHomozygous:
+            statsTumorMap && statsTumorMap[counts.tumorType]
+                ? statsTumorMap[counts.tumorType].numberOfGermlineHomozygous
+                : null,
     }));
 }
 
