@@ -1,4 +1,5 @@
 const clipboardy = require('clipboardy');
+const assertScreenShotMatch = require('./lib/testUtils').assertScreenShotMatch;
 
 function waitForStudyQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist({
@@ -19,6 +20,17 @@ function waitForGeneQueryPage(timeout) {
 
 function waitForPlotsTab(timeout) {
     $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
+}
+
+function waitForAndCheckPlotsTab() {
+    $('body').moveTo({ xOffset: 0, yOffset: 0 });
+    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
+    var res = checkElementWithElementHidden(
+        'div[data-test="PlotsTabEntireDiv"]',
+        '.popover',
+        { hide: ['.qtip'] }
+    );
+    assertScreenShotMatch(res);
 }
 
 function waitForCoExpressionTab(timeout) {
@@ -610,6 +622,7 @@ var openAlterationTypeSelectionMenu = () => {
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
+    waitForAndCheckPlotsTab: waitForAndCheckPlotsTab,
     waitForStudyQueryPage: waitForStudyQueryPage,
     waitForGeneQueryPage: waitForGeneQueryPage,
     waitForOncoprint: waitForOncoprint,

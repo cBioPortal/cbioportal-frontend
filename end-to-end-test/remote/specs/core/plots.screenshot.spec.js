@@ -6,19 +6,10 @@ var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 var checkElementWithElementHidden = require('../../../shared/specUtils')
     .checkElementWithElementHidden;
+var waitForAndCheckPlotsTab = require('../../../shared/specUtils')
+    .waitForAndCheckPlotsTab;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
-
-function waitForAndCheckPlotsTab() {
-    $('body').moveTo({ xOffset: 0, yOffset: 0 });
-    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
-    var res = checkElementWithElementHidden(
-        'div[data-test="PlotsTabEntireDiv"]',
-        '.popover',
-        { hide: ['.qtip'] }
-    );
-    assertScreenShotMatch(res);
-}
 
 describe('plots tab screenshot tests', function() {
     it('plots tab mutation type view', function() {
