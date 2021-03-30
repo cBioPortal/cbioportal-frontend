@@ -59,16 +59,18 @@ function handleValueThreshold(
     datum: GenericAssayDataEnhanced
 ): GenericAssayDataEnhanced {
     if (!datum.thresholdType) {
-        // this is to prevent repeated extraction of '>' and '<' symbols
-        const matches = /([><]?)(.+)/.exec(datum.value);
+        // only extract threshold for numeric values
+        const matches = /^([><]? *)(-?\d+(\.\d+)?)$/.exec(datum.value);
         datum.thresholdType = undefined;
         if (matches) {
             datum.value = matches[2];
-            if (matches[1].length > 0) {
-                if (matches[1] === '>') {
-                    datum.thresholdType = matches[1] as '>';
-                } else if (matches[1] === '<') {
-                    datum.thresholdType = matches[1] as '<';
+            // remove possible blanks from thresholdType
+            const thresholdType = _.trim(matches[1]);
+            if (thresholdType.length > 0) {
+                if (thresholdType === '>') {
+                    datum.thresholdType = thresholdType as '>';
+                } else if (thresholdType === '<') {
+                    datum.thresholdType = thresholdType as '<';
                 }
             }
         }
