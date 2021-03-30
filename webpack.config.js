@@ -218,10 +218,7 @@ var config = {
                         loader: 'ts-loader',
                         options: {
                             transpileOnly:
-                                isDev ||
-                                isTest ||
-                                (process.env.NETLIFY &&
-                                    process.env.CONTEXT !== 'production'),
+                                isDev || isTest || process.env.NETLIFY,
                         },
                     },
                 ],
@@ -494,7 +491,7 @@ if (isDev || isTest) {
     // from dev server
     config.output.publicPath = '//localhost:3000/';
 } else {
-    (config.devtool = sourceMap), (config.output.publicPath = '/');
+    config.output.publicPath = '/';
 
     // css modules for any scss matching test
     config.module.rules.push({
