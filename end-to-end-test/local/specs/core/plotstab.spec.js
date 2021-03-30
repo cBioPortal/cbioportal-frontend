@@ -1,5 +1,3 @@
-import { NONE_SELECTED_OPTION_NUMERICAL_VALUE } from 'pages/resultsView/plots/PlotsTab';
-
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
@@ -38,7 +36,7 @@ describe('plots tab', function() {
                 assert($('div.coloring-menu').isExisting());
                 assert(
                     $('div.coloring-menu').$$('input[type="checkbox"]')
-                        .length === 2
+                        .length === 3
                 );
             });
 
