@@ -46,6 +46,7 @@ import {
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
     CustomDriverNumericGeneMolecularData,
+    DataTypeConstants,
 } from '../ResultsViewPageStore';
 import numeral from 'numeral';
 import GenesetMolecularDataCache from '../../../shared/cache/GenesetMolecularDataCache';
@@ -1374,6 +1375,7 @@ function makeAxisDataPromise_Geneset(
 function makeAxisDataPromise_GenericAssay(
     entityId: string,
     molecularProfileIdSuffix: string,
+    genericAssayDataType: string,
     genericAssayMolecularDataCachePromise: MobxPromise<
         GenericAssayMolecularDataCache
     >,
@@ -1390,6 +1392,9 @@ function makeAxisDataPromise_GenericAssay(
             const profiles = molecularProfileIdSuffixToMolecularProfiles.result![
                 molecularProfileIdSuffix
             ];
+            // Only LIMITVALUE is numeric data
+            const isNumeric =
+                genericAssayDataType === DataTypeConstants.LIMITVALUE;
             const makeRequest = true;
             await Promise.all(
                 profiles.map(profile =>
@@ -1416,11 +1421,11 @@ function makeAxisDataPromise_GenericAssay(
                 data: data.map(d => {
                     return {
                         uniqueSampleKey: d.uniqueSampleKey,
-                        value: parseFloat(d.value),
+                        value: isNumeric ? parseFloat(d.value) : d.value,
                         thresholdType: d.thresholdType,
                     };
                 }),
-                datatype: 'number',
+                datatype: isNumeric ? 'number' : 'string',
                 genericAssayEntityId: entityId,
             });
         },
@@ -1461,7 +1466,7 @@ export function makeAxisDataPromise(
         () => new Promise<IAxisData>(() => 0)
     );
 
-    if (selection.dataType && selection.isGenericAssayType) {
+    if (selection.dataType && isGenericAssaySelected(selection)) {
         if (
             selection.genericAssayEntityId !== undefined &&
             selection.dataSourceId !== undefined
@@ -1469,6 +1474,7 @@ export function makeAxisDataPromise(
             ret = makeAxisDataPromise_GenericAssay(
                 selection.genericAssayEntityId,
                 selection.dataSourceId,
+                selection.genericAssayDataType!,
                 genericAssayMolecularDataCachePromise,
                 molecularProfileIdSuffixToMolecularProfiles
             );
@@ -1603,7 +1609,7 @@ export function getAxisLabel(
             }
             break;
     }
-    if (selection.dataType && selection.isGenericAssayType) {
+    if (selection.dataType && isGenericAssaySelected(selection)) {
         if (
             !!(
                 profile &&
@@ -2524,7 +2530,10 @@ export function logScalePossibleForProfile(profileId: string) {
 
 export function logScalePossible(axisSelection: AxisMenuSelection) {
     if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-        if (axisSelection.dataType && axisSelection.isGenericAssayType) {
+        if (
+            isGenericAssaySelected(axisSelection) &&
+            axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
+        ) {
             return true;
         }
         // molecular profile
@@ -3137,10 +3146,10 @@ export function showWaterfallPlot(
 ): boolean {
     return (
         (vertSelection.dataType !== undefined &&
-            !!vertSelection.isGenericAssayType &&
+            isGenericAssaySelected(vertSelection) &&
             horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
         (horzSelection.dataType !== undefined &&
-            !!horzSelection.isGenericAssayType &&
+            isGenericAssaySelected(horzSelection) &&
             vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
     );
 }
@@ -3158,9 +3167,9 @@ export function bothAxesNoMolecularProfile(
     // generic assay profile is not a molecular profile
     return (
         (noMolecularProfileDataTypes.includes(horzDataType) ||
-            !!horzSelection.isGenericAssayType) &&
+            isGenericAssaySelected(horzSelection)) &&
         (noMolecularProfileDataTypes.includes(vertDataType) ||
-            !!vertSelection.isGenericAssayType)
+            isGenericAssaySelected(vertSelection))
     );
 }
 
@@ -3471,7 +3480,7 @@ export function makeAxisLogScaleFunction(
 
     if (
         axisSelection.dataType === undefined ||
-        !axisSelection.isGenericAssayType
+        !isGenericAssaySelected(axisSelection)
     ) {
         // log-transformation parameters for non-genericAssay reponse
         // profile data. Note: log2-transformation is used by default
@@ -3592,4 +3601,8 @@ export function maybeSetLogScale(axisSelection: AxisMenuSelection) {
             axisSelection.logScale = true;
         }
     }
+}
+
+export function isGenericAssaySelected(selection: AxisMenuSelection) {
+    return selection.genericAssayDataType !== undefined;
 }
