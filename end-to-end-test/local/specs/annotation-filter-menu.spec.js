@@ -15,7 +15,7 @@ describe('alteration filter menu', function() {
         describe('study view', () => {
             describe('filtering of gene tables', () => {
                 beforeEach(() => {
-                    goToUrlAndSetLocalStorage(studyViewUrl);
+                    goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
                     // turn off cancer gene filters
                     $$('[data-test=header-filter-icon]').forEach(e =>
@@ -261,7 +261,7 @@ describe('alteration filter menu', function() {
 
             describe('filtering of study view samples', () => {
                 beforeEach(() => {
-                    goToUrlAndSetLocalStorage(studyViewUrl);
+                    goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
                     // turn off cancer gene filters
                     $$('[data-test=header-filter-icon]').forEach(e =>
@@ -342,7 +342,7 @@ describe('alteration filter menu', function() {
 
         describe('group comparison - results view ', () => {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(comparisonResultsViewUrl);
+                goToUrlAndSetLocalStorage(comparisonResultsViewUrl, true);
                 waitForComparisonTab();
                 // turn off fusion and cna types
                 $(
