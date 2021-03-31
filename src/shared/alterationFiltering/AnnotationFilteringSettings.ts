@@ -89,8 +89,8 @@ export function buildDriverAnnotationSettings(
         cosmicCountThreshold: 0,
         driverTiers: observable.map<string, boolean>(),
 
-        _hotspots: false,
-        _oncoKb: false,
+        _hotspots: true,
+        _oncoKb: true,
         _includeDriver: true,
         _includeVUS: true,
         _includeUnknownOncogenicity: true,
