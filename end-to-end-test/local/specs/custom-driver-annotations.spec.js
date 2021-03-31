@@ -8,8 +8,7 @@ var getReactSelectOptions = require('../../shared/specUtils')
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var setResultsPageSettingsMenuOpen = require('../../shared/specUtils')
-    .setResultsPageSettingsMenuOpen;
+var setSettingsMenuOpen = require('../../shared/specUtils').setSettingsMenuOpen;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -35,7 +34,7 @@ describe('custom driver annotations feature', function() {
             beforeEach(() => {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint(100000);
-                setResultsPageSettingsMenuOpen(true);
+                setSettingsMenuOpen(true, 'GlobalSettingsButton');
             });
 
             it('shows custom driver annotation elements in config menu', () => {
@@ -105,14 +104,13 @@ describe('custom driver annotations feature', function() {
                 assert(tiersCheckboxes[1].isSelected());
             });
         });
-    }
 
-    describe('oncoprint tab - discrete CNA', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
-            waitForOncoprint();
-            setResultsPageSettingsMenuOpen(true);
-        });
+        describe('oncoprint tab - discrete CNA', () => {
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
+                waitForOncoprint();
+                setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            });
 
             it('shows custom driver annotation elements in config menu', () => {
                 var topCheckBox = $('input[data-test=annotateCustomBinary]');

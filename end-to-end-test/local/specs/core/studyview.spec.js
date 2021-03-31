@@ -12,7 +12,7 @@ describe('study view', function() {
     if (useExternalFrontend) {
         describe('alteration filter menu', function() {
             beforeEach(() => {
-                goToUrlAndSetLocalStorage(studyViewUrl);
+                goToUrlAndSetLocalStorage(studyViewUrl, true);
                 waitForStudyView();
             });
 
