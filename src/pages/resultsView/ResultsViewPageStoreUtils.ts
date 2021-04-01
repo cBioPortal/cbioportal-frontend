@@ -251,22 +251,24 @@ export function filterAndAnnotateStructuralVariants(
     const vusAndGermline: AnnotatedStructuralVariant[] = [];
     const filteredAnnotatedMutations = [];
     for (const structuralVariant of structuralVariants) {
-        const annotatedMutation = annotateStructuralVariantPutativeDriver(
+        const annotatedStructuralVariant = annotateStructuralVariantPutativeDriver(
             structuralVariant,
             getPutativeDriverInfo(structuralVariant)
         ); // annotate
-        annotatedMutation.entrezGeneId = structuralVariant.site1EntrezGeneId;
-        annotatedMutation.hugoGeneSymbol = structuralVariant.site1HugoSymbol;
+        annotatedStructuralVariant.entrezGeneId =
+            structuralVariant.site1EntrezGeneId;
+        annotatedStructuralVariant.hugoGeneSymbol =
+            structuralVariant.site1HugoSymbol;
         const isGermline = false;
-        const isVus = !annotatedMutation.putativeDriver;
+        const isVus = !annotatedStructuralVariant.putativeDriver;
         if (isGermline && isVus) {
-            vusAndGermline.push(annotatedMutation);
+            vusAndGermline.push(annotatedStructuralVariant);
         } else if (isGermline) {
-            germline.push(annotatedMutation);
+            germline.push(annotatedStructuralVariant);
         } else if (isVus) {
-            vus.push(annotatedMutation);
+            vus.push(annotatedStructuralVariant);
         } else {
-            filteredAnnotatedMutations.push(annotatedMutation);
+            filteredAnnotatedMutations.push(annotatedStructuralVariant);
         }
     }
     return {
@@ -304,17 +306,17 @@ export function compileStructuralVariants<
     excludeVus: boolean,
     excludeGermline: boolean
 ) {
-    let mutations = report.data;
+    let structuralVariants = report.data;
     if (!excludeVus) {
-        mutations = mutations.concat(report.vus);
+        structuralVariants = structuralVariants.concat(report.vus);
     }
     if (!excludeGermline) {
-        mutations = mutations.concat(report.germline);
+        structuralVariants = structuralVariants.concat(report.germline);
     }
     if (!excludeVus && !excludeGermline) {
-        mutations = mutations.concat(report.vusAndGermline);
+        structuralVariants = structuralVariants.concat(report.vusAndGermline);
     }
-    return mutations;
+    return structuralVariants;
 }
 
 export const ONCOKB_ONCOGENIC_LOWERCASE = [

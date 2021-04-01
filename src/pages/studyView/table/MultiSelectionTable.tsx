@@ -55,7 +55,7 @@ export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
     MOLECULAR_PROFILE = 'Molecular Profile',
     CASE_LIST = 'Name',
-    NUMBER_STRUCTURAL_VARIANTS = '# Alt',
+    NUMBER_STRUCTURAL_VARIANTS = '# SV',
     NUMBER_MUTATIONS = '# Mut',
     CYTOBAND = 'Cytoband',
     CNA = 'CNA',

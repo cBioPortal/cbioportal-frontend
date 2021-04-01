@@ -120,6 +120,7 @@ import {
     DataBin,
     convertClinicalDataBinsToDataBins,
     getFilteredMolecularProfilesByAlterationType,
+    getStructuralVariantSamplesCount,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -7997,10 +7998,9 @@ export class StudyViewPageStore {
                     break;
                 }
                 case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE: {
-                    count =
-                        this.molecularProfileSampleCountSet.result[
-                            MolecularAlterationType_filenameSuffix.STRUCTURAL_VARIANT!
-                        ] || 0;
+                    count = getStructuralVariantSamplesCount(
+                        this.molecularProfileSampleCountSet.result
+                    );
                     break;
                 }
                 case ChartTypeEnum.CNA_GENES_TABLE: {

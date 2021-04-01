@@ -59,7 +59,10 @@ import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
-import { CNAProfilesEnum } from 'shared/components/query/QueryStoreUtils';
+import {
+    CNAProfilesEnum,
+    StructuralVariantProfilesEnum,
+} from 'shared/components/query/QueryStoreUtils';
 import {
     GenericAssayDataBin,
     ClinicalDataBin,
@@ -2920,6 +2923,18 @@ export async function getGenericAssayDataAsClinicalData(
         }
         return clinicaData;
     });
+}
+
+export function getStructuralVariantSamplesCount(molecularProfileSampleCountSet: {
+    [id: string]: number;
+}) {
+    return (
+        molecularProfileSampleCountSet[StructuralVariantProfilesEnum.fusion] ||
+        molecularProfileSampleCountSet[
+            StructuralVariantProfilesEnum.structural_variants
+        ] ||
+        0
+    );
 }
 
 export function getCNASamplesCount(molecularProfileSampleCountSet: {
