@@ -682,6 +682,7 @@ export function makeGeneticTrackTooltip(
     return function(
         dataUnderMouse: Pick<
             GeneticTrackDatum,
+            | 'trackLabel'
             | 'data'
             | 'profiled_in'
             | 'sample'
@@ -963,10 +964,21 @@ export function makeGeneticTrackTooltip(
             );
             ret.append('<br>');
         } else if (noneProfiledCount === dataUnderMouse.length) {
-            ret.append(
-                'Not profiled in selected molecular profiles.' +
-                    (dataUnderMouse.length > 1 ? ` (${noneProfiledCount})` : '')
-            );
+            if (
+                profiledGenePanelEntries.length ||
+                notProfiledGenePanelEntries.length
+            ) {
+                ret.append(
+                    `${dataUnderMouse[0].trackLabel} is not in the gene panels of the selected molecular profiles, but detected as a fusion partner`
+                );
+            } else {
+                ret.append(
+                    'Not profiled in selected molecular profiles.' +
+                        (dataUnderMouse.length > 1
+                            ? ` (${noneProfiledCount})`
+                            : '')
+                );
+            }
             ret.append('<br>');
         } else {
             if (profiledInEntries.length) {

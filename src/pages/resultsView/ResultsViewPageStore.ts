@@ -1756,6 +1756,30 @@ export class ResultsViewPageStore {
         },
     });
 
+    readonly oqlFilteredStructuralVariantsReport = remoteData({
+        await: () => [
+            this._filteredAndAnnotatedStructuralVariantsReport,
+            this.selectedMolecularProfiles,
+            this.defaultOQLQuery,
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.mapValues(
+                    this._filteredAndAnnotatedStructuralVariantsReport.result!,
+                    data =>
+                        filterCBioPortalWebServiceData(
+                            this.oqlText,
+                            data,
+                            new AccessorsForOqlFilter(
+                                this.selectedMolecularProfiles.result!
+                            ),
+                            this.defaultOQLQuery.result!
+                        )
+                )
+            );
+        },
+    });
+
     readonly oqlFilteredMolecularDataReport = remoteData({
         await: () => [
             this._filteredAndAnnotatedMolecularDataReport,

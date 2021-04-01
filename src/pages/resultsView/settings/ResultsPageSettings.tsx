@@ -127,8 +127,8 @@ export default class ResultsPageSettings extends React.Component<
                                     !this.driverSettingsState.distinguishDrivers
                                 }
                             />{' '}
-                            Exclude mutations and copy number alterations of
-                            unknown significance
+                            Exclude alterations (mutations, structural variants
+                            and copy number) of unknown significance
                         </label>
                     </div>
                     <div className="checkbox">
