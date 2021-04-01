@@ -255,7 +255,7 @@ describe('results view comparison tab screenshot tests', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
-                10000
+                30000
             );
             browser.waitForVisible('b=HOXB4', 10000);
             browser.click('b=HOXB4');
@@ -271,7 +271,7 @@ describe('results view comparison tab screenshot tests', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
-                10000
+                30000
             );
             browser.waitForVisible('b=MERTK', 10000);
             browser.click('b=MERTK');
