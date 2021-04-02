@@ -17,10 +17,7 @@ describe('alteration filter menu', function() {
                 beforeEach(() => {
                     goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
-                    // turn off cancer gene filters
-                    $$('[data-test=header-filter-icon]').forEach(e =>
-                        e.click()
-                    );
+                    turnOffCancerGenesFilters();
                     $('[data-test=AlterationFilterButton]').click();
                 });
 
@@ -129,14 +126,13 @@ describe('alteration filter menu', function() {
                     assert.deepStrictEqual(
                         geneTableCounts('copy number alterations-table'),
                         {
-                            ERCC5_AMP: '6',
                             AURKAIP1_AMP: '7',
                             ATAD3A_AMP: '7',
                             ATAD3B_AMP: '7',
                             ACAP3_AMP: '7',
                             ATAD3C_AMP: '7',
+                            ERCC5_AMP: '6',
                             AGRN_AMP: '6',
-                            ERCC5_HOMDEL: '1',
                             AURKAIP1_HOMDEL: '2',
                             ATAD3A_HOMDEL: '2',
                             ATAD3B_HOMDEL: '2',
@@ -144,6 +140,7 @@ describe('alteration filter menu', function() {
                             ACAP3_HOMDEL: '2',
                             ATAD3C_HOMDEL: '2',
                             AGRN_HOMDEL: '2',
+                            ERCC5_HOMDEL: '1',
                         }
                     );
                 });
@@ -263,10 +260,7 @@ describe('alteration filter menu', function() {
                 beforeEach(() => {
                     goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
-                    // turn off cancer gene filters
-                    $$('[data-test=header-filter-icon]').forEach(e =>
-                        e.click()
-                    );
+                    turnOffCancerGenesFilters();
                     $('[data-test=AlterationFilterButton]').click();
                 });
 
@@ -371,8 +365,8 @@ describe('alteration filter menu', function() {
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '0 (0.00%)', unalt: '6 (30.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '0 (0.00%)', unalt: '6 (31.58%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
 
@@ -381,7 +375,7 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(enrichmentTableCounts(), {
                     ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '5 (25.00%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '5 (26.32%)' },
                 });
             });
 
@@ -395,8 +389,8 @@ describe('alteration filter menu', function() {
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (57.89%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
 
@@ -409,8 +403,8 @@ describe('alteration filter menu', function() {
                     ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (57.89%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
 
@@ -421,8 +415,8 @@ describe('alteration filter menu', function() {
                     ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (57.89%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
 
@@ -452,8 +446,8 @@ describe('alteration filter menu', function() {
                     ATM: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (57.89%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
 
@@ -467,8 +461,8 @@ describe('alteration filter menu', function() {
                     BRCA1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     OR11H1: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
                     TMEM247: { alt: '1 (100.00%)', unalt: '0 (0.00%)' },
-                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (55.00%)' },
-                    ACPP: { alt: '0 (0.00%)', unalt: '5 (22.73%)' },
+                    BRCA2: { alt: '1 (100.00%)', unalt: '11 (57.89%)' },
+                    ACPP: { alt: '0 (0.00%)', unalt: '5 (23.81%)' },
                 });
             });
         });
@@ -543,6 +537,14 @@ var waitForUpdateStudyView = () => {
     $('//*[@data-test="fusions-table"]').waitForVisible();
     $('//*[@data-test="copy number alterations-table"]').waitForVisible();
 };
+
 var waitForUpdateResultsView = () => {
     $('[data-test=LazyMobXTable]').waitForVisible();
+};
+
+var turnOffCancerGenesFilters = () => {
+    const activeFilterIcons = $$(
+        '[data-test=gene-column-header] [data-test=header-filter-icon]'
+    ).filter(e => e.getCssProperty('color').value === 'rgba(0,0,0,1)');
+    activeFilterIcons.forEach(i => i.click());
 };
