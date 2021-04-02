@@ -29,7 +29,7 @@ import {
 } from 'appShell/App/usageAgreements/GenieAgreement';
 import makeRoutes from 'routes';
 import { AppContext } from 'cbioportal-frontend-commons';
-import { IAppContext } from 'cbioportal-frontend-commons/src';
+import { IAppContext } from 'cbioportal-frontend-commons';
 
 interface IContainerProps {
     location: Location;
@@ -63,8 +63,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     get appContext(): IAppContext {
-        //return { showDownloadControls: this.appStore.getServerConfig.some_prop }
-        return { showDownloadControls: true };
+        return {
+            showDownloadControls: !getServerConfig()
+                .skin_hide_download_controls,
+        };
     }
 
     render() {

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { If } from 'react-if';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import classnames from 'classnames';
 import styles from './copyDownloadControls.module.scss';
@@ -7,6 +6,8 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import VirtualStudy, {
     IVirtualStudyProps,
 } from 'pages/studyView/virtualStudy/VirtualStudy';
+import { computed } from 'mobx';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
     copyLinkRef?: (el: HTMLAnchorElement | null) => void;
@@ -34,6 +35,21 @@ export class CopyDownloadQueryLinks extends React.Component<
         showVirtualStudy: false,
     };
 
+    @computed
+    get showDownload() {
+        return (
+            this.props.showDownload &&
+            this.context.showDownloadControls === true
+        );
+    }
+
+    @computed
+    get showCopy() {
+        return (
+            this.props.showCopy && this.context.showDownloadControls === true
+        );
+    }
+
     public render() {
         return (
             <span
@@ -42,7 +58,7 @@ export class CopyDownloadQueryLinks extends React.Component<
                     this.props.className
                 )}
             >
-                {this.props.showCopy && (
+                {this.showCopy && (
                     <a
                         onClick={this.props.handleCopy}
                         ref={this.props.copyLinkRef}
@@ -51,18 +67,14 @@ export class CopyDownloadQueryLinks extends React.Component<
                         {this.props.copyLabel}
                     </a>
                 )}
-                {this.props.showCopy && this.props.showDownload && (
-                    <span>|</span>
-                )}
-                {this.props.showDownload && (
+                {this.showCopy && this.showDownload && <span>|</span>}
+                {this.showDownload && (
                     <a onClick={this.props.handleDownload}>
                         <i className="fa fa-cloud-download" />
                         {this.props.downloadLabel}
                     </a>
                 )}
-                {this.props.showDownload && this.props.showQuery && (
-                    <span>|</span>
-                )}
+                {this.showDownload && this.props.showQuery && <span>|</span>}
                 {this.props.showQuery && (
                     <a onClick={this.props.handleQuery}>
                         <i className="fa fa-external-link-square" />
@@ -126,3 +138,5 @@ export class CopyDownloadQueryLinks extends React.Component<
         );
     }
 }
+
+CopyDownloadQueryLinks.contextType = AppContext;

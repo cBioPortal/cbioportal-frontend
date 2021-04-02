@@ -196,6 +196,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',
     comparison_categorical_na_values: 'NA',
+    skin_hide_download_controls: false,
 };
 
 export default ServerConfigDefaults;

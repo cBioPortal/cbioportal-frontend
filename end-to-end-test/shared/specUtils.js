@@ -634,6 +634,15 @@ function jq(selector) {
     }, selector);
 }
 
+function setServerConfiguration(serverConfig) {
+    browser.execute(function(_serverConfig) {
+        this.localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({ serverConfig: _serverConfig })
+        );
+    }, serverConfig);
+}
+
 var openAlterationTypeSelectionMenu = () => {
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();

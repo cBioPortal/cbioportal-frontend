@@ -7,7 +7,6 @@ import {
     action,
     computed,
     observable,
-    reaction,
     runInAction,
     makeObservable,
     autorun,
@@ -28,7 +27,7 @@ import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
 import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
-import { remoteData } from 'cbioportal-frontend-commons';
+import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
 import {
@@ -70,6 +69,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
+import { AppContext } from 'cbioportal-frontend-commons';
 
 export function initStore(
     appStore: AppStore,
@@ -101,12 +101,9 @@ function addOnBecomeVisibleListener(callback: () => void) {
 }
 
 export interface IResultsViewPageProps {
-    routing: ExtendedRouterStore;
-    appStore: AppStore;
     params: any; // from react router
 }
 
-@inject('appStore', 'routing')
 @observer
 export default class ResultsViewPage extends React.Component<
     IResultsViewPageProps,
@@ -127,7 +124,7 @@ export default class ResultsViewPage extends React.Component<
 
         makeObservable(this);
 
-        this.urlWrapper = new ResultsViewURLWrapper(props.routing);
+        this.urlWrapper = new ResultsViewURLWrapper(this.routing);
 
         handleLegacySubmission(this.urlWrapper);
 
@@ -138,16 +135,28 @@ export default class ResultsViewPage extends React.Component<
         if (this.urlWrapper.hasSessionId) {
             onMobxPromise(this.urlWrapper.remoteSessionData, () => {
                 this.resultsViewPageStore = initStore(
-                    props.appStore,
+                    this.appStore,
                     this.urlWrapper
                 );
             });
         } else {
             this.resultsViewPageStore = initStore(
-                props.appStore,
+                this.appStore,
                 this.urlWrapper
             );
         }
+    }
+
+    // this is temporary to allow us to
+    // get rid of @inject, which is conflicting
+    // with react context
+    // ultimately should be replaced with react context
+    private get appStore(): AppStore {
+        return getBrowserWindow().globalStores.appStore as AppStore;
+    }
+
+    private get routing(): ExtendedRouterStore {
+        return getBrowserWindow().globalStores.routing as ExtendedRouterStore;
     }
 
     componentWillUnmount() {
@@ -255,7 +264,7 @@ export default class ResultsViewPage extends React.Component<
                         >
                             <Mutations
                                 store={store}
-                                appStore={this.props.appStore}
+                                appStore={this.appStore}
                                 urlWrapper={this.urlWrapper}
                             />
                         </MSKTab>
@@ -313,7 +322,7 @@ export default class ResultsViewPage extends React.Component<
                         >
                             <ComparisonTab
                                 urlWrapper={this.urlWrapper}
-                                appStore={this.props.appStore}
+                                appStore={this.appStore}
                                 store={this.resultsViewPageStore}
                             />
                         </MSKTab>
@@ -456,7 +465,7 @@ export default class ResultsViewPage extends React.Component<
                                         >
                                             <ResultsViewPathwayMapper
                                                 store={store}
-                                                appStore={this.props.appStore}
+                                                appStore={this.appStore}
                                                 urlWrapper={this.urlWrapper}
                                             />
                                         </MSKTab>
@@ -529,7 +538,10 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-            {
+        ];
+
+        if (this.context.showDownloadControls === true) {
+            tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return (
@@ -542,8 +554,8 @@ export default class ResultsViewPage extends React.Component<
                         </MSKTab>
                     );
                 },
-            },
-        ];
+            });
+        }
 
         let filteredTabs = tabMap
             .filter(this.evaluateTabInclusion)
@@ -629,8 +641,8 @@ export default class ResultsViewPage extends React.Component<
     private getTabHref(tabId: string) {
         return URL.format({
             pathname: buildCBioPortalPageUrl(`./results/${tabId}`),
-            query: this.props.routing.query,
-            hash: this.props.routing.location.hash,
+            query: this.routing.query,
+            hash: this.routing.location.hash,
         });
     }
 
@@ -726,7 +738,7 @@ export default class ResultsViewPage extends React.Component<
                             <div>
                                 <div className={'headBlock'}>
                                     <QuerySummary
-                                        routingStore={this.props.routing}
+                                        routingStore={this.routing}
                                         store={this.resultsViewPageStore}
                                         onToggleQueryFormVisibility={visible => {
                                             runInAction(() => {
@@ -789,7 +801,7 @@ export default class ResultsViewPage extends React.Component<
                                         contentWindowExtra={
                                             <HelpWidget
                                                 path={
-                                                    this.props.routing.location
+                                                    this.routing.location
                                                         .pathname
                                                 }
                                             />
@@ -852,3 +864,5 @@ export default class ResultsViewPage extends React.Component<
         }
     }
 }
+
+ResultsViewPage.contextType = AppContext;

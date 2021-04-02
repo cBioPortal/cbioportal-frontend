@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { If } from 'react-if';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
+import { AppContext } from 'cbioportal-frontend-commons';
+import { computed } from 'mobx';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
     copyLinkRef?: (el: HTMLAnchorElement | null) => void;
@@ -18,10 +19,23 @@ export class CopyDownloadLinks extends React.Component<
         showDownload: true,
     };
 
+    @computed get showDownload() {
+        return (
+            this.props.showDownload &&
+            this.context.showDownloadControls === true
+        );
+    }
+
+    @computed get showCopy() {
+        return (
+            this.props.showCopy && this.context.showDownloadControls === true
+        );
+    }
+
     public render() {
         return (
             <span className={this.props.className}>
-                {this.props.showCopy && (
+                {this.showCopy && (
                     <a
                         onClick={this.props.handleCopy}
                         ref={this.props.copyLinkRef}
@@ -33,10 +47,10 @@ export class CopyDownloadLinks extends React.Component<
                         {this.props.copyLabel}
                     </a>
                 )}
-                {this.props.showCopy && this.props.showDownload && (
+                {this.showCopy && this.showDownload && (
                     <span style={{ margin: '0px 10px' }}>|</span>
                 )}
-                {this.props.showDownload && (
+                {this.showDownload && (
                     <a
                         onClick={this.props.handleDownload}
                         style={{ marginRight: 10 }}
@@ -55,3 +69,5 @@ export class CopyDownloadLinks extends React.Component<
         );
     }
 }
+
+CopyDownloadLinks.contextType = AppContext;
