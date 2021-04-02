@@ -7,6 +7,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import VirtualStudy, {
     IVirtualStudyProps,
 } from 'pages/studyView/virtualStudy/VirtualStudy';
+import AppConfig from 'appConfig';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
     copyLinkRef?: (el: HTMLAnchorElement | null) => void;

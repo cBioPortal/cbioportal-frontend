@@ -146,7 +146,7 @@ export default class QueryAndDownloadTabs extends React.Component<
                     <MSKTab
                         id={DOWNLOAD}
                         linkText={'Download'}
-                        hide={!this.props.showDownloadTab}
+                        hide={true}
                         onTabDidMount={() => this.setDefaultTab(undefined)}
                     >
                         {/*forked experience is always false for download tab*/}

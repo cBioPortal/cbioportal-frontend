@@ -7,6 +7,7 @@ import {
 import { ClinicalDataBySampleId } from 'cbioportal-ts-api-client';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import './styles.scss';
+import AppConfig from 'appConfig';
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -52,7 +53,10 @@ export default class SampleInline extends React.Component<
                 {!this.props.hideClinicalTable && (
                     <ClinicalInformationPatientTable
                         showFilter={false}
-                        showCopyDownload={false}
+                        showCopyDownload={
+                            false &&
+                            !AppConfig.serverConfig.skin_hide_download_controls
+                        }
                         showTitleBar={false}
                         data={sample.clinicalData}
                         onSelectGenePanel={this.props.onSelectGenePanel}

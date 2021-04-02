@@ -40,6 +40,7 @@ import DriverAnnotationControls, {
 } from '../../../../pages/resultsView/settings/DriverAnnotationControls';
 import AddTracks from 'pages/resultsView/oncoprint/AddTracks';
 import { GenericAssayTrackInfo } from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
+import AppConfig from 'appConfig';
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?: (type: 'sample' | 'patient') => void;
@@ -1256,7 +1257,9 @@ export default class OncoprintControls extends React.Component<
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
-                    <this.DownloadMenu />
+                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                        <this.DownloadMenu />
+                    )}
                     <this.HorzZoomControls />
                     {this.minimapButton}
                     <ConfirmNgchmModal

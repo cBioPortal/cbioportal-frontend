@@ -26,6 +26,7 @@ import {
     QueryStore,
 } from 'shared/components/query/QueryStore';
 import { EnrichmentsTableDataStore } from './EnrichmentsTableDataStore';
+import AppConfig from 'appConfig';
 
 export interface IGeneBarPlotProps {
     data: AlterationEnrichmentRow[];
@@ -270,12 +271,15 @@ export default class GeneBarPlot extends React.Component<
                                 </button>
                             </div>
                         </DefaultTooltip>
-                        <DownloadControls
-                            getSvg={() => this.svgContainer}
-                            filename={'GroupComparisonGeneFrequencyPlot'}
-                            dontFade={true}
-                            type="button"
-                        />
+                        {!AppConfig.serverConfig
+                            .skin_hide_download_controls && (
+                            <DownloadControls
+                                getSvg={() => this.svgContainer}
+                                filename={'GroupComparisonGeneFrequencyPlot'}
+                                dontFade={true}
+                                type="button"
+                            />
+                        )}
                     </div>
                 </div>
             </React.Fragment>

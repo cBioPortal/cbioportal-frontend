@@ -2,6 +2,7 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import FrequencyBar from 'shared/components/cohort/FrequencyBar';
+import AppConfig from 'appConfig';
 
 export interface IGeneAlteration {
     gene: string;
@@ -102,7 +103,9 @@ export default class GeneAlterationTable extends React.Component<
                 initialItemsPerPage={10}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={true}
+                showCopyDownload={
+                    !AppConfig.serverConfig.skin_hide_download_controls
+                }
                 copyDownloadProps={{
                     downloadFilename: 'gene_alteration_frequency.tsv',
                 }}

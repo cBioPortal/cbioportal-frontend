@@ -14,6 +14,7 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { ClinicalEvent, ClinicalEventData } from 'cbioportal-ts-api-client';
 import { DownloadControls } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
+import AppConfig from 'appConfig';
 
 interface ITimelineProps {
     sampleManager: SampleManager;
@@ -138,15 +139,17 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
                         this.svgContainer = container!;
                     }}
                 ></div>
-                <DownloadControls
-                    buttons={['PDF', 'PNG', 'SVG']}
-                    dataExtension={'tsv'}
-                    getSvg={this.getSvg}
-                    filename="timeline"
-                    dontFade={true}
-                    type="button"
-                    style={{ position: 'absolute', top: 0, right: 5 }}
-                />
+                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    <DownloadControls
+                        buttons={['PDF', 'PNG', 'SVG']}
+                        dataExtension={'tsv'}
+                        getSvg={this.getSvg}
+                        filename="timeline"
+                        dontFade={true}
+                        type="button"
+                        style={{ position: 'absolute', top: 0, right: 5 }}
+                    />
+                )}
             </div>
         );
     }

@@ -50,6 +50,7 @@ import ReactDOM from 'react-dom';
 import Timeout = NodeJS.Timeout;
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
+import AppConfig from 'appConfig';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
@@ -655,25 +656,27 @@ export default class MutationOncoprint extends React.Component<
                     </LabeledCheckbox>
                     {this.zoomControls}
                 </div>
-                <DownloadControls
-                    filename="vafHeatmap"
-                    getSvg={() =>
-                        this.oncoprint ? this.oncoprint.toSVG(true) : null
-                    }
-                    getData={() => {
-                        const data = _.flatMap(
-                            this.heatmapTracks.result!,
-                            track => track.data
-                        );
-                        return getDownloadData(data);
-                    }}
-                    buttons={['SVG', 'PNG', 'Data']}
-                    type="button"
-                    dontFade
-                    style={{
-                        marginLeft: 10,
-                    }}
-                />
+                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    <DownloadControls
+                        filename="vafHeatmap"
+                        getSvg={() =>
+                            this.oncoprint ? this.oncoprint.toSVG(true) : null
+                        }
+                        getData={() => {
+                            const data = _.flatMap(
+                                this.heatmapTracks.result!,
+                                track => track.data
+                            );
+                            return getDownloadData(data);
+                        }}
+                        buttons={['SVG', 'PNG', 'Data']}
+                        type="button"
+                        dontFade
+                        style={{
+                            marginLeft: 10,
+                        }}
+                    />
+                )}
             </div>
         );
     }
