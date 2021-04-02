@@ -51,6 +51,7 @@ export default class CNSegmentsDownloader extends React.Component<
                     className={this.props.buttonClassName}
                     onClick={this.handleDownload}
                     disabled={this.downloading}
+                    data-test={'downloadButton'}
                 >
                     <i
                         className={classnames({
