@@ -65,7 +65,9 @@ export default class HomePage extends React.Component<
                     showQuickSearchTab={
                         AppConfig.serverConfig.quick_search_enabled
                     }
-                    showDownloadTab={true}
+                    showDownloadTab={
+                        !AppConfig.serverConfig.skin_hide_download_controls
+                    }
                 />
             </PageLayout>
         );

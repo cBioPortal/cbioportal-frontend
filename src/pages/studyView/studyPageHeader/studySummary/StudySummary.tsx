@@ -13,6 +13,7 @@ import MobxPromise from 'mobxpromise';
 import { StudyDataDownloadLink } from '../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
+import AppConfig from 'appConfig';
 
 interface IStudySummaryProps {
     studies: CancerStudy[];
@@ -127,34 +128,38 @@ export default class StudySummary extends React.Component<
                     {this.name}
                     {this.props.isMixedReferenceGenome &&
                         mixedReferenceGenomeWarning()}
-                    {this.props.hasRawDataForDownload && (
-                        <DefaultTooltip
-                            trigger={['hover']}
-                            placement={'top'}
-                            overlay={
-                                <span>
-                                    Download all clinical and genomic data of
-                                    this study
-                                </span>
-                            }
-                        >
-                            <span
-                                data-test="studySummaryRawDataDownloadIcon"
-                                data-event={serializeEvent({
-                                    category: 'studyPage',
-                                    action: 'dataDownload',
-                                    label: this.props.studies
-                                        .map(s => s.studyId)
-                                        .join(','),
-                                })}
-                                style={{ marginLeft: '10px', fontSize: '14px' }}
+                    {this.props.hasRawDataForDownload &&
+                        !AppConfig.serverConfig.skin_hide_download_controls && (
+                            <DefaultTooltip
+                                trigger={['hover']}
+                                placement={'top'}
+                                overlay={
+                                    <span>
+                                        Download all clinical and genomic data
+                                        of this study
+                                    </span>
+                                }
                             >
-                                <StudyDataDownloadLink
-                                    studyId={this.props.studies[0].studyId}
-                                />
-                            </span>
-                        </DefaultTooltip>
-                    )}
+                                <span
+                                    data-test="studySummaryRawDataDownloadIcon"
+                                    data-event={serializeEvent({
+                                        category: 'studyPage',
+                                        action: 'dataDownload',
+                                        label: this.props.studies
+                                            .map(s => s.studyId)
+                                            .join(','),
+                                    })}
+                                    style={{
+                                        marginLeft: '10px',
+                                        fontSize: '14px',
+                                    }}
+                                >
+                                    <StudyDataDownloadLink
+                                        studyId={this.props.studies[0].studyId}
+                                    />
+                                </span>
+                            </DefaultTooltip>
+                        )}
                 </h3>
                 <div className={styles.description}>
                     <div>

@@ -19,6 +19,7 @@ import {
 } from 'victory';
 import { QueryStoreComponent } from './QueryStore';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
+import AppConfig from 'appConfig';
 
 class GenesetsVolcanoTable extends LazyMobXTable<Geneset> {}
 
@@ -345,7 +346,11 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 initialItemsPerPage={100}
                                 showColumnVisibility={false}
                                 showFilter={true}
-                                showCopyDownload={false}
+                                showCopyDownload={
+                                    false &&
+                                    !AppConfig.serverConfig
+                                        .skin_hide_download_controls
+                                }
                             />
                         )}
                 </div>

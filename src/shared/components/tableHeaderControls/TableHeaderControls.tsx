@@ -21,6 +21,7 @@ import {
     IColumnVisibilityControlsProps,
     ColumnVisibilityControls,
 } from '../columnVisibilityControls/ColumnVisibilityControls';
+import AppConfig from 'appConfig';
 
 export interface ITableHeaderControlsProps {
     tableData?: Array<any>;
@@ -100,7 +101,8 @@ export default class TableHeaderControls extends React.Component<
 
     public static defaultProps: ITableHeaderControlsProps = {
         showSearch: false,
-        showCopyAndDownload: true,
+        showCopyAndDownload: !AppConfig.serverConfig
+            .skin_hide_download_controls,
         showPagination: false,
         searchClassName: '',
         copyDownloadClassName: '',

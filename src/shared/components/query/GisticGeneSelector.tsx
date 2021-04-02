@@ -17,6 +17,7 @@ import classNames from 'classnames';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { toPrecision } from '../../lib/FormatUtils';
 import { getGeneSymbols, sortByCytoband } from '../../lib/GisticUtils';
+import AppConfig from 'appConfig';
 
 const DEFAULT_NUM_GENES_SHOWN = 5;
 
@@ -169,7 +170,9 @@ export default class GisticGeneSelector extends React.Component<
                     columns={this.columns}
                     rawData={this.props.data}
                     headerControlsProps={{
-                        showCopyAndDownload: false,
+                        showCopyAndDownload:
+                            false &&
+                            !AppConfig.serverConfig.skin_hide_download_controls,
                         showHideShowColumnButton: false,
                         showPagination: true,
                     }}

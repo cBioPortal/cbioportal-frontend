@@ -31,6 +31,7 @@ import { getSampleViewUrl } from 'shared/api/urls';
 import classNames from 'classnames';
 import { getGeneSummary } from '../querySummary/QuerySummaryUtils';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import AppConfig from 'appConfig';
 
 class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
     IBoxScatterPlotPoint
@@ -351,15 +352,17 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
 
             plotElt = (
                 <div className={styles.BoxPlot} data-test="MiniBoxPlot">
-                    <DownloadControls
-                        buttons={['SVG', 'PNG', 'Data']}
-                        getSvg={() => this.svgContainer}
-                        getData={this.getData}
-                        filename={downloadFileName}
-                        dontFade={true}
-                        style={{ position: 'absolute', right: 10, top: 10 }}
-                        type="button"
-                    />
+                    {!AppConfig.serverConfig.skin_hide_download_controls && (
+                        <DownloadControls
+                            buttons={['SVG', 'PNG', 'Data']}
+                            getSvg={() => this.svgContainer}
+                            getData={this.getData}
+                            filename={downloadFileName}
+                            dontFade={true}
+                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            type="button"
+                        />
+                    )}
                     <EnrichmentsBoxPlotComponent
                         domainPadding={10}
                         startDataAxisAtZero={true}

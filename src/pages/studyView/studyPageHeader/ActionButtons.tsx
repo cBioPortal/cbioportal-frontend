@@ -13,6 +13,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import classNames from 'classnames';
 import { AppStore } from '../../../AppStore';
 import { serializeEvent } from '../../../shared/lib/tracking';
+import AppConfig from 'appConfig';
 
 export interface ActionButtonsProps {
     loadingComplete: boolean;
@@ -185,33 +186,34 @@ export default class ActionButtons extends React.Component<
                         </button>
                     </DefaultTooltip>
                 </DefaultTooltip>
-
-                <DefaultTooltip
-                    trigger={['hover']}
-                    placement={'top'}
-                    overlay={<span>{this.downloadButtonTooltip}</span>}
-                >
-                    <button
-                        className="btn btn-default btn-sm"
-                        disabled={!this.props.loadingComplete}
-                        onClick={this.initiateDownload}
-                        data-event={serializeEvent({
-                            category: 'studyPage',
-                            action: 'dataDownload',
-                            label: this.props.store.queriedPhysicalStudyIds
-                                .result,
-                        })}
+                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    <DefaultTooltip
+                        trigger={['hover']}
+                        placement={'top'}
+                        overlay={<span>{this.downloadButtonTooltip}</span>}
                     >
-                        <If condition={this.downloadingData}>
-                            <Then>
-                                <i className="fa fa-spinner fa-spin"></i>
-                            </Then>
-                            <Else>
-                                <i className="fa fa-download"></i>
-                            </Else>
-                        </If>
-                    </button>
-                </DefaultTooltip>
+                        <button
+                            className="btn btn-default btn-sm"
+                            disabled={!this.props.loadingComplete}
+                            onClick={this.initiateDownload}
+                            data-event={serializeEvent({
+                                category: 'studyPage',
+                                action: 'dataDownload',
+                                label: this.props.store.queriedPhysicalStudyIds
+                                    .result,
+                            })}
+                        >
+                            <If condition={this.downloadingData}>
+                                <Then>
+                                    <i className="fa fa-spinner fa-spin"></i>
+                                </Then>
+                                <Else>
+                                    <i className="fa fa-download"></i>
+                                </Else>
+                            </If>
+                        </button>
+                    </DefaultTooltip>
+                )}
             </div>
         );
     }
