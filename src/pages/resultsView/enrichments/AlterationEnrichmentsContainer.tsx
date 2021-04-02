@@ -506,8 +506,8 @@ export default class AlterationEnrichmentContainer extends React.Component<
             );
         }
 
-        const useInlineTypeSelectorMenu =
-            AppConfig.serverConfig.skin_show_settings_menu;
+        const useInlineTypeSelectorMenu = !AppConfig.serverConfig
+            .skin_show_settings_menu;
 
         return (
             <div
