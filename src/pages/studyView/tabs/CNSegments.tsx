@@ -157,7 +157,8 @@ export default class CNSegments extends React.Component<
                 </LoadingIndicator>
                 <div style={{ marginBottom: 15, marginLeft: 15 }}>
                     <span>{this.selectionInfo}</span>
-                    {!this.hasNoSegmentData && (
+                    {!this.hasNoSegmentData &&
+                        !AppConfig.serverConfig.skin_hide_download_controls && (
                         <CNSegmentsDownloader
                             promise={this.activePromise!}
                             filename={this.filename}

@@ -49,6 +49,7 @@ import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
 import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
+import AppConfig from 'appConfig';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -848,13 +849,15 @@ export default class ClinicalData extends React.Component<
     private toolbar() {
         return (
             <div style={{ textAlign: 'center', position: 'relative' }}>
-                <DownloadControls
-                    getSvg={this.getSvg}
-                    filename={SVG_ID}
-                    dontFade={true}
-                    type="button"
-                    style={{ position: 'absolute', right: 0, top: 0 }}
-                />
+                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    <DownloadControls
+                        getSvg={this.getSvg}
+                        filename={SVG_ID}
+                        dontFade={true}
+                        type="button"
+                        style={{ position: 'absolute', right: 0, top: 0 }}
+                    />
+                )}
             </div>
         );
     }

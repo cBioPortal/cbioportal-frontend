@@ -9,6 +9,7 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
+import AppConfig from 'appConfig';
 
 export type IPatientHeaderProps = {
     patient: any;
@@ -68,7 +69,10 @@ export default class PatientHeader extends React.Component<
                     <h5>{patient.id}</h5>
                     <ClinicalInformationPatientTable
                         showFilter={false}
-                        showCopyDownload={false}
+                        showCopyDownload={
+                            false &&
+                            !AppConfig.serverConfig.skin_hide_download_controls
+                        }
                         showTitleBar={false}
                         data={patient.clinicalData}
                     />

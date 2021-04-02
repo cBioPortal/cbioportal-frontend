@@ -11,6 +11,7 @@ import copyDownloadStyles from './copyDownloadControls.module.scss';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
 import autobind from 'autobind-decorator';
+import AppConfig from 'appConfig';
 
 export interface IAsyncCopyDownloadControlsProps
     extends ICopyDownloadControlsProps {

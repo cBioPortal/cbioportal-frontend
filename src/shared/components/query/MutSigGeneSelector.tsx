@@ -18,6 +18,7 @@ import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';
 import { toPrecision } from '../../lib/FormatUtils';
+import AppConfig from 'appConfig';
 
 class MutSigTable extends EnhancedReactTable<MutSig> {}
 
@@ -155,7 +156,9 @@ export default class MutSigGeneSelector extends React.Component<
                     columns={this.columns}
                     rawData={this.props.data}
                     headerControlsProps={{
-                        showCopyAndDownload: false,
+                        showCopyAndDownload:
+                            false &&
+                            !AppConfig.serverConfig.skin_hide_download_controls,
                         showHideShowColumnButton: false,
                         showPagination: true,
                     }}

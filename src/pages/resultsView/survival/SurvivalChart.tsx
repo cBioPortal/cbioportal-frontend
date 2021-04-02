@@ -584,17 +584,22 @@ export default class SurvivalChart
     get chart() {
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
-                {this.props.showDownloadButtons && (
-                    <DownloadControls
-                        dontFade={true}
-                        filename={this.props.fileName}
-                        buttons={['SVG', 'PNG', 'PDF', 'Data']}
-                        getSvg={this.getSvg}
-                        getData={this.getData}
-                        style={{ position: 'absolute', zIndex: 10, right: 10 }}
-                        type="button"
-                    />
-                )}
+                {this.props.showDownloadButtons &&
+                    !AppConfig.serverConfig.skin_hide_download_controls && (
+                        <DownloadControls
+                            dontFade={true}
+                            filename={this.props.fileName}
+                            buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                            getSvg={this.getSvg}
+                            getData={this.getData}
+                            style={{
+                                position: 'absolute',
+                                zIndex: 10,
+                                right: 10,
+                            }}
+                            type="button"
+                        />
+                    )}
 
                 {this.props.showSlider && (
                     <div

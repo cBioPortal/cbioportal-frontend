@@ -652,7 +652,10 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 <TrialMatchTableComponent
                     data={this.props.detailedTrialMatches}
                     columns={this._columns}
-                    showCopyDownload={false}
+                    showCopyDownload={
+                        false &&
+                        !AppConfig.serverConfig.skin_hide_download_controls
+                    }
                 />
                 <div className={styles.powered}>
                     Powered by{' '}

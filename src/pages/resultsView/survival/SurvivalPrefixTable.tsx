@@ -372,7 +372,9 @@ export default class SurvivalPrefixTable extends React.Component<
                 paginationProps={{ itemsPerPageOptions: [15] }}
                 initialItemsPerPage={15}
                 copyDownloadProps={{
-                    showCopy: false,
+                    showCopy:
+                        false &&
+                        !AppConfig.serverConfig.skin_hide_download_controls,
                 }}
                 filterBoxWidth={120}
             />

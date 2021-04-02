@@ -1199,7 +1199,9 @@ export default class OncoprintControls extends React.Component<
                     <this.SortMenu />
                     <this.MutationColorMenu />
                     <this.ViewMenu />
-                    <this.DownloadMenu />
+                    {!getServerConfig().skin_hide_download_controls && (
+                        <this.DownloadMenu />
+                    )}
                     <this.HorzZoomControls />
                     {this.minimapButton}
                     <ConfirmNgchmModal

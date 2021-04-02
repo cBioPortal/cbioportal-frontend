@@ -529,7 +529,10 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-            {
+        ];
+
+        if (!AppConfig.serverConfig.skin_hide_download_controls) {
+            tabMap.push({
                 id: ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return (
@@ -542,8 +545,8 @@ export default class ResultsViewPage extends React.Component<
                         </MSKTab>
                     );
                 },
-            },
-        ];
+            });
+        }
 
         let filteredTabs = tabMap
             .filter(this.evaluateTabInclusion)
@@ -656,7 +659,10 @@ export default class ResultsViewPage extends React.Component<
                     <QueryAndDownloadTabs
                         forkedMode={false}
                         showQuickSearchTab={false}
-                        showDownloadTab={false}
+                        showDownloadTab={
+                            false &&
+                            !AppConfig.serverConfig.skin_hide_download_controls
+                        }
                         showAlerts={true}
                         getQueryStore={() =>
                             createQueryStore(

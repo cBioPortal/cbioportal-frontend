@@ -23,6 +23,7 @@ import {
 } from 'shared/components/progressIndicator/ProgressIndicator';
 import { remoteData } from 'cbioportal-frontend-commons';
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
+import AppConfig from 'appConfig';
 
 @observer
 export default class CNSegments extends React.Component<
@@ -171,10 +172,12 @@ export default class CNSegments extends React.Component<
                         sequential={true}
                     />
                 </LoadingIndicator>
-                <CNSegmentsDownloader
-                    promise={this.props.store.cnSegments}
-                    filename={this.filename}
-                />
+                {!AppConfig.serverConfig.skin_hide_download_controls && (
+                    <CNSegmentsDownloader
+                        promise={this.props.store.cnSegments}
+                        filename={this.filename}
+                    />
+                )}
                 <div className={'tabMessageContainer'}>
                     <CaseFilterWarning store={this.props.store} />
                 </div>

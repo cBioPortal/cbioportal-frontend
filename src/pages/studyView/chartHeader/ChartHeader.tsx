@@ -22,6 +22,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
+import AppConfig from 'appConfig';
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -552,7 +553,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         if (
             this.props.chartControls &&
             this.props.downloadTypes &&
-            this.props.downloadTypes.length > 0
+            this.props.downloadTypes.length > 0 &&
+            !AppConfig.serverConfig.skin_hide_download_controls
         ) {
             const downloadSubmenuWidth = 70;
             items.push(

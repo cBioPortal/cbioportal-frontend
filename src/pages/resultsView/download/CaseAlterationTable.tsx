@@ -23,6 +23,7 @@ import { AlteredStatus } from 'pages/resultsView/mutualExclusivity/MutualExclusi
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import { parsedOQLAlterationToSourceOQL } from 'shared/lib/oql/oqlfilter';
 import { insertBetween } from 'shared/lib/ArrayUtils';
+import AppConfig from 'appConfig';
 
 export interface ISubAlteration {
     type: string;
@@ -514,7 +515,9 @@ export default class CaseAlterationTable extends React.Component<
                 showPagination={true}
                 showColumnVisibility={true}
                 showFilter={true}
-                showCopyDownload={true}
+                showCopyDownload={
+                    !AppConfig.serverConfig.skin_hide_download_controls
+                }
                 enableHorizontalScroll={true}
                 copyDownloadProps={{
                     downloadFilename: 'alterations_across_samples.tsv',
