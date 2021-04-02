@@ -23,7 +23,6 @@ import {
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
     FreqColumnTypeEnum,
-    getCancerGeneToggledOverlay,
     getFreqColumnRender,
     getTooltip,
     SelectionOperatorEnum,
