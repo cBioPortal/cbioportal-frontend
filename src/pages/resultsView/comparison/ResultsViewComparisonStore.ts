@@ -38,10 +38,10 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     constructor(
         appStore: AppStore,
-        private urlWrapper: ResultsViewURLWrapper,
+        protected urlWrapper: ResultsViewURLWrapper,
         protected resultsViewStore: ResultsViewPageStore
     ) {
-        super(appStore, resultsViewStore);
+        super(appStore, urlWrapper, resultsViewStore);
         makeObservable(this);
     }
 

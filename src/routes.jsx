@@ -12,6 +12,8 @@ import {
     redirectTo,
 } from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
+import { parse } from 'qs';
+import _ from 'lodash';
 
 /* HOW TO ADD A NEW ROUTE
  * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -95,7 +97,11 @@ import $ from 'jquery';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { seekUrlHash } from 'shared/lib/seekUrlHash';
 import { PagePath } from 'shared/enums/PagePaths';
-import { ResultsViewTab } from 'pages/resultsView/ResultsViewPageHelpers';
+import {
+    LegacyResultsViewComparisonSubTab,
+    ResultsViewComparisonSubTab,
+    ResultsViewTab,
+} from 'pages/resultsView/ResultsViewPageHelpers';
 import {
     StudyViewPageTabKeyEnum,
     StudyViewResourceTabPrefix,
@@ -104,11 +110,20 @@ import {
     PatientViewPageTabs,
     PatientViewResourceTabPrefix,
 } from 'pages/patientView/PatientViewPageTabs';
-import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
+import {
+    GroupComparisonTab,
+    LegacyGroupComparisonTab,
+} from 'pages/groupComparison/GroupComparisonTabs';
 import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import {
+    cnaGroup,
+    mutationGroup,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
+import { MapValues } from 'shared/lib/TypeScriptUtils';
+import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
 
 function SuspenseWrapper(Component) {
     return props => (
@@ -118,20 +133,64 @@ function SuspenseWrapper(Component) {
     );
 }
 
-function LocationValidationWrapper(Component, validator) {
+function LocationValidationWrapper(Component, validator, queryParamsAdjuster) {
     return props => {
-        if (
-            props.location &&
-            !(
-                validator(props.match.params) ||
-                customTabParamValidator(props.location)
-            )
-        ) {
-            return <ErrorPage {...props} />;
-        } else {
-            return <Component {...props} />;
+        if (props.location) {
+            if (queryParamsAdjuster) {
+                const query = parse(props.location.search, {
+                    depth: 0,
+                    ignoreQueryPrefix: true,
+                });
+                const adjustedQuery = queryParamsAdjuster(query);
+                if (adjustedQuery) {
+                    // redirect to adjusted query if there's a change
+                    const RedirectingBlankPage = getBlankPage(() => {
+                        redirectTo(adjustedQuery, props.location.pathname);
+                    });
+                    return <RedirectingBlankPage />;
+                }
+            }
+
+            if (
+                !(
+                    validator(props.match.params) ||
+                    customTabParamValidator(props.location)
+                )
+            ) {
+                return <ErrorPage {...props} />;
+            }
         }
+
+        return <Component {...props} />;
     };
+}
+
+function ResultsViewQueryParamsAdjuster(oldParams) {
+    let changeMade = false;
+    const newParams = _.cloneDeep(oldParams);
+    if (
+        newParams.comparison_subtab ===
+        LegacyResultsViewComparisonSubTab.MUTATIONS
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...mutationGroup,
+        ]);
+        changeMade = true;
+    } else if (
+        newParams.comparison_subtab === LegacyResultsViewComparisonSubTab.CNA
+    ) {
+        newParams.comparison_subtab = ResultsViewComparisonSubTab.ALTERATIONS;
+        newParams.comparison_selectedEnrichmentEventTypes = JSON.stringify([
+            ...cnaGroup,
+        ]);
+        changeMade = true;
+    }
+    if (changeMade) {
+        return newParams;
+    } else {
+        return undefined;
+    }
 }
 
 function ScrollToTop(Component) {
@@ -320,7 +379,8 @@ export const makeRoutes = routing => {
                     path="/results/:tab?"
                     component={LocationValidationWrapper(
                         ResultsViewPage,
-                        tabParamValidator(ResultsViewTab)
+                        tabParamValidator(ResultsViewTab),
+                        ResultsViewQueryParamsAdjuster
                     )}
                 />
                 <Route
@@ -340,6 +400,33 @@ export const makeRoutes = routing => {
                             tabParamValidator(StudyViewPageTabKeyEnum)
                         )
                     )}
+                />
+
+                <Route
+                    path={`/comparison/${LegacyGroupComparisonTab.MUTATIONS}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            {
+                                selectedEnrichmentEventTypes: JSON.stringify([
+                                    ...mutationGroup,
+                                ]),
+                            },
+                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                        );
+                    })}
+                />
+                <Route
+                    path={`/comparison/${LegacyGroupComparisonTab.CNA}`}
+                    component={getBlankPage(() => {
+                        redirectTo(
+                            {
+                                selectedEnrichmentEventTypes: JSON.stringify([
+                                    ...cnaGroup,
+                                ]),
+                            },
+                            `/comparison/${GroupComparisonTab.ALTERATIONS}`
+                        );
+                    })}
                 />
                 <Route
                     path="/comparison/:tab?"

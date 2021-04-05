@@ -1,25 +1,23 @@
 import React from 'react';
-import AlterationEnrichmentTypeSelector, {
-    IAlterationEnrichmentTypeSelectorHandlers,
-} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 import { mountWithCustomWrappers } from 'enzyme-custom-wrappers';
 import { assert } from 'chai';
 import _ from 'lodash';
 import sinon from 'sinon';
 import {
+    cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
     fusionGroup,
     MutationEnrichmentEventType,
+    mutationEventTypeSelectInit,
     mutationGroup,
 } from './ComparisonStoreUtils';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 
 describe('AlterationEnrichmentTypeSelector', () => {
     let menu: any;
-    const handlers: IAlterationEnrichmentTypeSelectorHandlers = {
-        updateSelectedCopyNumber: sinon.spy(),
-        updateSelectedMutations: sinon.spy(),
-    };
+    const updateSelectedEnrichmentEventTypes = sinon.spy();
 
     const inframeCheckboxRefs = [
         'InFrame',
@@ -150,8 +148,23 @@ describe('AlterationEnrichmentTypeSelector', () => {
         };
 
         return {
-            selectedCopyNumberEnrichmentEventTypes,
-            selectedMutationEnrichmentEventTypes,
+            selectedCopyNumberEnrichmentEventTypes: cnaEventTypeSelectInit([
+                {
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                } as MolecularProfile,
+            ]),
+            selectedMutationEnrichmentEventTypes: mutationEventTypeSelectInit({
+                mutationProfiles: [
+                    {
+                        molecularAlterationType: 'MUTATION_EXTENDED',
+                    } as MolecularProfile,
+                ],
+                structuralVariantProfiles: [
+                    {
+                        molecularAlterationType: 'STRUCTURAL_VARIANT',
+                    } as MolecularProfile,
+                ],
+            }),
         } as ComparisonStore;
     }
 
@@ -159,7 +172,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         beforeEach(() => {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={true}
                     showFusions={true}
@@ -284,7 +299,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('shows all sections when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={true}
                     showFusions={true}
@@ -302,7 +319,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('shows no sections when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={false}
                     showFusions={false}
@@ -320,7 +339,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('shows mutation section when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={true}
                     showFusions={false}
@@ -338,7 +359,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('shows fusions section when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={false}
                     showFusions={true}
@@ -356,7 +379,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('shows cna section when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={false}
                     showFusions={false}
@@ -376,7 +401,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
         beforeEach(() => {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
-                    handlers={handlers}
+                    updateSelectedEnrichmentEventTypes={
+                        updateSelectedEnrichmentEventTypes
+                    }
                     store={createStore()}
                     showMutations={true}
                     showFusions={true}
@@ -384,18 +411,18 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 />,
                 wrapperForMenu
             );
-            (handlers.updateSelectedMutations as sinon.SinonSpy).resetHistory();
-            (handlers.updateSelectedCopyNumber as sinon.SinonSpy).resetHistory();
+            updateSelectedEnrichmentEventTypes.resetHistory();
         });
 
-        it('invokes callback when pressed', function() {
+        it('is disabled before any changes are made', function() {
             menu.pressSubmitButton();
-            assert.isTrue(
-                (handlers.updateSelectedMutations as sinon.SinonSpy).calledOnce
-            );
-            assert.isTrue(
-                (handlers.updateSelectedCopyNumber as sinon.SinonSpy).calledOnce
-            );
+            assert.isTrue(updateSelectedEnrichmentEventTypes.notCalled);
+        });
+
+        it('invokes callback when pressed after change is made', function() {
+            menu.mutationSection.pressChildButton();
+            menu.pressSubmitButton();
+            assert.isTrue(updateSelectedEnrichmentEventTypes.calledOnce);
         });
 
         it('returns mutation types to callback', function() {
@@ -406,9 +433,11 @@ describe('AlterationEnrichmentTypeSelector', () => {
             menu.mutationSection.pressChildButton();
             menu.pressSubmitButton();
 
-            (handlers.updateSelectedMutations as sinon.SinonSpy).args[0][0].should.have.members(
-                ['missense', 'missense_mutation', 'missense_variant']
-            );
+            updateSelectedEnrichmentEventTypes.args[0][0].should.have.members([
+                'missense',
+                'missense_mutation',
+                'missense_variant',
+            ]);
         });
 
         it('returns cna types to callback', function() {
@@ -419,9 +448,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
             menu.cnaSection.pressChildButton();
             menu.pressSubmitButton();
 
-            (handlers.updateSelectedCopyNumber as sinon.SinonSpy).args[0][0].should.have.members(
-                ['HOMDEL']
-            );
+            updateSelectedEnrichmentEventTypes.args[0][0].should.have.members([
+                'HOMDEL',
+            ]);
         });
     });
 });

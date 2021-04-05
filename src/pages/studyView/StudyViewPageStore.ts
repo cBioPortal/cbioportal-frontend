@@ -1447,7 +1447,7 @@ export class StudyViewPageStore {
         }, 500);
 
         // save comparison session, and get id
-        let sessionId: string;
+        let comparisonId: string;
         const statusCallback = (phase: LoadingPhase) => {
             if (!comparisonWindow.closed) {
                 comparisonWindow.routingStore.updateRoute(
@@ -1462,21 +1462,21 @@ export class StudyViewPageStore {
         switch (chartType) {
             case ChartTypeEnum.PIE_CHART:
             case ChartTypeEnum.TABLE:
-                sessionId = await this.createCategoricalAttributeComparisonSession(
+                comparisonId = await this.createCategoricalAttributeComparisonSession(
                     chartMeta,
                     params.clinicalAttributeValues!,
                     statusCallback
                 );
                 break;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
-                sessionId = await this.createMutatedGeneComparisonSession(
+                comparisonId = await this.createMutatedGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
                     statusCallback
                 );
                 break;
             case ChartTypeEnum.CNA_GENES_TABLE:
-                sessionId = await this.createCnaGeneComparisonSession(
+                comparisonId = await this.createCnaGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
                     statusCallback
@@ -1484,7 +1484,7 @@ export class StudyViewPageStore {
                 break;
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
-                sessionId = await this.createTreatmentsComparisonSession(
+                comparisonId = await this.createTreatmentsComparisonSession(
                     chartMeta,
                     chartType,
                     params.treatmentUniqueKeys!,
@@ -1492,7 +1492,7 @@ export class StudyViewPageStore {
                 );
                 break;
             default:
-                sessionId = await this.createNumberAttributeComparisonSession(
+                comparisonId = await this.createNumberAttributeComparisonSession(
                     chartMeta,
                     params.categorizationType ||
                         NumericalGroupComparisonType.QUARTILES,
@@ -1505,7 +1505,7 @@ export class StudyViewPageStore {
 
         if (!comparisonWindow.closed) {
             // redirect window to correct URL
-            redirectToComparisonPage(comparisonWindow!, { sessionId });
+            redirectToComparisonPage(comparisonWindow!, { comparisonId });
         }
     }
     // < / comparison groups code>
