@@ -4990,7 +4990,7 @@ export class ResultsViewPageStore {
                     let result;
                     try {
                         result = await fetchStructuralVariantOncoKbData(
-                            {},
+                            this.uniqueSampleKeyToTumorType.result || {},
                             this.oncoKbAnnotatedGenes.result!,
                             this.structuralVariants
                         );
