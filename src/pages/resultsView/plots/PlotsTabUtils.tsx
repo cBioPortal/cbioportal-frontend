@@ -1782,7 +1782,7 @@ export const MUT_PROFILE_COUNT_DRIVER = 'Driver';
 export const MUT_PROFILE_COUNT_VUS = 'VUS';
 export const MUT_PROFILE_COUNT_MUTATED = 'Mutated';
 export const MUT_PROFILE_COUNT_MULTIPLE = 'Multiple';
-export const MUT_PROFILE_COUNT_NOT_MUTATED = 'Wild type';
+export const MUT_PROFILE_COUNT_NOT_MUTATED = 'No mutation';
 export const MUT_PROFILE_COUNT_NOT_PROFILED = 'Not profiled';
 export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.missense,
