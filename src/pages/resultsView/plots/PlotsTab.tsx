@@ -468,6 +468,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
+    @computed get showPlot(): boolean {
+        return this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown;
+    }
+
     @computed get dataAvailability(): JSX.Element[] {
         let components: JSX.Element[] = [];
 
@@ -4275,10 +4279,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
     }
 
     @computed get showUtilitiesMenu() {
-        return (
-            (this.plotDataExistsForTwoAxes || this.waterfallPlotIsShown) &&
-            (this.canColorByMutationData || this.canColorByCnaData)
-        );
+        return this.canColorByMutationData || this.canColorByCnaData;
     }
 
     @computed get noGeneSelectedForStyling(): boolean {
@@ -4376,6 +4377,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             case 'error':
                 return <span>Error loading plot data.</span>;
             default:
+                if (!this.showPlot) {
+                    return (
+                        <div className={'alert alert-info'}>
+                            No data to plot.
+                        </div>
+                    );
+                }
                 const plotType = this.plotType.result!;
                 let plotElt: any = null;
                 switch (plotType) {
