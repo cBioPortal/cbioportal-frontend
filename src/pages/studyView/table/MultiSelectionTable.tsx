@@ -97,7 +97,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
     [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
-    [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.25,
+    [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
     [MultiSelectionTableColumnKey.NUMBER]: 0.25,
     [MultiSelectionTableColumnKey.FREQ]: 0.15,
     [MultiSelectionTableColumnKey.CYTOBAND]: 0.25,
@@ -358,11 +358,11 @@ export class MultiSelectionTable extends React.Component<
                 tooltip: <span>Total number of structural variants</span>,
                 headerRender: () => {
                     return (
-                        <span>
+                        <div style={{ marginLeft: cellMargin }}>
                             {
                                 MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS
                             }
-                        </span>
+                        </div>
                     );
                 },
                 render: (data: MultiSelectionTableRow) => (
