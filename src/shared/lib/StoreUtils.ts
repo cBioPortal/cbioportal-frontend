@@ -742,7 +742,9 @@ export async function fetchOncoKbData(
 
     const mutationsToQuery = _.filter(
         mutationDataResult,
-        m => !!annotatedGenes[m.entrezGeneId]
+        m =>
+            m.mutationType === fusionMutationType ||
+            !!annotatedGenes[m.entrezGeneId]
     );
 
     return queryOncoKbData(
