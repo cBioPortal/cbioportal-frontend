@@ -1319,7 +1319,7 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
+        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "SHALLOWDEL" | "DEEPDEL",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any
@@ -1353,7 +1353,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
+        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "SHALLOWDEL" | "DEEPDEL",
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
             $queryParameters ? : any,
@@ -1409,7 +1409,7 @@ export default class CBioPortalAPIInternal {
      * @param {} groups - List of groups containing sample identifiers
      */
     fetchCopyNumberEnrichmentsUsingPOST(parameters: {
-            'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
+            'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "SHALLOWDEL" | "DEEPDEL",
             'enrichmentType' ? : "SAMPLE" | "PATIENT",
             'groups': Array < MolecularProfileCasesGroupFilter > ,
                 $queryParameters ? : any,

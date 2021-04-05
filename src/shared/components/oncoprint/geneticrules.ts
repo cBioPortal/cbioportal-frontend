@@ -1,8 +1,6 @@
-import * as $ from 'jquery';
 import {
     GeneticAlterationRuleParams,
     IGeneticAlterationRuleSetParams,
-    RuleSetParams,
     RuleSetType,
 } from 'oncoprintjs';
 import { DEFAULT_GREY } from 'shared/lib/Colors';
@@ -10,8 +8,8 @@ import _ from 'lodash';
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
-    CNA_COLOR_HOMDEL,
+    CNA_COLOR_SHALLOWDEL,
+    CNA_COLOR_DEEPDEL,
     MRNA_COLOR_HIGH,
     MRNA_COLOR_LOW,
     MUT_COLOR_FUSION,
@@ -36,8 +34,8 @@ const FUSION_LEGEND_ORDER = 1;
 const GERMLINE_LEGEND_ORDER = 2;
 const AMP_LEGEND_ORDER = 10;
 const GAIN_LEGEND_ORDER = 11;
-const HOMDEL_LEGEND_ORDER = 12;
-const HETLOSS_LEGEND_ORDER = 13;
+const DEEPDEL_LEGEND_ORDER = 12;
+const SHALLOWDEL_LEGEND_ORDER = 13;
 const MRNA_HIGH_LEGEND_ORDER = 20;
 const MRNA_LOW_LEGEND_ORDER = 21;
 const PROT_HIGH_LEGEND_ORDER = 31;
@@ -48,8 +46,8 @@ enum ShapeId {
 
     ampRectangle = 'ampRectangle',
     gainRectangle = 'gainRectangle',
-    homdelRectangle = 'homdelRectangle',
-    hetlossRectangle = 'hetlossRectangle',
+    deepDelRectangle = 'deepDelRectangle',
+    shallowDelRectangle = 'shallowDelRectangle',
 
     mrnaHighRectangle = 'mrnaHighRectangle',
     mrnaLowRectangle = 'mrnaLowRectangle',
@@ -97,18 +95,18 @@ const shapeBank = {
         height: 100,
         z: 2,
     },
-    [ShapeId.homdelRectangle]: {
+    [ShapeId.deepDelRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_HOMDEL,
+        fill: CNA_COLOR_DEEPDEL,
         x: 0,
         y: 0,
         width: 100,
         height: 100,
         z: 2,
     },
-    [ShapeId.hetlossRectangle]: {
+    [ShapeId.shallowDelRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_HETLOSS,
+        fill: CNA_COLOR_SHALLOWDEL,
         x: 0,
         y: 0,
         width: 100,
@@ -297,27 +295,27 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
                 legend_label: 'Gain (unknown significance)',
                 legend_order: GAIN_LEGEND_ORDER,
             },
-            homdel_rec: {
-                shapes: [shapeBank[ShapeId.homdelRectangle]],
+            deepdel_rec: {
+                shapes: [shapeBank[ShapeId.deepDelRectangle]],
                 legend_label: 'Deep Deletion (putative driver)',
-                legend_order: HOMDEL_LEGEND_ORDER,
+                legend_order: DEEPDEL_LEGEND_ORDER,
             },
             // Blue rectangle for deep deletion
-            homdel: {
-                shapes: [shapeBank[ShapeId.homdelRectangle]],
+            deepdel: {
+                shapes: [shapeBank[ShapeId.deepDelRectangle]],
                 legend_label: 'Deep Deletion (unknown significance)',
-                legend_order: HOMDEL_LEGEND_ORDER,
+                legend_order: DEEPDEL_LEGEND_ORDER,
             },
-            hetloss_rec: {
-                shapes: [shapeBank[ShapeId.hetlossRectangle]],
+            shallowdel_rec: {
+                shapes: [shapeBank[ShapeId.shallowDelRectangle]],
                 legend_label: 'Shallow Deletion (putative driver)',
-                legend_order: HETLOSS_LEGEND_ORDER,
+                legend_order: SHALLOWDEL_LEGEND_ORDER,
             },
             // Light blue rectangle for shallow deletion
-            hetloss: {
-                shapes: [shapeBank[ShapeId.hetlossRectangle]],
+            shallowdel: {
+                shapes: [shapeBank[ShapeId.shallowDelRectangle]],
                 legend_label: 'Shallow Deletion (unknown significance)',
-                legend_order: HETLOSS_LEGEND_ORDER,
+                legend_order: SHALLOWDEL_LEGEND_ORDER,
             },
         },
         // mRNA regulation

@@ -95,24 +95,24 @@ describe('CancerSummaryChart', () => {
                 ],
                 [
                     {
-                        alterationType: 'hetloss',
+                        alterationType: 'shallowdel',
                         x: 'Lung Squamous Cell Carcinoma',
                         y: 0,
                     },
                     {
-                        alterationType: 'hetloss',
+                        alterationType: 'shallowdel',
                         x: 'Lung Adenocarcinoma',
                         y: 0,
                     },
                 ],
                 [
                     {
-                        alterationType: 'homdel',
+                        alterationType: 'deepdel',
                         x: 'Lung Squamous Cell Carcinoma',
                         y: 3.71900826446281,
                     },
                     {
-                        alterationType: 'homdel',
+                        alterationType: 'deepdel',
                         x: 'Lung Adenocarcinoma',
                         y: 8.181818181818182,
                     },
@@ -173,8 +173,8 @@ describe('CancerSummaryChart', () => {
                     alterationTypeCounts: {
                         mutated: 280,
                         amp: 39,
-                        homdel: 54,
-                        hetloss: 0,
+                        deepdel: 54,
+                        shallowdel: 0,
                         gain: 0,
                         fusion: 0,
                         mrnaExpressionHigh: 0,
@@ -192,8 +192,8 @@ describe('CancerSummaryChart', () => {
                     alterationTypeCounts: {
                         mutated: 292,
                         amp: 2,
-                        homdel: 18,
-                        hetloss: 0,
+                        deepdel: 18,
+                        shallowdel: 0,
                         gain: 0,
                         fusion: 0,
                         mrnaExpressionHigh: 0,
@@ -208,7 +208,7 @@ describe('CancerSummaryChart', () => {
             },
             representedAlterations: {
                 multiple: true,
-                homdel: true,
+                deepdel: true,
                 amp: true,
                 mutated: true,
             },
@@ -218,8 +218,8 @@ describe('CancerSummaryChart', () => {
                 protExpressionHigh: 'Protein High',
                 mrnaExpressionLow: 'mRNA Low',
                 mrnaExpressionHigh: 'mRNA High',
-                hetloss: 'Shallow Deletion',
-                homdel: 'Deep Deletion',
+                shallowdel: 'Shallow Deletion',
+                deepdel: 'Deep Deletion',
                 gain: 'Gain',
                 amp: 'Amplification',
                 fusion: 'Fusion',
@@ -229,8 +229,8 @@ describe('CancerSummaryChart', () => {
             colors: {
                 mutated: '#008000',
                 amp: '#ff0000',
-                homdel: 'rgb(0,0,255)',
-                hetloss: '#000',
+                deepdel: 'rgb(0,0,255)',
+                shallowdel: '#000',
                 gain: 'rgb(255,182,193)',
                 fusion: '#8B00C9',
                 mrnaExpressionHigh: '#FF989A',
@@ -379,21 +379,29 @@ describe('CancerSummaryChart', () => {
             ],
             [
                 {
-                    alterationType: 'hetloss',
+                    alterationType: 'shallowdel',
                     x: 'Colorectal Adenocarcinoma',
                     y: 0,
                 },
-                { alterationType: 'hetloss', x: 'Rectal Adenocarcinoma', y: 0 },
-                { alterationType: 'hetloss', x: 'Colon Adenocarcinoma', y: 0 },
+                {
+                    alterationType: 'shallowdel',
+                    x: 'Rectal Adenocarcinoma',
+                    y: 0,
+                },
+                {
+                    alterationType: 'shallowdel',
+                    x: 'Colon Adenocarcinoma',
+                    y: 0,
+                },
             ],
             [
                 {
-                    alterationType: 'homdel',
+                    alterationType: 'deepdel',
                     x: 'Colorectal Adenocarcinoma',
                     y: 0,
                 },
-                { alterationType: 'homdel', x: 'Rectal Adenocarcinoma', y: 0 },
-                { alterationType: 'homdel', x: 'Colon Adenocarcinoma', y: 0 },
+                { alterationType: 'deepdel', x: 'Rectal Adenocarcinoma', y: 0 },
+                { alterationType: 'deepdel', x: 'Colon Adenocarcinoma', y: 0 },
             ],
             [
                 {

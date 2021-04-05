@@ -36,8 +36,8 @@ import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 
 const cnaDataToString: { [integerCNA: string]: string | undefined } = {
-    '-2': 'homdel',
-    '-1': 'hetloss',
+    '-2': 'deepdel',
+    '-1': 'shallowdel',
     '0': undefined,
     '1': 'gain',
     '2': 'amp',
@@ -58,9 +58,9 @@ const mutRenderPriority = stringListToIndexSet([
 ]);
 const cnaRenderPriority = {
     amp: 0,
-    homdel: 0,
+    deepdel: 0,
     gain: 1,
-    hetloss: 1,
+    shallowdel: 1,
 };
 const mrnaRenderPriority = {
     high: 0,

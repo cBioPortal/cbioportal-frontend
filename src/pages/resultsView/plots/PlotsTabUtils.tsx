@@ -65,7 +65,7 @@ import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
 import jStat from 'jStat';
 import {
     CNA_COLOR_AMP,
-    CNA_COLOR_HOMDEL,
+    CNA_COLOR_DEEPDEL,
     MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_INFRAME_PASSENGER,
@@ -1734,7 +1734,7 @@ export const noMutationAppearance = {
 const cnaToAppearance = {
     '-2': {
         legendLabel: 'Deep Deletion',
-        stroke: CNA_COLOR_HOMDEL,
+        stroke: CNA_COLOR_DEEPDEL,
         strokeOpacity: 1,
     },
     '-1': {

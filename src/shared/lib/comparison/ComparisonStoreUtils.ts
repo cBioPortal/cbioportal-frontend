@@ -3,7 +3,7 @@ import { action } from 'mobx';
 import _ from 'lodash';
 
 export enum CopyNumberEnrichmentEventType {
-    HOMDEL = 'HOMDEL',
+    DEEPDEL = 'DEEPDEL',
     AMP = 'AMP',
 }
 
@@ -151,7 +151,7 @@ export const mutationGroup = [
     ...otherGroup,
 ];
 export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
-export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
+export const deletionGroup = [CopyNumberEnrichmentEventType.DEEPDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
 export function buildAlterationEnrichmentTypeSelectorHandlers(

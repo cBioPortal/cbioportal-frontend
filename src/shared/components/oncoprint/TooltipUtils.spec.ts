@@ -1531,8 +1531,8 @@ describe('Oncoprint TooltipUtils', () => {
             });
             it('single genetic alteration in single case - cna', () => {
                 const disp_cna: { [integerCN: string]: string } = {
-                    '-2': 'HOMODELETED',
-                    '-1': 'HETLOSS',
+                    '-2': 'DeepDel',
+                    '-1': 'ShallowDel',
                     '1': 'GAIN',
                     '2': 'AMPLIFIED',
                 };
@@ -1768,8 +1768,8 @@ describe('Oncoprint TooltipUtils', () => {
             });
             it('single genetic alteration across multiple cases - cna', () => {
                 const disp_cna: { [integerCN: string]: string } = {
-                    '-2': 'HOMODELETED',
-                    '-1': 'HETLOSS',
+                    '-2': 'DeepDel',
+                    '-1': 'ShallowDel',
                     '1': 'GAIN',
                     '2': 'AMPLIFIED',
                 };
@@ -1913,11 +1913,11 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED/g)!.length,
+                    tooltipOutput.text().match(/GENE DeepDel/g)!.length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS/g)!.length,
+                    tooltipOutput.text().match(/GENE ShallowDel/g)!.length,
                     1
                 );
                 assert.equal(
@@ -2047,12 +2047,12 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!
+                    tooltipOutput.text().match(/GENE DeepDel\xa0\(3\)/g)!
                         .length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS\xa0\(3\)/g)!
+                    tooltipOutput.text().match(/GENE ShallowDel\xa0\(3\)/g)!
                         .length,
                     1
                 );
@@ -2068,12 +2068,12 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(1\)/g)!
+                    tooltipOutput.text().match(/GENE DeepDel\xa0\(1\)/g)!
                         .length,
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HETLOSS\xa0\(1\)/g)!
+                    tooltipOutput.text().match(/GENE ShallowDel\xa0\(1\)/g)!
                         .length,
                     1
                 );
@@ -2190,7 +2190,7 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED/g)!.length,
+                    tooltipOutput.text().match(/GENE DeepDel/g)!.length,
                     1
                 );
 
@@ -2280,7 +2280,7 @@ describe('Oncoprint TooltipUtils', () => {
                     1
                 );
                 assert.equal(
-                    tooltipOutput.text().match(/GENE HOMODELETED\xa0\(3\)/g)!
+                    tooltipOutput.text().match(/GENE DeepDel\xa0\(3\)/g)!
                         .length,
                     1
                 );

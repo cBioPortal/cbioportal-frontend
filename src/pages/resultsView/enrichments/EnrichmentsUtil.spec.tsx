@@ -877,15 +877,15 @@ describe('EnrichmentsUtil', () => {
                     { label: 'User-defined genes', genes: [] },
                     {
                         label: 'Genes with highest frequency in any group',
-                        genes: ['EGFR: AMP', 'FBXW4: HOMDEL', 'CAND2: AMP'],
+                        genes: ['EGFR: AMP', 'FBXW4: DeepDel', 'CAND2: AMP'],
                     },
                     {
                         label: 'Genes with highest average frequency',
-                        genes: ['EGFR: AMP', 'FBXW4: HOMDEL', 'CAND2: AMP'],
+                        genes: ['EGFR: AMP', 'FBXW4: DeepDel', 'CAND2: AMP'],
                     },
                     {
                         label: 'Genes with most significant p-value',
-                        genes: ['EGFR: AMP', 'FBXW4: HOMDEL', 'CAND2: AMP'],
+                        genes: ['EGFR: AMP', 'FBXW4: DeepDel', 'CAND2: AMP'],
                     },
                     { label: 'Sync with table (up to 100 genes)', genes: [] },
                 ]

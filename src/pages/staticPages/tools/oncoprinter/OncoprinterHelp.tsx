@@ -51,10 +51,10 @@ export const GenomicFormatHelp = (
                                 <code>GAIN</code>: low level gain
                             </li>
                             <li>
-                                <code>HETLOSS</code>: shallow deletion
+                                <code>SHALLOWDEL</code>: shallow deletion
                             </li>
                             <li>
-                                <code>HOMDEL</code>: deep deletion
+                                <code>DEEPDEL</code>: deep deletion
                             </li>
                         </ul>
                     </li>

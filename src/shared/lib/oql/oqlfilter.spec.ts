@@ -286,11 +286,11 @@ describe('unparseOQLQueryLine', () => {
     });
     it('unparses query with many alteration types', () => {
         const parsedLine = parseOQLQuery(
-            'TP53: MISSENSE proteinchange HOMDEL EXP<-4 PROT>1 FUSION;'
+            'TP53: MISSENSE proteinchange DEEPDEL EXP<-4 PROT>1 FUSION;'
         )[0];
         assert.equal(
             unparseOQLQueryLine(parsedLine),
-            'TP53: MUT=MISSENSE MUT=proteinchange HOMDEL EXP<-4 PROT>1 FUSION;'
+            'TP53: MUT=MISSENSE MUT=proteinchange DEEPDEL EXP<-4 PROT>1 FUSION;'
         );
     });
     it('unparses queries with germline and somatic mutation modifiers', () => {
@@ -304,11 +304,11 @@ describe('unparseOQLQueryLine', () => {
     });
     it('unparses queries with driver modifier', () => {
         const parsedLine = parseOQLQuery(
-            'TP53: DRIVER MUT=DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_HOMDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;'
+            'TP53: DRIVER MUT=DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_DEEPDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;'
         )[0];
         assert.equal(
             unparseOQLQueryLine(parsedLine),
-            'TP53: DRIVER MUT=DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER HOMDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;'
+            'TP53: DRIVER MUT=DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER DEEPDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;'
         );
     });
     it('unparses queries with range mutation modifiers', () => {

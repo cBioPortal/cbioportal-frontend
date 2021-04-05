@@ -10,8 +10,9 @@ import {
 import {
     ASCN_AMP,
     ASCN_GAIN,
-    ASCN_HETLOSS,
-    ASCN_HOMDEL,
+    ASCN_LIGHTGREY,
+    ASCN_SHALLOWDEL,
+    ASCN_DEEPDEL,
     ASCN_BLACK,
     ASCN_WHITE,
 } from 'shared/lib/Colors';
@@ -250,19 +251,19 @@ describe('ASCNCopyNumberElement', () => {
     it('ascn copy number value 0 should have the ASCN_LIGHTGREY color and be visible', () => {
         let sample = initSample();
         sample.ascnCopyNumberValue = '0';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_WHITE);
+        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_LIGHTGREY);
     });
 
-    it('ascn copy number value -1 should have the ASCN_HETLOSS color and be visible', () => {
+    it('ascn copy number value -1 should have the ASCN_SHALLOWDEL color and be visible', () => {
         let sample = initSample();
         sample.ascnCopyNumberValue = '-1';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_HETLOSS);
+        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_SHALLOWDEL);
     });
 
-    it('ascn copy number value -2 should have the ASCN_HOMDEL color and be visible', () => {
+    it('ascn copy number value -2 should have the ASCN_DEEPDEL color and be visible', () => {
         let sample = initSample();
         sample.ascnCopyNumberValue = '-2';
-        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_HOMDEL);
+        testExpectedColorValidASCNCopyNumberElement(sample, ASCN_DEEPDEL);
     });
 
     it('ascn copy number value of anything else should have the ASCN_BLACK color and be invisible', () => {
@@ -310,14 +311,17 @@ describe('ASCNCopyNumberElement', () => {
 
     it(
         'no wgd with major copy number of 1 and minor copy number of 0 displays ' +
-            ASCNCopyNumberValueEnum.HETLOSS.toLowerCase() +
+            ASCNCopyNumberValueEnum.SHALLOWDEL.toLowerCase() +
             ' in tooltip',
         () => {
             let sample = initSample();
             sample.wgdValue = 'no WGD';
             sample.totalCopyNumberValue = '1';
             sample.minorCopyNumberValue = '0';
-            testExpectedValidTooltip(sample, ASCNCopyNumberValueEnum.HETLOSS);
+            testExpectedValidTooltip(
+                sample,
+                ASCNCopyNumberValueEnum.SHALLOWDEL
+            );
         }
     );
 

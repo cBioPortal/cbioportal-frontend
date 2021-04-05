@@ -55,7 +55,11 @@ import styles from './styles.module.scss';
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
-import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import {
+    CNA_AMP_VALUE,
+    CNA_DEEPDEL_VALUE,
+    CNA_TO_ALTERATION,
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
@@ -64,7 +68,7 @@ import {
     ClinicalDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
+import { CNA_COLOR_AMP, CNA_COLOR_DEEPDEL } from 'cbioportal-frontend-commons';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -1461,9 +1465,9 @@ export function getCNAColorByAlteration(
     alteration: string
 ): string | undefined {
     switch (alteration) {
-        case 'HOMDEL':
-            return CNA_COLOR_HOMDEL;
-        case 'AMP':
+        case CNA_TO_ALTERATION[CNA_DEEPDEL_VALUE]:
+            return CNA_COLOR_DEEPDEL;
+        case CNA_TO_ALTERATION[CNA_AMP_VALUE]:
             return CNA_COLOR_AMP;
         default:
             return undefined;

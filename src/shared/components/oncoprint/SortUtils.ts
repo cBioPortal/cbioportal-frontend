@@ -48,23 +48,23 @@ export function getGeneticTrackSortComparator(
         if (!sortByDrivers) {
             _order = makeComparatorMetric([
                 'amp',
-                'homdel',
+                'deepdel',
                 'gain',
-                'hetloss',
+                'shallowdel',
                 'diploid',
                 undefined,
             ]);
         } else {
             _order = makeComparatorMetric([
                 'amp_rec',
-                'homdel_rec',
+                'deepdel_rec',
                 'gain_rec',
-                'hetloss_rec',
+                'shallowdel_rec',
                 'diploid_rec',
                 'amp',
-                'homdel',
+                'deepdel',
                 'gain',
-                'hetloss',
+                'shallowdel',
                 'diploid',
                 undefined,
             ]);

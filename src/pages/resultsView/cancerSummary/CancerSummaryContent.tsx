@@ -23,8 +23,8 @@ export const OrderedAlterationLabelMap: Record<
     protExpressionHigh: 'Protein High',
     mrnaExpressionLow: 'mRNA Low',
     mrnaExpressionHigh: 'mRNA High',
-    hetloss: 'Shallow Deletion',
-    homdel: 'Deep Deletion',
+    shallowdel: 'Shallow Deletion',
+    deepdel: 'Deep Deletion',
     gain: 'Gain',
     amp: 'Amplification',
     fusion: 'Fusion',
@@ -41,8 +41,8 @@ export const AlterationTypeToDataTypeLabel: { [id: string]: string } = {
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {
     mutated: '#008000',
     amp: '#ff0000',
-    homdel: '#0000ff', //"#8fd8d8" "rgb(0,0,255)",
-    hetloss: '#8fd8d8',
+    deepdel: '#0000ff', //"#8fd8d8" "rgb(0,0,255)",
+    shallowdel: '#8fd8d8',
     gain: 'rgb(255,182,193)',
     fusion: '#8B00C9',
     mrnaExpressionHigh: '#FF989A',
@@ -55,8 +55,8 @@ const alterationToColor: Record<keyof IAlterationCountMap, string> = {
 export interface IAlterationCountMap {
     mutated: number;
     amp: number;
-    homdel: number;
-    hetloss: number;
+    deepdel: number;
+    shallowdel: number;
     gain: number;
     fusion: number;
     mrnaExpressionHigh: number;

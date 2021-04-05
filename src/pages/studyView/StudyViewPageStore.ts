@@ -206,7 +206,7 @@ import {
 } from 'pages/studyView/StudyViewComparisonUtils';
 import {
     CNA_AMP_VALUE,
-    CNA_HOMDEL_VALUE,
+    CNA_DEEPDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     GenericAssayDataBinFilter,
@@ -1181,7 +1181,7 @@ export class StudyViewPageStore {
                         cnaData.filter(
                             d =>
                                 d.value === CNA_AMP_VALUE ||
-                                d.value === CNA_HOMDEL_VALUE
+                                d.value === CNA_DEEPDEL_VALUE
                         ),
                         (d: NumericGeneMolecularData) =>
                             `${d.gene.hugoGeneSymbol}:${getCNAByAlteration(

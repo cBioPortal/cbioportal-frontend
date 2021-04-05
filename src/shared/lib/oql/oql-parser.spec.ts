@@ -701,13 +701,13 @@ describe('OQL parser', () => {
                     {
                         alteration_type: 'cna',
                         constr_rel: '=',
-                        constr_val: 'HOMDEL',
+                        constr_val: 'DEEPDEL',
                         modifiers: [{ type: 'DRIVER' }],
                     },
                     {
                         alteration_type: 'cna',
                         constr_rel: '=',
-                        constr_val: 'HETLOSS',
+                        constr_val: 'SHALLOWDEL',
                         modifiers: [],
                     },
                     { alteration_type: 'any', modifiers: [{ type: 'DRIVER' }] },
@@ -715,6 +715,53 @@ describe('OQL parser', () => {
             },
         ]
     );
+    doTest('TP53: DeepDel ShallowDel', [
+        {
+            gene: 'TP53',
+            alterations: [
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'DEEPDEL',
+                    modifiers: [],
+                },
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'SHALLOWDEL',
+                    modifiers: [],
+                },
+            ] as Alteration[],
+        },
+    ]);
+    doTest('TP53: DRIVER_DeepDel ShallowDel_DRIVER', [
+        {
+            gene: 'TP53',
+            alterations: [
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'DEEPDEL',
+                    modifiers: [
+                        {
+                            type: 'DRIVER',
+                        },
+                    ],
+                },
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '=',
+                    constr_val: 'SHALLOWDEL',
+                    modifiers: [
+                        {
+                            type: 'DRIVER',
+                        },
+                    ],
+                },
+            ] as Alteration[],
+        },
+    ]);
+
     doTest('TP53:MISSENSE PROMOTER', [
         {
             gene: 'TP53',
@@ -767,7 +814,7 @@ describe('OQL parser', () => {
                 {
                     alteration_type: 'cna',
                     constr_rel: '=',
-                    constr_val: 'HETLOSS',
+                    constr_val: 'SHALLOWDEL',
                     modifiers: [],
                 },
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
@@ -792,7 +839,7 @@ describe('OQL parser', () => {
                 {
                     alteration_type: 'cna',
                     constr_rel: '=',
-                    constr_val: 'HOMDEL',
+                    constr_val: 'DEEPDEL',
                     modifiers: [],
                 },
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
@@ -842,7 +889,7 @@ describe('OQL parser', () => {
                 {
                     alteration_type: 'cna',
                     constr_rel: '=',
-                    constr_val: 'HOMDEL',
+                    constr_val: 'DEEPDEL',
                     modifiers: [],
                 },
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
@@ -867,7 +914,7 @@ describe('OQL parser', () => {
                 {
                     alteration_type: 'cna',
                     constr_rel: '=',
-                    constr_val: 'HOMDEL',
+                    constr_val: 'DEEPDEL',
                     modifiers: [],
                 },
                 { alteration_type: 'exp', constr_rel: '>=', constr_val: 3 },
@@ -975,13 +1022,25 @@ describe('OQL parser', () => {
                 {
                     alteration_type: 'cna',
                     constr_rel: '<',
-                    constr_val: 'HOMDEL',
+                    constr_val: 'DEEPDEL',
                     modifiers: [],
                 },
             ] as Alteration[],
         },
     ]);
-
+    doTest('BRAF:CNA < DeepDel', [
+        {
+            gene: 'BRAF',
+            alterations: [
+                {
+                    alteration_type: 'cna',
+                    constr_rel: '<',
+                    constr_val: 'DEEPDEL',
+                    modifiers: [],
+                },
+            ] as Alteration[],
+        },
+    ]);
     doTest('[TP53 BRCA1] NRAS', [
         {
             label: undefined,

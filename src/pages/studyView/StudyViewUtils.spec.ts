@@ -223,7 +223,7 @@ describe('StudyViewUtils', () => {
                         molecularProfileIds: ['cancer_study_fusion'],
                     },
                     {
-                        geneQueries: [['GENE2:HOMDEL']],
+                        geneQueries: [['GENE2:DEEPDEL']],
                         molecularProfileIds: ['cancer_study_cna'],
                     },
                 ],
@@ -272,7 +272,7 @@ describe('StudyViewUtils', () => {
                 ).startsWith(
                     '4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)' +
                         '\n\nFilters:\n-  Mutated Genes:\n  - GENE1\n- Fusion Genes:\n  - GENE1\n- CNA Genes:' +
-                        '\n  - GENE2:HOMDEL\n- attribute1 name: value1\n' +
+                        '\n  - GENE2:DEEPDEL\n- attribute1 name: value1\n' +
                         '- attribute2 name: 10 < x ≤ 0\n- attribute3 name: 2 samples\n\nCreated on'
                 )
             );
@@ -1689,7 +1689,7 @@ describe('StudyViewUtils', () => {
 
     describe('getCNAByAlteration', () => {
         it('return proper string from proper alteration', () => {
-            assert.isTrue(getCNAByAlteration(-2) === 'HOMDEL');
+            assert.isTrue(getCNAByAlteration(-2) === 'DeepDel');
             assert.isTrue(getCNAByAlteration(2) === 'AMP');
         });
 

@@ -168,7 +168,7 @@ describe('OncoprinterImportUtils', () => {
                     'sample'
                 ),
                 'sample1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
-                    'sample1  gene1  HOMDEL  CNA  label1\n' +
+                    'sample1  gene1  DEEPDEL  CNA  label1\n' +
                     'sample1  gene1  HIGH  EXP  label1\n' +
                     'sample2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
                     'sample2  gene1  AMP  CNA  label1\n' +
@@ -190,7 +190,7 @@ describe('OncoprinterImportUtils', () => {
                     'patient'
                 ),
                 'patient1  gene1  proteinChange1  MISSENSE_GERMLINE_DRIVER  label1\n' +
-                    'patient1  gene1  HOMDEL  CNA  label1\n' +
+                    'patient1  gene1  DEEPDEL  CNA  label1\n' +
                     'patient1  gene1  HIGH  EXP  label1\n' +
                     'patient2  gene1  proteinChange2  TRUNC_GERMLINE  label1\n' +
                     'patient2  gene1  AMP  CNA  label1\n' +

@@ -626,8 +626,8 @@ export function makeGeneticTrackTooltip(
     }
 
     const disp_cna: { [integerCN: string]: string } = {
-        '-2': 'HOMODELETED',
-        '-1': 'HETLOSS',
+        '-2': 'DeepDel',
+        '-1': 'ShallowDel',
         '1': 'GAIN',
         '2': 'AMPLIFIED',
     };

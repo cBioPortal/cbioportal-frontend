@@ -2,8 +2,8 @@ import * as _ from 'lodash';
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
-    CNA_COLOR_HOMDEL,
+    CNA_COLOR_SHALLOWDEL,
+    CNA_COLOR_DEEPDEL,
     MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
@@ -22,11 +22,24 @@ export const DARK_GREY = '#A9A9A9';
 export const ICON_FILTER_ON = BLACK;
 export const ICON_FILTER_OFF = DEFAULT_GREY;
 
+// Mutation colors
+export const MUT_COLOR_INFRAME_PASSENGER = '#a68028';
+export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
+export const MUT_COLOR_SPLICE_PASSENGER = '#f0b87b';
+export const MUT_COLOR_OTHER = '#cf58bc'; //'#cfb537';
+
+export const MRNA_COLOR_HIGH = '#ff9999';
+export const MRNA_COLOR_LOW = '#6699cc';
+export const MUT_COLOR_GERMLINE = '#FFFFFF';
+
+export const PROT_COLOR_HIGH = '#ff3df8';
+export const PROT_COLOR_LOW = '#00E1FF';
+
 // colors of ASCNCopyNumber icon
 export const ASCN_AMP = '#ff0000';
 export const ASCN_GAIN = '#e15b5b';
-export const ASCN_HETLOSS = '#2a5eea';
-export const ASCN_HOMDEL = '#0000ff';
+export const ASCN_SHALLOWDEL = '#2a5eea';
+export const ASCN_DEEPDEL = '#0000ff';
 export const ASCN_LIGHTGREY = '#bcbcbc';
 export const ASCN_DARKGREY = '#a9a9a9';
 export const ASCN_BLACK = '#000000';
@@ -120,8 +133,8 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     amplification: CNA_COLOR_AMP,
     gain: CNA_COLOR_GAIN,
     diploid: DEFAULT_GREY,
-    'shallow deletion': CNA_COLOR_HETLOSS,
-    'deep deletion': CNA_COLOR_HOMDEL,
+    'shallow deletion': CNA_COLOR_SHALLOWDEL,
+    'deep deletion': CNA_COLOR_DEEPDEL,
 };
 
 _.forEach(RESERVED_CLINICAL_VALUE_COLORS, (color, key) => {

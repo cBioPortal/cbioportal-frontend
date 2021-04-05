@@ -283,9 +283,9 @@ describe('DownloadUtils', () => {
             },
             oql: {
                 gene: 'EGFR',
-                oql_line: 'EGFR: AMP HOMDEL MUT FUSION;',
+                oql_line: 'EGFR: AMP DEEPDEL MUT FUSION;',
                 parsed_oql_line: oql_parser.parse(
-                    'EGFR: AMP HOMDEL MUT FUSION;'
+                    'EGFR: AMP DEEPDEL MUT FUSION;'
                 )![0],
                 data: sampleDataWithBothMutationAndFusion,
             },
@@ -302,9 +302,9 @@ describe('DownloadUtils', () => {
             },
             oql: {
                 gene: 'PTEN',
-                oql_line: 'PTEN: AMP HOMDEL MUT FUSION;',
+                oql_line: 'PTEN: AMP DEEPDEL MUT FUSION;',
                 parsed_oql_line: oql_parser.parse(
-                    'PTEN: AMP HOMDEL MUT FUSION;'
+                    'PTEN: AMP DEEPDEL MUT FUSION;'
                 )![0],
                 data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C],
             },
@@ -318,9 +318,9 @@ describe('DownloadUtils', () => {
             },
             oql: {
                 gene: 'TP53',
-                oql_line: 'TP53: AMP HOMDEL MUT FUSION;',
+                oql_line: 'TP53: AMP DEEPDEL MUT FUSION;',
                 parsed_oql_line: oql_parser.parse(
-                    'TP53: AMP HOMDEL MUT FUSION;'
+                    'TP53: AMP DEEPDEL MUT FUSION;'
                 )![0],
                 data: [],
             },
@@ -523,7 +523,7 @@ describe('DownloadUtils', () => {
 
             assert.equal(
                 caseAlterationData[0].oqlLine,
-                'EGFR: AMP HOMDEL MUT FUSION;',
+                'EGFR: AMP DEEPDEL MUT FUSION;',
                 'OQL line is correct for the gene EGFR'
             );
             assert.equal(
@@ -539,7 +539,7 @@ describe('DownloadUtils', () => {
 
             assert.equal(
                 caseAlterationData[1].oqlLine,
-                'PTEN: AMP HOMDEL MUT FUSION;',
+                'PTEN: AMP DEEPDEL MUT FUSION;',
                 'OQL line is correct for the gene PTEN'
             );
             assert.equal(
@@ -555,7 +555,7 @@ describe('DownloadUtils', () => {
 
             assert.equal(
                 caseAlterationData[2].oqlLine,
-                'TP53: AMP HOMDEL MUT FUSION;',
+                'TP53: AMP DEEPDEL MUT FUSION;',
                 'OQL line is correct for the gene TP53'
             );
             assert.equal(
@@ -764,7 +764,7 @@ describe('DownloadUtils', () => {
             const geneAlterationData = {
                 EGFR: {
                     gene: 'EGFR',
-                    oqlLine: 'EGFR: AMP HOMDEL MUT FUSION;',
+                    oqlLine: 'EGFR: AMP DEEPDEL MUT FUSION;',
                     sequenced: 0,
                     altered: 0,
                     percentAltered: 'N/S',
@@ -778,7 +778,7 @@ describe('DownloadUtils', () => {
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
                 (oql_parser.parse(
-                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                    'DUMMYGENE: AMP DEEPDEL MUT FUSION'
                 )![0] as SingleGeneQuery).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,
@@ -835,7 +835,7 @@ describe('DownloadUtils', () => {
             const caseAlterationData = generateCaseAlterationData(
                 'EGFR TP53 PTEN',
                 (oql_parser.parse(
-                    'DUMMYGENE: AMP HOMDEL MUT FUSION'
+                    'DUMMYGENE: AMP DEEPDEL MUT FUSION'
                 )![0] as SingleGeneQuery).alterations,
                 selectedMolecularProfiles,
                 caseAggregatedDataByOQLLine,

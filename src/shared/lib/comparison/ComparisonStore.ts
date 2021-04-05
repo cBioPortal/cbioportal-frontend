@@ -956,7 +956,7 @@ export default abstract class ComparisonStore {
 
     private getCopyNumberEnrichmentData(
         groups: MolecularProfileCasesGroupFilter[],
-        copyNumberEventType: 'HOMDEL' | 'AMP'
+        copyNumberEventType: 'DEEPDEL' | 'AMP'
     ): Promise<AlterationEnrichment[]> {
         return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             copyNumberEventType: copyNumberEventType,

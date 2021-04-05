@@ -39,8 +39,8 @@ export function getTabularDownloadData(
     const cnaMap: any = {
         amp: 'Amplification',
         gain: 'Gain',
-        hetloss: 'Shallow Deletion',
-        homdel: 'Deep Deletion',
+        shallowdel: 'Shallow Deletion',
+        deepdel: 'Deep Deletion',
     };
     let mutationMap: any = {};
     if (distinguishDrivers) {

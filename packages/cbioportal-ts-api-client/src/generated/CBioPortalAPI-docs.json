@@ -1405,14 +1405,14 @@
             "description": "Type of the copy number event",
             "required": false,
             "type": "string",
-            "default": "HOMDEL_AND_AMP",
+            "default": "DEEPDEL_AND_AMP",
             "allowEmptyValue": false,
             "enum": [
-              "HOMDEL_AND_AMP",
-              "HOMDEL",
+              "DEEPDEL_AND_AMP",
+              "DEEPDEL",
               "AMP",
               "GAIN",
-              "HETLOSS",
+              "SHALLOWDEL",
               "DIPLOID",
               "ALL"
             ]
@@ -1530,14 +1530,14 @@
             "description": "Type of the copy number event",
             "required": false,
             "type": "string",
-            "default": "HOMDEL_AND_AMP",
+            "default": "DEEPDEL_AND_AMP",
             "allowEmptyValue": false,
             "enum": [
-              "HOMDEL_AND_AMP",
-              "HOMDEL",
+              "DEEPDEL_AND_AMP",
+              "DEEPDEL",
               "AMP",
               "GAIN",
-              "HETLOSS",
+              "SHALLOWDEL",
               "DIPLOID",
               "ALL"
             ]
