@@ -12,6 +12,7 @@ import {
     MUT_COLOR_SPLICE,
     MUT_COLOR_TRUNC,
 } from 'cbioportal-frontend-commons';
+import { MUT_PROFILE_COUNT_NOT_MUTATED } from 'pages/resultsView/plots/PlotsTabUtils';
 // Default grey
 export const BLACK = '#000000';
 export const LIGHT_GREY = '#D3D3D3';
@@ -117,6 +118,7 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     '0:ned': CLI_YES_COLOR,
     // OTHER: MUT_COLOR_OTHER,
     'wild type': DEFAULT_GREY,
+    'no mutation': DEFAULT_GREY,
     amplification: CNA_COLOR_AMP,
     gain: CNA_COLOR_GAIN,
     diploid: DEFAULT_GREY,
