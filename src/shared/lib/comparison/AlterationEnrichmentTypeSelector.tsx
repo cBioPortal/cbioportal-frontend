@@ -10,6 +10,7 @@ import {
     cnaGroup,
     CopyNumberEnrichmentEventType,
     deletionGroup,
+    EnrichmentEventType,
     frameshiftDeletionGroup,
     frameshiftGroup,
     frameshiftInsertionGroup,
@@ -28,17 +29,8 @@ import {
     truncationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
-export interface IAlterationEnrichmentTypeSelectorHandlers {
-    updateSelectedMutations: (
-        selectedMutations: MutationEnrichmentEventType[]
-    ) => void;
-    updateSelectedCopyNumber: (
-        selectedCopyNumber: CopyNumberEnrichmentEventType[]
-    ) => void;
-}
-
 export interface IAlterationEnrichmentTypeSelectorProps {
-    handlers: IAlterationEnrichmentTypeSelectorHandlers;
+    updateSelectedEnrichmentEventTypes: (t: EnrichmentEventType[]) => void;
     store: ComparisonStore;
     showMutations?: boolean;
     showFusions?: boolean;
@@ -292,11 +284,22 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
             .pickBy()
             .keys()
             .value();
-        this.props.handlers.updateSelectedMutations(
-            selectedMutations as MutationEnrichmentEventType[]
-        );
-        this.props.handlers.updateSelectedCopyNumber(
-            selectedCopyNumber as CopyNumberEnrichmentEventType[]
+        const selectedTypes: EnrichmentEventType[] = selectedMutations.concat(
+            selectedCopyNumber
+        ) as EnrichmentEventType[];
+        this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
+    }
+
+    @computed get hasSelectionChanged() {
+        return (
+            !_.isEqual(
+                toJS(this.currentSelectedMutations),
+                toJS(this.props.store.selectedMutationEnrichmentEventTypes)
+            ) ||
+            !_.isEqual(
+                toJS(this.currentSelectedCopyNumber),
+                toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
+            )
         );
     }
 
@@ -608,6 +611,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                         data-test="buttonSelectAlterations"
                         type="button"
                         onClick={this.updateSelectedAlterations}
+                        disabled={!this.hasSelectionChanged}
                     >
                         Select
                     </button>

@@ -1,12 +1,16 @@
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 import { action } from 'mobx';
 import _ from 'lodash';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { stringListToMap } from 'cbioportal-frontend-commons';
 
+// For everything to work, the enum names must be identical to their value
 export enum CopyNumberEnrichmentEventType {
     HOMDEL = 'HOMDEL',
     AMP = 'AMP',
 }
 
+// For everything to work, the enum names must be identical to their value
 export enum MutationEnrichmentEventType {
     missense_mutation = 'missense_mutation',
     missense = 'missense',
@@ -58,6 +62,10 @@ export enum MutationEnrichmentEventType {
     any = 'any',
     other = 'other',
 }
+
+export type EnrichmentEventType =
+    | MutationEnrichmentEventType
+    | CopyNumberEnrichmentEventType;
 
 // Groups according to GitHub issue #8107 dd. December 2020
 // https://github.com/cBioPortal/cbioportal/issues/8107)
@@ -154,34 +162,62 @@ export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
 export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
-export function buildAlterationEnrichmentTypeSelectorHandlers(
-    self: ComparisonStore
-) {
-    const handlers = {
-        updateSelectedMutations: action((s: MutationEnrichmentEventType[]) => {
-            self.selectedMutationEnrichmentEventTypes = _.mapValues(
-                self.selectedMutationEnrichmentEventTypes,
-                (selected: boolean, type: MutationEnrichmentEventType) =>
-                    s.includes(type)
-            );
-        }),
-        updateSelectedCopyNumber: action(
-            (s: CopyNumberEnrichmentEventType[]) => {
-                self.selectedCopyNumberEnrichmentEventTypes = _.mapValues(
-                    self.selectedCopyNumberEnrichmentEventTypes,
-                    (selected: boolean, type: CopyNumberEnrichmentEventType) =>
-                        s.includes(type)
-                );
-            }
-        ),
-    };
-    return handlers;
+export function cnaEventTypeSelectInit(
+    profiles: MolecularProfile[]
+): {
+    [key in CopyNumberEnrichmentEventType]?: boolean;
+} {
+    if (profiles.length > 0) {
+        return {
+            [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            [CopyNumberEnrichmentEventType.AMP]: true,
+        };
+    } else {
+        return {};
+    }
 }
+export function mutationEventTypeSelectInit(alterationEnrichmentProfiles?: {
+    mutationProfiles: MolecularProfile[];
+    structuralVariantProfiles: MolecularProfile[];
+}) {
+    if (!alterationEnrichmentProfiles) {
+        return {};
+    }
 
+    const types = [];
+    if (alterationEnrichmentProfiles.mutationProfiles.length > 0) {
+        types.push(...mutationGroup);
+    }
+    if (alterationEnrichmentProfiles.structuralVariantProfiles.length > 0) {
+        types.push(...fusionGroup);
+    }
+    return types.reduce((acc, type) => {
+        acc[type] = true;
+        return acc;
+    }, {} as { [key in MutationEnrichmentEventType]?: boolean });
+}
 export function buildAlterationsTabName(store: ComparisonStore) {
     const nameElements = [];
     store.hasMutationEnrichmentData && nameElements.push('Mutations');
     store.hasFusionEnrichmentData && nameElements.push('Fusions');
     store.hasCnaEnrichmentData && nameElements.push('CNAs');
     return nameElements.join('/');
+}
+
+export function getMutationEventTypesAPIParameter(
+    selectedEvents: { [t in MutationEnrichmentEventType]?: boolean }
+) {
+    return stringListToMap(
+        [...mutationGroup, ...fusionGroup],
+        (e: MutationEnrichmentEventType) => selectedEvents[e] || false
+    );
+}
+
+export function getCopyNumberEventTypesAPIParameter(
+    selectedEvents: { [t in CopyNumberEnrichmentEventType]?: boolean }
+) {
+    return stringListToMap(
+        cnaGroup,
+        (e: CopyNumberEnrichmentEventType) => selectedEvents[e] || false
+    );
 }

@@ -215,11 +215,47 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
+        it('results view comparison tab alteration enrichments tab several groups', function() {
+            browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
+                10000
+            );
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+        it('results view comparison tab alteration enrichments tab several groups only truncating', function() {
+            browser.click(
+                '[data-test="AlterationTypeSelectorMenu"] [data-test="Mutations"]'
+            );
+            browser.click(
+                '[data-test="AlterationTypeSelectorMenu"] [data-test="CheckCopynumberAlterations"]'
+            );
+            browser.click(
+                '[data-test="AlterationTypeSelectorMenu"] [data-test="Truncating"]'
+            );
+
+            browser.click(
+                '[data-test="AlterationTypeSelectorMenu"] [data-test="buttonSelectAlterations"]'
+            );
+
+            browser.waitForVisible(
+                'div[data-test="GroupComparisonAlterationEnrichments"]',
+                10000
+            );
+            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
+                hide: ['.qtip'],
+            });
+            assertScreenShotMatch(res);
+        });
+
         it('results view comparison tab mrna enrichments tab several groups', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
-                10000
+                30000
             );
             browser.waitForVisible('b=HOXB4', 10000);
             browser.click('b=HOXB4');
@@ -235,7 +271,7 @@ describe('results view comparison tab screenshot tests', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
             browser.waitForVisible(
                 'div[data-test="GroupComparisonMRNAEnrichments"]',
-                10000
+                30000
             );
             browser.waitForVisible('b=MERTK', 10000);
             browser.click('b=MERTK');
