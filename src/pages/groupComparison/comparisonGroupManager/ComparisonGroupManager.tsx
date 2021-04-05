@@ -389,7 +389,7 @@ export default class ComparisonGroupManager extends React.Component<
 
                             // redirect window to correct URL
                             redirectToComparisonPage(comparisonWindow!, {
-                                sessionId: id,
+                                comparisonId: id,
                             });
                         }}
                     >
