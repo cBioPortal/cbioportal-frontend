@@ -1,12 +1,16 @@
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 import { action } from 'mobx';
 import _ from 'lodash';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
+import { stringListToMap } from 'cbioportal-frontend-commons';
 
+// For everything to work, the enum names must be identical to their value
 export enum CopyNumberEnrichmentEventType {
     HOMDEL = 'HOMDEL',
     AMP = 'AMP',
 }
 
+// For everything to work, the enum names must be identical to their value
 export enum MutationEnrichmentEventType {
     missense_mutation = 'missense_mutation',
     missense = 'missense',
@@ -57,6 +61,15 @@ export enum MutationEnrichmentEventType {
     any = 'any',
     other = 'other',
 }
+
+export enum StructuralVariantEnrichmentEventType {
+    structural_variant = 'structural_variant',
+}
+
+export type EnrichmentEventType =
+    | MutationEnrichmentEventType
+    | CopyNumberEnrichmentEventType
+    | StructuralVariantEnrichmentEventType;
 
 // Groups according to GitHub issue #8107 dd. December 2020
 // https://github.com/cBioPortal/cbioportal/issues/8107)
@@ -152,32 +165,41 @@ export const amplificationGroup = [CopyNumberEnrichmentEventType.AMP];
 export const deletionGroup = [CopyNumberEnrichmentEventType.HOMDEL];
 export const cnaGroup = [...amplificationGroup, ...deletionGroup];
 
-export function buildAlterationEnrichmentTypeSelectorHandlers(
-    self: ComparisonStore
-) {
-    const handlers = {
-        updateSelectedMutations: action((s: MutationEnrichmentEventType[]) => {
-            self.selectedMutationEnrichmentEventTypes = _.mapValues(
-                self.selectedMutationEnrichmentEventTypes,
-                (selected: boolean, type: MutationEnrichmentEventType) =>
-                    s.includes(type)
-            );
-        }),
-        updateSelectedCopyNumber: action(
-            (s: CopyNumberEnrichmentEventType[]) => {
-                self.selectedCopyNumberEnrichmentEventTypes = _.mapValues(
-                    self.selectedCopyNumberEnrichmentEventTypes,
-                    (selected: boolean, type: CopyNumberEnrichmentEventType) =>
-                        s.includes(type)
-                );
-            }
-        ),
-        updateStructuralVariantSelection: action((selected: boolean) => {
-            self.isStructuralVariantEnrichmentSelected = selected;
-        }),
-    };
-    return handlers;
+export function cnaEventTypeSelectInit(
+    profiles: MolecularProfile[]
+): {
+    [key in CopyNumberEnrichmentEventType]?: boolean;
+} {
+    if (profiles.length > 0) {
+        return {
+            [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            [CopyNumberEnrichmentEventType.AMP]: true,
+        };
+    } else {
+        return {};
+    }
 }
+export function mutationEventTypeSelectInit(mutationProfiles: MolecularProfile[]) {
+    if (mutationProfiles.length > 0) {
+        return mutationGroup.reduce((acc, type) => {
+            acc[type] = true;
+            return acc;
+        }, {} as { [key in MutationEnrichmentEventType]?: boolean });
+        
+    } else {
+        return {};
+    }
+}
+export function structuralVariantEventTypeSelectInit(structuralVariantProfiles: MolecularProfile[]): {
+    [key in StructuralVariantEnrichmentEventType]?: boolean;
+} {
+    if (structuralVariantProfiles.length > 0) {
+        return {[StructuralVariantEnrichmentEventType.structural_variant]:true};
+    } else {
+        return {};
+    }
+}
+
 
 export function buildAlterationsTabName(store: ComparisonStore) {
     const nameElements = [];
@@ -185,4 +207,22 @@ export function buildAlterationsTabName(store: ComparisonStore) {
     store.hasStructuralVariantData && nameElements.push('Structural Variants');
     store.hasCnaEnrichmentData && nameElements.push('CNAs');
     return nameElements.join('/');
+}
+
+export function getMutationEventTypesAPIParameter(
+    selectedEvents: { [t in MutationEnrichmentEventType]?: boolean }
+) {
+    return stringListToMap(
+        mutationGroup,
+        (e: MutationEnrichmentEventType) => selectedEvents[e] || false
+    );
+}
+
+export function getCopyNumberEventTypesAPIParameter(
+    selectedEvents: { [t in CopyNumberEnrichmentEventType]?: boolean }
+) {
+    return stringListToMap(
+        cnaGroup,
+        (e: CopyNumberEnrichmentEventType) => selectedEvents[e] || false
+    );
 }

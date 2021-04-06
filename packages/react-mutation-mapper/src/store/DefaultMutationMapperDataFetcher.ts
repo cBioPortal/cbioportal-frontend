@@ -44,6 +44,7 @@ import {
     initOncoKbClient,
     ONCOKB_DEFAULT_DATA,
 } from '../util/DataFetcherUtils';
+import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 
 export interface MutationMapperDataFetcherConfig {
     myGeneUrlTemplate?: string;
@@ -274,7 +275,11 @@ export class DefaultMutationMapperDataFetcher
 
         const mutationsToQuery = _.filter(
             mutations,
-            m => !!annotatedGenes[getEntrezGeneId(m)]
+            m =>
+                (m.mutationType &&
+                    m.mutationType.toLowerCase() ===
+                        CanonicalMutationType.FUSION) ||
+                !!annotatedGenes[getEntrezGeneId(m)]
         );
 
         return this.queryOncoKbData(

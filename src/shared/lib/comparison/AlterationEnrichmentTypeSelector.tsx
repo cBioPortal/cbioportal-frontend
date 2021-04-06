@@ -10,6 +10,7 @@ import {
     cnaGroup,
     CopyNumberEnrichmentEventType,
     deletionGroup,
+    EnrichmentEventType,
     frameshiftDeletionGroup,
     frameshiftGroup,
     frameshiftInsertionGroup,
@@ -24,21 +25,12 @@ import {
     nonstopGroup,
     otherGroup,
     spliceGroup,
+    StructuralVariantEnrichmentEventType,
     truncationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
-export interface IAlterationEnrichmentTypeSelectorHandlers {
-    updateSelectedMutations: (
-        selectedMutations: MutationEnrichmentEventType[]
-    ) => void;
-    updateSelectedCopyNumber: (
-        selectedCopyNumber: CopyNumberEnrichmentEventType[]
-    ) => void;
-    updateStructuralVariantSelection: (selected: boolean) => void;
-}
-
 export interface IAlterationEnrichmentTypeSelectorProps {
-    handlers: IAlterationEnrichmentTypeSelectorHandlers;
+    updateSelectedEnrichmentEventTypes: (t: EnrichmentEventType[]) => void;
     store: ComparisonStore;
     showMutations?: boolean;
     showStructuralVariants?: boolean;
@@ -84,7 +76,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         [key in CopyNumberEnrichmentEventType]?: boolean;
     };
 
-    private isStructuralVariantSelected?: boolean;
+    @observable private isStructuralVariantSelected?: boolean;
 
     componentWillMount() {
         this.currentSelectedMutations = observable(
@@ -174,6 +166,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
+        console.log((event.target as HTMLInputElement).value)
         switch ((event.target as HTMLInputElement).value) {
             case checkbox.mutations:
                 this.toggleMutGroup(
@@ -292,14 +285,29 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
             .pickBy()
             .keys()
             .value();
-        this.props.handlers.updateSelectedMutations(
-            selectedMutations as MutationEnrichmentEventType[]
-        );
-        this.props.handlers.updateSelectedCopyNumber(
-            selectedCopyNumber as CopyNumberEnrichmentEventType[]
-        );
-        this.props.handlers.updateStructuralVariantSelection(
-            !!this.isStructuralVariantSelected
+        const selectedTypes: EnrichmentEventType[] = selectedMutations.concat(
+            selectedCopyNumber
+        ) as EnrichmentEventType[];
+
+        if(this.isStructuralVariantSelected) {
+            selectedTypes.push(StructuralVariantEnrichmentEventType.structural_variant)
+        }
+        this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
+    }
+
+    @computed get hasSelectionChanged() {
+        return (
+            !_.isEqual(
+                toJS(this.currentSelectedMutations),
+                toJS(this.props.store.selectedMutationEnrichmentEventTypes)
+            ) ||
+            !_.isEqual(
+                toJS(this.currentSelectedCopyNumber),
+                toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
+            ) || !_.isEqual(
+                this.isStructuralVariantSelected,
+                this.props.store.isStructuralVariantEnrichmentSelected
+            )
         );
     }
 
@@ -546,7 +554,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                     <div className="checkbox">
                         <label>
                             <input
-                                data-test="Fusion"
+                                data-test="StructuralVariants"
                                 type="checkbox"
                                 value={checkbox.structvar}
                                 checked={this.isStructuralVariantSelected}
@@ -611,6 +619,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                         data-test="buttonSelectAlterations"
                         type="button"
                         onClick={this.updateSelectedAlterations}
+                        disabled={!this.hasSelectionChanged}
                     >
                         Select
                     </button>

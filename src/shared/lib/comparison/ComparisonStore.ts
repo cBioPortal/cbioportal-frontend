@@ -16,6 +16,7 @@ import {
     findFirstMostCommonElt,
     getBrowserWindow,
     remoteData,
+    stringListToMap,
 } from 'cbioportal-frontend-commons';
 import {
     AlterationEnrichment,
@@ -86,11 +87,19 @@ import {
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
 import onMobxPromise from '../onMobxPromise';
 import {
-    MutationEnrichmentEventType,
+    cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
+    EnrichmentEventType,
+    getCopyNumberEventTypesAPIParameter,
+    getMutationEventTypesAPIParameter,
+    MutationEnrichmentEventType,
+    mutationEventTypeSelectInit,
     mutationGroup,
-    cnaGroup,
+    StructuralVariantEnrichmentEventType,
+    structuralVariantEventTypeSelectInit,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import URLWrapper from '../URLWrapper';
+import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -102,19 +111,10 @@ export default abstract class ComparisonStore {
 
     private tabHasBeenShownReactionDisposer: IReactionDisposer;
     @observable public newSessionPending = false;
-    @observable.ref
-    public selectedCopyNumberEnrichmentEventTypes: {
-        [key in CopyNumberEnrichmentEventType]?: boolean;
-    } = {};
-    @observable.ref
-    public selectedMutationEnrichmentEventTypes: {
-        [key in MutationEnrichmentEventType]?: boolean;
-    } = {};
-    @observable.ref
-    public isStructuralVariantEnrichmentSelected?: boolean;
 
     constructor(
         protected appStore: AppStore,
+        protected urlWrapper: IComparisonURLWrapper,
         protected resultsViewStore?: ResultsViewPageStore
     ) {
         makeObservable(this);
@@ -169,6 +169,53 @@ export default abstract class ComparisonStore {
     public destroy() {
         this.tabHasBeenShownReactionDisposer &&
             this.tabHasBeenShownReactionDisposer();
+    }
+
+    @computed get selectedCopyNumberEnrichmentEventTypes() {
+        if (this.urlWrapper.selectedEnrichmentEventTypes) {
+            return stringListToMap(
+                this.urlWrapper.selectedEnrichmentEventTypes.filter(
+                    // get copy number enrichment types
+                    t => t in CopyNumberEnrichmentEventType
+                ),
+                t => true
+            );
+        } else {
+            // default
+            return cnaEventTypeSelectInit(
+                this.alterationEnrichmentProfiles.result
+                    ?.copyNumberEnrichmentProfiles || []
+            );
+        }
+    }
+
+    @computed get selectedMutationEnrichmentEventTypes() {
+        if (this.urlWrapper.selectedEnrichmentEventTypes) {
+            return stringListToMap(
+                this.urlWrapper.selectedEnrichmentEventTypes.filter(
+                    // get mutation enrichment types
+                    t => t in MutationEnrichmentEventType
+                ),
+                t => true
+            );
+        } else {
+            // default
+            return mutationEventTypeSelectInit(
+                this.alterationEnrichmentProfiles.result?.mutationProfiles || []
+            );
+        }
+    }
+    
+    @computed get isStructuralVariantEnrichmentSelected() {
+        if (this.urlWrapper.selectedEnrichmentEventTypes) {
+            return this.urlWrapper.selectedEnrichmentEventTypes.includes(StructuralVariantEnrichmentEventType.structural_variant)
+        }
+        return !!(this.alterationEnrichmentProfiles.result && this.alterationEnrichmentProfiles.result.structuralVariantProfiles.length > 0);
+    }
+
+    @autobind
+    public updateSelectedEnrichmentEventTypes(t: EnrichmentEventType[]) {
+        this.urlWrapper.updateSelectedEnrichmentEventTypes(t);
     }
 
     // < To be implemented in subclasses: >
@@ -457,29 +504,6 @@ export default abstract class ComparisonStore {
                 copyNumberEnrichmentProfiles: pickCopyNumberEnrichmentProfiles(
                     this.molecularProfilesInActiveStudies.result!
                 ),
-            });
-        },
-        onResult: profiles => {
-            runInAction(() => {
-                if (profiles) {
-                    if (!_.isEmpty(profiles.mutationProfiles)) {
-                        mutationGroup.forEach(eventType => {
-                            this.selectedMutationEnrichmentEventTypes[
-                                eventType
-                            ] = true;
-                        });
-                    }
-                    if (!_.isEmpty(profiles.structuralVariantProfiles)) {
-                        this.isStructuralVariantEnrichmentSelected = true;
-                    }
-                    if (!_.isEmpty(profiles.copyNumberEnrichmentProfiles)) {
-                        cnaGroup.forEach(eventType => {
-                            this.selectedCopyNumberEnrichmentEventTypes[
-                                eventType
-                            ] = true;
-                        });
-                    }
-                }
             });
         },
     });
@@ -1023,7 +1047,7 @@ export default abstract class ComparisonStore {
                         _(this.selectedCopyNumberEnrichmentEventTypes)
                             .values()
                             .some())) ||
-                !!this.isStructuralVariantEnrichmentSelected
+                            this.isStructuralVariantEnrichmentSelected
             ) {
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
@@ -1033,10 +1057,12 @@ export default abstract class ComparisonStore {
                         molecularProfileCasesGroupFilter: this
                             .alterationsEnrichmentDataRequestGroups.result!,
                         alterationEventTypes: {
-                            copyNumberAlterationEventTypes: this
-                                .selectedCopyNumberEnrichmentEventTypes,
-                            mutationEventTypes: this
-                                .selectedMutationEnrichmentEventTypes,
+                            copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
+                                this.selectedCopyNumberEnrichmentEventTypes
+                            ),
+                            mutationEventTypes: getMutationEventTypesAPIParameter(
+                                this.selectedMutationEnrichmentEventTypes
+                            ),
                             structuralVariants: !!this
                                 .isStructuralVariantEnrichmentSelected,
                         },

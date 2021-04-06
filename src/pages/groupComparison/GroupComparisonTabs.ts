@@ -1,7 +1,5 @@
 export enum GroupComparisonTab {
     OVERLAP = 'overlap',
-    MUTATIONS = 'mutations',
-    CNA = 'cna',
     MRNA = 'mrna',
     PROTEIN = 'protein',
     SURVIVAL = 'survival',
@@ -9,6 +7,11 @@ export enum GroupComparisonTab {
     DNAMETHYLATION = 'dna_methylation',
     ALTERATIONS = 'alterations',
     GENERIC_ASSAY_PREFIX = 'generic_assay',
+}
+
+export enum LegacyGroupComparisonTab {
+    MUTATIONS = 'mutations',
+    CNA = 'cna',
 }
 
 export const GENOMIC_ALTERATIONS_TAB_NAME = 'Genomic Alterations';

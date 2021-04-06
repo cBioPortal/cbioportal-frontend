@@ -4,6 +4,7 @@
   YARN_FLAGS = "--frozen-lockfile"
   BABEL_CACHE_FOLDER = "/opt/build/cache/"
   BUILD_REPORT_ERRORS_ONLY = "true"
+  DISABLE_SOURCEMAP = "true"
 
 [[headers]]
 for = "/*.otf"
