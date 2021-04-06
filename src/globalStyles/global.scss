@@ -11,6 +11,10 @@ body {
     padding: 0;
 }
 
+.modal-header .close::before {
+    content: 'x' !important;
+}
+
 .scrollbarAlwaysVisible {
     @include scrollbar-always-visible;
 }
