@@ -63,7 +63,10 @@ export default class URLWrapper<
             >;
         },
         public sessionEnabled = false,
-        public urlCharThresholdForSession = 1500
+        public urlCharThresholdForSession = 1500,
+        protected backwardsCompatibilityMapping?: (oldParams: {
+            [key: string]: string | undefined;
+        }) => MapValues<QueryParamsType, string | undefined>
     ) {
         makeObservable(this);
 
@@ -170,6 +173,13 @@ export default class URLWrapper<
         routeQuery: MapValues<QueryParamsType, string | undefined>,
         sessionQuery?: MapValues<QueryParamsType, string | undefined>
     ) {
+        // map to updated params based on backwards-compatibility mapping, if given
+        if (this.backwardsCompatibilityMapping) {
+            routeQuery = this.backwardsCompatibilityMapping(routeQuery);
+            sessionQuery =
+                sessionQuery &&
+                this.backwardsCompatibilityMapping(sessionQuery);
+        }
         for (const property of this.properties) {
             // if property is not a session prop
             // it will always be represented in URL

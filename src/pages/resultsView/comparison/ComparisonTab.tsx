@@ -30,15 +30,10 @@ import GroupSelector from '../../groupComparison/groupSelector/GroupSelector';
 import CaseFilterWarning from '../../../shared/components/banners/CaseFilterWarning';
 import MethylationEnrichments from 'pages/groupComparison/MethylationEnrichments';
 import AlterationEnrichments from 'pages/groupComparison/AlterationEnrichments';
-import AlterationEnrichmentTypeSelector, {
-    IAlterationEnrichmentTypeSelectorHandlers,
-} from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
-import {
-    buildAlterationEnrichmentTypeSelectorHandlers,
-    buildAlterationsTabName,
-} from 'shared/lib/comparison/ComparisonStoreUtils';
+import { buildAlterationsTabName } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 export interface IComparisonTabProps {
     urlWrapper: ResultsViewURLWrapper;
@@ -52,7 +47,6 @@ export default class ComparisonTab extends React.Component<
     {}
 > {
     @observable.ref private store: ResultsViewComparisonStore;
-    private alterationEnrichmentTypeSelectorHandlers: IAlterationEnrichmentTypeSelectorHandlers;
 
     constructor(props: IComparisonTabProps) {
         super(props);
@@ -62,9 +56,6 @@ export default class ComparisonTab extends React.Component<
             this.props.appStore,
             this.props.urlWrapper,
             this.props.store
-        );
-        this.alterationEnrichmentTypeSelectorHandlers = buildAlterationEnrichmentTypeSelectorHandlers(
-            this.store
         );
     }
 
@@ -196,9 +187,9 @@ export default class ComparisonTab extends React.Component<
                                 this.store.activeGroups.result!.length > 1 && (
                                     <AlterationEnrichmentTypeSelector
                                         store={this.store}
-                                        handlers={
-                                            this
-                                                .alterationEnrichmentTypeSelectorHandlers!
+                                        updateSelectedEnrichmentEventTypes={
+                                            this.store
+                                                .updateSelectedEnrichmentEventTypes
                                         }
                                         showMutations={
                                             this.store.hasMutationEnrichmentData

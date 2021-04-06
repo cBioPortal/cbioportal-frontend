@@ -721,6 +721,9 @@ export class CancerSummaryContent extends React.Component<
     }
 
     public render() {
+        if (!this.alterationTypeDataCounts.length) {
+            return <div className={'alert alert-info'}>No data to plot.</div>;
+        }
         return (
             <WindowWidthBox offset={60}>
                 <If condition={this.hasAlterations}>
