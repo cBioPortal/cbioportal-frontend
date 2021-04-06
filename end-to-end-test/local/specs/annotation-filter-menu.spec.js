@@ -17,6 +17,7 @@ describe('alteration filter menu', function() {
                 beforeEach(() => {
                     goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
+                    waitForUpdateStudyView();
                     turnOffCancerGenesFilters();
                     $('[data-test=AlterationFilterButton]').click();
                 });
@@ -260,6 +261,7 @@ describe('alteration filter menu', function() {
                 beforeEach(() => {
                     goToUrlAndSetLocalStorage(studyViewUrl, true);
                     waitForStudyView();
+                    waitForUpdateStudyView();
                     turnOffCancerGenesFilters();
                     $('[data-test=AlterationFilterButton]').click();
                 });

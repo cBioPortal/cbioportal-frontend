@@ -17,6 +17,7 @@ if (useExternalFrontend) {
     describe('comparison alterations tab', function() {
         beforeEach(() => {
             loadAlterationsTab();
+            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
         });
 
         it('shows basic counts', function() {
