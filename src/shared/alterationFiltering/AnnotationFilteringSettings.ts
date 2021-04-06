@@ -1,6 +1,7 @@
 import { action, observable, ObservableMap } from 'mobx';
 import AppConfig from 'appConfig';
 import { MobxPromiseUnionType } from 'mobxpromise';
+import _ from 'lodash';
 
 export interface IAnnotationFilterSettings
     extends IDriverSettingsProps,
@@ -87,7 +88,8 @@ export function buildDriverAnnotationSettings(
         cbioportalCountThreshold: 0,
         cosmicCount: false,
         cosmicCountThreshold: 0,
-        driverTiers: observable.map<string, boolean>(),
+        // driverTiers: observable.map<string, boolean>({}, {deep: true}),
+        driverTiers: observable.map<string, boolean>({}, { deep: true }),
 
         _hotspots: true,
         _oncoKb: true,
@@ -142,18 +144,7 @@ export function buildDriverAnnotationSettings(
                 this.cbioportalCount ||
                 this.cosmicCount ||
                 this.customBinary ||
-                this.driverTiers
-                    .entries()
-                    .reduce(
-                        (
-                            oneSelected: boolean,
-                            nextEntry: [string, boolean]
-                        ) => {
-                            return oneSelected || nextEntry[1];
-                        },
-                        false
-                    );
-
+                _.some(this.driverTiers.entries(), entry => entry[1]);
             return anySelected;
         },
 

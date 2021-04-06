@@ -74,12 +74,14 @@ describe('custom driver annotations feature', function() {
             });
 
             it('(de-)selects custom driver checkboxes with main annotation select option', () => {
+                $('input[data-test=ColorByDriver]').click();
+                waitForOncoprint();
+
+                $('input[data-test=annotateCustomBinary]').waitForExist();
                 var topCheckBox = $('input[data-test=annotateCustomBinary]');
                 var tiersCheckboxes = $(
                     'span[data-test=annotateCustomTiers]'
                 ).$$('input');
-
-                $('input[data-test=ColorByDriver]').click();
                 assert(!topCheckBox.isSelected());
                 assert(!tiersCheckboxes[0].isSelected());
                 assert(!tiersCheckboxes[1].isSelected());
@@ -155,12 +157,12 @@ describe('custom driver annotations feature', function() {
             });
 
             it('(de-)selects custom driver checkboxes with main annotation select option', () => {
+                $('input[data-test=ColorByDriver]').click();
+                waitForOncoprint();
                 var topCheckBox = $('input[data-test=annotateCustomBinary]');
                 var tiersCheckboxes = $(
                     'span[data-test=annotateCustomTiers]'
                 ).$$('input');
-
-                $('input[data-test=ColorByDriver]').click();
                 assert(!topCheckBox.isSelected());
                 assert(!tiersCheckboxes[0].isSelected());
                 assert(!tiersCheckboxes[1].isSelected());
