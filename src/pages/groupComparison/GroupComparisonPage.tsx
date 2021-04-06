@@ -184,7 +184,9 @@ export default class GroupComparisonPage extends React.Component<
                                     this.store.hasMutationEnrichmentData
                                 }
                                 showCnas={this.store.hasCnaEnrichmentData}
-                                showStructuralVariants={this.store.hasStructuralVariantData}
+                                showStructuralVariants={
+                                    this.store.hasStructuralVariantData
+                                }
                             />
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>

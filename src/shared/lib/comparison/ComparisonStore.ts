@@ -205,12 +205,18 @@ export default abstract class ComparisonStore {
             );
         }
     }
-    
+
     @computed get isStructuralVariantEnrichmentSelected() {
         if (this.urlWrapper.selectedEnrichmentEventTypes) {
-            return this.urlWrapper.selectedEnrichmentEventTypes.includes(StructuralVariantEnrichmentEventType.structural_variant)
+            return this.urlWrapper.selectedEnrichmentEventTypes.includes(
+                StructuralVariantEnrichmentEventType.structural_variant
+            );
         }
-        return !!(this.alterationEnrichmentProfiles.result && this.alterationEnrichmentProfiles.result.structuralVariantProfiles.length > 0);
+        return !!(
+            this.alterationEnrichmentProfiles.result &&
+            this.alterationEnrichmentProfiles.result.structuralVariantProfiles
+                .length > 0
+        );
     }
 
     @autobind
@@ -1047,7 +1053,7 @@ export default abstract class ComparisonStore {
                         _(this.selectedCopyNumberEnrichmentEventTypes)
                             .values()
                             .some())) ||
-                            this.isStructuralVariantEnrichmentSelected
+                this.isStructuralVariantEnrichmentSelected
             ) {
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments

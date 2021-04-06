@@ -166,7 +166,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
-        console.log((event.target as HTMLInputElement).value)
+        console.log((event.target as HTMLInputElement).value);
         switch ((event.target as HTMLInputElement).value) {
             case checkbox.mutations:
                 this.toggleMutGroup(
@@ -289,8 +289,10 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
             selectedCopyNumber
         ) as EnrichmentEventType[];
 
-        if(this.isStructuralVariantSelected) {
-            selectedTypes.push(StructuralVariantEnrichmentEventType.structural_variant)
+        if (this.isStructuralVariantSelected) {
+            selectedTypes.push(
+                StructuralVariantEnrichmentEventType.structural_variant
+            );
         }
         this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
     }
@@ -304,7 +306,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
             !_.isEqual(
                 toJS(this.currentSelectedCopyNumber),
                 toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
-            ) || !_.isEqual(
+            ) ||
+            !_.isEqual(
                 this.isStructuralVariantSelected,
                 this.props.store.isStructuralVariantEnrichmentSelected
             )

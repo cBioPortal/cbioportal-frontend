@@ -18,7 +18,6 @@ describe('AlterationEnrichmentTypeSelector', () => {
     let menu: any;
     const updateSelectedEnrichmentEventTypes = sinon.spy();
 
-
     const inframeCheckboxRefs = [
         'InFrame',
         'InframeDeletion',
@@ -143,7 +142,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     molecularAlterationType: 'MUTATION_EXTENDED',
                 } as MolecularProfile,
             ]),
-            isStructuralVariantEnrichmentSelected: true
+            isStructuralVariantEnrichmentSelected: true,
         } as ComparisonStore;
     }
 
@@ -309,7 +308,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 wrapperForMenu
             );
             assert.isFalse(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="StructuralVariants"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isFalse(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -329,7 +330,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 wrapperForMenu
             );
             assert.isTrue(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="StructuralVariants"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isFalse(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -369,7 +372,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 wrapperForMenu
             );
             assert.isFalse(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="StructuralVariants"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isTrue(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );

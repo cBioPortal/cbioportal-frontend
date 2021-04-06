@@ -179,27 +179,31 @@ export function cnaEventTypeSelectInit(
         return {};
     }
 }
-export function mutationEventTypeSelectInit(mutationProfiles: MolecularProfile[]) {
+export function mutationEventTypeSelectInit(
+    mutationProfiles: MolecularProfile[]
+) {
     if (mutationProfiles.length > 0) {
         return mutationGroup.reduce((acc, type) => {
             acc[type] = true;
             return acc;
         }, {} as { [key in MutationEnrichmentEventType]?: boolean });
-        
     } else {
         return {};
     }
 }
-export function structuralVariantEventTypeSelectInit(structuralVariantProfiles: MolecularProfile[]): {
+export function structuralVariantEventTypeSelectInit(
+    structuralVariantProfiles: MolecularProfile[]
+): {
     [key in StructuralVariantEnrichmentEventType]?: boolean;
 } {
     if (structuralVariantProfiles.length > 0) {
-        return {[StructuralVariantEnrichmentEventType.structural_variant]:true};
+        return {
+            [StructuralVariantEnrichmentEventType.structural_variant]: true,
+        };
     } else {
         return {};
     }
 }
-
 
 export function buildAlterationsTabName(store: ComparisonStore) {
     const nameElements = [];
