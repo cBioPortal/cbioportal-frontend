@@ -241,7 +241,7 @@ function waitForStudyViewSelectedInfo() {
 }
 
 function waitForStudyView() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, 10000);
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, 100000);
 }
 
 function waitForGroupComparisonTabOpen() {
