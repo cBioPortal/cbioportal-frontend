@@ -535,9 +535,9 @@ var enrichmentTableCounts = () => {
 };
 
 var waitForUpdateStudyView = () => {
-    $('//*[@data-test="mutations-table"]').waitForVisible();
-    $('//*[@data-test="fusions-table"]').waitForVisible();
-    $('//*[@data-test="copy number alterations-table"]').waitForVisible();
+    $('//*[@data-test="mutations-table"]').waitForVisible(30000);
+    $('//*[@data-test="fusions-table"]').waitForVisible(30000);
+    $('//*[@data-test="copy number alterations-table"]').waitForVisible(30000);
 };
 
 var waitForUpdateResultsView = () => {
