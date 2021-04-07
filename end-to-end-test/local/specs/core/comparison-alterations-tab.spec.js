@@ -66,7 +66,7 @@ if (useExternalFrontend) {
 // Multiple loading attempts are needed in some cases to show the
 // enrichment panels and make the tests pass reliably.
 var loadAlterationsTab = () => {
-    var timeIntervals = [3000, 4000, 5000, 5000, 10000];
+    var timeIntervals = [3000, 4000, 5000, 5000, 10000, 30000, 100000];
     for (const timeInterval of timeIntervals) {
         goToUrlAndSetLocalStorage(resultsViewComparisonTab, true);
         browser.pause(timeInterval);
