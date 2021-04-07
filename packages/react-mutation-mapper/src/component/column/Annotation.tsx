@@ -32,6 +32,7 @@ import HotspotAnnotation, {
     sortValue as hotspotSortValue,
 } from './HotspotAnnotation';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from '../../util/DataFetcherUtils';
+import { CanonicalMutationType } from 'cbioportal-frontend-commons';
 
 export type AnnotationProps = {
     mutation?: Mutation;
@@ -131,8 +132,11 @@ export function getAnnotationData(
                 _.find(
                     oncoKbCancerGenes.result,
                     (gene: CancerGene) =>
-                        gene.oncokbAnnotated &&
-                        gene.entrezGeneId === entrezGeneId
+                        (mutation.mutationType &&
+                            mutation.mutationType.toLowerCase() ===
+                                CanonicalMutationType.FUSION) ||
+                        (gene.oncokbAnnotated &&
+                            gene.entrezGeneId === entrezGeneId)
                 ) !== undefined;
             isOncoKbCancerGene =
                 _.find(
