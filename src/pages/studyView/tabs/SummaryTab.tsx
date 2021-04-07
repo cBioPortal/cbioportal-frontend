@@ -568,7 +568,7 @@ export class StudySummaryTab extends React.Component<
                                 className="btn btn-primary btn-sm"
                                 onClick={() => {
                                     this.store.hideRestoreSettingsMsg = true;
-                                    this.store.undoUserSettings();
+                                    this.store.undoUserChartSettings();
                                 }}
                                 style={{ marginLeft: '10px' }}
                             >

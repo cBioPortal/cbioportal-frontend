@@ -152,3 +152,23 @@ export function getClinicalValueColor(value: string): string | undefined {
         value.replace(/\s/g, '').toLowerCase()
     ];
 }
+
+export function getReservedGroupColor(value: string): string | undefined {
+    // if group is composed of multiple predefined colors (ex: 0:Living, Female) then return undefined
+    console.info('getting color for group ' + value);
+    let groupColor: string | undefined = undefined;
+    const words: string[] = value.split(',');
+    words.forEach((word, index) => {
+        const color = getClinicalValueColor(word);
+        console.info('word:' + word + '-' + color);
+        if (color != undefined) {
+            if (groupColor == undefined) groupColor = color;
+            else {
+                groupColor = undefined;
+                return groupColor;
+            }
+        }
+    });
+    console.info(groupColor);
+    return groupColor;
+}
