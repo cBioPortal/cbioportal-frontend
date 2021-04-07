@@ -826,11 +826,6 @@ export default class BoxScatterPlot<
     }
 
     @autobind
-    private svgRef(): ((svgContainer: SVGElement | null) => void) | undefined {
-        return this.props.svgRef;
-    }
-
-    @autobind
     private getChart() {
         return (
             <div
@@ -849,7 +844,7 @@ export default class BoxScatterPlot<
                     role="img"
                     viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     onMouseMove={this.onMouseMove}
-                    ref={this.svgRef()}
+                    ref={this.props.svgRef}
                 >
                     <g
                         transform={`translate(${this.leftPadding}, ${this.topPadding})`}
