@@ -821,35 +821,21 @@ export default abstract class ComparisonStore {
             return Promise.resolve(
                 this.enrichmentAnalysisGroups.result!.reduce(
                     (acc: EnrichmentAnalysisComparisonGroup[], group) => {
-                        let filteredSamples: Sample[] = group.samples;
-                        // filter samples having mutation profile
-                        if (
-                            !_.isEmpty(
-                                this.selectedStudyMutationEnrichmentProfileMap
-                                    .result
-                            )
-                        ) {
-                            filteredSamples = filteredSamples.filter(
-                                sample =>
+                        let filteredSamples: Sample[] = group.samples.filter(
+                            sample => {
+                                // fixes: https://github.com/cBioPortal/cbioportal/issues/8490
+                                // filter sample if it has data for atleast one of the molecular profile type
+                                return (
                                     this
                                         .selectedStudyMutationEnrichmentProfileMap
-                                        .result![sample.studyId] !== undefined
-                            );
-                        }
-                        // filter samples having copy number profile and append it to filteredSamples
-                        if (
-                            !_.isEmpty(
-                                this.selectedStudyCopyNumberEnrichmentProfileMap
-                                    .result
-                            )
-                        ) {
-                            filteredSamples = filteredSamples.filter(
-                                sample =>
+                                        .result![sample.studyId] !==
+                                        undefined ||
                                     this
                                         .selectedStudyCopyNumberEnrichmentProfileMap
                                         .result![sample.studyId] !== undefined
-                            );
-                        }
+                                );
+                            }
+                        );
                         if (filteredSamples.length > 0) {
                             acc.push({
                                 ...group,
@@ -884,40 +870,34 @@ export default abstract class ComparisonStore {
                         caseId: string;
                         molecularProfileId: string;
                     }[] = [];
-                    if (
-                        !_.isEmpty(
+                    group.samples.forEach(sample => {
+                        if (
                             this.selectedStudyMutationEnrichmentProfileMap
-                                .result
-                        )
-                    ) {
-                        molecularProfileCaseIdentifiers = molecularProfileCaseIdentifiers.concat(
-                            group.samples.map(sample => ({
+                                .result![sample.studyId]
+                        ) {
+                            molecularProfileCaseIdentifiers.push({
                                 caseId: this.usePatientLevelEnrichments
                                     ? sample.patientId
                                     : sample.sampleId,
                                 molecularProfileId: this
                                     .selectedStudyMutationEnrichmentProfileMap
                                     .result![sample.studyId].molecularProfileId,
-                            }))
-                        );
-                    }
-                    if (
-                        !_.isEmpty(
+                            });
+                        }
+                        if (
                             this.selectedStudyCopyNumberEnrichmentProfileMap
-                                .result
-                        )
-                    ) {
-                        molecularProfileCaseIdentifiers = molecularProfileCaseIdentifiers.concat(
-                            group.samples.map(sample => ({
+                                .result![sample.studyId]
+                        ) {
+                            molecularProfileCaseIdentifiers.push({
                                 caseId: this.usePatientLevelEnrichments
                                     ? sample.patientId
                                     : sample.sampleId,
                                 molecularProfileId: this
                                     .selectedStudyCopyNumberEnrichmentProfileMap
                                     .result![sample.studyId].molecularProfileId,
-                            }))
-                        );
-                    }
+                            });
+                        }
+                    });
                     return {
                         name: group.name,
                         molecularProfileCaseIdentifiers,
