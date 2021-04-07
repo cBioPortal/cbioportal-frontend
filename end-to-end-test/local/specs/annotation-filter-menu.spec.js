@@ -298,7 +298,6 @@ describe('alteration filter menu', function() {
                     // does not include the mutation status settings
                     clickCheckBoxStudyView('Somatic');
                     clickCheckBoxStudyView('Putative drivers');
-                    waitForUpdateStudyView();
                     $('//*[@data-test="copy number alterations-table"]')
                         .$('input')
                         .click();
@@ -319,7 +318,6 @@ describe('alteration filter menu', function() {
                     // does not include the mutation status settings
                     clickCheckBoxStudyView('Somatic');
                     clickCheckBoxStudyView('Putative passengers');
-                    waitForUpdateStudyView();
                     $('//*[@data-test="mutations-table"]')
                         .$$('input')[1]
                         .click(); // click ATM gene
