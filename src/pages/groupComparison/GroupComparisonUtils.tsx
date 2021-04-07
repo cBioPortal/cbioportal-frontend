@@ -464,6 +464,9 @@ export function MakeEnrichmentsTabUI(
                 );
             } else {
                 const content: any = [];
+                const doShowInlineTypeSelectionMenu =
+                    enrichmentType == 'alterations' &&
+                    !AppConfig.serverConfig.skin_show_settings_menu;
                 content.push(
                     // The alteration type selector is shown to left of the
                     // graph panels ('in-line'). This div element pushes the
@@ -471,8 +474,7 @@ export function MakeEnrichmentsTabUI(
                     // is shown 'in-line'.
                     <div
                         style={{
-                            marginLeft:
-                                enrichmentType == 'alterations' ? 244 : 0,
+                            marginLeft: doShowInlineTypeSelectionMenu ? 244 : 0,
                         }}
                     >
                         <OverlapExclusionIndicator
