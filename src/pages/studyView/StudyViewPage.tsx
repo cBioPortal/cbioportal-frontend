@@ -794,9 +794,7 @@ export default class StudyViewPage extends React.Component<
                                                             <AlterationMenuHeader
                                                                 includeCnaTable={
                                                                     this.store
-                                                                        .doShowDriverAnnotationSectionInGlobalMenu ||
-                                                                    this.store
-                                                                        .doShowTierAnnotationSectionInGlobalMenu
+                                                                        .hasCnaProfileData
                                                                 }
                                                             />
                                                         }

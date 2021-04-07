@@ -4234,6 +4234,12 @@ export class StudyViewPageStore
         default: [],
     });
 
+    @computed get hasCnaProfileData() {
+        return (
+            this.cnaProfiles.isComplete && this.cnaProfiles.result!.length > 0
+        );
+    }
+
     private getMolecularProfilesByAlterationType(
         alterationType: string,
         dataType?: string
@@ -8289,6 +8295,17 @@ export class StudyViewPageStore
     }
 
     @computed get doShowDriverAnnotationSectionInGlobalMenu(): boolean {
+        const a = this.customDriverAnnotationReport.isComplete;
+        let b = false;
+        if (a) {
+            b = this.customDriverAnnotationReport.result!.hasBinary;
+        }
+        const c =
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label;
+        const d =
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label;
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.hasBinary &&

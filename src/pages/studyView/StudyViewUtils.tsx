@@ -3027,8 +3027,7 @@ export const AlterationMenuHeader: React.FunctionComponent<{
         return (
             <span style={{ marginTop: 'auto', marginBottom: 'auto' }}>
                 Select the types of alterations to count in the{' '}
-                <i>Mutated Genes</i>, <i>CNA Genes</i> and <i>Fusion Genes</i>{' '}
-                tables.
+                <i>Mutated Genes</i> and <i>Fusion Genes</i> tables.
             </span>
         );
     }
