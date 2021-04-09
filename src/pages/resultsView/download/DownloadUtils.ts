@@ -75,6 +75,7 @@ export function generateOqlData(
                     cnaAlterations.push({
                         type: alterationSubType,
                         value: alteration.value,
+                        putativeDriver: alteration.putativeDriver,
                     });
                     alterationTypes.push('CNA');
                 }
@@ -105,6 +106,7 @@ export function generateOqlData(
                     mutation.push({
                         proteinChange: alteration.proteinChange,
                         isGermline: !isNotGermlineMutation(alteration),
+                        putativeDriver: alteration.putativeDriver,
                     });
                     alterationTypes.push('MUT');
                 }
