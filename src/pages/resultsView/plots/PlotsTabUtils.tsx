@@ -1798,8 +1798,8 @@ export const oncoprintMutationTypeToAppearanceDefault: {
 
 export const notProfiledCnaAndSvAppearance = {
     symbol: 'circle',
-    stroke: '#000000',
-    strokeOpacity: 0.3,
+    stroke: LIGHT_GREY,
+    strokeOpacity: 0.9,
 };
 export const notProfiledMutationsAppearance = Object.assign(
     {},
