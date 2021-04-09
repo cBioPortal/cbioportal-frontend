@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.",
-    "version": "1.0 (beta)",
-    "title": "cBioPortal web API [Beta]",
+    "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.",
+    "version": "1.0 (beta). Internal API are prone to change.",
+    "title": "cBioPortal web Internal API [Beta]",
     "contact": {
       "name": "cBioPortal",
       "url": "https://www.cbioportal.org",
@@ -20,7 +20,15 @@
       "description": " "
     },
     {
+      "name": "Clinical Attributes Count",
+      "description": " "
+    },
+    {
       "name": "Clinical Data Enrichments",
+      "description": " "
+    },
+    {
+      "name": "Clinical Events",
       "description": " "
     },
     {
@@ -37,6 +45,10 @@
     },
     {
       "name": "Data Access Tokens",
+      "description": " "
+    },
+    {
+      "name": "Discrete Copy Number Alteration Counts",
       "description": " "
     },
     {
@@ -69,6 +81,22 @@
     },
     {
       "name": "Mutation Spectrums",
+      "description": " "
+    },
+    {
+      "name": "Mutations Count",
+      "description": " "
+    },
+    {
+      "name": "Reference Genome Genes",
+      "description": " "
+    },
+    {
+      "name": "Resource Data",
+      "description": " "
+    },
+    {
+      "name": "Resource Definitions",
       "description": " "
     },
     {
@@ -145,6 +173,44 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/AlterationEnrichment"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/clinical-attributes/counts/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Attributes Count"
+        ],
+        "summary": "Get counts for clinical attributes according to their data availability for selected samples/patients",
+        "operationId": "getClinicalAttributeCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalAttributeCountFilter",
+            "description": "List of SampleIdentifiers or Sample List ID",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalAttributeCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalAttributeCount"
               }
             }
           }
@@ -1980,6 +2046,54 @@
         "deprecated": false
       }
     },
+    "/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch": {
+      "post": {
+        "tags": [
+          "Discrete Copy Number Alteration Counts"
+        ],
+        "summary": "Get counts of specific genes and alterations within a CNA molecular profile",
+        "operationId": "fetchCopyNumberCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "copyNumberCountIdentifiers",
+            "description": "List of copy number count identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CopyNumberCountIdentifier"
+              }
+            }
+          },
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CopyNumberCount"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/molecular-profiles/{molecularProfileId}/mrna-percentile/fetch": {
       "post": {
         "tags": [
@@ -2168,6 +2282,47 @@
         "deprecated": false
       }
     },
+    "/mutation-counts-by-position/fetch": {
+      "post": {
+        "tags": [
+          "Mutations Count"
+        ],
+        "summary": "Fetch mutation counts in all studies by gene and position",
+        "operationId": "fetchMutationCountsByPositionUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "mutationPositionIdentifiers",
+            "description": "List of gene and positions",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationPositionIdentifier"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationCountByPosition"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/mutation-enrichments/fetch": {
       "post": {
         "tags": [
@@ -2222,6 +2377,125 @@
         "deprecated": false
       }
     },
+    "/reference-genome-genes/{genomeName}": {
+      "get": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Get all reference genes",
+        "operationId": "getAllReferenceGenomeGenesUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceGenomeGene"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/reference-genome-genes/{genomeName}/fetch": {
+      "post": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Fetch genes of reference genome of interest",
+        "operationId": "fetchReferenceGenomeGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "geneIds",
+            "description": "List of Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ReferenceGenomeGene"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/reference-genome-genes/{genomeName}/{geneId}": {
+      "get": {
+        "tags": [
+          "Reference Genome Genes"
+        ],
+        "summary": "Get a gene of a reference genome of interest",
+        "operationId": "getReferenceGenomeGeneUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "geneId",
+            "in": "path",
+            "description": "Entrez Gene ID 207",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "genomeName",
+            "in": "path",
+            "description": "Name of Reference Genome hg19",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ReferenceGenomeGene"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/sample-lists-counts/fetch": {
       "post": {
         "tags": [
@@ -2253,6 +2527,689 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CaseListDataCount"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/clinical-events": {
+      "get": {
+        "tags": [
+          "Clinical Events"
+        ],
+        "summary": "Get all clinical events in a study",
+        "operationId": "getAllClinicalEventsInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "eventType",
+              "startNumberOfDaysSinceDiagnosis",
+              "endNumberOfDaysSinceDiagnosis"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. lgg_ucsf_2014",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEvent"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/patients/{patientId}/clinical-events": {
+      "get": {
+        "tags": [
+          "Clinical Events"
+        ],
+        "summary": "Get all clinical events of a patient in a study",
+        "operationId": "getAllClinicalEventsOfPatientInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "patientId",
+            "in": "path",
+            "description": "Patient ID e.g. P01",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "eventType",
+              "startNumberOfDaysSinceDiagnosis",
+              "endNumberOfDaysSinceDiagnosis"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. lgg_ucsf_2014",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalEvent"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/patients/{patientId}/resource-data": {
+      "get": {
+        "tags": [
+          "Resource Data"
+        ],
+        "summary": "Get all resource data of a patient in a study",
+        "operationId": "getAllResourceDataOfPatientInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "patientId",
+            "in": "path",
+            "description": "Patient ID e.g. TCGA-OR-A5J2",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/resource-data": {
+      "get": {
+        "tags": [
+          "Resource Data"
+        ],
+        "summary": "Get all resource data for a study",
+        "operationId": "getAllStudyResourceDataInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/resource-definitions": {
+      "get": {
+        "tags": [
+          "Resource Definitions"
+        ],
+        "summary": "Get all resoruce definitions in the specified study",
+        "operationId": "getAllResourceDefinitionsInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "resourceId",
+              "displayName",
+              "description",
+              "resourceType",
+              "priority",
+              "openByDefault",
+              "studyId"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceDefinition"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/resource-definitions/{resourceId}": {
+      "get": {
+        "tags": [
+          "Resource Definitions"
+        ],
+        "summary": "Get specified resource definition",
+        "operationId": "getResourceDefinitionInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "resourceId",
+            "in": "path",
+            "description": "Resource ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ResourceDefinition"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/studies/{studyId}/samples/{sampleId}/resource-data": {
+      "get": {
+        "tags": [
+          "Resource Data"
+        ],
+        "summary": "Get all resource data of a sample in a study",
+        "operationId": "getAllResourceDataOfSampleInStudyUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "allowEmptyValue": false,
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          {
+            "name": "pageNumber",
+            "in": "query",
+            "description": "Page number of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Page size of the result list",
+            "required": false,
+            "type": "integer",
+            "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
+            "format": "int32",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "resourceId",
+            "in": "query",
+            "description": "Resource ID",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "sampleId",
+            "in": "path",
+            "description": "Sample ID e.g. TCGA-OR-A5J2-01",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "allowEmptyValue": false,
+            "enum": [
+              "ResourceId",
+              "url"
+            ]
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceData"
               }
             }
           }
@@ -2647,6 +3604,34 @@
       },
       "title": "ClinicalAttribute"
     },
+    "ClinicalAttributeCount": {
+      "type": "object",
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ClinicalAttributeCount"
+    },
+    "ClinicalAttributeCountFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalAttributeCountFilter"
+    },
     "ClinicalDataBin": {
       "type": "object",
       "properties": {
@@ -2790,6 +3775,62 @@
       },
       "title": "ClinicalDataFilter"
     },
+    "ClinicalEvent": {
+      "type": "object",
+      "required": [
+        "eventType",
+        "patientId",
+        "studyId"
+      ],
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalEventData"
+          }
+        },
+        "endNumberOfDaysSinceDiagnosis": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "eventType": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "startNumberOfDaysSinceDiagnosis": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEvent"
+    },
+    "ClinicalEventData": {
+      "type": "object",
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEventData"
+    },
     "CoExpression": {
       "type": "object",
       "required": [
@@ -2842,6 +3883,38 @@
       },
       "title": "CoExpressionFilter"
     },
+    "CopyNumberCount": {
+      "type": "object",
+      "required": [
+        "alteration",
+        "entrezGeneId",
+        "molecularProfileId",
+        "numberOfSamples",
+        "numberOfSamplesWithAlterationInGene"
+      ],
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "numberOfSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfSamplesWithAlterationInGene": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberCount"
+    },
     "CopyNumberCountByGene": {
       "type": "object",
       "properties": {
@@ -2882,6 +3955,20 @@
         }
       },
       "title": "CopyNumberCountByGene"
+    },
+    "CopyNumberCountIdentifier": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberCountIdentifier"
     },
     "CosmicMutation": {
       "type": "object",
@@ -3699,6 +4786,52 @@
       },
       "title": "MutSig"
     },
+    "MutationCountByPosition": {
+      "type": "object",
+      "required": [
+        "count",
+        "entrezGeneId",
+        "proteinPosEnd",
+        "proteinPosStart"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosStart": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationCountByPosition"
+    },
+    "MutationPositionIdentifier": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosStart": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationPositionIdentifier"
+    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -3806,6 +4939,118 @@
         }
       },
       "title": "PatientTreatmentFilter"
+    },
+    "ReferenceGenomeGene": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "referenceGenomeId"
+      ],
+      "properties": {
+        "chromosome": {
+          "type": "string"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "referenceGenomeId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "ReferenceGenomeGene"
+    },
+    "ResourceData": {
+      "type": "object",
+      "required": [
+        "resourceId",
+        "studyId",
+        "url"
+      ],
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "resourceDefinition": {
+          "$ref": "#/definitions/ResourceDefinition"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "title": "ResourceData"
+    },
+    "ResourceDefinition": {
+      "type": "object",
+      "required": [
+        "displayName",
+        "resourceId",
+        "resourceType",
+        "studyId"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "openByDefault": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "resourceId": {
+          "type": "string"
+        },
+        "resourceType": {
+          "type": "string",
+          "enum": [
+            "STUDY",
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "ResourceDefinition"
     },
     "Sample": {
       "type": "object",
