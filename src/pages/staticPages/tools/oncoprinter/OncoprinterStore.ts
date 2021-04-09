@@ -40,6 +40,7 @@ import {
     parseClinicalInput,
     parseHeatmapInput,
 } from './OncoprinterClinicalAndHeatmapUtils';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
@@ -422,9 +423,11 @@ export default class OncoprinterStore {
                 countMutations(mutations)
             );
 
-            const data = await client.fetchMutationCountsByPositionUsingPOST({
-                mutationPositionIdentifiers,
-            });
+            const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
+                {
+                    mutationPositionIdentifiers,
+                }
+            );
 
             return _.chain(data)
                 .groupBy(mutationCountByPositionKey)
