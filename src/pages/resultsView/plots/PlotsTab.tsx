@@ -4379,7 +4379,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             default:
                 if (!this.showPlot) {
                     return (
-                        <div className={'alert alert-info'}>
+                        <div
+                            data-test="PlotsTabNoDataDiv"
+                            className={'alert alert-info'}
+                        >
                             No data to plot.
                         </div>
                     );
