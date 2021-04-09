@@ -26,7 +26,6 @@ import {
 } from './ResultsViewPageStoreUtils';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     CustomDriverNumericGeneMolecularData,
     IQueriedMergedTrackCaseData,
 } from './ResultsViewPageStore';

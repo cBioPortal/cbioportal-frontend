@@ -251,6 +251,10 @@ import oql_parser, {
     Alteration,
     SingleGeneQuery,
 } from 'shared/lib/oql/oql-parser';
+import {
+    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+    createAnnotatedProteinImpactTypeFilter,
+} from 'shared/lib/MutationUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -615,7 +619,7 @@ export class ResultsViewPageStore {
 
     public driverAnnotationsReactionDisposer: any;
 
-    private mutationMapperStoreByGene: {
+    private mutationMapperStoreByGeneDriverKey: {
         [hugoGeneSymbol: string]: ResultsViewMutationMapperStore;
     } = {};
 
@@ -3403,6 +3407,11 @@ export class ResultsViewPageStore {
             AppConfig.serverConfig,
             {
                 filterMutationsBySelectedTranscript: true,
+                filterAppliersOverride: {
+                    [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
+                        this.isPutativeDriver
+                    ),
+                },
             },
             gene,
             this.filteredSamples,
@@ -3427,7 +3436,9 @@ export class ResultsViewPageStore {
             this.genomeNexusInternalClient,
             () => this.urlWrapper.query.mutations_transcript_id
         );
-        this.mutationMapperStoreByGene[gene.hugoGeneSymbol] = store;
+        this.mutationMapperStoreByGeneDriverKey[
+            this.getGeneDriverKey(gene)
+        ] = store;
         return store;
     }
 
@@ -3441,11 +3452,23 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            return this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
-                ? this.mutationMapperStoreByGene[gene.hugoGeneSymbol]
+            return this.mutationMapperStoreByGeneDriverKey[
+                this.getGeneDriverKey(gene)
+            ]
+                ? this.mutationMapperStoreByGeneDriverKey[
+                      this.getGeneDriverKey(gene)
+                  ]
                 : this.createMutationMapperStoreForSelectedGene(gene);
         }
         return undefined;
+    }
+
+    // Need to add "driver" into key because mutation mapper store is cached
+    // if we don't do this, starting with no driver then switch to driver will get wrong filter results
+    private getGeneDriverKey(gene: Gene) {
+        return `${gene.hugoGeneSymbol}_${
+            this.isPutativeDriver ? 'driver' : 'no_driver'
+        }`;
     }
 
     readonly oncoKbCancerGenes = remoteData(
@@ -5533,5 +5556,11 @@ export class ResultsViewPageStore {
         if (this.studies.result) {
             return isMixedReferenceGenome(this.studies.result);
         }
+    }
+
+    @computed get isPutativeDriver() {
+        return this.driverAnnotationSettings.driversAnnotated
+            ? (m: AnnotatedMutation) => m.putativeDriver
+            : undefined;
     }
 }

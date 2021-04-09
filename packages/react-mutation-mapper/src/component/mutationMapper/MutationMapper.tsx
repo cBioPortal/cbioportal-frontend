@@ -99,6 +99,8 @@ export type MutationMapperProps = {
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     filterApplier?: FilterApplier;
     onTranscriptChange?: (transcript: string) => void;
+    hideHugoSymbol?: boolean;
+    compactStype?: boolean;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -387,6 +389,7 @@ export default class MutationMapper<
                     this.props.transcriptSummaryUrlTemplate
                 }
                 onTranscriptChange={this.handleTranscriptChange}
+                compactStype={this.props.compactStype}
             />
         );
     }

@@ -17,6 +17,7 @@ export type GeneSummaryProps = {
     transcriptSummaryUrlTemplate?: string;
     showDropDown: boolean;
     showOnlyAnnotatedTranscriptsInDropdown: boolean;
+    compactStype?: boolean; // compactStyle = false: "RefSeq: NM_000546 Ensembl: ENST00000269305...", compactStyle = true: "NM_000546 | ENST00000269305..."
     transcriptsByTranscriptId: { [transcriptId: string]: EnsemblTranscript };
     activeTranscript?: string;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
@@ -35,6 +36,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
     public static defaultProps: Partial<GeneSummaryProps> = {
         transcriptSummaryUrlTemplate:
             'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
+        compactStype: false,
     };
 
     public render() {
@@ -64,9 +66,111 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
         const refseqMrnaId = transcript && transcript.refseqMrnaId;
         const ccdsId = transcript && transcript.ccdsId;
 
+        const refSeq = refseqMrnaId ? (
+            <a href={getNCBIlink(`/nuccore/${refseqMrnaId}`)} target="_blank">
+                {refseqMrnaId}
+            </a>
+        ) : (
+            '-'
+        );
+        const ensembl = showDropDown
+            ? activeTranscript && (
+                  <a
+                      href={getUrl(this.props.transcriptSummaryUrlTemplate!, {
+                          transcriptId: activeTranscript,
+                      })}
+                      target="_blank"
+                  >
+                      {activeTranscript}
+                  </a>
+              )
+            : canonicalTranscriptId && (
+                  // down't show drop down, only the canonical transcript
+                  <a
+                      href={getUrl(this.props.transcriptSummaryUrlTemplate!, {
+                          transcriptId: canonicalTranscriptId,
+                      })}
+                      target="_blank"
+                  >
+                      {canonicalTranscriptId}
+                  </a>
+              );
+        const ccds = ccdsId ? (
+            <a
+                href={getNCBIlink({
+                    pathname: '/CCDS/CcdsBrowse.cgi',
+                    query: {
+                        REQUEST: 'CCDS',
+                        DATA: ccdsId,
+                    },
+                })}
+                target="_blank"
+            >
+                {ccdsId}
+            </a>
+        ) : (
+            '-'
+        );
+
+        const uniprot = uniprotId ? (
+            <a
+                href={`http://www.uniprot.org/uniprot/${uniprotId}`}
+                target="_blank"
+            >
+                {uniprotId}
+            </a>
+        ) : (
+            '-'
+        );
+
+        const geneSummaryInfo = (
+            <div>
+                <div>
+                    <span data-test="GeneSummaryRefSeq">
+                        {'RefSeq: '}
+                        {refSeq}
+                    </span>
+                </div>
+                <div>
+                    <span>Ensembl: </span>
+                    {ensembl}
+                </div>
+                <div>
+                    <span data-test="GeneSummaryCCDS">
+                        {'CCDS: '}
+                        {ccds}
+                    </span>
+                </div>
+                <div>
+                    <span data-test="GeneSummaryUniProt">
+                        {'UniProt: '}
+                        {uniprot}
+                    </span>
+                </div>
+            </div>
+        );
+        const compactGeneSummaryInfo = (
+            <div>
+                <span data-test="compactGeneSummaryRefSeq">{refSeq}</span>
+                {` | `}
+                {ensembl}
+                <br />
+                <span data-test="compactGeneSummaryCCDS">{ccds}</span>
+                {` | `}
+                <span data-test="compactGeneSummaryUniProt">{uniprot}</span>
+            </div>
+        );
         return (
-            <div className={styles.geneSummary}>
-                <h4 className={styles.hugoSymbol}>{hugoGeneSymbol}</h4>
+            <div
+                className={
+                    this.props.compactStype
+                        ? styles.geneSummaryCompact
+                        : styles.geneSummary
+                }
+            >
+                {!this.props.compactStype && (
+                    <h4 className={styles.hugoSymbol}>{hugoGeneSymbol}</h4>
+                )}
                 <TranscriptDropdown
                     showDropDown={showDropDown}
                     showOnlyAnnotatedTranscriptsInDropdown={
@@ -82,87 +186,9 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                     onChange={onTranscriptChange}
                     loadingIndicator={loadingIndicator}
                 />
-                <div>
-                    <span data-test="GeneSummaryRefSeq">
-                        {'RefSeq: '}
-                        {refseqMrnaId ? (
-                            <a
-                                href={getNCBIlink(`/nuccore/${refseqMrnaId}`)}
-                                target="_blank"
-                            >
-                                {refseqMrnaId}
-                            </a>
-                        ) : (
-                            '-'
-                        )}
-                    </span>
-                </div>
-                {showDropDown
-                    ? activeTranscript && (
-                          <div>
-                              <span>Ensembl: </span>
-                              <a
-                                  href={getUrl(
-                                      this.props.transcriptSummaryUrlTemplate!,
-                                      { transcriptId: activeTranscript }
-                                  )}
-                                  target="_blank"
-                              >
-                                  {activeTranscript}
-                              </a>
-                          </div>
-                      )
-                    : canonicalTranscriptId && (
-                          // down't show drop down, only the canonical transcript
-                          <div>
-                              <span>Ensembl: </span>
-                              <a
-                                  href={getUrl(
-                                      this.props.transcriptSummaryUrlTemplate!,
-                                      { transcriptId: canonicalTranscriptId }
-                                  )}
-                                  target="_blank"
-                              >
-                                  {canonicalTranscriptId}
-                              </a>
-                          </div>
-                      )}
-                <div>
-                    <span data-test="GeneSummaryCCDS">
-                        {'CCDS: '}
-                        {ccdsId ? (
-                            <a
-                                href={getNCBIlink({
-                                    pathname: '/CCDS/CcdsBrowse.cgi',
-                                    query: {
-                                        REQUEST: 'CCDS',
-                                        DATA: ccdsId,
-                                    },
-                                })}
-                                target="_blank"
-                            >
-                                {ccdsId}
-                            </a>
-                        ) : (
-                            '-'
-                        )}
-                    </span>
-                </div>
-                <div>
-                    <span data-test="GeneSummaryUniProt">
-                        {'UniProt: '}
-                        {uniprotId ? (
-                            <a
-                                href={`http://www.uniprot.org/uniprot/${uniprotId}`}
-                                target="_blank"
-                            >
-                                {uniprotId}
-                            </a>
-                        ) : (
-                            '-'
-                        )}
-                    </span>
-                </div>
+                {this.props.compactStype
+                    ? compactGeneSummaryInfo
+                    : geneSummaryInfo}
             </div>
         );
     }

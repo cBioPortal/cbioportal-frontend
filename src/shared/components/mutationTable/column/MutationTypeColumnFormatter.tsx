@@ -64,7 +64,7 @@ export default class MutationTypeColumnFormatter {
             },
             splice_site: {
                 displayValue: 'Splice',
-                className: styles.truncMutation,
+                className: styles.splice,
             },
             fusion: {
                 displayValue: 'Fusion',
