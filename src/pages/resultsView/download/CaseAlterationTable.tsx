@@ -27,12 +27,17 @@ import { insertBetween } from 'shared/lib/ArrayUtils';
 export interface ISubAlteration {
     type: string;
     value: number;
+    putativeDriver?: boolean;
 }
 
 export interface IOqlData {
     geneSymbol: string;
     sequenced: boolean;
-    mutation: { proteinChange: string; isGermline: boolean }[];
+    mutation: {
+        proteinChange: string;
+        isGermline: boolean;
+        putativeDriver: boolean;
+    }[];
     fusion: string[];
     cna: ISubAlteration[];
     mrnaExp: ISubAlteration[];
@@ -78,7 +83,9 @@ type RenderGenerator<T> = {
 function mutationMapper(forDownload?: boolean) {
     const renderMutation = (d: IOqlData['mutation'][0]) => {
         if (forDownload) {
-            return `${d.proteinChange}${d.isGermline ? ' [germline]' : ''}`;
+            return `${d.proteinChange}${d.isGermline ? ' [germline]' : ''}${
+                d.putativeDriver ? ' (driver)' : ''
+            }`;
         } else {
             return (
                 <span>
@@ -88,6 +95,11 @@ function mutationMapper(forDownload?: boolean) {
                             Germline
                         </span>
                     )}
+                    {d.putativeDriver && (
+                        <span className={proteinChangeStyles.driver}>
+                            (Driver)
+                        </span>
+                    )}
                 </span>
             );
         }
@@ -95,6 +107,26 @@ function mutationMapper(forDownload?: boolean) {
 
     return (alterationData: IOqlData['mutation']) =>
         alterationData.map(renderMutation);
+}
+
+function cnaMapper(forDownload?: boolean) {
+    const renderCna = (d: IOqlData['cna'][0]) => {
+        if (forDownload) {
+            return `${d.type}${d.putativeDriver ? ' (driver)' : ''}`;
+        } else {
+            return (
+                <span>
+                    <span>{d.type}</span>
+                    {d.putativeDriver && (
+                        <span className={proteinChangeStyles.driver}>
+                            (Driver)
+                        </span>
+                    )}
+                </span>
+            );
+        }
+    };
+    return (alterationData: IOqlData['cna']) => alterationData.map(renderCna);
 }
 
 export function generateOqlValue(
@@ -144,7 +176,7 @@ export function generateOqlValue(
                 label: 'CNA',
                 getAlterationData: (oqlData: IOqlData) => oqlData.cna,
                 isNotProfiled: (oqlData: IOqlData) => oqlData.isCnaNotProfiled,
-                getValues: subAlterationMapper,
+                getValues: cnaMapper(forDownload),
             };
             break;
         case 'EXP':
