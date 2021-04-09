@@ -40,6 +40,7 @@ import { PagePath } from 'shared/enums/PagePaths';
 import URL from 'url';
 import { CANCER_SUMMARY_ALL_GENES } from './CancerSummaryContainer';
 import { ResultsViewURLQueryEnum } from 'pages/resultsView/ResultsViewURLWrapper';
+import ScrollWrapper from './ScrollWrapper';
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -119,8 +120,65 @@ export class CancerSummaryChart extends React.Component<
     @observable private isBarPlotTooltipHovered = false;
     @observable private shouldUpdatePosition = false; // Prevents chasing tooltip
 
-    private svg: SVGElement;
     @observable mousePosition = { x: 0, y: 0 };
+
+    private plotSvg: SVGElement | null = null;
+    private dummyScrollPane: HTMLDivElement;
+
+    private scrollPane: HTMLDivElement;
+    private scrollingDummyPane = false;
+    @observable plotElementWidth = 0;
+    @autobind
+    private getSvg() {
+        return this.plotSvg;
+    }
+    @autobind
+    private assignScrollPaneRef(el: HTMLDivElement) {
+        this.scrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+            $(el).scroll(this.synchronizeScrollPanes);
+        }
+    }
+    @autobind
+    private assignDummyScrollPaneRef(el: HTMLDivElement) {
+        this.dummyScrollPane = el;
+        if (el) {
+            this.synchronizeScrollPanes();
+
+            $(el).scroll(this.synchronizeScrollPanes);
+
+            $(el).on('mousedown', () => {
+                this.scrollingDummyPane = true;
+            });
+            $(el).on('mouseup', () => {
+                this.scrollingDummyPane = false;
+            });
+        }
+    }
+    @autobind
+    private assignPlotSvgRef(el: SVGElement | null) {
+        this.plotSvg = el;
+        if (el) {
+            this.plotElementWidth = el.scrollWidth;
+        } else {
+            this.plotElementWidth = 0;
+        }
+    }
+    @autobind
+    private synchronizeScrollPanes() {
+        if (!this.scrollPane || !this.dummyScrollPane) {
+            // Can't do anything if both panes don't exist yet
+            return;
+        }
+        if (this.scrollingDummyPane) {
+            // prevent infinite loop by only updating in one direction
+            //  based on whether user is clicking in the dummy pane
+            this.scrollPane.scrollLeft = this.dummyScrollPane.scrollLeft;
+        } else {
+            this.dummyScrollPane.scrollLeft = this.scrollPane.scrollLeft;
+        }
+    }
 
     constructor(props: CancerSummaryChartProps) {
         super(props);
@@ -679,131 +737,141 @@ export class CancerSummaryChart extends React.Component<
     @autobind private getChart() {
         return (
             <div style={this.overflowStyle} className="borderedChart">
-                <div style={{ overflowX: 'auto', overflowY: 'hidden' }}>
-                    <svg
-                        style={{
-                            width: this.svgWidth,
-                            height: this.svgHeight,
-                            pointerEvents: 'all',
-                        }}
-                        height={this.svgHeight}
-                        width={this.svgWidth}
-                        role="img"
-                        viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                        ref={(ref: any) => (this.svg = ref)}
-                        onMouseMove={this.onMouseMove}
+                <ScrollWrapper
+                    plotElementWidth={this.plotElementWidth}
+                    assignDummyScrollPaneRef={this.assignDummyScrollPaneRef}
+                    scrollPane={this.scrollPane}
+                >
+                    <div
+                        style={{ overflowX: 'auto', overflowY: 'hidden' }}
+                        className="hideScrollbar"
+                        ref={this.assignScrollPaneRef}
                     >
-                        <g transform={`translate(${this.leftPadding}, 0)`}>
-                            <VictoryChart
-                                theme={CBIOPORTAL_VICTORY_THEME}
-                                width={this.chartWidth}
-                                height={this.barChartHeight()}
-                                standalone={false}
-                                domainPadding={this.chartDomainPadding()}
-                                singleQuadrantDomainPadding={{
-                                    y: true,
-                                    x: false,
-                                }}
-                            >
-                                <VictoryAxis
-                                    dependentAxis
-                                    axisLabelComponent={
-                                        <VictoryLabel dy={-50} />
-                                    }
-                                    label={this.yAxisLabel}
-                                    tickFormat={this.tickFormat}
-                                    offsetX={50}
-                                    orientation="left"
-                                />
-
-                                <VictoryAxis
-                                    tickValues={this.props.xLabels}
-                                    style={{
-                                        ticks: { size: 0, strokeWidth: 0 },
-                                        tickLabels: { fontSize: 0 },
-                                        grid: { stroke: 0 },
-                                    }}
-                                />
-
-                                <VictoryStack colorScale={this.colorArray}>
-                                    {this.barPlots}
-                                </VictoryStack>
-                                {// we're not showing alterations, so we don't need legend
-                                !this.props.hideGenomicAlterations && (
-                                    <VictoryLegend
-                                        x={10}
-                                        y={this.svgHeight - 30}
-                                        orientation="horizontal"
-                                        data={this.legendData}
-                                    />
-                                )}
-                            </VictoryChart>
-                        </g>
-
-                        <g
-                            transform={`translate(${this.leftPadding}, ${this.scatterPlotTopPadding})`}
+                        <svg
+                            style={{
+                                width: this.svgWidth,
+                                height: this.svgHeight,
+                                pointerEvents: 'all',
+                            }}
+                            height={this.svgHeight}
+                            width={this.svgWidth}
+                            role="img"
+                            viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                            ref={this.assignPlotSvgRef}
+                            onMouseMove={this.onMouseMove}
                         >
-                            <VictoryChart
-                                theme={CBIOPORTAL_VICTORY_THEME}
-                                width={this.chartWidth}
-                                height={this.scatterChartHeight}
-                                standalone={false}
-                                domainPadding={this.chartDomainPadding()}
-                                singleQuadrantDomainPadding={{
-                                    y: true,
-                                    x: false,
-                                }}
-                            >
-                                <VictoryAxis
-                                    orientation="bottom"
-                                    crossAxis={false}
-                                    tickValues={this.props.xLabels}
-                                    style={{
-                                        axis: { strokeWidth: 0 },
-                                        ticks: { size: 0, strokeWidth: 0 },
-                                        grid: {
-                                            stroke: 0,
-                                        },
+                            <g transform={`translate(${this.leftPadding}, 0)`}>
+                                <VictoryChart
+                                    theme={CBIOPORTAL_VICTORY_THEME}
+                                    width={this.chartWidth}
+                                    height={this.barChartHeight()}
+                                    standalone={false}
+                                    domainPadding={this.chartDomainPadding()}
+                                    singleQuadrantDomainPadding={{
+                                        y: true,
+                                        x: false,
                                     }}
-                                    tickLabelComponent={
-                                        <VictoryLabel
-                                            angle={50}
-                                            verticalAnchor="start"
-                                            textAnchor="start"
+                                >
+                                    <VictoryAxis
+                                        dependentAxis
+                                        axisLabelComponent={
+                                            <VictoryLabel dy={-50} />
+                                        }
+                                        label={this.yAxisLabel}
+                                        tickFormat={this.tickFormat}
+                                        offsetX={50}
+                                        orientation="left"
+                                    />
+
+                                    <VictoryAxis
+                                        tickValues={this.props.xLabels}
+                                        style={{
+                                            ticks: { size: 0, strokeWidth: 0 },
+                                            tickLabels: { fontSize: 0 },
+                                            grid: { stroke: 0 },
+                                        }}
+                                    />
+
+                                    <VictoryStack colorScale={this.colorArray}>
+                                        {this.barPlots}
+                                    </VictoryStack>
+                                    {// we're not showing alterations, so we don't need legend
+                                    !this.props.hideGenomicAlterations && (
+                                        <VictoryLegend
+                                            x={10}
+                                            y={this.svgHeight - 30}
+                                            orientation="horizontal"
+                                            data={this.legendData}
                                         />
-                                    }
-                                />
+                                    )}
+                                </VictoryChart>
+                            </g>
 
-                                <VictoryAxis
-                                    orientation="left"
-                                    dependentAxis
-                                    crossAxis={false}
-                                    style={{
-                                        axis: { strokeWidth: 0 },
-                                        ticks: { size: 0, strokeWidth: 0 },
-                                        grid: {
-                                            stroke: 0,
-                                        },
+                            <g
+                                transform={`translate(${this.leftPadding}, ${this.scatterPlotTopPadding})`}
+                            >
+                                <VictoryChart
+                                    theme={CBIOPORTAL_VICTORY_THEME}
+                                    width={this.chartWidth}
+                                    height={this.scatterChartHeight}
+                                    standalone={false}
+                                    domainPadding={this.chartDomainPadding()}
+                                    singleQuadrantDomainPadding={{
+                                        y: true,
+                                        x: false,
                                     }}
-                                />
+                                >
+                                    <VictoryAxis
+                                        orientation="bottom"
+                                        crossAxis={false}
+                                        tickValues={this.props.xLabels}
+                                        style={{
+                                            axis: { strokeWidth: 0 },
+                                            ticks: { size: 0, strokeWidth: 0 },
+                                            grid: {
+                                                stroke: 0,
+                                            },
+                                        }}
+                                        tickLabelComponent={
+                                            <VictoryLabel
+                                                angle={50}
+                                                verticalAnchor="start"
+                                                textAnchor="start"
+                                            />
+                                        }
+                                    />
 
-                                <VictoryScatter
-                                    size={this.barWidth() / 5}
-                                    style={{
-                                        data: {
-                                            fill: 'black',
-                                            cursor: (d: any) => d.cursor,
-                                        },
-                                    }}
-                                    data={this.scatterData}
-                                    events={this.scatterPlotMouseEvents}
-                                />
-                            </VictoryChart>
-                        </g>
-                    </svg>
-                </div>
+                                    <VictoryAxis
+                                        orientation="left"
+                                        dependentAxis
+                                        crossAxis={false}
+                                        style={{
+                                            axis: { strokeWidth: 0 },
+                                            ticks: { size: 0, strokeWidth: 0 },
+                                            grid: {
+                                                stroke: 0,
+                                            },
+                                        }}
+                                    />
+
+                                    <VictoryScatter
+                                        size={this.barWidth() / 5}
+                                        style={{
+                                            data: {
+                                                fill: 'black',
+                                                cursor: (d: any) => d.cursor,
+                                            },
+                                        }}
+                                        data={this.scatterData}
+                                        events={this.scatterPlotMouseEvents}
+                                    />
+                                </VictoryChart>
+                            </g>
+                        </svg>
+                    </div>
+                </ScrollWrapper>
                 <DownloadControls
-                    getSvg={() => this.svg}
+                    getSvg={this.getSvg}
                     getData={this.getData}
                     filename="cancer_types_summary"
                     dontFade={true}

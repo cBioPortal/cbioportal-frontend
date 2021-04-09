@@ -121,6 +121,7 @@ import {
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
+import ScrollWrapper from '../cancerSummary/ScrollWrapper';
 
 enum EventKey {
     horz_logScale,
@@ -3798,7 +3799,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             });
         }
     }
-    @action.bound
+    @autobind
     private assignPlotSvgRef(el: SVGElement | null) {
         this.plotSvg = el;
         if (el) {
@@ -4897,48 +4898,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                     }
                                 }}
                             </Observer>
-                            <Observer>
-                                {() => (
-                                    <div
-                                        className="dummyScrollDiv scrollbarAlwaysVisible"
-                                        style={{
-                                            position: 'relative',
-                                            width: '100%',
-                                            maxWidth: this.plotElementWidth,
-                                            overflow: 'scroll',
-                                            marginTop: 35,
-                                            marginBottom: -25, // reduce excessive padding caused by the marginTop
-                                            zIndex: 1, // make sure it receives mouse even though marginBottom pulls the plot on top of it
-                                        }}
-                                        ref={this.assignDummyScrollPaneRef}
-                                    >
+
+                            <ScrollWrapper
+                                plotElementWidth={this.plotElementWidth}
+                                assignDummyScrollPaneRef={
+                                    this.assignDummyScrollPaneRef
+                                }
+                                scrollPane={this.scrollPane}
+                            >
+                                <Observer>
+                                    {() => (
                                         <div
                                             style={{
-                                                minWidth:
-                                                    this.plotElementWidth - 8, // subtract 8 due to the pseudo-scrollbar element adding bulk
-                                                height: 1,
+                                                position: 'relative',
+                                                display: 'inline-block',
+                                                width: '100%',
+                                                overflow: 'scroll',
+                                                marginTop: -13,
                                             }}
-                                        />
-                                    </div>
-                                )}
-                            </Observer>
-                            <Observer>
-                                {() => (
-                                    <div
-                                        style={{
-                                            position: 'relative',
-                                            display: 'inline-block',
-                                            width: '100%',
-                                            overflow: 'scroll',
-                                            marginTop: -13,
-                                        }}
-                                        className="hideScrollbar"
-                                        ref={this.assignScrollPaneRef}
-                                    >
-                                        {plotElt}
-                                    </div>
-                                )}
-                            </Observer>
+                                            className="hideScrollbar"
+                                            ref={this.assignScrollPaneRef}
+                                        >
+                                            {plotElt}
+                                        </div>
+                                    )}
+                                </Observer>
+                            </ScrollWrapper>
                         </div>
                         {this.canColorByMutationData && (
                             <div style={{ marginTop: 5 }}>
