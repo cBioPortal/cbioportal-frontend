@@ -340,6 +340,25 @@ function isPointProfiledForCna(d: IPlotSampleData) {
 function isPointProfiledForSv(d: IPlotSampleData) {
     return !!d.isProfiledStructuralVariants;
 }
+function isPointNotProfiledForCnaAndSv(
+    d: IPlotSampleData,
+    coloringTypes: SelectedColoringTypes
+) {
+    const isUnprofiledCna = !isPointProfiledForCna(d);
+    const isUnprofiledSv = !isPointProfiledForSv(d);
+    return (
+        (ColoringType.CopyNumber in coloringTypes &&
+            ColoringType.StructuralVariant in coloringTypes &&
+            isUnprofiledCna &&
+            isUnprofiledSv) ||
+        (ColoringType.CopyNumber in coloringTypes &&
+            !(ColoringType.StructuralVariant in coloringTypes) &&
+            isUnprofiledCna) ||
+        (ColoringType.StructuralVariant in coloringTypes &&
+            !(ColoringType.CopyNumber in coloringTypes) &&
+            isUnprofiledSv)
+    );
+}
 
 export function scatterPlotZIndexSortBy<
     D extends Pick<
@@ -832,15 +851,8 @@ function scatterPlotCnaAndSvLegendData(
             }
 
             const ret = d.dispCna ? d.dispCna.value : null;
-            const isUnprofiledCna =
-                ColoringType.CopyNumber in coloringTypes
-                    ? !isPointProfiledForCna(d)
-                    : true;
-            const isUnprofiledSv =
-                ColoringType.StructuralVariant in coloringTypes
-                    ? !isPointProfiledForSv(d)
-                    : true;
-            if (isUnprofiledCna && isUnprofiledSv) {
+
+            if (isPointNotProfiledForCnaAndSv(d, coloringTypes)) {
                 showNotProfiledElement = true;
             }
             return ret;
@@ -912,13 +924,7 @@ function scatterPlotCnaAndSvLegendData(
             highlighting: onClick && {
                 uid: NOT_PROFILED_CNA_SV_LEGEND_LABEL(coloringTypes).join('\n'),
                 isDatumHighlighted: (d: IPlotSampleData) => {
-                    const highlightForCna =
-                        ColoringType.CopyNumber in coloringTypes &&
-                        !isPointProfiledForCna(d);
-                    const highlightForSv =
-                        ColoringType.StructuralVariant in coloringTypes &&
-                        !isPointProfiledForSv(d);
-                    return highlightForCna || highlightForSv;
+                    return isPointNotProfiledForCnaAndSv(d, coloringTypes);
                 },
                 onClick,
             },
