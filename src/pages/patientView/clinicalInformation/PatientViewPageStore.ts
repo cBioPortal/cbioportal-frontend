@@ -817,7 +817,7 @@ export class PatientViewPageStore {
 
     readonly resourceDefinitions = remoteData({
         invoke: () =>
-            client.getAllResourceDefinitionsInStudyUsingGET({
+            internalClient.getAllResourceDefinitionsInStudyUsingGET({
                 studyId: this.studyId,
             }),
         onResult: defs => {
@@ -840,7 +840,7 @@ export class PatientViewPageStore {
             const promises = [];
             for (const resource of studyResourceDefinitions) {
                 promises.push(
-                    client
+                    internalClient
                         .getAllStudyResourceDataInStudyUsingGET({
                             studyId: this.studyId,
                             resourceId: resource.resourceId,
@@ -871,7 +871,7 @@ export class PatientViewPageStore {
             for (const sample of samples) {
                 for (const resource of sampleResourceDefinitions) {
                     promises.push(
-                        client
+                        internalClient
                             .getAllResourceDataOfSampleInStudyUsingGET({
                                 sampleId: sample.sampleId,
                                 studyId: this.studyId,
@@ -900,7 +900,7 @@ export class PatientViewPageStore {
             const promises = [];
             for (const resource of patientResourceDefinitions) {
                 promises.push(
-                    client
+                    internalClient
                         .getAllResourceDataOfPatientInStudyUsingGET({
                             studyId: this.studyId,
                             patientId: this.patientId,
@@ -1301,7 +1301,7 @@ export class PatientViewPageStore {
         {
             await: () => [this.patientViewData],
             invoke: async () => {
-                return await client.getAllClinicalEventsOfPatientInStudyUsingGET(
+                return await internalClient.getAllClinicalEventsOfPatientInStudyUsingGET(
                     {
                         studyId: this.studyId,
                         patientId: this.patientId,
