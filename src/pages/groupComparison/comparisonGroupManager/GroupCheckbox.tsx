@@ -21,10 +21,7 @@ import {
     CLI_YES_COLOR,
     DARK_GREY,
 } from '../../../shared/lib/Colors';
-import {
-    DefaultTooltip,
-    EllipsisTextTooltip,
-} from 'cbioportal-frontend-commons';
+import { DefaultTooltip, TruncatedText } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
 import { ColorPickerIcon } from 'pages/groupComparison/comparisonGroupManager/ColorPickerIcon';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
@@ -93,8 +90,14 @@ export default class GroupCheckbox extends React.Component<
 
     @computed get label() {
         return (
-            <span style={{ display: 'flex', alignItems: 'center' }}>
-                <EllipsisTextTooltip text={this.props.group.name} />
+            <span
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    whiteSpace: 'nowrap',
+                }}
+            >
+                <TruncatedText text={this.props.group.name} maxLength={30} />
                 &nbsp;(
                 {caseCounts(
                     getNumSamples(this.props.group),
