@@ -67,6 +67,18 @@ export type ClinicalAttribute = {
         'studyId': string
 
 };
+export type ClinicalAttributeCount = {
+    'clinicalAttributeId': string
+
+        'count': number
+
+};
+export type ClinicalAttributeCountFilter = {
+    'sampleIdentifiers': Array < SampleIdentifier >
+
+        'sampleListId': string
+
+};
 export type ClinicalDataBin = {
     'attributeId': string
 
@@ -131,6 +143,30 @@ export type ClinicalDataFilter = {
         'values': Array < DataFilterValue >
 
 };
+export type ClinicalEvent = {
+    'attributes': Array < ClinicalEventData >
+
+        'endNumberOfDaysSinceDiagnosis': number
+
+        'eventType': string
+
+        'patientId': string
+
+        'startNumberOfDaysSinceDiagnosis': number
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+};
+export type ClinicalEventData = {
+    'key': string
+
+        'value': string
+
+};
 export type CoExpression = {
     'geneticEntityId': string
 
@@ -151,6 +187,18 @@ export type CoExpressionFilter = {
         'sampleListId': string
 
 };
+export type CopyNumberCount = {
+    'alteration': number
+
+        'entrezGeneId': number
+
+        'molecularProfileId': string
+
+        'numberOfSamples': number
+
+        'numberOfSamplesWithAlterationInGene': number
+
+};
 export type CopyNumberCountByGene = {
     'alteration': number
 
@@ -169,6 +217,12 @@ export type CopyNumberCountByGene = {
         'qValue': number
 
         'totalCount': number
+
+};
+export type CopyNumberCountIdentifier = {
+    'alteration': number
+
+        'entrezGeneId': number
 
 };
 export type CosmicMutation = {
@@ -536,6 +590,24 @@ export type MutSig = {
         'studyId': string
 
 };
+export type MutationCountByPosition = {
+    'count': number
+
+        'entrezGeneId': number
+
+        'proteinPosEnd': number
+
+        'proteinPosStart': number
+
+};
+export type MutationPositionIdentifier = {
+    'entrezGeneId': number
+
+        'proteinPosEnd': number
+
+        'proteinPosStart': number
+
+};
 export type MutationSpectrum = {
     'CtoA': number
 
@@ -578,6 +650,58 @@ export type OredSampleTreatmentFilters = {
 };
 export type PatientTreatmentFilter = {
     'treatment': string
+
+};
+export type ReferenceGenomeGene = {
+    'chromosome': string
+
+        'cytoband': string
+
+        'end': number
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'length': number
+
+        'referenceGenomeId': number
+
+        'start': number
+
+};
+export type ResourceData = {
+    'patientId': string
+
+        'resourceDefinition': ResourceDefinition
+
+        'resourceId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'url': string
+
+};
+export type ResourceDefinition = {
+    'description': string
+
+        'displayName': string
+
+        'openByDefault': boolean
+
+        'priority': string
+
+        'resourceId': string
+
+        'resourceType': "STUDY" | "SAMPLE" | "PATIENT"
+
+        'studyId': string
 
 };
 export type Sample = {
@@ -664,7 +788,7 @@ export type VariantCountIdentifier = {
 };
 
 /**
- * A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+ * A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
  * @class CBioPortalAPIInternal
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -803,6 +927,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < AlterationEnrichment >
         > {
             return this.fetchAlterationEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getClinicalAttributeCountsUsingPOSTURL(parameters: {
+        'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-attributes/counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get counts for clinical attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getClinicalAttributeCountsUsingPOST
+     * @param {} clinicalAttributeCountFilter - List of SampleIdentifiers or Sample List ID
+     */
+    getClinicalAttributeCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-attributes/counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['clinicalAttributeCountFilter'] !== undefined) {
+                body = parameters['clinicalAttributeCountFilter'];
+            }
+
+            if (parameters['clinicalAttributeCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalAttributeCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get counts for clinical attributes according to their data availability for selected samples/patients
+     * @method
+     * @name CBioPortalAPIInternal#getClinicalAttributeCountsUsingPOST
+     * @param {} clinicalAttributeCountFilter - List of SampleIdentifiers or Sample List ID
+     */
+    getClinicalAttributeCountsUsingPOST(parameters: {
+            'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalAttributeCount >
+        > {
+            return this.getClinicalAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -1618,11 +1819,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingGETWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -1680,11 +1881,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingGET(parameters: {
         'authenticated' ? : boolean,
@@ -1743,11 +1944,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingHEAD
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingHEADWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -1806,11 +2007,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingHEAD
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingHEAD(parameters: {
         'authenticated' ? : boolean,
@@ -1869,11 +2070,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPOST
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -1932,11 +2133,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPOST
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPOST(parameters: {
         'authenticated' ? : boolean,
@@ -1995,11 +2196,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPUT
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPUTWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2058,11 +2259,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPUT
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPUT(parameters: {
         'authenticated' ? : boolean,
@@ -2121,11 +2322,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingDELETE
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingDELETEWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2183,11 +2384,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingDELETE
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingDELETE(parameters: {
         'authenticated' ? : boolean,
@@ -2246,11 +2447,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingOPTIONS
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingOPTIONSWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2309,11 +2510,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingOPTIONS
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingOPTIONS(parameters: {
         'authenticated' ? : boolean,
@@ -2372,11 +2573,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPATCH
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPATCHWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2435,11 +2636,11 @@ export default class CBioPortalAPIInternal {
      * downloadDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#downloadDataAccessTokenUsingPATCH
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     downloadDataAccessTokenUsingPATCH(parameters: {
         'authenticated' ? : boolean,
@@ -2498,11 +2699,11 @@ export default class CBioPortalAPIInternal {
      * getAllDataAccessTokens
      * @method
      * @name CBioPortalAPIInternal#getAllDataAccessTokensUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     getAllDataAccessTokensUsingGETWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2560,11 +2761,11 @@ export default class CBioPortalAPIInternal {
      * getAllDataAccessTokens
      * @method
      * @name CBioPortalAPIInternal#getAllDataAccessTokensUsingGET
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     getAllDataAccessTokensUsingGET(parameters: {
             'authenticated' ? : boolean,
@@ -2624,11 +2825,11 @@ export default class CBioPortalAPIInternal {
      * createDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2687,11 +2888,11 @@ export default class CBioPortalAPIInternal {
      * createDataAccessToken
      * @method
      * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     createDataAccessTokenUsingPOST(parameters: {
         'authenticated' ? : boolean,
@@ -2750,11 +2951,11 @@ export default class CBioPortalAPIInternal {
      * revokeAllDataAccessTokens
      * @method
      * @name CBioPortalAPIInternal#revokeAllDataAccessTokensUsingDELETE
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     revokeAllDataAccessTokensUsingDELETEWithHttpInfo(parameters: {
         'authenticated' ? : boolean,
@@ -2812,11 +3013,11 @@ export default class CBioPortalAPIInternal {
      * revokeAllDataAccessTokens
      * @method
      * @name CBioPortalAPIInternal#revokeAllDataAccessTokensUsingDELETE
-     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
-     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that interal API is currently in beta and subject to change.
      */
     revokeAllDataAccessTokensUsingDELETE(parameters: {
         'authenticated' ? : boolean,
@@ -4501,6 +4702,97 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchCopyNumberCountsUsingPOSTURL(parameters: {
+        'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
+        'molecularProfileId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch';
+
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get counts of specific genes and alterations within a CNA molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchCopyNumberCountsUsingPOST
+     * @param {} copyNumberCountIdentifiers - List of copy number count identifiers
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
+     */
+    fetchCopyNumberCountsUsingPOSTWithHttpInfo(parameters: {
+        'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
+        'molecularProfileId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['copyNumberCountIdentifiers'] !== undefined) {
+                body = parameters['copyNumberCountIdentifiers'];
+            }
+
+            if (parameters['copyNumberCountIdentifiers'] === undefined) {
+                reject(new Error('Missing required  parameter: copyNumberCountIdentifiers'));
+                return;
+            }
+
+            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+            if (parameters['molecularProfileId'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get counts of specific genes and alterations within a CNA molecular profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchCopyNumberCountsUsingPOST
+     * @param {} copyNumberCountIdentifiers - List of copy number count identifiers
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
+     */
+    fetchCopyNumberCountsUsingPOST(parameters: {
+            'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
+            'molecularProfileId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < CopyNumberCount >
+        > {
+            return this.fetchCopyNumberCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchMrnaPercentileUsingPOSTURL(parameters: {
         'entrezGeneIds': Array < number > ,
         'molecularProfileId': string,
@@ -4868,6 +5160,83 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchMutationCountsByPositionUsingPOSTURL(parameters: {
+        'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/mutation-counts-by-position/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch mutation counts in all studies by gene and position
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationCountsByPositionUsingPOST
+     * @param {} mutationPositionIdentifiers - List of gene and positions
+     */
+    fetchMutationCountsByPositionUsingPOSTWithHttpInfo(parameters: {
+        'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/mutation-counts-by-position/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['mutationPositionIdentifiers'] !== undefined) {
+                body = parameters['mutationPositionIdentifiers'];
+            }
+
+            if (parameters['mutationPositionIdentifiers'] === undefined) {
+                reject(new Error('Missing required  parameter: mutationPositionIdentifiers'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch mutation counts in all studies by gene and position
+     * @method
+     * @name CBioPortalAPIInternal#fetchMutationCountsByPositionUsingPOST
+     * @param {} mutationPositionIdentifiers - List of gene and positions
+     */
+    fetchMutationCountsByPositionUsingPOST(parameters: {
+            'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < MutationCountByPosition >
+        > {
+            return this.fetchMutationCountsByPositionUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchMutationEnrichmentsUsingPOSTURL(parameters: {
         'enrichmentType' ? : "SAMPLE" | "PATIENT",
         'groups': Array < MolecularProfileCasesGroupFilter > ,
@@ -4957,6 +5326,262 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    getAllReferenceGenomeGenesUsingGETURL(parameters: {
+        'genomeName': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all reference genes
+     * @method
+     * @name CBioPortalAPIInternal#getAllReferenceGenomeGenesUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getAllReferenceGenomeGenesUsingGETWithHttpInfo(parameters: {
+        'genomeName': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all reference genes
+     * @method
+     * @name CBioPortalAPIInternal#getAllReferenceGenomeGenesUsingGET
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getAllReferenceGenomeGenesUsingGET(parameters: {
+            'genomeName': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ReferenceGenomeGene >
+        > {
+            return this.getAllReferenceGenomeGenesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchReferenceGenomeGenesUsingPOSTURL(parameters: {
+        'geneIds': Array < string > ,
+        'genomeName': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}/fetch';
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch genes of reference genome of interest
+     * @method
+     * @name CBioPortalAPIInternal#fetchReferenceGenomeGenesUsingPOST
+     * @param {} geneIds - List of Entrez Gene IDs
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    fetchReferenceGenomeGenesUsingPOSTWithHttpInfo(parameters: {
+        'geneIds': Array < string > ,
+        'genomeName': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['geneIds'] !== undefined) {
+                body = parameters['geneIds'];
+            }
+
+            if (parameters['geneIds'] === undefined) {
+                reject(new Error('Missing required  parameter: geneIds'));
+                return;
+            }
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch genes of reference genome of interest
+     * @method
+     * @name CBioPortalAPIInternal#fetchReferenceGenomeGenesUsingPOST
+     * @param {} geneIds - List of Entrez Gene IDs
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    fetchReferenceGenomeGenesUsingPOST(parameters: {
+            'geneIds': Array < string > ,
+            'genomeName': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ReferenceGenomeGene >
+        > {
+            return this.fetchReferenceGenomeGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getReferenceGenomeGeneUsingGETURL(parameters: {
+        'geneId': number,
+        'genomeName': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/reference-genome-genes/{genomeName}/{geneId}';
+
+        path = path.replace('{geneId}', parameters['geneId'] + '');
+
+        path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get a gene of a reference genome of interest
+     * @method
+     * @name CBioPortalAPIInternal#getReferenceGenomeGeneUsingGET
+     * @param {integer} geneId - Entrez Gene ID 207
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getReferenceGenomeGeneUsingGETWithHttpInfo(parameters: {
+        'geneId': number,
+        'genomeName': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/reference-genome-genes/{genomeName}/{geneId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{geneId}', parameters['geneId'] + '');
+
+            if (parameters['geneId'] === undefined) {
+                reject(new Error('Missing required  parameter: geneId'));
+                return;
+            }
+
+            path = path.replace('{genomeName}', parameters['genomeName'] + '');
+
+            if (parameters['genomeName'] === undefined) {
+                reject(new Error('Missing required  parameter: genomeName'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get a gene of a reference genome of interest
+     * @method
+     * @name CBioPortalAPIInternal#getReferenceGenomeGeneUsingGET
+     * @param {integer} geneId - Entrez Gene ID 207
+     * @param {string} genomeName - Name of Reference Genome hg19
+     */
+    getReferenceGenomeGeneUsingGET(parameters: {
+        'geneId': number,
+        'genomeName': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < ReferenceGenomeGene > {
+        return this.getReferenceGenomeGeneUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchCaseListCountsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
@@ -5031,6 +5656,1013 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CaseListDataCount >
         > {
             return this.fetchCaseListCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllClinicalEventsInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/clinical-events';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all clinical events in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllClinicalEventsInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. lgg_ucsf_2014
+     */
+    getAllClinicalEventsInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/clinical-events';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all clinical events in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllClinicalEventsInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. lgg_ucsf_2014
+     */
+    getAllClinicalEventsInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ClinicalEvent >
+        > {
+            return this.getAllClinicalEventsInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllClinicalEventsOfPatientInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'patientId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/patients/{patientId}/clinical-events';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        path = path.replace('{patientId}', parameters['patientId'] + '');
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all clinical events of a patient in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllClinicalEventsOfPatientInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} patientId - Patient ID e.g. P01
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. lgg_ucsf_2014
+     */
+    getAllClinicalEventsOfPatientInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'patientId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/patients/{patientId}/clinical-events';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            path = path.replace('{patientId}', parameters['patientId'] + '');
+
+            if (parameters['patientId'] === undefined) {
+                reject(new Error('Missing required  parameter: patientId'));
+                return;
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all clinical events of a patient in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllClinicalEventsOfPatientInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} patientId - Patient ID e.g. P01
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. lgg_ucsf_2014
+     */
+    getAllClinicalEventsOfPatientInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'patientId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ClinicalEvent >
+        > {
+            return this.getAllClinicalEventsOfPatientInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllResourceDataOfPatientInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'patientId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/patients/{patientId}/resource-data';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        path = path.replace('{patientId}', parameters['patientId'] + '');
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['resourceId'] !== undefined) {
+            queryParameters['resourceId'] = parameters['resourceId'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all resource data of a patient in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDataOfPatientInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} patientId - Patient ID e.g. TCGA-OR-A5J2
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDataOfPatientInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'patientId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/patients/{patientId}/resource-data';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            path = path.replace('{patientId}', parameters['patientId'] + '');
+
+            if (parameters['patientId'] === undefined) {
+                reject(new Error('Missing required  parameter: patientId'));
+                return;
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['resourceId'] !== undefined) {
+                queryParameters['resourceId'] = parameters['resourceId'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all resource data of a patient in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDataOfPatientInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} patientId - Patient ID e.g. TCGA-OR-A5J2
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDataOfPatientInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'patientId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'resourceId' ? : string,
+            'sortBy' ? : "ResourceId" | "url",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ResourceData >
+        > {
+            return this.getAllResourceDataOfPatientInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllStudyResourceDataInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/resource-data';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['resourceId'] !== undefined) {
+            queryParameters['resourceId'] = parameters['resourceId'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all resource data for a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllStudyResourceDataInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllStudyResourceDataInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/resource-data';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['resourceId'] !== undefined) {
+                queryParameters['resourceId'] = parameters['resourceId'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all resource data for a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllStudyResourceDataInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllStudyResourceDataInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'resourceId' ? : string,
+            'sortBy' ? : "ResourceId" | "url",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ResourceData >
+        > {
+            return this.getAllStudyResourceDataInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllResourceDefinitionsInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/resource-definitions';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all resoruce definitions in the specified study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDefinitionsInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDefinitionsInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/resource-definitions';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all resoruce definitions in the specified study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDefinitionsInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDefinitionsInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'sortBy' ? : "resourceId" | "displayName" | "description" | "resourceType" | "priority" | "openByDefault" | "studyId",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ResourceDefinition >
+        > {
+            return this.getAllResourceDefinitionsInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getResourceDefinitionInStudyUsingGETURL(parameters: {
+        'resourceId': string,
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/resource-definitions/{resourceId}';
+
+        path = path.replace('{resourceId}', parameters['resourceId'] + '');
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get specified resource definition
+     * @method
+     * @name CBioPortalAPIInternal#getResourceDefinitionInStudyUsingGET
+     * @param {string} resourceId - Resource ID
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getResourceDefinitionInStudyUsingGETWithHttpInfo(parameters: {
+        'resourceId': string,
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/resource-definitions/{resourceId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{resourceId}', parameters['resourceId'] + '');
+
+            if (parameters['resourceId'] === undefined) {
+                reject(new Error('Missing required  parameter: resourceId'));
+                return;
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get specified resource definition
+     * @method
+     * @name CBioPortalAPIInternal#getResourceDefinitionInStudyUsingGET
+     * @param {string} resourceId - Resource ID
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getResourceDefinitionInStudyUsingGET(parameters: {
+        'resourceId': string,
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < ResourceDefinition > {
+        return this.getResourceDefinitionInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    getAllResourceDataOfSampleInStudyUsingGETURL(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sampleId': string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/samples/{sampleId}/resource-data';
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['resourceId'] !== undefined) {
+            queryParameters['resourceId'] = parameters['resourceId'];
+        }
+
+        path = path.replace('{sampleId}', parameters['sampleId'] + '');
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all resource data of a sample in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDataOfSampleInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDataOfSampleInStudyUsingGETWithHttpInfo(parameters: {
+        'direction' ? : "ASC" | "DESC",
+        'pageNumber' ? : number,
+        'pageSize' ? : number,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'resourceId' ? : string,
+        'sampleId': string,
+        'sortBy' ? : "ResourceId" | "url",
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/samples/{sampleId}/resource-data';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['resourceId'] !== undefined) {
+                queryParameters['resourceId'] = parameters['resourceId'];
+            }
+
+            path = path.replace('{sampleId}', parameters['sampleId'] + '');
+
+            if (parameters['sampleId'] === undefined) {
+                reject(new Error('Missing required  parameter: sampleId'));
+                return;
+            }
+
+            if (parameters['sortBy'] !== undefined) {
+                queryParameters['sortBy'] = parameters['sortBy'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all resource data of a sample in a study
+     * @method
+     * @name CBioPortalAPIInternal#getAllResourceDataOfSampleInStudyUsingGET
+     * @param {string} direction - Direction of the sort
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {integer} pageSize - Page size of the result list
+     * @param {string} projection - Level of detail of the response
+     * @param {string} resourceId - Resource ID
+     * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getAllResourceDataOfSampleInStudyUsingGET(parameters: {
+            'direction' ? : "ASC" | "DESC",
+            'pageNumber' ? : number,
+            'pageSize' ? : number,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'resourceId' ? : string,
+            'sampleId': string,
+            'sortBy' ? : "ResourceId" | "url",
+            'studyId': string,
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ResourceData >
+        > {
+            return this.getAllResourceDataOfSampleInStudyUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
