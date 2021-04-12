@@ -1185,9 +1185,11 @@ export class ResultsViewPageStore {
                 } as ClinicalAttributeCountFilter;
             }
 
-            const result = await client.getClinicalAttributeCountsUsingPOST({
-                clinicalAttributeCountFilter,
-            });
+            const result = await internalClient.getClinicalAttributeCountsUsingPOST(
+                {
+                    clinicalAttributeCountFilter,
+                }
+            );
             // build map
             const ret: { [clinicalAttributeId: string]: number } = _.reduce(
                 result,
@@ -5108,7 +5110,7 @@ export class ResultsViewPageStore {
             );
 
             if (mutationPositionIdentifiers.length > 0) {
-                return client.fetchMutationCountsByPositionUsingPOST({
+                return internalClient.fetchMutationCountsByPositionUsingPOST({
                     mutationPositionIdentifiers,
                 });
             } else {

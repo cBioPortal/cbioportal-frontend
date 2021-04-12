@@ -4294,7 +4294,7 @@ export class StudyViewPageStore {
             const ret: ResourceDefinition[] = [];
             for (const study of this.queriedPhysicalStudies.result) {
                 promises.push(
-                    defaultClient
+                    internalClient
                         .getAllResourceDefinitionsInStudyUsingGET({
                             studyId: study.studyId,
                         })
@@ -4324,7 +4324,7 @@ export class StudyViewPageStore {
             const promises = [];
             for (const resource of studyResourceDefinitions) {
                 promises.push(
-                    defaultClient
+                    internalClient
                         .getAllStudyResourceDataInStudyUsingGET({
                             studyId: resource.studyId,
                             resourceId: resource.resourceId,
@@ -7402,7 +7402,7 @@ export class StudyViewPageStore {
             let clinicalAttributeCountFilter = {
                 sampleIdentifiers,
             } as ClinicalAttributeCountFilter;
-            return defaultClient.getClinicalAttributeCountsUsingPOST({
+            return internalClient.getClinicalAttributeCountsUsingPOST({
                 clinicalAttributeCountFilter,
             });
         },

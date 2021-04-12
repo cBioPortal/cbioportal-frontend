@@ -216,7 +216,7 @@ export async function fetchReferenceGenomeGenes(
     if (hugoGeneSymbols && hugoGeneSymbols.length) {
         const order = stringListToIndexSet(hugoGeneSymbols);
         return _.sortBy(
-            await client.fetchReferenceGenomeGenesUsingPOST({
+            await internalClient.fetchReferenceGenomeGenesUsingPOST({
                 genomeName: genomeName,
                 geneIds: hugoGeneSymbols.slice(),
             }),
@@ -239,7 +239,7 @@ export async function fetchAllReferenceGenomeGenes(
         });
     }
     if (genomeName) {
-        return await client.getAllReferenceGenomeGenesUsingGET({
+        return await internalClient.getAllReferenceGenomeGenesUsingGET({
             genomeName: genomeName,
         });
     } else {
@@ -681,7 +681,7 @@ export async function fetchCopyNumberData(
         molecularProfileIdDiscrete.result &&
         copyNumberCountIdentifiers.length > 0
     ) {
-        return await client.fetchCopyNumberCountsUsingPOST({
+        return await internalClient.fetchCopyNumberCountsUsingPOST({
             molecularProfileId: molecularProfileIdDiscrete.result,
             copyNumberCountIdentifiers,
         });
