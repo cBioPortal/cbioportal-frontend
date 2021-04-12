@@ -38,7 +38,7 @@ import {
     OncoprintMutationType,
     selectDisplayValue,
 } from '../../../shared/components/oncoprint/DataUtils';
-import { DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
+import { BLACK, DEFAULT_GREY, LIGHT_GREY } from 'shared/lib/Colors';
 import { CoverageInformation } from '../../../shared/lib/GenePanelUtils';
 import { IBoxScatterPlotData } from '../../../shared/components/plots/BoxScatterPlot';
 import {
@@ -1804,14 +1804,15 @@ export const oncoprintMutationTypeToAppearanceDefault: {
 
 export const notProfiledCnaAndSvAppearance = {
     symbol: 'circle',
-    stroke: LIGHT_GREY,
-    strokeOpacity: 0.9,
+    stroke: BLACK,
+    strokeOpacity: 1,
 };
-export const notProfiledMutationsAppearance = Object.assign(
-    {},
-    { fill: '#ffffff' },
-    notProfiledCnaAndSvAppearance
-);
+export const notProfiledMutationsAppearance = {
+    symbol: 'circle',
+    stroke: LIGHT_GREY,
+    strokeOpacity: 1,
+    fill: '#ffffff',
+};
 export const noDataClinicalAppearance = Object.assign(
     {},
     notProfiledMutationsAppearance,
