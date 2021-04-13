@@ -3,7 +3,7 @@ import {
     CopyNumberCount,
     CopyNumberCountIdentifier,
 } from 'cbioportal-ts-api-client';
-import client from 'shared/api/cbioportalClientInstance';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 function getKey<T extends { entrezGeneId: number; alteration: number }>(
     obj: T
@@ -19,7 +19,7 @@ function fetch(
         return Promise.reject('No discrete CNA molecular profile id given');
     } else {
         if (queries.length) {
-            return client.fetchCopyNumberCountsUsingPOST({
+            return internalClient.fetchCopyNumberCountsUsingPOST({
                 molecularProfileId: molecularProfileIdDiscrete,
                 copyNumberCountIdentifiers: queries,
             });
