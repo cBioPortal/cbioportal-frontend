@@ -476,8 +476,16 @@ describe('DownloadUtils', () => {
             assert.deepEqual(
                 oqlData.mutation,
                 [
-                    { proteinChange: 'G598A', isGermline: true },
-                    { proteinChange: 'G239C', isGermline: false },
+                    {
+                        proteinChange: 'G598A',
+                        isGermline: true,
+                        putativeDriver: true,
+                    },
+                    {
+                        proteinChange: 'G239C',
+                        isGermline: false,
+                        putativeDriver: false,
+                    },
                 ],
                 'mutation data is correct for the sample with mutation and fusion data'
             );
@@ -867,8 +875,16 @@ describe('DownloadUtils', () => {
             assert.deepEqual(
                 caseAlterationData[0].oqlData['EGFR'].mutation,
                 [
-                    { proteinChange: 'G598A', isGermline: true },
-                    { proteinChange: 'G239C', isGermline: false },
+                    {
+                        proteinChange: 'G598A',
+                        isGermline: true,
+                        putativeDriver: true,
+                    },
+                    {
+                        proteinChange: 'G239C',
+                        isGermline: false,
+                        putativeDriver: false,
+                    },
                 ],
                 'mutation data is correct for the sample key UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3'
             );
