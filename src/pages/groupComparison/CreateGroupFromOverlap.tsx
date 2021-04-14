@@ -99,6 +99,7 @@ export default class CreateGroupFromOverlap extends React.Component<
                 description: '',
                 studies: studiesAttr,
                 origin: this.props.store.origin.result!,
+                color: undefined,
             },
             this.saveGroupToUser
         );
