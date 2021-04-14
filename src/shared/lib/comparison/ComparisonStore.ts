@@ -940,60 +940,81 @@ export default abstract class ComparisonStore {
             this.selectedStudyStructuralVariantEnrichmentProfileMap,
         ],
         invoke: () => {
-            return Promise.resolve(
-                this.alterationsEnrichmentAnalysisGroups.result!.map(group => {
-                    let molecularProfileCaseIdentifiers: {
-                        caseId: string;
-                        molecularProfileId: string;
-                    }[] = [];
-                    group.samples.forEach(sample => {
-                        if (
-                            this.selectedStudyMutationEnrichmentProfileMap
-                                .result![sample.studyId]
-                        ) {
-                            molecularProfileCaseIdentifiers.push({
-                                caseId: this.usePatientLevelEnrichments
-                                    ? sample.patientId
-                                    : sample.sampleId,
-                                molecularProfileId: this
-                                    .selectedStudyMutationEnrichmentProfileMap
-                                    .result![sample.studyId].molecularProfileId,
+            if (
+                this.alterationsEnrichmentAnalysisGroups.result &&
+                this.alterationsEnrichmentAnalysisGroups.result.length > 1 &&
+                (_(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some() ||
+                    _(this.selectedCopyNumberEnrichmentEventTypes)
+                        .values()
+                        .some() ||
+                    this.isStructuralVariantEnrichmentSelected)
+            ) {
+                return Promise.resolve(
+                    this.alterationsEnrichmentAnalysisGroups.result!.map(
+                        group => {
+                            let molecularProfileCaseIdentifiers: {
+                                caseId: string;
+                                molecularProfileId: string;
+                            }[] = [];
+                            group.samples.forEach(sample => {
+                                if (
+                                    this
+                                        .selectedStudyMutationEnrichmentProfileMap
+                                        .result![sample.studyId]
+                                ) {
+                                    molecularProfileCaseIdentifiers.push({
+                                        caseId: this.usePatientLevelEnrichments
+                                            ? sample.patientId
+                                            : sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedStudyMutationEnrichmentProfileMap
+                                            .result![sample.studyId]
+                                            .molecularProfileId,
+                                    });
+                                }
+                                if (
+                                    this
+                                        .selectedStudyCopyNumberEnrichmentProfileMap
+                                        .result![sample.studyId]
+                                ) {
+                                    molecularProfileCaseIdentifiers.push({
+                                        caseId: this.usePatientLevelEnrichments
+                                            ? sample.patientId
+                                            : sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedStudyCopyNumberEnrichmentProfileMap
+                                            .result![sample.studyId]
+                                            .molecularProfileId,
+                                    });
+                                }
+                                if (
+                                    this
+                                        .selectedStudyStructuralVariantEnrichmentProfileMap
+                                        .result![sample.studyId]
+                                ) {
+                                    molecularProfileCaseIdentifiers.push({
+                                        caseId: this.usePatientLevelEnrichments
+                                            ? sample.patientId
+                                            : sample.sampleId,
+                                        molecularProfileId: this
+                                            .selectedStudyStructuralVariantEnrichmentProfileMap
+                                            .result![sample.studyId]
+                                            .molecularProfileId,
+                                    });
+                                }
                             });
+                            return {
+                                name: group.name,
+                                molecularProfileCaseIdentifiers,
+                            };
                         }
-                        if (
-                            this.selectedStudyCopyNumberEnrichmentProfileMap
-                                .result![sample.studyId]
-                        ) {
-                            molecularProfileCaseIdentifiers.push({
-                                caseId: this.usePatientLevelEnrichments
-                                    ? sample.patientId
-                                    : sample.sampleId,
-                                molecularProfileId: this
-                                    .selectedStudyCopyNumberEnrichmentProfileMap
-                                    .result![sample.studyId].molecularProfileId,
-                            });
-                        }
-                        if (
-                            this
-                                .selectedStudyStructuralVariantEnrichmentProfileMap
-                                .result![sample.studyId]
-                        ) {
-                            molecularProfileCaseIdentifiers.push({
-                                caseId: this.usePatientLevelEnrichments
-                                    ? sample.patientId
-                                    : sample.sampleId,
-                                molecularProfileId: this
-                                    .selectedStudyStructuralVariantEnrichmentProfileMap
-                                    .result![sample.studyId].molecularProfileId,
-                            });
-                        }
-                    });
-                    return {
-                        name: group.name,
-                        molecularProfileCaseIdentifiers,
-                    };
-                })
-            );
+                    )
+                );
+            } else {
+                return Promise.resolve([]);
+            }
         },
     });
 
@@ -1007,40 +1028,25 @@ export default abstract class ComparisonStore {
         ],
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
-            if (
-                (this.alterationsEnrichmentDataRequestGroups.result &&
-                    this.alterationsEnrichmentDataRequestGroups.result.length >
-                        1 &&
-                    (_(this.selectedMutationEnrichmentEventTypes)
-                        .values()
-                        .some() ||
-                        _(this.selectedCopyNumberEnrichmentEventTypes)
-                            .values()
-                            .some())) ||
-                this.isStructuralVariantEnrichmentSelected
-            ) {
-                return internalClient.fetchAlterationEnrichmentsUsingPOST({
-                    enrichmentType: this.usePatientLevelEnrichments
-                        ? 'PATIENT'
-                        : 'SAMPLE',
-                    groupsAndAlterationTypes: {
-                        molecularProfileCasesGroupFilter: this
-                            .alterationsEnrichmentDataRequestGroups.result!,
-                        alterationEventTypes: {
-                            copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
-                                this.selectedCopyNumberEnrichmentEventTypes
-                            ),
-                            mutationEventTypes: getMutationEventTypesAPIParameter(
-                                this.selectedMutationEnrichmentEventTypes
-                            ),
-                            structuralVariants: !!this
-                                .isStructuralVariantEnrichmentSelected,
-                        },
+            return internalClient.fetchAlterationEnrichmentsUsingPOST({
+                enrichmentType: this.usePatientLevelEnrichments
+                    ? 'PATIENT'
+                    : 'SAMPLE',
+                groupsAndAlterationTypes: {
+                    molecularProfileCasesGroupFilter: this
+                        .alterationsEnrichmentDataRequestGroups.result!,
+                    alterationEventTypes: {
+                        copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
+                            this.selectedCopyNumberEnrichmentEventTypes
+                        ),
+                        mutationEventTypes: getMutationEventTypesAPIParameter(
+                            this.selectedMutationEnrichmentEventTypes
+                        ),
+                        structuralVariants: !!this
+                            .isStructuralVariantEnrichmentSelected,
                     },
-                });
-            } else {
-                return Promise.resolve([]);
-            }
+                },
+            });
         },
     });
 
