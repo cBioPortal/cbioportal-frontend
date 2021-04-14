@@ -15,7 +15,7 @@ function waitForGeneQueryPage(timeout) {
 }
 
 function waitForPlotsTab(timeout) {
-    $('div.axisBlock').waitForVisible(timeout || 20000);
+    $('div.axisBlock').waitForDisplayed(timeout || 20000);
 }
 
 function waitForCoExpressionTab(timeout) {
@@ -24,10 +24,10 @@ function waitForCoExpressionTab(timeout) {
 
 function waitForPatientView(timeout) {
     $('#patientViewPageTabs').waitForExist(timeout || 20000);
-    $('[data-test=patientview-copynumber-table]').waitForVisible(
+    $('[data-test=patientview-copynumber-table]').waitForDisplayed(
         timeout || 20000
     );
-    $('[data-test=patientview-mutation-table]').waitForVisible(
+    $('[data-test=patientview-mutation-table]').waitForDisplayed(
         timeout || 20000
     );
 }
@@ -36,10 +36,9 @@ function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(() => {
         return (
-            !browser.isExisting('.oncoprintLoadingIndicator') && // wait for loading indicator to hide, and
-            browser.isExisting('#oncoprintDiv svg rect') && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-            browser.getCssProperty('.oncoprintContainer', 'opacity').value ===
-                1 && // oncoprint has faded in
+            !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
+            $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+            $('.oncoprintContainer').getCSSProperty('opacity').value === 1 && // oncoprint has faded in
             $('.oncoprint__controls').isExisting()
         ); // oncoprint controls are showing
     }, timeout);
@@ -52,13 +51,13 @@ function getTextInOncoprintLegend() {
 function setResultsPageSettingsMenuOpen(open) {
     const button = 'button[data-test="GlobalSettingsButton"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
-    browser.waitForVisible(button);
+    $(button).waitForDisplayed();
     browser.waitUntil(
         () => {
-            if (open === browser.isVisible(dropdown)) {
+            if (open === $(dropdown).isDisplayed()) {
                 return true;
             } else {
-                browser.click(button);
+                $(button).click();
                 return false;
             }
         },
@@ -72,14 +71,14 @@ function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = '#mutationColorDropdown';
     const mutationColorMenuDropdown =
         'div.oncoprint__controls__mutation_color_menu';
-    browser.moveToObject('div.oncoprint__controls');
-    browser.waitForVisible(mutationColorMenuButton);
+    $('div.oncoprint__controls').moveTo();
+    $(mutationColorMenuButton).waitForDisplayed();
     browser.waitUntil(
         () => {
-            if (open === browser.isVisible(mutationColorMenuDropdown)) {
+            if (open === $(mutationColorMenuDropdown).isDisplayed()) {
                 return true;
             } else {
-                browser.click(mutationColorMenuButton);
+                $(mutationColorMenuButton).click();
                 return false;
             }
         },
@@ -98,13 +97,13 @@ function setDropdownOpen(
     browser.waitUntil(
         () => {
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
-            const isOpen = browser.isExisting(dropdown_selector)
-                ? browser.isVisible(dropdown_selector)
+            const isOpen = $(dropdown_selector).isExisting()
+                ? $(dropdown_selector).isDisplayed()
                 : false;
             if (open === isOpen) {
                 return true;
             } else {
-                browser.click(button_selector);
+                $(button_selector).click();
                 return false;
             }
         },
@@ -129,10 +128,10 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     }
     if (needToLogin) keycloakLogin();
 
-    browser.setViewportSize({ height: 1000, width: 1600 });
+    //browser.setViewportSize({ height: 1000, width: 1600 });
 
     // move mouse out of the way
-    browser.moveToObject('body', 0, 0);
+    //browser.moveToObject('body', 0, 0);
 }
 
 function sessionServiceIsEnabled() {
@@ -205,60 +204,58 @@ function getPortalUrlFromEnv() {
 function toStudyViewSummaryTab() {
     var summaryTab = '#studyViewTabs a.tabAnchor_summary';
     var summaryContent = "[data-test='summary-tab-content']";
-    if (!browser.isVisible(summaryContent)) {
-        browser.waitForVisible(summaryTab, 10000);
-        browser.click(summaryTab);
-        browser.waitForVisible(summaryContent, 10000);
+    if (!$(summaryContent).isDisplayed()) {
+        $(summaryTab).waitForDisplayed({ timeout: 10000 });
+        $(summaryTab).click();
+        $(summaryContent).waitForDisplayed({ timeout: 10000 });
     }
 }
 
 function toStudyViewClinicalDataTab() {
     var clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
     var clinicalDataContent = "[data-test='clinical-data-tab-content']";
-    if (!browser.isVisible(clinicalDataContent)) {
-        browser.waitForVisible(clinicalDataTab, 10000);
-        browser.click(clinicalDataTab);
-        browser.waitForVisible(clinicalDataContent, 10000);
+    if (!$(clinicalDataContent).isDisplayed()) {
+        $(clinicalDataTab).waitForDisplayed({ timeout: 10000 });
+        $(clinicalDataTab).click();
+        $(clinicalDataContent).waitForDisplayed({ timeout: 10000 });
     }
 }
 
 function removeAllStudyViewFilters() {
     const clearAllFilter = "[data-test='clear-all-filters']";
-    if (browser.isVisible(clearAllFilter)) {
-        browser.click(clearAllFilter);
+    if ($(clearAllFilter).isDisplayed()) {
+        $(clearAllFilter).click();
     }
 }
 
 function waitForStudyViewSelectedInfo() {
-    browser.waitForVisible("[data-test='selected-info']", 5000);
+    $("[data-test='selected-info']").waitForDisplayed({ timeout: 5000 });
     // pause to wait the animation finished
     browser.pause(2000);
 }
 
 function waitForStudyView() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, 10000);
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, { timeout: 10000 });
 }
 
 function waitForGroupComparisonTabOpen() {
-    $('[data-test=ComparisonPageOverlapTabDiv]').waitForVisible(100000);
+    $('[data-test=ComparisonPageOverlapTabDiv]').waitForDisplayed({
+        timeout: 100000,
+    });
 }
 
 function getTextFromElement(element) {
-    return browser
-        .element(element)
+    return $(element)
         .getText()
         .trim();
 }
 
 function getNumberOfStudyViewCharts() {
-    return browser.elements('div.react-grid-item').value.length;
+    return $$('div.react-grid-item').length;
 }
 
 function setInputText(selector, text) {
-    browser.setValue(
-        selector,
-        '\uE003'.repeat(browser.getValue(selector).length) + text
-    );
+    $(selector).setValue('\uE003'.repeat($(selector).getValue().length) + text);
 }
 
 function getReactSelectOptions(parent) {
@@ -293,11 +290,11 @@ function getSelectCheckedOptions(parent) {
 
 function pasteToElement(elementSelector, text) {
     clipboardy.writeSync(text);
-    browser.setValue(elementSelector, ['Shift', 'Insert']);
+    $(elementSelector).setValue(['Shift', 'Insert']);
 }
 
 function checkOncoprintElement(selector) {
-    browser.moveToObject('body', 0, 0);
+    //browser.moveToObject('body', 0, 0);
     browser.execute(function() {
         frontendOnc.clearMouseOverEffects(); // clear mouse hover effects for uniform screenshot
     });
@@ -381,13 +378,13 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
 }
 
 function clickQueryByGeneButton() {
-    browser.waitForEnabled('a=Query By Gene');
-    browser.click('a=Query By Gene');
-    browser.scroll(0, 0);
+    $('a=Query By Gene').waitForEnabled();
+    $('a=Query By Gene').click();
+    $('body').scrollIntoView();
 }
 
 function clickModifyStudySelectionButton() {
-    browser.click('[data-test="modifyStudySelectionButton"]');
+    $('[data-test="modifyStudySelectionButton"]').click();
 }
 
 function getOncoprintGroupHeaderOptionsElements(trackGroupIndex) {
@@ -448,44 +445,47 @@ function keycloakLogin(timeout) {
         timeout,
         'No redirect to Keycloak could be detected.'
     );
-    $('body').waitForVisible(timeout);
+    $('body').waitForDisplayed(timeout);
 
     $('#username').setValue('testuser');
     $('#password').setValue('P@ssword1');
     $('#kc-login').click();
 
     browser.waitUntil(() => !browser.getUrl().includes('/auth/realms/cbio'));
-    $('body').waitForVisible(timeout);
+    $('body').waitForDisplayed(timeout);
 }
 
 function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     goToUrlAndSetLocalStorage(studyViewUrl, true);
-    $('[data-test=summary-tab-content]').waitForVisible();
+    $('[data-test=summary-tab-content]').waitForDisplayed();
     waitForNetworkQuiet();
     const chart = '[data-test=' + chartDataTest + ']';
-    browser.waitForVisible(chart, timeout || 10000);
-    browser.moveToObject(chart);
-    browser.waitUntil(() => {
-        return browser.isExisting(chart + ' .controls');
-    }, timeout || 10000);
+    $(chart).waitForDisplayed({ timeout: timeout || 10000 });
+    $(chart).moveTo();
+    browser.waitUntil(
+        () => {
+            return $(chart + ' .controls').isExisting();
+        },
+        { timeout: timeout || 10000 }
+    );
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    browser.moveToObject(hamburgerIcon);
+    $(hamburgerIcon).moveTo();
 
     // wait for the menu available
-    browser.waitForVisible(hamburgerIcon, timeout || 10000);
+    $(hamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
 
     // open comparison session
-    const studyViewTabId = browser.getCurrentTabId();
+    const studyViewTabId = browser.getWindowHandle();
     $(chart)
         .$(hamburgerIcon)
         .$$('li')[1]
         .click();
     const groupComparisonTabId = browser
-        .windowHandles()
-        .value.filter(id => id !== studyViewTabId)[0];
-    browser.window(groupComparisonTabId);
+        .getWindowHandles()
+        .filter(id => id !== studyViewTabId)[0];
+    browser.switchToWindow(groupComparisonTabId);
     waitForGroupComparisonTabOpen();
 }
 

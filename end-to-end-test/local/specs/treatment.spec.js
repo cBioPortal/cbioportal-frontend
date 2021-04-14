@@ -176,7 +176,7 @@ describe('treatment feature', function() {
 
                 $('button=Add Track').click();
                 waitForOncoprint();
-                var url = browser.url().value;
+                var url = browser.getUrl();
                 var regex = /generic_assay_groups=study_es_0_treatment_ec50%2C17-AAG/;
                 assert(url.match(regex));
             });
@@ -259,22 +259,22 @@ describe('treatment feature', function() {
                 );
 
                 $('[data-test=generic-assay-info-icon]').waitForExist();
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
-                            value: '17-AAG',
-                            label: 'Name of 17-AAG',
-                        });
-                    })
-                );
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
-                    })
-                );
+
+                // NOT SUPER CLEAR WHY THESE ARE NECESSARY
+                browser.execute(function() {
+                    resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                        value: '17-AAG',
+                        label: 'Name of 17-AAG',
+                    });
+                })
+
+                browser.execute(function() {
+                    resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                        value: 'AEW541',
+                        label: 'Name of AEW541',
+                    });
+                })
+
             });
 
             it('vertical axis menu shows treatment entry in entity menu', () => {
@@ -292,22 +292,22 @@ describe('treatment feature', function() {
                 );
 
                 $('[data-test=generic-assay-info-icon]').waitForExist();
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
-                            value: '17-AAG',
-                            label: 'Name of 17-AAG',
-                        });
-                    })
-                );
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
-                    })
-                );
+
+                // browser.execute(function() {
+                //     resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                //         value: '17-AAG',
+                //         label: 'Name of 17-AAG',
+                //     });
+                // })
+                //
+                //
+                // browser.execute(function() {
+                //     resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                //         value: 'AEW541',
+                //         label: 'Name of AEW541',
+                //     });
+                // })
+
             });
 
             it('has Ordered samples entry in vert. menu when treatment selected on horz. axis', () => {
@@ -325,14 +325,13 @@ describe('treatment feature', function() {
                 );
 
                 $('[data-test=generic-assay-info-icon]').waitForExist();
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
-                    })
-                );
+
+                browser.execute(function() {
+                    resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                        value: 'AEW541',
+                        label: 'Name of AEW541',
+                    });
+                });
 
                 var horzDataSelect = $('[name=h-profile-type-selector]').$(
                     '..'
@@ -355,14 +354,14 @@ describe('treatment feature', function() {
                 );
 
                 $('[data-test=generic-assay-info-icon]').waitForExist();
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
-                    })
-                );
+
+                browser.execute(function() {
+                    resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                        value: 'AEW541',
+                        label: 'Name of AEW541',
+                    });
+                });
+
 
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
@@ -401,16 +400,18 @@ describe('treatment feature', function() {
                 );
 
                 $('[data-test=generic-assay-info-icon]').waitForExist(10000);
-                assert(
+
+
+                    // WHY WAS ASSERT BEING CALLED ON THIS?
                     browser.execute(function() {
                         resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                             value: 'AEW541',
                             label: 'Name of AEW541',
                         });
-                    })
-                );
+                    });
+                   // browser.pause(1000);
 
-                assert($('[data-test=ViewLimitValues]').isVisible());
+                assert($('[data-test=ViewLimitValues]').waitForDisplayed());
             });
 
             it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', () => {
@@ -427,16 +428,15 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
                 $('[data-test=generic-assay-info-icon]').waitForExist(10000);
-                assert(
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
-                    })
-                );
 
-                assert($('[data-test=ViewLimitValues]').isVisible());
+                browser.execute(function() {
+                    resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
+                        value: 'AEW541',
+                        label: 'Name of AEW541',
+                    });
+                });
+
+                assert($('[data-test=ViewLimitValues]').waitForDisplayed());
             });
 
             it('shows hint for handling of threshold values for treatment data in scatter plot', () => {
@@ -469,7 +469,7 @@ describe('treatment feature', function() {
                 geneSelect.click();
                 $('[data-test=GeneColoringMenu]')
                     .$('div=Genes')
-                    .waitForVisible();
+                    .waitForDisplayed();
 
                 // select gene menu entries
                 var geneMenuEntries = $('[data-test=GeneColoringMenu]')
@@ -497,12 +497,12 @@ describe('treatment feature', function() {
 });
 
 var goToTreatmentTab = () => {
-    var addTracksButton = browser.$('button[id=addTracksDropdown]');
+    var addTracksButton = $('button[id=addTracksDropdown]');
     addTracksButton.click();
 
-    var addTracksMenu = browser.$(ADD_TRACKS_TREATMENT_TAB);
+    var addTracksMenu = $(ADD_TRACKS_TREATMENT_TAB);
     addTracksMenu.waitForExist();
-    browser.click(ADD_TRACKS_TREATMENT_TAB);
+    $(ADD_TRACKS_TREATMENT_TAB).click();
 };
 
 var selectTreamentsBothAxes = () => {

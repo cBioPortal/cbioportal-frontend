@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { configure } from 'mobx';
-import { enableLogging } from 'mobx-logger';
 import { Provider } from 'mobx-react';
-import { Router, Switch } from 'react-router-dom';
-import { createHistory, createBrowserHistory } from 'history';
+import { Router } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
@@ -17,11 +16,10 @@ import {
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
-import makeRoutes from './routes';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
-import { getHost, buildCBioPortalPageUrl } from './shared/api/urls';
+import { buildCBioPortalPageUrl } from './shared/api/urls';
 import AppConfig from 'appConfig';
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';

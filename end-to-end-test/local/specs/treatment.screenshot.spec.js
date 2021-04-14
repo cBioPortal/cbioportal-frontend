@@ -47,7 +47,7 @@ describe('treatment feature', () => {
 
             $('button=Add Track').click();
             // close add tracks menu
-            var addTracksButton = browser.$('button[id=addTracksDropdown]');
+            var addTracksButton = $('button[id=addTracksDropdown]');
             addTracksButton.click();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');
@@ -62,8 +62,13 @@ describe('treatment feature', () => {
             selectTreamentsBothAxes();
         });
 
-        it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
+        it.only('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
+
+            browser.execute(()=>{
+                $("div").css({border:"1px solid red !important"});
+            })
+
             assertScreenShotMatch(res);
         });
 

@@ -1,5 +1,6 @@
-var assert = require('assert');
-var expect = require('chai').expect;
+//var assert = require('assert');
+//var expect = require('chai').expect;
+
 const {
     waitForOncoprint,
     setResultsPageSettingsMenuOpen,
@@ -16,19 +17,15 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 var { COEXPRESSION_TIMEOUT } = require('../../../shared/specUtils');
 
 function waitForAndCheckPlotsTab() {
-    browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
-    var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]', {
-        hide: ['.qtip'],
-    });
+    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timout: 100000 });
+    var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]');
     assertScreenShotMatch(res);
 }
 
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
-        var res = browser.checkElement('.oncoprintContainer', {
-            hide: ['.oncoprint__controls'],
-        }); // just hide the controls bc for some reason they keep showing up transparent in this test only
+        var res = browser.checkElement('.oncoprintContainer'); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
     });
 
@@ -43,77 +40,66 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 
     it(`${prefix} cancer type summary`, function() {
-        browser.click('a.tabAnchor_cancerTypesSummary');
-        browser.waitForVisible('[data-test="cancerTypeSummaryChart"]', 10000);
-        browser.waitForExist('[data-test="cancerTypeSummaryWrapper"]', 5000);
+        $('a.tabAnchor_cancerTypesSummary').click();
+        $('[data-test="cancerTypeSummaryChart"]', 10000).waitForDisplayed();
+        $('[data-test="cancerTypeSummaryWrapper"]').waitForExist();
         var res = browser.checkElement(
-            '[data-test="cancerTypeSummaryWrapper"]',
-            { hide: ['.qtip'] }
+            '[data-test="cancerTypeSummaryWrapper"]'
         );
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} mutex tab`, function() {
-        browser.click('a.tabAnchor_mutualExclusivity');
-        var res = browser.checkElement(
-            '[data-test="mutualExclusivityTabDiv"]',
-            { hide: ['.qtip'] }
-        );
+        $('a.tabAnchor_mutualExclusivity').click();
+        var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} plots tab`, function() {
-        browser.click('a.tabAnchor_plots');
+        $('a.tabAnchor_plots').click();
         waitForAndCheckPlotsTab();
     });
 
     it(`${prefix} mutation tab`, function() {
-        browser.click('a.tabAnchor_mutations');
-        browser.waitForVisible('.borderedChart svg', 20000);
+        $('a.tabAnchor_mutations').click();
+        $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
         var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
-            hide: [
-                '.qtip',
-                '[data-test=view3DStructure]',
-                '[data-test=GeneSummaryUniProt]',
-            ],
             viewportChangePause: 4000,
         }); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
 
-    it.skip(`${prefix} coexpression tab`, function() {
-        browser.click('a.tabAnchor_coexpression');
-        browser.waitForVisible(
-            'div[data-test="CoExpressionPlot"]',
-            COEXPRESSION_TIMEOUT
-        );
-        var res = browser.checkElement('[data-test="coExpressionTabDiv"]', {
-            hide: ['.qtip'],
+    it(`${prefix} coexpression tab`, function() {
+        $('a.tabAnchor_coexpression').click();
+        $('div[data-test="CoExpressionPlot"]').waitForDisplayed({
+            timeout: COEXPRESSION_TIMEOUT,
         });
+        var res = browser.checkElement('[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab overlap`, function() {
-        browser.click('a.tabAnchor_comparison');
-        browser.waitForVisible(
+        $('a.tabAnchor_comparison').click();
+        $(
             'div[data-test="ComparisonPageOverlapTabContent"]'
-        );
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        ).waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab clinical`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_clinical');
-        browser.waitForVisible('div[data-test="ComparisonPageClinicalTabDiv"]');
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        $('.comparisonTabSubTabs .tabAnchor_clinical').click();
+        $('div[data-test="ComparisonPageClinicalTabDiv"]').waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
+        $('.comparisonTabSubTabs .tabAnchor_mutations').click();
+        $(
+            'div[data-test="GroupComparisonMutationEnrichments"]'
+        ).waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
         browser.waitForVisible(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
@@ -134,75 +120,49 @@ function runResultsTestSuite(prefix, options = {}) {
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
             hide: ['.qtip'],
         });
+        $(
+            'div[data-test="GroupComparisonMutationEnrichments"]'
+        ).waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab mrna enrichments`, function() {
-        browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]'
-        );
-        browser.click(options.mrnaEnrichmentsRowSelector || 'b=ETV5');
-        browser.waitForVisible('div[data-test="MiniBoxPlot"]');
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        $('div[data-test="GroupComparisonMRNAEnrichments"]').waitForDisplayed();
+        $(options.mrnaEnrichmentsRowSelector || 'b=ETV5').click();
+        $('div[data-test="MiniBoxPlot"]').waitForDisplayed();
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} survival tab`, function() {
-        browser.click('.comparisonTabSubTabs a.tabAnchor_survival');
-        browser.waitForVisible(
+        $('.comparisonTabSubTabs a.tabAnchor_survival').click();
+        $(
             '[data-test="ComparisonPageSurvivalTabDiv"] svg',
             10000
-        );
-        var res = browser.checkElement('[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        ).waitForDisplayed();
+        var res = browser.checkElement('[data-test="ComparisonTabDiv"]');
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} pathwaymapper tab`, function() {
         // go to pathways tab
-        browser.waitForVisible('a.tabAnchor_pathways');
-        browser.click('a.tabAnchor_pathways');
+        $('a.tabAnchor_pathways').waitForDisplayed();
+        $('a.tabAnchor_pathways').click();
 
-        browser.waitForVisible('#cy', 10000);
-        browser.waitForExist('div[data-test="pathwayMapperMessageBox"]', 4000);
+        $('#cy', 10000).waitForDisplayed();
+        $('div[data-test="pathwayMapperMessageBox"]').waitForExist(4000);
 
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
-            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-        });
-
-        assertScreenShotMatch(res);
-    });
-
-    it.skip(`${prefix} network tab`, function() {
-        // TODO: unskip this when bug is fixed
-
-        browser.click('a.tabAnchor_network');
-
-        browser.waitForExist('iframe#networkFrame', 10000);
-
-        browser.frame('networkFrame', function(err, result) {
-            if (err) console.log(err);
-        });
-        browser.waitForVisible('#cytoscapeweb canvas', 60000);
-        browser.execute(function() {
-            $('<style>canvas { visibility: hidden} </style>').appendTo('body');
-        });
-        browser.frame(null);
-        var res = browser.checkElement('#networkFrame', {
-            hide: ['.qtip', 'canvas'],
-        });
+        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {});
 
         assertScreenShotMatch(res);
     });
 
     it.skip(`${prefix} data_download tab`, function() {
-        browser.click('a.tabAnchor_download');
+        $('a.tabAnchor_download').click();
         //  browser.pause(1000);
-        browser.waitForExist('#text_area_gene_alteration_freq', 20000);
+        $('#text_area_gene_alteration_freq', 20000).waitForExist();
         browser.waitUntil(function() {
             return (
                 browser.getValue('#text_area_gene_alteration_freq').length > 0
@@ -215,13 +175,13 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 }
 
-describe('result page screenshot tests', function() {
+describe.only('result page screenshot tests', function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
     });
-
+    //
     runResultsTestSuite('no session');
 });
 
@@ -329,149 +289,98 @@ describe('patient view page screenshot test', function() {
         var res = browser.checkElement('#mainColumn', { hide: ['.qtip'] });
         assertScreenShotMatch(res);
     });
-
-    it('patient view pathways tab msk_impact_2017 P-0000377', function() {
-        var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=P-0000377`;
-        goToUrlAndSetLocalStorage(url);
-
-        // go to pathways tab
-        browser.waitForVisible('a.tabAnchor_pathways');
-        browser.click('a.tabAnchor_pathways');
-
-        browser.waitForVisible('#cy', 10000);
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
-            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-        });
-
-        assertScreenShotMatch(res);
-    });
 });
 
 describe('enrichments tab screenshot tests', function() {
-    before(function() {
+    beforeEach(function() {
         var url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
         goToUrlAndSetLocalStorage(url);
+        //browser.$('.fdsa').waitForDisplayed();
     });
+
     it('enrichments tab coadread_tcga_pub mRNA profile', function() {
-        browser.waitForVisible('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.click('.comparisonTabSubTabs .tabAnchor_mrna');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]'
-        );
-        browser.waitForVisible('a=mRNA', 10000);
-        browser.click('a=mRNA');
-        browser.waitForVisible(
-            'div[data-test="GroupComparisonMRNAEnrichments"]',
-            20000
-        );
-        browser.waitForVisible('b=MERTK', 10000);
-        browser.click('b=MERTK');
-        browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        browser.$('.comparisonTabSubTabs .tabAnchor_mrna').waitForDisplayed();
+
+        $('.comparisonTabSubTabs .tabAnchor_mrna').click();
+        $('a=mRNA').click();
+
+        $('b=MERTK').click();
+
+        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {});
+
         assertScreenShotMatch(res);
     });
 });
 
-describe.skip('multi-study enrichments tab screenshot tests', function() {
-    before(function() {
-        var url = `${CBIOPORTAL_URL}/results/enrichments?Action=Submit&cancer_study_list=coadread_tcga_pub%2Cgbm_tcga_pub&case_set_id=all&clinicallist=CANCER_STUDY%2CPROFILED_IN_COPY_NUMBER_ALTERATION%2CPROFILED_IN_MUTATION_EXTENDED&data_priority=0&gene_list=APC%0ACDKN2B&show_samples=false&tab_index=tab_visualize`;
-        goToUrlAndSetLocalStorage(url);
-    });
-    it('multi-study mutation enrichments tab', function() {
-        browser.waitForVisible(
-            'div[data-test="MutationEnrichmentsTab"]',
-            10000
-        );
-        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
-            hide: ['.qtip'],
-        });
-        assertScreenShotMatch(res);
-    });
+// describe('result page tabs, loading from session id', function() {
+//     before(function() {
+//         // only run these tests if session service is enabled
+//         if (sessionServiceIsEnabled() === false) {
+//             this.skip();
+//         }
+//
+//         var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
+//         goToUrlAndSetLocalStorage(url);
+//         waitForOncoprint(15000);
+//     });
+//
+//     runResultsTestSuite('session');
+// });
 
-    it('multi-study copy-number enrichments tab', function() {
-        browser.click('a=Copy-number');
-        browser.waitForVisible(
-            'div[data-test="CopyNumberEnrichmentsTab"]',
-            20000
-        );
-        var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', {
-            hide: ['.qtip'],
-        });
-        assertScreenShotMatch(res);
-    });
-});
-
-describe('result page tabs, loading from session id', function() {
-    before(function() {
-        // only run these tests if session service is enabled
-        if (sessionServiceIsEnabled() === false) {
-            this.skip();
-        }
-
-        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
-        goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(15000);
-    });
-
-    runResultsTestSuite('session');
-});
-
-describe('results page tabs while excluding unprofiled samples', function() {
-    before(() => {
-        goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
-        );
-        waitForOncoprint(10000);
-        setResultsPageSettingsMenuOpen(true);
-        browser.waitForExist('input[data-test="HideUnprofiled"]');
-        browser.click('input[data-test="HideUnprofiled"]');
-        waitForOncoprint(10000);
-        setResultsPageSettingsMenuOpen(false);
-    });
-
-    runResultsTestSuite('excluding unprofiled samples', {
-        mrnaEnrichmentsRowSelector: 'b=PRR22',
-    });
-});
-
-describe('error messaging for 400 error', function() {
-    before(function() {
-        var url = `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pubb_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`;
-        goToUrlAndSetLocalStorage(url);
-    });
-
-    it('should show error message for 400 query', function() {
-        browser.waitForExist('.errorScreen');
-    });
-
-    it('should allow return to homepage after error message', function() {
-        $('.errorLogo').click();
-        browser.waitForExist('.homePageLayout');
-    });
-});
-
-describe('error messaging for 404 error', function() {
-    it('should show error message for wrong sample', function() {
-        var url = `${CBIOPORTAL_URL}/patient?sampleId=not-a-sample&studyId=msk_impact_2017`;
-        goToUrlAndSetLocalStorage(url);
-
-        browser.waitForExist('.errorScreen');
-        var res = browser.checkElement('.errorScreen', {
-            hide: ['.form-group'],
-        });
-        assertScreenShotMatch(res);
-    });
-
-    it('should show error message for wrong patient', function() {
-        var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=not-a-patient`;
-        goToUrlAndSetLocalStorage(url);
-
-        browser.waitForExist('.errorScreen');
-        var res = browser.checkElement('.errorScreen', {
-            hide: ['.form-group'],
-        });
-        assertScreenShotMatch(res);
-    });
-});
+// describe('results page tabs while excluding unprofiled samples', function() {
+//     before(() => {
+//         goToUrlAndSetLocalStorage(
+//             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
+//         );
+//         waitForOncoprint(10000);
+//         setResultsPageSettingsMenuOpen(true);
+//         browser.waitForExist('input[data-test="HideUnprofiled"]');
+//         browser.click('input[data-test="HideUnprofiled"]');
+//         waitForOncoprint(10000);
+//         setResultsPageSettingsMenuOpen(false);
+//     });
+//
+//     runResultsTestSuite('excluding unprofiled samples', {
+//         mrnaEnrichmentsRowSelector: 'b=PRR22',
+//     });
+// });
+//
+// describe('error messaging for 400 error', function() {
+//     before(function() {
+//         var url = `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pubb_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`;
+//         goToUrlAndSetLocalStorage(url);
+//     });
+//
+//     it('should show error message for 400 query', function() {
+//         browser.waitForExist('.errorScreen');
+//     });
+//
+//     it('should allow return to homepage after error message', function() {
+//         $('.errorLogo').click();
+//         browser.waitForExist('.homePageLayout');
+//     });
+// });
+//
+// describe('error messaging for 404 error', function() {
+//     it('should show error message for wrong sample', function() {
+//         var url = `${CBIOPORTAL_URL}/patient?sampleId=not-a-sample&studyId=msk_impact_2017`;
+//         goToUrlAndSetLocalStorage(url);
+//
+//         browser.waitForExist('.errorScreen');
+//         var res = browser.checkElement('.errorScreen', {
+//             hide: ['.form-group'],
+//         });
+//         assertScreenShotMatch(res);
+//     });
+//
+//     it('should show error message for wrong patient', function() {
+//         var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=not-a-patient`;
+//         goToUrlAndSetLocalStorage(url);
+//
+//         browser.waitForExist('.errorScreen');
+//         var res = browser.checkElement('.errorScreen', {
+//             hide: ['.form-group'],
+//         });
+//         assertScreenShotMatch(res);
+//     });
+// });
