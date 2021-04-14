@@ -74,12 +74,17 @@ export default class OverlapExclusionIndicator extends React.Component<
                 summary = (
                     <span>
                         {groupNames}
-                        {` ${is} completely overlapping with other selected groups, so `}
-                        {this.props.overlapTabMode
-                            ? `${is} excluded from analysis in other tabs.`
-                            : `${
-                                  excludedGroups.length === 1 ? 'has' : 'have'
-                              } been excluded from this analysis.`}
+                        {` ${is} completely overlapping with other selected groups and ${is} ${
+                            this.props.store.overlapStrategy ===
+                            OverlapStrategy.EXCLUDE
+                                ? 'excluded'
+                                : 'included'
+                        } in ${
+                            this.props.overlapTabMode
+                                ? 'other tabs'
+                                : 'the analysis below'
+                        }`}
+                        .
                     </span>
                 );
             }
