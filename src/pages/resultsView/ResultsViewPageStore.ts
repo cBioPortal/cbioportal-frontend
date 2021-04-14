@@ -36,7 +36,11 @@ import {
     StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import client from 'shared/api/cbioportalClientInstance';
-import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
+import {
+    CanonicalMutationType,
+    remoteData,
+    stringListToSet,
+} from 'cbioportal-frontend-commons';
 import {
     action,
     computed,
@@ -3359,7 +3363,7 @@ export class ResultsViewPageStore {
                             keyword: structuralVariant.comments,
                             molecularProfileId:
                                 structuralVariant.molecularProfileId,
-                            mutationType: structuralVariant.variantClass,
+                            mutationType: CanonicalMutationType.FUSION,
                             ncbiBuild: structuralVariant.ncbiBuild,
                             patientId: structuralVariant.patientId,
                             proteinChange: structuralVariant.eventInfo,
@@ -3380,9 +3384,8 @@ export class ResultsViewPageStore {
                             putativeDriver: structuralVariant.putativeDriver,
                             oncoKbOncogenic: structuralVariant.oncoKbOncogenic,
                             isHotspot: structuralVariant.isHotspot,
-                            simplifiedMutationType: getSimplifiedMutationType(
-                                structuralVariant.variantClass
-                            ),
+                            simplifiedMutationType:
+                                CanonicalMutationType.FUSION,
                         } as AnnotatedMutation;
 
                         mutationsByGene[hugoGeneSymbol].push(mutation);
