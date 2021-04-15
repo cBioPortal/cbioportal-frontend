@@ -5065,7 +5065,10 @@ export class ResultsViewPageStore {
               structuralVariant: StructuralVariant
           ) => IndicatorQueryResp | undefined)
     >({
-        await: () => [this.structuralVariantOncoKbDataForOncoprint],
+        await: () => [
+            this.structuralVariantOncoKbDataForOncoprint,
+            this.uniqueSampleKeyToTumorType,
+        ],
         invoke: () => {
             const structuralVariantOncoKbDataForOncoprint = this
                 .structuralVariantOncoKbDataForOncoprint.result!;
@@ -5079,7 +5082,7 @@ export class ResultsViewPageStore {
                             structuralVariant.site2EntrezGeneId,
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
-                                {}
+                                this.uniqueSampleKeyToTumorType.result || {}
                             )
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
