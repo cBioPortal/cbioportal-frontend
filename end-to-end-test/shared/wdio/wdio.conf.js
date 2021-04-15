@@ -1,5 +1,6 @@
 const { join } = require('path');
 
+
 const fs = require('fs');
 var path = require('path');
 var VisualRegressionCompare = require('wdio-novus-visual-regression-service/compare');
@@ -67,7 +68,8 @@ let SPEC_FILE_PATTERN = undefined;
 if (grep) {
     SPEC_FILE_PATTERN = grep.split('=')[1];
 } else {
-    SPEC_FILE_PATTERN = process.env.SPEC_FILE_PATTERN;
+    SPEC_FILE_PATTERN = process.env.SPEC_FILE_PATTERN ?
+        process.env.SPEC_FILE_PATTERN : `${TEST_TYPE}/specs/**/*.spec.js`;
 }
 
 // if spec pattern contains slash, use it whole, otherwise, assume it is just a spec file name or wildcard
