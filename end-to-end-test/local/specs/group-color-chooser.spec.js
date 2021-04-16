@@ -92,6 +92,8 @@ describe('color chooser for groups menu in study view', function() {
         browser.waitUntil(() => $$(colorIcon).length === 2);
         $$(colorIcon)[0].click();
         $(colorPickerBlue).click();
+        // close color picker 0 before going to next one
+        $$(colorIcon)[0].click();
         $$(colorIcon)[1].click();
         $(colorPickerBlue).click();
 
