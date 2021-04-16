@@ -88,20 +88,8 @@ export enum DataType {
 }
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
-export type ChartType =
-    | 'PIE_CHART'
-    | 'BAR_CHART'
-    | 'SURVIVAL'
-    | 'TABLE'
-    | 'SCATTER'
-    | 'MUTATED_GENES_TABLE'
-    | 'STRUCTURAL_VARIANT_GENES_TABLE'
-    | 'GENOMIC_PROFILES_TABLE'
-    | 'CASE_LIST_TABLE'
-    | 'CNA_GENES_TABLE'
-    | 'SAMPLE_TREATMENTS_TABLE'
-    | 'PATIENT_TREATMENTS_TABLE'
-    | 'NONE';
+
+export type ChartType = keyof typeof ChartTypeEnum;
 
 export enum SpecialChartsUniqueKeyEnum {
     CUSTOM_SELECT = 'CUSTOM_SELECT',

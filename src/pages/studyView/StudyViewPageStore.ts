@@ -5308,6 +5308,9 @@ export class StudyViewPageStore {
     @action.bound
     private loadSettings(chartSettings: ChartUserSetting[]): void {
         this.clearPageSettings();
+        const validChartTypes = Object.values(ChartTypeEnum).map(chartType =>
+            chartType.toString()
+        );
         _.map(chartSettings, chartUserSettings => {
             if (chartUserSettings.name && chartUserSettings.groups) {
                 type CustomGroup = {
@@ -5430,12 +5433,18 @@ export class StudyViewPageStore {
                 default:
                     break;
             }
-            this.changeChartVisibility(chartUserSettings.id, true);
-            chartUserSettings.chartType &&
-                this.chartsType.set(
-                    chartUserSettings.id,
-                    chartUserSettings.chartType
-                );
+            let chartType = chartUserSettings.chartType;
+            if (chartType) {
+                // map any old FUSION_GENES_TABLE chart types to STRUCTURAL_VARIANT_GENES_TABLE
+                if (chartType.toString() === 'FUSION_GENES_TABLE') {
+                    chartType = ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE;
+                }
+                //only valid chart types should be visible
+                if (validChartTypes.includes(chartType)) {
+                    this.changeChartVisibility(chartUserSettings.id, true);
+                    this.chartsType.set(chartUserSettings.id, chartType);
+                }
+            }
         });
         this.useCurrentGridLayout = true;
     }
