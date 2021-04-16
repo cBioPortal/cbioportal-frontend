@@ -14,7 +14,7 @@ import {
     getComparisonLoadingUrl,
     redirectToComparisonPage,
 } from '../../../shared/api/urls';
-import styles from '../styles.module.scss';
+import styles, { sharedGroup } from '../styles.module.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import {
     getGroupParameters,
@@ -29,13 +29,14 @@ import { sleepUntil } from '../../../shared/lib/TimeUtils';
 import { LoadingPhase } from '../GroupComparisonLoading';
 import _ from 'lodash';
 import { serializeEvent } from 'shared/lib/tracking';
-import AppConfig from 'appConfig';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import classnames from 'classnames';
+import { getReservedGroupColor } from 'shared/lib/Colors';
 
 export interface IComparisonGroupManagerProps {
     store: StudyViewPageStore;
     shareGroups: (groups: StudyViewComparisonGroup[]) => void;
+    onGroupColorChange?: (groupId: string, color: string) => void;
 }
 
 @observer
@@ -109,12 +110,17 @@ export default class ComparisonGroupManager extends React.Component<
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, true);
         }
+        this.props.store.flagDuplicateColorsForSelectedGroups(
+            undefined!,
+            undefined!
+        );
     }
 
     @action.bound
     private deselectAllFiltered() {
         for (const group of this.filteredGroups.result!) {
             this.props.store.setComparisonGroupSelected(group.uid, false);
+            this.props.store.showComparisonGroupWarningSign(group.uid, false);
         }
     }
 
@@ -192,19 +198,31 @@ export default class ComparisonGroupManager extends React.Component<
             if (this.props.store.comparisonGroups.result!.length > 0) {
                 // show this component if there are groups, and if filteredGroups is complete
                 return (
-                    <div className={styles.groupCheckboxes}>
+                    <div
+                        className={styles.groupCheckboxes}
+                        data-test="group-checkboxes"
+                    >
                         {this.filteredGroups.result!.length > 0 ? (
                             this.filteredGroups.result!.map(group => (
                                 <GroupCheckbox
                                     group={group}
+                                    color={
+                                        this.props.store.userGroupColors[
+                                            group.uid
+                                        ]
+                                    }
                                     store={this.props.store}
                                     markedForDeletion={this.props.store.isComparisonGroupMarkedForDeletion(
+                                        group.uid
+                                    )}
+                                    markedWithWarningSign={this.props.store.isComparisonGroupMarkedWithWarningSign(
                                         group.uid
                                     )}
                                     restore={this.restoreGroup}
                                     delete={this.deleteGroup}
                                     studyIds={this.props.store.studyIds}
                                     shareGroup={this.shareSingleGroup}
+                                    onChangeGroupColor={this.onGroupColorChange}
                                 />
                             ))
                         ) : (
@@ -310,7 +328,7 @@ export default class ComparisonGroupManager extends React.Component<
     }
 
     @action.bound
-    private async submitNewGroup() {
+    private async onSubmitNewGroup() {
         const selectedSamples = this.props.store.selectedSamples.isComplete
             ? this.props.store.selectedSamples.result
             : undefined;
@@ -321,9 +339,22 @@ export default class ComparisonGroupManager extends React.Component<
                 this.props.store.studyIds
             )
         );
+        // check if there is any predefined color for this group and set the color
+        const reservedColor = getReservedGroupColor(this.inputGroupName);
+        if (reservedColor != undefined)
+            this.props.store.onGroupColorChange(id, reservedColor);
         this.props.store.notifyComparisonGroupsChange();
         this.props.store.setComparisonGroupSelected(id); // created groups start selected
         this.cancelAddGroup();
+    }
+
+    @action.bound
+    private async onGroupColorChange(
+        group: StudyViewComparisonGroup,
+        newColor: string
+    ) {
+        this.props.onGroupColorChange &&
+            this.props.onGroupColorChange(group.uid, newColor);
     }
 
     private get compareButton() {
@@ -495,7 +526,7 @@ export default class ComparisonGroupManager extends React.Component<
                                         event.key == 'Enter' &&
                                         !this.submitNewGroupDisabled
                                     ) {
-                                        this.submitNewGroup();
+                                        this.onSubmitNewGroup();
                                     }
                                 }}
                             />
@@ -503,7 +534,7 @@ export default class ComparisonGroupManager extends React.Component<
                         <button
                             className="btn btn-sm btn-primary"
                             style={{ width: createOrAddButtonWidth }}
-                            onClick={this.submitNewGroup}
+                            onClick={this.onSubmitNewGroup}
                             disabled={this.submitNewGroupDisabled}
                         >
                             Create
@@ -520,6 +551,7 @@ export default class ComparisonGroupManager extends React.Component<
                         label: '',
                         category: 'groupComparison',
                     })}
+                    data-test="create-new-group-btn"
                     onClick={this.showAddGroupPanel}
                     disabled={!selectedSamples}
                     style={{ width: '100%' }}
