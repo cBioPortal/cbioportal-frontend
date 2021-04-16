@@ -136,11 +136,13 @@ $(document).ready(function() {
 var sideBySideCycleInterval = null;
 
 function buildImagePath(ref, rootUrl) {
+
+    debugger;
     return {
         screenImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'screen/'),
+            `${rootUrl}` + ref.replace(/reference\//, 'screen/'),
         diffImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'diff/'),
+            `${rootUrl}` + ref.replace(/reference\//, 'diff/'),
         refImagePath: `${rootUrl}screenshots/${ref}`,
         imageName: ref.substring(ref.lastIndexOf('/') + 1),
     };
@@ -155,6 +157,8 @@ function buildCurlStatement(data, runMode) {
     const imageUrl = window.location.href.replace(/imageCompare\.html?/,data.screenImagePath);
 
     const imageName = data.imageName;
+
+    debugger;
 
     return `curl -L '${imageUrl}' > 'end-to-end-test/${runMode}/screenshots/reference/${imageName}'; git add 'end-to-end-test/${runMode}/screenshots/reference/${imageName}';`;
 }
