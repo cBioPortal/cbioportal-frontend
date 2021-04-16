@@ -51,11 +51,13 @@ export type EnrichmentAnalysisComparisonGroup = {
     nameOfEnrichmentDirection: string | undefined;
 };
 
-export type StudyViewComparisonGroup = Omit<GroupData, 'studies' | 'color'> & {
+export type StudyViewComparisonGroup = Omit<GroupData, 'studies'> & {
     uid: string; // unique in the session
     studies: { id: string; samples: string[]; patients: string[] }[]; // include patients, filter out nonexistent samples
     nonExistentSamples: SampleIdentifier[]; // samples specified in the group which no longer exist in our DB
+    color?: string | undefined;
     isSharedGroup?: boolean;
+    hasWarningSign?: boolean;
 };
 
 export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & {

@@ -126,6 +126,7 @@ export function getAlteredByOncoprintTrackGroups(
                 } with alterations in ${label}`,
                 studies,
                 origin: studyIds,
+                color: undefined,
             };
         }
     );
