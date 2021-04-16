@@ -23,12 +23,16 @@ import { StudyViewPageStore } from '../StudyViewPageStore';
 
 @observer
 export default class CNSegments extends React.Component<
-    { store: StudyViewPageStore },
+    { store: StudyViewPageStore; sampleThreshold?: number },
     {}
 > {
     @observable renderingComplete = false;
     @observable.ref segmentTrackMaxHeight: number | undefined = undefined;
     private lastSelectedLocus: string | undefined = undefined;
+
+    public static defaultProps = {
+        sampleThreshold: 20000,
+    };
 
     constructor(props: { store: StudyViewPageStore }) {
         super(props);
@@ -65,28 +69,46 @@ export default class CNSegments extends React.Component<
     }
 
     @computed get isLoading() {
-        return this.activePromise ? this.activePromise.isPending : true;
+        if (!this.isSampleCountWithinThreshold) {
+            return false;
+        } else {
+            return this.activePromise ? this.activePromise.isPending : true;
+        }
+    }
+
+    @computed get isSampleCountWithinThreshold() {
+        return (
+            !this.props.store.selectedSamples.result ||
+            !this.props.sampleThreshold ||
+            this.props.store.selectedSamples.result.length <=
+                this.props.sampleThreshold
+        );
     }
 
     @computed get activePromise() {
-        return this.props.store.cnSegments;
+        return this.props.store.selectedSamples.result &&
+            this.isSampleCountWithinThreshold
+            ? this.props.store.cnSegments
+            : undefined;
     }
 
     @computed get progressItems(): IProgressIndicatorItem[] {
-        return [
-            {
-                label: 'Loading copy number segments data...',
-                promises: [this.activePromise],
-            },
-            {
-                label: 'Rendering',
-            },
-        ];
+        return this.activePromise
+            ? [
+                  {
+                      label: 'Loading copy number segments data...',
+                      promises: [this.activePromise],
+                  },
+                  {
+                      label: 'Rendering',
+                  },
+              ]
+            : [];
     }
 
     @computed get hasNoSegmentData() {
         return (
-            this.activePromise.isComplete &&
+            this.activePromise?.isComplete &&
             (!this.activePromise.result ||
                 this.activePromise.result.length === 0)
         );
@@ -99,41 +121,57 @@ export default class CNSegments extends React.Component<
         return study ? study.referenceGenome : DEFAULT_GENOME;
     }
 
+    get selectionInfo() {
+        if (!this.isSampleCountWithinThreshold) {
+            return `Too many samples (>${this.props.sampleThreshold}) for copy number segmentation view, make a selection on Summary tab first.`;
+        } else {
+            const segmentInfo = this.hasNoSegmentData
+                ? 'No segmented'
+                : 'Segmented';
+            const sampleCount = this.props.store.selectedSamples.result
+                ? `${this.props.store.selectedSamples.result.length} `
+                : '';
+            const samples =
+                this.props.store.selectedSamples.result?.length === 1
+                    ? 'sample'
+                    : 'samples';
+
+            return `${segmentInfo} copy-number data for the selected ${sampleCount}${samples}.`;
+        }
+    }
+
     public render() {
         return (
             <div>
                 <LoadingIndicator
-                    isLoading={this.isHidden}
+                    isLoading={
+                        this.isSampleCountWithinThreshold && this.isHidden
+                    }
                     size={'big'}
                     center={true}
                 >
                     <ProgressIndicator
                         getItems={() => this.progressItems}
-                        show={this.isHidden}
+                        show={
+                            this.isSampleCountWithinThreshold && this.isHidden
+                        }
                         sequential={true}
                     />
                 </LoadingIndicator>
                 <div style={{ marginBottom: 15, marginLeft: 15 }}>
-                    <span>
-                        {this.hasNoSegmentData ? 'No segmented' : 'Segmented'}{' '}
-                        copy-number data for the selected{' '}
-                        {this.props.store.selectedSamples.result &&
-                            this.props.store.selectedSamples.result.length}{' '}
-                        {this.props.store.selectedSamples.result &&
-                        this.props.store.selectedSamples.result.length === 1
-                            ? 'sample.'
-                            : 'samples.'}
-                    </span>
+                    <span>{this.selectionInfo}</span>
                     {!this.hasNoSegmentData && (
                         <CNSegmentsDownloader
-                            promise={this.activePromise}
+                            promise={this.activePromise!}
                             filename={this.filename}
                         />
                     )}
                 </div>
                 <div
                     style={
-                        this.isHidden || this.hasNoSegmentData
+                        this.isHidden ||
+                        this.hasNoSegmentData ||
+                        !this.isSampleCountWithinThreshold
                             ? { opacity: 0 }
                             : undefined
                     }
