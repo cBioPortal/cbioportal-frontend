@@ -402,6 +402,7 @@ describe('results view comparison tab screenshot tests', function() {
             browser.click(
                 'button[data-test="groupSelectorButtontest"] [data-test="deleteButton"]'
             );
+            browser.pause(1000);
             var res = checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
         });
