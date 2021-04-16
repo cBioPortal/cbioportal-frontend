@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.7.19",
+  "version": "0.7.20",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -39,8 +39,8 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.4.12",
-    "cbioportal-utils": "^0.2.28",
+    "cbioportal-frontend-commons": "^0.4.13",
+    "cbioportal-utils": "^0.2.29",
     "classnames": "^2.2.5",
     "genome-nexus-ts-api-client": "^1.1.14",
     "jquery": "^3.2.1",
@@ -48,7 +48,7 @@
     "memoize-weak-decorator": "^1.0.3",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "oncokb-styles": "~1.1.0",
-    "oncokb-ts-api-client": "^1.1.5",
+    "oncokb-ts-api-client": "^1.1.6",
     "react-collapse": "^4.0.3",
     "react-if": "^2.1.0",
     "react-motion": "^0.5.2",
