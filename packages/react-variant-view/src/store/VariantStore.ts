@@ -54,7 +54,9 @@ export class VariantStore {
     public readonly oncokbGenes = remoteData<CuratedGene[]>({
         await: () => [],
         invoke: async () => {
-            return this.oncokbClient.utilsAllCuratedGenesGetUsingGET_1({});
+            return this.oncokbClient.utilsAllCuratedGenesGetUsingGET_1({
+                includeEvidence: false,
+            });
         },
         default: [],
     });
