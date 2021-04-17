@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.2.1",
+    "version": "v1.2.2",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -793,9 +793,17 @@
           {
             "name": "version",
             "in": "query",
-            "description": "version",
+            "description": "The data version",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "includeEvidence",
+            "in": "query",
+            "description": "Include gene summary and background",
+            "required": false,
+            "type": "boolean",
+            "default": true
           }
         ],
         "responses": {
@@ -835,9 +843,17 @@
           {
             "name": "version",
             "in": "query",
-            "description": "version",
+            "description": "The data version",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "includeEvidence",
+            "in": "query",
+            "description": "Include gene summary and background",
+            "required": false,
+            "type": "boolean",
+            "default": true
           }
         ],
         "responses": {
@@ -874,7 +890,7 @@
           {
             "name": "version",
             "in": "query",
-            "description": "version",
+            "description": "The data version",
             "required": false,
             "type": "string"
           }
@@ -916,7 +932,7 @@
           {
             "name": "version",
             "in": "query",
-            "description": "version",
+            "description": "The data version",
             "required": false,
             "type": "string"
           }
@@ -1007,6 +1023,9 @@
     "CuratedGene": {
       "type": "object",
       "properties": {
+        "background": {
+          "type": "string"
+        },
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
