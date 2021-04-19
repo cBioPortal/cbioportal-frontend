@@ -5,6 +5,8 @@ var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var executeInBrowser = require('../../shared/specUtils').executeInBrowser;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
+var setServerConfiguration = require('../../shared/specUtils')
+    .setServerConfiguration;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -103,10 +105,3 @@ describe('homepage', function() {
         browser.waitForExist('#blurbDiv');
     });
 });
-
-function setServerConfiguration(serverConfig) {
-    browser.localStorage('POST', {
-        key: 'frontendConfig',
-        value: JSON.stringify({ serverConfig: serverConfig }),
-    });
-}
