@@ -9,25 +9,43 @@ import {
 } from '../GroupComparisonUtils';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
 import autobind from 'autobind-decorator';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import ErrorIcon from '../../../shared/components/ErrorIcon';
 import styles from '../styles.module.scss';
-
+import { CirclePicker, CirclePickerProps } from 'react-color';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
+import { COLORS } from '../../studyView/StudyViewUtils';
+import {
+    CLI_FEMALE_COLOR,
+    CLI_NO_COLOR,
+    CLI_YES_COLOR,
+    DARK_GREY,
+} from '../../../shared/lib/Colors';
 import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import classnames from 'classnames';
+import { ColorPickerIcon } from 'pages/groupComparison/comparisonGroupManager/ColorPickerIcon';
+import { getBrowserWindow } from 'cbioportal-frontend-commons';
 
 export interface IGroupCheckboxProps {
     group: StudyViewComparisonGroup;
     store: StudyViewPageStore;
     markedForDeletion: boolean;
+    markedWithWarningSign: boolean;
     studyIds: string[];
     restore: (group: StudyViewComparisonGroup) => void;
     delete: (group: StudyViewComparisonGroup) => void;
     shareGroup: (group: StudyViewComparisonGroup) => void;
+    color: string;
+    onChangeGroupColor: (
+        group: StudyViewComparisonGroup,
+        color: string | undefined
+    ) => void;
 }
+
+const COLOR_UNDEFINED = '#FFFFFF';
 
 @observer
 export default class GroupCheckbox extends React.Component<
@@ -42,6 +60,10 @@ export default class GroupCheckbox extends React.Component<
     @autobind
     private onCheckboxClick() {
         this.props.store.toggleComparisonGroupSelected(this.props.group.uid);
+        this.props.store.flagDuplicateColorsForSelectedGroups(
+            this.props.group.uid,
+            this.props.color!
+        );
     }
 
     @autobind
@@ -59,6 +81,16 @@ export default class GroupCheckbox extends React.Component<
         this.props.shareGroup(this.props.group);
     }
 
+    @autobind
+    private onOverlayEnter() {
+        this.props.store.numberOfVisibleColorChooserModals += 1;
+    }
+
+    @autobind
+    private onOverlayExit() {
+        this.props.store.numberOfVisibleColorChooserModals -= 1;
+    }
+
     @computed get label() {
         return (
             <span style={{ display: 'flex', alignItems: 'center' }}>
@@ -72,6 +104,54 @@ export default class GroupCheckbox extends React.Component<
             </span>
         );
     }
+
+    @computed get colorList() {
+        let colors: string[] = COLORS.slice(0, 20);
+        colors.push(CLI_YES_COLOR);
+        colors.push(CLI_NO_COLOR);
+        colors.push(CLI_FEMALE_COLOR);
+        colors.push(DARK_GREY);
+        return colors;
+    }
+
+    @action.bound
+    handleChangeComplete = (color: any, event: any) => {
+        // if same color is select, unselect it (go back to no color)
+        if (color.hex === this.props.color) {
+            this.props.onChangeGroupColor(this.props.group, undefined);
+            this.props.store.flagDuplicateColorsForSelectedGroups(
+                this.props.group.uid,
+                undefined
+            );
+        } else {
+            this.props.onChangeGroupColor(this.props.group, color.hex);
+            this.props.store.flagDuplicateColorsForSelectedGroups(
+                this.props.group.uid,
+                color.hex
+            );
+        }
+    };
+
+    buildColorChooserWidget = () => (
+        <Popover
+            id="popover-basic"
+            onClick={e => {
+                e.stopPropagation();
+                e.preventDefault();
+            }}
+        >
+            <div>
+                <CirclePicker
+                    colors={this.colorList}
+                    circleSize={20}
+                    circleSpacing={3}
+                    onChangeComplete={this.handleChangeComplete}
+                    color={this.props.color}
+                    width="140px"
+                />
+            </div>
+        </Popover>
+    );
 
     render() {
         const group = this.props.group;
@@ -116,9 +196,71 @@ export default class GroupCheckbox extends React.Component<
                 }}
             >
                 {checkboxAndLabel}
+
                 <div className={styles.groupLineItemActionButtons}>
                     {!this.props.markedForDeletion && (
                         <>
+                            {getBrowserWindow().localStorage.getItem(
+                                'ff_colorchooser'
+                            ) === 'true' && (
+                                <>
+                                    <DefaultTooltip
+                                        overlay={
+                                            'You have selected identical colors for compared groups.'
+                                        }
+                                    >
+                                        <span>
+                                            {this.props
+                                                .markedWithWarningSign && (
+                                                <i
+                                                    className="fa fa-warning"
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        color: '#fad201',
+                                                        position: 'relative',
+                                                        top: '1px',
+                                                        right: '2px',
+                                                    }}
+                                                />
+                                            )}
+                                        </span>
+                                    </DefaultTooltip>
+                                    <OverlayTrigger
+                                        containerPadding={40}
+                                        trigger="click"
+                                        placement="bottom"
+                                        overlay={this.buildColorChooserWidget()}
+                                        onEnter={this.onOverlayEnter}
+                                        onExit={this.onOverlayExit}
+                                        rootClose={true}
+                                    >
+                                        <DefaultTooltip
+                                            overlay={
+                                                'Select color for group used in group comparison'
+                                            }
+                                            disabled={
+                                                this.props.store
+                                                    .numberOfVisibleColorChooserModals >
+                                                0
+                                            }
+                                        >
+                                            <span
+                                                style={{
+                                                    marginTop: 2,
+                                                    marginRight: 2,
+                                                }}
+                                            >
+                                                <ColorPickerIcon
+                                                    color={
+                                                        this.props.color ||
+                                                        COLOR_UNDEFINED
+                                                    }
+                                                />
+                                            </span>
+                                        </DefaultTooltip>
+                                    </OverlayTrigger>
+                                </>
+                            )}
                             <DefaultTooltip overlay={'Delete Group'}>
                                 <span onClick={this.onDeleteClick}>
                                     <i
@@ -139,7 +281,6 @@ export default class GroupCheckbox extends React.Component<
                             </span>
                         </>
                     )}
-
                     {this.props.group.nonExistentSamples.length > 0 && (
                         <ErrorIcon
                             tooltip={

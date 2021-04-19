@@ -31,6 +31,7 @@ import {
     ChartUserSetting,
     GenomicChart,
     GenericAssayChart,
+    StudyPageSettings,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -3012,4 +3013,13 @@ export function getNonZeroUniqueBins(dataBins: DataBin[]) {
             [] as number[]
         )
     );
+}
+
+export function getUserGroupColor(
+    groupColors: { [groupId: string]: string },
+    groupId: string
+) {
+    return groupColors && _.has(groupColors, groupId)
+        ? groupColors[groupId]
+        : undefined;
 }

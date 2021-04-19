@@ -230,9 +230,7 @@ export type EnsemblGene = {
 
 };
 export type EnsemblTranscript = {
-    'uniprotId': string
-
-        'transcriptId': string
+    'transcriptId': string
 
         'geneId': string
 
@@ -846,8 +844,6 @@ export type TranscriptConsequence = {
 
         'transcript_id': string
 
-        'uniprotId': string
-
         'variant_allele': string
 
 };
@@ -887,8 +883,6 @@ export type TranscriptConsequenceSummary = {
         'siftScore': number
 
         'transcriptId': string
-
-        'uniprotId': string
 
         'variantClassification': string
 
@@ -934,7 +928,7 @@ export type VariantAnnotation = {
 
         'assembly_name': string
 
-        'clinvar': ClinvarAnnotation
+        'clinvarAnnotation': ClinvarAnnotation
 
         'colocatedVariants': Array < ColocatedVariant >
 

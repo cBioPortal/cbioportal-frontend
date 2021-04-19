@@ -7,10 +7,10 @@ import {
     action,
     computed,
     IReactionDisposer,
+    makeObservable,
     observable,
     reaction,
     toJS,
-    makeObservable,
 } from 'mobx';
 import {
     AndedPatientTreatmentFilters,
@@ -40,12 +40,12 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
     Patient,
+    PatientTreatmentRow,
     ResourceData,
     ResourceDefinition,
     Sample,
     SampleIdentifier,
     SampleTreatmentRow,
-    PatientTreatmentRow,
     StudyViewFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
@@ -70,7 +70,10 @@ import {
     clinicalAttributeComparator,
     ClinicalDataCountSummary,
     ClinicalDataTypeEnum,
+    convertClinicalDataBinsToDataBins,
+    convertGenericAssayDataBinsToDataBins,
     convertGenomicDataBinsToDataBins,
+    DataBin,
     DataType,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
@@ -87,6 +90,8 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGenericAssayChartUniqueKey,
+    getGenericAssayDataAsClinicalData,
     getGenomicChartUniqueKey,
     getGenomicDataAsClinicalData,
     getGroupsFromBins,
@@ -94,12 +99,14 @@ import {
     getMolecularProfileIdsFromUniqueKey,
     getMolecularProfileOptions,
     getMolecularProfileSamplesSet,
+    getNonZeroUniqueBins,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
     getUniqueKey,
     getUniqueKeyFromMolecularProfileIds,
+    getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
     MutationCountVsCnaYBinsMin,
@@ -113,12 +120,6 @@ import {
     StudyWithSamples,
     submitToPage,
     updateSavedUserPreferenceChartIds,
-    getGenericAssayChartUniqueKey,
-    getGenericAssayDataAsClinicalData,
-    convertGenericAssayDataBinsToDataBins,
-    getNonZeroUniqueBins,
-    DataBin,
-    convertClinicalDataBinsToDataBins,
     getFilteredMolecularProfilesByAlterationType,
     getStructuralVariantSamplesCount,
 } from './StudyViewUtils';
@@ -212,9 +213,9 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
-    GenericAssayDataBinFilter,
     GenericAssayDataBin,
     ClinicalDataBin,
+    GenericAssayDataBinFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
@@ -251,6 +252,7 @@ export type ChartUserSetting = {
 export type StudyPageSettings = {
     chartSettings: ChartUserSetting[];
     origin: string[];
+    groupColors: { [groupId: string]: string };
 };
 
 export type StudyViewPageTabKey =
@@ -340,6 +342,8 @@ export class StudyViewPageStore {
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
+    @observable numberOfVisibleColorChooserModals = 0;
+    @observable userGroupColors: { [groupId: string]: string } = {};
 
     @action
     updateNAValue = (uniqueKey: string): void => {
@@ -391,7 +395,7 @@ export class StudyViewPageStore {
                 () => {
                     if (!this.loadingInitialDataForSummaryTab) {
                         this.updateChartStats();
-                        this.loadUserSettings();
+                        this.loadUserChartSettings();
                     }
                 }
             )
@@ -413,7 +417,10 @@ export class StudyViewPageStore {
 
         this.reactionDisposers.push(
             reaction(
-                () => toJS(this.currentChartSettingsMap),
+                () => [
+                    toJS(this.currentChartSettingsMap),
+                    toJS(this.userGroupColors),
+                ],
                 () => {
                     if (this.isSavingUserSettingsPossible) {
                         if (!this.hideRestoreSettingsMsg) {
@@ -421,7 +428,24 @@ export class StudyViewPageStore {
                             // this is because the user setting session is going to be updated for every operation once the user is logged in
                             this.hideRestoreSettingsMsg = true;
                         }
-                        this.updateUserSettingsDebounce();
+
+                        const groupColorSettingsFirstTime =
+                            this.userSettings.result === undefined &&
+                            Object.keys(this.userGroupColors).length > 0;
+                        const groupColorSettingsChanged =
+                            this.userSettings.result &&
+                            (!this.userSettings.result!.groupColors ||
+                                !_.isEqual(
+                                    toJS(this.userGroupColors!),
+                                    this.userSettings.result!.groupColors
+                                ));
+                        // for group color update immediately, for the rest wait 3 sec
+                        if (
+                            groupColorSettingsChanged ||
+                            groupColorSettingsFirstTime
+                        ) {
+                            this.updateUserSettings();
+                        } else this.updateUserSettingsDebounce();
                     }
                 }
             )
@@ -429,7 +453,7 @@ export class StudyViewPageStore {
 
         this.reactionDisposers.push(
             reaction(
-                () => this.fetchUserSettings.isComplete,
+                () => this.userSettings.isComplete,
                 isComplete => {
                     //execute if user log in from study page
                     if (
@@ -438,7 +462,7 @@ export class StudyViewPageStore {
                         !this._loadUserSettingsInitially
                     ) {
                         this.previousSettings = this.currentChartSettingsMap;
-                        this.loadUserSettings();
+                        this.loadUserChartSettings();
                     }
                 }
             )
@@ -544,6 +568,10 @@ export class StudyViewPageStore {
         ComparisonGroupId,
         boolean
     >({}, { deep: false });
+    private _selectedComparisonGroupsWarningSigns = observable.map<
+        string,
+        boolean
+    >({}, { deep: false });
     private _comparisonGroupsMarkedForDeletion = observable.map<
         ComparisonGroupId,
         boolean
@@ -562,6 +590,8 @@ export class StudyViewPageStore {
     }
 
     @action public toggleComparisonGroupSelected(groupId: string): void {
+        if (this.isComparisonGroupSelected(groupId))
+            this.showComparisonGroupWarningSign(groupId, false);
         this.setComparisonGroupSelected(
             groupId,
             !this.isComparisonGroupSelected(groupId)
@@ -582,6 +612,13 @@ export class StudyViewPageStore {
             chartId,
             !this.isCustomChartGroupMarkedForDeletion(chartId)
         );
+    }
+
+    @action public showComparisonGroupWarningSign(
+        groupId: string,
+        markedValue: boolean
+    ) {
+        this._selectedComparisonGroupsWarningSigns.set(groupId, markedValue);
     }
 
     public isComparisonGroupSelected(groupId: string): boolean {
@@ -617,6 +654,13 @@ export class StudyViewPageStore {
             }
         });
         return customChartGroupMarkedForDeletion;
+    }
+
+    public isComparisonGroupMarkedWithWarningSign(groupId: string): boolean {
+        return !!(
+            this._selectedComparisonGroups.has(groupId) &&
+            this._selectedComparisonGroupsWarningSigns.get(groupId)!
+        );
     }
 
     @action public async deleteMarkedComparisonGroups(): Promise<void> {
@@ -661,6 +705,48 @@ export class StudyViewPageStore {
             await Promise.all(deletionPromises);
             this._customChartsMarkedForDeletion.clear();
         }
+    }
+
+    public flagDuplicateColorsForSelectedGroups(
+        groupUid: string,
+        color: string | undefined
+    ) {
+        let colors: { [color: string]: number } = {};
+
+        // check colors only for selected groups
+        let selectedGroups = getSelectedGroups(
+            this.comparisonGroups.result,
+            this
+        );
+
+        selectedGroups.sort((a, b) => a.name.localeCompare(b.name));
+        selectedGroups.forEach(
+            (selectedGroup: StudyViewComparisonGroup, i: number) => {
+                let groupColor =
+                    selectedGroup.uid === groupUid
+                        ? color
+                        : this.userGroupColors[selectedGroup.uid];
+                if (groupColor != undefined)
+                    groupColor = groupColor.toLowerCase();
+
+                if (
+                    groupColor == undefined ||
+                    colors[groupColor] == undefined
+                ) {
+                    if (groupColor != undefined) colors[groupColor] = 1;
+                    this.showComparisonGroupWarningSign(
+                        selectedGroup.uid,
+                        false
+                    );
+                } else {
+                    colors[groupColor] = colors[groupColor] + 1;
+                    this.showComparisonGroupWarningSign(
+                        selectedGroup.uid,
+                        true
+                    );
+                }
+            }
+        );
     }
 
     // edge case: user deletes/add a group, then opens the panel again,
@@ -723,14 +809,16 @@ export class StudyViewPageStore {
         }
     }
 
-    readonly userSavedGroups = remoteData<StudyViewComparisonGroup[]>({
+    readonly userGroupsFromRemote = remoteData<StudyViewComparisonGroup[]>({
         await: () => [this.sampleSet, this.pendingDecision],
         invoke: async () => {
             // reference this so its responsive to changes
             this._comparisonGroupsChangeCount;
             if (
                 this.studyIds.length > 0 &&
-                this.isLoggedIn &&
+                (this.isLoggedIn ||
+                    AppConfig.serverConfig.authenticationMethod ===
+                        'noauthsessionservice') &&
                 !this.pendingDecision.result
             ) {
                 const groups = await comparisonClient.getGroupsForStudies(
@@ -740,7 +828,11 @@ export class StudyViewPageStore {
                 return groups.map(group =>
                     Object.assign(
                         group.data,
-                        { uid: group.id, isSharedGroup: false },
+                        {
+                            uid: group.id,
+                            isSharedGroup: false,
+                            color: undefined,
+                        },
                         finalizeStudiesAttr(group.data, this.sampleSet.result!)
                     )
                 );
@@ -751,7 +843,11 @@ export class StudyViewPageStore {
     });
 
     readonly sharedGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.sampleSet, this.queriedPhysicalStudyIds],
+        await: () => [
+            this.sampleSet,
+            this.queriedPhysicalStudyIds,
+            this.userSettings,
+        ],
         invoke: async () => {
             const promises: Promise<Group>[] = [];
             Object.keys(this.sharedGroupSet).forEach(groupId => {
@@ -772,7 +868,14 @@ export class StudyViewPageStore {
                 .map(group =>
                     Object.assign(
                         group.data,
-                        { uid: group.id, isSharedGroup: true },
+                        {
+                            uid: group.id,
+                            isSharedGroup: true,
+                            color: getUserGroupColor(
+                                this.userGroupColors,
+                                group.id
+                            ),
+                        },
                         finalizeStudiesAttr(group.data, this.sampleSet.result!)
                     )
                 );
@@ -781,10 +884,10 @@ export class StudyViewPageStore {
     });
 
     readonly comparisonGroups = remoteData<StudyViewComparisonGroup[]>({
-        await: () => [this.userSavedGroups, this.sharedGroups],
+        await: () => [this.userGroupsFromRemote, this.sharedGroups],
         invoke: async () => {
             let groups: StudyViewComparisonGroup[] = _.cloneDeep(
-                this.userSavedGroups.result
+                this.userGroupsFromRemote.result
             );
             let groupIdSet: { [s: string]: boolean } = stringListToSet(
                 groups.map(group => group.uid)
@@ -826,6 +929,7 @@ export class StudyViewPageStore {
                             Object.assign(
                                 group.data,
                                 { uid: group.id },
+                                { color: undefined },
                                 finalizeStudiesAttr(
                                     group.data,
                                     this.sampleSet.result!
@@ -962,6 +1066,13 @@ export class StudyViewPageStore {
     @observable private _comparisonGroupsChangeCount = 0;
     @action public notifyComparisonGroupsChange(): void {
         this._comparisonGroupsChangeCount += 1;
+    }
+
+    @action.bound
+    public onGroupColorChange(groupId: string, color: string) {
+        if (color == undefined && this.userGroupColors[groupId]) {
+            delete this.userGroupColors[groupId];
+        } else this.userGroupColors[groupId] = color;
     }
 
     private async createNumberAttributeComparisonSession(
@@ -5041,14 +5152,15 @@ export class StudyViewPageStore {
 
     @computed
     get showSettingRestoreMsg(): boolean {
-        return (
+        return !!(
             this.isSavingUserPreferencePossible &&
             !this.hideRestoreSettingsMsg &&
-            this.fetchUserSettings.isComplete &&
+            this.userSettings.isComplete &&
+            this.userSettings.result &&
             !_.isEqual(
                 this.previousSettings,
                 _.keyBy(
-                    this.fetchUserSettings.result,
+                    this.userSettings.result!.chartSettings,
                     chartUserSetting => chartUserSetting.id
                 )
             )
@@ -5059,14 +5171,19 @@ export class StudyViewPageStore {
     get isSavingUserSettingsPossible(): boolean {
         return (
             this.isSavingUserPreferencePossible &&
-            this.fetchUserSettings.isComplete &&
+            this.userSettings.isComplete &&
             (!this.showSettingRestoreMsg ||
+                !this.userSettings.result ||
                 !_.isEqual(
                     this.currentChartSettingsMap,
                     _.keyBy(
-                        this.fetchUserSettings.result,
+                        this.userSettings.result!.chartSettings,
                         chartSetting => chartSetting.id
                     )
+                ) ||
+                !_.isEqual(
+                    toJS(this.userGroupColors),
+                    this.userSettings.result!.groupColors
                 ))
         );
     }
@@ -5097,7 +5214,7 @@ export class StudyViewPageStore {
         }
 
         if (this._loadUserSettingsInitially) {
-            pending = pending || this.fetchUserSettings.isPending;
+            pending = pending || this.userSettings.isPending;
             pending = pending || this.userSavedCustomData.isPending;
         }
         if (!_.isEmpty(this.initialFilters.genomicDataFilters)) {
@@ -5120,13 +5237,26 @@ export class StudyViewPageStore {
         return pending;
     }
 
+    public updateUserSettings() {
+        sessionServiceClient.updateUserSettings({
+            origin: toJS(this.studyIds),
+            chartSettings: _.values(this.currentChartSettingsMap),
+            groupColors: toJS(this.userGroupColors),
+        });
+    }
+
     public updateUserSettingsDebounce = _.debounce(() => {
-        if (!_.isEqual(this.previousSettings, this.currentChartSettingsMap)) {
+        const chartSettingsChanged = !_.isEqual(
+            this.previousSettings,
+            this.currentChartSettingsMap
+        );
+        if (chartSettingsChanged) {
             this.previousSettings = this.currentChartSettingsMap;
             if (!_.isEmpty(this.currentChartSettingsMap)) {
                 sessionServiceClient.updateUserSettings({
                     origin: toJS(this.studyIds),
                     chartSettings: _.values(this.currentChartSettingsMap),
+                    groupColors: toJS(this.userGroupColors),
                 });
             }
         }
@@ -5155,31 +5285,36 @@ export class StudyViewPageStore {
         return chartSettingsMap;
     }
 
-    readonly fetchUserSettings = remoteData<ChartUserSetting[]>({
+    readonly userSettings = remoteData<StudyPageSettings | undefined>({
         invoke: async () => {
             if (
                 this.isSavingUserPreferencePossible &&
                 this.studyIds.length > 0
             ) {
-                let userSettings = await sessionServiceClient.fetchUserSettings(
+                return sessionServiceClient.fetchUserSettings(
                     toJS(this.studyIds)
                 );
-                if (userSettings) {
-                    return updateSavedUserPreferenceChartIds(
-                        userSettings.chartSettings
-                    );
-                }
             }
-            return [];
+            return undefined;
         },
-        default: [],
+        default: undefined,
         onError: () => {
             // fail silently when an error occurs
+        },
+        onResult: () => {
+            const groupColorFromSession =
+                this.userSettings.isComplete && this.userSettings.result
+                    ? this.userSettings.result.groupColors
+                    : {};
+            _.forIn(
+                groupColorFromSession,
+                (value, key) => (this.userGroupColors[key] = value)
+            );
         },
     });
 
     @action.bound
-    private clearPageSettings(): void {
+    private clearPageChartSettings() {
         // Only remove visibility of unfiltered chart. This is to fix https://github.com/cBioPortal/cbioportal/issues/8057#issuecomment-747062244
         _.forEach(
             _.fromPairs(this._chartVisibility.toJSON()),
@@ -5201,16 +5336,18 @@ export class StudyViewPageStore {
     }
 
     @action.bound
-    loadUserSettings(): void {
+    loadUserChartSettings() {
         if (
             this.isSavingUserPreferencePossible &&
-            !_.isEmpty(this.fetchUserSettings.result)
+            this.userSettings.isComplete &&
+            this.userSettings.result &&
+            !_.isEmpty(this.userSettings.result!.chartSettings)
         ) {
-            this.loadSettings(this.fetchUserSettings.result);
+            this.loadChartSettings(this.userSettings.result!.chartSettings);
             // set previousSettings only if user is already logged in
             if (this._loadUserSettingsInitially) {
                 this.previousSettings = _.keyBy(
-                    this.fetchUserSettings.result,
+                    this.userSettings.result!.chartSettings,
                     chartSetting => chartSetting.id
                 );
             }
@@ -5247,8 +5384,8 @@ export class StudyViewPageStore {
     }
 
     @action.bound
-    public undoUserSettings(): void {
-        this.loadSettings(_.values(this.previousSettings));
+    public undoUserChartSettings(): void {
+        this.loadChartSettings(_.values(this.previousSettings));
         this.previousSettings = {};
     }
 
@@ -5269,9 +5406,9 @@ export class StudyViewPageStore {
     >();
 
     @action.bound
-    public resetToDefaultSettings(): void {
-        this.clearPageSettings();
-        this.loadSettings(_.values(this.defaultChartSettingsMap));
+    public resetToDefaultChartSettings(): void {
+        this.clearPageChartSettings();
+        this.loadChartSettings(_.values(this.defaultChartSettingsMap));
     }
 
     @computed get showResetToDefaultButton(): boolean {
@@ -5306,8 +5443,8 @@ export class StudyViewPageStore {
     }
 
     @action.bound
-    private loadSettings(chartSettings: ChartUserSetting[]): void {
-        this.clearPageSettings();
+    private loadChartSettings(chartSettings: ChartUserSetting[]): void {
+        this.clearPageChartSettings();
         const validChartTypes = Object.values(ChartTypeEnum).map(chartType =>
             chartType.toString()
         );

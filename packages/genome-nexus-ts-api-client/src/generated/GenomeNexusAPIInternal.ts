@@ -544,8 +544,6 @@ export type TranscriptConsequenceSummary = {
 
         'transcriptId': string
 
-        'uniprotId': string
-
         'variantClassification': string
 
 };
