@@ -268,7 +268,7 @@ describe('case set selection in modify query form', function() {
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
@@ -453,7 +453,7 @@ describe('genetic profile selection in modify query form', function() {
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae"]',
             10000
         );
         assert(
@@ -464,7 +464,7 @@ describe('genetic profile selection in modify query form', function() {
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae"]'
             ),
             "'Copy number alterations' should be selected"
         );

@@ -16,11 +16,11 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<
     {}
 > {
     readonly molecularProfileCategorySet = remoteData({
-        await: () => [this.store.groupedMolecularProfilesByType],
+        await: () => [this.store.validProfileIdSetForSelectedStudies],
         invoke: () => {
             return Promise.resolve(
                 getMolecularProfileOptions(
-                    this.store.groupedMolecularProfilesByType.result
+                    this.store.validProfileIdSetForSelectedStudies.result
                 )
             );
         },
