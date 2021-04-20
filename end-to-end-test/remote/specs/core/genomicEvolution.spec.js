@@ -20,10 +20,9 @@ describe('Patient View Genomic Evolution tab', function() {
         });
         it('shows only highlighted, or all mutations, depending on setting', () => {
             // at first, showing all mutations
-            browser.waitForExist(
-                'input[data-test="TableShowOnlyHighlighted"]',
-                3000
-            );
+            $('input[data-test="TableShowOnlyHighlighted"]').waitForExist({
+                timeout: 3000,
+            });
             assert(
                 !browser.isSelected(
                     'input[data-test="TableShowOnlyHighlighted"]'
@@ -41,12 +40,12 @@ describe('Patient View Genomic Evolution tab', function() {
             assert(numMutations > 2);
 
             // now select two mutations
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
-            browser.click(
+            ).click();
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(4)'
-            );
+            ).click();
 
             // should still show all
             browser.waitForExist(
@@ -59,7 +58,7 @@ describe('Patient View Genomic Evolution tab', function() {
             assert(numMutations > 2);
 
             // now select "show only highlighted"
-            browser.click('input[data-test="TableShowOnlyHighlighted"]');
+            $('input[data-test="TableShowOnlyHighlighted"]').click();
             browser.waitUntil(
                 () => {
                     numMutationsText = browser.getText(
@@ -73,9 +72,9 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on one of the 2 mutations
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
+            ).click();
             browser.waitUntil(
                 () => {
                     numMutationsText = browser.getText(
@@ -89,9 +88,9 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on the last remaining mutation
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
+            ).click();
             browser.waitUntil(
                 () => {
                     numMutationsText = browser.getText(

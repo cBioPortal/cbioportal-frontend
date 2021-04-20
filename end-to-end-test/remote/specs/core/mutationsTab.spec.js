@@ -14,11 +14,11 @@ describe('mutations tab', function() {
         );
         waitForOncoprint(60000);
         setResultsPageSettingsMenuOpen(true);
-        browser.click('input[data-test="HideVUS"]');
+        $('input[data-test="HideVUS"]').click();
         setResultsPageSettingsMenuOpen(false);
-        browser.waitForExist('a.tabAnchor_mutations');
-        browser.click('a.tabAnchor_mutations');
-        browser.waitForVisible('[data-test="LazyMobXTable_CountHeader"]');
+        $('a.tabAnchor_mutations').waitForExist();
+        $('a.tabAnchor_mutations').click();
+        $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed();
         assert(
             browser
                 .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
@@ -29,10 +29,9 @@ describe('mutations tab', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=brca_tcga_pub&case_set_id=brca_tcga_pub_cnaseq&data_priority=0&gene_list=BRCA1%2520BRCA2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&tab_index=tab_visualize`
         );
-        browser.waitForVisible(
-            '[data-test="LazyMobXTable_CountHeader"]',
-            10000
-        );
+        $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed({
+            timeout: 10000,
+        });
         assert(
             browser
                 .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
@@ -40,20 +39,18 @@ describe('mutations tab', function() {
             'unfiltered is 19 mutations'
         );
 
-        browser.click('button[data-test="GlobalSettingsButton"]');
-        browser.waitForVisible(
-            'div[data-test="GlobalSettingsDropdown"]',
-            10000
-        );
-        browser.click(
+        $('button[data-test="GlobalSettingsButton"]').click();
+        $('div[data-test="GlobalSettingsDropdown"]').waitForDisplayed({
+            timeout: 10000,
+        });
+        $(
             'div[data-test="GlobalSettingsDropdown"] input[data-test="HideGermline"]'
-        );
-        browser.click('button[data-test="GlobalSettingsButton"]');
+        ).click();
+        $('button[data-test="GlobalSettingsButton"]').click();
 
-        browser.waitForVisible(
-            '[data-test="LazyMobXTable_CountHeader"]',
-            10000
-        );
+        $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed({
+            timeout: 10000,
+        });
         assert(
             browser
                 .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)

@@ -38,10 +38,12 @@ describe.skip('merged tracks', () => {
 
         var trackOptionsElts = getNthOncoprintTrackOptionsElements(1);
         // open menu
-        browser.click(trackOptionsElts.button_selector);
-        browser.waitForVisible(trackOptionsElts.dropdown_selector, 1000);
+        $(trackOptionsElts.button_selector).click();
+        $(trackOptionsElts.dropdown_selector).waitForDisplayed({
+            timeout: 1000,
+        });
         // click expand
-        browser.click(trackOptionsElts.dropdown_selector + ' li:nth-child(3)');
+        $(trackOptionsElts.dropdown_selector + ' li:nth-child(3)').click();
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
         var res = browser.checkElement('.oncoprintContainer', {
@@ -189,7 +191,7 @@ describe('oncoprint', function() {
             );
 
             // Cluster
-            browser.click(mrnaElements.dropdown_selector + ' li:nth-child(1)'); // Click Cluster
+            $(mrnaElements.dropdown_selector + ' li:nth-child(1)').click(); // Click Cluster
             browser.pause(500); // give it time to sort
 
             // Open menu again, which may have closed
@@ -214,7 +216,7 @@ describe('oncoprint', function() {
             );
 
             // Uncluster
-            browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't clsuter
+            $(mrnaElements.dropdown_selector + ' li:nth-child(2)').click(); // Click Don't clsuter
             browser.pause(500); // give it time to sort
 
             // Open menu again, which may have closed
@@ -271,11 +273,11 @@ describe('oncoprint', function() {
         it('annotates all types of mutations with cbioportal count and cosmic', () => {
             setResultsPageSettingsMenuOpen(true);
             // select only mutation coloring by cbioportal count
-            browser.click(cbioportalCheckbox);
+            $(cbioportalCheckbox).click();
             waitForOncoprint(2000);
-            browser.click(oncoKbCheckbox);
+            $(oncoKbCheckbox).click();
             waitForOncoprint(2000);
-            browser.click(hotspotsCheckbox);
+            $(hotspotsCheckbox).click();
             waitForOncoprint(2000);
             // set threshold 1
             browser.execute(function() {
@@ -300,9 +302,9 @@ describe('oncoprint', function() {
 
             // select only mutation coloring by cosmic count
             setResultsPageSettingsMenuOpen(true);
-            browser.click(cosmicCheckbox);
+            $(cosmicCheckbox).click();
             waitForOncoprint(2000);
-            browser.click(cbioportalCheckbox);
+            $(cbioportalCheckbox).click();
             waitForOncoprint(2000);
             // set threshold 1
             browser.execute(function() {
@@ -332,17 +334,16 @@ describe('oncoprint', function() {
             // search for study with germline mutation (ov_tcga_pub)
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             var inputSelector = '.autosuggest input[type="text"]';
-            browser.waitForExist(inputSelector, 10000);
-            browser.setValue(
-                inputSelector,
+            $(inputSelector).waitForExist({ timeout: 10000 });
+            $(inputSelector).setValue(
                 'ovarian serous cystadenocarcinoma tcga nature 2011'
             );
             waitForNumberOfStudyCheckboxes(1);
 
             // select it
             var checkBox = $('[data-test="StudySelect"]');
-            checkBox.waitForExist(10000);
-            browser.click('[data-test="StudySelect"] input');
+            checkBox.waitForExist({ timeout: 10000 });
+            $('[data-test="StudySelect"] input').click();
 
             clickQueryByGeneButton();
 
@@ -351,7 +352,7 @@ describe('oncoprint', function() {
 
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.scroll(0);
-            browser.click('[data-test="queryButton"]');
+            $('[data-test="queryButton"]').click();
 
             waitForOncoprint(ONCOPRINT_TIMEOUT);
 
@@ -371,7 +372,7 @@ describe('oncoprint', function() {
             ).click(); // open view menu
             $(
                 '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-            ).waitForExist(10000);
+            ).waitForExist({ timeout: 10000 });
             $(
                 '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
             ).click(); // go to sample mode
@@ -406,8 +407,8 @@ describe('oncoprint', function() {
 
             setResultsPageSettingsMenuOpen(true);
             const hideGermlineButton = 'input[data-test="HideGermline"]';
-            browser.waitForVisible(hideGermlineButton, 1000);
-            browser.click(hideGermlineButton);
+            $(hideGermlineButton).waitForDisplayed({ timeout: 1000 });
+            $(hideGermlineButton).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
@@ -418,8 +419,8 @@ describe('oncoprint', function() {
             assert(oncoprintDivText.indexOf('4%') > -1, 'now, 4% altered');
 
             setResultsPageSettingsMenuOpen(true);
-            browser.waitForVisible(hideGermlineButton, 1000);
-            browser.click(hideGermlineButton);
+            $(hideGermlineButton).waitForDisplayed({ timeout: 1000 });
+            $(hideGermlineButton).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
@@ -445,8 +446,8 @@ describe('oncoprint', function() {
 
             setOncoprintMutationsMenuOpen(true);
             const colorByGermline = 'input[data-test="ColorByGermline"]';
-            browser.waitForVisible(colorByGermline, 1000);
-            browser.click(colorByGermline);
+            $(colorByGermline).waitForDisplayed({ timeout: 1000 });
+            $(colorByGermline).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
@@ -457,8 +458,8 @@ describe('oncoprint', function() {
             assert(oncoprintDivText.indexOf('12%') > -1, 'still 12% altered');
 
             setOncoprintMutationsMenuOpen(true);
-            browser.waitForVisible(colorByGermline, 1000);
-            browser.click(colorByGermline);
+            $(colorByGermline).waitForDisplayed({ timeout: 1000 });
+            $(colorByGermline).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
             oncoprintDivText = browser.getText('#oncoprintDiv');
@@ -485,20 +486,20 @@ describe('oncoprint', function() {
                 ).click(); // open view menu
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
-                ).waitForVisible(10000);
+                ).waitForDisplayed({ timeout: 10000 });
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
                 ).click(); // go to sample mode
 
                 waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-                browser.click('#sortDropdown');
-                browser.waitForVisible(
+                $('#sortDropdown').click();
+                $(
                     '[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]'
-                );
-                browser.click(
+                ).waitForVisible();
+                $(
                     '[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]'
-                );
+                ).click();
                 browser.pause(100); // allow to sort
 
                 assert.equal(
@@ -514,7 +515,7 @@ describe('oncoprint', function() {
                 ).click(); // open view menu
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-                ).waitForVisible(10000);
+                ).waitForDisplayed({ timeout: 10000 });
                 $(
                     '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
                 ).click(); // go to sample mode
@@ -533,12 +534,12 @@ describe('oncoprint', function() {
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
             var inputSelector = '.autosuggest input[type="text"]';
-            browser.waitForExist(inputSelector, 10000);
+            $(inputSelector).waitForExist({ timeout: 10000 });
             browser.setValue(inputSelector, 'colorectal tcga nature');
             waitForNumberOfStudyCheckboxes(1);
             var checkBox = $('[data-test="StudySelect"]');
-            checkBox.waitForExist(10000);
-            browser.click('[data-test="StudySelect"] input');
+            checkBox.waitForExist({ timeout: 10000 });
+            $('[data-test="StudySelect"] input').click();
 
             setInputText(
                 inputSelector,
@@ -550,30 +551,28 @@ describe('oncoprint', function() {
             );
 
             var checkBox = $('[data-test="StudySelect"]');
-            checkBox.waitForExist(10000);
-            browser.click('[data-test="StudySelect"] input');
+            checkBox.waitForExist({ timeout: 10000 });
+            $('[data-test="StudySelect"] input').click();
 
             clickQueryByGeneButton();
 
-            browser.waitForExist(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
-                10000
-            );
-            browser.waitForExist(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
-                10000
-            );
+            $(
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
+            ).waitForExist({ timeout: 10000 });
+            $(
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
+            ).waitForExist({ timeout: 10000 });
 
             // select custom case list
             var caseSetSelector = $(
                 '[data-test="CaseSetSelector"] .Select-input input'
             );
-            caseSetSelector.waitForExist(10000);
+            caseSetSelector.waitForExist({ timeout: 10000 });
             caseSetSelector.setValue('User-defined Case List');
-            browser.click('[data-test="CaseSetSelector"] .Select-option');
+            $('[data-test="CaseSetSelector"] .Select-option').click();
 
             var caseInput = $('[data-test="CustomCaseSetInput"]');
-            caseInput.waitForExist(10000);
+            caseInput.waitForExist({ timeout: 10000 });
             caseInput.setValue(
                 'coadread_tcga_pub:TCGA-AA-3971-01\n' +
                     'acc_tcga:TCGA-OR-A5JC-01\n' +
@@ -588,21 +587,23 @@ describe('oncoprint', function() {
                 'DKK2 KRAS BCL2L1 RASA1 HLA-B RRAGC'
             );
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
-            browser.click('[data-test="queryButton"]');
+            $('[data-test="queryButton"]').click();
 
             doCustomCaseOrderTest();
 
             // change genes and resubmit
-            browser.click('button#modifyQueryBtn');
-            browser.waitForVisible('textarea[data-test="geneSet"]', 10000);
+            $('button#modifyQueryBtn').click();
+            $('textarea[data-test="geneSet"]').waitForDisplayed({
+                timeout: 10000,
+            });
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             browser.pause(100); // let things trigger
             browser.waitForEnabled('button[data-test="queryButton"]', 10000);
-            browser.click('button[data-test="queryButton"]');
+            $('button[data-test="queryButton"]').click();
             browser.pause(100); // wait for query to submit
             // go to oncoprint tab
-            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
-            browser.click('a.tabAnchor_oncoprint');
+            $('a.tabAnchor_oncoprint').waitForExist({ timeout: 10000 });
+            $('a.tabAnchor_oncoprint').click();
 
             // run same test again
             doCustomCaseOrderTest();
@@ -624,7 +625,7 @@ describe('oncoprint', function() {
             $(
                 '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
             ).click(); // open view menu
-            $(checkboxSelector).waitForExist(1000);
+            $(checkboxSelector).waitForExist({ timeout: 1000 });
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();
@@ -669,7 +670,7 @@ describe('oncoprint', function() {
             $(
                 '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
             ).click(); // open view menu
-            $(checkboxSelector).waitForExist(1000);
+            $(checkboxSelector).waitForExist({ timeout: 1000 });
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
             legendText = getTextInOncoprintLegend();

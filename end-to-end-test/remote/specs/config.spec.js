@@ -14,57 +14,63 @@ describe('homepage', function() {
     before(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.localStorage('POST', { key: 'frontendConfig', value: '{}' });
+        browser.execute(function() {
+            this.localStorage.setItem('frontendConfig', '{}');
+        });
     });
 
     afterEach(() => {
-        browser.localStorage('POST', {
-            key: 'frontendConfig',
-            value: JSON.stringify({ serverConfig: {} }),
+        browser.execute(function() {
+            this.localStorage.setItem(
+                'frontendConfig',
+                JSON.stringify({ serverConfig: {} })
+            );
         });
     });
 
     it('test login observes authenticationMethod config property', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
-        browser.isExisting('button=Login');
+        $('button=Login').isExisting();
 
-        browser.localStorage('POST', {
-            key: 'frontendConfig',
-            value: JSON.stringify({
-                serverConfig: { authenticationMethod: null },
-            }),
+        browser.execute(function() {
+            this.localStorage.setItem(
+                'frontendConfig',
+                JSON.stringify({
+                    serverConfig: { authenticationMethod: null },
+                })
+            );
         });
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
-        assert.equal(browser.isExisting('button=Login'), false);
+        assert.equal($('button=Login').isExisting(), false);
     });
 
     it('test login observes authenticationMethod config property', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
-        browser.isExisting('a=Data Sets');
+        $('a=Data Sets').isExisting();
 
         setServerConfiguration({ skin_show_data_tab: false });
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
-        assert.equal(browser.isExisting('a=Data Sets'), false);
+        assert.equal($('a=Data Sets').isExisting(), false);
     });
 
     it('shows right logo in header bar depending on skin_right_logo', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
         var test = browser.execute(function() {
             return (
@@ -81,7 +87,7 @@ describe('homepage', function() {
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#rightHeaderContent');
+        $('#rightHeaderContent').waitForExist();
 
         assert(
             executeInBrowser(() => {
@@ -100,13 +106,15 @@ describe('homepage', function() {
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('#blurbDiv');
+        $('#blurbDiv').waitForExist();
     });
 });
 
 function setServerConfiguration(serverConfig) {
-    browser.localStorage('POST', {
-        key: 'frontendConfig',
-        value: JSON.stringify({ serverConfig: serverConfig }),
-    });
+    browser.execute(function(_serverConfig) {
+        this.localStorage.setItem(
+            'frontendConfig',
+            JSON.stringify({ serverConfig: _serverConfig })
+        );
+    }, serverConfig);
 }

@@ -21,24 +21,22 @@ describe('Mutation Mapper Tool', function() {
         beforeEach(() => {
             var url = `${CBIOPORTAL_URL}/mutation_mapper`;
             goToUrlAndSetLocalStorage(url);
-            browser.waitForVisible(
-                '[data-test=GenomicChangesExampleButton]',
-                10000
-            );
+            $('[data-test=GenomicChangesExampleButton]').waitForDisplayed({
+                timeout: 10000,
+            });
         });
 
         it('should correctly annotate the genomic changes example and display the results', () => {
-            browser.click('[data-test=GenomicChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=GenomicChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 60000 });
 
             // Waiting for Annotation column sorting
             browser.waitForText('.//*[text()[contains(.,"T790M")]]');
@@ -62,7 +60,9 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
@@ -87,14 +87,16 @@ describe('Mutation Mapper Tool', function() {
         });
 
         it('should update the listed number of mutations when selecting a different transcript in the dropdown', () => {
-            browser.click('[data-test=GenomicChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=GenomicChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
 
             // wait for transcript to be listed
             browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
@@ -113,14 +115,16 @@ describe('Mutation Mapper Tool', function() {
         });
 
         it('should show all transcripts when using protein changes', () => {
-            browser.click('[data-test=ProteinChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=ProteinChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
             // it should have 124 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
 
@@ -153,14 +157,16 @@ describe('Mutation Mapper Tool', function() {
         });
 
         it('should show all transcripts when using combination of genomic and protein changes', () => {
-            browser.click('[data-test=GenomicAndProteinChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=GenomicAndProteinChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
             // it should have 122 egfr mutations
             browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
 
@@ -193,17 +199,16 @@ describe('Mutation Mapper Tool', function() {
         });
 
         it('should correctly annotate the protein changes example and display the results', () => {
-            browser.click('[data-test=ProteinChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=ProteinChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 60000 });
 
             const mutationsT790M = browser.getText(
                 './/*[text()[contains(.,"T790M")]]'
@@ -237,9 +242,9 @@ describe('Mutation Mapper Tool', function() {
                 'Sample_ID Cancer_Type Chromosome Start_Position End_Position Reference_Allele Variant_Allele\nTCGA-49-4494-01 Lung_Adenocarcinoma 6 27819890 27819890 A G'
             );
 
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
-            browser.waitForVisible('[class=borderedChart]', 20000);
+            $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
 
             // the canonical transcript id for HIST1H2BN is ENST00000396980, but
             // this mutation applies to ENST00000606613 and ENST00000449538
@@ -254,9 +259,9 @@ describe('Mutation Mapper Tool', function() {
                 'Sample_ID Cancer_Type Chromosome Start_Position End_Position Reference_Allele Variant_Allele\nTCGA-O2-A52N-01 Lung_Squamous_Cell_Carcinoma 7 -1 -1 NA\nTCGA-33-4566-01 Lung_Squamous_Cell_Carcinoma 7 55269425 55269425 C T'
             );
 
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
-            browser.waitForVisible('[class=borderedChart]', 20000);
+            $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
 
             const warning = browser.getText(
                 './/*[text()[contains(.,"Failed to annotate")]]'
@@ -266,7 +271,7 @@ describe('Mutation Mapper Tool', function() {
                 'there should be a warning indicating one mutation failed annotation'
             );
 
-            browser.click('[data-test=ShowWarningsButton]');
+            $('[data-test=ShowWarningsButton]').click();
 
             const failingRecord = browser.getText(
                 './/*[text()[contains(.,"TCGA-33-4566-01")]]'
@@ -284,9 +289,9 @@ describe('Mutation Mapper Tool', function() {
             const hla = require('./data/hla_a_test_mutation_mapper_tool.txt');
 
             input.setValue(hla);
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
-            browser.waitForVisible('[class=borderedChart]', 20000);
+            $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
 
             // check total number of mutations (this gets Showing 1-14 of 14
             // Mutations)
@@ -301,31 +306,28 @@ describe('Mutation Mapper Tool', function() {
         beforeEach(() => {
             var url = `${CBIOPORTAL_URL}/mutation_mapper`;
             goToUrlAndSetLocalStorage(url);
-            browser.waitForVisible(
-                '[data-test=MutationMapperToolGRCh38Button]',
-                10000
-            );
+            $('[data-test=MutationMapperToolGRCh38Button]').waitForDisplayed({
+                timeout: 10000,
+            });
         });
 
         it('should correctly annotate the genomic changes example with GRCh38 and display the results', () => {
             // choose GRCh38
-            browser.click('[data-test=MutationMapperToolGRCh38Button]');
+            $('[data-test=MutationMapperToolGRCh38Button]').click();
             // the page will reloda after change genome build, wait until loading finished
-            browser.waitForVisible(
-                '[data-test=GenomicChangesExampleButton]',
-                10000
-            );
-            browser.click('[data-test=GenomicChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=GenomicChangesExampleButton]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('[data-test=GenomicChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 60000 });
 
             // Waiting for Annotation column sorting
             browser.waitForText('.//*[text()[contains(.,"T790M")]]');
@@ -349,7 +351,9 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
@@ -376,27 +380,28 @@ describe('Mutation Mapper Tool', function() {
         it('should show dbSNP with GRCh38 instance', () => {
             // dbSNP is getting from myVariant Info
             // choose GRCh38
-            browser.click('[data-test=MutationMapperToolGRCh38Button]');
+            $('[data-test=MutationMapperToolGRCh38Button]').click();
             // the page will reloda after change genome build, wait until loading finished
-            browser.waitForVisible(
-                '[data-test=GenomicChangesExampleButton]',
-                10000
-            );
-            browser.click('[data-test=GenomicChangesExampleButton]');
-            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+            $('[data-test=GenomicChangesExampleButton]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('[data-test=GenomicChangesExampleButton]').click();
+            $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             waitForGenomeNexusAnnotation();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible('[data-test=oncogenic-icon-image]', 60000);
+            $('[data-test=oncogenic-icon-image]').waitForDisplayed({
+                timeout: 60000,
+            });
 
             // click on column button
-            browser.click('button*=Columns');
+            $('button*=Columns').click();
             // scroll down to activated "dbSNP" selection
             browser.scroll(1000, 1000);
             // click "dbSNP"
-            browser.click('//*[text()="dbSNP"]');
+            $('//*[text()="dbSNP"]').click();
             browser.waitForText('.//*[text()[contains(.,"rs121434568")]]');
         });
     });

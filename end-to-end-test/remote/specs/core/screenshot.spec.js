@@ -32,7 +32,7 @@ function runResultsTestSuite(prefix, options = {}) {
     // can't get it to pass reliably
     it.skip(`${prefix} igv_tab tab`, function() {
         $('a.tabAnchor_cnSegments').click();
-        $('#cnSegmentsFrame').waitForExist({timeout:20000});;
+        $('#cnSegmentsFrame').waitForExist({ timeout: 20000 });
         var res = browser.checkElement('.cnSegmentsMSKTabs');
         assertScreenShotMatch(res);
     });
@@ -150,7 +150,9 @@ function runResultsTestSuite(prefix, options = {}) {
         $('a.tabAnchor_pathways').click();
 
         $('#cy', 10000).waitForDisplayed();
-        $('div[data-test="pathwayMapperMessageBox"]').waitForExist(4000);
+        $('div[data-test="pathwayMapperMessageBox"]').waitForExist({
+            timeout: 4000,
+        });
 
         var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {});
 
@@ -187,12 +189,12 @@ describe('download tab screenshot tests', function() {
     it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        $('a.tabAnchor_download').waitForExist({ timeout:10000 });
+        $('a.tabAnchor_download').waitForExist({ timeout: 10000 });
         $('a.tabAnchor_download').click();
         $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-        ).waitForExist({ timeout:20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({ timeout:10000 });;
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 10000 });
         var res = browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -202,8 +204,8 @@ describe('download tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
         $(
             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout:20000 });;
-        $('[data-test="downloadTabDiv"]').waitForExist({timeout:5000});
+        ).waitForExist({ timeout: 20000 });
+        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
         var res = browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -213,8 +215,8 @@ describe('download tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
         $(
             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({ timeout:20000 });
-        $('[data-test="downloadTabDiv"]').waitForExist({timeout:5000});
+        ).waitForExist({ timeout: 20000 });
+        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
         var res = browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -223,9 +225,9 @@ describe('download tab screenshot tests', function() {
         var url = `${CBIOPORTAL_URL}/results/download?Action=Submit&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=nsclc_tcga_broad_2016_cna&Z_SCORE_THRESHOLD=2.0&tab_index=tab_visualize&data_priority=0&case_set_id=nsclc_tcga_broad_2016_cnaseq&gene_list=EGFR%253A%2520MUT%253DT790M%2520AMP&RPPA_SCORE_THRESHOLD=2.0&cancer_study_list=nsclc_tcga_broad_2016&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=nsclc_tcga_broad_2016_mutations`;
         goToUrlAndSetLocalStorage(url);
         $(
-            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg',
-        ).waitForExist({timeout:20000});
-        $('[data-test="downloadTabDiv"]').waitForExist({timeout:5000});
+            '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
+        ).waitForExist({ timeout: 20000 });
+        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
         var res = browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -235,9 +237,9 @@ describe('download tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(url);
         $(
             '[data-test="dataDownloadGeneAlterationTable"] tr > td > svg'
-        ).waitForExist({timeout:20000});
+        ).waitForExist({ timeout: 20000 });
 
-        $('[data-test="downloadTabDiv"]').waitForExist({timeout:5000});;
+        $('[data-test="downloadTabDiv"]').waitForExist({ timeout: 5000 });
 
         var res = browser.checkElement('[data-test="downloadTabDiv"]');
         assertScreenShotMatch(res);
@@ -251,10 +253,10 @@ describe('patient view page screenshot test', function() {
 
         // find oncokb image
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist(30000);
+        oncokbIndicator.waitForExist({ timeout: 30000 });
         // find vaf plot
         var vafPlot = $('.vafPlot');
-        vafPlot.waitForExist(30000);
+        vafPlot.waitForExist({ timeout: 30000 });
 
         var res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
@@ -337,12 +339,12 @@ describe('results page tabs while excluding unprofiled samples', function() {
 //     });
 //
 //     it('should show error message for 400 query', function() {
-//         browser.waitForExist('.errorScreen');
+//         $('.errorScreen').waitForExist();
 //     });
 //
 //     it('should allow return to homepage after error message', function() {
 //         $('.errorLogo').click();
-//         browser.waitForExist('.homePageLayout');
+//         $('.homePageLayout').waitForExist();
 //     });
 // });
 //
@@ -351,7 +353,7 @@ describe('results page tabs while excluding unprofiled samples', function() {
 //         var url = `${CBIOPORTAL_URL}/patient?sampleId=not-a-sample&studyId=msk_impact_2017`;
 //         goToUrlAndSetLocalStorage(url);
 //
-//         browser.waitForExist('.errorScreen');
+//         $('.errorScreen').waitForExist();
 //         var res = browser.checkElement('.errorScreen', {
 //             hide: ['.form-group'],
 //         });
@@ -362,7 +364,7 @@ describe('results page tabs while excluding unprofiled samples', function() {
 //         var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=not-a-patient`;
 //         goToUrlAndSetLocalStorage(url);
 //
-//         browser.waitForExist('.errorScreen');
+//         $('.errorScreen').waitForExist();
 //         var res = browser.checkElement('.errorScreen', {
 //             hide: ['.form-group'],
 //         });

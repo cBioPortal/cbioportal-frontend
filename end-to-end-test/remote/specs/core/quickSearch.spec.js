@@ -14,7 +14,7 @@ describe('Quick Search', () => {
         goToUrlAndSetLocalStorage(url);
         $('strong=Beta!').click();
         browser.waitForText('div=e.g. Lung, EGFR, TCGA-OR-A5J2');
-        browser.click('div=e.g. Lung, EGFR, TCGA-OR-A5J2');
+        $('div=e.g. Lung, EGFR, TCGA-OR-A5J2').click();
         // "BRAF" is nice because it matches studies, genes, patients, and samples
         $('input').setValue('BRAF');
         browser.waitForText('div=Click on a study to open its summary');
@@ -23,9 +23,7 @@ describe('Quick Search', () => {
     });
 
     it('should give results for studies', () => {
-        browser.click(
-            'strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        );
+        $('strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)').click();
         browser.waitForText(
             'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
         );
@@ -40,35 +38,31 @@ describe('Quick Search', () => {
     });
 
     it('should give results for genes', () => {
-        browser.click('strong=25 more genes (click to load 20 more)');
+        $('strong=25 more genes (click to load 20 more)').click();
         browser.waitForText('strong=BRAF_PS314');
-        browser.click('strong=BRAF_PS314');
+        $('strong=BRAF_PS314').click();
         browser.waitForText('a=BRAF_PS314');
 
-        assert.equal(
-            browser.isVisible('a=BRAF_PS314'),
-            true,
-            'modal is visible'
-        );
+        assert.equal($('a=BRAF_PS314').isVisible(), true, 'modal is visible');
     });
 
     it('should give results for patients', () => {
-        browser.click('strong=Mel-BRAFi-03');
+        $('strong=Mel-BRAFi-03').click();
         browser.waitForText('a=Mel-BRAFi-03');
 
         assert.equal(
-            browser.isVisible('a=Mel-BRAFi-03')[0],
+            $('a=Mel-BRAFi-03').isVisible()[0],
             true,
             'modal is visible'
         );
     });
 
     it('should give results for samples', () => {
-        browser.click('strong=Mel_BRAFi_02_PRE');
+        $('strong=Mel_BRAFi_02_PRE').click();
         browser.waitForText('a=Mel_BRAFi_02_PRE');
 
         assert.equal(
-            browser.isVisible('a=Mel_BRAFi_02_PRE')[0],
+            $('a=Mel_BRAFi_02_PRE').isVisible()[0],
             true,
             'modal is visible'
         );
