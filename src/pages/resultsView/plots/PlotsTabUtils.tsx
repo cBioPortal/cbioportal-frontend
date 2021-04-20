@@ -1609,6 +1609,7 @@ export function getAxisLabel(
             }
             break;
     }
+    // override axis label for Generic Assay profiles
     if (selection.dataType && isGenericAssaySelected(selection)) {
         if (
             !!(
@@ -2529,23 +2530,23 @@ export function logScalePossibleForProfile(profileId: string) {
 }
 
 export function logScalePossible(axisSelection: AxisMenuSelection) {
-    if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-        if (
-            isGenericAssaySelected(axisSelection) &&
-            axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
-        ) {
-            return true;
-        }
-        // molecular profile
-        return !!(
-            axisSelection.dataSourceId &&
-            logScalePossibleForProfile(axisSelection.dataSourceId)
-        );
-    } else {
+    if (axisSelection.dataType === CLIN_ATTR_DATA_TYPE) {
         // clinical attribute
         return (
             axisSelection.dataSourceId ===
             SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+        );
+    } else if (
+        isGenericAssaySelected(axisSelection) &&
+        axisSelection.genericAssayDataType === DataTypeConstants.LIMITVALUE
+    ) {
+        // Generic Assay numeric profile is log scale possible
+        return true;
+    } else {
+        // molecular profile
+        return !!(
+            axisSelection.dataSourceId &&
+            logScalePossibleForProfile(axisSelection.dataSourceId)
         );
     }
 }
@@ -3147,9 +3148,13 @@ export function showWaterfallPlot(
     return (
         (vertSelection.dataType !== undefined &&
             isGenericAssaySelected(vertSelection) &&
+            vertSelection.genericAssayDataType ===
+                DataTypeConstants.LIMITVALUE &&
             horzSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE) ||
         (horzSelection.dataType !== undefined &&
             isGenericAssaySelected(horzSelection) &&
+            horzSelection.genericAssayDataType ===
+                DataTypeConstants.LIMITVALUE &&
             vertSelection.dataType === NONE_SELECTED_OPTION_STRING_VALUE)
     );
 }
@@ -3488,7 +3493,7 @@ export function makeAxisLogScaleFunction(
         fLogScale = (x: number) => Math.log2(Math.max(x, 0) + 1);
         fInvLogScale = (x: number) => Math.pow(2, x) - 1;
     } else {
-        // log-transformation parameters for generic assay reponse profile
+        // log-transformation parameters for generic assay profile
         // data. Note: log10-transformation is used for generic assays
         label = 'log10';
         fLogScale = (x: number, offset?: number) => {

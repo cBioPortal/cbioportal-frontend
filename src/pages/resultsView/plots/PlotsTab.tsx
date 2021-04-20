@@ -2573,7 +2573,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (
             this.horzAxisDataPromise.result &&
             this.horzSelection.dataType &&
-            isGenericAssaySelected(this.horzSelection)
+            isGenericAssaySelected(this.horzSelection) &&
+            this.horzSelection.genericAssayDataType ===
+                DataTypeConstants.LIMITVALUE
         ) {
             return getLimitValues(this.horzAxisDataPromise.result.data);
         }
@@ -2588,7 +2590,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         if (
             this.vertAxisDataPromise.result &&
             this.vertSelection.dataType &&
-            isGenericAssaySelected(this.vertSelection)
+            isGenericAssaySelected(this.vertSelection) &&
+            this.vertSelection.genericAssayDataType ===
+                DataTypeConstants.LIMITVALUE
         ) {
             return getLimitValues(this.vertAxisDataPromise.result.data);
         }

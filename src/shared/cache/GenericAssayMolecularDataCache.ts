@@ -59,7 +59,14 @@ function handleValueThreshold(
     datum: GenericAssayDataEnhanced
 ): GenericAssayDataEnhanced {
     if (!datum.thresholdType) {
-        // only extract threshold for numeric values
+        // only extract threshold('>' and '<' symbols) for numeric values
+        // This will match a number with possible threshold('>' and '<' symbols) before it
+        // Example 1, integer: 10
+        // Example 2, float: 10.0015
+        // Example 3, integer with threshold: >10
+        // Example 4, float with threshold: <10.0015
+        // Example 5, integer with threshold and space: > 10
+        // Example 6, float with threshold and space: < 10.0015
         const matches = /^([><]? *)(-?\d+(\.\d+)?)$/.exec(datum.value);
         datum.thresholdType = undefined;
         if (matches) {
