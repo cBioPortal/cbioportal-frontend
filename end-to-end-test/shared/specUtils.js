@@ -149,17 +149,17 @@ function showGsva() {
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     browser.waitUntil(() => {
         var ret =
-            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
-                .value.length === expectedNumber;
+            $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
+            expectedNumber;
         if (text && ret) {
-            ret = browser.isExisting(
+            ret = $(
                 '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-            );
+            ).isExisting();
             if (ret) {
                 ret =
-                    browser.getText(
+                    $(
                         '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                    ) === text;
+                    ).getText() === text;
             }
         }
         return ret;
@@ -192,7 +192,7 @@ function waitForNetworkQuiet(timeout) {
         return (
             browser.execute(function() {
                 return window.ajaxQuiet === true;
-            }).value == true
+            }) == true
         );
     }, timeout);
 }
@@ -309,7 +309,7 @@ function checkOncoprintElement(selector) {
 }
 
 function executeInBrowser(callback) {
-    return browser.execute(callback).value;
+    return browser.execute(callback);
 }
 
 function checkElementWithTemporaryClass(

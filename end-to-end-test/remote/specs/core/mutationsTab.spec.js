@@ -20,8 +20,8 @@ describe('mutations tab', function() {
         $('a.tabAnchor_mutations').click();
         $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed();
         assert(
-            browser
-                .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
+            $('[data-test="LazyMobXTable_CountHeader"]')
+                .getHTML(false)
                 .indexOf('0 Mutations') > -1
         );
     });
@@ -33,8 +33,8 @@ describe('mutations tab', function() {
             timeout: 10000,
         });
         assert(
-            browser
-                .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
+            $('[data-test="LazyMobXTable_CountHeader"]')
+                .getHTML(false)
                 .indexOf('19 Mutations') > -1,
             'unfiltered is 19 mutations'
         );
@@ -52,8 +52,8 @@ describe('mutations tab', function() {
             timeout: 10000,
         });
         assert(
-            browser
-                .getHTML('[data-test="LazyMobXTable_CountHeader"]', false)
+            $('[data-test="LazyMobXTable_CountHeader"]')
+                .getHTML(false)
                 .indexOf('6 Mutations') > -1,
             'filtered is 6 mutations'
         );

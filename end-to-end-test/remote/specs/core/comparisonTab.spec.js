@@ -36,7 +36,7 @@ describe('results view comparison tab venn diagram tests', function() {
             $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameInputField"]').isVisible(),
+                $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
                 true,
                 'group name input exists'
             );
@@ -55,9 +55,7 @@ describe('results view comparison tab venn diagram tests', function() {
                 '[data-test="sampleDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="sampleDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
@@ -65,15 +63,13 @@ describe('results view comparison tab venn diagram tests', function() {
                 false
             );
 
-            browser.setValue('[data-test="sampleGroupNameInputField"]', 'KRAS');
+            $('[data-test="sampleGroupNameInputField"]').setValue('KRAS');
             browser.pause(100);
             $(
                 '[data-test="sampleDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="sampleDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
@@ -105,7 +101,7 @@ describe('results view comparison tab venn diagram tests', function() {
             $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameInputField"]').isVisible(),
+                $('[data-test="patientGroupNameInputField"]').isDisplayed(),
                 true,
                 'group name input exists'
             );
@@ -124,9 +120,7 @@ describe('results view comparison tab venn diagram tests', function() {
                 '[data-test="patientDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="patientDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
@@ -140,9 +134,7 @@ describe('results view comparison tab venn diagram tests', function() {
                 '[data-test="patientDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="patientDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
@@ -190,7 +182,7 @@ describe('results view comparison tab upset diagram tests', function() {
             $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameInputField"]').isVisible(),
+                $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
                 true,
                 'group name input exists'
             );
@@ -209,9 +201,7 @@ describe('results view comparison tab upset diagram tests', function() {
                 '[data-test="sampleDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="sampleDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
@@ -243,7 +233,7 @@ describe('results view comparison tab upset diagram tests', function() {
             $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameInputField"]').isVisible(),
+                $('[data-test="patientGroupNameInputField"]').isDisplayed(),
                 true,
                 'group name input exists'
             );
@@ -260,9 +250,7 @@ describe('results view comparison tab upset diagram tests', function() {
                 '[data-test="patientDuplicateGroupNameMessage"]'
             ).waitForDisplayed({ timeout: 20000 });
             assert.equal(
-                browser.getText(
-                    '[data-test="patientDuplicateGroupNameMessage"]'
-                ),
+                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
             );
             assert.equal(
