@@ -410,6 +410,7 @@ describe('treatment feature', function() {
                     })
                 );
 
+                $('[data-test=ViewLimitValues]').waitForExist();
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
@@ -436,6 +437,7 @@ describe('treatment feature', function() {
                     })
                 );
 
+                $('[data-test=ViewLimitValues]').waitForExist();
                 assert($('[data-test=ViewLimitValues]').isVisible());
             });
 

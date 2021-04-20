@@ -41,12 +41,15 @@ import {
     generateMutationDownloadData,
     generateProteinData,
     hasValidData,
+    hasValidStructuralVariantData,
     hasValidMutationData,
     stringify2DArray,
     generateOtherMolecularProfileData,
     generateOtherMolecularProfileDownloadData,
     generateGenericAssayProfileData,
     generateGenericAssayProfileDownloadData,
+    generateStructuralVariantData,
+    generateStructuralDownloadData,
     makeIsSampleProfiledFunction,
 } from './DownloadUtils';
 
@@ -429,6 +432,42 @@ export default class DownloadTab extends React.Component<
             ),
     });
 
+    readonly structuralVariantData = remoteData<{
+        [key: string]: ExtendedAlteration[];
+    }>({
+        await: () => [this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke: () =>
+            Promise.resolve(
+                generateStructuralVariantData(
+                    this.props.store.nonOqlFilteredCaseAggregatedData.result!
+                )
+            ),
+    });
+
+    readonly structuralVariantDownloadData = remoteData<string[][]>({
+        await: () => [
+            this.structuralVariantData,
+            this.props.store.samples,
+            this.props.store.genes,
+            this.props.store.coverageInformation,
+            this.props.store.studyToSelectedMolecularProfilesMap,
+        ],
+        invoke: () =>
+            Promise.resolve(
+                generateStructuralDownloadData(
+                    this.structuralVariantData.result!,
+                    this.props.store.samples.result!,
+                    this.props.store.genes.result!,
+                    makeIsSampleProfiledFunction(
+                        AlterationTypeConstants.STRUCTURAL_VARIANT,
+                        this.props.store.studyToSelectedMolecularProfilesMap
+                            .result!,
+                        this.props.store.coverageInformation.result!
+                    )
+                )
+            ),
+    });
+
     readonly alteredCaseAlterationData = remoteData<ICaseAlteration[]>({
         await: () => [this.caseAlterationData],
         invoke: () =>
@@ -671,6 +710,7 @@ export default class DownloadTab extends React.Component<
             this.geneAlterationMap,
             this.cnaData,
             this.mutationData,
+            this.structuralVariantData,
             this.mrnaData,
             this.proteinData,
             this.unalteredCaseAlterationData,
@@ -727,6 +767,10 @@ export default class DownloadTab extends React.Component<
                                     {hasValidMutationData(
                                         this.mutationData.result!
                                     ) && this.mutationDownloadControls()}
+                                    {hasValidStructuralVariantData(
+                                        this.structuralVariantData.result!
+                                    ) &&
+                                        this.structuralVariantDownloadControls()}
                                     {hasValidData(this.mrnaData.result!) &&
                                         this.mrnaExprDownloadControls(
                                             this.props.store.selectedMolecularProfiles.result!.find(
@@ -842,6 +886,14 @@ export default class DownloadTab extends React.Component<
             'Mutations (OQL is not in effect)',
             this.handleMutationDownload,
             this.handleTransposedMutationDownload
+        );
+    }
+
+    private structuralVariantDownloadControls(): JSX.Element {
+        return this.downloadControlsRow(
+            'Structural Variants (OQL is not in effect)',
+            this.handleStructuralVariantDownload,
+            this.handleTransposedStructuralVariantDownload
         );
     }
 
@@ -1213,6 +1265,22 @@ export default class DownloadTab extends React.Component<
         onMobxPromise(this.mutationDownloadData, data => {
             const text = this.downloadDataText(this.unzipDownloadData(data));
             fileDownload(text, 'mutations_transposed.txt');
+        });
+    }
+
+    @autobind
+    private handleStructuralVariantDownload() {
+        onMobxPromise(this.structuralVariantDownloadData, data => {
+            const text = this.downloadDataText(data);
+            fileDownload(text, 'structural_variants.txt');
+        });
+    }
+
+    @autobind
+    private handleTransposedStructuralVariantDownload() {
+        onMobxPromise(this.structuralVariantDownloadData, data => {
+            const text = this.downloadDataText(this.unzipDownloadData(data));
+            fileDownload(text, 'structural_variants_transposed.txt');
         });
     }
 

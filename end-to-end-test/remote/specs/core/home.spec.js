@@ -290,7 +290,7 @@ describe('case set selection in front page query form', function() {
         clickQueryByGeneButton();
 
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
 
@@ -356,11 +356,11 @@ describe('case set selection in front page query form', function() {
         clickQueryByGeneButton();
 
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
@@ -388,11 +388,11 @@ describe('case set selection in front page query form', function() {
         clickQueryByGeneButton();
 
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);
@@ -485,22 +485,22 @@ describe('genetic profile selection in front page query form', () => {
 
         // wait for data type priority selector to load
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
             10000
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
             ),
             "'Mutation' should be selected"
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]'
             ),
             "'Copy number alterations' should be selected"
         );
@@ -551,22 +551,22 @@ describe('genetic profile selection in front page query form', () => {
 
         // wait for data type priority selector to load
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
             10000
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
             ),
             "'Mutation' should be selected"
         );
         assert(
             browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
+                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]'
             ),
             "'Copy number alterations' should be selected"
         );
@@ -669,21 +669,17 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         // wait for query to load
         waitForOncoprint(20000);
 
-        const query = browser.execute(function() {
-            return urlWrapper.query;
-        }).value;
+        const profileFilter = (
+            browser.execute(function() {
+                return urlWrapper.query;
+            }).value.profileFilter || ''
+        ).split(',');
         // mutation, cna, mrna profiles are there
+        assert.equal(profileFilter.includes('mutations'), true);
+        assert.equal(profileFilter.includes('gistic'), true);
         assert.equal(
-            query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            'prad_tcga_pub_mutations'
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            'prad_tcga_pub_gistic'
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-            'prad_tcga_pub_rna_seq_v2_mrna_median_Zscores'
+            profileFilter.includes('rna_seq_v2_mrna_median_Zscores'),
+            true
         );
     });
 });
@@ -760,20 +756,17 @@ describe('results page quick oql edit', () => {
         waitForOncoprint(20000);
 
         // mutation, cna, mrna profiles are there
-        query = browser.execute(function() {
-            return urlWrapper.query;
-        }).value;
+        let profileFilter = (
+            browser.execute(function() {
+                return urlWrapper.query;
+            }).value.profileFilter || ''
+        ).split(',');
+        // mutation, cna, mrna profiles are there
+        assert.equal(profileFilter.includes('mutations'), true);
+        assert.equal(profileFilter.includes('gistic'), true);
         assert.equal(
-            query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-            'prad_tcga_pub_mutations'
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-            'prad_tcga_pub_gistic'
-        );
-        assert.equal(
-            query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-            'prad_tcga_pub_rna_seq_v2_mrna_median_Zscores'
+            profileFilter.includes('rna_seq_v2_mrna_median_Zscores'),
+            true
         );
     });
 });

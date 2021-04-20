@@ -20,6 +20,7 @@ function getPlotsSelectionParam<T extends string | undefined>(val: T): any {
         dataType: val,
         selectedDataSourceOption: val,
         mutationCountBy: val,
+        structuralVariantCountBy: val,
         logScale: val,
     };
 }

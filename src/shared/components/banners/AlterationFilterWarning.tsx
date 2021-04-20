@@ -19,12 +19,15 @@ export interface IAlterationFilterWarningProps {
 }
 
 function getVusDescription(
-    types: { mutation: boolean; cna: boolean },
+    types: { mutation: boolean; cna: boolean; structuralVariant: boolean },
     plural: boolean
 ) {
     const descriptions = [];
     if (types.mutation) {
         descriptions.push(`mutation${plural ? 's' : ''}`);
+    }
+    if (types.structuralVariant) {
+        descriptions.push(`structural variant${plural ? 's' : ''}`);
     }
     if (types.cna) {
         descriptions.push(`copy number alteration${plural ? 's' : ''}`);
@@ -79,6 +82,7 @@ export default class AlterationFilterWarning extends React.Component<
                 return [
                     this.props.store.oqlFilteredMutationsReport,
                     this.props.store.oqlFilteredMolecularDataReport,
+                    this.props.store.oqlFilteredStructuralVariantsReport,
                 ];
             }
         },
@@ -87,6 +91,7 @@ export default class AlterationFilterWarning extends React.Component<
             const vusTypes = {
                 mutation: false,
                 cna: false,
+                structuralVariant: false,
             };
             if (this.props.mutationsTabModeSettings) {
                 const report = this.props.store.mutationsReportByGene.result![
@@ -104,12 +109,18 @@ export default class AlterationFilterWarning extends React.Component<
                     mutationReport.vusAndGermline.length;
                 const cnaVusCount = this.props.store
                     .oqlFilteredMolecularDataReport.result!.vus.length;
-                vusCount = mutationVusCount + cnaVusCount;
+                const structuralVariantVusCount = this.props.store
+                    .oqlFilteredStructuralVariantsReport.result!.vus.length;
+                vusCount =
+                    mutationVusCount + cnaVusCount + structuralVariantVusCount;
                 if (mutationVusCount > 0) {
                     vusTypes.mutation = true;
                 }
                 if (cnaVusCount > 0) {
                     vusTypes.cna = true;
+                }
+                if (structuralVariantVusCount > 0) {
+                    vusTypes.structuralVariant = true;
                 }
             }
 

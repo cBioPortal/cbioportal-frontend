@@ -119,7 +119,7 @@ export default class GroupComparisonPage extends React.Component<
             this.store._activeGroupsNotOverlapRemoved,
             this.store.activeGroups,
             this.store.mutationEnrichmentProfiles,
-            this.store.structuralVariantProfiles,
+            this.store.structuralVariantEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
@@ -184,7 +184,9 @@ export default class GroupComparisonPage extends React.Component<
                                     this.store.hasMutationEnrichmentData
                                 }
                                 showCnas={this.store.hasCnaEnrichmentData}
-                                showFusions={this.store.hasFusionEnrichmentData}
+                                showStructuralVariants={
+                                    this.store.hasStructuralVariantData
+                                }
                             />
                             <AlterationEnrichments store={this.store} />
                         </MSKTab>

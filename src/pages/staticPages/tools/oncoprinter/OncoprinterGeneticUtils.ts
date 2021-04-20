@@ -59,7 +59,7 @@ export type OncoprinterGeneticTrackDatum = Pick<
     | 'disp_cna'
     | 'disp_mrna'
     | 'disp_prot'
-    | 'disp_fusion'
+    | 'disp_structuralVariant'
     | 'disp_germ'
 > & {
     sample: string;
@@ -94,7 +94,8 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
         | 'mrnaHigh'
         | 'mrnaLow'
         | 'protHigh'
-        | 'protLow';
+        | 'protLow'
+        | 'structuralVariant';
     trackName?: string;
     isGermline?: boolean;
     isCustomDriver?: boolean;
@@ -401,11 +402,11 @@ export function makeGeneticTrackDatum_Data(
                 mutationType: 'indel',
             });
             break;
-        case OncoprintMutationTypeEnum.FUSION:
+        case OncoprintMutationTypeEnum.STRUCTURAL_VARIANT:
             ret = Object.assign(ret, {
                 molecularProfileAlterationType:
-                    AlterationTypeConstants.MUTATION_EXTENDED,
-                mutationType: 'fusion',
+                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                mutationType: 'structuralVariant',
             });
             break;
         case OncoprintMutationTypeEnum.PROMOTER:
@@ -504,7 +505,11 @@ export function makeGeneticTrackDatum_Data(
 
 export function isAltered(d: OncoprinterGeneticTrackDatum) {
     return (
-        d.disp_mut || d.disp_cna || d.disp_mrna || d.disp_prot || d.disp_fusion
+        d.disp_mut ||
+        d.disp_cna ||
+        d.disp_mrna ||
+        d.disp_prot ||
+        d.disp_structuralVariant
     );
 }
 function getPercentAltered(data: OncoprinterGeneticTrackDatum[]) {
@@ -743,6 +748,13 @@ export function annotateGeneticTrackData(
                             d.driverFilter === PUTATIVE_DRIVER)
                     );
                     return !excludeVUS || d.putativeDriver;
+                }
+                if (
+                    d.molecularProfileAlterationType ===
+                    AlterationTypeConstants.STRUCTURAL_VARIANT
+                ) {
+                    //TODO: fetch oncokb data for structural variants once we have
+                    return !excludeVUS;
                 } else {
                     return true;
                 }
@@ -843,7 +855,7 @@ export function parseGeneticInput(
                                 `${errorPrefix}Type "${type}" is not valid - it must be "FUSION" if Alteration is "FUSION"`
                             );
                         } else {
-                            ret.alteration = lcType as OncoprintMutationType;
+                            ret.alteration = 'structuralVariant';
                             ret.proteinChange = alteration;
                         }
                         break;
