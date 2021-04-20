@@ -659,8 +659,6 @@ export type StructuralVariant = {
 
         'sampleId': string
 
-        'sampleIdInternal': number
-
         'site1Chromosome': string
 
         'site1Description': string
@@ -690,8 +688,6 @@ export type StructuralVariant = {
         'site2HugoSymbol': string
 
         'site2Position': number
-
-        'structuralVariantId': number
 
         'studyId': string
 
@@ -4712,7 +4708,7 @@ export default class CBioPortalAPI {
             $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/structuralvariant/fetch';
+        let path = '/structural-variant/fetch';
         if (parameters['entrezGeneIds'] !== undefined) {
             queryParameters['entrezGeneIds'] = parameters['entrezGeneIds'];
         }
@@ -4761,7 +4757,7 @@ export default class CBioPortalAPI {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/structuralvariant/fetch';
+        let path = '/structural-variant/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};

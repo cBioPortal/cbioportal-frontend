@@ -61,6 +61,10 @@ import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Datalabel } from 'shared/lib/DataUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import {
+    CNAProfilesEnum,
+    StructuralVariantProfilesEnum,
+} from 'shared/components/query/QueryStoreUtils';
+import {
     GenericAssayDataBin,
     ClinicalDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -84,28 +88,9 @@ export enum DataType {
     NUMBER = 'NUMBER',
 }
 
-export enum CNAProfilesEnum {
-    cna = 'cna',
-    gistic = 'gistic',
-    rae = 'rae',
-    cna_consensus = 'cna_consensus',
-}
-
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
-export type ChartType =
-    | 'PIE_CHART'
-    | 'BAR_CHART'
-    | 'SURVIVAL'
-    | 'TABLE'
-    | 'SCATTER'
-    | 'MUTATED_GENES_TABLE'
-    | 'FUSION_GENES_TABLE'
-    | 'GENOMIC_PROFILES_TABLE'
-    | 'CASE_LIST_TABLE'
-    | 'CNA_GENES_TABLE'
-    | 'SAMPLE_TREATMENTS_TABLE'
-    | 'PATIENT_TREATMENTS_TABLE'
-    | 'NONE';
+
+export type ChartType = keyof typeof ChartTypeEnum;
 
 export enum SpecialChartsUniqueKeyEnum {
     CUSTOM_SELECT = 'CUSTOM_SELECT',
@@ -2340,7 +2325,7 @@ export function getChartSettingsMap(
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
     filterMutatedGenesTableByCancerGenes: boolean = true,
-    filterFusionGenesTableByCancerGenes: boolean = true,
+    filterSVGenesTableByCancerGenes: boolean = true,
     filterCNAGenesTableByCancerGenes: boolean = true,
     gridLayout?: ReactGridLayout.Layout[]
 ) {
@@ -2366,8 +2351,8 @@ export function getChartSettingsMap(
             case ChartTypeEnum.MUTATED_GENES_TABLE:
                 chartSetting.filterByCancerGenes = filterMutatedGenesTableByCancerGenes;
                 break;
-            case ChartTypeEnum.FUSION_GENES_TABLE:
-                chartSetting.filterByCancerGenes = filterFusionGenesTableByCancerGenes;
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                chartSetting.filterByCancerGenes = filterSVGenesTableByCancerGenes;
                 break;
             case ChartTypeEnum.CNA_GENES_TABLE:
                 chartSetting.filterByCancerGenes = filterCNAGenesTableByCancerGenes;
@@ -2929,13 +2914,25 @@ export async function getGenericAssayDataAsClinicalData(
     });
 }
 
+export function getStructuralVariantSamplesCount(molecularProfileSampleCountSet: {
+    [id: string]: number;
+}) {
+    return (
+        molecularProfileSampleCountSet[StructuralVariantProfilesEnum.fusion] ||
+        molecularProfileSampleCountSet[
+            StructuralVariantProfilesEnum.structural_variants
+        ] ||
+        0
+    );
+}
+
 export function getCNASamplesCount(molecularProfileSampleCountSet: {
     [id: string]: number;
 }) {
     return (
         molecularProfileSampleCountSet[CNAProfilesEnum.cna] ||
         molecularProfileSampleCountSet[CNAProfilesEnum.gistic] ||
-        molecularProfileSampleCountSet[CNAProfilesEnum.rae] ||
+        molecularProfileSampleCountSet[CNAProfilesEnum.cna_rae] ||
         molecularProfileSampleCountSet[CNAProfilesEnum.cna_consensus] ||
         0
     );
@@ -2959,6 +2956,44 @@ export function getMolecularProfileSamplesSet(
             return acc;
         },
         {}
+    );
+}
+
+export function getFilteredMolecularProfilesByAlterationType(
+    studyIdToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
+    alterationType: string,
+    allowedDataTypes?: string[] // allowed MolecularProfile datatypes
+) {
+    return _.reduce(
+        studyIdToMolecularProfiles,
+        (acc: MolecularProfile[], molecularProfiles) => {
+            let filteredMolecularProfiles = molecularProfiles.filter(
+                profile => {
+                    let isFiltered =
+                        profile.molecularAlterationType === alterationType;
+                    if (!_.isEmpty(allowedDataTypes)) {
+                        isFiltered =
+                            isFiltered ||
+                            allowedDataTypes!.includes(profile.datatype);
+                    }
+                    return isFiltered;
+                }
+            );
+            if (!_.isEmpty(allowedDataTypes)) {
+                const dataTypeToIndexSet = stringListToIndexSet(
+                    allowedDataTypes!
+                );
+                filteredMolecularProfiles = _.sortBy(
+                    filteredMolecularProfiles,
+                    profile => dataTypeToIndexSet[profile.datatype]
+                );
+            }
+            if (!_.isEmpty(filteredMolecularProfiles)) {
+                acc.push(filteredMolecularProfiles[0]);
+            }
+            return acc;
+        },
+        []
     );
 }
 

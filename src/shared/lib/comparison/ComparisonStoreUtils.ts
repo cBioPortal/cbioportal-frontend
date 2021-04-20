@@ -56,16 +56,20 @@ export enum MutationEnrichmentEventType {
     inframe = 'inframe',
     truncating = 'truncating',
     feature_truncation = 'feature_truncation',
-    fusion = 'fusion',
     silent = 'silent',
     synonymous_variant = 'synonymous_variant',
     any = 'any',
     other = 'other',
 }
 
+export enum StructuralVariantEnrichmentEventType {
+    structural_variant = 'structural_variant',
+}
+
 export type EnrichmentEventType =
     | MutationEnrichmentEventType
-    | CopyNumberEnrichmentEventType;
+    | CopyNumberEnrichmentEventType
+    | StructuralVariantEnrichmentEventType;
 
 // Groups according to GitHub issue #8107 dd. December 2020
 // https://github.com/cBioPortal/cbioportal/issues/8107)
@@ -151,7 +155,6 @@ export const otherGroup = [
     MutationEnrichmentEventType.targeted_region,
     MutationEnrichmentEventType.other,
 ];
-export const fusionGroup = [MutationEnrichmentEventType.fusion];
 export const mutationGroup = [
     ...missenseGroup,
     ...inframeGroup,
@@ -176,30 +179,36 @@ export function cnaEventTypeSelectInit(
         return {};
     }
 }
-export function mutationEventTypeSelectInit(alterationEnrichmentProfiles?: {
-    mutationProfiles: MolecularProfile[];
-    structuralVariantProfiles: MolecularProfile[];
-}) {
-    if (!alterationEnrichmentProfiles) {
+export function mutationEventTypeSelectInit(
+    mutationProfiles: MolecularProfile[]
+) {
+    if (mutationProfiles.length > 0) {
+        return mutationGroup.reduce((acc, type) => {
+            acc[type] = true;
+            return acc;
+        }, {} as { [key in MutationEnrichmentEventType]?: boolean });
+    } else {
         return {};
     }
-
-    const types = [];
-    if (alterationEnrichmentProfiles.mutationProfiles.length > 0) {
-        types.push(...mutationGroup);
-    }
-    if (alterationEnrichmentProfiles.structuralVariantProfiles.length > 0) {
-        types.push(...fusionGroup);
-    }
-    return types.reduce((acc, type) => {
-        acc[type] = true;
-        return acc;
-    }, {} as { [key in MutationEnrichmentEventType]?: boolean });
 }
+export function structuralVariantEventTypeSelectInit(
+    structuralVariantProfiles: MolecularProfile[]
+): {
+    [key in StructuralVariantEnrichmentEventType]?: boolean;
+} {
+    if (structuralVariantProfiles.length > 0) {
+        return {
+            [StructuralVariantEnrichmentEventType.structural_variant]: true,
+        };
+    } else {
+        return {};
+    }
+}
+
 export function buildAlterationsTabName(store: ComparisonStore) {
     const nameElements = [];
     store.hasMutationEnrichmentData && nameElements.push('Mutations');
-    store.hasFusionEnrichmentData && nameElements.push('Fusions');
+    store.hasStructuralVariantData && nameElements.push('Structural Variants');
     store.hasCnaEnrichmentData && nameElements.push('CNAs');
     return nameElements.join('/');
 }
@@ -208,7 +217,7 @@ export function getMutationEventTypesAPIParameter(
     selectedEvents: { [t in MutationEnrichmentEventType]?: boolean }
 ) {
     return stringListToMap(
-        [...mutationGroup, ...fusionGroup],
+        mutationGroup,
         (e: MutationEnrichmentEventType) => selectedEvents[e] || false
     );
 }

@@ -27,11 +27,11 @@ import { toSampleUuid } from './UuidUtils';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
 import { getSimplifiedMutationType } from './oql/AccessorsForOqlFilter';
 import {
-    MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
@@ -43,7 +43,7 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     truncatingVusColor: MUT_COLOR_TRUNC_PASSENGER,
     spliceColor: MUT_COLOR_SPLICE,
     spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
-    fusionColor: MUT_COLOR_FUSION,
+    fusionColor: STRUCTURAL_VARIANT_COLOR,
     otherColor: MUT_COLOR_OTHER,
 };
 

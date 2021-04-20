@@ -19,6 +19,7 @@ import {
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
+import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
@@ -27,6 +28,7 @@ export type PlotsSelectionParam = {
     dataType?: string;
     selectedDataSourceOption?: string;
     mutationCountBy?: string;
+    structuralVariantCountBy?: string;
     logScale?: string;
 };
 
@@ -37,6 +39,7 @@ const PlotsSelectionParamProps: Required<PlotsSelectionParam> = {
     dataType: '',
     selectedDataSourceOption: '',
     mutationCountBy: '',
+    structuralVariantCountBy: '',
     logScale: '',
 };
 
@@ -45,6 +48,7 @@ export type PlotsColoringParam = {
     logScale?: string;
     colorByMutationType?: string;
     colorByCopyNumber?: string;
+    colorBySv?: string;
 };
 
 const PlotsColoringParamProps: Required<PlotsColoringParam> = {
@@ -52,6 +56,7 @@ const PlotsColoringParamProps: Required<PlotsColoringParam> = {
     logScale: '',
     colorByMutationType: '',
     colorByCopyNumber: '',
+    colorBySv: '',
 };
 
 export enum ResultsViewURLQueryEnum {
@@ -246,9 +251,7 @@ export default class ResultsViewURLWrapper
     }
 
     @computed public get comparisonSubTabId() {
-        return (
-            this.query.comparison_subtab || ResultsViewComparisonSubTab.OVERLAP
-        );
+        return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
     }
 
     @autobind
@@ -257,7 +260,7 @@ export default class ResultsViewURLWrapper
     }
 
     @autobind
-    public setComparisonSubTabId(tabId: ResultsViewComparisonSubTab) {
+    public setComparisonSubTabId(tabId: GroupComparisonTab) {
         this.updateURL({ comparison_subtab: tabId });
     }
 

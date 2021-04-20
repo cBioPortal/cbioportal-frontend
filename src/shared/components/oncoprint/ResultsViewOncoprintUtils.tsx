@@ -22,6 +22,7 @@ export const alterationTypeToProfiledForText: {
     COPY_NUMBER_ALTERATION: 'copy number alterations',
     MRNA_EXPRESSION: 'mRNA expression',
     PROTEIN_LEVEL: 'protein expression',
+    STRUCTURAL_VARIANT: 'structural variants',
 };
 
 export function getAnnotatingProgressMessage(

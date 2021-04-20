@@ -58,7 +58,7 @@ export function generateOqlData(
     }
 ): IOqlData {
     const mutation: IOqlData['mutation'] = [];
-    const fusions: string[] = [];
+    const structuralVariant: string[] = [];
     const cnaAlterations: ISubAlteration[] = [];
     const proteinLevels: ISubAlteration[] = [];
     const mrnaExpressions: ISubAlteration[] = [];
@@ -99,18 +99,16 @@ export function generateOqlData(
                 }
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
-                if (alteration.mutationType.toLowerCase().includes('fusion')) {
-                    fusions.push(alteration.proteinChange);
-                    alterationTypes.push('FUSION');
-                } else {
-                    mutation.push({
-                        proteinChange: alteration.proteinChange,
-                        isGermline: !isNotGermlineMutation(alteration),
-                        putativeDriver: alteration.putativeDriver,
-                    });
-                    alterationTypes.push('MUT');
-                }
+                mutation.push({
+                    proteinChange: alteration.proteinChange,
+                    isGermline: !isNotGermlineMutation(alteration),
+                    putativeDriver: alteration.putativeDriver,
+                });
+                alterationTypes.push('MUT');
                 break;
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                structuralVariant.push(alteration.eventInfo);
+                alterationTypes.push('FUSION');
         }
     }
 
@@ -126,12 +124,12 @@ export function generateOqlData(
                 : true,
         geneSymbol: datum.trackLabel,
         mutation,
-        fusion: fusions,
+        structuralVariant,
         cna: cnaAlterations,
         mrnaExp: mrnaExpressions,
         proteinLevel: proteinLevels,
         isMutationNotProfiled: false,
-        isFusionNotProfiled: false,
+        isStructuralVariantNotProfiled: false,
         isCnaNotProfiled: false,
         isMrnaExpNotProfiled: false,
         isProteinLevelNotProfiled: false,
@@ -147,7 +145,7 @@ export function updateOqlData(
     }
 ): IOqlData {
     let isMutationNotProfiled = true;
-    let isFusionNotProfiled = true;
+    let isStructuralVariantNotProfiled = true;
     let isCnaNotProfiled = true;
     let isMrnaExpNotProfiled = true;
     let isProteinLevelNotProfiled = true;
@@ -172,15 +170,15 @@ export function updateOqlData(
                         break;
                     case AlterationTypeConstants.MUTATION_EXTENDED:
                         isMutationNotProfiled = false;
-                    case AlterationTypeConstants.FUSION:
-                        isFusionNotProfiled = false;
+                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                        isStructuralVariantNotProfiled = false;
                         break;
                 }
             }
         }
     }
     oql.isMutationNotProfiled = isMutationNotProfiled;
-    oql.isFusionNotProfiled = isFusionNotProfiled;
+    oql.isStructuralVariantNotProfiled = isStructuralVariantNotProfiled;
     oql.isCnaNotProfiled = isCnaNotProfiled;
     oql.isMrnaExpNotProfiled = isMrnaExpNotProfiled;
     oql.isProteinLevelNotProfiled = isProteinLevelNotProfiled;
@@ -266,6 +264,27 @@ export function generateMutationDownloadData(
         : [];
 }
 
+export function generateStructuralDownloadData(
+    sampleAlterationDataByGene: { [key: string]: ExtendedAlteration[] },
+    samples: Sample[] = [],
+    genes: Gene[] = [],
+    isSampleProfiledFunc: (
+        uniqueSampleKey: string,
+        studyId: string,
+        hugoGeneSymbol: string
+    ) => boolean
+): string[][] {
+    return sampleAlterationDataByGene
+        ? generateDownloadData(
+              sampleAlterationDataByGene,
+              samples,
+              genes,
+              isSampleProfiledFunc,
+              extractStructuralVariantValue
+          )
+        : [];
+}
+
 export function generateMrnaData(
     unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>
 ): { [key: string]: ExtendedAlteration[] } {
@@ -309,6 +328,24 @@ export function generateCnaData(
         return (
             alteration.molecularProfileAlterationType ===
             AlterationTypeConstants.COPY_NUMBER_ALTERATION
+        );
+    };
+
+    return unfilteredCaseAggregatedData
+        ? generateSampleAlterationDataByGene(
+              unfilteredCaseAggregatedData,
+              sampleFilter
+          )
+        : {};
+}
+
+export function generateStructuralVariantData(
+    unfilteredCaseAggregatedData?: CaseAggregatedData<ExtendedAlteration>
+): { [key: string]: ExtendedAlteration[] } {
+    const sampleFilter = (alteration: ExtendedAlteration) => {
+        return (
+            alteration.molecularProfileAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
         );
     };
 
@@ -446,7 +483,7 @@ export function generateSampleAlterationDataByGene(
 
     _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
         alterations.forEach(alteration => {
-            const key = `${alteration.gene.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
+            const key = `${alteration.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
             sampleDataByGene[key] = sampleDataByGene[key] || [];
 
             // if no filter function provided nothing is filtered out,
@@ -830,6 +867,19 @@ function extractMutationValue(alteration: ExtendedAlteration) {
     return `${alteration.proteinChange}${
         !isNotGermlineMutation(alteration) ? ' [germline]' : ''
     }`;
+}
+
+export function hasValidStructuralVariantData(sampleAlterationDataByGene: {
+    [key: string]: ExtendedAlteration[];
+}): boolean {
+    return hasValidData(
+        sampleAlterationDataByGene,
+        extractStructuralVariantValue
+    );
+}
+
+function extractStructuralVariantValue(alteration: ExtendedAlteration) {
+    return alteration.eventInfo;
 }
 
 export function decideMolecularProfileSortingOrder(

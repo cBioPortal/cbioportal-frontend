@@ -1327,44 +1327,6 @@
         "deprecated": false
       }
     },
-    "/fusion-genes/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch fusion genes by study view filter",
-        "operationId": "fetchFusionGenesUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationCountByGene"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
     "/generic-assay-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -2534,6 +2496,44 @@
         "deprecated": false
       }
     },
+    "/structuralvariant-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch structural variant genes by study view filter",
+        "operationId": "fetchStructuralVariantGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AlterationCountByGene"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/studies/{studyId}/clinical-events": {
       "get": {
         "tags": [
@@ -3527,6 +3527,9 @@
           "additionalProperties": {
             "type": "boolean"
           }
+        },
+        "structuralVariants": {
+          "type": "boolean"
         }
       },
       "title": "AlterationEventTypeFilter"
