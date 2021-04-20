@@ -18,6 +18,7 @@ import {
     Gene,
     Sample,
     SampleFilter,
+    StudyOverlap,
 } from 'cbioportal-ts-api-client';
 import { Geneset } from 'cbioportal-ts-api-client';
 import CancerStudyTreeData from './CancerStudyTreeData';
@@ -1465,14 +1466,75 @@ export class QueryStore {
     }
 
     @computed
-    public get getOverlappingStudiesMap() {
-        const overlappingStudyGroups = getOverlappingStudies(
-            this.selectableSelectedStudies
+    private get overlappingStudiesMap(): Map<string, Set<string>> {
+        if (
+            this.overlappingStudies.isPending ||
+            this.userVirtualStudies.isPending
+        ) {
+            return new Map<string, Set<string>>();
+        }
+
+        const studies = (this.overlappingStudies
+            .result as StudyOverlap[]).reduce((studyMap, study) => {
+            studyMap.set(study.studyId, new Set(study.overlappingStudyIds));
+            return studyMap;
+        }, new Map<string, Set<string>>());
+
+        const virtualStudies = this.userVirtualStudies.result.reduce(
+            (vStudyMap, vStudy) => {
+                vStudyMap.set(
+                    vStudy.id,
+                    new Set(vStudy.data.studies.map(s => s.id))
+                );
+                return vStudyMap;
+            },
+            new Map<string, Set<string>>()
         );
-        return _.chain(overlappingStudyGroups)
-            .flatten()
-            .keyBy((study: CancerStudy) => study.studyId)
-            .value();
+
+        studies.forEach((oStudies, studyId) => {
+            virtualStudies.forEach((baseStudies, vStudyId) => {
+                if (baseStudies.has(studyId)) {
+                    // if a virtual study is derived from this study,
+                    // we say that the virtual study overlaps with this study, as well
+                    // as any study this study overlaps with
+                    oStudies.add(vStudyId);
+                    oStudies.forEach(oStudy => {
+                        if (studies.has(oStudy)) {
+                            studies.get(oStudy)?.add(vStudyId);
+                        }
+                    });
+                }
+            });
+        });
+
+        virtualStudies.forEach((baseStudies, vStudyId) => {
+            // a virtual study's overlap is the sum of the overlap of all
+            // the studies it's composed from
+            const overlap = [...baseStudies].reduce((overlapSet, baseStudy) => {
+                if (studies.has(baseStudy)) {
+                    studies.get(baseStudy)?.forEach(overlapSet.add, overlapSet);
+                }
+                return overlapSet;
+            }, new Set<string>());
+            studies.set(vStudyId, overlap);
+        });
+
+        return studies;
+    }
+
+    public findOverlappingStudiesForStudy(studyId: string): string[] {
+        const selectedStudies = new Set(this.selectableSelectedStudyIds);
+        const overlappingStudies = this.overlappingStudiesMap.get(studyId);
+
+        if (
+            !overlappingStudies ||
+            overlappingStudies.size == 0 ||
+            selectedStudies.size == 0
+        ) {
+            return [];
+        }
+
+        return [...overlappingStudies].filter(o => selectedStudies.has(o));
     }
 
     @computed
@@ -1755,6 +1817,13 @@ export class QueryStore {
                 this.defaultSelectedSampleListId
             );
             return hierarchyData;
+        },
+    });
+
+    readonly overlappingStudies = remoteData<StudyOverlap[]>({
+        await: () => [],
+        invoke: async () => {
+            return client.getStudiesWithOverlappingSamplesUsingGET({});
         },
     });
 

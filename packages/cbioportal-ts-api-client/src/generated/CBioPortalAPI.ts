@@ -714,6 +714,12 @@ export type StructuralVariantFilter = {
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
+export type StudyOverlap = {
+    'overlappingStudyIds': Array < string >
+
+        'studyId': string
+
+};
 export type StudyViewFilter = {
     'caseLists': Array < Array < string >
         >
@@ -5052,6 +5058,68 @@ export default class CBioPortalAPI {
         }): Promise < Array < CancerStudy >
         > {
             return this.fetchStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getStudiesWithOverlappingSamplesUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/overlapping_studies';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get the study tags by IDs
+     * @method
+     * @name CBioPortalAPI#getStudiesWithOverlappingSamplesUsingGET
+     */
+    getStudiesWithOverlappingSamplesUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/overlapping_studies';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get the study tags by IDs
+     * @method
+     * @name CBioPortalAPI#getStudiesWithOverlappingSamplesUsingGET
+     */
+    getStudiesWithOverlappingSamplesUsingGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < StudyOverlap >
+        > {
+            return this.getStudiesWithOverlappingSamplesUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
