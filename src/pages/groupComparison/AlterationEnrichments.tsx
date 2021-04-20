@@ -40,6 +40,7 @@ export default class AlterationEnrichments extends React.Component<
             this.props.store.alterationsEnrichmentAnalysisGroups,
             this.props.store.selectedStudyMutationEnrichmentProfileMap,
             this.props.store.selectedStudyCopyNumberEnrichmentProfileMap,
+            this.props.store.selectedStudyStructuralVariantEnrichmentProfileMap,
             this.props.store.studies,
         ],
         render: () => {

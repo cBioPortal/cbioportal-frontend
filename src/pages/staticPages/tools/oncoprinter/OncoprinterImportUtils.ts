@@ -31,7 +31,7 @@ const geneticAlterationToDataType: {
 } = {
     missense: AlterationTypeConstants.MUTATION_EXTENDED,
     inframe: AlterationTypeConstants.MUTATION_EXTENDED,
-    fusion: AlterationTypeConstants.FUSION,
+    structuralVariant: AlterationTypeConstants.STRUCTURAL_VARIANT,
     promoter: AlterationTypeConstants.MUTATION_EXTENDED,
     trunc: AlterationTypeConstants.MUTATION_EXTENDED,
     splice: AlterationTypeConstants.MUTATION_EXTENDED,
@@ -92,6 +92,9 @@ function getOncoprinterGeneticAlteration(d: GeneticTrackDatum_Data) {
         case AlterationTypeConstants.MUTATION_EXTENDED:
             alteration = getOncoprintMutationType(d);
             break;
+        case AlterationTypeConstants.STRUCTURAL_VARIANT:
+            alteration = 'structuralVariant';
+            break;
         case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
             alteration = cna_profile_data_to_string[d.value];
             break;
@@ -138,9 +141,8 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 line.push(parsed.alteration === 'protHigh' ? 'HIGH' : 'LOW');
                 line.push('PROT');
                 break;
-            case AlterationTypeConstants.FUSION:
-                line.push(parsed.proteinChange || 'fusion');
-                line.push('FUSION');
+            case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                line.push('STRUCTURAL VARIANT');
                 break;
         }
         if (parsed.trackName) {
