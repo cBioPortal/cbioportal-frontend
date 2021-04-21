@@ -14,7 +14,6 @@ import {
     frameshiftDeletionGroup,
     frameshiftGroup,
     frameshiftInsertionGroup,
-    fusionGroup,
     inframeDeletionGroup,
     inframeGroup,
     inframeInsertionGroup,
@@ -26,6 +25,7 @@ import {
     nonstopGroup,
     otherGroup,
     spliceGroup,
+    StructuralVariantEnrichmentEventType,
     truncationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 
@@ -33,7 +33,7 @@ export interface IAlterationEnrichmentTypeSelectorProps {
     updateSelectedEnrichmentEventTypes: (t: EnrichmentEventType[]) => void;
     store: ComparisonStore;
     showMutations?: boolean;
-    showFusions?: boolean;
+    showStructuralVariants?: boolean;
     showCnas?: boolean;
     classNames?: string;
 }
@@ -76,6 +76,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         [key in CopyNumberEnrichmentEventType]?: boolean;
     };
 
+    @observable private isStructuralVariantSelected?: boolean;
+
     componentWillMount() {
         this.currentSelectedMutations = observable(
             toJS(this.props.store.selectedMutationEnrichmentEventTypes)
@@ -83,6 +85,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         this.currentSelectedCopyNumber = observable(
             toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
         );
+        this.isStructuralVariantSelected = this.props.store.isStructuralVariantEnrichmentSelected;
     }
 
     @computed get isAnyMutationsSelected() {
@@ -141,10 +144,6 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         return this.isAnySelectedMut(otherGroup);
     }
 
-    @computed get isAnyFusionsSelected() {
-        return this.isAnySelectedMut(fusionGroup);
-    }
-
     @computed get isAnyCopyNumberSelected() {
         return this.isAnySelectedCna(cnaGroup);
     }
@@ -167,6 +166,7 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @autobind
     private onInputClick(event: React.MouseEvent<HTMLInputElement>) {
+        console.log((event.target as HTMLInputElement).value);
         switch ((event.target as HTMLInputElement).value) {
             case checkbox.mutations:
                 this.toggleMutGroup(
@@ -232,7 +232,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                 this.toggleMutGroup(otherGroup, !this.isAnyOtherSelected);
                 break;
             case checkbox.structvar:
-                this.toggleMutGroup(fusionGroup, !this.isAnyFusionsSelected);
+                this.isStructuralVariantSelected = !this
+                    .isStructuralVariantSelected;
                 break;
             case checkbox.cna:
                 this.toggleCnaGroup(cnaGroup, !this.isAnyCopyNumberSelected);
@@ -287,6 +288,12 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
         const selectedTypes: EnrichmentEventType[] = selectedMutations.concat(
             selectedCopyNumber
         ) as EnrichmentEventType[];
+
+        if (this.isStructuralVariantSelected) {
+            selectedTypes.push(
+                StructuralVariantEnrichmentEventType.structural_variant
+            );
+        }
         this.props.updateSelectedEnrichmentEventTypes(selectedTypes);
     }
 
@@ -299,6 +306,10 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
             !_.isEqual(
                 toJS(this.currentSelectedCopyNumber),
                 toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
+            ) ||
+            !_.isEqual(
+                this.isStructuralVariantSelected,
+                this.props.store.isStructuralVariantEnrichmentSelected
             )
         );
     }
@@ -542,14 +553,14 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
                         </div>
                     </div>
                 )}
-                {this.props.showFusions && (
+                {this.props.showStructuralVariants && (
                     <div className="checkbox">
                         <label>
                             <input
-                                data-test="Fusion"
+                                data-test="StructuralVariants"
                                 type="checkbox"
                                 value={checkbox.structvar}
-                                checked={this.isAnyFusionsSelected}
+                                checked={this.isStructuralVariantSelected}
                                 onClick={this.onInputClick}
                             />{' '}
                             <b>Structural Variants / Fusions</b>

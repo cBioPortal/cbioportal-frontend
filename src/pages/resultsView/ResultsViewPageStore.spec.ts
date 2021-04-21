@@ -13,11 +13,27 @@ describe('buildDefaultOQLProfile', () => {
         );
         assert.equal(
             buildDefaultOQLProfile(['MUTATION_EXTENDED'], 2, 2),
-            'MUT FUSION'
+            'MUT'
+        );
+        assert.equal(
+            buildDefaultOQLProfile(['STRUCTURAL_VARIANT'], 2, 2),
+            'FUSION'
         );
         assert.equal(
             buildDefaultOQLProfile(
                 ['MUTATION_EXTENDED', 'COPY_NUMBER_ALTERATION'],
+                2,
+                2
+            ),
+            'MUT AMP HOMDEL'
+        );
+        assert.equal(
+            buildDefaultOQLProfile(
+                [
+                    'MUTATION_EXTENDED',
+                    'STRUCTURAL_VARIANT',
+                    'COPY_NUMBER_ALTERATION',
+                ],
                 2,
                 2
             ),
@@ -29,7 +45,7 @@ describe('buildDefaultOQLProfile', () => {
                 2,
                 2
             ),
-            'MUT FUSION EXP>=2 EXP<=-2'
+            'MUT EXP>=2 EXP<=-2'
         );
         assert.equal(
             buildDefaultOQLProfile(
@@ -37,7 +53,7 @@ describe('buildDefaultOQLProfile', () => {
                 2,
                 2
             ),
-            'MUT FUSION PROT>=2 PROT<=-2'
+            'MUT PROT>=2 PROT<=-2'
         );
     });
 });

@@ -32,6 +32,7 @@ import {
     ReferenceGenomeGene,
     Sample,
     SampleFilter,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -54,6 +55,7 @@ import {
     generateQueryVariantId,
     IHotspotIndex,
     IOncoKbData,
+    generateAnnotateStructuralVariantQueryFromGenes,
     isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
@@ -79,8 +81,9 @@ import AppConfig from 'appConfig';
 import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
-    CancerGene,
+    AnnotateStructuralVariantQuery,
     IndicatorQueryResp,
+    CancerGene,
     OncoKbAPI,
     OncoKBInfo,
 } from 'oncokb-ts-api-client';
@@ -104,6 +107,18 @@ import {
     isNotGermlineMutation,
 } from 'shared/lib/MutationUtils';
 import { ObservableMap } from 'mobx';
+
+export const MolecularAlterationType_filenameSuffix: {
+    [K in MolecularProfile['molecularAlterationType']]?: string;
+} = {
+    MUTATION_EXTENDED: 'mutations',
+    COPY_NUMBER_ALTERATION: 'cna',
+    MRNA_EXPRESSION: 'mrna',
+    METHYLATION: 'methylation',
+    METHYLATION_BINARY: 'methylation',
+    PROTEIN_LEVEL: 'rppa',
+    STRUCTURAL_VARIANT: 'structural_variants',
+};
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
@@ -798,6 +813,44 @@ export async function fetchCnaOncoKbData(
     }
 }
 
+export async function fetchStructuralVariantOncoKbData(
+    uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
+    annotatedGenes: { [entrezGeneId: number]: boolean },
+    structuralVariantData: MobxPromise<StructuralVariant[]>,
+    client: OncoKbAPI = oncokbClient
+) {
+    if (
+        !structuralVariantData.result ||
+        structuralVariantData.result.length === 0
+    ) {
+        return ONCOKB_DEFAULT;
+    } else {
+        const alterationsToQuery = _.filter(
+            structuralVariantData.result,
+            d =>
+                d.site1EntrezGeneId &&
+                d.site2EntrezGeneId &&
+                (!!annotatedGenes[d.site1EntrezGeneId] ||
+                    !!annotatedGenes[d.site2EntrezGeneId])
+        );
+        const queryVariants = _.uniqBy(
+            _.map(alterationsToQuery, datum => {
+                return generateAnnotateStructuralVariantQueryFromGenes(
+                    datum.site1EntrezGeneId,
+                    datum.site2EntrezGeneId,
+                    cancerTypeForOncoKb(
+                        datum.uniqueSampleKey,
+                        uniqueSampleKeyToTumorType
+                    ),
+                    datum.variantClass.toUpperCase() as any
+                );
+            }),
+            datum => datum.id
+        );
+        return fetchOncoKbStructuralVariantData(queryVariants, client);
+    }
+}
+
 export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(
     uniqueSampleKeyToTumorType: { [uniqueSampleKey: string]: string },
     annotatedGenes: { [entrezGeneId: number]: boolean },
@@ -920,6 +973,20 @@ export async function queryOncoKbCopyNumberAlterationData(
         queryVariants.length === 0
             ? []
             : await client.annotateCopyNumberAlterationsPostUsingPOST_1({
+                  body: queryVariants,
+              });
+
+    return toOncoKbData(oncokbSearch);
+}
+
+export async function fetchOncoKbStructuralVariantData(
+    queryVariants: AnnotateStructuralVariantQuery[],
+    client: OncoKbAPI = oncokbClient
+) {
+    const oncokbSearch =
+        queryVariants.length === 0
+            ? []
+            : await client.annotateStructuralVariantsPostUsingPOST_1({
                   body: queryVariants,
               });
 
@@ -1186,6 +1253,18 @@ export function generateMutationIdByEvent(m: Mutation): string {
     return mutationEventFields(m).join('_');
 }
 
+export function generateStructuralVariantId(s: StructuralVariant): string {
+    return [
+        s.site1HugoSymbol,
+        s.site2HugoSymbol,
+        s.site1Position,
+        s.site2Position,
+        s.site1Chromosome,
+        s.site2Chromosome,
+        s.variantClass,
+    ].join('_');
+}
+
 export function generateMutationIdByGeneAndProteinChangeAndEvent(
     m: Mutation
 ): string {
@@ -1432,6 +1511,7 @@ export async function fetchSurvivalDataExists(
 
 export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
     let haveMutInQuery = false;
+    let haveStructuralVariantInQuery = false;
     let haveCnaInQuery = false;
     let haveMrnaInQuery = false;
     let haveProtInQuery = false;
@@ -1440,6 +1520,9 @@ export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
         for (const alteration of queryLine.alterations || []) {
             haveMutInQuery =
                 haveMutInQuery || alteration.alteration_type === 'mut';
+            haveStructuralVariantInQuery =
+                haveStructuralVariantInQuery ||
+                alteration.alteration_type === 'fusion';
             haveCnaInQuery =
                 haveCnaInQuery || alteration.alteration_type === 'cna';
             haveMrnaInQuery =
@@ -1450,6 +1533,7 @@ export function getAlterationTypesInOql(parsedQueryLines: SingleGeneQuery[]) {
     }
     return {
         haveMutInQuery,
+        haveStructuralVariantInQuery,
         haveCnaInQuery,
         haveMrnaInQuery,
         haveProtInQuery,
@@ -1477,6 +1561,7 @@ export function getDefaultProfilesForOql(profiles: MolecularProfile[]) {
     return _.mapValues(
         _.keyBy([
             AlterationTypeConstants.MUTATION_EXTENDED,
+            AlterationTypeConstants.STRUCTURAL_VARIANT,
             AlterationTypeConstants.COPY_NUMBER_ALTERATION,
             AlterationTypeConstants.MRNA_EXPRESSION,
             AlterationTypeConstants.PROTEIN_LEVEL,

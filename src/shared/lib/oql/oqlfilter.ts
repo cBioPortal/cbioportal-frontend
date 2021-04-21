@@ -16,8 +16,13 @@ import { SingleGeneQuery, MergedGeneQuery } from './oql-parser';
 import {
     AnnotatedMutation,
     ExtendedAlteration,
+    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
-import { NumericGeneMolecularData, Mutation } from 'cbioportal-ts-api-client';
+import {
+    NumericGeneMolecularData,
+    Mutation,
+    StructuralVariant,
+} from 'cbioportal-ts-api-client';
 import { Alteration } from 'shared/lib/oql/oql-parser';
 import AccessorsForOqlFilter, {
     Datum,
@@ -62,7 +67,7 @@ export interface IAccessorsForOqlFilter<T> {
     prot: (d: T) => number | null;
 
     // returns true, false, or null
-    fusion: (d: T) => boolean | null;
+    structuralVariant: (d: T) => boolean | null;
 
     // returns true, false, or null
     is_driver: (d: T) => boolean | null;
@@ -519,7 +524,7 @@ function isDatumWantedByFUSIONCommand<T>(
     /* Helper method for isDatumWantedByOQLAlterationCommand
      * In/Out: See isDatumWantedByOQLAlterationCommand
      */
-    var d_fusion = accessors.fusion(datum); // null || true
+    var d_fusion = accessors.structuralVariant(datum); // null || true
     if (d_fusion === null) {
         // If no fusion data, it's not addressed
         return 0;
@@ -861,14 +866,14 @@ function filterData<T extends Datum>(
                 gene: query_line.gene,
                 parsed_oql_line: query_line,
                 oql_line: unparseOQLQueryLine(query_line),
-                data: data.filter(datum =>
-                    isDatumWantedByOQLLine(
+                data: data.filter(datum => {
+                    return isDatumWantedByOQLLine(
                         query_line,
                         datum,
                         accessors.gene(datum).toUpperCase(),
                         accessors
-                    )
-                ),
+                    );
+                }),
             }))
         );
     } else {
@@ -879,7 +884,7 @@ function filterData<T extends Datum>(
 }
 
 export function filterCBioPortalWebServiceData<
-    T extends Mutation | NumericGeneMolecularData
+    T extends Mutation | NumericGeneMolecularData | StructuralVariant
 >(
     oql_query: string,
     data: T[],
@@ -900,13 +905,17 @@ export function filterCBioPortalWebServiceData<
 
 export function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,
-    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    data: (
+        | AnnotatedMutation
+        | NumericGeneMolecularData
+        | AnnotatedStructuralVariant
+    )[],
     accessors: any,
     default_oql?: string
 ): OQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[];
 export function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,
-    data: (Mutation | NumericGeneMolecularData)[],
+    data: (Mutation | NumericGeneMolecularData | AnnotatedStructuralVariant)[],
     accessors: any,
     default_oql?: string
 ): OQLLineFilterOutput<ExtendedAlteration>[];
@@ -914,8 +923,12 @@ export function filterCBioPortalWebServiceDataByOQLLine(
 export function filterCBioPortalWebServiceDataByOQLLine(
     oql_query: string,
     data:
-        | (AnnotatedMutation | NumericGeneMolecularData)[]
-        | (Mutation | NumericGeneMolecularData)[],
+        | (
+              | AnnotatedMutation
+              | NumericGeneMolecularData
+              | AnnotatedStructuralVariant
+          )[]
+        | (Mutation | NumericGeneMolecularData | StructuralVariant)[],
     accessors: any,
     default_oql?: string
 ) {
@@ -933,7 +946,11 @@ export function filterCBioPortalWebServiceDataByOQLLine(
 
 export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(
     oql_query: string,
-    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    data: (
+        | AnnotatedMutation
+        | NumericGeneMolecularData
+        | AnnotatedStructuralVariant
+    )[],
     accessors: any,
     default_oql?: string
 ): UnflattenedOQLLineFilterOutput<ExtendedAlteration & AnnotatedMutation>[] {

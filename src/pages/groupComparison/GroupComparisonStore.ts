@@ -5,7 +5,6 @@ import {
     getOrdinals,
     getStudyIds,
 } from './GroupComparisonUtils';
-import { GroupComparisonTab } from './GroupComparisonTabs';
 import { remoteData, stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { SampleFilter, CancerStudy } from 'cbioportal-ts-api-client';
 import { action, computed, observable, makeObservable } from 'mobx';
@@ -21,9 +20,7 @@ import {
 import { AppStore } from '../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
-import GroupComparisonURLWrapper, {
-    GroupComparisonURLQuery,
-} from './GroupComparisonURLWrapper';
+import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
@@ -32,9 +29,6 @@ import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import { COLORS } from '../studyView/StudyViewUtils';
 
 export default class GroupComparisonStore extends ComparisonStore {
-    @observable private _currentTabId:
-        | GroupComparisonTab
-        | undefined = undefined;
     @observable.ref private sessionId: string;
 
     constructor(

@@ -133,7 +133,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             PFS_SURVIVAL: 250,
             MUTATION_COUNT_CNA_FRACTION: 200,
             MUTATED_GENES_TABLE: 90,
-            FUSION_GENES_TABLE: 85,
+            STRUCTURAL_VARIANT_GENES_TABLE: 85,
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
             SAMPLE_TREATMENTS_TABLE: 75,

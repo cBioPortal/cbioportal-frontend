@@ -4,13 +4,13 @@ import {
     CNA_COLOR_GAIN,
     CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
-    MUT_COLOR_FUSION,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_MISSENSE_PASSENGER,
     MUT_COLOR_PROMOTER,
     MUT_COLOR_SPLICE,
     MUT_COLOR_TRUNC,
+    STRUCTURAL_VARIANT_COLOR,
 } from 'cbioportal-frontend-commons';
 import { MUT_PROFILE_COUNT_NOT_MUTATED } from 'pages/resultsView/plots/PlotsTabUtils';
 // Default grey
@@ -81,8 +81,8 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     missense: MUT_COLOR_MISSENSE,
     inframe: MUT_COLOR_INFRAME,
     truncating: MUT_COLOR_TRUNC,
+    fusion: STRUCTURAL_VARIANT_COLOR,
     splice: MUT_COLOR_SPLICE,
-    fusion: MUT_COLOR_FUSION,
     promoter: MUT_COLOR_PROMOTER,
     driver: MUT_COLOR_MISSENSE,
     vus: MUT_COLOR_MISSENSE_PASSENGER,

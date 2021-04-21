@@ -42,7 +42,7 @@ import {
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 import {
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
 
@@ -635,8 +635,8 @@ export default class UserSelections extends React.Component<
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     color = MUT_COLOR_MISSENSE;
                     break;
-                case ChartTypeEnum.FUSION_GENES_TABLE:
-                    color = MUT_COLOR_FUSION;
+                case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                    color = STRUCTURAL_VARIANT_COLOR;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE: {
                     const oqlParts = oql.trim().split(':');
