@@ -450,7 +450,7 @@ describe('sorting', function() {
         while (
             !$(
                 '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-            ).isVisible()
+            ).isDisplayed()
         ) {
             // behavior varies whether this menu is still visible, so we have to go into this loop to make sure its visible before clicking to sample mode
             $(

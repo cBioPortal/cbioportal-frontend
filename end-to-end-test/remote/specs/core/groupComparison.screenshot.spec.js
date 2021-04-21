@@ -34,7 +34,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page survival tab exclude overlapping samples', () => {
-            assert($('a.tabAnchor_survival').isVisible());
+            assert($('a.tabAnchor_survival').isDisplayed());
             $('a.tabAnchor_survival').click();
             $(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]'
@@ -68,7 +68,7 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page clinical tab include overlapping samples Kruskal Wallis test', function() {
-            assert($('a.tabAnchor_clinical').isVisible());
+            assert($('a.tabAnchor_clinical').isDisplayed());
             $('a.tabAnchor_clinical').click();
             waitForNetworkQuiet();
             $(

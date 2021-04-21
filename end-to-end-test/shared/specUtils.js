@@ -327,7 +327,7 @@ function checkElementWithTemporaryClass(
         temporaryClass
     );
     browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking, options);
+    var res = browser.checkElement(selectorForChecking, '', options);
     browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);

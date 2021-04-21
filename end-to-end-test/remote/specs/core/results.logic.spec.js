@@ -27,7 +27,7 @@ describe('cross cancer query', function() {
 
         // check if TP53 is in the navigation above the plots
         $('.nav-pills').waitForExist({ timeout: 30000 });
-        var text = browser.getText('.nav-pills');
+        var text = $('.nav-pills').getText();
         assert(text.search('TP53') > -1);
     });
 });
@@ -68,7 +68,7 @@ describe('single study query', function() {
             $('[data-test="mutation-rate-summary"]').waitForExist({
                 timeout: 60000,
             });
-            var text = browser.getText('[data-test="mutation-rate-summary"]');
+            var text = $('[data-test="mutation-rate-summary"]').getText();
             // check germline mutation rate
             assert(text.search('8.2%') > -1);
             // check somatic mutation
@@ -113,8 +113,8 @@ describe('results page', function() {
                 `${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            assert(!$('a.tabAnchor_coexpression').isVisible());
-            assert(!$('a.tabAnchor_cnSegments').isVisible());
+            assert(!$('a.tabAnchor_coexpression').isDisplayed());
+            assert(!$('a.tabAnchor_cnSegments').isDisplayed());
         });
         it('should hide survival tab in a query without any survival data', () => {
             goToUrlAndSetLocalStorage(
@@ -123,7 +123,7 @@ describe('results page', function() {
             $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForDisplayed({
                 timeout: 20000,
             });
-            assert(!$('a.tabAnchor_survival').isVisible());
+            assert(!$('a.tabAnchor_survival').isDisplayed());
         });
     });
     describe('mutual exclusivity tab', function() {
@@ -133,7 +133,7 @@ describe('results page', function() {
             );
             $('a.tabAnchor_mutualExclusivity').waitForExist({ timeout: 10000 });
 
-            assert($('a.tabAnchor_mutualExclusivity').isVisible());
+            assert($('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
         it('should appear in a multiple study with multiple genes', function() {
             goToUrlAndSetLocalStorage(
@@ -141,20 +141,20 @@ describe('results page', function() {
             );
             $('a.tabAnchor_mutualExclusivity').waitForExist({ timeout: 10000 });
 
-            assert($('a.tabAnchor_mutualExclusivity').isVisible());
+            assert($('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
         it('should not appear in a single study query with one gene', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            assert(!$('a.tabAnchor_mutualExclusivity').isVisible());
+            assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
 
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            assert(!$('a.tabAnchor_mutualExclusivity').isVisible());
+            assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
         it.skip('should not appear in a multiple study query with one gene', function() {
             goToUrlAndSetLocalStorage(
@@ -162,17 +162,17 @@ describe('results page', function() {
             );
             $('a.tabAnchor_oncoprint').waitForExist({ timeout: 10000 });
             browser.waitUntil(function() {
-                return !$('a.tabAnchor_mutualExclusivity').isVisible();
+                return !$('a.tabAnchor_mutualExclusivity').isDisplayed();
             });
-            assert(!$('a.tabAnchor_mutualExclusivity').isVisible());
+            assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
             $('a.tabAnchor_oncoprint').waitForExist({ timeout: 10000 });
             browser.waitUntil(function() {
-                return !$('a.tabAnchor_mutualExclusivity').isVisible();
+                return !$('a.tabAnchor_mutualExclusivity').isDisplayed();
             });
-            assert(!$('a.tabAnchor_mutualExclusivity').isVisible());
+            assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
     });
 });
@@ -195,7 +195,7 @@ describe('case set selection in modify query form', function() {
         $('#modifyQueryBtn').click();
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert.equal(
-            browser.getText(selectedCaseSet_sel),
+            $(selectedCaseSet_sel).getText(),
             'Samples with protein data (RPPA) (196)',
             'Initially selected case set should be as specified from URL'
         );
@@ -218,7 +218,7 @@ describe('case set selection in modify query form', function() {
         ).waitForExist({ timeout: 10000 });
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert(
-            ALL_CASE_SET_REGEXP.test(browser.getText(selectedCaseSet_sel)),
+            ALL_CASE_SET_REGEXP.test($(selectedCaseSet_sel).getText()),
             "'All' case set"
         );
 
@@ -228,7 +228,7 @@ describe('case set selection in modify query form', function() {
 
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert.equal(
-            browser.getText(selectedCaseSet_sel),
+            $(selectedCaseSet_sel).getText(),
             'Samples with mutation and CNA data (212)',
             'Now we should be back to default selected case set for this study'
         );
@@ -240,7 +240,7 @@ describe('case set selection in modify query form', function() {
         $('#modifyQueryBtn').click();
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert.equal(
-            browser.getText(selectedCaseSet_sel),
+            $(selectedCaseSet_sel).getText(),
             'Samples with protein data (RPPA) (196)',
             'Initially selected case set should be as specified from URL'
         );
@@ -263,9 +263,7 @@ describe('case set selection in modify query form', function() {
         ).waitForExist({ timeout: 10000 });
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(() => {
-            return ALL_CASE_SET_REGEXP.test(
-                browser.getText(selectedCaseSet_sel)
-            );
+            return ALL_CASE_SET_REGEXP.test($(selectedCaseSet_sel).getText());
         }, 5000);
 
         // Deselect all filtered studies
@@ -276,7 +274,7 @@ describe('case set selection in modify query form', function() {
 
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert.equal(
-            browser.getText(selectedCaseSet_sel),
+            $(selectedCaseSet_sel).getText(),
             'Samples with mutation and CNA data (212)',
             'Now we should be back to default selected case set for this study'
         );
@@ -500,7 +498,7 @@ describe('invalid query from url', function() {
 
         // check alert message
         $('[data-test="invalidQueryAlert"]').waitForExist({ timeout: 60000 });
-        var text = browser.getText('[data-test="invalidQueryAlert"]');
+        var text = $('[data-test="invalidQueryAlert"]').getText();
         assert.equal(
             text,
             'Your query has invalid or out-dated gene symbols. Please correct below.',

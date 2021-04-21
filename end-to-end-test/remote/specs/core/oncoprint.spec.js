@@ -394,7 +394,7 @@ describe('oncoprint', function() {
                 `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ov_tcga_pub&case_set_id=ov_tcga_pub_cna_seq&data_priority=0&gene_list=BRCA1&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&tab_index=tab_visualize`
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
-            let oncoprintDivText = browser.getText('#oncoprintDiv');
+            let oncoprintDivText = $('#oncoprintDiv').getText();
             let legendText = getTextInOncoprintLegend();
             assert(
                 legendText.indexOf('Germline Mutation') > -1,
@@ -411,7 +411,7 @@ describe('oncoprint', function() {
             $(hideGermlineButton).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
-            oncoprintDivText = browser.getText('#oncoprintDiv');
+            oncoprintDivText = $('#oncoprintDiv').getText();
             assert(
                 legendText.indexOf('Germline Mutation') === -1,
                 'now, there are no germline mutations'
@@ -423,7 +423,7 @@ describe('oncoprint', function() {
             $(hideGermlineButton).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
-            oncoprintDivText = browser.getText('#oncoprintDiv');
+            oncoprintDivText = $('#oncoprintDiv').getText();
             assert(
                 legendText.indexOf('Germline Mutation') > -1,
                 'germline mutations are back now'
@@ -437,7 +437,7 @@ describe('oncoprint', function() {
             );
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             let legendText = getTextInOncoprintLegend();
-            let oncoprintDivText = browser.getText('#oncoprintDiv');
+            let oncoprintDivText = $('#oncoprintDiv').getText();
             assert(
                 legendText.indexOf('Germline Mutation') > -1,
                 'by default, there are germline mutations'
@@ -450,7 +450,7 @@ describe('oncoprint', function() {
             $(colorByGermline).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
-            oncoprintDivText = browser.getText('#oncoprintDiv');
+            oncoprintDivText = $('#oncoprintDiv').getText();
             assert(
                 legendText.indexOf('Germline Mutation') === -1,
                 'now, there are no germline mutations'
@@ -462,7 +462,7 @@ describe('oncoprint', function() {
             $(colorByGermline).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             legendText = getTextInOncoprintLegend();
-            oncoprintDivText = browser.getText('#oncoprintDiv');
+            oncoprintDivText = $('#oncoprintDiv').getText();
             assert(
                 legendText.indexOf('Germline Mutation') > -1,
                 'germline mutations are back now'

@@ -186,7 +186,7 @@ describe('Results Page', function() {
                 $('[data-test=view3DStructure]').click();
                 browser.waitUntil(
                     () =>
-                        browser.getText('[data-test=pdbChainInfoText]') !==
+                        $('[data-test=pdbChainInfoText]').getText() !==
                         'LOADING',
                     10000
                 );
@@ -275,12 +275,12 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.oncoprint-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.oncoprint-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should not be present in cancer types summary with simple query', function() {
@@ -289,32 +289,32 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.cancer-types-summary-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.cancer-types-summary-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should not be present in mutual exclusivity tab with simple query', function() {
             $('.tabAnchor_mutualExclusivity').click();
             browser.pause(500);
             assert(
-                !$(`${yesBannerSelector}.mutex-oql-status-banner`).isVisible()
+                !$(`${yesBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.mutex-oql-status-banner`).isVisible()
+                !$(`${noBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
         });
         it('should not be present in plots tab with simple query', function() {
             $('.tabAnchor_plots').click();
             browser.pause(500);
             assert(
-                !$(`${yesBannerSelector}.plots-oql-status-banner`).isVisible()
+                !$(`${yesBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.plots-oql-status-banner`).isVisible()
+                !$(`${noBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
         });
         it('should not be present in mutations tab with simple query', function() {
@@ -323,27 +323,27 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.mutations-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.mutations-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${unaffectedBannerSelector}.mutations-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should not be present in coexpression tab with simple query', function() {
             $('.tabAnchor_coexpression').click();
             browser.pause(500);
             assert(
-                !$(`${yesBannerSelector}.coexp-oql-status-banner`).isVisible()
+                !$(`${yesBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.coexp-oql-status-banner`).isVisible()
+                !$(`${noBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
         });
         it('should not be present in alteration enrichments tab with simple query', function() {
@@ -354,12 +354,12 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should not be present in survival tab with simple query', function() {
@@ -368,10 +368,12 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.survival-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.survival-oql-status-banner`).isVisible()
+                !$(
+                    `${noBannerSelector}.survival-oql-status-banner`
+                ).isDisplayed()
             );
         });
         it('should not be present in download tab with simple query', function() {
@@ -380,10 +382,12 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${yesBannerSelector}.download-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.download-oql-status-banner`).isVisible()
+                !$(
+                    `${noBannerSelector}.download-oql-status-banner`
+                ).isDisplayed()
             );
         });
 
@@ -393,12 +397,12 @@ describe('Results Page', function() {
             assert(
                 $(
                     `${yesBannerSelector}.oncoprint-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.oncoprint-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should be present in cancer types summary with explicit query', function() {
@@ -409,12 +413,12 @@ describe('Results Page', function() {
             assert(
                 $(
                     `${yesBannerSelector}.cancer-types-summary-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.cancer-types-summary-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should be present in mutual exclusivity tab with explicit query', function() {
@@ -423,10 +427,10 @@ describe('Results Page', function() {
                 timeout: 10000,
             });
             assert(
-                $(`${yesBannerSelector}.mutex-oql-status-banner`).isVisible()
+                $(`${yesBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.mutex-oql-status-banner`).isVisible()
+                !$(`${noBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
         });
         it('should be present in plots tab with explicit query', function() {
@@ -435,10 +439,10 @@ describe('Results Page', function() {
                 timeout: 10000,
             });
             assert(
-                !$(`${yesBannerSelector}.plots-oql-status-banner`).isVisible()
+                !$(`${yesBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
             assert(
-                $(`${noBannerSelector}.plots-oql-status-banner`).isVisible()
+                $(`${noBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
         });
         it('should be present in alterations tab with explicit query', function() {
@@ -452,17 +456,17 @@ describe('Results Page', function() {
             assert(
                 !$(
                     `${unaffectedBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 $(
                     `${yesBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should be present in coexpression tab with explicit query', function() {
@@ -471,10 +475,10 @@ describe('Results Page', function() {
                 timeout: 10000,
             });
             assert(
-                !$(`${yesBannerSelector}.coexp-oql-status-banner`).isVisible()
+                !$(`${yesBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
             assert(
-                $(`${noBannerSelector}.coexp-oql-status-banner`).isVisible()
+                $(`${noBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
         });
         it('should be present in alteration enrichments tab with explicit query', function() {
@@ -487,12 +491,12 @@ describe('Results Page', function() {
             assert(
                 $(
                     `${yesBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should be present in survival tab with explicit query', function() {
@@ -503,12 +507,12 @@ describe('Results Page', function() {
             assert(
                 $(
                     `${yesBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
             assert(
                 !$(
                     `${noBannerSelector}.comparison-oql-status-banner`
-                ).isVisible()
+                ).isDisplayed()
             );
         });
         it('should be present in download tab with explicit query', function() {
@@ -517,10 +521,14 @@ describe('Results Page', function() {
                 `${yesBannerSelector}.download-oql-status-banner`
             ).waitForDisplayed({ timeout: 10000 });
             assert(
-                $(`${yesBannerSelector}.download-oql-status-banner`).isVisible()
+                $(
+                    `${yesBannerSelector}.download-oql-status-banner`
+                ).isDisplayed()
             );
             assert(
-                !$(`${noBannerSelector}.download-oql-status-banner`).isVisible()
+                !$(
+                    `${noBannerSelector}.download-oql-status-banner`
+                ).isDisplayed()
             );
         });
     });

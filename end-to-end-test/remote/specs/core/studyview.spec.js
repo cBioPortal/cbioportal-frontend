@@ -146,7 +146,7 @@ describe('study laml_tcga tests', () => {
         it('chart in genomic tab can be updated', () => {
             toStudyViewSummaryTab();
             const numOfChartsBeforeAdding = getNumberOfStudyViewCharts();
-            if (!$(ADD_CHART_GENOMIC_TAB).isVisible()) {
+            if (!$(ADD_CHART_GENOMIC_TAB).isDisplayed()) {
                 $(ADD_CHART_BUTTON).click();
             }
             $(ADD_CHART_GENOMIC_TAB).click();
@@ -166,7 +166,7 @@ describe('study laml_tcga tests', () => {
         it('chart in clinical tab can be updated', () => {
             const numOfChartsBeforeAdding = getNumberOfStudyViewCharts();
 
-            if (!$(ADD_CHART_CLINICAL_TAB).isVisible()) {
+            if (!$(ADD_CHART_CLINICAL_TAB).isDisplayed()) {
                 $(ADD_CHART_BUTTON).click();
             }
             $(ADD_CHART_CLINICAL_TAB).click();
@@ -184,7 +184,7 @@ describe('study laml_tcga tests', () => {
         });
         describe('add custom data', () => {
             before(() => {
-                if (!$(ADD_CHART_CUSTOM_DATA_TAB).isVisible()) {
+                if (!$(ADD_CHART_CUSTOM_DATA_TAB).isDisplayed()) {
                     $(ADD_CHART_BUTTON).waitForExist();
                     $(ADD_CHART_BUTTON).click();
                 }
@@ -242,7 +242,7 @@ describe('study laml_tcga tests', () => {
             });
             after(() => {
                 // Close the tooltip
-                if ($(ADD_CHART_CUSTOM_DATA_TAB).isVisible()) {
+                if ($(ADD_CHART_CUSTOM_DATA_TAB).isDisplayed()) {
                     $(ADD_CHART_BUTTON).click();
                 }
             });
@@ -443,13 +443,13 @@ describe('study view lgg_tcga study tests', () => {
         const barChart = "[data-test='chart-container-DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', () => {
             $(barChart).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
-            browser.moveToObject(barChart);
+            $(barChart).moveTo();
             browser.waitUntil(() => {
                 return $(barChart + ' .controls').isExisting();
             }, 10000);
 
             // move to hamburger icon
-            browser.moveToObject("[data-test='chart-header-hamburger-icon']");
+            $("[data-test='chart-header-hamburger-icon']").moveTo();
 
             // wait for the menu available
             $(
@@ -469,7 +469,7 @@ describe('study view lgg_tcga study tests', () => {
                 $(pieChart).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                browser.moveToObject(pieChart);
+                $(pieChart).moveTo();
 
                 browser.waitUntil(() => {
                     return $(pieChart + ' .controls').isExisting();
@@ -484,7 +484,7 @@ describe('study view lgg_tcga study tests', () => {
                 $(table).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                browser.moveToObject(table);
+                $(table).moveTo();
 
                 browser.waitUntil(() => {
                     return $(table + ' .controls').isExisting();
@@ -594,16 +594,16 @@ describe('the gene panel is loaded properly', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
 
-        browser.moveToObject(
-            `${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`
-        );
+        $(`${CNA_GENES_TABLE} [data-test='freq-cell']:first-child`).moveTo();
 
         $(tooltipSelector).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
 
         // the gene panel ID IMPACT341 should be listed
-        browser.getText(tooltipSelector).includes('IMPACT341');
+        $(tooltipSelector)
+            .getText()
+            .includes('IMPACT341');
 
         $(
             `${tooltipSelector} a[data-test='gene-panel-linkout-IMPACT341']`
@@ -614,7 +614,7 @@ describe('the gene panel is loaded properly', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         assert.equal(
-            browser.getText(`[data-test="gene-panel-modal-title"]`),
+            $(`[data-test="gene-panel-modal-title"]`).getText(),
             'IMPACT341'
         );
 
@@ -623,9 +623,7 @@ describe('the gene panel is loaded properly', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         assert.equal(
-            browser.getText(
-                '[data-test="gene-panel-modal-body"] p:first-child'
-            ),
+            $('[data-test="gene-panel-modal-body"] p:first-child').getText(),
             'ABL1'
         );
     });
@@ -643,7 +641,7 @@ describe('submit genes to results view query', () => {
         browser.waitUntil(() => {
             return (
                 $('[data-test="oqlErrorMessage"]').isExisting() &&
-                browser.getText('[data-test="oqlErrorMessage"]') ===
+                $('[data-test="oqlErrorMessage"]').getText() ===
                     'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
             );
         }, 20000);

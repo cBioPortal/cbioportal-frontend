@@ -39,24 +39,24 @@ describe('Mutation Mapper Tool', function() {
             ).waitForDisplayed({ timeout: 60000 });
 
             // Waiting for Annotation column sorting
-            browser.waitForText('.//*[text()[contains(.,"T790M")]]');
+            $('.//*[text()[contains(.,"T790M")]]').waitForExist();
 
             assert.equal(
-                browser.getText('.//*[text()[contains(.,"T790M")]]').length,
+                $$('.//*[text()[contains(.,"T790M")]]').length,
                 2,
                 'there should be two samples with a T790M mutation'
             );
 
             // check total number of mutations (this gets Showing 1-25 of 122
             // Mutations)
-            let mutationCount = browser.getText(
-                './/*[text()[contains(.,"122 Mutations")]]'
+            assert.ok(
+                $('.//*[text()[contains(.,"122 Mutations")]]').isExisting()
             );
-            assert.ok(mutationCount.length > 0);
 
-            const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
-            assert.ok(brca1.length > 0);
-            browser.elements('.nav-pill').click('a*=BRCA1');
+            assert.ok($('.//*[text()[contains(.,"BRCA1")]]').isExisting());
+            $('.nav-pills')
+                .$('a*=BRCA1')
+                .click();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
@@ -66,24 +66,25 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
-            mutationCount = browser.getText(
-                './/*[text()[contains(.,"85 Mutations")]]'
+            assert.ok(
+                $('.//*[text()[contains(.,"85 Mutations")]]').isExisting()
             );
-            assert.ok(mutationCount.length > 0);
 
-            const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]');
-            assert.ok(brca2.length > 0);
-            browser.elements('.nav-pill').click('a*=BRCA2');
+            assert.ok($('.//*[text()[contains(.,"BRCA2")]]').isExisting());
+            $('.nav-pills')
+                .$('a*=BRCA2')
+                .click();
             // check total number of mutations (this gets Showing 1-25 of 113
             // Mutations)
-            browser.waitForText('.//*[text()[contains(.,"113 Mutations")]]');
+            $('.//*[text()[contains(.,"113 Mutations")]]').waitForExist();
 
-            const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]');
-            assert.ok(pten.length > 0);
-            browser.elements('.nav-pill').click('a*=PTEN');
+            assert.ok($('.//*[text()[contains(.,"PTEN")]]').isExisting());
+            $('.nav-pills')
+                .$('a*=PTEN')
+                .click();
             // check total number of mutations (this gets Showing 1-25 of 136
             // Mutations)
-            browser.waitForText('.//*[text()[contains(.,"136 Mutations")]]');
+            $('.//*[text()[contains(.,"136 Mutations")]]').waitForExist();
         });
 
         it('should update the listed number of mutations when selecting a different transcript in the dropdown', () => {
@@ -99,19 +100,15 @@ describe('Mutation Mapper Tool', function() {
             });
 
             // wait for transcript to be listed
-            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            $('.//*[text()[contains(.,"NM_005228")]]').waitForExist();
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_005228")]]').click();
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_201283")]]').click();
 
             // check number of mutations on this transcript (this gets Showing
             // 1-27 of 27 Mutations)
-            browser.waitForText('.//*[text()[contains(.,"27 Mutations")]]');
+            $('.//*[text()[contains(.,"27 Mutations")]]').waitForExist();
         });
 
         it('should show all transcripts when using protein changes', () => {
@@ -126,34 +123,30 @@ describe('Mutation Mapper Tool', function() {
                 timeout: 60000,
             });
             // it should have 124 egfr mutations
-            browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
+            $('.//*[text()[contains(.,"124 Mutations")]]').waitForExist();
 
             // wait for transcript to be listed
-            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            $('.//*[text()[contains(.,"NM_005228")]]').waitForExist();
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_005228")]]').click();
 
             // check if all 8 transcripts are listed (already know the one above
             // is listed, since we clicked on it)
-            browser.waitForText('.//*[text()[contains(.,"NM_201284")]]');
-            browser.waitForText('.//*[text()[contains(.,"NM_201282")]]');
-            browser.waitForText('.//*[text()[contains(.,"NM_201283")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000454757")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000455089")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000442591")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
+            $('.//*[text()[contains(.,"NM_201284")]]').waitForExist();
+            $('.//*[text()[contains(.,"NM_201282")]]').waitForExist();
+            $('.//*[text()[contains(.,"NM_201283")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000454757")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000455089")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000442591")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000450046")]]').waitForExist();
 
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_201283")]]').click();
 
             // check number of mutations on this transcript (this should keep
             // showing all mutations (we don't know which transcript was used to
             // get those annotations the user inputted))
-            browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
+            $('.//*[text()[contains(.,"124 Mutations")]]').waitForExist();
         });
 
         it('should show all transcripts when using combination of genomic and protein changes', () => {
@@ -168,34 +161,30 @@ describe('Mutation Mapper Tool', function() {
                 timeout: 60000,
             });
             // it should have 122 egfr mutations
-            browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
+            $('.//*[text()[contains(.,"122 Mutations")]]').waitForExist();
 
             // wait for transcript to be listed
-            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            $('.//*[text()[contains(.,"NM_005228")]]').waitForExist();
             // click on dropbox
-            browser
-                .elements('.//*[text()[contains(.,"NM_005228")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_005228")]]').click();
 
             // check if all 8 transcripts are listed (already know the one above
             // is listed, since we clicked on it)
-            browser.waitForText('.//*[text()[contains(.,"NM_201284")]]');
-            browser.waitForText('.//*[text()[contains(.,"NM_201282")]]');
-            browser.waitForText('.//*[text()[contains(.,"NM_201283")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000454757")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000455089")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000442591")]]');
-            browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
+            $('.//*[text()[contains(.,"NM_201284")]]').waitForExist();
+            $('.//*[text()[contains(.,"NM_201282")]]').waitForExist();
+            $('.//*[text()[contains(.,"NM_201283")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000454757")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000455089")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000442591")]]').waitForExist();
+            $('.//*[text()[contains(.,"ENST00000450046")]]').waitForExist();
 
             // select a different transcript
-            browser
-                .elements('.//*[text()[contains(.,"NM_201283")]]')
-                .value[0].click();
+            $('.//*[text()[contains(.,"NM_201283")]]').click();
 
             // check number of mutations on this transcript (this should keep
             // showing all mutations (we don't know which transcript was used to
             // get those annotations the user inputted))
-            browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
+            $('.//*[text()[contains(.,"122 Mutations")]]').waitForExist();
         });
 
         it('should correctly annotate the protein changes example and display the results', () => {
@@ -210,9 +199,7 @@ describe('Mutation Mapper Tool', function() {
                 'tr:nth-child(1) [data-test=oncogenic-icon-image]'
             ).waitForDisplayed({ timeout: 60000 });
 
-            const mutationsT790M = browser.getText(
-                './/*[text()[contains(.,"T790M")]]'
-            );
+            const mutationsT790M = $$('.//*[text()[contains(.,"T790M")]]');
             assert.equal(
                 mutationsT790M.length,
                 2,
@@ -221,19 +208,15 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 124
             // Mutations)
-            const mutationCount = browser.getText(
-                './/*[text()[contains(.,"124 Mutations")]]'
+            assert.ok(
+                $('.//*[text()[contains(.,"124 Mutations")]]').isExisting()
             );
-            assert.ok(mutationCount.length > 0);
 
-            const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
-            assert.ok(brca1.length > 0);
+            assert.ok($('.//*[text()[contains(.,"BRCA1")]]').isExisting());
 
-            const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]');
-            assert.ok(brca2.length > 0);
+            assert.ok($('.//*[text()[contains(.,"BRCA2")]]').isExisting());
 
-            const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]');
-            assert.ok(pten.length > 0);
+            assert.ok($('.//*[text()[contains(.,"PTEN")]]').isExisting());
         });
 
         it('should not display mutations that do not affect the displayed transcript id (HIST1H2BN, ENST00000396980)', () => {
@@ -248,9 +231,9 @@ describe('Mutation Mapper Tool', function() {
 
             // the canonical transcript id for HIST1H2BN is ENST00000396980, but
             // this mutation applies to ENST00000606613 and ENST00000449538
-            browser.waitForText('.//*[text()[contains(.,"ENST00000449538")]]');
+            $('.//*[text()[contains(.,"ENST00000449538")]]').waitForExist();
 
-            browser.waitForText('.//*[text()[contains(.,"1 Mutation")]]');
+            $('.//*[text()[contains(.,"1 Mutation")]]').waitForExist();
         });
 
         it('should show a warning when certain lines were not annotated', () => {
@@ -263,21 +246,17 @@ describe('Mutation Mapper Tool', function() {
 
             $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
 
-            const warning = browser.getText(
-                './/*[text()[contains(.,"Failed to annotate")]]'
-            );
             assert.ok(
-                warning.length > 0,
+                $(
+                    './/*[text()[contains(.,"Failed to annotate")]]'
+                ).isExisting(),
                 'there should be a warning indicating one mutation failed annotation'
             );
 
             $('[data-test=ShowWarningsButton]').click();
 
-            const failingRecord = browser.getText(
-                './/*[text()[contains(.,"TCGA-33-4566-01")]]'
-            );
             assert.ok(
-                failingRecord.length > 0,
+                $('.//*[text()[contains(.,"TCGA-33-4566-01")]]').isExisting(),
                 'there should be a warning indicating which sample is failing'
             );
         });
@@ -295,10 +274,9 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-14 of 14
             // Mutations)
-            const mutationCount = browser.getText(
-                './/*[text()[contains(.,"14 Mutations")]]'
+            assert.ok(
+                $('.//*[text()[contains(.,"14 Mutations")]]').isExisting()
             );
-            assert.ok(mutationCount.length > 0);
         });
     });
 
@@ -330,24 +308,25 @@ describe('Mutation Mapper Tool', function() {
             ).waitForDisplayed({ timeout: 60000 });
 
             // Waiting for Annotation column sorting
-            browser.waitForText('.//*[text()[contains(.,"T790M")]]');
+            $('.//*[text()[contains(.,"T790M")]]').waitForExist();
 
             assert.equal(
-                browser.getText('.//*[text()[contains(.,"T790M")]]').length,
+                $$('.//*[text()[contains(.,"T790M")]]').length,
                 2,
                 'there should be two samples with a T790M mutation'
             );
 
             // check total number of mutations (this gets Showing 1-25 of 122
             // Mutations)
-            let mutationCount = browser.getText(
-                './/*[text()[contains(.,"122 Mutations")]]'
+            assert.ok(
+                $('.//*[text()[contains(.,"122 Mutations")]]').isExisting()
             );
-            assert.ok(mutationCount.length > 0);
 
-            const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]');
-            assert.ok(brca1.length > 0);
-            browser.elements('.nav-pill').click('a*=BRCA1');
+            const brca1 = $('.//*[text()[contains(.,"BRCA1")]]');
+            assert.ok(brca1.isExisting());
+            $('.nav-pills')
+                .$('a*=BRCA1')
+                .click();
 
             // mutations table should be visible after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
@@ -357,24 +336,26 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
-            mutationCount = browser.getText(
-                './/*[text()[contains(.,"85 Mutations")]]'
-            );
-            assert.ok(mutationCount.length > 0);
+            mutationCount = $('.//*[text()[contains(.,"85 Mutations")]]');
+            assert.ok(mutationCount.isExisting());
 
-            const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]');
-            assert.ok(brca2.length > 0);
-            browser.elements('.nav-pill').click('a*=BRCA2');
+            const brca2 = $('.//*[text()[contains(.,"BRCA2")]]');
+            assert.ok(brca2.isExisting());
+            $('.nav-pills')
+                .$('a*=BRCA2')
+                .click();
             // check total number of mutations (this gets Showing 1-25 of 113
             // Mutations)
-            browser.waitForText('.//*[text()[contains(.,"113 Mutations")]]');
+            $('.//*[text()[contains(.,"113 Mutations")]]').waitForExist();
 
-            const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]');
-            assert.ok(pten.length > 0);
-            browser.elements('.nav-pill').click('a*=PTEN');
+            const pten = $('.//*[text()[contains(.,"PTEN")]]');
+            assert.ok(pten.isExisting());
+            $('.nav-pills')
+                .$('a*=PTEN')
+                .click();
             // check total number of mutations (this gets Showing 1-25 of 136
             // Mutations)
-            browser.waitForText('.//*[text()[contains(.,"136 Mutations")]]');
+            $('.//*[text()[contains(.,"136 Mutations")]]').waitForExist();
         });
 
         it('should show dbSNP with GRCh38 instance', () => {
@@ -399,10 +380,10 @@ describe('Mutation Mapper Tool', function() {
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "dbSNP" selection
-            browser.scroll(1000, 1000);
+            $('//*[text()="dbSNP"]').scrollIntoView();
             // click "dbSNP"
             $('//*[text()="dbSNP"]').click();
-            browser.waitForText('.//*[text()[contains(.,"rs121434568")]]');
+            $('.//*[text()[contains(.,"rs121434568")]]').waitForExist();
         });
     });
 });

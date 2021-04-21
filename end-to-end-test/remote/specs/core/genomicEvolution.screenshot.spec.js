@@ -53,9 +53,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with line chart', function() {
-        browser.moveToObject(
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
-        );
+        ).moveTo();
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             '',
@@ -107,7 +107,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
         ).click();
-        browser.moveToObject('#cbioportal-logo');
+        $('#cbioportal-logo').moveTo();
         const res = checkElementWithMouseDisabled(
             'div[data-test="GenomicEvolutionTab"]',
             0,
@@ -116,9 +116,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with heatmap', function() {
-        browser.moveToObject(
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
-        );
+        ).moveTo();
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             '',

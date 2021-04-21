@@ -15,7 +15,7 @@ describe('plots tab tests', function() {
         // Control logic below is needed to access the last one after it
         // was created.
         var curNumToolTips = $$('div.rc-tooltip-inner').length;
-        browser.moveToObject("[data-test='dataAvailabilityAlertInfoIcon']");
+        $("[data-test='dataAvailabilityAlertInfoIcon']").moveTo();
         browser.waitUntil(
             () => $$('div.rc-tooltip-inner').length > curNumToolTips
         );

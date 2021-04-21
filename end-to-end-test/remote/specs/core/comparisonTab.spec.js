@@ -14,7 +14,7 @@ describe('results view comparison tab venn diagram tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
             );
-            $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForDisplayed({
+            $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForExist({
                 timeout: 20000,
             });
         });
@@ -33,7 +33,7 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('click sample venn diagram create group button', function() {
             $(SampleCreateGroupButton).click();
-            $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
+            $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
                 $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
@@ -51,9 +51,9 @@ describe('results view comparison tab venn diagram tests', function() {
                 'Altered group'
             );
             browser.pause(100);
-            $(
-                '[data-test="sampleDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
@@ -65,9 +65,9 @@ describe('results view comparison tab venn diagram tests', function() {
 
             $('[data-test="sampleGroupNameInputField"]').setValue('KRAS');
             browser.pause(100);
-            $(
-                '[data-test="sampleDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
@@ -98,7 +98,7 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('click patient venn diagram create group button', function() {
             $(PatientCreateGroupButton).click();
-            $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
+            $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
                 $('[data-test="patientGroupNameInputField"]').isDisplayed(),
@@ -116,9 +116,9 @@ describe('results view comparison tab venn diagram tests', function() {
                 'Unaltered group'
             );
             browser.pause(100);
-            $(
-                '[data-test="patientDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="patientDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
@@ -130,9 +130,9 @@ describe('results view comparison tab venn diagram tests', function() {
 
             $('[data-test="patientGroupNameInputField"]').setValue('BRAF');
             browser.pause(100);
-            $(
-                '[data-test="patientDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="patientDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
@@ -160,7 +160,7 @@ describe('results view comparison tab upset diagram tests', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&comparison_selectedGroups=%5B%22Altered%20group%22%2C%22Unaltered%20group%22%2C%22KRAS%22%2C%22NRAS%22%5D&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations`
             );
-            $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForDisplayed({
+            $('div[data-test="ComparisonPageOverlapTabDiv"]').waitForExist({
                 timeout: 20000,
             });
         });
@@ -179,7 +179,7 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('click sample upset diagram create group button', function() {
             $(SampleCreateGroupButton).click();
-            $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
+            $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
                 $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
@@ -197,9 +197,9 @@ describe('results view comparison tab upset diagram tests', function() {
                 'Altered group'
             );
             browser.pause(100);
-            $(
-                '[data-test="sampleDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'
@@ -230,7 +230,7 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('click patient upset diagram create group button', function() {
             $(PatientCreateGroupButton).click();
-            $('div.rc-tooltip-inner').waitForDisplayed({ timeout: 20000 });
+            $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
                 $('[data-test="patientGroupNameInputField"]').isDisplayed(),
@@ -246,9 +246,9 @@ describe('results view comparison tab upset diagram tests', function() {
         it('patient upset diagram: group name exists, should disable submit button', function() {
             $('[data-test="patientGroupNameInputField"]').setValue('BRAF');
             browser.pause(100);
-            $(
-                '[data-test="patientDuplicateGroupNameMessage"]'
-            ).waitForDisplayed({ timeout: 20000 });
+            $('[data-test="patientDuplicateGroupNameMessage"]').waitForExist({
+                timeout: 20000,
+            });
             assert.equal(
                 $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
                 'Another group already has this name.'

@@ -128,7 +128,7 @@ describe('Mutation Table', function() {
             // wait for gnomad frequency show in the column
             browser.waitUntil(
                 () => {
-                    var textFrequency = browser.getText(frequency);
+                    var textFrequency = $(frequency).getText();
                     return textFrequency.length >= 1;
                 },
                 600000,
