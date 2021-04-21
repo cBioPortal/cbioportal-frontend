@@ -360,7 +360,7 @@ describe('case set selection in front page query form', function() {
             10000
         );
         browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae-cna_consensus"]',
+            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae"]',
             10000
         );
         browser.waitForExist(selectedCaseSet_sel, 10000);

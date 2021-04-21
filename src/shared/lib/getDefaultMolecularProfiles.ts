@@ -1,13 +1,8 @@
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
-import {
-    CNAProfilesEnum,
-    GeneSetProfilesEnum,
-    MutationProfilesEnum,
-    StructuralVariantProfilesEnum,
-} from 'shared/components/query/QueryStoreUtils';
-import { stringListToSet } from 'cbioportal-frontend-commons';
+import { GeneSetProfilesEnum } from 'shared/components/query/QueryStoreUtils';
+import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
 
 export enum MolecularProfileFilterEnum {
     MutationAndCNA = 0,
@@ -19,16 +14,15 @@ export function getDefaultMolecularProfiles(
     studyToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
     profileFilter: string
 ) {
-    let profileFilterSet: { [id: string]: boolean } | undefined = undefined;
     let dataPriority = parseInt(profileFilter, 10);
-    if (isNaN(dataPriority)) {
-        profileFilterSet = stringListToSet(profileFilter.split(','));
-    }
+    let queriedProfileSuffixes = isNaN(dataPriority)
+        ? profileFilter.split(',')
+        : undefined;
 
     return _.flatMap(studyToMolecularProfiles, profiles =>
         getFilteredMolecularProfiles(
             profiles,
-            profileFilterSet,
+            queriedProfileSuffixes,
             isNaN(dataPriority) ? 0 : dataPriority
         )
     );
@@ -123,32 +117,23 @@ export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
 
 export function getFilteredMolecularProfiles(
     profiles: MolecularProfile[],
-    profileFilterSet?: { [profileType: string]: boolean },
+    queriedProfileSuffixes?: string[],
     dataPriority: number = 0 // this is legacy and necessary only for backward compatibility
 ) {
-    const defaultProfiles: (MolecularProfile | undefined)[] = [];
+    let defaultProfiles: (MolecularProfile | undefined)[] = [];
 
-    if (profileFilterSet) {
-        if (profileFilterSet[MutationProfilesEnum.mutations]) {
-            defaultProfiles.push(getDefaultMutationProfile(profiles));
-        }
-        if (
-            profileFilterSet[CNAProfilesEnum.gistic] ||
-            profileFilterSet[CNAProfilesEnum.cna_rae] ||
-            profileFilterSet[CNAProfilesEnum.cna] ||
-            profileFilterSet[CNAProfilesEnum.cna_consensus]
-        ) {
-            defaultProfiles.push(getDefaultCNAProfile(profiles));
-        }
-        if (
-            profileFilterSet[StructuralVariantProfilesEnum.fusion] ||
-            profileFilterSet[StructuralVariantProfilesEnum.structural_variants]
-        ) {
-            defaultProfiles.push(getDefaultStructuralVariantProfile(profiles));
-        }
-        if (profileFilterSet[GeneSetProfilesEnum.gsva_scores]) {
-            defaultProfiles.push(getDefaultGeneSetProfile(profiles));
-        }
+    if (queriedProfileSuffixes) {
+        const molecularProfilesByIdSuffix = _.groupBy(
+            profiles,
+            molecularProfile => getSuffixOfMolecularProfile(molecularProfile)
+        );
+        _.each(queriedProfileSuffixes, profileSuffix => {
+            if (molecularProfilesByIdSuffix[profileSuffix]) {
+                defaultProfiles = defaultProfiles.concat(
+                    molecularProfilesByIdSuffix[profileSuffix]
+                );
+            }
+        });
     } else {
         switch (dataPriority) {
             case MolecularProfileFilterEnum.Mutation:
