@@ -364,11 +364,15 @@ export function generateOtherMolecularProfileData(
     const sampleFilter = (alteration: ExtendedAlteration) => {
         return molecularProfileId.includes(alteration.molecularProfileId);
     };
+    const keyGenerator = (alteration: ExtendedAlteration) => {
+        return `${alteration.gene.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
+    };
 
     return unfilteredCaseAggregatedData
         ? generateSampleAlterationDataByGene(
               unfilteredCaseAggregatedData,
-              sampleFilter
+              sampleFilter,
+              keyGenerator
           )
         : {};
 }
@@ -476,14 +480,17 @@ export function generateGenericAssayProfileDownloadData(
 
 export function generateSampleAlterationDataByGene(
     unfilteredCaseAggregatedData: CaseAggregatedData<ExtendedAlteration>,
-    sampleFilter?: (alteration: ExtendedAlteration) => boolean
+    sampleFilter?: (alteration: ExtendedAlteration) => boolean,
+    keyGenerator?: (alteration: ExtendedAlteration) => string
 ): { [key: string]: ExtendedAlteration[] } {
     // key => gene + uniqueSampleKey
     const sampleDataByGene: { [key: string]: ExtendedAlteration[] } = {};
 
     _.values(unfilteredCaseAggregatedData.samples).forEach(alterations => {
         alterations.forEach(alteration => {
-            const key = `${alteration.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
+            const key = keyGenerator
+                ? keyGenerator(alteration)
+                : `${alteration.hugoGeneSymbol}_${alteration.uniqueSampleKey}`;
             sampleDataByGene[key] = sampleDataByGene[key] || [];
 
             // if no filter function provided nothing is filtered out,
