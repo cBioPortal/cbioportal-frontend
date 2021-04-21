@@ -49,7 +49,9 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab survival tab exclude overlapping samples', () => {
-            assert($('.comparisonTabSubTabs a.tabAnchor_survival').isVisible());
+            assert(
+                $('.comparisonTabSubTabs a.tabAnchor_survival').isDisplayed()
+            );
             $('.comparisonTabSubTabs a.tabAnchor_survival').click();
             $(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]'
@@ -80,14 +82,16 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab clinical tab include overlapping samples Kruskal Wallis test', function() {
-            assert($('.comparisonTabSubTabs a.tabAnchor_clinical').isVisible());
+            assert(
+                $('.comparisonTabSubTabs a.tabAnchor_clinical').isDisplayed()
+            );
             $('.comparisonTabSubTabs a.tabAnchor_clinical').click();
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]'
-            ).waitForVisible();
+            ).waitForDisplayed();
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]'
             ).click();
@@ -514,7 +518,9 @@ describe('results view comparison tab screenshot tests', function() {
             });
 
             it('results view comparison tab overlap tab venn diagram view with overlap and session selected view', function() {
-                browser.leftClick('text[data-test="sample0,1,2VennLabel"]');
+                $('text[data-test="sample0,1,2VennLabel"]').click({
+                    button: 'left',
+                });
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
