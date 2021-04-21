@@ -279,8 +279,8 @@ export function categorizedSamplesCount(
     };
 }
 
-export function getMolecularProfileOptions(molecularProfilesByType: {
-    [profileType: string]: MolecularProfile[];
+export function getMolecularProfileOptions(molecularProfileIdSet: {
+    [profileType: string]: boolean;
 }) {
     const molecularProfileOptions: {
         label: string;
@@ -288,7 +288,7 @@ export function getMolecularProfileOptions(molecularProfilesByType: {
         profileTypes: string[];
     }[] = [];
 
-    if (molecularProfilesByType[MutationProfilesEnum.mutations]) {
+    if (molecularProfileIdSet[MutationProfilesEnum.mutations]) {
         molecularProfileOptions.push({
             label: 'Mutations',
             id: MutationProfilesEnum.mutations,
@@ -298,7 +298,7 @@ export function getMolecularProfileOptions(molecularProfilesByType: {
 
     const structuralVariantProfileTypes = Object.keys(
         StructuralVariantProfilesEnum
-    ).filter(profileType => molecularProfilesByType[profileType] !== undefined);
+    ).filter(profileType => molecularProfileIdSet[profileType] !== undefined);
     if (structuralVariantProfileTypes.length > 0) {
         molecularProfileOptions.push({
             label: 'Structural variants',
@@ -308,7 +308,7 @@ export function getMolecularProfileOptions(molecularProfilesByType: {
     }
 
     const cnaProfileTypes = Object.keys(CNAProfilesEnum).filter(
-        profileType => molecularProfilesByType[profileType] !== undefined
+        profileType => molecularProfileIdSet[profileType] !== undefined
     );
     if (cnaProfileTypes.length > 0) {
         molecularProfileOptions.push({
