@@ -4925,19 +4925,20 @@ export class StudyViewPageStore {
             _.fromPairs(this._genericAssayCharts.toJSON())
         );
 
-        // filter out survival attributes (months attributes only)
-        const survivalMonthAttributeIdsDict = createSurvivalAttributeIdsDict(
-            this.survivalClinicalAttributesPrefix.result,
-            false,
-            true
+        // filter out survival attributes (only keep 'OS_STATUS' attribute)
+        // create a dict which contains all survival attribute Ids that will be excluded from study view
+        // get all survival attribute Ids into a dict
+        let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
+            this.survivalClinicalAttributesPrefix.result
         );
+        // omit 'OS_STATUS' from dict
+        survivalAttributeIdsDict = _.omit(survivalAttributeIdsDict, [
+            'OS_STATUS',
+        ]);
         const filteredClinicalAttributes = _.filter(
             this.clinicalAttributes.result,
             attribute =>
-                !(
-                    attribute.clinicalAttributeId in
-                    survivalMonthAttributeIdsDict
-                )
+                !(attribute.clinicalAttributeId in survivalAttributeIdsDict)
         );
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
