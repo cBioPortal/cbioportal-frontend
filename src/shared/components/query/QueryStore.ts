@@ -316,9 +316,9 @@ export class QueryStore {
 
     @computed get selectedProfileIdSet() {
         let selectedIdSet: { [is: string]: boolean } = {};
-        if (this.groupedMolecularProfilesByType.isComplete) {
+        if (this.validProfileIdSetForSelectedStudies.isComplete) {
             const groupedMolecularProfilesByType = this
-                .groupedMolecularProfilesByType.result;
+                .validProfileIdSetForSelectedStudies.result;
             if (this.profileFilterSet === undefined) {
                 if (!this.studiesHaveChangedSinceInitialization) {
                     if (!_.isEmpty(this.profileFilterSetFromUrl)) {
@@ -389,14 +389,14 @@ export class QueryStore {
                         'STRUCTURAL_VARIANT',
                         'COPY_NUMBER_ALTERATION',
                     ];
-                    let profiles = _.flatMap(altTypes, altType =>
-                        this.getFilteredProfiles(altType)
-                    );
-
-                    profiles.forEach(profile => {
-                        selectedIdSet[
-                            getSuffixOfMolecularProfile(profile)
-                        ] = true;
+                    altTypes.forEach(altType => {
+                        _(this.getFilteredProfiles(altType))
+                            .groupBy(profile => profile.studyId)
+                            .forEach(profiles => {
+                                selectedIdSet[
+                                    getSuffixOfMolecularProfile(profiles[0])
+                                ] = true;
+                            });
                     });
                 }
             } else {
@@ -962,18 +962,36 @@ export class QueryStore {
         },
     });
 
-    readonly groupedMolecularProfilesByType = remoteData({
+    readonly validProfileIdSetForSelectedStudies = remoteData({
         await: () => [this.molecularProfilesInSelectedStudies],
         invoke: async () => {
-            return _.chain(this.molecularProfilesInSelectedStudies.result)
+            const validProfileIds: string[] = _(
+                this.molecularProfilesInSelectedStudies.result
+            )
                 .filter(
                     molecularProfile =>
                         molecularProfile.showProfileInAnalysisTab
                 )
-                .groupBy(molecularProfile =>
-                    getSuffixOfMolecularProfile(molecularProfile)
-                )
+                .groupBy(molecularProfile => molecularProfile.studyId)
+                .flatMap(studyProfiles => {
+                    return _(studyProfiles)
+                        .groupBy(
+                            profile =>
+                                profile.molecularAlterationType +
+                                profile.datatype
+                        )
+                        .map(alterationTypeProfiles => {
+                            // A study can have multiple profiles for same alteration type and datatpye.
+                            // we need just one profile of each
+                            return getSuffixOfMolecularProfile(
+                                alterationTypeProfiles[0]
+                            );
+                        })
+                        .value();
+                })
                 .value();
+
+            return stringListToSet(validProfileIds);
         },
         default: {},
     });
