@@ -29,9 +29,9 @@ describe('Quick Search', () => {
         ).waitForExist();
 
         assert.equal(
-            browser.isDisplayed(
+            $(
                 'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-            ),
+            ).isDisplayed(),
             true,
             'modal is visible'
         );
@@ -41,7 +41,7 @@ describe('Quick Search', () => {
         $('strong=25 more genes (click to load 20 more)').click();
         $('strong=BRAF_PS314').waitForExist();
         $('strong=BRAF_PS314').click();
-        $('a=BRAF_PS314').waitForExist();
+        $('a=BRAF_PS314').waitForExist({ timeout: 60000 });
 
         assert.equal($('a=BRAF_PS314').isDisplayed(), true, 'modal is visible');
     });
@@ -51,7 +51,7 @@ describe('Quick Search', () => {
         $('a=Mel-BRAFi-03').waitForExist();
 
         assert.equal(
-            $('a=Mel-BRAFi-03').isDisplayed()[0],
+            $('a=Mel-BRAFi-03').isDisplayed(),
             true,
             'modal is visible'
         );
@@ -62,7 +62,7 @@ describe('Quick Search', () => {
         $('a=Mel_BRAFi_02_PRE').waitForExist();
 
         assert.equal(
-            $('a=Mel_BRAFi_02_PRE').isDisplayed()[0],
+            $('a=Mel_BRAFi_02_PRE').isDisplayed(),
             true,
             'modal is visible'
         );

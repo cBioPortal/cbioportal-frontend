@@ -496,11 +496,12 @@ describe('invalid query from url', function() {
 
         // check alert message
         $('[data-test="invalidQueryAlert"]').waitForExist({ timeout: 60000 });
-        var text = $('[data-test="invalidQueryAlert"]').getText();
+        var text = $('[data-test="invalidQueryAlert"]')
+            .getText()
+            .trim();
         assert.equal(
             text,
-            'Your query has invalid or out-dated gene symbols. Please correct below.',
-            'should show invalid query alert when url contains invalid gene'
+            'Your query has invalid or out-dated gene symbols. Please correct below.'
         );
     });
 

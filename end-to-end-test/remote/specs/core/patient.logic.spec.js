@@ -28,8 +28,8 @@ describe('patient page', function() {
         $('.//*[text()[contains(.,"Show all")]]').waitForExist();
 
         assert.equal(
-            browser
-                .getText('.//*[text()[contains(.,"Show all")]]')
+            $('.//*[text()[contains(.,"Show all")]]')
+                .getText()
                 .toLowerCase(),
             'show all 4 samples'.toLowerCase()
         );

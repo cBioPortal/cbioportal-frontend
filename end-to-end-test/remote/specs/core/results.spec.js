@@ -36,13 +36,13 @@ describe('Results Page', function() {
                     "[data-test='cancerTypeSummaryWrapper'] .nav li a"
                 );
                 assert.equal(
-                    tabs.value.length,
+                    tabs.length,
                     4,
                     'three gene tabs plus "all genes" equals four total tabs'
                 );
-                assert.equal(tabs.value[0].getText(), 'All Queried Genes');
+                assert.equal(tabs[0].getText(), 'All Queried Genes');
                 assert.deepEqual(
-                    tabs.value.map(tab => tab.getText()),
+                    tabs.map(tab => tab.getText()),
                     ['All Queried Genes', 'BRAF', 'KRAS', 'NRAS'],
                     'we have all genes and genes in order of oql'
                 );
@@ -120,10 +120,7 @@ describe('Results Page', function() {
             });
 
             it('handles change to absolute value yaxis', function() {
-                browser.selectByIndex(
-                    '[data-test="cancerSummaryYAxisSelect"]',
-                    1
-                );
+                $('[data-test="cancerSummaryYAxisSelect"]').selectByIndex(1);
                 var res = browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
@@ -133,10 +130,7 @@ describe('Results Page', function() {
             });
 
             it('handles change to sort of xaxis', function() {
-                browser.selectByIndex(
-                    '[data-test="cancerSummaryXAxisSelect"]',
-                    1
-                );
+                $('[data-test="cancerSummaryXAxisSelect"]').selectByIndex(1);
                 var res = browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
@@ -192,9 +186,8 @@ describe('Results Page', function() {
                         'LOADING',
                     10000
                 );
-                const text = browser
-                    .elements('[data-test="pdbChainInfoText"]')
-                    .value[0].getText()
+                const text = $('[data-test="pdbChainInfoText"]')
+                    .getText()
                     .trim();
                 assert.ok(
                     text.startsWith(
@@ -223,29 +216,21 @@ describe('Results Page', function() {
                 $('.annotation-track-selector').click();
 
                 // open Hotspots track
-                browser
-                    .elements('.//*[text()[contains(.,"Cancer Hotspots")]]')
-                    .value[0].click();
+                $('.//*[text()[contains(.,"Cancer Hotspots")]]').click();
                 $('[class=cancer-hotspot-0]').waitForExist({ timeout: 10000 });
 
                 // open OncoKB track
-                browser
-                    .elements('.//*[text()[contains(.,"OncoKB")]]')
-                    .value[0].click();
+                $('.//*[text()[contains(.,"OncoKB")]]').click();
                 $('[class=onco-kb-0]').waitForExist({ timeout: 10000 });
 
                 // open PTM track
-                browser
-                    .elements(
-                        './/*[text()[contains(.,"Post Translational Modifications")]]'
-                    )
-                    .value[0].click();
+                $(
+                    './/*[text()[contains(.,"Post Translational Modifications")]]'
+                ).click();
                 $('[class=ptm-0-0]').waitForExist({ timeout: 10000 });
 
                 // open 3D visualizer via tracks menu
-                browser
-                    .elements('.//*[text()[contains(.,"3D Structure")]]')
-                    .value[0].click();
+                $('.//*[text()[contains(.,"3D Structure")]]').click();
                 $('[class=chain-0]').waitForExist({ timeout: 10000 });
             });
 

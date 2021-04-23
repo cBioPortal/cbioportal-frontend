@@ -121,6 +121,8 @@ describe('Mutation Table', function() {
             $('[data-id=gnomAD]').waitForDisplayed({ timeout: 60000 });
             // click "GNOMAD"
             $('//*[text()="gnomAD"]').click();
+            // close columns menu
+            $('button*=Columns').click();
             // find frequency
             const frequency =
                 '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
@@ -201,8 +203,6 @@ describe('Mutation Table', function() {
         it('should show the rs ids in dbsnp after adding the dbSNP column', () => {
             // click on column button
             $('button*=Columns').click();
-            // scroll down to activated "dbSNP" selection
-            browser.scroll(1000, 1000);
             // click "dbSNP"
             $('//*[text()="dbSNP"]').click();
             let res;

@@ -1,4 +1,4 @@
-Hugo_Symbol Chromosome Start_Position End_Position Reference_Allele Variant_Allele Mutation_Type Protien_Change
+module.exports = `Hugo_Symbol Chromosome Start_Position End_Position Reference_Allele Variant_Allele Mutation_Type Protien_Change
 HLA-A 6 29911072 29911072 G A Missense_Mutation G124D
 HLA-A 6 29912018 29912018 G A Missense_Mutation D247N
 HLA-A 6 29910348 29910348 CCGAA C frameshift_variant&feature_truncation R7fs
@@ -14,4 +14,4 @@ HLA-A 6 29911112 29911112 C G Nonsense_Mutation Y137X
 HLA-A 6 29911201 29911201 C T Missense_Mutation T167I
 HLA-A 6 29911944 29911944 A G Missense_Mutation E222G
 HLA-A 6 29910602 29910602 G T Missense_Mutation A48S
-HLA-A 6 29910602 29910602 G T Missense_Mutation A48S
+HLA-A 6 29910602 29910602 G T Missense_Mutation A48S`;

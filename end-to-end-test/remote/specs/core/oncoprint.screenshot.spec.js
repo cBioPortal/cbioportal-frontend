@@ -557,8 +557,6 @@ describe('sorting', function() {
         $(`${profiledElements.dropdown_selector} li:nth-child(3)`).click(); // Click Remove Track
         browser.pause(100); // give time to take effect
 
-        browser.scroll(0, 1000); //scroll down
-
         // Sort heatmap tracks
         var TP53HeatmapElements = getNthTrackOptionsElements(8);
         $(TP53HeatmapElements.button_selector).click(); // open track menu

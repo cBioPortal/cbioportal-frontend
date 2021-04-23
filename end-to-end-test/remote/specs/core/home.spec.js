@@ -106,9 +106,8 @@ describe('homepage', function() {
         );
 
         var submitButtonSel = 'button[data-test="queryButton"]';
-        assert.equal(
-            $(submitButtonSel).getAttribute('disabled'),
-            'true',
+        assert.ok(
+            !$(submitButtonSel).isEnabled(),
             'submit should be disabled w/ EXP in oql'
         );
 
@@ -121,9 +120,8 @@ describe('homepage', function() {
             $(errorMessageSel).getText(),
             'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
         );
-        assert.equal(
-            $(submitButtonSel).getAttribute('disabled'),
-            'true',
+        assert.ok(
+            !$(submitButtonSel).isEnabled(),
             'submit should be disabled w/ PROT in oql'
         );
     });
@@ -345,9 +343,9 @@ describe('case set selection in front page query form', function() {
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'tcga -provisional');
         browser.pause(500);
-        'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'.waitForExist(
-            { timeout: 10000 }
-        );
+        $(
+            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+        ).waitForExist({ timeout: 10000 });
         $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         ).click();
@@ -576,7 +574,7 @@ describe('genetic profile selection in front page query form', () => {
         // wait for profiles selector to load
         $(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
-        ).waitForExist({ timeout: 3000 });
+        ).waitForExist({ timeout: 6000 });
         // mutations, CNA should be selected
         assert(
             $(
@@ -663,7 +661,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         waitForOncoprint(20000);
 
         const query = browser.execute(function() {
-            return urlWrapper.query;
+            return { ...urlWrapper.query };
         });
         // mutation, cna, mrna profiles are there
         assert.equal(
@@ -718,7 +716,7 @@ describe('results page quick oql edit', () => {
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
         let query = browser.execute(function() {
-            return urlWrapper.query;
+            return { ...urlWrapper.query };
         });
         // mutation and cna profile are there
         assert.equal(
@@ -756,7 +754,7 @@ describe('results page quick oql edit', () => {
 
         // mutation, cna, mrna profiles are there
         query = browser.execute(function() {
-            return urlWrapper.query;
+            return { ...urlWrapper.query };
         });
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,

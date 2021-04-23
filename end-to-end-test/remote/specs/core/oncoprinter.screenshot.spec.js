@@ -81,8 +81,8 @@ describe('oncoprinter screenshot tests', function() {
         $('input[data-test="annotateOncoKb"]').click();
         browser.waitUntil(() => {
             return (
-                browser
-                    .getText('.oncoprint-legend-div')
+                $('.oncoprint-legend-div')
+                    .getText()
                     .indexOf('Inframe Mutation (putative driver)') > -1
             );
         });

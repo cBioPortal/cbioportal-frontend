@@ -34,18 +34,26 @@ function waitForPatientView(timeout) {
 
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
-    browser.waitUntil(() => {
-        return (
-            !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
-            $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-            $('.oncoprintContainer').getCSSProperty('opacity').value === 1 && // oncoprint has faded in
-            $('.oncoprint__controls').isExisting()
-        ); // oncoprint controls are showing
-    }, timeout);
+    browser.waitUntil(
+        () => {
+            return (
+                !$('.oncoprintLoadingIndicator').isExisting() && // wait for loading indicator to hide, and
+                $('#oncoprintDiv svg rect').isExisting() && // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+                $('.oncoprintContainer').getCSSProperty('opacity').value ===
+                    1 && // oncoprint has faded in
+                $('.oncoprint__controls').isExisting()
+            ); // oncoprint controls are showing
+        },
+        { timeout }
+    );
 }
 
 function getTextInOncoprintLegend() {
-    return $('#oncoprintDiv .oncoprint-legend-div svg').getText();
+    return $$('#oncoprintDiv .oncoprint-legend-div svg text')
+        .map(t => {
+            return t.getHTML(false);
+        })
+        .join(' ');
 }
 
 function setResultsPageSettingsMenuOpen(open) {
@@ -54,16 +62,20 @@ function setResultsPageSettingsMenuOpen(open) {
     $(button).waitForDisplayed();
     browser.waitUntil(
         () => {
-            if (open === $(dropdown).isDisplayed()) {
+            if (open === $(dropdown).isDisplayedInViewport()) {
                 return true;
             } else {
                 $(button).click();
                 return false;
             }
         },
-        10000,
-        `Couldn't ${open ? 'open' : 'close'} results page settings menu`,
-        2000
+        {
+            timeout: 10000,
+            timeoutMsg: `Couldn't ${
+                open ? 'open' : 'close'
+            } results page settings menu`,
+            interval: 2000,
+        }
     );
 }
 
@@ -75,16 +87,20 @@ function setOncoprintMutationsMenuOpen(open) {
     $(mutationColorMenuButton).waitForDisplayed();
     browser.waitUntil(
         () => {
-            if (open === $(mutationColorMenuDropdown).isDisplayed()) {
+            if (open === $(mutationColorMenuDropdown).isDisplayedInViewport()) {
                 return true;
             } else {
                 $(mutationColorMenuButton).click();
                 return false;
             }
         },
-        10000,
-        `Couldn't ${open ? 'open' : 'close'} Mutations menu in Oncoprint`,
-        2000
+        {
+            timeout: 10000,
+            timeoutMsg: `Couldn't ${
+                open ? 'open' : 'close'
+            } Mutations menu in Oncoprint`,
+            interval: 2000,
+        }
     );
 }
 
@@ -98,7 +114,7 @@ function setDropdownOpen(
         () => {
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
             const isOpen = $(dropdown_selector).isExisting()
-                ? $(dropdown_selector).isDisplayed()
+                ? $(dropdown_selector).isDisplayedInViewport()
                 : false;
             if (open === isOpen) {
                 return true;
@@ -107,9 +123,11 @@ function setDropdownOpen(
                 return false;
             }
         },
-        10000,
-        failure_message,
-        2000
+        {
+            timeout: 10000,
+            timeoutMsg: failure_message,
+            interval: 2000,
+        }
     );
 }
 
@@ -147,23 +165,26 @@ function showGsva() {
 }
 
 function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
-    browser.waitUntil(() => {
-        var ret =
-            $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
-            expectedNumber;
-        if (text && ret) {
-            ret = $(
-                '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-            ).isExisting();
-            if (ret) {
-                ret =
-                    $(
-                        '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
-                    ).getText() === text;
+    browser.waitUntil(
+        () => {
+            var ret =
+                $$('[data-test="cancerTypeListContainer"] > ul > ul').length ===
+                expectedNumber;
+            if (text && ret) {
+                ret = $(
+                    '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
+                ).isExisting();
+                if (ret) {
+                    ret =
+                        $(
+                            '[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span'
+                        ).getText() === text;
+                }
             }
-        }
-        return ret;
-    }, 60000);
+            return ret;
+        },
+        { timeout: 60000 }
+    );
 }
 
 function getNthOncoprintTrackOptionsElements(n) {
@@ -188,13 +209,16 @@ const useExternalFrontend = !process.env
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
 function waitForNetworkQuiet(timeout) {
-    browser.waitUntil(() => {
-        return (
-            browser.execute(function() {
-                return window.ajaxQuiet === true;
-            }) == true
-        );
-    }, timeout);
+    browser.waitUntil(
+        () => {
+            return (
+                browser.execute(function() {
+                    return window.ajaxQuiet === true;
+                }) == true
+            );
+        },
+        { timeout }
+    );
 }
 
 function getPortalUrlFromEnv() {
@@ -204,7 +228,7 @@ function getPortalUrlFromEnv() {
 function toStudyViewSummaryTab() {
     var summaryTab = '#studyViewTabs a.tabAnchor_summary';
     var summaryContent = "[data-test='summary-tab-content']";
-    if (!$(summaryContent).isDisplayed()) {
+    if (!$(summaryContent).isDisplayedInViewport()) {
         $(summaryTab).waitForDisplayed({ timeout: 10000 });
         $(summaryTab).click();
         $(summaryContent).waitForDisplayed({ timeout: 10000 });
@@ -214,7 +238,7 @@ function toStudyViewSummaryTab() {
 function toStudyViewClinicalDataTab() {
     var clinicalDataTab = '#studyViewTabs a.tabAnchor_clinicalData';
     var clinicalDataContent = "[data-test='clinical-data-tab-content']";
-    if (!$(clinicalDataContent).isDisplayed()) {
+    if (!$(clinicalDataContent).isDisplayedInViewport()) {
         $(clinicalDataTab).waitForDisplayed({ timeout: 10000 });
         $(clinicalDataTab).click();
         $(clinicalDataContent).waitForDisplayed({ timeout: 10000 });
@@ -223,7 +247,7 @@ function toStudyViewClinicalDataTab() {
 
 function removeAllStudyViewFilters() {
     const clearAllFilter = "[data-test='clear-all-filters']";
-    if ($(clearAllFilter).isDisplayed()) {
+    if ($(clearAllFilter).isDisplayedInViewport()) {
         $(clearAllFilter).click();
     }
 }
@@ -255,7 +279,11 @@ function getNumberOfStudyViewCharts() {
 }
 
 function setInputText(selector, text) {
-    $(selector).setValue('\uE003'.repeat($(selector).getValue().length) + text);
+    // backspace to delete current contents - webdriver is supposed to clear it but it doesnt always work
+    $(selector).click();
+    browser.keys('\uE003'.repeat($(selector).getValue().length));
+
+    $(selector).setValue(text);
 }
 
 function getReactSelectOptions(parent) {
@@ -290,7 +318,8 @@ function getSelectCheckedOptions(parent) {
 
 function pasteToElement(elementSelector, text) {
     clipboardy.writeSync(text);
-    $(elementSelector).setValue(['Shift', 'Insert']);
+    $(elementSelector).click();
+    browser.keys(['Shift', 'Insert']);
 }
 
 function checkOncoprintElement(selector) {
@@ -368,7 +397,7 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
         ).appendTo('head');
     }, selectorToHide);
 
-    var res = browser.checkElement(selector, options);
+    var res = browser.checkElement(selector, '', options);
 
     browser.execute(selectorToHide => {
         $('#tempHiddenStyles').remove();
@@ -440,11 +469,10 @@ function postDataToUrl(url, data, authenticated = true) {
 }
 
 function keycloakLogin(timeout) {
-    browser.waitUntil(
-        () => browser.getUrl().includes('/auth/realms/cbio'),
+    browser.waitUntil(() => browser.getUrl().includes('/auth/realms/cbio'), {
         timeout,
-        'No redirect to Keycloak could be detected.'
-    );
+        timeoutMsg: 'No redirect to Keycloak could be detected.',
+    });
     $('body').waitForDisplayed(timeout);
 
     $('#username').setValue('testuser');

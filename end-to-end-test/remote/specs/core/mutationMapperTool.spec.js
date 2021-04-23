@@ -8,6 +8,8 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
+var exampleMaf = require('./data/hla_a_test_mutation_mapper_tool');
+
 function waitForGenomeNexusAnnotation() {
     browser.pause(5000); // wait for annotation
 }
@@ -265,9 +267,8 @@ describe('Mutation Mapper Tool', function() {
         // https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cbioportal/UQP41OIT5HI/1AaX24AcAwAJ
         it('should not show the canonical transcript when there are no matching annotations', () => {
             var input = $('#standaloneMutationTextInput');
-            const hla = require('./data/hla_a_test_mutation_mapper_tool.txt');
 
-            input.setValue(hla);
+            input.setValue(exampleMaf);
             $('[data-test=MutationMapperToolVisualizeButton]').click();
 
             $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });

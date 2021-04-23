@@ -19,6 +19,7 @@ const getTextFromElement = require('../../../shared/specUtils')
     .getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
+const { setDropdownOpen } = require('../../../shared/specUtils');
 
 var {
     checkElementWithMouseDisabled,
@@ -146,9 +147,7 @@ describe('study laml_tcga tests', () => {
         it('chart in genomic tab can be updated', () => {
             toStudyViewSummaryTab();
             const numOfChartsBeforeAdding = getNumberOfStudyViewCharts();
-            if (!$(ADD_CHART_GENOMIC_TAB).isDisplayed()) {
-                $(ADD_CHART_BUTTON).click();
-            }
+            setDropdownOpen(true, ADD_CHART_BUTTON, ADD_CHART_GENOMIC_TAB);
             $(ADD_CHART_GENOMIC_TAB).click();
 
             const chosenCheckbox =
@@ -353,7 +352,7 @@ describe('cancer gene filter', () => {
             true
         );
         assert.equal(
-            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCssProperty(
+            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCSSProperty(
                 'color'
             ).parsed.hex,
             '#bebebe'
@@ -368,7 +367,7 @@ describe('cancer gene filter', () => {
         // enable the filter and check
         $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).click();
         assert.equal(
-            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCssProperty(
+            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCSSProperty(
                 'color'
             ).parsed.hex,
             '#000000'
@@ -387,7 +386,14 @@ describe('crc_msk_2017 study tests', () => {
         $(ADD_CHART_BUTTON).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $(ADD_CHART_BUTTON).click();
+        $(ADD_CHART_BUTTON).waitForEnabled({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        setDropdownOpen(
+            true,
+            ADD_CHART_BUTTON,
+            "[data-test='fixed-header-table-search-input']"
+        );
 
         // Wait after the frequency is calculated.
         waitForNetworkQuiet();
@@ -437,10 +443,9 @@ describe('study view lgg_tcga study tests', () => {
         const barChart = "[data-test='chart-container-DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', () => {
             $(barChart).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
+            $(barChart).scrollIntoView();
             $(barChart).moveTo();
-            browser.waitUntil(() => {
-                return $(barChart + ' .controls').isExisting();
-            }, 10000);
+            $(barChart + ' .controls').waitForExist({ timeout: 10000 });
 
             // move to hamburger icon
             $("[data-test='chart-header-hamburger-icon']").moveTo();
@@ -660,19 +665,21 @@ describe('submit genes to results view query', () => {
         });
         $('button[data-test="geneSetSubmit"]').click();
 
+        browser.waitUntil(() => browser.getWindowHandles().length > 1); // wait until new tab opens
+
         // switch tabs to results view
         const resultsViewTabId = browser
             .getWindowHandles()
             .find(x => x !== studyViewTabId);
-        browser.switchTab(resultsViewTabId);
+        browser.switchToWindow(resultsViewTabId);
 
         // wait for query to load
         waitForOncoprint(20000);
 
         // only mrna profile is there
         const query = browser.execute(function() {
-            return urlWrapper.query;
-        }).value;
+            return { ...urlWrapper.query };
+        });
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
             undefined
