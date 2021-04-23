@@ -123,7 +123,7 @@ describe('study laml_tcga tests', () => {
         $(ADD_CHART_CUSTOM_GROUPS_TEXTAREA).setValue(
             'laml_tcga:TCGA-AB-2802-03\nlaml_tcga:TCGA-AB-2803-03\n'
         );
-        browser.waitForEnabled(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
+        $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).waitForEnabled();
         $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).click();
 
         waitForStudyViewSelectedInfo();
@@ -155,7 +155,7 @@ describe('study laml_tcga tests', () => {
                 '.addChartTabs .addGenomicChartTab .add-chart-option:nth-child(1) input';
             $(chosenCheckbox).waitForExist({ timeout: 10000 });
 
-            const isSelected = browser.isSelected(chosenCheckbox);
+            const isSelected = $(chosenCheckbox).isSelected();
 
             $(chosenCheckbox).click();
             assert(
@@ -171,9 +171,7 @@ describe('study laml_tcga tests', () => {
             }
             $(ADD_CHART_CLINICAL_TAB).click();
 
-            const chosenCheckbox = browser.elements(
-                '.addChartTabs .add-chart-option input'
-            ).value[0];
+            const chosenCheckbox = $('.addChartTabs .add-chart-option input');
             const isSelected = chosenCheckbox.isSelected();
 
             chosenCheckbox.click();
@@ -197,7 +195,7 @@ describe('study laml_tcga tests', () => {
                 );
             });
             it('add chart button should be disabled when content is invalid', () => {
-                browser.setValue(ADD_CHART_CUSTOM_GROUPS_TEXTAREA, 'test');
+                $(ADD_CHART_CUSTOM_GROUPS_TEXTAREA).setValue('test');
                 // pause to wait for the content validation
                 browser.pause();
                 assert(
@@ -216,15 +214,13 @@ describe('study laml_tcga tests', () => {
             // heroku instance of it not stable (would not be active/running all the time)
             // also data-test would be dynamic and depends on chart id (session id)
             it.skip('a new chart should be added and filtered', () => {
-                browser.waitForEnabled(
-                    ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON
-                );
+                $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).waitForEnabled();
                 const beforeClick = getNumberOfStudyViewCharts();
                 $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).click();
 
                 $(
                     "[data-test='chart-container-CUSTOM_FILTERS_3']"
-                ).waitForVisible();
+                ).waitForDisplayed();
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
@@ -277,43 +273,43 @@ describe('check the filters are working properly', () => {
 
     it('removing filters are working properly', function() {
         // Remove pie chart filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '1');
         assert(getTextFromElement(SELECTED_SAMPLES) === '1');
 
         // Remove bar chart filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '1');
         assert(getTextFromElement(SELECTED_SAMPLES) === '1');
 
         // Remove gene specific chart filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '5');
         assert(getTextFromElement(SELECTED_SAMPLES) === '5');
 
         // Remove mutated genes filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '13');
         assert(getTextFromElement(SELECTED_SAMPLES) === '13');
 
         // Remove cna genes filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '188');
         assert(getTextFromElement(SELECTED_SAMPLES) === '188');
 
         // Remove genomic profiles sample count filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '200');
         assert(getTextFromElement(SELECTED_SAMPLES) === '200');
@@ -335,7 +331,7 @@ describe('check the fusion filter is working properly', () => {
 
     it('fusion filter removing filters are working properly', function() {
         // Remove cna genes filter
-        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '103');
         assert(getTextFromElement(SELECTED_SAMPLES) === '107');
@@ -357,8 +353,7 @@ describe('cancer gene filter', () => {
             true
         );
         assert.equal(
-            browser.getCssProperty(
-                `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCssProperty(
                 'color'
             ).parsed.hex,
             '#bebebe'
@@ -373,8 +368,7 @@ describe('cancer gene filter', () => {
         // enable the filter and check
         $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).click();
         assert.equal(
-            browser.getCssProperty(
-                `${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`,
+            $(`${CNA_GENES_TABLE} ${CANCER_GENE_FILTER_ICON}`).getCssProperty(
                 'color'
             ).parsed.hex,
             '#000000'
@@ -457,9 +451,9 @@ describe('study view lgg_tcga study tests', () => {
             ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
 
             assert(
-                browser.isSelected(
+                $(
                     barChart + ' .chartHeader .logScaleCheckbox input'
-                )
+                ).isSelected()
             );
         });
     });
@@ -511,7 +505,7 @@ describe('study view lgg_tcga study tests', () => {
                 $(option).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                if (browser.element(option).isSelected()) {
+                if ($(option).isSelected()) {
                     $(option).click();
                 }
 
@@ -655,18 +649,20 @@ describe('submit genes to results view query', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/study/summary?id=acc_tcga_pan_can_atlas_2018`
         );
-        const studyViewTabId = browser.getTabIds()[0];
+        const studyViewTabId = browser.getWindowHandles()[0];
 
         // enter oql
         $('textarea[data-test="geneSet"]').waitForExist({ timeout: 10000 });
         setInputText('textarea[data-test="geneSet"]', 'PTEN: EXP>1');
 
-        browser.waitForEnabled('button[data-test="geneSetSubmit"]', 10000);
+        $('button[data-test="geneSetSubmit"]').waitForEnabled({
+            timeout: 10000,
+        });
         $('button[data-test="geneSetSubmit"]').click();
 
         // switch tabs to results view
         const resultsViewTabId = browser
-            .getTabIds()
+            .getWindowHandles()
             .find(x => x !== studyViewTabId);
         browser.switchTab(resultsViewTabId);
 

@@ -209,16 +209,20 @@ describe('group comparison page screenshot tests', function() {
             $('.tabAnchor_mrna').click();
             $(
                 'div[data-test="GroupComparisonMRNAEnrichments"]'
-            ).waitForDisplayed({ timeout: 10000 });
+            ).waitForDisplayed({ timeout: 20000 });
             $('b=BTN3A3').waitForDisplayed({ timeout: 10000 });
             $('b=BTN3A3').click();
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
                 timeout: 20000,
             });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -233,9 +237,13 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 20000,
             });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -250,9 +258,13 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 20000,
             });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -270,9 +282,13 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForDisplayed({ timeout: 10000 });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -282,9 +298,13 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForDisplayed({ timeout: 10000 });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -296,9 +316,13 @@ describe('group comparison page screenshot tests', function() {
                 'div[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForDisplayed({ timeout: 30000 });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -310,9 +334,13 @@ describe('group comparison page screenshot tests', function() {
             $('b=RBMX2').waitForDisplayed({ timeout: 10000 });
             $('b=RBMX2').click();
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -324,9 +352,13 @@ describe('group comparison page screenshot tests', function() {
             $('b=ETS1').waitForDisplayed({ timeout: 10000 });
             $('b=ETS1').click();
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -338,9 +370,13 @@ describe('group comparison page screenshot tests', function() {
             $('b=BET1').waitForDisplayed({ timeout: 10000 });
             $('b=BET1').click();
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -361,9 +397,13 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 20000,
             });
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -378,9 +418,13 @@ describe('group comparison page screenshot tests', function() {
             $('b=Lawsonia').waitForDisplayed({ timeout: 10000 });
             $('b=Lawsonia').click();
             $('body').moveTo(0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
     });
@@ -477,7 +521,9 @@ describe('group comparison page screenshot tests', function() {
             });
 
             it('group comparison page overlap tab venn diagram view with overlap and session selected view', function() {
-                browser.leftClick('text[data-test="sample0,1,2VennLabel"]');
+                $('text[data-test="sample0,1,2VennLabel"]').click({
+                    button: 'left',
+                });
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',

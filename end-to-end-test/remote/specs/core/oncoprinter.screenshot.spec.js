@@ -113,7 +113,7 @@ describe('oncoprinter screenshot tests', function() {
         $('.oncoprinterModifyInput').waitForExist({ timeout: TIMEOUT });
         $('.oncoprinterModifyInput').click();
         $('.oncoprinterGenesInput').waitForDisplayed({ timeout: TIMEOUT });
-        browser.setValue('.oncoprinterGenesInput', 'BRCA1 PTEN TP53 BRCA2');
+        $('.oncoprinterGenesInput').setValue('BRCA1 PTEN TP53 BRCA2');
         $('.oncoprinterSubmit').click();
         waitForOncoprint(TIMEOUT);
 
@@ -133,7 +133,7 @@ describe('oncoprinter screenshot tests', function() {
         $('.oncoprinterModifyInput').waitForExist({ timeout: TIMEOUT });
         $('.oncoprinterModifyInput').click();
         $('.oncoprinterGenesInput').waitForDisplayed({ timeout: TIMEOUT });
-        browser.setValue('.oncoprinterGenesInput', 'BRCA1 PTEN');
+        $('.oncoprinterGenesInput').setValue('BRCA1 PTEN');
         $('.oncoprinterSubmit').click();
         waitForOncoprint(TIMEOUT);
 
@@ -205,7 +205,7 @@ describe('oncoprinter screenshot tests', function() {
         $('.oncoprinterGeneticExampleData').click();
         $('.oncoprinterClinicalExampleData').click();
         $('.oncoprinterHeatmapExampleData').click();
-        browser.setValue('.oncoprinterGenesInput', 'BRCA1 PTEN TP53 BRCA2');
+        $('.oncoprinterGenesInput').setValue('BRCA1 PTEN TP53 BRCA2');
         $('.oncoprinterSubmit').click();
         waitForOncoprint(TIMEOUT);
         $('.oncoprinterModifyInput').waitForExist({ timeout: TIMEOUT });
@@ -239,7 +239,7 @@ describe('oncoprinter screenshot tests', function() {
         $('.oncoprinterModifyInput').waitForExist({ timeout: TIMEOUT });
         $('.oncoprinterModifyInput').click();
         $('.oncoprinterGenesInput').waitForDisplayed({ timeout: TIMEOUT });
-        browser.setValue('.oncoprinterGenesInput', 'BRCA2 TP53 PTEN');
+        $('.oncoprinterGenesInput').setValue('BRCA2 TP53 PTEN');
         $('.oncoprinterSubmit').click();
         waitForOncoprint(TIMEOUT);
 

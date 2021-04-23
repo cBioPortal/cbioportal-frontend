@@ -58,7 +58,7 @@ describe('single study query', function() {
             // query BRCA1 and BRCA2
             $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
 
-            browser.waitForEnabled('[data-test="queryButton"]', 10000);
+            $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
             $('[data-test="queryButton"]').click();
 
             // click mutations tab
@@ -97,9 +97,7 @@ describe('single study query', function() {
                 `${CBIOPORTAL_URL}/results/comparison?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`
             );
 
-            browser.waitForExist(
-                '.comparisonTabSubTabs .tabAnchor_alterations'
-            );
+            $('.comparisonTabSubTabs .tabAnchor_alterations').waitForExist();
         });
     });
 });
@@ -300,27 +298,27 @@ describe('genetic profile selection in modify query form', function() {
         ).waitForExist({ timeout: 3000 });
         // mutations, CNA, and protein should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ),
+            ).isSelected(),
             'protein level should be selected'
         );
 
@@ -341,15 +339,15 @@ describe('genetic profile selection in modify query form', function() {
             '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
         ).waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ),
+            ).isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ),
+            ).isSelected(),
             "'Copy number alterations' should be selected"
         );
 
@@ -362,27 +360,27 @@ describe('genetic profile selection in modify query form', function() {
         ).waitForExist({ timeout: 3000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ),
+            ).isSelected(),
             'protein level not selected'
         );
     });
@@ -397,27 +395,27 @@ describe('genetic profile selection in modify query form', function() {
         ).waitForExist({ timeout: 3000 });
         // mutations, CNA, and protein should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ),
+            ).isSelected(),
             'protein level should be selected'
         );
 
@@ -438,15 +436,15 @@ describe('genetic profile selection in modify query form', function() {
             '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
         ).waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ),
+            ).isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ),
+            ).isSelected(),
             "'Copy number alterations' should be selected"
         );
 
@@ -462,27 +460,27 @@ describe('genetic profile selection in modify query form', function() {
         ).waitForExist({ timeout: 3000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'
-            ),
+            ).isSelected(),
             'protein level not selected'
         );
     });
@@ -510,7 +508,7 @@ describe('invalid query from url', function() {
         // correct to valid gene symbol RB1
         $('[data-test="geneSet"]').setValue('RB1');
 
-        browser.waitForEnabled('[data-test="queryButton"]', 10000);
+        $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
         $('[data-test="queryButton"]').click();
 
         $('#modifyQueryBtn').waitForExist({ timeout: 3000 });

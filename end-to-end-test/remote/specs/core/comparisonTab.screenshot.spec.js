@@ -302,7 +302,7 @@ describe('results view comparison tab screenshot tests', function() {
             );
             $(
                 'div[data-test="GroupComparisonProteinEnrichments"]'
-            ).waitForDisplayed({ timeout: 10000 });
+            ).waitForDisplayed({ timeout: 30000 });
             $('b=SCD').waitForDisplayed({ timeout: 10000 });
             $('b=SCD').click();
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({

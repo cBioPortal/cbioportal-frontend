@@ -21,15 +21,11 @@ describe('oncoprinter tests', function() {
             waitForOncoprint(TIMEOUT);
 
             setOncoprintMutationsMenuOpen(true);
-            assert(!browser.isSelected('input[data-test="annotateOncoKb"]'));
+            assert(!$('input[data-test="annotateOncoKb"]').isSelected());
             assert(
-                !browser.isSelected(
-                    'input[data-test="annotateCBioPortalCount"]'
-                )
+                !$('input[data-test="annotateCBioPortalCount"]').isSelected()
             );
-            assert(
-                browser.isSelected('input[data-test="annotateCustomBinary"]')
-            );
+            assert($('input[data-test="annotateCustomBinary"]').isSelected());
         }
 
         function doTestWithoutCustomDriver() {
@@ -42,7 +38,7 @@ describe('oncoprinter tests', function() {
             waitForOncoprint(TIMEOUT);
 
             setOncoprintMutationsMenuOpen(true);
-            assert(browser.isSelected('input[data-test="annotateOncoKb"]'));
+            assert($('input[data-test="annotateOncoKb"]').isSelected());
             assert(!$('input[data-test="annotateCustomBinary"]').isExisting());
         }
 

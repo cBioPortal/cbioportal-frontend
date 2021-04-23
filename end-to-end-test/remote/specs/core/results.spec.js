@@ -27,12 +27,12 @@ describe('Results Page', function() {
             });
 
             it('defaults to cancerTypeDetailed', () => {
-                var el = browser.elements('[data-value="cancerTypeDetailed"]');
+                var el = $('[data-value="cancerTypeDetailed"]');
                 assert.equal(el.isSelected(), true);
             });
 
             it('three gene tabs plus "all genes" equals four total tabs, in order of genes in oql', () => {
-                var tabs = browser.elements(
+                var tabs = $$(
                     "[data-test='cancerTypeSummaryWrapper'] .nav li a"
                 );
                 assert.equal(
@@ -59,7 +59,7 @@ describe('Results Page', function() {
             });
 
             it("defaults to grouping by studyId when there's more than one study", function() {
-                var el = browser.elements('[data-value="studyId"]');
+                var el = $('[data-value="studyId"]');
                 assert.equal(el.isSelected(), true);
             });
         });
@@ -74,7 +74,7 @@ describe('Results Page', function() {
             });
 
             it("defaults to cancerType grouping when there's more than one cancer type in query", function() {
-                var el = browser.elements('[data-value="cancerType"]');
+                var el = $('[data-value="cancerType"]');
                 assert.equal(el.isSelected(), true);
             });
         });
@@ -109,7 +109,7 @@ describe('Results Page', function() {
             });
 
             it('group by detailed type', function() {
-                var el = browser.element('[data-value="cancerTypeDetailed"]');
+                var el = $('[data-value="cancerTypeDetailed"]');
                 el.click();
                 var res = browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
@@ -146,7 +146,7 @@ describe('Results Page', function() {
             });
 
             it('handles change to alteration threshold', function() {
-                browser.setValue("[data-test='alterationThresholdInput']", 300);
+                $("[data-test='alterationThresholdInput']").setValue(300);
                 browser.keys('Enter');
                 var res = browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
@@ -154,7 +154,7 @@ describe('Results Page', function() {
                     { hide: ['.qtip'] }
                 );
                 // now cleanup
-                browser.setValue("[data-test='alterationThresholdInput']", 0);
+                $("[data-test='alterationThresholdInput']").setValue(0);
                 browser.keys('Enter');
             });
 
@@ -179,7 +179,9 @@ describe('Results Page', function() {
                 $('[data-test=view3DStructure]').waitForExist({
                     timeout: 10000,
                 });
-                browser.waitForEnabled('[data-test=view3DStructure]', 10000);
+                $('[data-test=view3DStructure]').waitForEnabled({
+                    timeout: 10000,
+                });
             });
 
             it('populates PDB info properly', () => {
@@ -209,7 +211,9 @@ describe('Results Page', function() {
                 $('[data-test=view3DStructure]').waitForExist({
                     timeout: 10000,
                 });
-                browser.waitForEnabled('[data-test=view3DStructure]', 10000);
+                $('[data-test=view3DStructure]').waitForEnabled({
+                    timeout: 10000,
+                });
                 $('[data-test=oncogenic-icon-image]').waitForDisplayed({
                     timeout: 10000,
                 });
@@ -348,7 +352,9 @@ describe('Results Page', function() {
         });
         it('should not be present in alteration enrichments tab with simple query', function() {
             $('.tabAnchor_comparison').click();
-            $('.comparisonTabSubTabs .tabAnchor_alterations').waitForVisible();
+            $(
+                '.comparisonTabSubTabs .tabAnchor_alterations'
+            ).waitForDisplayed();
             $('.comparisonTabSubTabs .tabAnchor_alterations').click();
             browser.pause(500);
             assert(
@@ -483,7 +489,9 @@ describe('Results Page', function() {
         });
         it('should be present in alteration enrichments tab with explicit query', function() {
             $('.tabAnchor_comparison').click();
-            $('.comparisonTabSubTabs .tabAnchor_alterations').waitForVisible();
+            $(
+                '.comparisonTabSubTabs .tabAnchor_alterations'
+            ).waitForDisplayed();
             $('.comparisonTabSubTabs .tabAnchor_alterations').click();
             $(
                 `${yesBannerSelector}.comparison-oql-status-banner`

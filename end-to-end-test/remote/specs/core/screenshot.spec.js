@@ -61,7 +61,7 @@ function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} mutation tab`, function() {
         $('a.tabAnchor_mutations').click();
         $('.borderedChart svg').waitForDisplayed({ timeout: 20000 });
-        var res = browser.checkElement('[data-test="mutationsTabDiv"]', {
+        var res = browser.checkElement('[data-test="mutationsTabDiv"]', '', {
             viewportChangePause: 4000,
         }); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
@@ -115,9 +115,13 @@ function runResultsTestSuite(prefix, options = {}) {
         $(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
         ).waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement(
+            'div[data-test="ComparisonTabDiv"]',
+            '',
+            {
+                hide: ['.qtip'],
+            }
+        );
         $(
             'div[data-test="GroupComparisonMutationEnrichments"]'
         ).waitForDisplayed();
@@ -154,7 +158,11 @@ function runResultsTestSuite(prefix, options = {}) {
             timeout: 4000,
         });
 
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {});
+        var res = browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            {}
+        );
 
         assertScreenShotMatch(res);
     });
@@ -168,7 +176,7 @@ function runResultsTestSuite(prefix, options = {}) {
                 browser.getValue('#text_area_gene_alteration_freq').length > 0
             );
         }, 20000);
-        var res = browser.checkElement('[data-test="downloadTabDiv"]', {
+        var res = browser.checkElement('[data-test="downloadTabDiv"]', '', {
             hide: ['.qtip'],
         });
         assertScreenShotMatch(res);

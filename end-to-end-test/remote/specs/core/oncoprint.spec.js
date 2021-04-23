@@ -46,7 +46,7 @@ describe.skip('merged tracks', () => {
         $(trackOptionsElts.dropdown_selector + ' li:nth-child(3)').click();
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-        var res = browser.checkElement('.oncoprintContainer', {
+        var res = browser.checkElement('.oncoprintContainer', '', {
             hide: ['.oncoprint__controls'],
         }); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
@@ -350,8 +350,8 @@ describe('oncoprint', function() {
             // query with BRCA1
             $('[data-test="geneSet"]').setValue('BRCA1');
 
-            browser.waitForEnabled('[data-test="queryButton"]', 30000);
-            browser.scroll(0);
+            $('[data-test="queryButton"]').waitForEnabled({ timeout: 30000 });
+            $('[data-test="queryButton"]').scrollIntoView();
             $('[data-test="queryButton"]').click();
 
             waitForOncoprint(ONCOPRINT_TIMEOUT);
@@ -496,7 +496,7 @@ describe('oncoprint', function() {
                 $('#sortDropdown').click();
                 $(
                     '[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]'
-                ).waitForVisible();
+                ).waitForDisplayed();
                 $(
                     '[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]'
                 ).click();
@@ -535,7 +535,7 @@ describe('oncoprint', function() {
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
             var inputSelector = '.autosuggest input[type="text"]';
             $(inputSelector).waitForExist({ timeout: 10000 });
-            browser.setValue(inputSelector, 'colorectal tcga nature');
+            $(inputSelector).setValue('colorectal tcga nature');
             waitForNumberOfStudyCheckboxes(1);
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist({ timeout: 10000 });
@@ -586,7 +586,7 @@ describe('oncoprint', function() {
             $('[data-test="geneSet"]').setValue(
                 'DKK2 KRAS BCL2L1 RASA1 HLA-B RRAGC'
             );
-            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            $('[data-test="queryButton"]').waitForEnabled({ timeout: 30000 });
             $('[data-test="queryButton"]').click();
 
             doCustomCaseOrderTest();
@@ -598,7 +598,9 @@ describe('oncoprint', function() {
             });
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             browser.pause(100); // let things trigger
-            browser.waitForEnabled('button[data-test="queryButton"]', 10000);
+            $('button[data-test="queryButton"]').waitForEnabled({
+                timeout: 10000,
+            });
             $('button[data-test="queryButton"]').click();
             browser.pause(100); // wait for query to submit
             // go to oncoprint tab

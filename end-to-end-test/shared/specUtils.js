@@ -45,7 +45,7 @@ function waitForOncoprint(timeout) {
 }
 
 function getTextInOncoprintLegend() {
-    return browser.getText('#oncoprintDiv .oncoprint-legend-div svg');
+    return $('#oncoprintDiv .oncoprint-legend-div svg').getText();
 }
 
 function setResultsPageSettingsMenuOpen(open) {

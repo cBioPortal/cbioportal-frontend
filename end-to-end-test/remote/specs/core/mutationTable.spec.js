@@ -36,7 +36,7 @@ describe('Mutation Table', function() {
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "exon" selection
-            browser.scroll(1000, 1000);
+            $('//*[text()="Exon"]').scrollIntoView();
             // click "exon"
             $('//*[text()="Exon"]').click();
             // check if three exact matches for 6 appear
@@ -112,11 +112,11 @@ describe('Mutation Table', function() {
                 'tr:nth-child(1) [data-test=oncogenic-icon-image]'
             ).waitForDisplayed({ timeout: 60000 });
             // show the gnomad column
-            browser.scroll(1000, 0);
+            $('button*=Columns').scrollIntoView();
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "GNOMAD" selection
-            browser.scroll(1000, 1000);
+            $('[data-id=gnomAD]').scrollIntoView();
             // wait for gnomad checkbox appear
             $('[data-id=gnomAD]').waitForDisplayed({ timeout: 60000 });
             // click "GNOMAD"
@@ -169,7 +169,7 @@ describe('Mutation Table', function() {
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "ClinVar" selection
-            browser.scroll(1000, 1000);
+            $('//*[text()="ClinVar"]').scrollIntoView();
             // click "clinvar"
             $('//*[text()="ClinVar"]').click();
             let res;

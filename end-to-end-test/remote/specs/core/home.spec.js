@@ -94,8 +94,10 @@ describe('homepage', function() {
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
         $(errorMessageSel).waitForExist();
-        browser.waitForText(
-            'span=Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
+        browser.waitUntil(
+            () =>
+                $(errorMessageSel).getText() ===
+                'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
         );
 
         assert.equal(
@@ -112,9 +114,9 @@ describe('homepage', function() {
 
         setInputText(oqlEntrySel, 'PTEN: PROT>1');
         $(errorMessageSel).waitForExist();
-        browser.waitForText(
+        $(
             'span=Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
-        );
+        ).waitForExist();
         assert.equal(
             $(errorMessageSel).getText(),
             'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
@@ -129,9 +131,7 @@ describe('homepage', function() {
     describe.skip('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            browser.waitForExist(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            );
+            $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
         });
 
         function getVisibleCheckboxes() {
@@ -268,7 +268,7 @@ describe('case set selection in front page query form', function() {
             () =>
                 $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation data (160)',
-            10000
+            30000
         );
 
         clickModifyStudySelectionButton();
@@ -345,6 +345,9 @@ describe('case set selection in front page query form', function() {
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'tcga -provisional');
         browser.pause(500);
+        'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'.waitForExist(
+            { timeout: 10000 }
+        );
         $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         ).click();
@@ -366,6 +369,9 @@ describe('case set selection in front page query form', function() {
         clickModifyStudySelectionButton();
 
         // Deselect all tcga -provisional studies
+        $(
+            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+        ).waitForExist({ timeout: 10000 });
         $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         ).click();
@@ -482,15 +488,15 @@ describe('genetic profile selection in front page query form', () => {
             '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
         ).waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ),
+            ).isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ),
+            ).isSelected(),
             "'Copy number alterations' should be selected"
         );
 
@@ -507,21 +513,21 @@ describe('genetic profile selection in front page query form', () => {
         ).waitForExist({ timeout: 10000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
 
@@ -545,15 +551,15 @@ describe('genetic profile selection in front page query form', () => {
             '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
         ).waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ),
+            ).isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
+            $(
                 '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ),
+            ).isSelected(),
             "'Copy number alterations' should be selected"
         );
 
@@ -573,21 +579,21 @@ describe('genetic profile selection in front page query form', () => {
         ).waitForExist({ timeout: 3000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
     });
@@ -607,13 +613,16 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         setInputText('textarea[data-test="geneSet"]', 'BRCA1: PROT>1');
 
         // error appears
-        browser.waitUntil(() => {
-            return (
-                $('[data-test="oqlErrorMessage"]').isExisting() &&
-                $('[data-test="oqlErrorMessage"]').getText() ===
-                    'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
-            );
-        }, 20000);
+        browser.waitUntil(
+            () => {
+                return (
+                    $('[data-test="oqlErrorMessage"]').isExisting() &&
+                    $('[data-test="oqlErrorMessage"]').getText() ===
+                        'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
+                );
+            },
+            { timeout: 20000 }
+        );
 
         // submit is disabled
         assert(!$('button[data-test="queryButton"]').isEnabled());
@@ -647,7 +656,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         $('textarea[data-test="geneSet"]').waitForExist({ timeout: 2000 });
         setInputText('textarea[data-test="geneSet"]', 'BRCA1: EXP>1');
 
-        browser.waitForEnabled('button[data-test="queryButton"]', 5000);
+        $('button[data-test="queryButton"]').waitForEnabled({ timeout: 5000 });
         $('button[data-test="queryButton"]').click();
 
         // wait for query to load
@@ -689,15 +698,20 @@ describe('results page quick oql edit', () => {
         setInputText('.quick_oql_edit [data-test="geneSet"]', 'PTEN: PROT>0');
 
         // error appears
-        browser.waitUntil(() => {
-            return (
-                $(
-                    '.quick_oql_edit [data-test="oqlErrorMessage"]'
-                ).isExisting() &&
-                $('.quick_oql_edit [data-test="oqlErrorMessage"]').getText() ===
-                    'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
-            );
-        }, 20000);
+        browser.waitUntil(
+            () => {
+                return (
+                    $(
+                        '.quick_oql_edit [data-test="oqlErrorMessage"]'
+                    ).isExisting() &&
+                    $(
+                        '.quick_oql_edit [data-test="oqlErrorMessage"]'
+                    ).getText() ===
+                        'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
+                );
+            },
+            { timeout: 20000 }
+        );
 
         // submit is disabled
         assert(!$('button[data-test="oqlQuickEditSubmitButton"]').isEnabled());

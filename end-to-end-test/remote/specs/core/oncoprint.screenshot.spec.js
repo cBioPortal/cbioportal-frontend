@@ -268,7 +268,7 @@ describe('sorting', function() {
         // query KRAS NRAS BRAF
         $('[data-test="geneSet"]').setValue('KRAS NRAS BRAF');
 
-        browser.waitForEnabled('[data-test="queryButton"]', 30000);
+        $('[data-test="queryButton"]').waitForEnabled({ timeout: 30000 });
 
         $('[data-test="queryButton"]').click();
 
@@ -319,7 +319,7 @@ describe('sorting', function() {
         // query KRAS NRAS BRAF
         $('[data-test="geneSet"]').setValue('TP53 MDM2 MDM4');
 
-        browser.waitForEnabled('[data-test="queryButton"]', 30000);
+        $('[data-test="queryButton"]').waitForEnabled({ timeout: 30000 });
 
         $('[data-test="queryButton"]').click();
 
@@ -531,7 +531,9 @@ describe('sorting', function() {
         $(TP53HeatmapElements.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         }); // wait for menu to appear
-        browser.scroll(0, 1000); // scroll down
+        $(
+            TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'
+        ).scrollIntoView();
         $(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)').click(); // Click sort Z-a
         browser.pause(100); // give time to sort
 
