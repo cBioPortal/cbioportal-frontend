@@ -3414,7 +3414,10 @@ export class StudyViewPageStore {
     readonly newlyAddedUnfilteredClinicalDataBinCount = remoteData<DataBin[]>({
         invoke: async () => {
             // return empty if there are no sample identifiers or study ids in the filter
-            if (this.hasSampleIdentifiersInFilter) {
+            if (
+                this.hasSampleIdentifiersInFilter &&
+                this.newlyAddedUnfilteredAttrsForNumerical.length > 0
+            ) {
                 const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
@@ -3447,7 +3450,10 @@ export class StudyViewPageStore {
     readonly unfilteredClinicalDataBinCount = remoteData<DataBin[]>({
         invoke: async () => {
             // return empty if there are no sample identifiers or study ids in the filter
-            if (this.hasSampleIdentifiersInFilter) {
+            if (
+                this.hasSampleIdentifiersInFilter &&
+                this.unfilteredAttrsForNumerical.length > 0
+            ) {
                 const clinicalDataBinCountData = await internalClient.fetchClinicalDataBinCountsUsingPOST(
                     {
                         dataBinMethod: 'STATIC',
@@ -3799,7 +3805,10 @@ export class StudyViewPageStore {
                     }
                     const attributeChanged =
                         isDefaultAttr &&
-                        !_.isEqual(toJS(attribute), initDataBinFilter);
+                        !_.isEqual(
+                            _.omit(toJS(attribute), ['showNA']),
+                            _.omit(initDataBinFilter, ['showNA'])
+                        );
                     if (
                         this.isInitialFilterState &&
                         isDefaultAttr &&
