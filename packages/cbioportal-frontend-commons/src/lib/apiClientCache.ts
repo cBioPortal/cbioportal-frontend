@@ -1,5 +1,6 @@
 import getBrowserWindow from './getBrowserWindow';
 import sizeof from 'object-sizeof';
+import fileDownload from 'react-file-download';
 
 function hash(str: string) {
     var hash = 0,
@@ -97,6 +98,7 @@ export function cachePostMethod(
     targetObj[methodName] = function(arg: any) {
         //console.log('posted data',arg);
         const hash = getHash(arg);
+
         // remove this from sizeQueue, if it exists, because we just used it so it should get bumped back in line,
         //  away from deletion
         const sizeQueueIndex = sizeQueue.findIndex(
@@ -128,6 +130,51 @@ export function cachePostMethod(
     };
 }
 
+export function s3CachePostMethod(
+    targetObj: any,
+    methodName: string,
+    apiCacheLimit?: number,
+    log?: (message: string) => void,
+    sentryLog?: (message: string) => void
+) {
+    const cachedMethods = {
+        fetchGenePanelDataInMultipleMolecularProfilesUsingPOST: (data: any) =>
+            true,
+        fetchStructuralVariantGenesUsingPOST: (data: any) => true,
+        fetchCNAGenesUsingPOST: (data: any) => true,
+        fetchMutatedGenesUsingPOST: (data: any) => true,
+        fetchClinicalDataBinCountsUsingPOST: (data: any) => true,
+    };
+
+    if (methodName in cachedMethods) {
+        const oldMethod = targetObj[methodName];
+
+        targetObj[methodName] = function(arg: any) {
+            const hash = getHash(arg);
+            const args = arguments; // keep them locally for closure
+            const fileName = `${methodName}-${hash}.json`;
+
+            return $.get(
+                `https://service-cache.s3.amazonaws.com/${fileName}`,
+                {}
+            )
+                .then(resp => {
+                    return resp;
+                })
+                .catch(() => {
+                    return oldMethod.apply(this, args).then((data: any) => {
+                        if (localStorage.harvestData) {
+                            (window as any)[`download${methodName}`] = () => {
+                                fileDownload(JSON.stringify(data), fileName);
+                            };
+                        }
+                        return data;
+                    });
+                });
+        };
+    }
+}
+
 export function cachePostMethodsOnClient(
     obj: any,
     excluded: string[] = [],
@@ -136,19 +183,29 @@ export function cachePostMethodsOnClient(
     log?: (message: string) => void,
     sentryLog?: (message: string) => void
 ) {
-    const postMethods = Object.getOwnPropertyNames(obj.prototype).filter(
-        methodName =>
-            postMethodNameRegex.test(methodName) &&
-            !excluded.includes(methodName)
-    );
+    const postMethods = Object.getOwnPropertyNames(
+        obj.prototype
+    ).filter(methodName => postMethodNameRegex.test(methodName));
 
-    postMethods.forEach(methodName =>
-        cachePostMethod(
-            obj.prototype,
-            methodName,
-            apiCacheLimit,
-            log,
-            sentryLog
-        )
-    );
+    postMethods.forEach(methodName => {
+        if (!excluded.includes(methodName)) {
+            cachePostMethod(
+                obj.prototype,
+                methodName,
+                apiCacheLimit,
+                log,
+                sentryLog
+            );
+        }
+
+        if (/genie-private|genie-public/.test(window.location.hostname)) {
+            s3CachePostMethod(
+                obj.prototype,
+                methodName,
+                apiCacheLimit,
+                log,
+                sentryLog
+            );
+        }
+    });
 }
