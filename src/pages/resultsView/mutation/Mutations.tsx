@@ -244,7 +244,7 @@ export default class Mutations extends React.Component<
                         }
                         onTranscriptChange={this.onTranscriptChange}
                         onClickSettingMenu={this.onClickSettingMenu}
-                        compactStype={true}
+                        compactStyle={true}
                     />
                 </div>
             );

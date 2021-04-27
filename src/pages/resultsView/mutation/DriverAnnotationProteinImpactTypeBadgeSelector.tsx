@@ -95,7 +95,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                             }}
                             className="btn btn-primary"
                             onClick={e => {
-                                e.stopPropagation();
+                                e.stopPropagation(); // Prevent click being applied to parent element
                                 this.props.onClickSettingMenu &&
                                     this.props.onClickSettingMenu();
                             }}
@@ -183,6 +183,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         allValuesSelected: boolean
     ) {
         let selected: string[] = [];
+        // If select "Driver" or "VUS", then also select corresponding mutation types
         _.forEach(selectedOption, option => {
             if (option === DriverVsVusType.DRIVER) {
                 selected = _.union(selected, PUTATIVE_DRIVER_TYPE);
@@ -191,11 +192,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                 selected = _.union(selected, UNKNOWN_SIGNIFICANCE_TYPE);
             }
         });
-        this.props.onSelect &&
-            this.props.onSelect(
-                _.difference(selected, selectedOption),
-                allValuesSelected
-            );
+        this.props.onSelect && this.props.onSelect(selected, allValuesSelected);
         this.selectedDriverVsVusValues = selectedOption;
     }
 
@@ -204,6 +201,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         selectedOption: string[],
         allValuesSelected: boolean
     ) {
+        // If all driver(vus) mutation types are selected, select "Driver"("VUS") button
         let updatedDriverVsVusValues = [];
         if (
             _.intersection(selectedOption, PUTATIVE_DRIVER_TYPE).length ===

@@ -17,7 +17,7 @@ export type GeneSummaryProps = {
     transcriptSummaryUrlTemplate?: string;
     showDropDown: boolean;
     showOnlyAnnotatedTranscriptsInDropdown: boolean;
-    compactStype?: boolean; // compactStyle = false: "RefSeq: NM_000546 Ensembl: ENST00000269305...", compactStyle = true: "NM_000546 | ENST00000269305..."
+    compactStyle?: boolean; // compactStyle = false: "RefSeq: NM_000546 Ensembl: ENST00000269305...", compactStyle = true: "NM_000546 | ENST00000269305..."
     transcriptsByTranscriptId: { [transcriptId: string]: EnsemblTranscript };
     activeTranscript?: string;
     canonicalTranscript: RemoteData<EnsemblTranscript | undefined>;
@@ -36,7 +36,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
     public static defaultProps: Partial<GeneSummaryProps> = {
         transcriptSummaryUrlTemplate:
             'http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=<%= transcriptId %>',
-        compactStype: false,
+        compactStyle: false,
     };
 
     public render() {
@@ -163,12 +163,12 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
         return (
             <div
                 className={
-                    this.props.compactStype
+                    this.props.compactStyle
                         ? styles.geneSummaryCompact
                         : styles.geneSummary
                 }
             >
-                {!this.props.compactStype && (
+                {!this.props.compactStyle && (
                     <h4 className={styles.hugoSymbol}>{hugoGeneSymbol}</h4>
                 )}
                 <TranscriptDropdown
@@ -186,7 +186,7 @@ export default class GeneSummary extends React.Component<GeneSummaryProps, {}> {
                     onChange={onTranscriptChange}
                     loadingIndicator={loadingIndicator}
                 />
-                {this.props.compactStype
+                {this.props.compactStyle
                     ? compactGeneSummaryInfo
                     : geneSummaryInfo}
             </div>

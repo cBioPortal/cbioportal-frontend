@@ -79,7 +79,7 @@ export interface IMutationMapperProps {
     enableHotspot?: boolean;
     enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
-    compactStype?: boolean;
+    compactStyle?: boolean;
 }
 
 export default class MutationMapper<
@@ -342,7 +342,7 @@ export default class MutationMapper<
                 {this.props.isPutativeDriver ? (
                     <div
                         style={{
-                            paddingBottom: this.props.compactStype ? 5 : 15,
+                            paddingBottom: this.props.compactStyle ? 5 : 15,
                         }}
                     >
                         <DriverAnnotationProteinImpactTypeBadgeSelector
@@ -353,19 +353,17 @@ export default class MutationMapper<
                         />
                     </div>
                 ) : (
-                    <div>
-                        <div
-                            style={{
-                                paddingBottom: 15,
-                                paddingTop: 15,
-                            }}
-                        >
-                            <ProteinImpactTypeBadgeSelector
-                                filter={this.proteinImpactTypeFilter}
-                                counts={this.mutationCountsByProteinImpactType}
-                                onSelect={this.onProteinImpactTypeSelect}
-                            />
-                        </div>
+                    <div
+                        style={{
+                            paddingBottom: 15,
+                            paddingTop: 15,
+                        }}
+                    >
+                        <ProteinImpactTypeBadgeSelector
+                            filter={this.proteinImpactTypeFilter}
+                            counts={this.mutationCountsByProteinImpactType}
+                            onSelect={this.onProteinImpactTypeSelect}
+                        />
                     </div>
                 )}
             </div>
@@ -381,6 +379,7 @@ export default class MutationMapper<
             },
         }));
 
+        // Use customized filter for putative driver annotation
         const groupedData = groupDataByGroupFilters(
             filters,
             sortedFilteredData,

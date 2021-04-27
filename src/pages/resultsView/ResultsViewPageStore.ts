@@ -619,8 +619,9 @@ export class ResultsViewPageStore {
 
     public driverAnnotationsReactionDisposer: any;
 
-    private mutationMapperStoreByGeneDriverKey: {
-        [hugoGeneSymbol: string]: ResultsViewMutationMapperStore;
+    // Use gene + driver as key, e.g. TP53_DRIVER or TP53_NO_DRIVER
+    private mutationMapperStoreByGeneWithDriverKey: {
+        [hugoGeneSymbolWithDriver: string]: ResultsViewMutationMapperStore;
     } = {};
 
     @computed get oqlText() {
@@ -3436,8 +3437,8 @@ export class ResultsViewPageStore {
             this.genomeNexusInternalClient,
             () => this.urlWrapper.query.mutations_transcript_id
         );
-        this.mutationMapperStoreByGeneDriverKey[
-            this.getGeneDriverKey(gene)
+        this.mutationMapperStoreByGeneWithDriverKey[
+            this.getGeneWithDriverKey(gene)
         ] = store;
         return store;
     }
@@ -3452,22 +3453,22 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            return this.mutationMapperStoreByGeneDriverKey[
-                this.getGeneDriverKey(gene)
+            return this.mutationMapperStoreByGeneWithDriverKey[
+                this.getGeneWithDriverKey(gene)
             ]
-                ? this.mutationMapperStoreByGeneDriverKey[
-                      this.getGeneDriverKey(gene)
+                ? this.mutationMapperStoreByGeneWithDriverKey[
+                      this.getGeneWithDriverKey(gene)
                   ]
                 : this.createMutationMapperStoreForSelectedGene(gene);
         }
         return undefined;
     }
 
-    // Need to add "driver" into key because mutation mapper store is cached
+    // Need to add "DRIVER" into key because mutation mapper store is cached
     // if we don't do this, starting with no driver then switch to driver will get wrong filter results
-    private getGeneDriverKey(gene: Gene) {
+    private getGeneWithDriverKey(gene: Gene) {
         return `${gene.hugoGeneSymbol}_${
-            this.isPutativeDriver ? 'driver' : 'no_driver'
+            this.isPutativeDriver ? 'DRIVER' : 'NO_DRIVER'
         }`;
     }
 

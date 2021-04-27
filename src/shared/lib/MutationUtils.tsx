@@ -17,6 +17,8 @@ import {
     ProteinImpactType,
     getProteinImpactType,
     DriverVsVusType,
+    MUT_DRIVER,
+    MUT_VUS,
 } from 'cbioportal-frontend-commons';
 import { extractGenomicLocation } from 'cbioportal-utils';
 import { GenomicLocation } from 'genome-nexus-ts-api-client';
@@ -178,7 +180,7 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
         [DriverVsVusType.DRIVER]: (
             <strong
                 style={{
-                    color: '#000000',
+                    color: proteinImpactTypeColorMap[DriverVsVusType.DRIVER],
                 }}
             >
                 Driver
@@ -187,7 +189,7 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
         [DriverVsVusType.VUS]: (
             <strong
                 style={{
-                    color: '#696969',
+                    color: proteinImpactTypeColorMap[DriverVsVusType.VUS],
                 }}
             >
                 VUS
@@ -214,8 +216,8 @@ export function getProteinImpactTypeColorMap(
         [ProteinImpactType.FUSION_PUTATIVE_DRIVER]: colors.fusionColor,
         [ProteinImpactType.FUSION_UNKNOWN_SIGNIFICANCE]: colors.fusionVusColor,
         [ProteinImpactType.OTHER]: colors.otherColor,
-        [DriverVsVusType.DRIVER]: '#000000',
-        [DriverVsVusType.VUS]: '#696969',
+        [DriverVsVusType.DRIVER]: MUT_DRIVER,
+        [DriverVsVusType.VUS]: MUT_VUS,
     };
 }
 
