@@ -32,3 +32,4 @@ yarn.lock
 *.seg
 end-to-end-test/local/studies/**
 *.screenshottest
+*.jks

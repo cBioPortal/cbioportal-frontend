@@ -442,6 +442,7 @@ describe('group comparison page screenshot tests', function() {
             $(
                 'button[data-test="groupSelectorButtonGARS mutant"] [data-test="deleteButton"]'
             ).click();
+            browser.pause(1000);
             var res = checkElementWithMouseDisabled('div.mainContainer');
             assertScreenShotMatch(res);
         });

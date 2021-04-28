@@ -297,7 +297,7 @@ describe('alterationCountHelpers', () => {
                         homdel: 0,
                         hetloss: 0,
                         gain: 0,
-                        fusion: 0,
+                        structuralVariant: 0,
                         mrnaExpressionHigh: 0,
                         mrnaExpressionLow: 0,
                         protExpressionHigh: 0,
@@ -311,12 +311,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };
@@ -328,9 +330,8 @@ describe('alterationCountHelpers', () => {
             alterationsBySampleId['VTA0NDpjaG9sX251c18yMDEy'] = [
                 {
                     uniqueSampleKey: 'VTA0NDpjaG9sX251c18yMDEy',
-                    molecularProfileAlterationType: 'MUTATION_EXTENDED',
-                    alterationSubType: 'missense',
-                    alterationType: 'FUSION',
+                    molecularProfileAlterationType: 'STRUCTURAL_VARIANT',
+                    alterationType: 'STRUCTURAL_VARIANT',
                 },
             ];
 
@@ -367,7 +368,7 @@ describe('alterationCountHelpers', () => {
                         homdel: 1,
                         hetloss: 0,
                         gain: 0,
-                        fusion: 1,
+                        structuralVariant: 1,
                         mrnaExpressionHigh: 0,
                         mrnaExpressionLow: 0,
                         protExpressionHigh: 0,
@@ -381,12 +382,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };
@@ -423,7 +426,7 @@ describe('alterationCountHelpers', () => {
                         homdel: 0,
                         hetloss: 0,
                         gain: 0,
-                        fusion: 0,
+                        structuralVariant: 0,
                         mrnaExpressionHigh: 0,
                         mrnaExpressionLow: 0,
                         protExpressionHigh: 0,
@@ -437,12 +440,14 @@ describe('alterationCountHelpers', () => {
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                     notProfiledSamplesCounts: {
                         mutation: 5,
                         cna: 0,
                         expression: 0,
                         protein: 0,
+                        structuralVariant: 0,
                     },
                 },
             };

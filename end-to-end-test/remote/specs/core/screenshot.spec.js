@@ -5,6 +5,7 @@ const {
     waitForOncoprint,
     setResultsPageSettingsMenuOpen,
     setOncoprintMutationsMenuOpen,
+    checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     sessionServiceIsEnabled,
@@ -144,7 +145,9 @@ function runResultsTestSuite(prefix, options = {}) {
             '[data-test="ComparisonPageSurvivalTabDiv"] svg',
             10000
         ).waitForDisplayed();
-        var res = browser.checkElement('[data-test="ComparisonTabDiv"]');
+        var res = checkElementWithMouseDisabled(
+            '[data-test="ComparisonTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
@@ -158,10 +161,12 @@ function runResultsTestSuite(prefix, options = {}) {
             timeout: 4000,
         });
 
+        waitForNetworkQuiet(1000);
+
         var res = browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',
             '',
-            {}
+            { hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'] }
         );
 
         assertScreenShotMatch(res);

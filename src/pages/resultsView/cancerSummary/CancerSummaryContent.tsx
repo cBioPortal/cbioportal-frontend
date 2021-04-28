@@ -27,7 +27,7 @@ export const OrderedAlterationLabelMap: Record<
     homdel: 'Deep Deletion',
     gain: 'Gain',
     amp: 'Amplification',
-    fusion: 'Fusion',
+    structuralVariant: 'Structural Variant',
     mutated: 'Mutation',
 };
 
@@ -36,6 +36,7 @@ export const AlterationTypeToDataTypeLabel: { [id: string]: string } = {
     expression: 'mRNA data',
     cna: 'CNA data',
     mutation: 'Mutation data',
+    structuralVariant: 'Structural variant data',
 };
 
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {
@@ -44,7 +45,7 @@ const alterationToColor: Record<keyof IAlterationCountMap, string> = {
     homdel: '#0000ff', //"#8fd8d8" "rgb(0,0,255)",
     hetloss: '#8fd8d8',
     gain: 'rgb(255,182,193)',
-    fusion: '#8B00C9',
+    structuralVariant: '#8B00C9',
     mrnaExpressionHigh: '#FF989A',
     mrnaExpressionLow: '#529AC8',
     protExpressionHigh: '#FF989A',
@@ -58,7 +59,7 @@ export interface IAlterationCountMap {
     homdel: number;
     hetloss: number;
     gain: number;
-    fusion: number;
+    structuralVariant: number;
     mrnaExpressionHigh: number;
     mrnaExpressionLow: number;
     protExpressionHigh: number;
@@ -77,12 +78,14 @@ export interface IAlterationData {
         cna: number;
         expression: number;
         protein: number;
+        structuralVariant: number;
     };
     notProfiledSamplesCounts: {
         mutation: number;
         cna: number;
         expression: number;
         protein: number;
+        structuralVariant: number;
     };
 }
 

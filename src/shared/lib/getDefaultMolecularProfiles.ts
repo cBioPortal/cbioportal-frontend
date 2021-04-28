@@ -1,6 +1,8 @@
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import { AlterationTypeConstants } from '../../pages/resultsView/ResultsViewPageStore';
+import { GeneSetProfilesEnum } from 'shared/components/query/QueryStoreUtils';
+import { getSuffixOfMolecularProfile } from './molecularProfileUtils';
 
 export enum MolecularProfileFilterEnum {
     MutationAndCNA = 0,
@@ -10,10 +12,19 @@ export enum MolecularProfileFilterEnum {
 
 export function getDefaultMolecularProfiles(
     studyToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
-    profileFilter: number
+    profileFilter: string
 ) {
+    let dataPriority = parseInt(profileFilter, 10);
+    let queriedProfileSuffixes = isNaN(dataPriority)
+        ? profileFilter.split(',')
+        : undefined;
+
     return _.flatMap(studyToMolecularProfiles, profiles =>
-        getDefaultMolecularProfilesForStudy(profiles, profileFilter)
+        getFilteredMolecularProfiles(
+            profiles,
+            queriedProfileSuffixes,
+            isNaN(dataPriority) ? 0 : dataPriority
+        )
     );
 }
 
@@ -84,22 +95,63 @@ export function getDefaultMutationProfile(profiles: MolecularProfile[]) {
     );
 }
 
-export function getDefaultMolecularProfilesForStudy(
-    profiles: MolecularProfile[],
-    profileFilter: number
+export function getDefaultStructuralVariantProfile(
+    profiles: MolecularProfile[]
 ) {
-    const defaultProfiles: (MolecularProfile | undefined)[] = [];
+    return _.find(
+        profiles,
+        profile =>
+            profile.molecularAlterationType ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+    );
+}
 
-    switch (profileFilter) {
-        case MolecularProfileFilterEnum.Mutation:
-            defaultProfiles.push(getDefaultMutationProfile(profiles));
-            break;
-        case MolecularProfileFilterEnum.CNA:
-            defaultProfiles.push(getDefaultCNAProfile(profiles));
-            break;
-        case MolecularProfileFilterEnum.MutationAndCNA:
-            defaultProfiles.push(getDefaultMutationProfile(profiles));
-            defaultProfiles.push(getDefaultCNAProfile(profiles));
+export function getDefaultGeneSetProfile(profiles: MolecularProfile[]) {
+    return _.find(
+        profiles,
+        profile =>
+            profile.molecularProfileId ===
+            profile.studyId + '_' + GeneSetProfilesEnum.gsva_scores
+    );
+}
+
+export function getFilteredMolecularProfiles(
+    profiles: MolecularProfile[],
+    queriedProfileSuffixes?: string[],
+    dataPriority: number = 0 // this is legacy and necessary only for backward compatibility
+) {
+    let defaultProfiles: (MolecularProfile | undefined)[] = [];
+
+    if (queriedProfileSuffixes) {
+        const molecularProfilesByIdSuffix = _.groupBy(
+            profiles,
+            molecularProfile => getSuffixOfMolecularProfile(molecularProfile)
+        );
+        _.each(queriedProfileSuffixes, profileSuffix => {
+            if (molecularProfilesByIdSuffix[profileSuffix]) {
+                defaultProfiles = defaultProfiles.concat(
+                    molecularProfilesByIdSuffix[profileSuffix]
+                );
+            }
+        });
+    } else {
+        switch (dataPriority) {
+            case MolecularProfileFilterEnum.Mutation:
+                defaultProfiles.push(getDefaultMutationProfile(profiles));
+                defaultProfiles.push(
+                    getDefaultStructuralVariantProfile(profiles)
+                );
+                break;
+            case MolecularProfileFilterEnum.CNA:
+                defaultProfiles.push(getDefaultCNAProfile(profiles));
+                break;
+            case MolecularProfileFilterEnum.MutationAndCNA:
+                defaultProfiles.push(getDefaultMutationProfile(profiles));
+                defaultProfiles.push(getDefaultCNAProfile(profiles));
+                defaultProfiles.push(
+                    getDefaultStructuralVariantProfile(profiles)
+                );
+        }
     }
     // get rid of any undefined items
     return _.compact(defaultProfiles);

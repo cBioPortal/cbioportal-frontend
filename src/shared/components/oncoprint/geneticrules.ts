@@ -14,7 +14,7 @@ import {
     CNA_COLOR_HOMDEL,
     MRNA_COLOR_HIGH,
     MRNA_COLOR_LOW,
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_GERMLINE,
     MUT_COLOR_INFRAME,
     MUT_COLOR_INFRAME_PASSENGER,
@@ -32,7 +32,7 @@ import {
 // Feed this in as
 
 const MUTATION_LEGEND_ORDER = 0;
-const FUSION_LEGEND_ORDER = 1;
+const STRUCTURAL_VARIANT_LEGEND_ORDER = 1;
 const GERMLINE_LEGEND_ORDER = 2;
 const AMP_LEGEND_ORDER = 10;
 const GAIN_LEGEND_ORDER = 11;
@@ -57,7 +57,7 @@ enum ShapeId {
     protHighRectangle = 'protHighRectangle',
     protLowRectangle = 'protLowRectangle',
 
-    fusionRectangle = 'fusionRectangle',
+    structuralVariantRectangle = 'structuralVariantRectangle',
 
     germlineRectangle = 'germlineRectangle',
 
@@ -155,9 +155,9 @@ const shapeBank = {
         height: 20,
         z: 4,
     },
-    [ShapeId.fusionRectangle]: {
+    [ShapeId.structuralVariantRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         x: 0,
         y: 20,
         width: 100,
@@ -350,13 +350,13 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
                 legend_order: PROT_LOW_LEGEND_ORDER,
             },
         },
-        // fusion
-        disp_fusion: {
-            // tall inset purple rectangle for fusion
+        // structural variant
+        disp_structuralVariant: {
+            // tall inset purple rectangle for structural variant
             true: {
-                shapes: [shapeBank[ShapeId.fusionRectangle]],
-                legend_label: 'Fusion',
-                legend_order: FUSION_LEGEND_ORDER,
+                shapes: [shapeBank[ShapeId.structuralVariantRectangle]],
+                legend_label: 'Structural Variant',
+                legend_order: STRUCTURAL_VARIANT_LEGEND_ORDER,
             },
         },
     },

@@ -266,15 +266,14 @@ describe('treatment feature', function() {
                         value: '17-AAG',
                         label: 'Name of 17-AAG',
                     });
-                })
+                });
 
                 browser.execute(function() {
                     resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
                         value: 'AEW541',
                         label: 'Name of AEW541',
                     });
-                })
-
+                });
             });
 
             it('vertical axis menu shows treatment entry in entity menu', () => {
@@ -307,7 +306,6 @@ describe('treatment feature', function() {
                 //         label: 'Name of AEW541',
                 //     });
                 // })
-
             });
 
             it('has Ordered samples entry in vert. menu when treatment selected on horz. axis', () => {
@@ -362,7 +360,6 @@ describe('treatment feature', function() {
                     });
                 });
 
-
                 var vertDataSelect = $('[name=v-profile-type-selector]').$(
                     '..'
                 );
@@ -401,17 +398,17 @@ describe('treatment feature', function() {
 
                 $('[data-test=generic-assay-info-icon]').waitForExist(10000);
 
-
-                    // WHY WAS ASSERT BEING CALLED ON THIS?
-                    browser.execute(function() {
-                        resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
-                            value: 'AEW541',
-                            label: 'Name of AEW541',
-                        });
+                // WHY WAS ASSERT BEING CALLED ON THIS?
+                browser.execute(function() {
+                    resultsViewPlotsTab.onHorizontalAxisGenericAssaySelect({
+                        value: 'AEW541',
+                        label: 'Name of AEW541',
                     });
-                   // browser.pause(1000);
+                });
+                // browser.pause(1000);
 
-                assert($('[data-test=ViewLimitValues]').waitForDisplayed());
+                $('[data-test=ViewLimitValues]').waitForExist();
+                assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
             it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', () => {
@@ -436,7 +433,8 @@ describe('treatment feature', function() {
                     });
                 });
 
-                assert($('[data-test=ViewLimitValues]').waitForDisplayed());
+                $('[data-test=ViewLimitValues]').waitForExist();
+                assert($('[data-test=ViewLimitValues]').isVisible());
             });
 
             it('shows hint for handling of threshold values for treatment data in scatter plot', () => {

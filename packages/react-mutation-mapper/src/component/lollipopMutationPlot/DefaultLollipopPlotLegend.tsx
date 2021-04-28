@@ -3,7 +3,7 @@ import {
     MUT_COLOR_MISSENSE,
     MUT_COLOR_TRUNC,
     MUT_COLOR_INFRAME,
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_SPLICE,
     MUT_COLOR_OTHER,
 } from 'cbioportal-frontend-commons';
@@ -25,7 +25,7 @@ export default class DefaultLollipopPlotLegend extends React.Component<
         truncatingColor: MUT_COLOR_TRUNC,
         inframeColor: MUT_COLOR_INFRAME,
         spliceColor: MUT_COLOR_SPLICE,
-        fusionColor: MUT_COLOR_FUSION,
+        fusionColor: STRUCTURAL_VARIANT_COLOR,
         otherColor: MUT_COLOR_OTHER,
     };
 

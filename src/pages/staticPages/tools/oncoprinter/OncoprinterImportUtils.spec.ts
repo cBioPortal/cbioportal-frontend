@@ -138,10 +138,13 @@ describe('OncoprinterImportUtils', () => {
                         data: [
                             {
                                 molecularProfileAlterationType:
-                                    AlterationTypeConstants.MUTATION_EXTENDED,
-                                proteinChange: 'proteinChange3',
-                                mutationType: 'fusion',
-                                hugoGeneSymbol: 'gene2',
+                                    AlterationTypeConstants.STRUCTURAL_VARIANT,
+                                hugoGeneSymbol: 'gene1',
+                                site1HugoSymbol: 'gene1',
+                                site2HugoSymbol: 'gene2',
+                                eventInfo: 'gene1-gene2',
+                                variantClass: 'Fusion',
+                                comments: 'gene1 gene1-gene2',
                             },
                             {
                                 molecularProfileAlterationType:
@@ -176,7 +179,7 @@ describe('OncoprinterImportUtils', () => {
                     'sample1  gene2  promoter  PROMOTER  label2\n' +
                     'sample1  gene2  GAIN  CNA  label2\n' +
                     'sample1  gene2  LOW  EXP  label2\n' +
-                    'sample2  gene2  proteinChange3  FUSION  label2\n' +
+                    'sample2  gene1  STRUCTURAL_VARIANT  label2\n' +
                     'sample2\n' +
                     'sample2  gene2  LOW  PROT  label2\n' +
                     'sample1\nsample2'
@@ -198,7 +201,7 @@ describe('OncoprinterImportUtils', () => {
                     'patient1  gene2  promoter  PROMOTER  label2\n' +
                     'patient1  gene2  GAIN  CNA  label2\n' +
                     'patient1  gene2  LOW  EXP  label2\n' +
-                    'patient2  gene2  proteinChange3  FUSION  label2\n' +
+                    'patient2  gene1  STRUCTURAL_VARIANT  label2\n' +
                     'patient2\n' +
                     'patient2  gene2  LOW  PROT  label2\n' +
                     'patient1\npatient2'

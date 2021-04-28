@@ -8,7 +8,6 @@ import sinon from 'sinon';
 import {
     cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,
-    fusionGroup,
     MutationEnrichmentEventType,
     mutationEventTypeSelectInit,
     mutationGroup,
@@ -39,8 +38,6 @@ describe('AlterationEnrichmentTypeSelector', () => {
         'Nonstart',
         'Nonstop',
     ];
-
-    const structvarCheckboxRefs = ['Fusion'];
 
     const cnaCheckboxRefs = [
         'CheckCopynumberAlterations',
@@ -125,8 +122,8 @@ describe('AlterationEnrichmentTypeSelector', () => {
                 allCheckBoxesDeselected: () =>
                     allDeselected(mutationTypeCheckboxRefs),
             },
-            fusionSection: {
-                pressMasterButton: () => toggleCheckbox('Fusion'),
+            structuralVariantSection: {
+                pressMasterButton: () => toggleCheckbox('StructuralVariants'),
             },
             pressSubmitButton: () =>
                 component.findByDataTest('buttonSelectAlterations').click(),
@@ -134,37 +131,18 @@ describe('AlterationEnrichmentTypeSelector', () => {
     };
 
     function createStore() {
-        let selectedMutationEnrichmentEventTypes = [
-            ...mutationGroup,
-            ...fusionGroup,
-        ].reduce((acc, type) => {
-            acc[type] = true;
-            return acc;
-        }, {} as { [key in MutationEnrichmentEventType]?: boolean });
-
-        let selectedCopyNumberEnrichmentEventTypes = {
-            [CopyNumberEnrichmentEventType.HOMDEL]: true,
-            [CopyNumberEnrichmentEventType.AMP]: true,
-        };
-
         return {
             selectedCopyNumberEnrichmentEventTypes: cnaEventTypeSelectInit([
                 {
                     molecularAlterationType: 'COPY_NUMBER_ALTERATION',
                 } as MolecularProfile,
             ]),
-            selectedMutationEnrichmentEventTypes: mutationEventTypeSelectInit({
-                mutationProfiles: [
-                    {
-                        molecularAlterationType: 'MUTATION_EXTENDED',
-                    } as MolecularProfile,
-                ],
-                structuralVariantProfiles: [
-                    {
-                        molecularAlterationType: 'STRUCTURAL_VARIANT',
-                    } as MolecularProfile,
-                ],
-            }),
+            selectedMutationEnrichmentEventTypes: mutationEventTypeSelectInit([
+                {
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                } as MolecularProfile,
+            ]),
+            isStructuralVariantEnrichmentSelected: true,
         } as ComparisonStore;
     }
 
@@ -177,7 +155,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={true}
-                    showFusions={true}
+                    showStructuralVariants={true}
                     showCnas={true}
                 />,
                 wrapperForMenu
@@ -304,13 +282,13 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={true}
-                    showFusions={true}
+                    showStructuralVariants={true}
                     showCnas={true}
                 />,
                 wrapperForMenu
             );
             assert.isTrue(menu.exists('input[data-test="Mutations"]'));
-            assert.isTrue(menu.exists('input[data-test="Fusion"]'));
+            assert.isTrue(menu.exists('input[data-test="StructuralVariants"]'));
             assert.isTrue(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -324,13 +302,15 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={false}
-                    showFusions={false}
+                    showStructuralVariants={false}
                     showCnas={false}
                 />,
                 wrapperForMenu
             );
             assert.isFalse(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="Fusion"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isFalse(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -344,19 +324,21 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={true}
-                    showFusions={false}
+                    showStructuralVariants={false}
                     showCnas={false}
                 />,
                 wrapperForMenu
             );
             assert.isTrue(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="Fusion"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isFalse(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
         });
 
-        it('shows fusions section when asked', function() {
+        it('shows structural variant section when asked', function() {
             menu = mountWithCustomWrappers(
                 <AlterationEnrichmentTypeSelector
                     updateSelectedEnrichmentEventTypes={
@@ -364,13 +346,13 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={false}
-                    showFusions={true}
+                    showStructuralVariants={true}
                     showCnas={false}
                 />,
                 wrapperForMenu
             );
             assert.isFalse(menu.exists('input[data-test="Mutations"]'));
-            assert.isTrue(menu.exists('input[data-test="Fusion"]'));
+            assert.isTrue(menu.exists('input[data-test="StructuralVariants"]'));
             assert.isFalse(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -384,13 +366,15 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={false}
-                    showFusions={false}
+                    showStructuralVariants={false}
                     showCnas={true}
                 />,
                 wrapperForMenu
             );
             assert.isFalse(menu.exists('input[data-test="Mutations"]'));
-            assert.isFalse(menu.exists('input[data-test="Fusion"]'));
+            assert.isFalse(
+                menu.exists('input[data-test="StructuralVariants"]')
+            );
             assert.isTrue(
                 menu.exists('input[data-test="CheckCopynumberAlterations"]')
             );
@@ -406,7 +390,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
                     }
                     store={createStore()}
                     showMutations={true}
-                    showFusions={true}
+                    showStructuralVariants={true}
                     showCnas={true}
                 />,
                 wrapperForMenu
@@ -428,7 +412,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('returns mutation types to callback', function() {
             menu.mutationSection.pressMasterButton();
             menu.cnaSection.pressMasterButton();
-            menu.fusionSection.pressMasterButton();
+            menu.structuralVariantSection.pressMasterButton();
 
             menu.mutationSection.pressChildButton();
             menu.pressSubmitButton();
@@ -443,7 +427,7 @@ describe('AlterationEnrichmentTypeSelector', () => {
         it('returns cna types to callback', function() {
             menu.mutationSection.pressMasterButton();
             menu.cnaSection.pressMasterButton();
-            menu.fusionSection.pressMasterButton();
+            menu.structuralVariantSection.pressMasterButton();
 
             menu.cnaSection.pressChildButton();
             menu.pressSubmitButton();

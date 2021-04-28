@@ -19,7 +19,7 @@ import { getJitterForCase } from '../../../shared/components/plots/PlotUtils';
 import * as React from 'react';
 import { getSampleViewUrl, getStudySummaryUrl } from '../../../shared/api/urls';
 import {
-    MUT_COLOR_FUSION,
+    STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE,
     MUT_COLOR_PROMOTER,
@@ -71,7 +71,7 @@ export const ExpressionStyleSheet: {
     fusion: {
         typeName: 'Fusion',
         symbol: VictoryShapeType.circle,
-        fill: MUT_COLOR_FUSION,
+        fill: STRUCTURAL_VARIANT_COLOR,
         stroke: '#000000',
         legendText: 'Fusion',
     },
@@ -229,12 +229,12 @@ export function expressionTooltip(
     let cna = null;
 
     if (d.mutations.length > 0) {
-        mutations = tooltipMutationsSection(d.mutations);
+        mutations = tooltipMutationsSection(d);
     }
 
     const nonDiploidCna = d.copyNumberAlterations.filter(x => x.value !== 0);
     if (nonDiploidCna.length > 0) {
-        cna = tooltipCnaSection(nonDiploidCna);
+        cna = tooltipCnaSection(d);
     }
 
     return (

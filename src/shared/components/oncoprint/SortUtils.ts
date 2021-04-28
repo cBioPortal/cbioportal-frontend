@@ -135,8 +135,8 @@ export function getGeneticTrackSortComparator(
     function mandatoryHelper(d: GeneticTrackDatum): number[] {
         const vector = [];
 
-        // Test fusion
-        if (d.disp_fusion) {
+        // Test structural variant
+        if (d.disp_structuralVariant) {
             vector.push(0);
         } else {
             vector.push(1);
