@@ -1411,7 +1411,6 @@ export class ResultsViewPageStore {
         NumericGeneMolecularData[]
     >({
         await: () => [
-            this.studyToDataQueryFilter,
             this.genes,
             this.nonSelectedDownloadableMolecularProfiles,
             this.samples,
