@@ -1244,6 +1244,15 @@ export default class PatientViewPage extends React.Component<
                                         }
                                     />
 
+                                    <PatientViewStructuralVariantTable
+                                        store={this.patientViewPageStore}
+                                        onSelectGenePanel={
+                                            this.toggleGenePanelModal
+                                        }
+                                    />
+
+                                    <hr />
+
                                     {this.patientViewPageStore.studyIdToStudy
                                         .isComplete &&
                                         this.patientViewPageStore
@@ -1393,14 +1402,6 @@ export default class PatientViewPage extends React.Component<
                                                 />
                                             </div>
                                         )}
-
-                                    <hr />
-                                    <PatientViewStructuralVariantTable
-                                        store={this.patientViewPageStore}
-                                        onSelectGenePanel={
-                                            this.toggleGenePanelModal
-                                        }
-                                    />
                                 </MSKTab>
                                 {!!sampleManager &&
                                     this.patientViewPageStore.sampleIds.length >
