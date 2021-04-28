@@ -14,9 +14,10 @@ import {
     Sample,
     Gene,
     MolecularProfile,
-    GenePanelData,
     GenericAssayData,
     GenericAssayMeta,
+    SampleMolecularIdentifier,
+    MolecularDataMultipleStudyFilter,
 } from 'cbioportal-ts-api-client';
 import {
     ICaseAlteration,
@@ -34,13 +35,15 @@ import {
     MergedTrackLineFilterOutput,
 } from 'shared/lib/oql/oqlfilter';
 import { isNotGermlineMutation } from 'shared/lib/MutationUtils';
-import { coverageInformation } from 'pages/resultsView/expression/expressionHelpers.sample';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import {
     getGenericAssayMetaPropertyOrDefault,
     COMMON_GENERIC_ASSAY_PROPERTY,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { Alteration } from 'shared/lib/oql/oql-parser';
+import client from 'shared/api/cbioportalClientInstance';
+import { REQUEST_ARG_ENUM } from 'shared/constants';
+import fileDownload from 'react-file-download';
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -390,6 +393,83 @@ export function generateOtherMolecularProfileDownloadData(
               () => true // dont deal with labeling not profiled
           )
         : [];
+}
+
+export async function downloadOtherMolecularProfileData(
+    profileName: string,
+    profiles: MolecularProfile[],
+    samples: Sample[],
+    genes: Gene[],
+    transposed: boolean = false
+) {
+    // STEP 1: fetch data
+    let molecularData: any[] = [];
+    if (profiles.length && genes != undefined && genes.length) {
+        const profilesGroupByStudyId = _.groupBy(
+            profiles,
+            profile => profile.studyId
+        );
+        // find samples which share studyId with profile and add identifier
+        const sampleIdentifiers: SampleMolecularIdentifier[] = (samples as Sample[]).reduce(
+            (acc: SampleMolecularIdentifier[], sample) => {
+                if (sample.studyId in profilesGroupByStudyId) {
+                    acc.push(
+                        ...profilesGroupByStudyId[sample.studyId].map(
+                            profile => {
+                                return {
+                                    molecularProfileId:
+                                        profile.molecularProfileId,
+                                    sampleId: sample.sampleId,
+                                } as SampleMolecularIdentifier;
+                            }
+                        )
+                    );
+                }
+                return acc;
+            },
+            []
+        );
+
+        if (sampleIdentifiers.length) {
+            molecularData = await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                {
+                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                    molecularDataMultipleStudyFilter: {
+                        entrezGeneIds: _.map(
+                            genes,
+                            (gene: Gene) => gene.entrezGeneId
+                        ),
+                        sampleMolecularIdentifiers: sampleIdentifiers,
+                    } as MolecularDataMultipleStudyFilter,
+                }
+            );
+        }
+    }
+
+    // STEP 2: generate alteration data
+    const data = {
+        samples: _.groupBy(molecularData, data => data.uniqueSampleKey),
+    } as CaseAggregatedData<ExtendedAlteration>;
+
+    const alterationData = generateOtherMolecularProfileData(
+        profiles.map(profile => profile.molecularProfileId),
+        data
+    );
+
+    // STEP 3: generate download data
+    const downloadData = generateOtherMolecularProfileDownloadData(
+        alterationData,
+        samples,
+        genes
+    );
+
+    // STEP 4: download data
+    fileDownload(
+        transposed
+            ? unzipDownloadData(downloadData)
+            : downloadDataText(downloadData),
+        `${profileName}.txt`
+    );
 }
 
 export function generateGenericAssayProfileData(
@@ -910,4 +990,28 @@ export function decideMolecularProfileSortingOrder(
         default:
             return Number.MAX_VALUE;
     }
+}
+
+export function unzipDownloadDataGroupByKey(downloadDataGroupByKey: {
+    [key: string]: string[][];
+}): { [key: string]: string[][] } {
+    return _.mapValues(downloadDataGroupByKey, downloadData => {
+        return _.unzip(downloadData);
+    });
+}
+
+export function downloadDataTextGroupByKey(downloadDataGroupByKey: {
+    [key: string]: string[][];
+}): { [x: string]: string } {
+    return _.mapValues(downloadDataGroupByKey, downloadData => {
+        return stringify2DArray(downloadData);
+    });
+}
+
+export function unzipDownloadData(downloadData: string[][]): string[][] {
+    return _.unzip(downloadData);
+}
+
+export function downloadDataText(downloadData: string[][]): string {
+    return stringify2DArray(downloadData);
 }
