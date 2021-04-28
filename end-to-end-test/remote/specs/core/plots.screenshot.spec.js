@@ -220,6 +220,7 @@ describe('plots tab screenshot tests', function() {
                 value: 'StackedBar',
             });
         });
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -240,6 +241,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab clinical vs clinical table plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
@@ -262,6 +264,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical horizontal stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -274,6 +277,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical percentage stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -304,6 +308,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical horizontal stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -316,6 +321,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical percentage stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -341,6 +347,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical horizontal stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
@@ -353,6 +360,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical percentage stacked bar plot', function() {
+        $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });

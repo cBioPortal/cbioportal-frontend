@@ -39,14 +39,11 @@ describe('mutations tab', function() {
             'unfiltered is 19 mutations'
         );
 
-        $('button[data-test="GlobalSettingsButton"]').click();
-        $('div[data-test="GlobalSettingsDropdown"]').waitForDisplayed({
-            timeout: 10000,
-        });
+        setResultsPageSettingsMenuOpen(true);
         $(
             'div[data-test="GlobalSettingsDropdown"] input[data-test="HideGermline"]'
         ).click();
-        $('button[data-test="GlobalSettingsButton"]').click();
+        setResultsPageSettingsMenuOpen(false);
 
         $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed({
             timeout: 10000,

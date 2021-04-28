@@ -30,10 +30,13 @@ describe('oncoprinter tests', function() {
 
         function doTestWithoutCustomDriver() {
             $('.oncoprinterGeneticExampleData').waitForExist();
-            setInputText(
-                'textarea.oncoprinterGeneticDataInput',
-                'TCGA-25-2392-01 TP53 FUSION FUSION\nTCGA-04-1357-01 BRCA1 Q1538A MISSENSE'
-            );
+            browser.execute(function(text) {
+                oncoprinterTool.onGeneticDataInputChange({
+                    currentTarget: {
+                        value: text,
+                    },
+                });
+            }, 'TCGA-25-2392-01 TP53 FUSION FUSION\nTCGA-04-1357-01 BRCA1 Q1538A MISSENSE');
             $('.oncoprinterSubmit').click();
             waitForOncoprint(TIMEOUT);
 

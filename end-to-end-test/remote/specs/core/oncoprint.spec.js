@@ -556,12 +556,14 @@ describe('oncoprint', function() {
 
             clickQueryByGeneButton();
 
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ).waitForExist({ timeout: 10000 });
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ).waitForExist({ timeout: 10000 });
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Mutations')
+                .$('input[type="checkbox"]')
+                .waitForExist({ timeout: 10000 });
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Copy number alterations')
+                .$('input[type="checkbox"]')
+                .waitForExist({ timeout: 10000 });
 
             // select custom case list
             var caseSetSelector = $(

@@ -161,7 +161,7 @@ function runResultsTestSuite(prefix, options = {}) {
             timeout: 4000,
         });
 
-        waitForNetworkQuiet(1000);
+        waitForNetworkQuiet(5000);
 
         var res = browser.checkElement(
             '[data-test="pathwayMapperTabDiv"]',

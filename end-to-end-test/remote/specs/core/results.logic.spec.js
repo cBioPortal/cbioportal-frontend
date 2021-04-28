@@ -208,12 +208,14 @@ describe('case set selection in modify query form', function() {
         $('[data-test="StudySelect"] input').click();
         browser.pause(100);
 
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-        ).waitForExist({ timeout: 10000 });
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-        ).waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         assert(
             ALL_CASE_SET_REGEXP.test($(selectedCaseSet_sel).getText()),
@@ -253,12 +255,14 @@ describe('case set selection in modify query form', function() {
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
         ).click();
 
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-        ).waitForExist({ timeout: 10000 });
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-        ).waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(() => {
             return ALL_CASE_SET_REGEXP.test($(selectedCaseSet_sel).getText());
@@ -332,22 +336,26 @@ describe('genetic profile selection in modify query form', function() {
         $('[data-test="StudySelect"] input').click();
 
         // wait for data type priority selector to load
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-        ).waitForExist({ timeout: 10000 });
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-        ).waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         assert(
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ).isSelected(),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Mutations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ).isSelected(),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Copy number alterations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Copy number alterations' should be selected"
         );
 
@@ -429,22 +437,26 @@ describe('genetic profile selection in modify query form', function() {
         ).click();
 
         // wait for data type priority selector to load
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-        ).waitForExist({ timeout: 10000 });
-        $(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-        ).waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         assert(
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'
-            ).isSelected(),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Mutations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            $(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'
-            ).isSelected(),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Copy number alterations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Copy number alterations' should be selected"
         );
 
