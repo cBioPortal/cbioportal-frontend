@@ -11,6 +11,7 @@ import {
     IOncoKbData,
     Mutation,
     uniqueGenomicLocations,
+    StructuralVariantType,
 } from 'cbioportal-utils';
 import {
     AnnotateMutationByProteinChangeQuery,
@@ -319,7 +320,9 @@ export class DefaultMutationMapperDataFetcher
         const structuralQueryVariants: AnnotateStructuralVariantQuery[] = _.uniqBy(
             _.map(
                 queryVariants.filter(
-                    mutation => mutation.mutationType === 'Fusion'
+                    mutation =>
+                        mutation.mutationType?.toUpperCase() ===
+                        StructuralVariantType.FUSION
                 ),
                 (mutation: Mutation) => {
                     return generateAnnotateStructuralVariantQuery(

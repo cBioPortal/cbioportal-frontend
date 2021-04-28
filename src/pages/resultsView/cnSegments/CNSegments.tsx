@@ -2,16 +2,11 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
 import MobxPromise from 'mobxpromise';
-import autobind from 'autobind-decorator';
 import { Nav, NavItem } from 'react-bootstrap';
 
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { ResultsViewTab } from '../ResultsViewPageHelpers';
-import {
-    CopyNumberSeg,
-    Gene,
-    ReferenceGenomeGene,
-} from 'cbioportal-ts-api-client';
+import { CopyNumberSeg, Gene } from 'cbioportal-ts-api-client';
 import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
 import CNSegmentsDownloader from 'shared/components/cnSegments/CNSegmentsDownloader';
 import WindowStore from 'shared/components/window/WindowStore';
@@ -27,18 +22,20 @@ import {
     IProgressIndicatorItem,
 } from 'shared/components/progressIndicator/ProgressIndicator';
 import { remoteData } from 'cbioportal-frontend-commons';
-import OqlStatusBanner from 'shared/components/banners/OqlStatusBanner';
-import AlterationFilterWarning from 'shared/components/banners/AlterationFilterWarning';
 import CaseFilterWarning from 'shared/components/banners/CaseFilterWarning';
 
 @observer
 export default class CNSegments extends React.Component<
-    { store: ResultsViewPageStore },
+    { store: ResultsViewPageStore; sampleThreshold?: number },
     {}
 > {
     @observable renderingComplete = false;
     @observable.ref selectedLocus: string;
     @observable segmentTrackMaxHeight: number | undefined;
+
+    public static defaultProps = {
+        sampleThreshold: 20000,
+    };
 
     constructor(props: { store: ResultsViewPageStore }) {
         super(props);
@@ -92,13 +89,36 @@ export default class CNSegments extends React.Component<
         return this.isLoading || !this.renderingComplete;
     }
 
+    @computed get isSampleCountWithinThreshold() {
+        return (
+            !this.props.store.filteredSamples.result ||
+            !this.props.sampleThreshold ||
+            this.props.store.filteredSamples.result.length <=
+                this.props.sampleThreshold
+        );
+    }
+
+    @computed get tooManySamplesForWholeGenome() {
+        return (
+            this.activeLocus === WHOLE_GENOME &&
+            !this.isSampleCountWithinThreshold
+        );
+    }
+
     @computed get isLoading() {
-        return this.activePromise ? this.activePromise.isPending : true;
+        if (this.tooManySamplesForWholeGenome) {
+            return false;
+        } else {
+            return this.activePromise ? this.activePromise.isPending : true;
+        }
     }
 
     @computed get activePromise() {
         if (this.activeLocus === WHOLE_GENOME) {
-            return this.props.store.cnSegments;
+            return this.props.store.filteredSamples.result &&
+                this.isSampleCountWithinThreshold
+                ? this.props.store.cnSegments
+                : undefined;
         } else if (
             this.props.store.cnSegmentsByChromosome.result &&
             this.chromosome
@@ -174,7 +194,20 @@ export default class CNSegments extends React.Component<
                             </NavItem>
                         ))}
                 </Nav>
-                <div style={this.isHidden ? { opacity: 0 } : undefined}>
+                {this.tooManySamplesForWholeGenome && (
+                    <span>
+                        Too many samples ({`>${this.props.sampleThreshold}`})
+                        for the whole genome view. Try to select a different
+                        sample list.
+                    </span>
+                )}
+                <div
+                    style={
+                        this.isHidden || this.tooManySamplesForWholeGenome
+                            ? { opacity: 0 }
+                            : undefined
+                    }
+                >
                     <IntegrativeGenomicsViewer
                         tracks={[
                             {
@@ -190,7 +223,9 @@ export default class CNSegments extends React.Component<
                         disableSearch={this.activeLocus !== WHOLE_GENOME}
                         isVisible={
                             this.props.store.tabId ===
-                                ResultsViewTab.CN_SEGMENTS && !this.isHidden
+                                ResultsViewTab.CN_SEGMENTS &&
+                            !this.isHidden &&
+                            !this.tooManySamplesForWholeGenome
                         }
                     />
                 </div>

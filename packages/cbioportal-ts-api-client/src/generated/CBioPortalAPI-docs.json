@@ -2567,7 +2567,7 @@
         "deprecated": false
       }
     },
-    "/structuralvariant/fetch": {
+    "/structural-variant/fetch": {
       "post": {
         "tags": [
           "Structural Variants"
@@ -2590,7 +2590,9 @@
               "type": "integer",
               "format": "int32"
             },
-            "collectionFormat": "multi"
+            "collectionFormat": "multi",
+            "maximum": 10000000,
+            "minimum": 0
           },
           {
             "name": "molecularProfileIds",
@@ -2602,7 +2604,7 @@
             },
             "collectionFormat": "multi",
             "maximum": 10000000,
-            "minimum": 1
+            "minimum": 0
           },
           {
             "name": "sampleMolecularIdentifiers[0].molecularProfileId",
@@ -5787,10 +5789,6 @@
         "sampleId": {
           "type": "string"
         },
-        "sampleIdInternal": {
-          "type": "integer",
-          "format": "int32"
-        },
         "site1Chromosome": {
           "type": "string"
         },
@@ -5842,10 +5840,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "structuralVariantId": {
-          "type": "integer",
-          "format": "int64"
-        },
         "studyId": {
           "type": "string"
         },
@@ -5884,7 +5878,9 @@
           "type": "array",
           "items": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 10000000
           }
         },
         "molecularProfileIds": {

@@ -21,6 +21,7 @@ import {
     AlterationTypeConstants,
     CustomDriverNumericGeneMolecularData,
     AnnotatedMutation,
+    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 
 // This file uses type assertions to force functions that use overly specific
@@ -159,17 +160,13 @@ const MUTATION_PROFILE = {
     studyId: 'gbm_tcga',
 } as MolecularProfile;
 
+const STRUCTURAL_VARIANT_PROFILE = {
+    molecularAlterationType: AlterationTypeConstants.STRUCTURAL_VARIANT,
+    molecularProfileId: 'gbm_tcga_fusion',
+    studyId: 'gbm_tcga',
+} as MolecularProfile;
+
 const MUTATION_DATA = ([
-    {
-        gene: {
-            hugoGeneSymbol: 'BRCA1',
-        },
-        molecularProfileId: 'gbm_tcga_mutations',
-        mutationType: 'fusion',
-        mutationStatus: undefined,
-        putativeDriver: true,
-        __id: -1,
-    },
     {
         gene: {
             hugoGeneSymbol: 'BRCA1',
@@ -231,6 +228,19 @@ const MUTATION_DATA = ([
         __id: 3.1,
     },
 ] as any) as AnnotatedMutation[];
+
+const STRUCTURAL_VARIANT_DATA = ([
+    {
+        hugoGeneSymbol: 'BRCA1',
+        site1HugoSymbol: 'BRCA1',
+        site2HugoSymbol: 'IGF2',
+        molecularProfileId: 'gbm_tcga_fusion',
+        variantClass: 'Fusion',
+        eventInfo: 'BRCA1-IGF2',
+        putativeDriver: false,
+        __id: -1,
+    },
+] as any) as AnnotatedStructuralVariant[];
 
 describe('doesQueryContainOQL', () => {
     it('returns correct result in various cases', () => {
@@ -400,6 +410,7 @@ describe('filterCBioPortalWebServiceData', () => {
         const accessorsInstance = new AccessorsForOqlFilter([
             MUTATION_PROFILE,
             DATA_PROFILE,
+            STRUCTURAL_VARIANT_PROFILE,
         ]);
         let filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER',
@@ -409,7 +420,7 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [-1, 0, 1, 3, 3.1, 7]
+            [0, 1, 3, 3.1, 7]
         );
 
         filteredData = filterCBioPortalWebServiceData(
@@ -486,12 +497,16 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [-1, 0, 1, 3, 3.1, 7, 8]
+            [0, 1, 3, 3.1, 7, 8]
         );
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:FUSION_DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -502,7 +517,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER_FUSION',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );

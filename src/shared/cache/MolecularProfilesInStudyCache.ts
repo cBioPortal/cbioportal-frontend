@@ -5,6 +5,10 @@ import {
 } from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
 import * as _ from 'lodash';
+import {
+    DataTypeConstants,
+    AlterationTypeConstants,
+} from 'pages/resultsView/ResultsViewPageStore';
 
 function queryToKey(studyId: string) {
     return studyId;
@@ -17,13 +21,27 @@ function dataToKey(molecularProfiles: MolecularProfile[], studyId: string) {
 async function fetch(
     studyIds: string[]
 ): Promise<AugmentedData<MolecularProfile[], string>[]> {
-    const profiles: MolecularProfile[] = await client.fetchMolecularProfilesUsingPOST(
+    let profiles: MolecularProfile[] = await client.fetchMolecularProfilesUsingPOST(
         {
             molecularProfileFilter: {
                 studyIds,
             } as MolecularProfileFilter,
         }
     );
+
+    //TODO: remove this block once data is fixed
+    profiles = profiles.map(profile => {
+        if (
+            profile.molecularAlterationType ===
+                AlterationTypeConstants.STRUCTURAL_VARIANT &&
+            profile.datatype === DataTypeConstants.SV
+        ) {
+            profile.showProfileInAnalysisTab = false;
+        }
+        return profile;
+    });
+    //TODO: remove this block once data is fixed
+
     const profilesByStudy = _.groupBy(profiles, profile => profile.studyId);
     return studyIds.map(studyId => {
         const data = [profilesByStudy[studyId] || []];

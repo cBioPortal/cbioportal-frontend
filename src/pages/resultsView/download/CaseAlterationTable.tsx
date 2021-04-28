@@ -38,12 +38,12 @@ export interface IOqlData {
         isGermline: boolean;
         putativeDriver: boolean;
     }[];
-    fusion: string[];
+    structuralVariant: string[];
     cna: ISubAlteration[];
     mrnaExp: ISubAlteration[];
     proteinLevel: ISubAlteration[];
     isMutationNotProfiled: boolean;
-    isFusionNotProfiled: boolean;
+    isStructuralVariantNotProfiled: boolean;
     isCnaNotProfiled: boolean;
     isMrnaExpNotProfiled: boolean;
     isProteinLevelNotProfiled: boolean;
@@ -165,9 +165,10 @@ export function generateOqlValue(
         case 'FUSION':
             generator = {
                 label: 'FUSION',
-                getAlterationData: (oqlData: IOqlData) => oqlData.fusion,
+                getAlterationData: (oqlData: IOqlData) =>
+                    oqlData.structuralVariant,
                 isNotProfiled: (oqlData: IOqlData) =>
-                    oqlData.isFusionNotProfiled,
+                    oqlData.isStructuralVariantNotProfiled,
                 getValues: stringMapper,
             };
             break;

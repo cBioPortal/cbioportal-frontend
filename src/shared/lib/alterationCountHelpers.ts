@@ -106,7 +106,7 @@ export function countAlterationOccurences(
                 homdel: 0, // -2
                 hetloss: 0, // -1
                 gain: 0, // 1
-                fusion: 0,
+                structuralVariant: 0,
                 mrnaExpressionHigh: 0,
                 mrnaExpressionLow: 0,
                 protExpressionHigh: 0,
@@ -119,6 +119,7 @@ export function countAlterationOccurences(
                 cna: 0,
                 expression: 0,
                 protein: 0,
+                structuralVariant: 0,
             };
 
             const notProfiledSamplesCounts = {
@@ -126,6 +127,7 @@ export function countAlterationOccurences(
                 cna: 0,
                 expression: 0,
                 protein: 0,
+                structuralVariant: 0,
             };
 
             const ret: IAlterationData = {
@@ -181,6 +183,12 @@ export function countAlterationOccurences(
                                 profiled
                                     ? profiledTypeCounts.mutation++
                                     : notProfiledSamplesCounts.mutation++;
+                                break;
+                            }
+                            case AlterationTypeConstants.STRUCTURAL_VARIANT: {
+                                profiled
+                                    ? profiledTypeCounts.structuralVariant++
+                                    : notProfiledSamplesCounts.structuralVariant++;
                                 break;
                             }
                         }
@@ -253,8 +261,8 @@ export function countAlterationOccurences(
                                     case AlterationTypeConstants.MUTATION_EXTENDED:
                                         counts.mutated++;
                                         break;
-                                    case AlterationTypeConstants.FUSION:
-                                        counts.fusion++;
+                                    case AlterationTypeConstants.STRUCTURAL_VARIANT:
+                                        counts.structuralVariant++;
                                         break;
                                 }
                             }

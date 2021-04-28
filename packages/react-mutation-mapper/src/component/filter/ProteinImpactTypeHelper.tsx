@@ -42,7 +42,7 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
                     color: proteinImpactTypeColorMap[ProteinImpactType.FUSION],
                 }}
             >
-                Fusion
+                SV/Fusion
             </strong>
         ),
         [ProteinImpactType.OTHER]: (

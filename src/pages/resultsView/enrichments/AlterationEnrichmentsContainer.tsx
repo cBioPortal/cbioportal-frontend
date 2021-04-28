@@ -455,18 +455,10 @@ export default class AlterationEnrichmentContainer extends React.Component<
     }
 
     @computed get isAnyFusionTypeSelected() {
-        if (
+        return (
             this.props.comparisonStore &&
-            this.props.comparisonStore!.selectedMutationEnrichmentEventTypes &&
-            MutationEnrichmentEventType.fusion in
-                this.props.comparisonStore!.selectedMutationEnrichmentEventTypes
-        ) {
-            return !!this.props.comparisonStore!
-                .selectedMutationEnrichmentEventTypes[
-                MutationEnrichmentEventType.fusion
-            ];
-        }
-        return false;
+            this.props.comparisonStore!.isStructuralVariantEnrichmentSelected
+        );
     }
 
     @computed get isAnyCnaTypeSelected() {

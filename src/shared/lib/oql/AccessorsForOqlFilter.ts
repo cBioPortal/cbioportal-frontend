@@ -2,6 +2,7 @@ import {
     Mutation,
     MolecularProfile,
     NumericGeneMolecularData,
+    StructuralVariant,
 } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import {
@@ -10,6 +11,7 @@ import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
     AnnotatedNumericGeneMolecularData,
+    AnnotatedStructuralVariant,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { isNotGermlineMutation } from '../MutationUtils';
 import { IAccessorsForOqlFilter } from './oqlfilter';
@@ -117,6 +119,9 @@ export type Datum =
     | Mutation
     | NumericGeneMolecularData
     | AnnotatedMutation
+    | AnnotatedNumericGeneMolecularData
+    | StructuralVariant
+    | AnnotatedStructuralVariant
     | CustomDriverNumericGeneMolecularData;
 
 export default class AccessorsForOqlFilter
@@ -140,7 +145,13 @@ export default class AccessorsForOqlFilter
     }
 
     public gene(d: Datum) {
-        return d.gene.hugoGeneSymbol;
+        if (
+            this.molecularAlterationType(d.molecularProfileId) ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+        ) {
+            return (d as StructuralVariant).site1HugoSymbol;
+        }
+        return (d as any).gene.hugoGeneSymbol;
     }
 
     public molecularAlterationType(molecularProfileId: string) {
@@ -233,11 +244,12 @@ export default class AccessorsForOqlFilter
         }
     }
 
-    public fusion(d: Datum) {
-        if (this.isMutation(d)) {
-            return getSimplifiedMutationType(d.mutationType) === 'fusion'
-                ? true
-                : null;
+    public structuralVariant(d: Datum) {
+        if (
+            this.molecularAlterationType(d.molecularProfileId) ===
+            AlterationTypeConstants.STRUCTURAL_VARIANT
+        ) {
+            return true;
         } else {
             return null;
         }
