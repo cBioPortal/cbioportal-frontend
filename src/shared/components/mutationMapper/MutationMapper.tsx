@@ -389,16 +389,8 @@ export default class MutationMapper<
         return _.keyBy(groupedData, d => d.group);
     }
 
-    protected getMutationsGroupedByProteinImpactType?: () => {
-        [type: string]: { group: string; data: any[] };
-    };
-
     @computed
     protected get mutationsGroupedByProteinImpactType() {
-        if (this.getMutationsGroupedByProteinImpactType) {
-            return this.getMutationsGroupedByProteinImpactType();
-        }
-
         // there are two types of filters (with putative driver, without putative driver)
         const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
             f =>
@@ -408,11 +400,20 @@ export default class MutationMapper<
 
         // apply filters excluding the protein impact type filters
         // this prevents number of unchecked protein impact types from being counted as zero
-        const sortedFilteredData = applyDataFilters(
+        let sortedFilteredData = applyDataFilters(
             this.store.dataStore.allData,
             filtersWithoutProteinImpactTypeFilter,
             this.store.dataStore.applyFilter
         );
+
+        // also apply lazy mobx table search filter
+        sortedFilteredData = sortedFilteredData.filter(m =>
+            (this.store
+                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                m
+            )
+        );
+
         return this.groupDataByProteinImpactType(sortedFilteredData);
     }
 
