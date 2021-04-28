@@ -1109,7 +1109,7 @@ export default class DownloadTab extends React.Component<
                                 </a>
                             </Then>
                             <Else>
-                                Heatmap tracks added in the&nbsp;
+                                Tracks added in the&nbsp;
                                 <a
                                     onClick={() =>
                                         this.props.store.handleTabChange(
