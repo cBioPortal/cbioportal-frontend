@@ -36,6 +36,15 @@ export function getProteinImpactTypeOptionDisplayValueMap(proteinImpactTypeColor
                 Inframe
             </strong>
         ),
+        [ProteinImpactType.SPLICE]: (
+            <strong
+                style={{
+                    color: proteinImpactTypeColorMap[ProteinImpactType.SPLICE],
+                }}
+            >
+                Splice
+            </strong>
+        ),
         [ProteinImpactType.FUSION]: (
             <strong
                 style={{
@@ -64,6 +73,7 @@ export function getProteinImpactTypeColorMap(
         [ProteinImpactType.MISSENSE]: colors.missenseColor,
         [ProteinImpactType.TRUNCATING]: colors.truncatingColor,
         [ProteinImpactType.INFRAME]: colors.inframeColor,
+        [ProteinImpactType.SPLICE]: colors.spliceColor,
         [ProteinImpactType.FUSION]: colors.fusionColor,
         [ProteinImpactType.OTHER]: colors.otherColor,
     };

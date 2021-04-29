@@ -1,6 +1,5 @@
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     CaseAggregatedData,
     CustomDriverNumericGeneMolecularData,
     ExtendedAlteration,
@@ -24,10 +23,7 @@ import {
     IGeneHeatmapTrackDatum,
 } from './Oncoprint';
 import { isSample, isSampleList } from '../../lib/CBioPortalAPIUtils';
-import {
-    getSimplifiedMutationType,
-    SimplifiedMutationType,
-} from '../../lib/oql/AccessorsForOqlFilter';
+import { getSimplifiedMutationType } from '../../lib/oql/AccessorsForOqlFilter';
 import _ from 'lodash';
 import { MutationSpectrum } from 'cbioportal-ts-api-client';
 import { ExtendedClinicalAttribute } from '../../../pages/resultsView/ResultsViewPageStoreUtils';
