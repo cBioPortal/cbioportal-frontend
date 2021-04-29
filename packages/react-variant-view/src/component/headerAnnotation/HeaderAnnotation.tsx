@@ -88,7 +88,7 @@ export const MAIN_MUTATION_TYPE_MAP: { [key: string]: IMutationTypeFormat } = {
     },
     splice_site: {
         label: 'Splice',
-        className: 'trunc-mutation',
+        className: 'splice',
     },
     fusion: {
         label: 'Fusion',

@@ -8,5 +8,6 @@ export interface IProteinImpactTypeColors {
     spliceColor: string;
     spliceVusColor: string;
     fusionColor: string;
+    fusionVusColor: string;
     otherColor: string;
 }

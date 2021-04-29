@@ -3,11 +3,13 @@ import _ from 'lodash';
 import { action, computed, makeObservable } from 'mobx';
 import classnames from 'classnames';
 import {
+    applyDataFilters,
     DataFilterType,
+    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     FilterResetPanel,
     getColorForProteinImpactType,
+    groupDataByGroupFilters,
     LollipopMutationPlot,
-    Mutation,
     MutationMapper as DefaultMutationMapper,
     onFilterOptionSelect,
     ProteinImpactTypeBadgeSelector,
@@ -26,7 +28,11 @@ import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
-import { DEFAULT_PROTEIN_IMPACT_TYPE_COLORS } from 'shared/lib/MutationUtils';
+import {
+    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+    ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID,
+    createAnnotatedProteinImpactTypeFilter,
+} from 'shared/lib/MutationUtils';
 import ProteinChainPanel from 'shared/components/proteinChainPanel/ProteinChainPanel';
 import MutationMapperStore from './MutationMapperStore';
 import MutationMapperDataStore, {
@@ -36,7 +42,9 @@ import MutationMapperDataStore, {
 import WindowStore from '../window/WindowStore';
 
 import styles from './mutationMapper.module.scss';
+import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
+import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -58,6 +66,7 @@ export interface IMutationMapperProps {
     genomeNexusMutationAssessorCache?: GenomeNexusMutationAssessorCache;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     onTranscriptChange?: (transcript: string) => void;
+    onClickSettingMenu?: () => void;
     // server config properties
     genomeNexusUrl?: string;
     oncoKbPublicApiUrl?: string;
@@ -70,6 +79,7 @@ export interface IMutationMapperProps {
     enableHotspot?: boolean;
     enableMyCancerGenome?: boolean;
     enableCivic?: boolean;
+    compactStyle?: boolean;
 }
 
 export default class MutationMapper<
@@ -79,6 +89,163 @@ export default class MutationMapper<
         super(props);
         makeObservable(this);
     }
+
+    protected legendColorCodes = (
+        <div style={{ maxWidth: 700, marginTop: 5 }}>
+            <strong style={{ color: '#2153AA' }}>Color Codes</strong>
+            <p>
+                Mutation diagram circles are colored with respect to the
+                corresponding mutation types. In case of different mutation
+                types at a single position, color of the circle is determined
+                with respect to the most frequent mutation type.
+            </p>
+            <br />
+            <div>
+                Mutation types and corresponding color codes are as follows:
+                <ul>
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseColor,
+                            }}
+                        >
+                            Missense Mutations
+                        </strong>
+                        {this.props.isPutativeDriver !== undefined && (
+                            <span>(putative driver)</span>
+                        )}
+                    </li>
+                    {this.props.isPutativeDriver !== undefined && (
+                        <li>
+                            <strong
+                                style={{
+                                    color:
+                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.missenseVusColor,
+                                }}
+                            >
+                                Missense Mutations
+                            </strong>
+                            {this.props.isPutativeDriver !== undefined && (
+                                <span>(unknown significance)</span>
+                            )}
+                        </li>
+                    )}
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingColor,
+                            }}
+                        >
+                            Truncating Mutations
+                        </strong>
+                        {this.props.isPutativeDriver !== undefined && (
+                            <span>(putative driver)</span>
+                        )}
+                        : Nonsense, Nonstop, Frameshift deletion, Frameshift
+                        insertion, Splice site
+                    </li>
+                    {this.props.isPutativeDriver !== undefined && (
+                        <li>
+                            <strong
+                                style={{
+                                    color:
+                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.truncatingVusColor,
+                                }}
+                            >
+                                Truncating Mutations
+                            </strong>
+                            {this.props.isPutativeDriver !== undefined && (
+                                <span>(unknown significance)</span>
+                            )}
+                            : Nonsense, Nonstop, Frameshift deletion, Frameshift
+                            insertion, Splice site
+                        </li>
+                    )}
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeColor,
+                            }}
+                        >
+                            Inframe Mutations
+                        </strong>
+                        {this.props.isPutativeDriver !== undefined && (
+                            <span>(putative driver)</span>
+                        )}
+                        : Inframe deletion, Inframe insertion
+                    </li>
+                    {this.props.isPutativeDriver !== undefined && (
+                        <li>
+                            <strong
+                                style={{
+                                    color:
+                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.inframeVusColor,
+                                }}
+                            >
+                                Inframe Mutations
+                            </strong>
+                            {this.props.isPutativeDriver !== undefined && (
+                                <span>(unknown significance)</span>
+                            )}
+                            : Inframe deletion, Inframe insertion
+                        </li>
+                    )}
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceColor,
+                            }}
+                        >
+                            Splice Mutations
+                        </strong>
+                        {this.props.isPutativeDriver !== undefined && (
+                            <span>(putative driver)</span>
+                        )}
+                    </li>
+                    {this.props.isPutativeDriver !== undefined && (
+                        <li>
+                            <strong
+                                style={{
+                                    color:
+                                        DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.spliceVusColor,
+                                }}
+                            >
+                                Splice Mutations
+                            </strong>
+                            {this.props.isPutativeDriver !== undefined && (
+                                <span>(unknown significance)</span>
+                            )}
+                        </li>
+                    )}
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.fusionColor,
+                            }}
+                        >
+                            Fusion Mutations
+                        </strong>
+                    </li>
+                    <li>
+                        <strong
+                            style={{
+                                color:
+                                    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS.otherColor,
+                            }}
+                        >
+                            Other Mutations
+                        </strong>
+                        : All other types of mutations
+                    </li>
+                </ul>
+            </div>
+        </div>
+    );
 
     protected getTrackDataStatus(): TrackDataStatus {
         let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this
@@ -172,15 +339,99 @@ export default class MutationMapper<
     protected get mutationFilterPanel(): JSX.Element | null {
         return (
             <div>
-                <div style={{ paddingBottom: 15, paddingTop: 15 }}>
-                    <ProteinImpactTypeBadgeSelector
-                        filter={this.proteinImpactTypeFilter}
-                        counts={this.store.mutationCountsByProteinImpactType}
-                        onSelect={this.onProteinImpactTypeSelect}
-                    />
-                </div>
+                {this.props.isPutativeDriver ? (
+                    <div
+                        style={{
+                            paddingBottom: this.props.compactStyle ? 5 : 15,
+                        }}
+                    >
+                        <DriverAnnotationProteinImpactTypeBadgeSelector
+                            filter={this.proteinImpactTypeFilter}
+                            counts={this.mutationCountsByProteinImpactType}
+                            onSelect={this.onProteinImpactTypeSelect}
+                            onClickSettingMenu={this.props.onClickSettingMenu}
+                        />
+                    </div>
+                ) : (
+                    <div
+                        style={{
+                            paddingBottom: 15,
+                            paddingTop: 15,
+                        }}
+                    >
+                        <ProteinImpactTypeBadgeSelector
+                            filter={this.proteinImpactTypeFilter}
+                            counts={this.mutationCountsByProteinImpactType}
+                            onSelect={this.onProteinImpactTypeSelect}
+                        />
+                    </div>
+                )}
             </div>
         );
+    }
+
+    protected groupDataByProteinImpactType(sortedFilteredData: any[]) {
+        const filters = Object.values(ProteinImpactType).map(value => ({
+            group: value,
+            filter: {
+                type: DataFilterType.PROTEIN_IMPACT_TYPE,
+                values: [value],
+            },
+        }));
+
+        // Use customized filter for putative driver annotation
+        const groupedData = groupDataByGroupFilters(
+            filters,
+            sortedFilteredData,
+            createAnnotatedProteinImpactTypeFilter(this.props.isPutativeDriver)
+        );
+
+        return _.keyBy(groupedData, d => d.group);
+    }
+
+    @computed
+    protected get mutationsGroupedByProteinImpactType() {
+        // there are two types of filters (with putative driver, without putative driver)
+        const filtersWithoutProteinImpactTypeFilter = this.store.dataStore.dataFilters.filter(
+            f =>
+                f.type !== DataFilterType.PROTEIN_IMPACT_TYPE &&
+                f.type !== ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
+        );
+
+        // apply filters excluding the protein impact type filters
+        // this prevents number of unchecked protein impact types from being counted as zero
+        let sortedFilteredData = applyDataFilters(
+            this.store.dataStore.allData,
+            filtersWithoutProteinImpactTypeFilter,
+            this.store.dataStore.applyFilter
+        );
+
+        // also apply lazy mobx table search filter
+        sortedFilteredData = sortedFilteredData.filter(m =>
+            (this.store
+                .dataStore as MutationMapperDataStore).applyLazyMobXTableFilter(
+                m
+            )
+        );
+
+        return this.groupDataByProteinImpactType(sortedFilteredData);
+    }
+
+    @computed
+    public get mutationCountsByProteinImpactType(): {
+        [proteinImpactType: string]: number;
+    } {
+        const map: { [proteinImpactType: string]: number } = {};
+
+        Object.keys(this.mutationsGroupedByProteinImpactType).forEach(
+            proteinImpactType => {
+                const g = this.mutationsGroupedByProteinImpactType[
+                    proteinImpactType
+                ];
+                map[g.group] = g.data.length;
+            }
+        );
+        return map;
     }
 
     protected get structureViewerPanel(): JSX.Element | null {
@@ -227,6 +478,7 @@ export default class MutationMapper<
                         ? this.filterResetPanel
                         : undefined
                 }
+                legend={this.legendColorCodes}
             />
         );
     }
@@ -392,12 +644,17 @@ export default class MutationMapper<
         selectedMutationTypeIds: string[],
         allValuesSelected: boolean
     ) {
+        // use different filters when putative driver annotation setting changes
         onFilterOptionSelect(
             selectedMutationTypeIds.map(v => v.toLowerCase()),
             allValuesSelected,
             this.store.dataStore,
-            DataFilterType.PROTEIN_IMPACT_TYPE,
-            PROTEIN_IMPACT_TYPE_FILTER_ID
+            this.props.isPutativeDriver === undefined
+                ? DataFilterType.PROTEIN_IMPACT_TYPE
+                : ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
+            this.props.isPutativeDriver === undefined
+                ? PROTEIN_IMPACT_TYPE_FILTER_ID
+                : ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID
         );
     }
 }
