@@ -17,7 +17,6 @@ import {
 } from './Oncoprint';
 import {
     AnnotatedExtendedAlteration,
-    AnnotatedMutation,
     ExtendedAlteration,
     AlterationTypeConstants,
     CustomDriverNumericGeneMolecularData,

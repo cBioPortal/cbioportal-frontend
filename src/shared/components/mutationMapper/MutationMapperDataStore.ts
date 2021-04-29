@@ -13,6 +13,7 @@ import {
 import { SimpleLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
+    ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID,
     countDuplicateMutations,
     groupMutationsByGeneAndPatientAndProteinChange,
 } from 'shared/lib/MutationUtils';
@@ -24,7 +25,12 @@ export const PROTEIN_IMPACT_TYPE_FILTER_ID =
 export const MUTATION_STATUS_FILTER_ID = '_cBioPortalMutationStatusFilter_';
 
 export function findProteinImpactTypeFilter(dataFilters: DataFilter[]) {
-    return dataFilters.find(f => f.id === PROTEIN_IMPACT_TYPE_FILTER_ID);
+    // there are two types of filters (with putative driver, without putative driver)
+    return dataFilters.find(
+        f =>
+            f.id === PROTEIN_IMPACT_TYPE_FILTER_ID ||
+            f.id === ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID
+    );
 }
 
 // TODO this is now mostly duplicate of DefaultMutationMapperDataStore in react-mutation-mapper,
