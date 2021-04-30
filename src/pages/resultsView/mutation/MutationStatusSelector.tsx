@@ -88,7 +88,11 @@ export default class MutationStatusSelector extends React.Component<
 
     private get germlinePlaceholder() {
         return (
-            <div data-test="germlineMutationRate" className="invisible">
+            <div
+                data-test="germlineMutationRate"
+                className="invisible"
+                style={{ display: 'none' }}
+            >
                 %
             </div>
         );

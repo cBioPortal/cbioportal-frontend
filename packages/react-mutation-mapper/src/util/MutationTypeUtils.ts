@@ -14,6 +14,7 @@ import {
     MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_TRUNC_PASSENGER,
     MUT_COLOR_SPLICE_PASSENGER,
+    STRUCTURAL_VARIANT_PASSENGER_COLOR,
 } from 'cbioportal-frontend-commons';
 import { Mutation } from 'cbioportal-utils';
 import _ from 'lodash';
@@ -30,6 +31,7 @@ export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
     spliceColor: MUT_COLOR_SPLICE,
     spliceVusColor: MUT_COLOR_SPLICE_PASSENGER,
     fusionColor: STRUCTURAL_VARIANT_COLOR,
+    fusionVusColor: STRUCTURAL_VARIANT_PASSENGER_COLOR,
     otherColor: MUT_COLOR_OTHER,
 };
 
@@ -125,7 +127,9 @@ export function getColorForProteinImpactType<T extends Mutation>(
                     ? colors.inframeColor
                     : colors.inframeVusColor;
             case ProteinImpactType.FUSION:
-                return colors.fusionColor;
+                return chosenMutation.isPutativeDriver
+                    ? colors.fusionColor
+                    : colors.fusionVusColor;
             case ProteinImpactType.SPLICE:
                 return chosenMutation.isPutativeDriver
                     ? colors.spliceColor

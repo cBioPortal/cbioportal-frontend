@@ -99,6 +99,7 @@ export type MutationMapperProps = {
     filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
     filterApplier?: FilterApplier;
     onTranscriptChange?: (transcript: string) => void;
+    compactStyle?: boolean;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -387,6 +388,7 @@ export default class MutationMapper<
                     this.props.transcriptSummaryUrlTemplate
                 }
                 onTranscriptChange={this.handleTranscriptChange}
+                compactStyle={this.props.compactStyle}
             />
         );
     }

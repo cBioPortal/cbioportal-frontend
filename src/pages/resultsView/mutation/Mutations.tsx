@@ -243,6 +243,8 @@ export default class Mutations extends React.Component<
                             AppConfig.serverConfig.show_transcript_dropdown
                         }
                         onTranscriptChange={this.onTranscriptChange}
+                        onClickSettingMenu={this.onClickSettingMenu}
+                        compactStyle={true}
                     />
                 </div>
             );
@@ -256,5 +258,10 @@ export default class Mutations extends React.Component<
         this.props.urlWrapper.updateURL({
             mutations_transcript_id: transcriptId,
         });
+    }
+
+    @action.bound
+    protected onClickSettingMenu() {
+        this.props.store.resultsPageSettingsVisible = true;
     }
 }

@@ -11,12 +11,12 @@ import {
     groupOncoKbIndicatorDataByMutations,
     DefaultMutationMapperStore,
     ONCOKB_DEFAULT_INFO,
+    ApplyFilterFn,
 } from 'react-mutation-mapper';
 import {
     defaultOncoKbIndicatorFilter,
     IHotspotIndex,
     getMutationsByTranscriptId,
-    Mutation as SimpleMutation,
 } from 'cbioportal-utils';
 import { remoteData } from 'cbioportal-frontend-commons';
 import { Gene, Mutation } from 'cbioportal-ts-api-client';
@@ -55,10 +55,11 @@ import { getOncoKbApiUrl } from 'shared/api/urls';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
+    filterAppliersOverride?: { [filterType: string]: ApplyFilterFn };
 }
 
 export default class MutationMapperStore extends DefaultMutationMapperStore<
-    SimpleMutation
+    Mutation
 > {
     constructor(
         protected mutationMapperConfig: IMutationMapperConfig,
@@ -87,6 +88,8 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
                     mutationMapperStoreConfig.filterMutationsBySelectedTranscript,
                 enableCivic: mutationMapperConfig.show_civic,
                 enableOncoKb: mutationMapperConfig.show_oncokb,
+                filterAppliersOverride:
+                    mutationMapperStoreConfig.filterAppliersOverride,
             },
             getMutations,
             getTranscriptId
@@ -119,7 +122,7 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
 
     @memoize
     protected getAnnotatedMutationsByTranscriptId(
-        mutations: SimpleMutation[],
+        mutations: Mutation[],
         transcriptId: string,
         indexedVariantAnnotations: {
             [genomicLocation: string]: VariantAnnotation;
