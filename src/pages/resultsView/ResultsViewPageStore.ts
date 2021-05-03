@@ -4796,13 +4796,16 @@ export class ResultsViewPageStore {
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
                 const isHotspotDriver =
+                    this.driverAnnotationSettings.hotspots &&
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
                 const cbioportalCountExceeded =
+                    this.driverAnnotationSettings.cbioportalCount &&
                     this.getCBioportalCount.isComplete &&
                     this.getCBioportalCount.result!(mutation) >=
                         this.driverAnnotationSettings.cbioportalCountThreshold;
                 const cosmicCountExceeded =
+                    this.driverAnnotationSettings.cosmicCount &&
                     this.getCosmicCount.isComplete &&
                     this.getCosmicCount.result!(mutation) >=
                         this.driverAnnotationSettings.cosmicCountThreshold;
