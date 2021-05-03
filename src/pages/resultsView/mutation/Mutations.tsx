@@ -167,35 +167,6 @@ export default class Mutations extends React.Component<
             )!;
             return (
                 <div>
-                    <div className={'tabMessageContainer'}>
-                        <OqlStatusBanner
-                            className="mutations-oql-status-banner"
-                            store={this.props.store}
-                            tabReflectsOql={
-                                this.props.store.mutationsTabFilteringSettings
-                                    .useOql
-                            }
-                            isUnaffected={
-                                !this.props.store.queryContainsMutationOql
-                            }
-                            onToggle={this.onToggleOql}
-                        />
-                        <AlterationFilterWarning
-                            store={this.props.store}
-                            mutationsTabModeSettings={{
-                                excludeVUS: this.props.store
-                                    .mutationsTabFilteringSettings.excludeVus,
-                                excludeGermline: this.props.store
-                                    .mutationsTabFilteringSettings
-                                    .excludeGermline,
-                                toggleExcludeVUS: this.onToggleVUS,
-                                toggleExcludeGermline: this.onToggleGermline,
-                                hugoGeneSymbol: this.selectedGene
-                                    .hugoGeneSymbol,
-                            }}
-                        />
-                        <CaseFilterWarning store={this.props.store} />
-                    </div>
                     <ResultsViewMutationMapper
                         {...convertToMutationMapperProps({
                             ...AppConfig.serverConfig,

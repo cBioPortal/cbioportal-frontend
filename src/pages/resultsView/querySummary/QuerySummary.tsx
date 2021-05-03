@@ -345,6 +345,7 @@ export default class QuerySummary extends React.Component<
                                 this.cohortAndGeneSummary.component!}
                         </div>
 
+                        {/*
                         <div className="query-summary__rightItems">
                             <div className="query-summary__alterationData">
                                 {loadingComplete && (
@@ -362,6 +363,7 @@ export default class QuerySummary extends React.Component<
                                 urlWrapper={this.props.store.urlWrapper}
                             />
                         </div>
+                            */}
                     </div>
 
                     {this.queryFormVisible && this.queryForm}

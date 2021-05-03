@@ -579,7 +579,6 @@ export default class MutationMapper<
 
                             <div className="mutationMapperMetaColumn">
                                 {this.geneSummary}
-                                {this.mutationRateSummary}
                                 {this.mutationFilterPanel}
                                 {this.view3dButton}
                             </div>

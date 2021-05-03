@@ -3275,9 +3275,7 @@ export class ResultsViewPageStore {
         await: () => [
             this.selectedMolecularProfiles,
             this.defaultOQLQuery,
-            this.mutationsReportByGene,
-            this.filteredSampleKeyToSample,
-            this.structuralVariantsReportByGene,
+            this.mutationsReportByGene
         ],
         invoke: () => {
             const mutationsByGene = _.mapValues(
@@ -3306,97 +3304,9 @@ export class ResultsViewPageStore {
                         this.mutationsTabFilteringSettings.excludeVus,
                         this.mutationsTabFilteringSettings.excludeGermline
                     );
-                    if (this.hideUnprofiledSamples) {
-                        // filter unprofiled samples
-                        const sampleMap = this.filteredSampleKeyToSample
-                            .result!;
-                        return filteredMutations.filter(
-                            m => m.uniqueSampleKey in sampleMap
-                        );
-                    } else {
-                        return filteredMutations;
-                    }
+                    return filteredMutations;
                 }
             );
-
-            //TODO: remove once SV/Fusion tab is merged
-            _.forEach(
-                this.structuralVariantsReportByGene.result,
-                (structuralVariantsGroups, hugoGeneSymbol) => {
-                    if (mutationsByGene[hugoGeneSymbol] === undefined) {
-                        mutationsByGene[hugoGeneSymbol] = [];
-                    }
-
-                    if (
-                        this.mutationsTabFilteringSettings.useOql &&
-                        this.queryContainsMutationOql
-                    ) {
-                        // use oql filtering in mutations tab only if query contains mutation oql
-                        structuralVariantsGroups = _.mapValues(
-                            structuralVariantsGroups,
-                            structuralVariants =>
-                                filterCBioPortalWebServiceData(
-                                    this.oqlText,
-                                    structuralVariants,
-                                    new AccessorsForOqlFilter(
-                                        this.selectedMolecularProfiles.result!
-                                    ),
-                                    this.defaultOQLQuery.result!
-                                )
-                        );
-                    }
-                    let filteredStructuralVariants = compileStructuralVariants(
-                        structuralVariantsGroups,
-                        this.mutationsTabFilteringSettings.excludeVus,
-                        this.mutationsTabFilteringSettings.excludeGermline
-                    );
-                    if (this.hideUnprofiledSamples) {
-                        // filter unprofiled samples
-                        const sampleMap = this.filteredSampleKeyToSample
-                            .result!;
-                        filteredStructuralVariants = filteredStructuralVariants.filter(
-                            m => m.uniqueSampleKey in sampleMap
-                        );
-                    }
-
-                    filteredStructuralVariants.forEach(structuralVariant => {
-                        const mutation = {
-                            center: structuralVariant.center,
-                            chr: structuralVariant.site1Chromosome,
-                            entrezGeneId: structuralVariant.site1EntrezGeneId,
-                            keyword: structuralVariant.comments,
-                            molecularProfileId:
-                                structuralVariant.molecularProfileId,
-                            mutationType: CanonicalMutationType.FUSION,
-                            ncbiBuild: structuralVariant.ncbiBuild,
-                            patientId: structuralVariant.patientId,
-                            proteinChange: structuralVariant.eventInfo,
-                            sampleId: structuralVariant.sampleId,
-                            startPosition: structuralVariant.site1Position,
-                            studyId: structuralVariant.studyId,
-                            uniquePatientKey:
-                                structuralVariant.uniquePatientKey,
-                            uniqueSampleKey: structuralVariant.uniqueSampleKey,
-                            variantType: structuralVariant.variantClass,
-                            gene: {
-                                entrezGeneId:
-                                    structuralVariant.site1EntrezGeneId,
-                                hugoGeneSymbol:
-                                    structuralVariant.site1HugoSymbol,
-                            },
-                            hugoGeneSymbol: structuralVariant.site1HugoSymbol,
-                            putativeDriver: structuralVariant.putativeDriver,
-                            oncoKbOncogenic: structuralVariant.oncoKbOncogenic,
-                            isHotspot: structuralVariant.isHotspot,
-                            simplifiedMutationType:
-                                CanonicalMutationType.FUSION,
-                        } as AnnotatedMutation;
-
-                        mutationsByGene[hugoGeneSymbol].push(mutation);
-                    });
-                }
-            );
-            //TODO: remove once SV/Fusion tab is merged
 
             return Promise.resolve(mutationsByGene);
         },

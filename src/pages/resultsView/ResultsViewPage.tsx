@@ -168,89 +168,6 @@ export default class ResultsViewPage extends React.Component<
         const store = this.resultsViewPageStore;
 
         const tabMap: ITabConfiguration[] = [
-            {
-                id: ResultsViewTab.ONCOPRINT,
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={0}
-                            id={ResultsViewTab.ONCOPRINT}
-                            linkText="OncoPrint"
-                        >
-                            <ResultsViewOncoprint
-                                divId={'oncoprintDiv'}
-                                store={store}
-                                urlWrapper={store.urlWrapper}
-                                key={store.hugoGeneSymbols.join(',')}
-                                addOnBecomeVisibleListener={
-                                    addOnBecomeVisibleListener
-                                }
-                            />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.CANCER_TYPES_SUMMARY,
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={1}
-                            id={ResultsViewTab.CANCER_TYPES_SUMMARY}
-                            linkText="Cancer Types Summary"
-                        >
-                            <CancerSummaryContainer store={store} />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.MUTUAL_EXCLUSIVITY,
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={5}
-                            id={ResultsViewTab.MUTUAL_EXCLUSIVITY}
-                            linkText="Mutual Exclusivity"
-                        >
-                            <MutualExclusivityTab
-                                store={store}
-                                isSampleAlteredMap={store.isSampleAlteredMap}
-                            />
-                        </MSKTab>
-                    );
-                },
-                hide: () => {
-                    // we are using the size of isSampleAlteredMap as a proxy for the number of things we have to compare
-                    return (
-                        !this.resultsViewPageStore.isSampleAlteredMap
-                            .isComplete ||
-                        _.size(
-                            this.resultsViewPageStore.isSampleAlteredMap.result
-                        ) < 2
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.PLOTS,
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={12}
-                            id={ResultsViewTab.PLOTS}
-                            linkText={'Plots'}
-                        >
-                            <PlotsTab
-                                store={store}
-                                urlWrapper={this.urlWrapper}
-                            />
-                        </MSKTab>
-                    );
-                },
-            },
 
             {
                 id: ResultsViewTab.MUTATIONS,
@@ -266,173 +183,6 @@ export default class ResultsViewPage extends React.Component<
                                 appStore={this.props.appStore}
                                 urlWrapper={this.urlWrapper}
                             />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.COEXPRESSION,
-                hide: () => {
-                    if (
-                        !this.resultsViewPageStore.isThereDataForCoExpressionTab
-                            .isComplete ||
-                        !this.resultsViewPageStore.studies.isComplete
-                    ) {
-                        return true;
-                    } else {
-                        const tooManyStudies =
-                            this.resultsViewPageStore.studies.result!.length >
-                            1;
-                        const noData = !this.resultsViewPageStore
-                            .isThereDataForCoExpressionTab.result;
-                        return tooManyStudies || noData;
-                    }
-                },
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={7}
-                            id={ResultsViewTab.COEXPRESSION}
-                            linkText={'Co-expression'}
-                        >
-                            <CoExpressionTab store={store} />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.COMPARISON,
-                hide: () => {
-                    return this.resultsViewPageStore.survivalClinicalDataExists
-                        .isPending;
-                },
-                getTab: () => {
-                    const text = this.resultsViewPageStore
-                        .survivalClinicalDataExists.result
-                        ? 'Comparison/Survival'
-                        : 'Comparison';
-                    return (
-                        <MSKTab
-                            key={10}
-                            id={ResultsViewTab.COMPARISON}
-                            linkText={text}
-                        >
-                            <ComparisonTab
-                                urlWrapper={this.urlWrapper}
-                                appStore={this.props.appStore}
-                                store={this.resultsViewPageStore}
-                            />
-                        </MSKTab>
-                    );
-                },
-            },
-            {
-                id: ResultsViewTab.CN_SEGMENTS,
-                hide: () => {
-                    return (
-                        !this.resultsViewPageStore.studies.isComplete ||
-                        !this.resultsViewPageStore.genes.isComplete ||
-                        !this.resultsViewPageStore.referenceGenes.isComplete ||
-                        !doesQueryHaveCNSegmentData(
-                            this.resultsViewPageStore.samples.result
-                        )
-                    );
-                },
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={6}
-                            id={ResultsViewTab.CN_SEGMENTS}
-                            linkText="CN Segments"
-                        >
-                            <CNSegments store={store} />
-                        </MSKTab>
-                    );
-                },
-            },
-
-            {
-                id: ResultsViewTab.NETWORK,
-                hide: () => {
-                    return true;
-                },
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={9}
-                            id={ResultsViewTab.NETWORK}
-                            linkText={'Network'}
-                        >
-                            <div className="alert alert-info">
-                                The Network tab has been retired. For similar
-                                functionality, please visit{' '}
-                                <a
-                                    href="http://www.pathwaycommons.org/pcviz/"
-                                    target="_blank"
-                                >
-                                    http://www.pathwaycommons.org/pcviz/
-                                </a>
-                            </div>
-                        </MSKTab>
-                    );
-                },
-            },
-            {
-                id: ResultsViewTab.PATHWAY_MAPPER,
-                hide: () =>
-                    browser.name === 'Internet Explorer' ||
-                    !AppConfig.serverConfig.show_pathway_mapper ||
-                    !this.resultsViewPageStore.studies.isComplete,
-                getTab: () => {
-                    const showPM =
-                        store.filteredSequencedSampleKeysByGene.isComplete &&
-                        store.oqlFilteredCaseAggregatedDataByOQLLine
-                            .isComplete &&
-                        store.genes.isComplete &&
-                        store.samples.isComplete &&
-                        store.patients.isComplete &&
-                        store.coverageInformation.isComplete &&
-                        store.filteredSequencedSampleKeysByGene.isComplete &&
-                        store.filteredSequencedPatientKeysByGene.isComplete &&
-                        store.selectedMolecularProfiles.isComplete &&
-                        store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
-                            .isComplete;
-
-                    return (
-                        <MSKTab
-                            key={13}
-                            id={ResultsViewTab.PATHWAY_MAPPER}
-                            linkText={'Pathways'}
-                        >
-                            {showPM ? (
-                                <ResultsViewPathwayMapper
-                                    store={store}
-                                    appStore={this.props.appStore}
-                                    urlWrapper={this.urlWrapper}
-                                />
-                            ) : (
-                                <LoadingIndicator
-                                    isLoading={true}
-                                    size={'big'}
-                                    center={true}
-                                />
-                            )}
-                        </MSKTab>
-                    );
-                },
-            },
-            {
-                id: ResultsViewTab.DOWNLOAD,
-                getTab: () => {
-                    return (
-                        <MSKTab
-                            key={11}
-                            id={ResultsViewTab.DOWNLOAD}
-                            linkText={'Download'}
-                        >
-                            <DownloadTab store={store} />
                         </MSKTab>
                     );
                 },
@@ -611,28 +361,6 @@ export default class ResultsViewPage extends React.Component<
         } else {
             return (
                 <>
-                    {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
-                    this.resultsViewPageStore.isQueryInvalid && (
-                        <div
-                            className="alert alert-danger queryInvalid"
-                            style={{ marginBottom: '40px' }}
-                            role="alert"
-                        >
-                            <GeneSymbolValidationError
-                                sampleCount={
-                                    this.resultsViewPageStore.samples.result
-                                        .length
-                                }
-                                queryProductLimit={
-                                    AppConfig.serverConfig.query_product_limit
-                                }
-                                email={
-                                    AppConfig.serverConfig.skin_email_contact
-                                }
-                            />
-                        </div>
-                    )}
-
                     {this.userMessages.isComplete &&
                         this.userMessages.result.length > 0 && (
                             <UserMessager messages={this.userMessages.result} />
@@ -657,6 +385,7 @@ export default class ResultsViewPage extends React.Component<
                                 </title>
                             </Helmet>
                             <div>
+                                {/*
                                 <div className={'headBlock'}>
                                     <QuerySummary
                                         routingStore={this.props.routing}
@@ -700,13 +429,9 @@ export default class ResultsViewPage extends React.Component<
                                         </div>
                                     )}
                                 </div>
+                                */}
                                 {// we don't show the result tabs if we don't have valid query
-                                this.showTabs &&
-                                    !this.resultsViewPageStore.genesInvalid &&
-                                    !this.resultsViewPageStore.isQueryInvalid &&
-                                    this.resultsViewPageStore
-                                        .customDriverAnnotationReport
-                                        .isComplete && (
+                                this.showTabs && (
                                         <MSKTabs
                                             key={this.urlWrapper.hash}
                                             activeTabId={

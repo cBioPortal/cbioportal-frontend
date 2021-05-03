@@ -166,6 +166,7 @@ export async function getCoverageInformation(
     // query for gene panel data using sample molecular identifiers
     let genePanelData: GenePanelData[];
     if (sampleMolecularIdentifiers.length && genes.result!.length) {
+        debugger;
         genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
             {
                 sampleMolecularIdentifiers,

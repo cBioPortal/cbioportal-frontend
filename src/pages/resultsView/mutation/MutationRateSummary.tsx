@@ -85,8 +85,8 @@ export default class MutationRateSummary extends React.Component<
                     filter={this.props.mutationStatusFilter}
                     onSelect={this.props.onMutationStatusSelect}
                     rates={{
-                        Germline: this.germlineMutationRate,
-                        Somatic: this.somaticMutationRate,
+                        Germline: 1,
+                        Somatic: 1,
                     }}
                     somaticContent={{
                         title: 'Somatic Mutation Frequency',
