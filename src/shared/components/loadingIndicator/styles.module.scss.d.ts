@@ -4,6 +4,7 @@ declare const styles: {
   readonly "centered-with-children": string;
   readonly "color": string;
   readonly "fadein": string;
+  readonly "nofade": string;
   readonly "progressUI": string;
   readonly "small": string;
 };
