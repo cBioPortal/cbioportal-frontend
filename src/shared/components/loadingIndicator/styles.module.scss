@@ -7,6 +7,10 @@
     transform: translate(-50%, -50%);
     animation: fadein 1s;
 
+    &.nofade {
+        animation: none;
+    }
+
     border-radius: 10px;
 
     :global(.hiddenByPosition) & {

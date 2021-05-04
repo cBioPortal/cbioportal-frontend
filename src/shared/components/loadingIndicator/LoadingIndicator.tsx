@@ -14,6 +14,7 @@ export interface ILoader {
     inline?: boolean;
     center?: boolean;
     centerRelativeToContainer?: boolean;
+    noFade?: boolean;
     size?: 'big' | 'small';
     small?: boolean;
     big?: boolean;
@@ -54,6 +55,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]: this.props.center,
+            [styles.nofade]: this.props.noFade,
             // (centered-relative-to-container style is currently commented out)
             // [styles['centered-relative-to-container']]: this.props
             //     .centerRelativeToContainer,
