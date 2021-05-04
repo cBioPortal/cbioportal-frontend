@@ -1010,12 +1010,16 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
+        'alwaysCache' ? : boolean,
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/clinical-data-bin-counts/fetch';
+        if (parameters['alwaysCache'] !== undefined) {
+            queryParameters['alwaysCache'] = parameters['alwaysCache'];
+        }
 
         if (parameters['dataBinMethod'] !== undefined) {
             queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
@@ -1035,14 +1039,16 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      * @param {string} dataBinMethod - Method for data binning
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'alwaysCache' ? : boolean,
         'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -1055,6 +1061,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['alwaysCache'] !== undefined) {
+                queryParameters['alwaysCache'] = parameters['alwaysCache'];
+            }
 
             if (parameters['clinicalDataBinCountFilter'] !== undefined) {
                 body = parameters['clinicalDataBinCountFilter'];
@@ -1085,14 +1095,16 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      * @param {string} dataBinMethod - Method for data binning
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
+            'alwaysCache' ? : boolean,
             'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
             'dataBinMethod' ? : "STATIC" | "DYNAMIC",
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < ClinicalDataBin >
         > {
             return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -5009,11 +5021,15 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchMutatedGenesUsingPOSTURL(parameters: {
+        'alwaysCache' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/mutated-genes/fetch';
+        if (parameters['alwaysCache'] !== undefined) {
+            queryParameters['alwaysCache'] = parameters['alwaysCache'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -5029,12 +5045,14 @@ export default class CBioPortalAPIInternal {
      * Fetch mutated genes by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMutatedGenesUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} studyViewFilter - Study view filter
      */
     fetchMutatedGenesUsingPOSTWithHttpInfo(parameters: {
+        'alwaysCache' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -5047,6 +5065,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['alwaysCache'] !== undefined) {
+                queryParameters['alwaysCache'] = parameters['alwaysCache'];
+            }
 
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
@@ -5073,12 +5095,14 @@ export default class CBioPortalAPIInternal {
      * Fetch mutated genes by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMutatedGenesUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} studyViewFilter - Study view filter
      */
     fetchMutatedGenesUsingPOST(parameters: {
+            'alwaysCache' ? : boolean,
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < AlterationCountByGene >
         > {
             return this.fetchMutatedGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {

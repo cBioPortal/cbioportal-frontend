@@ -3411,6 +3411,7 @@ export class StudyViewPageStore {
                                 .newlyAddedUnfilteredAttrsForNumerical,
                             studyViewFilter: this.filters,
                         },
+                        alwaysCache: !this.chartsAreFiltered,
                     }
                 );
                 return Promise.resolve(
@@ -3446,6 +3447,7 @@ export class StudyViewPageStore {
                             attributes: this.unfilteredAttrsForNumerical,
                             studyViewFilter: this.filters,
                         },
+                        alwaysCache: !this.chartsAreFiltered,
                     }
                 );
                 return Promise.resolve(
@@ -3819,6 +3821,7 @@ export class StudyViewPageStore {
                                         attributes: [attribute],
                                         studyViewFilter: this.filters,
                                     },
+                                    alwaysCache: !this.chartsAreFiltered,
                                 }
                             );
                             // convert ClinicalDataBin to DataBin
@@ -5929,6 +5932,7 @@ export class StudyViewPageStore {
                             .result,
                         studyViewFilter: this.initialFilters,
                     },
+                    alwaysCache: !this.chartsAreFiltered,
                 }
             );
             return Promise.resolve(
@@ -6328,6 +6332,7 @@ export class StudyViewPageStore {
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
+                        alwaysCache: !this.chartsAreFiltered,
                     }
                 );
                 return mutatedGenes.map(item => {
