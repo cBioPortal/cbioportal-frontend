@@ -255,6 +255,7 @@ import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
+import { default as uniqueSampleKeyToTumorType } from './uniqueSampleKeyToTumorTypeMap.json';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3071,7 +3072,6 @@ export class ResultsViewPageStore {
     readonly mutations = remoteData<Mutation[]>({
         await: () => [
             this.genes,
-            this.samples,
             this.studyToMutationMolecularProfile,
         ],
         invoke: async () => {
@@ -3081,35 +3081,45 @@ export class ResultsViewPageStore {
             const studyIdToProfileMap = this.studyToMutationMolecularProfile
                 .result;
 
-            const filters = this.samples.result.reduce(
-                (memo, sample: Sample) => {
-                    if (sample.studyId in studyIdToProfileMap) {
-                        memo.push({
-                            molecularProfileId:
-                                studyIdToProfileMap[sample.studyId]
-                                    .molecularProfileId,
-                            sampleId: sample.sampleId,
-                        });
-                    }
-                    return memo;
-                },
-                [] as any[]
-            );
+            // const filters = this.samples.result.reduce(
+            //     (memo, sample: Sample) => {
+            //         if (sample.studyId in studyIdToProfileMap) {
+            //             memo.push({
+            //                 molecularProfileId:
+            //                     studyIdToProfileMap[sample.studyId]
+            //                         .molecularProfileId,
+            //                 sampleId: sample.sampleId,
+            //             });
+            //         }
+            //         return memo;
+            //     },
+            //     [] as any[]
+            // );
 
             const data = {
                 entrezGeneIds: _.map(
                     this.genes.result,
                     (gene: Gene) => gene.entrezGeneId
                 ),
-                sampleMolecularIdentifiers: filters,
+                molecularProfileIds: Object.values(studyIdToProfileMap).map(mp => mp.molecularProfileId)
             } as MutationMultipleStudyFilter;
 
-            return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+            // this seems like backend error (5x error) though arguments seem correct?
+            // return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+            //     {
+            //         projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+            //         mutationMultipleStudyFilter: data,
+            //     }
+            // );
+            // TODO: generalize, right know hardcode desired profile for EGFR in mskimpact
+            return await client.getMutationsInMolecularProfileBySampleListIdUsingGET(
                 {
-                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    mutationMultipleStudyFilter: data,
+                    entrezGeneId:1956,
+                    molecularProfileId:"mskimpact_mutations",
+                    sampleListId:"mskimpact_all",
+                    projection: "DETAILED"
                 }
-            );
+            )
         },
     });
 
@@ -3571,6 +3581,7 @@ export class ResultsViewPageStore {
                     }
                 );
                 let promises: Promise<Sample[]>[] = [];
+                debugger;
                 if (sampleIdentifiers.length) {
                     promises.push(
                         client.fetchSamplesUsingPOST({
@@ -4886,17 +4897,10 @@ export class ResultsViewPageStore {
         [uniqueSampleKey: string]: string;
     }>({
         await: () => [
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData,
         ],
         invoke: () => {
             return Promise.resolve(
-                generateUniqueSampleKeyToTumorTypeMap(
-                    this.clinicalDataForSamples,
-                    this.studiesForSamplesWithoutCancerTypeClinicalData,
-                    this.samplesWithoutCancerTypeClinicalData
-                )
+                uniqueSampleKeyToTumorType
             );
         },
     });

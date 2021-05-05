@@ -79,13 +79,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
     protected get isMutationTableDataLoading() {
         return (
             getRemoteDataGroupStatus(
-                this.props.store.clinicalDataForSamples,
-                this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.props.store.canonicalTranscript,
                 this.props.store.mutationData,
                 this.props.store.indexedVariantAnnotations,
                 this.props.store.activeTranscript,
-                this.props.store.clinicalDataGroupedBySampleMap
             ) === 'pending'
         );
     }
