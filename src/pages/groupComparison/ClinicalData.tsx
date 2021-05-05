@@ -204,11 +204,24 @@ export default class ClinicalData extends React.Component<
             const survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
                 this.props.store.survivalClinicalAttributesPrefix.result || []
             );
+            // In addition remove a few more attributes from the comparison page
+            // for GENIE BPC related to years. In the future we might want to
+            // have a more elegant way to exclude clinical attributes from
+            // comparison. See also
+            // https://github.com/cBioPortal/cbioportal/issues/8445
+            const excludeGenieHardcodedAttributeIds = {
+                AGE_LAST_FU_YEARS: 'AGE_LAST_FU_YEARS',
+                BIRTH_YEAR: 'BIRTH_YEAR',
+            };
             return this.props.store.clinicalDataEnrichmentsWithQValues.result.filter(
                 d =>
                     !(
                         d.clinicalAttribute.clinicalAttributeId in
                         survivalAttributeIdsDict
+                    ) &&
+                    !(
+                        d.clinicalAttribute.clinicalAttributeId in
+                        excludeGenieHardcodedAttributeIds
                     )
             );
         },
