@@ -1,5 +1,4 @@
 import { Option, ProteinImpactType } from 'cbioportal-frontend-commons';
-import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import { CSSProperties } from 'react';
@@ -26,6 +25,7 @@ const VALUES = [
     ProteinImpactType.MISSENSE,
     ProteinImpactType.TRUNCATING,
     ProteinImpactType.INFRAME,
+    ProteinImpactType.SPLICE,
     ProteinImpactType.FUSION,
     ProteinImpactType.OTHER,
 ];
@@ -56,14 +56,13 @@ export function getProteinImpactTypeBadgeLabel(
 }
 
 @observer
-export class ProteinImpactTypeBadgeSelector extends React.Component<
-    ProteinImpactTypeBadgeSelectorProps,
-    {}
-> {
+export class ProteinImpactTypeBadgeSelector<
+    P extends ProteinImpactTypeBadgeSelectorProps = ProteinImpactTypeBadgeSelectorProps
+> extends React.Component<P, {}> {
     constructor(props: any) {
         super(props);
-        makeObservable(this);
     }
+
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,
@@ -71,20 +70,18 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<
         numberOfColumnsPerRow: 2,
     };
 
-    @computed
     protected get optionDisplayValueMap() {
         return getProteinImpactTypeOptionDisplayValueMap(
             this.proteinImpactTypeColors
         );
     }
 
-    @computed
     protected get proteinImpactTypeColors() {
         return getProteinImpactTypeColorMap(this.props.colors);
     }
 
-    @computed
     protected get options() {
+        // get options, hide "Other" if it's 0
         return VALUES.map(value => ({
             value,
             label: this.optionDisplayValueMap[value],
@@ -94,7 +91,13 @@ export class ProteinImpactTypeBadgeSelector extends React.Component<
             badgeStyleOverride: {
                 backgroundColor: this.proteinImpactTypeColors[value],
             },
-        }));
+        })).filter(
+            type =>
+                !(
+                    type.value === ProteinImpactType.OTHER &&
+                    type.badgeContent === 0
+                )
+        );
     }
 
     public render() {

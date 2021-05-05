@@ -64,6 +64,11 @@ export default class DefaultLollipopPlotLegend extends React.Component<
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
+                            <strong style={{ color: this.props.spliceColor }}>
+                                Splice Mutations
+                            </strong>
+                        </li>
+                        <li>
                             <strong style={{ color: this.props.fusionColor }}>
                                 Fusion Mutations
                             </strong>

@@ -82,6 +82,8 @@ export {
 export {
     default as ProteinImpactTypeBadgeSelector,
     ProteinImpactTypeBadgeSelectorProps,
+    getProteinImpactTypeOptionLabel,
+    getProteinImpactTypeBadgeLabel,
 } from './component/filter/ProteinImpactTypeBadgeSelector';
 export {
     default as MutationStatusBadgeSelector,
@@ -161,6 +163,7 @@ export {
     MUTATION_TYPE_PRIORITY,
     mutationTypeSort,
     getColorForProteinImpactType,
+    DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
 } from './util/MutationTypeUtils';
 export {
     defaultOncoKbFilter,

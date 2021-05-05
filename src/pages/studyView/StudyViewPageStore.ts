@@ -8280,9 +8280,13 @@ export class StudyViewPageStore {
         await: () => [
             this.studyViewFilterWithFilteredSampleIdentifiers,
             this.selectedSamples,
+            this.displaySampleTreatments,
         ],
         invoke: () => {
-            if (this.hasFilteredSamples) {
+            if (
+                this.hasFilteredSamples &&
+                this.displaySampleTreatments.result
+            ) {
                 return defaultClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
@@ -8316,9 +8320,13 @@ export class StudyViewPageStore {
         await: () => [
             this.studyViewFilterWithFilteredSampleIdentifiers,
             this.selectedSamples,
+            this.displayPatientTreatments,
         ],
         invoke: () => {
-            if (this.hasFilteredSamples) {
+            if (
+                this.hasFilteredSamples &&
+                this.displayPatientTreatments.result
+            ) {
                 return defaultClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this
                         .studyViewFilterWithFilteredSampleIdentifiers.result!,
