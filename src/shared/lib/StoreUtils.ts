@@ -120,6 +120,32 @@ export const MolecularAlterationType_filenameSuffix: {
     STRUCTURAL_VARIANT: 'structural_variants',
 };
 
+export function batchCalls<T>(
+    client: any,
+    methodName: any,
+    data: any,
+    arrayPath: string
+): Promise<T[]> {
+    const items = _.at(data, [arrayPath])[0];
+
+    const size = items.length / (localStorage.batchSize || 1);
+
+    const batches = Math.ceil(items.length / size);
+
+    const groups: any[] = [];
+
+    for (let i = 0; i < batches; i++) {
+        groups.push(items.slice(i * size, (i + 1) * size));
+    }
+
+    const proms = groups.map(batch => {
+        const param = _.update(data, arrayPath, o => batch);
+        return client[methodName](param);
+    });
+
+    return Promise.all(proms);
+}
+
 export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap: {},
 };
@@ -942,12 +968,26 @@ export async function queryOncoKbData(
         'id'
     );
 
-    const mutationQueryResult =
-        mutationQueryVariants.length === 0
-            ? []
-            : await client.annotateMutationsByProteinChangePostUsingPOST_1({
-                  body: mutationQueryVariants,
-              });
+    const now1 = performance.now();
+
+    let mutationQueryResult: any = await batchCalls(
+        client,
+        'annotateMutationsByProteinChangePostUsingPOST_1',
+        {
+            body: mutationQueryVariants,
+        },
+        'body'
+    );
+
+    //  const now2 = performance.now();
+    // mutationQueryResult =
+    //      mutationQueryVariants.length === 0
+    //          ? []
+    //          : await client.annotateMutationsByProteinChangePostUsingPOST_1({
+    //                body: mutationQueryVariants,
+    //            });
+    //
+    //  console.log('gene-panel time2', performance.now() - now2);
 
     const structuralVariantQueryResult =
         structuralQueryVariants.length === 0
@@ -955,7 +995,7 @@ export async function queryOncoKbData(
             : await client.annotateStructuralVariantsPostUsingPOST_1({
                   body: structuralQueryVariants,
               });
-
+    //@ts-ignore
     const oncoKbData: IOncoKbData = {
         indicatorMap: generateIdToIndicatorMap(
             mutationQueryResult.concat(structuralVariantQueryResult)

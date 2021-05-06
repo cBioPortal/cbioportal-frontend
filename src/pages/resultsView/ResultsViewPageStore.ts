@@ -102,6 +102,7 @@ import {
     fetchStructuralVariantOncoKbData,
     cancerTypeForOncoKb,
     getOncoKbOncogenic,
+    batchCalls,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -3105,12 +3106,24 @@ export class ResultsViewPageStore {
                 sampleMolecularIdentifiers: filters,
             } as MutationMultipleStudyFilter;
 
-            return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+            const mutations = await batchCalls<Mutation>(
+                client,
+                'fetchMutationsInMultipleMolecularProfilesUsingPOST',
                 {
                     projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                     mutationMultipleStudyFilter: data,
-                }
+                },
+                'mutationMultipleStudyFilter.sampleMolecularIdentifiers'
             );
+
+            return _.flatten(mutations);
+
+            // return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
+            //     {
+            //         projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+            //         mutationMultipleStudyFilter: data,
+            //     }
+            // );
         },
     });
 
