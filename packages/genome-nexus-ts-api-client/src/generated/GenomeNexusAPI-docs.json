@@ -1586,6 +1586,9 @@
         "transcriptId"
       ],
       "properties": {
+        "uniprotId": {
+          "type": "string"
+        },
         "transcriptId": {
           "type": "string",
           "description": "Ensembl transcript id"
@@ -3160,6 +3163,9 @@
           "type": "string",
           "description": "Ensembl transcript id"
         },
+        "uniprotId": {
+          "type": "string"
+        },
         "variant_allele": {
           "type": "string",
           "description": "Variant allele"
@@ -3244,6 +3250,10 @@
         "transcriptId": {
           "type": "string",
           "description": "Transcript id"
+        },
+        "uniprotId": {
+          "type": "string",
+          "description": "Uniprot ID"
         },
         "variantClassification": {
           "type": "string",
@@ -3351,7 +3361,8 @@
           "type": "string",
           "description": "NCBI build number"
         },
-        "clinvarAnnotation": {
+        "clinvar": {
+          "description": "ClinVar",
           "$ref": "#/definitions/ClinvarAnnotation"
         },
         "colocatedVariants": {
