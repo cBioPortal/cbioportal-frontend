@@ -46,7 +46,9 @@ describe('OverlapUtils', () => {
                     <>
                         (<strong>1</strong>)&nbsp;
                     </>
-                    nameA
+                    <span style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
+                        nameA
+                    </span>
                 </span>
             );
             expect(
@@ -63,14 +65,22 @@ describe('OverlapUtils', () => {
                         <>
                             (<strong>1</strong>)&nbsp;
                         </>
-                        nameA
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameA
+                        </span>
                     </span>{' '}
                     and{' '}
                     <span>
                         <>
                             (<strong>B</strong>)&nbsp;
                         </>
-                        nameB
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameB
+                        </span>
                     </span>
                 </span>
             );
@@ -89,21 +99,33 @@ describe('OverlapUtils', () => {
                         <>
                             (<strong>1</strong>)&nbsp;
                         </>
-                        nameA
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameA
+                        </span>
                     </span>
                     ,{' '}
                     <span>
                         <>
                             (<strong>2</strong>)&nbsp;
                         </>
-                        nameB
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameB
+                        </span>
                     </span>
                     , and{' '}
                     <span>
                         <>
                             (<strong>3</strong>)&nbsp;
                         </>
-                        nameC
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameC
+                        </span>
                     </span>
                 </span>
             );
@@ -123,28 +145,44 @@ describe('OverlapUtils', () => {
                         <>
                             (<strong>1</strong>)&nbsp;
                         </>
-                        nameA
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameA
+                        </span>
                     </span>
                     ,{' '}
                     <span>
                         <>
                             (<strong>2</strong>)&nbsp;
                         </>
-                        nameB
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameB
+                        </span>
                     </span>
                     ,{' '}
                     <span>
                         <>
                             (<strong>3</strong>)&nbsp;
                         </>
-                        nameC
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameC
+                        </span>
                     </span>
                     , and{' '}
                     <span>
                         <>
                             (<strong>4</strong>)&nbsp;
                         </>
-                        nameD
+                        <span
+                            style={{ fontWeight: 'bold', fontStyle: 'italic' }}
+                        >
+                            nameD
+                        </span>
                     </span>
                 </span>
             );
