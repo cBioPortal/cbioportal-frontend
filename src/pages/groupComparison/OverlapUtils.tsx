@@ -52,7 +52,8 @@ export function getExcludedIndexes(
 }
 
 export function renderGroupNameWithOrdinal(
-    group: Pick<ComparisonGroup, 'name' | 'ordinal'>
+    group: Pick<ComparisonGroup, 'name' | 'ordinal'>,
+    highlight?: boolean
 ) {
     return (
         <span>
@@ -61,7 +62,12 @@ export function renderGroupNameWithOrdinal(
                     (<strong>{group.ordinal}</strong>)&nbsp;
                 </>
             )}
-            {group.name}
+            {highlight && (
+                <span style={{ fontWeight: 'bold', fontStyle: 'italic' }}>
+                    {group.name}
+                </span>
+            )}
+            {!highlight && group.name}
         </span>
     );
 }
@@ -70,7 +76,7 @@ export function joinGroupNames(
     groups: Pick<ComparisonGroup, 'name' | 'ordinal'>[],
     conj: string
 ) {
-    const names = groups.map(renderGroupNameWithOrdinal);
+    const names = groups.map(group => renderGroupNameWithOrdinal(group, true));
     switch (names.length) {
         case 0:
             return <span></span>;
