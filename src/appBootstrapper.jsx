@@ -84,6 +84,21 @@ if (getBrowserWindow().navigator.webdriver || localStorage.recordAjaxQuiet) {
     setNetworkListener();
 }
 
+if (localStorage.getItem('timeElementVisible')) {
+    const interval = setInterval(() => {
+        const elementIsVisible = $(
+            localStorage.getItem('timeElementVisible')
+        ).is(':visible');
+        if (elementIsVisible) {
+            clearInterval(interval);
+            console.log(
+                `TimeElementVisible for selector "${localStorage.timeElementVisible}"`,
+                performance.now()
+            );
+        }
+    }, 1000);
+}
+
 // for cbioportal instances, add an extra custom HTTP header to
 // aid debugging in Sentry
 if (/cbioportal\.org/.test(getBrowserWindow().location.href)) {
