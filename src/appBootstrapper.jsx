@@ -17,11 +17,10 @@ import {
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
-import makeRoutes from './routes';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
-import { getHost, buildCBioPortalPageUrl } from './shared/api/urls';
+import { buildCBioPortalPageUrl } from './shared/api/urls';
 import AppConfig from 'appConfig';
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
@@ -78,7 +77,10 @@ if (getBrowserWindow().navigator.webdriver) {
         $('body').addClass('e2etest');
         window.e2etest = true;
     });
+}
 
+// if we are running e2e OR we are testing performance improvements manually
+if (getBrowserWindow().navigator.webdriver || localStorage.recordAjaxQuiet) {
     setNetworkListener();
 }
 
