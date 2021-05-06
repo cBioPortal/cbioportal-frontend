@@ -1647,6 +1647,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     centerRelativeToContainer={false}
                     center={true}
                     className="oncoprintLoadingIndicator"
+                    noFade={true}
                 >
                     <div>
                         <ProgressIndicator
