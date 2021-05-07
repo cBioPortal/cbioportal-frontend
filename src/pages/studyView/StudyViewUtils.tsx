@@ -159,7 +159,6 @@ export type MolecularProfileOption = {
     count: number;
     label: string;
     description: string;
-    sampleUniqueKeys: string[];
     dataType: string;
 };
 
@@ -2690,45 +2689,6 @@ export function updateSavedUserPreferenceChartIds(
         });
     }
     return chartSettings;
-}
-
-export function getMolecularProfileOptions(
-    molecularProfiles: MolecularProfile[],
-    sampleUniqueKeysByMolecularProfileIdSet: { [id: string]: string[] },
-    filter?: (molecularProfile: MolecularProfile) => boolean
-): MolecularProfileOption[] {
-    return _.chain(molecularProfiles)
-        .filter(molecularProfile => {
-            if (filter) {
-                return filter(molecularProfile);
-            }
-            return true;
-        })
-        .groupBy(molecularProfile =>
-            getSuffixOfMolecularProfile(molecularProfile)
-        )
-        .map((profiles, value) => {
-            const uniqueProfiledSamples = _.chain(profiles)
-                .flatMap(
-                    molecularProfile =>
-                        sampleUniqueKeysByMolecularProfileIdSet[
-                            molecularProfile.molecularProfileId
-                        ] || []
-                )
-                .uniq()
-                .value();
-
-            return {
-                value: value,
-                count: uniqueProfiledSamples.length,
-                label: profiles[0].name,
-                description: profiles[0].description,
-                sampleUniqueKeys: uniqueProfiledSamples,
-                dataType: profiles[0].datatype,
-            };
-        })
-        .filter(record => record.count > 0)
-        .value();
 }
 
 export function convertClinicalDataBinsToDataBins(
