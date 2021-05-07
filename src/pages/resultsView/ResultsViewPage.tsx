@@ -609,6 +609,13 @@ export default class ResultsViewPage extends React.Component<
                 </div>
             );
         } else {
+            // we don't show the result tabs if we don't have valid query
+            const tabsReady =
+                this.showTabs &&
+                !this.resultsViewPageStore.genesInvalid &&
+                !this.resultsViewPageStore.isQueryInvalid &&
+                this.resultsViewPageStore.customDriverAnnotationReport
+                    .isComplete;
             return (
                 <>
                     {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
@@ -638,10 +645,12 @@ export default class ResultsViewPage extends React.Component<
                             <UserMessager messages={this.userMessages.result} />
                         )}
 
-                    {this.resultsViewPageStore.studies.isPending && (
+                    {(this.resultsViewPageStore.studies.isPending ||
+                        !tabsReady) && (
                         <LoadingIndicator
                             isLoading={true}
                             center={true}
+                            noFade={true}
                             size={'big'}
                         ></LoadingIndicator>
                     )}
@@ -700,30 +709,24 @@ export default class ResultsViewPage extends React.Component<
                                         </div>
                                     )}
                                 </div>
-                                {// we don't show the result tabs if we don't have valid query
-                                this.showTabs &&
-                                    !this.resultsViewPageStore.genesInvalid &&
-                                    !this.resultsViewPageStore.isQueryInvalid &&
-                                    this.resultsViewPageStore
-                                        .customDriverAnnotationReport
-                                        .isComplete && (
-                                        <MSKTabs
-                                            key={this.urlWrapper.hash}
-                                            activeTabId={
-                                                this.resultsViewPageStore.tabId
-                                            }
-                                            unmountOnHide={false}
-                                            onTabClick={(id: string) =>
-                                                this.resultsViewPageStore.handleTabChange(
-                                                    id
-                                                )
-                                            }
-                                            className="mainTabs"
-                                            getTabHref={this.getTabHref}
-                                        >
-                                            {this.tabs}
-                                        </MSKTabs>
-                                    )}
+                                {tabsReady && (
+                                    <MSKTabs
+                                        key={this.urlWrapper.hash}
+                                        activeTabId={
+                                            this.resultsViewPageStore.tabId
+                                        }
+                                        unmountOnHide={false}
+                                        onTabClick={(id: string) =>
+                                            this.resultsViewPageStore.handleTabChange(
+                                                id
+                                            )
+                                        }
+                                        className="mainTabs"
+                                        getTabHref={this.getTabHref}
+                                    >
+                                        {this.tabs}
+                                    </MSKTabs>
+                                )}
                             </div>
                         </>
                     )}
@@ -739,7 +742,12 @@ export default class ResultsViewPage extends React.Component<
             !this.resultsViewPageStore.studies.isComplete
         ) {
             return (
-                <LoadingIndicator isLoading={true} center={true} size={'big'} />
+                <LoadingIndicator
+                    isLoading={true}
+                    center={true}
+                    noFade={true}
+                    size={'big'}
+                />
             );
         }
 
