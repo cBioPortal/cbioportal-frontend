@@ -76,8 +76,26 @@ if (getBrowserWindow().navigator.webdriver) {
         $('body').addClass('e2etest');
         window.e2etest = true;
     });
+}
 
+// if we are running e2e OR we are testing performance improvements manually
+if (getBrowserWindow().navigator.webdriver || localStorage.recordAjaxQuiet) {
     setNetworkListener();
+}
+
+if (localStorage.getItem('timeElementVisible')) {
+    const interval = setInterval(() => {
+        const elementIsVisible = $(
+            localStorage.getItem('timeElementVisible')
+        ).is(':visible');
+        if (elementIsVisible) {
+            clearInterval(interval);
+            console.log(
+                `TimeElementVisible for selector "${localStorage.timeElementVisible}"`,
+                performance.now()
+            );
+        }
+    }, 1000);
 }
 
 // for cbioportal instances, add an extra custom HTTP header to

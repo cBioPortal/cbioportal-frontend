@@ -2109,6 +2109,10 @@
           "type": "string",
           "description": "Transcript id"
         },
+        "uniprotId": {
+          "type": "string",
+          "description": "Uniprot ID"
+        },
         "variantClassification": {
           "type": "string",
           "description": "Variant classification"
