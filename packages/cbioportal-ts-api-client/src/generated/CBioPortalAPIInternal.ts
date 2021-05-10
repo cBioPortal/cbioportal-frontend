@@ -5609,11 +5609,15 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchStructuralVariantGenesUsingPOSTURL(parameters: {
+        'alwaysCache' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/structuralvariant-genes/fetch';
+        if (parameters['alwaysCache'] !== undefined) {
+            queryParameters['alwaysCache'] = parameters['alwaysCache'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -5629,12 +5633,14 @@ export default class CBioPortalAPIInternal {
      * Fetch structural variant genes by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchStructuralVariantGenesUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} studyViewFilter - Study view filter
      */
     fetchStructuralVariantGenesUsingPOSTWithHttpInfo(parameters: {
+        'alwaysCache' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -5647,6 +5653,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['alwaysCache'] !== undefined) {
+                queryParameters['alwaysCache'] = parameters['alwaysCache'];
+            }
 
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
@@ -5673,12 +5683,14 @@ export default class CBioPortalAPIInternal {
      * Fetch structural variant genes by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchStructuralVariantGenesUsingPOST
+     * @param {boolean} alwaysCache - alwaysCache
      * @param {} studyViewFilter - Study view filter
      */
     fetchStructuralVariantGenesUsingPOST(parameters: {
+            'alwaysCache' ? : boolean,
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < AlterationCountByGene >
         > {
             return this.fetchStructuralVariantGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {

@@ -6393,6 +6393,7 @@ export class StudyViewPageStore {
                 const structuralVariantGenes = await internalClient.fetchStructuralVariantGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
+                        alwaysCache: !this.chartsAreFiltered,
                     }
                 );
                 return structuralVariantGenes.map(item => {

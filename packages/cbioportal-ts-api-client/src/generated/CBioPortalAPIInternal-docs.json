@@ -2527,6 +2527,14 @@
         ],
         "parameters": [
           {
+            "name": "alwaysCache",
+            "in": "query",
+            "description": "alwaysCache",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
             "in": "body",
             "name": "studyViewFilter",
             "description": "Study view filter",
