@@ -203,67 +203,61 @@ export default class GroupCheckbox extends React.Component<
                 <div className={styles.groupLineItemActionButtons}>
                     {!this.props.markedForDeletion && (
                         <>
-                            {getBrowserWindow().localStorage.getItem(
-                                'ff_colorchooser'
-                            ) === 'true' && (
-                                <>
-                                    <DefaultTooltip
-                                        overlay={
-                                            'You have selected identical colors for compared groups.'
-                                        }
+                            <DefaultTooltip
+                                overlay={
+                                    'You have selected identical colors for compared groups.'
+                                }
+                            >
+                                <span>
+                                    {this.props.markedWithWarningSign && (
+                                        <i
+                                            className="fa fa-warning"
+                                            style={{
+                                                cursor: 'pointer',
+                                                color: '#fad201',
+                                                position: 'relative',
+                                                top: '1px',
+                                                right: '2px',
+                                            }}
+                                        />
+                                    )}
+                                </span>
+                            </DefaultTooltip>
+                            <OverlayTrigger
+                                containerPadding={40}
+                                trigger="click"
+                                placement="bottom"
+                                overlay={this.buildColorChooserWidget()}
+                                onEnter={this.onOverlayEnter}
+                                onExit={this.onOverlayExit}
+                                rootClose={true}
+                            >
+                                <DefaultTooltip
+                                    overlay={
+                                        'Optional: Select color for group to be used in group comparison. If no color is selected, a random color will be applied.'
+                                    }
+                                    disabled={
+                                        this.props.store
+                                            .numberOfVisibleColorChooserModals >
+                                        0
+                                    }
+                                >
+                                    <span
+                                        style={{
+                                            marginTop: 2,
+                                            marginRight: 2,
+                                        }}
                                     >
-                                        <span>
-                                            {this.props
-                                                .markedWithWarningSign && (
-                                                <i
-                                                    className="fa fa-warning"
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        color: '#fad201',
-                                                        position: 'relative',
-                                                        top: '1px',
-                                                        right: '2px',
-                                                    }}
-                                                />
-                                            )}
-                                        </span>
-                                    </DefaultTooltip>
-                                    <OverlayTrigger
-                                        containerPadding={40}
-                                        trigger="click"
-                                        placement="bottom"
-                                        overlay={this.buildColorChooserWidget()}
-                                        onEnter={this.onOverlayEnter}
-                                        onExit={this.onOverlayExit}
-                                        rootClose={true}
-                                    >
-                                        <DefaultTooltip
-                                            overlay={
-                                                'Optional: Select color for group to be used in group comparison. If no color is selected, a random color will be applied.'
+                                        <ColorPickerIcon
+                                            color={
+                                                this.props.color ||
+                                                COLOR_UNDEFINED
                                             }
-                                            disabled={
-                                                this.props.store
-                                                    .numberOfVisibleColorChooserModals >
-                                                0
-                                            }
-                                        >
-                                            <span
-                                                style={{
-                                                    marginTop: 2,
-                                                    marginRight: 2,
-                                                }}
-                                            >
-                                                <ColorPickerIcon
-                                                    color={
-                                                        this.props.color ||
-                                                        COLOR_UNDEFINED
-                                                    }
-                                                />
-                                            </span>
-                                        </DefaultTooltip>
-                                    </OverlayTrigger>
-                                </>
-                            )}
+                                        />
+                                    </span>
+                                </DefaultTooltip>
+                            </OverlayTrigger>
+
                             <DefaultTooltip overlay={'Delete Group'}>
                                 <span onClick={this.onDeleteClick}>
                                     <i
