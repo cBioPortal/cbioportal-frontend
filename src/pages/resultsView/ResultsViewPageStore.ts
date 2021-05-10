@@ -3616,20 +3616,18 @@ export class ResultsViewPageStore {
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>(
         {
-            await: () => [this.studyIds, this.samples],
+            await: () => [this.studyIds, this.sampleMap],
             invoke: async () => {
-                const germlineConsentedSamples = await fetchGermlineConsentedSamples(
+                const germlineConsentedSamples: SampleIdentifier[] = await fetchGermlineConsentedSamples(
                     this.studyIds,
                     AppConfig.serverConfig.studiesWithGermlineConsentedSamples
                 );
-                const sampleIds = this.samples.result
-                    ? this.samples.result.map(s => s.sampleId)
-                    : [];
 
                 // do not simply return all germline consented samples,
                 // only include the ones matching current sample selection
+                const sampleMap = this.sampleMap.result!;
                 return germlineConsentedSamples.filter(s =>
-                    sampleIds.includes(s.sampleId)
+                    sampleMap.has(s, ['sampleId', 'studyId'])
                 );
             },
             onError: () => {
