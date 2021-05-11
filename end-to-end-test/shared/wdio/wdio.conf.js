@@ -1,6 +1,5 @@
 const { join } = require('path');
 
-
 const fs = require('fs');
 var path = require('path');
 var VisualRegressionCompare = require('wdio-novus-visual-regression-service/compare');
@@ -12,11 +11,10 @@ const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
 var defaultMaxInstances = 3;
 
-let screenshotRoot =
-    process.env.SCREENSHOT_DIRECTORY;
+let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
 // correct if screenshot directory has trailing slash
-screenshotRoot = screenshotRoot.replace(/\/$/,"");
+screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
@@ -68,8 +66,9 @@ let SPEC_FILE_PATTERN = undefined;
 if (grep) {
     SPEC_FILE_PATTERN = grep.split('=')[1];
 } else {
-    SPEC_FILE_PATTERN = process.env.SPEC_FILE_PATTERN ?
-        process.env.SPEC_FILE_PATTERN : `${TEST_TYPE}/specs/**/*.spec.js`;
+    SPEC_FILE_PATTERN = process.env.SPEC_FILE_PATTERN
+        ? process.env.SPEC_FILE_PATTERN
+        : `${TEST_TYPE}/specs/**/*.spec.js`;
 }
 
 // if spec pattern contains slash, use it whole, otherwise, assume it is just a spec file name or wildcard

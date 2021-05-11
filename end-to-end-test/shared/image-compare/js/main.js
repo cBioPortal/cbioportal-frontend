@@ -1,10 +1,8 @@
 const isLocalHost = /127.0.0.1|localhost/.test(window.location.hostname);
 
-if (typeof runMode === "undefined") {
-    var runMode = "remote";
+if (typeof runMode === 'undefined') {
+    var runMode = 'remote';
 }
-
-
 
 function getURLParameterByName(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -29,7 +27,6 @@ var reportUrl = isLocalHost
     ? './results/customReport.json'
     : `./customReport.json`;
 
-
 var diffSliderMode = true;
 
 function updateComparisonMode() {
@@ -43,8 +40,6 @@ function updateComparisonMode() {
 }
 
 $(document).on('click', '#toggleDiffModeBtn', () => {
-
-
     diffSliderMode = !diffSliderMode;
     updateComparisonMode();
 });
@@ -53,7 +48,9 @@ function buildData(reportData) {
     const data = reportData.map(test => {
         const testName = test.title.replace(/\s/g, '_').toLowerCase();
         const imagePath = `/${testName}_element_chrome_1600x1000.png`;
-        const rootUrl = isLocalHost ? `/${runMode}/screenshots/` : './screenshots/';
+        const rootUrl = isLocalHost
+            ? `/${runMode}/screenshots/`
+            : './screenshots/';
         return {
             screenImagePath: `${rootUrl}screen${imagePath}`,
             diffImagePath: `${rootUrl}diff${imagePath}`,
@@ -127,7 +124,6 @@ async function bootstrap() {
     renderList(data);
 }
 
-
 $(document).ready(function() {
     var selectedSSIndex = 0;
     bootstrap();
@@ -136,13 +132,10 @@ $(document).ready(function() {
 var sideBySideCycleInterval = null;
 
 function buildImagePath(ref, rootUrl) {
-
     debugger;
     return {
-        screenImagePath:
-            `${rootUrl}` + ref.replace(/reference\//, 'screen/'),
-        diffImagePath:
-            `${rootUrl}` + ref.replace(/reference\//, 'diff/'),
+        screenImagePath: `${rootUrl}` + ref.replace(/reference\//, 'screen/'),
+        diffImagePath: `${rootUrl}` + ref.replace(/reference\//, 'diff/'),
         refImagePath: `${rootUrl}screenshots/${ref}`,
         imageName: ref.substring(ref.lastIndexOf('/') + 1),
     };
@@ -154,7 +147,10 @@ function buildCurlStatement(data, runMode) {
     //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
     //      -L makes curl "follow" the redirect so it downloads the file correctly.
 
-    const imageUrl = window.location.href.replace(/imageCompare\.html?/,data.screenImagePath);
+    const imageUrl = window.location.href.replace(
+        /imageCompare\.html?/,
+        data.screenImagePath
+    );
 
     const imageName = data.imageName;
 

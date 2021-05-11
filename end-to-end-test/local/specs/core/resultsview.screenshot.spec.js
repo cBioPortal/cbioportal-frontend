@@ -26,8 +26,8 @@ describe('results view mutation table', function() {
             'table[class="simple-table table table-striped table-border-top"]'
         ).waitForExist();
 
-        browser.execute(function(){
-            $("th").css({ color:"red"});
+        browser.execute(function() {
+            $('th').css({ color: 'red' });
         });
 
         res = browser.checkElement(

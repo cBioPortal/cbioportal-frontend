@@ -65,9 +65,9 @@ describe('treatment feature', () => {
         it.only('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
 
-            browser.execute(()=>{
-                $("div").css({border:"1px solid red !important"});
-            })
+            browser.execute(() => {
+                $('div').css({ border: '1px solid red !important' });
+            });
 
             assertScreenShotMatch(res);
         });
