@@ -33,10 +33,6 @@ describe('color chooser for groups menu in study view', function() {
     before(() => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
         waitForStudyView();
-        browser.localStorage('POST', {
-            key: 'ff_colorchooser',
-            value: 'true',
-        });
     });
 
     it('shows no icon color for new group', () => {
