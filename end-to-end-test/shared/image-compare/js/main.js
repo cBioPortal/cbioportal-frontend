@@ -1,8 +1,8 @@
 const isLocalHost = /127.0.0.1|localhost/.test(window.location.hostname);
 
-if (typeof runMode === 'undefined') {
-    var runMode = 'remote';
-}
+var runMode = 'remote';
+
+const LI_INDEX_ATTR = 'data-index';
 
 function getURLParameterByName(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
@@ -69,15 +69,21 @@ function renderList(data) {
     data.forEach((item, index) => {
         var test = item.test;
         $(
-            `<li><a data-index='${index}' href="javascript:void(0)">${item.imageName}</a></li>`
+            `<li><a ${LI_INDEX_ATTR}='${index}' href="javascript:void(0)">${item.imageName}</a></li>`
         )
             .appendTo($list)
-            .click(() => {
-                console.log(test);
+            .click(function() {
                 $list.find('a').removeClass('active');
-                $(this).addClass('active');
-                //clearSideBySideInterval();
+                $(this)
+                    .find('a')
+                    .addClass('active');
+                selectedSSIndex = parseInt(
+                    $(this)
+                        .find('a')
+                        .attr(LI_INDEX_ATTR)
+                );
                 buildDisplay(item, data, '', runMode);
+                clearSideBySideInterval();
             });
     });
 
@@ -88,11 +94,11 @@ function renderList(data) {
         .click();
 
     function clampSSIndex(i) {
-        return Math.max(Math.min(i, errorImages.length - 1), 0);
+        return Math.max(Math.min(i, data.length - 1), 0);
     }
 
     function selectSS() {
-        $(`a[data-index="${selectedSSIndex}"]`).click();
+        $(`a[${LI_INDEX_ATTR}="${selectedSSIndex}"]`).click();
     }
 
     $('#nextSS').click(() => {
@@ -106,11 +112,10 @@ function renderList(data) {
 }
 
 async function bootstrap() {
-    const reportData = await getResultsReport(
-        'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
-    );
+    const reportData = await getResultsReport();
+    //'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
 
-    runMode = reportData.testHome;
+    runMode = reportData.testHome || 'remote';
 
     const filteredReportData = reportData.tests.filter(test => {
         return (
@@ -124,15 +129,14 @@ async function bootstrap() {
     renderList(data);
 }
 
+var selectedSSIndex = 0;
 $(document).ready(function() {
-    var selectedSSIndex = 0;
     bootstrap();
 });
 
 var sideBySideCycleInterval = null;
 
 function buildImagePath(ref, rootUrl) {
-    debugger;
     return {
         screenImagePath: `${rootUrl}` + ref.replace(/reference\//, 'screen/'),
         diffImagePath: `${rootUrl}` + ref.replace(/reference\//, 'diff/'),
@@ -141,7 +145,7 @@ function buildImagePath(ref, rootUrl) {
     };
 }
 
-function buildCurlStatement(data, runMode) {
+function buildCurlStatement(data) {
     // -L means follow redirects
     //      CircleCI seems to be hosting their files differently now, with the real URL
     //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
@@ -153,8 +157,6 @@ function buildCurlStatement(data, runMode) {
     );
 
     const imageName = data.imageName;
-
-    debugger;
 
     return `curl -L '${imageUrl}' > 'end-to-end-test/${runMode}/screenshots/reference/${imageName}'; git add 'end-to-end-test/${runMode}/screenshots/reference/${imageName}';`;
 }
@@ -172,7 +174,7 @@ function clearSideBySideInterval() {
 function buildDisplay(data, allData, rootUrl) {
     var curlStatements = allData.map(item => {
         var data = buildImagePath(item.refImagePath, rootUrl);
-        return buildCurlStatement(data, runMode);
+        return buildCurlStatement(data);
     });
 
     var template = `
@@ -301,7 +303,7 @@ function buildDisplay(data, allData, rootUrl) {
     );
 }
 
-function getResultsReport(reportRoot) {
+function getResultsReport() {
     return $.get(reportUrl);
 }
 

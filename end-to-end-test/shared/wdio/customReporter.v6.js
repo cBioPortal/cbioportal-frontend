@@ -86,7 +86,14 @@ class CustomReporter extends WDIOReporter {
             tests = [...existingTests, ...tests];
         }
 
-        const strReport = JSON.stringify({ tests }, null, 5);
+        const strReport = JSON.stringify(
+            {
+                testHome: this.options[0].testHome,
+                tests,
+            },
+            null,
+            5
+        );
 
         fs.writeFileSync(
             `${this.options[0].outputDir}/customReportJSONP.js`,
