@@ -239,7 +239,7 @@ export default class GroupCheckbox extends React.Component<
                                     >
                                         <DefaultTooltip
                                             overlay={
-                                                'Select color for group used in group comparison'
+                                                'Optional: Select color for group to be used in group comparison. If no color is selected, a random color will be applied.'
                                             }
                                             disabled={
                                                 this.props.store
