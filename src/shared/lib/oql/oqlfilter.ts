@@ -79,7 +79,7 @@ export type OQLLineFilterOutput<T> = {
     gene: string;
     parsed_oql_line: SingleGeneQuery;
     oql_line: string;
-    data: T[];
+    data: Readonly<T>[];
 };
 
 export type MergedTrackLineFilterOutput<T> = {
@@ -814,7 +814,6 @@ function filterData<T extends Datum>(
      *    * If opt_by_oql_line is false or absent, then the result is
      *      a flat list of the data that is wanted by at least one oql line.
      */
-    data = $.extend(true, [], data); // deep copy, because of any modifications it will make during filtration
     var null_fn = function() {
         return null;
     };
