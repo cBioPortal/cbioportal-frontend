@@ -25,15 +25,16 @@ describe('ComplexKeyCounter', () => {
         counter.increment({ k: 'aaidsopjfap' });
         counter.increment({ k: 'aaidsopjfap' });
         counter.increment({ k: 'aaidsopjfap' });
+        counter.add({ k: 'aaidsopjfap' }, 6);
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
         counter.increment({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' });
-        assert.equal(counter.get({ k: 'aaidsopjfap' }), 5);
+        assert.equal(counter.get({ k: 'aaidsopjfap' }), 11);
         assert.equal(
             counter.get({ 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }),
             2
         );
         assert.deepEqual(counter.entries(), [
-            { key: { k: 'aaidsopjfap' }, value: 5 },
+            { key: { k: 'aaidsopjfap' }, value: 11 },
             { key: { 'kjaspdoijfp134u13!@@#$!$$': 'sdf0913' }, value: 2 },
         ]);
     });
