@@ -255,6 +255,7 @@ import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
+import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -4796,13 +4797,16 @@ export class ResultsViewPageStore {
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
                 const isHotspotDriver =
+                    this.driverAnnotationSettings.hotspots &&
                     !(this.isHotspotForOncoprint.result instanceof Error) &&
                     this.isHotspotForOncoprint.result!(mutation);
                 const cbioportalCountExceeded =
+                    this.driverAnnotationSettings.cbioportalCount &&
                     this.getCBioportalCount.isComplete &&
                     this.getCBioportalCount.result!(mutation) >=
                         this.driverAnnotationSettings.cbioportalCountThreshold;
                 const cosmicCountExceeded =
+                    this.driverAnnotationSettings.cosmicCount &&
                     this.getCosmicCount.isComplete &&
                     this.getCosmicCount.result!(mutation) >=
                         this.driverAnnotationSettings.cosmicCountThreshold;
@@ -5127,21 +5131,28 @@ export class ResultsViewPageStore {
             ),
     });
 
-    readonly cbioportalMutationCountData = remoteData<
-        MutationCountByPosition[]
-    >({
+    readonly cbioportalMutationCountData = remoteData<{
+        [mutationCountByPositionKey: string]: number;
+    }>({
         await: () => [this.mutations],
-        invoke: () => {
+        invoke: async () => {
             const mutationPositionIdentifiers = _.values(
                 countMutations(this.mutations.result!)
             );
 
             if (mutationPositionIdentifiers.length > 0) {
-                return internalClient.fetchMutationCountsByPositionUsingPOST({
-                    mutationPositionIdentifiers,
-                });
+                const data = await internalClient.fetchMutationCountsByPositionUsingPOST(
+                    {
+                        mutationPositionIdentifiers,
+                    }
+                );
+                return _.mapValues(
+                    _.groupBy(data, mutationCountByPositionKey),
+                    (counts: MutationCountByPosition[]) =>
+                        _.sumBy(counts, c => c.count)
+                );
             } else {
-                return Promise.resolve([]);
+                return {};
             }
         },
     });
@@ -5151,27 +5162,16 @@ export class ResultsViewPageStore {
     > = remoteData({
         await: () => [this.cbioportalMutationCountData],
         invoke: () => {
-            const countsMap = _.groupBy(
-                this.cbioportalMutationCountData.result!,
-                count => mutationCountByPositionKey(count)
-            );
             return Promise.resolve((mutation: Mutation): number => {
                 const key = mutationCountByPositionKey(mutation);
-                const counts = countsMap[key];
-                if (counts) {
-                    return counts.reduce((count, next) => {
-                        return count + next.count;
-                    }, 0);
-                } else {
-                    return -1;
-                }
+                return this.cbioportalMutationCountData.result![key] || -1;
             });
         },
     });
     //COSMIC count
-    readonly cosmicCountData = remoteData<CosmicMutation[]>({
+    readonly cosmicCountsByKeywordAndStart = remoteData<ComplexKeyCounter>({
         await: () => [this.mutations],
-        invoke: () => {
+        invoke: async () => {
             const keywords = _.uniq(
                 this.mutations
                     .result!.filter((m: Mutation) => {
@@ -5184,11 +5184,27 @@ export class ResultsViewPageStore {
             );
 
             if (keywords.length > 0) {
-                return internalClient.fetchCosmicCountsUsingPOST({
+                const data = await internalClient.fetchCosmicCountsUsingPOST({
                     keywords,
                 });
+                const map = new ComplexKeyCounter();
+                for (const d of data) {
+                    const position = getProteinPositionFromProteinChange(
+                        d.proteinChange
+                    );
+                    if (position) {
+                        map.add(
+                            {
+                                keyword: d.keyword,
+                                start: position.start,
+                            },
+                            d.count
+                        );
+                    }
+                }
+                return map;
             } else {
-                return Promise.resolve([]);
+                return new ComplexKeyCounter();
             }
         },
     });
@@ -5196,31 +5212,21 @@ export class ResultsViewPageStore {
     readonly getCosmicCount: MobxPromise<
         (mutation: Mutation) => number
     > = remoteData({
-        await: () => [this.cosmicCountData],
+        await: () => [this.cosmicCountsByKeywordAndStart],
         invoke: () => {
-            const countMap = _.groupBy(
-                this.cosmicCountData.result!,
-                d => d.keyword
-            );
             return Promise.resolve((mutation: Mutation): number => {
-                const keyword = mutation.keyword;
-                const counts = countMap[keyword];
                 const targetPosObj = getProteinPositionFromProteinChange(
                     mutation.proteinChange
                 );
-                if (counts && targetPosObj) {
-                    const targetPos = targetPosObj.start;
-                    return counts.reduce((count, next: CosmicMutation) => {
-                        const pos = getProteinPositionFromProteinChange(
-                            next.proteinChange
-                        );
-                        if (pos && pos.start === targetPos) {
-                            // only tally cosmic entries with same keyword and same start position
-                            return count + next.count;
-                        } else {
-                            return count;
+                if (targetPosObj) {
+                    const keyword = mutation.keyword;
+                    const cosmicCount = this.cosmicCountsByKeywordAndStart.result!.get(
+                        {
+                            keyword,
+                            start: targetPosObj.start,
                         }
-                    }, 0);
+                    );
+                    return cosmicCount;
                 } else {
                     return -1;
                 }
