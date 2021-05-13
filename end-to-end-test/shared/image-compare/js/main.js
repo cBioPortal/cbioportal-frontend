@@ -64,7 +64,13 @@ function buildData(reportData) {
 }
 
 function renderList(data) {
-    var $list = $('<ul></ul>').prependTo('body');
+    var $div = $('<div></div>')
+        .prependTo('body')
+        .css({
+            'max-height': 350,
+            overflow: 'scroll',
+        });
+    var $list = $('<ul></ul>').appendTo($div);
 
     data.forEach((item, index) => {
         var test = item.test;
