@@ -7,6 +7,7 @@ var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
 var waitForNetworkQuiet = require('../../../shared/specUtils')
     .waitForNetworkQuiet;
+var { setCheckboxChecked } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -65,10 +66,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
     });
 
     it('pvge switch to sequential mode', function() {
-        $('input[data-test="VAFSequentialMode"]').click();
+        setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
-        $('input[data-test="VAFSequentialMode"]').click();
     });
 
     it('pvge only show highlighted in line chart', function() {

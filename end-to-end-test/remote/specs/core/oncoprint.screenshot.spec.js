@@ -279,12 +279,11 @@ describe('sorting', function() {
     });
 
     it('oncoprint should sort samples correctly in coadread_tcga_pub', function() {
-        $(
-            '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-        ).click(); // open view menu
-        $(
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-        ).waitForExist({ timeout: 10000 });
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
         ).click(); // go to sample mode
@@ -330,12 +329,11 @@ describe('sorting', function() {
     });
 
     it('oncoprint should sort samples correctly in gbm_tcga_pub', function() {
-        $(
-            '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-        ).click(); // open view menu
-        $(
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-        ).waitForExist({ timeout: 10000 });
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
         ).click(); // go to sample mode
@@ -367,12 +365,11 @@ describe('sorting', function() {
         assertScreenShotMatch(res);
     });
     it('oncoprint sorts through a flow with clinical tracks sorted - initial sample order', function() {
-        $(
-            '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-        ).click(); // open view menu
-        $(
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-        ).waitForDisplayed({ timeout: 10000 });
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
         ).click(); // go to sample mode
@@ -383,9 +380,11 @@ describe('sorting', function() {
         assertScreenShotMatch(res);
     });
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 1', function() {
-        $(
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
-        ).waitForDisplayed({ timeout: 10000 });
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
         ).click(); // go to patient mode
@@ -404,6 +403,12 @@ describe('sorting', function() {
         assertScreenShotMatch(res);
     });
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2', function() {
+        // close the view menu
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
+        );
         var overallSurvivalElements = getNthTrackOptionsElements(4);
         setDropdownOpen(
             true,
@@ -635,12 +640,11 @@ describe('sorting', function() {
     });
 
     it('oncoprint sorts through a flow with heatmap tracks sorted - sorted patient order 1', function() {
-        $(
-            '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-        ).click(); // open view menu
-        $(
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
-        ).waitForExist({ timeout: 10000 });
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
         ).click(); // go to patient mode

@@ -87,6 +87,8 @@ describe('oncoprinter screenshot tests', function() {
             );
         });
 
+        setOncoprintMutationsMenuOpen(false);
+
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });

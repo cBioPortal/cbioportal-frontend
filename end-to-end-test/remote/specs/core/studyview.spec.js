@@ -19,7 +19,7 @@ const getTextFromElement = require('../../../shared/specUtils')
     .getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
-const { setDropdownOpen } = require('../../../shared/specUtils');
+const { setDropdownOpen, jsApiHover } = require('../../../shared/specUtils');
 
 var {
     checkElementWithMouseDisabled,
@@ -444,11 +444,11 @@ describe('study view lgg_tcga study tests', () => {
         it('the log scale should be used for Sample Collection', () => {
             $(barChart).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
             $(barChart).scrollIntoView();
-            $(barChart).moveTo();
+            jsApiHover(barChart);
             $(barChart + ' .controls').waitForExist({ timeout: 10000 });
 
             // move to hamburger icon
-            $("[data-test='chart-header-hamburger-icon']").moveTo();
+            jsApiHover("[data-test='chart-header-hamburger-icon']");
 
             // wait for the menu available
             $(
@@ -468,7 +468,7 @@ describe('study view lgg_tcga study tests', () => {
                 $(pieChart).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                $(pieChart).moveTo();
+                jsApiHover(pieChart);
 
                 browser.waitUntil(() => {
                     return $(pieChart + ' .controls').isExisting();
@@ -483,7 +483,7 @@ describe('study view lgg_tcga study tests', () => {
                 $(table).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                $(table).moveTo();
+                jsApiHover(table);
 
                 browser.waitUntil(() => {
                     return $(table + ' .controls').isExisting();

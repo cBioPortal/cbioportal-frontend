@@ -25,9 +25,7 @@ describe('group comparison venn diagram tests', function() {
         });
 
         it('select from sample venn diagram', function() {
-            $('rect[data-test="sample0,1VennRegion"]').click({
-                button: 'left',
-            });
+            jsApiClick('rect[data-test="sample0,1VennRegion"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), true);
             assert.equal($(PatientCreateGroupButton).isEnabled(), false);
@@ -77,10 +75,8 @@ describe('group comparison venn diagram tests', function() {
 
         it('select from patient venn diagram', function() {
             // unselect sample venn diagram first
-            $('rect[data-test="sample0,1VennRegion"]').click({
-                button: 'left',
-            });
-            $('rect[data-test="patient0VennRegion"]').click({ button: 'left' });
+            jsApiClick('rect[data-test="sample0,1VennRegion"]');
+            jsApiClick('rect[data-test="patient0VennRegion"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), false);
             assert.equal($(PatientCreateGroupButton).isEnabled(), true);
@@ -147,7 +143,7 @@ describe('group comparison upset diagram tests', function() {
         });
 
         it('select from sample upset diagram', function() {
-            $('.sample_testGroup2_testGroup3_bar').click({ button: 'left' });
+            jsApiClick('.sample_testGroup2_testGroup3_bar');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), true);
             assert.equal($(PatientCreateGroupButton).isEnabled(), false);

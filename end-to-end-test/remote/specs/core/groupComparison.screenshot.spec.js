@@ -10,6 +10,7 @@ var checkElementWithTemporaryClass = require('../../../shared/specUtils')
     .checkElementWithTemporaryClass;
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
+var { jsApiClick } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -473,9 +474,7 @@ describe('group comparison page screenshot tests', function() {
                 $('svg#comparison-tab-overlap-svg').waitForDisplayed({
                     timeout: 6000,
                 });
-                $('text[data-test="sample0VennLabel"]').click({
-                    button: 'left',
-                });
+                jsApiClick('text[data-test="sample0VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -522,9 +521,7 @@ describe('group comparison page screenshot tests', function() {
             });
 
             it('group comparison page overlap tab venn diagram view with overlap and session selected view', function() {
-                $('text[data-test="sample0,1,2VennLabel"]').click({
-                    button: 'left',
-                });
+                jsApiClick('text[data-test="sample0,1,2VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -686,9 +683,9 @@ describe('group comparison page screenshot tests', function() {
         });
 
         it('group comparison page overlap tab upset groups selected', function() {
-            $('.sample_testGroup5_bar').click({ button: 'left' });
-            $('.sample_testGroup1_testGroup2_bar').click({ button: 'left' });
-            $('.patient_testGroup1_bar').click({ button: 'left' });
+            jsApiClick('.sample_testGroup5_bar');
+            jsApiClick('.sample_testGroup1_testGroup2_bar');
+            jsApiClick('.patient_testGroup1_bar');
             var res = checkElementWithTemporaryClass(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
                 'div[data-test="ComparisonPageOverlapTabDiv"]',

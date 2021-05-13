@@ -25,7 +25,7 @@ describe('results view comparison tab venn diagram tests', function() {
         });
 
         it('select from sample venn diagram', function() {
-            $('text[data-test="sample0VennLabel"]').click({ button: 'left' });
+            jsApiClick('text[data-test="sample0VennLabel"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), true);
             assert.equal($(PatientCreateGroupButton).isEnabled(), false);
@@ -89,8 +89,8 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('select from patient venn diagram', function() {
             // unselect sample venn diagram first
-            $('text[data-test="sample0VennLabel"]').click({ button: 'left' });
-            $('text[data-test="patient0VennLabel"]').click({ button: 'left' });
+            jsApiClick('text[data-test="sample0VennLabel"]');
+            jsApiClick('text[data-test="patient0VennLabel"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), false);
             assert.equal($(PatientCreateGroupButton).isEnabled(), true);
@@ -171,7 +171,7 @@ describe('results view comparison tab upset diagram tests', function() {
         });
 
         it('select from sample upset diagram', function() {
-            $('.sample_Altered_group_KRAS_bar').click({ button: 'left' });
+            jsApiClick('.sample_Altered_group_KRAS_bar');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), true);
             assert.equal($(PatientCreateGroupButton).isEnabled(), false);
@@ -221,8 +221,8 @@ describe('results view comparison tab upset diagram tests', function() {
 
         it('select from patient upset diagram', function() {
             // unselect sample venn diagram first
-            $('.sample_Altered_group_KRAS_bar').click({ button: 'left' });
-            $('.patient_Unaltered_group_bar').click({ button: 'left' });
+            jsApiClick('.sample_Altered_group_KRAS_bar');
+            jsApiClick('.patient_Unaltered_group_bar');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), false);
             assert.equal($(PatientCreateGroupButton).isEnabled(), true);

@@ -9,7 +9,7 @@ var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('homepage', function() {
-    this.retries(2);
+    this.retries(0);
 
     before(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
@@ -72,14 +72,14 @@ describe('homepage', function() {
 
         $('#rightHeaderContent').waitForExist();
 
-        var test = browser.execute(function() {
+        browser.pause(1000);
+        let doesLogoExist = browser.execute(function() {
             return (
-                $("img[src='images/msk_logo_transparent_black.png']").length ===
-                0
+                $("img[src='images/msk_logo_transparent_black.png']").length > 0
             );
         });
 
-        assert.equal(test.value, true);
+        assert(!doesLogoExist);
 
         setServerConfiguration({
             skin_right_logo: 'msk_logo_transparent_black.png',
@@ -89,14 +89,8 @@ describe('homepage', function() {
 
         $('#rightHeaderContent').waitForExist();
 
-        assert(
-            executeInBrowser(() => {
-                return (
-                    $("img[src='images/msk_logo_transparent_black.png']")
-                        .length > 0
-                );
-            })
-        );
+        // this logo now exists
+        $("img[src*='images/msk_logo_transparent_black.png']").waitForExist();
     });
 
     it('shows skin_blurb as configured', function() {

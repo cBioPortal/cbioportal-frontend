@@ -104,6 +104,20 @@ function setOncoprintMutationsMenuOpen(open) {
     );
 }
 
+function setCheckboxChecked(checked, selector, failure_message) {
+    browser.waitUntil(
+        () => {
+            $(selector).click();
+            return $(selector).isSelected();
+        },
+        {
+            timeout: 10000,
+            timeoutMsg: failure_message,
+            interval: 2000,
+        }
+    );
+}
+
 function setDropdownOpen(
     open,
     button_selector,
@@ -337,6 +351,22 @@ function checkOncoprintElement(selector) {
     });
 }
 
+function jsApiHover(selector) {
+    browser.execute(function(_selector) {
+        $(_selector)[0].dispatchEvent(
+            new MouseEvent('mouseover', { bubbles: true })
+        );
+    }, selector);
+}
+
+function jsApiClick(selector) {
+    browser.execute(function(_selector) {
+        $(_selector)[0].dispatchEvent(
+            new MouseEvent('click', { bubbles: true })
+        );
+    }, selector);
+}
+
 function executeInBrowser(callback) {
     return browser.execute(callback);
 }
@@ -567,4 +597,7 @@ module.exports = {
     getPortalUrlFromEnv: getPortalUrlFromEnv,
     openGroupComparison: openGroupComparison,
     selectElementByText: selectElementByText,
+    jsApiHover,
+    jsApiClick,
+    setCheckboxChecked,
 };

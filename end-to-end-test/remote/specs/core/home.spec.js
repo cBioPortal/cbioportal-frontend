@@ -437,8 +437,7 @@ describe('genetic profile selection in front page query form', () => {
         $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ovarian nature 2011');
         waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
         $('[data-test="StudySelect"] input').click();
         browser.pause(200);
 
@@ -477,8 +476,7 @@ describe('genetic profile selection in front page query form', () => {
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
         $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();

@@ -11,6 +11,7 @@ var checkElementWithTemporaryClass = require('../../../shared/specUtils')
 var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
 var setDropdownOpen = require('../../../shared/specUtils').setDropdownOpen;
+var { jsApiClick } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
@@ -470,9 +471,7 @@ describe('results view comparison tab screenshot tests', function() {
                 $('svg#comparison-tab-overlap-svg').waitForDisplayed({
                     timeout: 6000,
                 });
-                $('text[data-test="sample0VennLabel"]').click({
-                    button: 'left',
-                });
+                jsApiClick('text[data-test="sample0VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -519,9 +518,7 @@ describe('results view comparison tab screenshot tests', function() {
             });
 
             it('results view comparison tab overlap tab venn diagram view with overlap and session selected view', function() {
-                $('text[data-test="sample0,1,2VennLabel"]').click({
-                    button: 'left',
-                });
+                jsApiClick('text[data-test="sample0,1,2VennLabel"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -682,9 +679,9 @@ describe('results view comparison tab screenshot tests', function() {
         });
 
         it('results view comparison tab overlap tab upset groups selected', function() {
-            $('.sample_Unaltered_group_bar').click({ button: 'left' });
-            $('.sample_Altered_group_KRAS_bar').click({ button: 'left' });
-            $('.patient_Altered_group_NRAS_bar').click({ button: 'left' });
+            jsApiClick('.sample_Unaltered_group_bar');
+            jsApiClick('.sample_Altered_group_KRAS_bar');
+            jsApiClick('.patient_Altered_group_NRAS_bar');
             var res = checkElementWithTemporaryClass(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
