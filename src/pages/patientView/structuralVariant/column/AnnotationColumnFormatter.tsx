@@ -7,6 +7,7 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
     oncoKbAnnotationSortValue,
+    calculateOncoKbAvailableDataType,
 } from 'react-mutation-mapper';
 import { CancerStudy, StructuralVariant } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
@@ -96,6 +97,12 @@ export default class AnnotationColumnFormatter {
                         uniqueSampleKeyToTumorType,
                         studyIdToStudy
                     );
+                    oncoKbAvailableDataTypes = _.uniq([
+                        ...oncoKbAvailableDataTypes,
+                        ...calculateOncoKbAvailableDataType(
+                            _.values(oncoKbData.result.indicatorMap)
+                        ),
+                    ]);
                 }
                 oncoKbStatus = oncoKbData ? oncoKbData.status : 'pending';
             }
