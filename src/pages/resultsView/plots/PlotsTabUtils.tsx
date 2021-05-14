@@ -84,6 +84,7 @@ import {
     MUT_COLOR_TRUNC,
     MUT_COLOR_TRUNC_PASSENGER,
 } from 'cbioportal-frontend-commons';
+import { getCategoryOrderByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export const CLIN_ATTR_DATA_TYPE = 'clinical_attribute';
 export const GENESET_DATA_TYPE = 'GENESET_SCORE';
@@ -1417,17 +1418,38 @@ function makeAxisDataPromise_GenericAssay(
                     })!.data!
             );
 
-            return Promise.resolve({
-                data: data.map(d => {
-                    return {
-                        uniqueSampleKey: d.uniqueSampleKey,
-                        value: isNumeric ? parseFloat(d.value) : d.value,
-                        thresholdType: d.thresholdType,
-                    };
-                }),
-                datatype: isNumeric ? 'number' : 'string',
-                genericAssayEntityId: entityId,
-            });
+            if (isNumeric) {
+                return Promise.resolve({
+                    data: data.map(d => {
+                        return {
+                            uniqueSampleKey: d.uniqueSampleKey,
+                            value: parseFloat(d.value),
+                            thresholdType: d.thresholdType,
+                        };
+                    }),
+                    datatype: 'number',
+                    genericAssayEntityId: entityId,
+                });
+            } else {
+                // each profile in profiles should share the same generic assay type
+                const categoryOrder =
+                    profiles.length > 0
+                        ? getCategoryOrderByGenericAssayType(
+                              profiles[0].genericAssayType
+                          )
+                        : undefined;
+                return Promise.resolve({
+                    data: data.map(d => {
+                        return {
+                            uniqueSampleKey: d.uniqueSampleKey,
+                            value: d.value,
+                        };
+                    }),
+                    datatype: 'string',
+                    categoryOrder,
+                    genericAssayEntityId: entityId,
+                } as IStringAxisData);
+            }
         },
     });
 }
