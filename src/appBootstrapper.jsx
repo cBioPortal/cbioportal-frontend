@@ -1,10 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { configure } from 'mobx';
-import { enableLogging } from 'mobx-logger';
 import { Provider } from 'mobx-react';
-import { Router, Switch } from 'react-router-dom';
-import { createHistory, createBrowserHistory } from 'history';
+import { Router } from 'react-router-dom';
+import { createBrowserHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {

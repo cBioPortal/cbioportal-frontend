@@ -25,21 +25,20 @@ describe('Mutation Table', function() {
             goToUrlAndSetLocalStorage(url);
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                30000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 30000 });
         });
 
         it('should show the exon number after adding the exon column', () => {
             // check if 6 appears once in COSMIC column
 
             // click on column button
-            browser.click('button*=Columns');
+            $('button*=Columns').click();
             // scroll down to activated "exon" selection
-            browser.scroll(1000, 1000);
+            $('//*[text()="Exon"]').scrollIntoView();
             // click "exon"
-            browser.click('//*[text()="Exon"]');
+            $('//*[text()="Exon"]').click();
             // check if three exact matches for 6 appear
 
             let res;
@@ -57,7 +56,7 @@ describe('Mutation Table', function() {
 
         it('should show more exon number after clicking "Show more"', () => {
             // click "show more" to add more data
-            browser.click('button*=Show more');
+            $('button*=Show more').click();
             let res;
             browser.waitUntil(
                 () => {
@@ -73,21 +72,22 @@ describe('Mutation Table', function() {
 
         it('should show the HGVSc data after adding the HGVSc column', () => {
             // reopen columns
-            browser.click('button*=Columns');
+            $('button*=Columns').click();
             // click "HGVSc"
-            browser.click('//*[text()="HGVSc"]');
+            $('//*[text()="HGVSc"]').click();
 
-            browser.waitForExist(
-                '//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]',
-                60000
-            );
+            $(
+                '//*[text()[contains(.,"ENST00000269305.4:c.817C>T")]]'
+            ).waitForExist({ timeout: 60000 });
         });
 
         it('should show more HGVSc data after clicking "Show more"', () => {
             // click "show more" to add more data
-            browser.click('button*=Show more');
+            $('button*=Show more').click();
             // check if "C>T" exact matches for 12 appear
-            browser.waitForExist('//*[text()[contains(.,"C>T")]]', 60000);
+            $('//*[text()[contains(.,"C>T")]]').waitForExist({
+                timeout: 60000,
+            });
         });
     });
 
@@ -98,10 +98,9 @@ describe('Mutation Table', function() {
             goToUrlAndSetLocalStorage(url);
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                300000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 300000 });
         });
 
         it('should show the gnomad table after mouse over the frequency in gnomad column', () => {
@@ -109,37 +108,38 @@ describe('Mutation Table', function() {
             var textArea = browser.$('[class*=tableSearchInput]');
             // only show LUAD-B00416-Tumor in table
             textArea.setValue('LUAD-B00416-Tumor');
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                60000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 60000 });
             // show the gnomad column
-            browser.scroll(1000, 0);
+            $('button*=Columns').scrollIntoView();
             // click on column button
-            browser.click('button*=Columns');
+            $('button*=Columns').click();
             // scroll down to activated "GNOMAD" selection
-            browser.scroll(1000, 1000);
+            $('[data-id=gnomAD]').scrollIntoView();
             // wait for gnomad checkbox appear
-            browser.waitForVisible('[data-id=gnomAD]', 60000);
+            $('[data-id=gnomAD]').waitForDisplayed({ timeout: 60000 });
             // click "GNOMAD"
-            browser.click('//*[text()="gnomAD"]');
+            $('//*[text()="gnomAD"]').click();
+            // close columns menu
+            $('button*=Columns').click();
             // find frequency
             const frequency =
                 '[data-test2="LUAD-B00416-Tumor"][data-test="gnomad-column"] span';
-            browser.waitForExist(frequency, 60000);
+            $(frequency).waitForExist({ timeout: 60000 });
             // wait for gnomad frequency show in the column
             browser.waitUntil(
                 () => {
-                    var textFrequency = browser.getText(frequency);
+                    var textFrequency = $(frequency).getText();
                     return textFrequency.length >= 1;
                 },
                 600000,
                 'Frequency data not in Gnoamd column'
             );
             // mouse over the frequency
-            browser.moveToObject(frequency, 0, 0);
+            $(frequency).moveTo(0, 0);
             // wait for gnomad table showing up
-            browser.waitForExist('[data-test="gnomad-table"]', 300000);
+            $('[data-test="gnomad-table"]').waitForExist({ timeout: 300000 });
             // check if the gnomad table show up
             let res;
             browser.waitUntil(
@@ -162,19 +162,18 @@ describe('Mutation Table', function() {
             goToUrlAndSetLocalStorage(url);
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                30000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 30000 });
         });
 
         it('should show the ClinVar interpretation after adding the ClinVar column', () => {
             // click on column button
-            browser.click('button*=Columns');
+            $('button*=Columns').click();
             // scroll down to activated "ClinVar" selection
-            browser.scroll(1000, 1000);
+            $('//*[text()="ClinVar"]').scrollIntoView();
             // click "clinvar"
-            browser.click('//*[text()="ClinVar"]');
+            $('//*[text()="ClinVar"]').click();
             let res;
             browser.waitUntil(
                 () => {
@@ -196,19 +195,16 @@ describe('Mutation Table', function() {
             goToUrlAndSetLocalStorage(url);
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible(
-                'tr:nth-child(1) [data-test=oncogenic-icon-image]',
-                30000
-            );
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 30000 });
         });
 
         it('should show the rs ids in dbsnp after adding the dbSNP column', () => {
             // click on column button
-            browser.click('button*=Columns');
-            // scroll down to activated "dbSNP" selection
-            browser.scroll(1000, 1000);
+            $('button*=Columns').click();
             // click "dbSNP"
-            browser.click('//*[text()="dbSNP"]');
+            $('//*[text()="dbSNP"]').click();
             let res;
             browser.waitUntil(
                 () => {

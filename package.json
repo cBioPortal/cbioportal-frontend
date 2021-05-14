@@ -57,11 +57,15 @@
     "prettierFixLocal": "CHANGED_FILES=$(git diff $(echo $BRANCH_ENV) --name-only --diff-filter=d) && ([ ! -z \"$CHANGED_FILES\" ] && yarn run prettier --write $(echo $CHANGED_FILES) || echo \"Nothing to prettify\")",
     "prettierAll": "yarn run prettier --write $(git ls-files | grep '\\(.js\\|.ts\\|.scss\\|.css\\)')",
     "checkIncorrectImportStatements": "./scripts/check_incorrect_import_statements.sh",
-    "syncmock": "node src/test/fetchMockData.js --diff"
+    "syncmock": "node src/test/fetchMockData.js --diff",
+    "e2e:spinup": "sh ./scripts/e2e.sh",
+    "e2e:local": "export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-local",
+    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-remote",
+    "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
   },
   "engines": {
-    "node": "8.12.0",
-    "yarn": "1.22.4"
+    "node": "15.2.1",
+    "yarn": "1.22.5"
   },
   "resolutions": {
     "mobx": "^6.0.0",
@@ -206,7 +210,6 @@
     "mobx-react-router": "4.1.0",
     "mobx-utils": "6.0.1",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
-    "node-sass": "^4.9.3",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
     "oncokb-ts-api-client": "^1.1.6",
@@ -285,7 +288,8 @@
     "rollup-plugin-sourcemaps": "^0.4.2",
     "rollup-plugin-typescript2": "^0.27.0",
     "route-parser": "0.0.5",
-    "sass-loader": "^7.1.0",
+    "sass": "^1.32.4",
+    "sass-loader": "10.1.1",
     "sass-resources-loader": "^1.3.1",
     "save-svg-as-png": "^1.4.6",
     "script-loader": "^0.7.0",
@@ -331,7 +335,7 @@
     "es-abstract": "1.18.0-next.2",
     "expect": "^1.20.2",
     "expect-jsx": "5.0.0",
-    "http-server": "^0.11.1",
+    "http-server": "0.11.1",
     "jasmine-core": "^2.5.2",
     "json": "^9.0.6",
     "karma": "^1.7.0",
@@ -344,6 +348,7 @@
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^3.0.5",
     "mocha": "^5.2.0",
+    "node-fetch": "^2.6.1",
     "pre-commit": "^1.2.2",
     "prettier": "1.19.1",
     "react-element-to-jsx-string": "14.3.1",
