@@ -6,26 +6,25 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:15.2.1-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    - run:
-        name: "Install yarn at specific version"
-        command:
-          sudo npm install --global yarn@1.22.4
+#    - run:
+#        name: "Install yarn at specific version"
+#        command:
+#          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
+          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' --gekko false && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' & \
-          ./scripts/env_vars.sh && \
-          eval "$(./scripts/env_vars.sh)" && \
+          ../scripts/env_vars.sh && \
+          eval "$(../scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
           sleep 5s && \
           curl $CBIOPORTAL_URL > /dev/null && \
@@ -34,9 +33,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 20s && \
           (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
           sleep 1s && \
-          cd end-to-end-test && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-          yarn run e2e
+          yarn run test-webdriver-manager-remote
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
@@ -60,17 +58,19 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - store_artifacts:
         path: /tmp/repo/end-to-end-test/shared/imageCompare.html
         destination: /imageCompare.html
-
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
+        destination: /customReport.json
 
 version: 2
 jobs:
   install:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+#      - run:
+#          name: "Install yarn at specific version"
+#          command:
+#            sudo npm install --global yarn@1.22.4
       - run:
           name: "Show yarn and node versions"
           command: |
@@ -126,10 +126,10 @@ jobs:
   unit_tests:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+#      - run:
+#          name: "Install yarn at specific version"
+#          command:
+#            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
       # run tests!
@@ -170,7 +170,7 @@ jobs:
   end_to_end_tests:
     <<: *defaults
     environment:
-      SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
+      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
@@ -186,11 +186,15 @@ jobs:
       - run:
           # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
           name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-          command: pyenv local 3.5.2 && virtualenv venv
+          command: pyenv local 3.6.5 && virtualenv venv
       - run:
           name: Setup python libraries
           command: |
               pip3 install requests pyyaml
+#      - run:
+#          name: Install canvas deps [for screenshot comparison]
+#          command: |
+#              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       - run:
           name: Install dependencies
           command: |
@@ -286,11 +290,17 @@ jobs:
           destination: /errorShots
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/junit
+          destination: /results
+#      - store_artifacts:
+#          path: /tmp/repo/end-to-end-test/local/junit
+#          destination: /results
       - store_artifacts:
           path: /tmp/repo/end-to-end-test/shared/imageCompare.html
           destination: /imageCompare.html
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit/customReport.json
+          destination: /customReport.json
+
     environment:
         PORTAL_SOURCE_DIR: /tmp/repo
         TEST_HOME: /tmp/repo/end-to-end-test/local
