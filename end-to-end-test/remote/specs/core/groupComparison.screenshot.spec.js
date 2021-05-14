@@ -474,7 +474,7 @@ describe('group comparison page screenshot tests', function() {
                 $('svg#comparison-tab-overlap-svg').waitForDisplayed({
                     timeout: 6000,
                 });
-                jsApiClick('text[data-test="sample0VennLabel"]');
+                jsApiClick('rect[data-test="sample0VennRegion"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
@@ -521,7 +521,7 @@ describe('group comparison page screenshot tests', function() {
             });
 
             it('group comparison page overlap tab venn diagram view with overlap and session selected view', function() {
-                jsApiClick('text[data-test="sample0,1,2VennLabel"]');
+                jsApiClick('rect[data-test="sample0,1,2VennRegion"]');
                 var res = checkElementWithTemporaryClass(
                     'div[data-test="ComparisonPageOverlapTabDiv"]',
                     'div[data-test="ComparisonPageOverlapTabDiv"]',

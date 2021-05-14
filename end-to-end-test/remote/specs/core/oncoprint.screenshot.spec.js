@@ -376,6 +376,12 @@ describe('sorting', function() {
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
+        );
+
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
@@ -399,16 +405,16 @@ describe('sorting', function() {
         overallSurvivalElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
         browser.pause(100); // give time to sort
 
-        var res = checkOncoprintElement();
-        assertScreenShotMatch(res);
-    });
-    it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2', function() {
-        // close the view menu
         setDropdownOpen(
             false,
             '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
         );
+
+        var res = checkOncoprintElement();
+        assertScreenShotMatch(res);
+    });
+    it('oncoprint sorts through a flow with clinical tracks sorted - sorted patient order 2', function() {
         var overallSurvivalElements = getNthTrackOptionsElements(4);
         setDropdownOpen(
             true,
@@ -452,22 +458,22 @@ describe('sorting', function() {
     });
 
     it('oncoprint sorts through a flow with clinical tracks sorted - sorted sample order 1', function() {
-        while (
-            !$(
-                '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
-            ).isDisplayed()
-        ) {
-            // behavior varies whether this menu is still visible, so we have to go into this loop to make sure its visible before clicking to sample mode
-            $(
-                '.oncoprintContainer .oncoprint__controls #viewDropdownButton'
-            ).click(); // open view menu
-            browser.pause(100);
-        }
+        setDropdownOpen(
+            true,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
+        );
         $(
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
         ).click(); // go to sample mode
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
+        );
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
@@ -649,6 +655,12 @@ describe('sorting', function() {
             '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
         ).click(); // go to patient mode
         waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]'
+        );
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);

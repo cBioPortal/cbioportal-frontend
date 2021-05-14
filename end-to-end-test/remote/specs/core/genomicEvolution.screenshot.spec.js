@@ -69,6 +69,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
+        setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
     });
 
     it('pvge only show highlighted in line chart', function() {

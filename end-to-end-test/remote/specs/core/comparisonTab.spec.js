@@ -1,6 +1,7 @@
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
+var { jsApiClick } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const SampleCreateGroupButton =
@@ -25,7 +26,7 @@ describe('results view comparison tab venn diagram tests', function() {
         });
 
         it('select from sample venn diagram', function() {
-            jsApiClick('text[data-test="sample0VennLabel"]');
+            jsApiClick('rect[data-test="sample0VennRegion"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), true);
             assert.equal($(PatientCreateGroupButton).isEnabled(), false);
@@ -89,8 +90,8 @@ describe('results view comparison tab venn diagram tests', function() {
 
         it('select from patient venn diagram', function() {
             // unselect sample venn diagram first
-            jsApiClick('text[data-test="sample0VennLabel"]');
-            jsApiClick('text[data-test="patient0VennLabel"]');
+            jsApiClick('rect[data-test="sample0VennRegion"]');
+            jsApiClick('rect[data-test="patient0VennRegion"]');
             browser.pause(100);
             assert.equal($(SampleCreateGroupButton).isEnabled(), false);
             assert.equal($(PatientCreateGroupButton).isEnabled(), true);
