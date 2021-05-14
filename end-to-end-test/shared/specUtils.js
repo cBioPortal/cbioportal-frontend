@@ -108,7 +108,7 @@ function setCheckboxChecked(checked, selector, failure_message) {
     browser.waitUntil(
         () => {
             $(selector).click();
-            return $(selector).isSelected();
+            return checked === $(selector).isSelected();
         },
         {
             timeout: 10000,

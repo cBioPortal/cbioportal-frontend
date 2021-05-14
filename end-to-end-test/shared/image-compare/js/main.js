@@ -183,6 +183,8 @@ function buildDisplay(data, allData, rootUrl) {
         return buildCurlStatement(data);
     });
 
+    var thisData = buildImagePath(data.refImagePath, rootUrl);
+
     var template = `
      <h3 class="screenshot-name"></h3>
         <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
@@ -241,7 +243,7 @@ function buildDisplay(data, allData, rootUrl) {
         to the repo, commit it and push it to your PR's branch, that is:
         <br />
         <br />
-        <textarea class="curls">${buildCurlStatement(data)}</textarea>
+        <textarea class="curls">${buildCurlStatement(thisData)}</textarea>
         <br />
         <br />
         Then preferably use git commit --amend and change your commit message

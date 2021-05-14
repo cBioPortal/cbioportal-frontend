@@ -290,6 +290,12 @@ describe('sorting', function() {
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
+        );
+
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
@@ -339,6 +345,12 @@ describe('sorting', function() {
         ).click(); // go to sample mode
 
         waitForOncoprint(ONCOPRINT_TIMEOUT);
+
+        setDropdownOpen(
+            false,
+            '.oncoprintContainer .oncoprint__controls #viewDropdownButton',
+            '.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]'
+        );
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);

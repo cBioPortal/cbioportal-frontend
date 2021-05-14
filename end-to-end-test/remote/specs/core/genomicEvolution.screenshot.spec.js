@@ -10,6 +10,7 @@ var waitForNetworkQuiet = require('../../../shared/specUtils')
 var { setCheckboxChecked } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
+var { jsApiHover } = require('../../../shared/specUtils');
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`;
@@ -54,9 +55,9 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with line chart', function() {
-        $(
+        jsApiHover(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
-        ).moveTo();
+        );
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
             '',
@@ -69,10 +70,10 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
-        setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
     });
 
     it('pvge only show highlighted in line chart', function() {
+        setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
         $('input[data-test="VAFOnlyHighlighted"]').click();
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
