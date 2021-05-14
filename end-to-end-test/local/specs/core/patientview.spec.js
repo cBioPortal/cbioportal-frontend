@@ -90,14 +90,14 @@ describe('patient view page', function() {
                 filterIcon = $('div[data-test=patientview-mutation-table]').$(
                     'i[data-test=gene-filter-icon]'
                 );
-                assert(filterIcon.isVisible());
+                assert(filterIcon.isDisplayed());
             });
 
             it('opens selection menu when filter icon clicked', () => {
                 filterIcon.click();
                 $('.rc-tooltip').waitForExist();
                 selectMenu = $('.rc-tooltip');
-                assert(selectMenu.isVisible());
+                assert(selectMenu.isDisplayed());
             });
 
             it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
@@ -123,7 +123,7 @@ describe('patient view page', function() {
             it('closes selection menu when filter icon clicked again', () => {
                 filterIcon.click();
                 selectMenu = $('.rc-tooltip');
-                assert(!selectMenu.isVisible());
+                assert(!selectMenu.isDisplayed());
             });
 
             it('filter menu icon is not shown when gene panels are not used', () => {
@@ -136,7 +136,7 @@ describe('patient view page', function() {
                 var filterIcon = $(
                     'div[data-test=patientview-mutation-table]'
                 ).$('i[data-test=gene-filter-icon]');
-                assert(!filterIcon.isVisible());
+                assert(!filterIcon.isDisplayed());
             });
         });
 
@@ -153,14 +153,14 @@ describe('patient view page', function() {
                 filterIcon = $('div[data-test=patientview-copynumber-table]').$(
                     'i[data-test=gene-filter-icon]'
                 );
-                assert(filterIcon.isVisible());
+                assert(filterIcon.isDisplayed());
             });
 
             it('opens selection menu when filter icon clicked', () => {
                 filterIcon.click();
                 $('.rc-tooltip').waitForExist();
                 selectMenu = $('.rc-tooltip');
-                assert(selectMenu.isVisible());
+                assert(selectMenu.isDisplayed());
             });
 
             it('removes genes profiles profiled in some samples then `all genes` option selected', () => {
@@ -182,7 +182,7 @@ describe('patient view page', function() {
             it('closes selection menu when filter icon clicked again', () => {
                 filterIcon.click();
                 selectMenu = $('.rc-tooltip');
-                assert(!selectMenu.isVisible());
+                assert(!selectMenu.isDisplayed());
             });
 
             it('filter menu icon is not shown when gene panels are not used', () => {
@@ -195,7 +195,7 @@ describe('patient view page', function() {
                 var filterIcon = $(
                     'div[data-test=patientview-copynumber-table]'
                 ).$('i[data-test=gene-filter-icon]');
-                assert(!filterIcon.isVisible());
+                assert(!filterIcon.isDisplayed());
             });
         });
 
@@ -266,7 +266,9 @@ describe('patient view page', function() {
 
             it('shows gene panel icons when gene panels are used', () => {
                 browser.moveToObject('svg[data-test=vaf-plot]'); // moves pointer to plot thumbnail
-                $('div[role=tooltip] svg[data-test=vaf-plot]').waitForVisible();
+                $(
+                    'div[role=tooltip] svg[data-test=vaf-plot]'
+                ).waitForDisplayed();
                 var genePanelIcon = $(
                     'svg[data-test=vaf-plot] rect.genepanel-icon'
                 );
@@ -276,8 +278,9 @@ describe('patient view page', function() {
 
         describe('gene panel modal', () => {
             function clickOnGenePanelLinks() {
-                const genePanelLinks = $$('.rc-tooltip table td a');
-                genePanelLinks[genePanelLinks.length - 1].click();
+                const el = $('.rc-tooltip td a');
+                el.waitForDisplayed();
+                el.click();
             }
 
             beforeEach(() => {
@@ -286,40 +289,36 @@ describe('patient view page', function() {
             });
 
             it('toggles gene panel modal from patient header', () => {
-                browser
-                    .moveToObject('.patientSamples .clinical-spans svg')
-                    .pause(500);
+                $('.patientSamples .clinical-spans svg').moveTo();
+
                 clickOnGenePanelLinks();
-                assert($('#patient-view-gene-panel').isExisting());
+
+                assert($('#patient-view-gene-panel').waitForDisplayed());
             });
 
             it('toggles gene panel modal from sample icon in genomic tracks', () => {
-                browser
-                    .moveToObject(
-                        '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
-                    )
-                    .pause(500);
+                $(
+                    '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
+                ).moveTo();
+
                 clickOnGenePanelLinks();
-                assert($('#patient-view-gene-panel').isExisting());
+                assert($('#patient-view-gene-panel').waitForDisplayed());
             });
 
             it('toggles gene panel modal from gene panel icon in genomic tracks', () => {
-                browser
-                    .moveToObject(
-                        '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
-                    )
-                    .pause(500);
+                $(
+                    '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
+                ).moveTo();
+
                 $('.qtip-content a').click();
-                assert($('#patient-view-gene-panel').isExisting());
+                assert($('#patient-view-gene-panel').waitForDisplayed());
             });
 
             it('toggles gene panel modal from sample icon in mutations table', () => {
                 const mutationsTable = '[data-test=patientview-mutation-table]';
-                browser
-                    .moveToObject(
-                        `${mutationsTable} table td li:not(.invisible) [data-test=not-profiled-icon]`
-                    )
-                    .pause(500);
+                $(
+                    `${mutationsTable} table td li:not(.invisible) [data-test=not-profiled-icon]`
+                ).moveTo();
                 clickOnGenePanelLinks();
                 assert($('#patient-view-gene-panel').isExisting());
             });
@@ -483,7 +482,7 @@ function testSampleIcon(
     });
 
     sampleVisibilities.forEach((desiredVisibility, i) => {
-        const actualVisibility = icons[i].isVisible();
+        const actualVisibility = icons[i].isDisplayed();
         assert.equal(
             actualVisibility,
             desiredVisibility,

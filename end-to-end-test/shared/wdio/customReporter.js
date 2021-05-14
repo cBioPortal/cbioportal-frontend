@@ -24,6 +24,8 @@ class WdioTestRailReporter extends events.EventEmitter {
         });
 
         this.on('end', () => {
+            this.report.testHome = config.testHome;
+
             const strReport = JSON.stringify(this.report);
 
             fs.writeFileSync(
