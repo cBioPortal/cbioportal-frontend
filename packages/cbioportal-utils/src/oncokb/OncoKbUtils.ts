@@ -255,6 +255,11 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
     structuralVariantType: keyof typeof StructuralVariantType,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
+    // For most of the SV in the portal, we can assume they are fusion event. The assumption is based on that user generally will not import none fusion event in database.
+    let isIntragenic = false;
+    if (site1EntrezGeneId === site2EntrezGeneId || site2EntrezGeneId === null) {
+        isIntragenic = true;
+    }
     return {
         id: generateQueryStructuralVariantId(
             site1EntrezGeneId,
@@ -267,11 +272,10 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
         geneB: {
             entrezGeneId: site2EntrezGeneId,
         },
-        structuralVariantType,
-        functionalFusion: !(
-            site1EntrezGeneId === site2EntrezGeneId ||
-            site2EntrezGeneId === null
-        ),
+        structuralVariantType: isIntragenic
+            ? 'DELETION'
+            : structuralVariantType,
+        functionalFusion: !isIntragenic,
         tumorType,
         evidenceTypes: evidenceTypes,
     } as AnnotateStructuralVariantQuery;
