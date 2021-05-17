@@ -3273,13 +3273,18 @@ export class ResultsViewPageStore {
     readonly mutationsByGene = remoteData<{
         [hugoGeneSymbol: string]: Mutation[];
     }>({
-        await: () => [
-            this.selectedMolecularProfiles,
-            this.defaultOQLQuery,
-            this.mutationsReportByGene,
-            this.filteredSampleKeyToSample,
-            this.structuralVariantsReportByGene,
-        ],
+        await: () => {
+            const promises: MobxPromise<any>[] = [
+                this.selectedMolecularProfiles,
+                this.defaultOQLQuery,
+                this.mutationsReportByGene,
+                this.structuralVariantsReportByGene,
+            ];
+            if (this.hideUnprofiledSamples) {
+                promises.push(this.filteredSampleKeyToSample);
+            }
+            return promises;
+        },
         invoke: () => {
             const mutationsByGene = _.mapValues(
                 this.mutationsReportByGene.result!,
