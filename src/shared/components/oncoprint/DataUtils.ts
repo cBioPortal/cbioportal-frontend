@@ -53,6 +53,11 @@ const mutRenderPriority = stringListToIndexSet([
     'missense',
     'other',
 ]);
+const svRenderPriority = {
+    sv_rec: 0,
+    sv: 1,
+};
+
 const cnaRenderPriority = {
     amp: 0,
     homdel: 0,
@@ -160,6 +165,7 @@ export function fillGeneticTrackDatum(
     const dispProtCounts: { [protEvent: string]: number } = {};
     const dispMutCounts: { [mutType: string]: number } = {};
     const dispGermline: { [mutType: string]: boolean } = {};
+    const dispSvCounts: { [svType: string]: number } = {};
     let structuralVariantCounts: number = 0;
     const caseInsensitiveGermlineMatch = new RegExp(
         MUTATION_STATUS_GERMLINE,
@@ -213,11 +219,21 @@ export function fillGeneticTrackDatum(
                 dispMutCounts[oncoprintMutationType] += 1;
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                structuralVariantCounts += 1;
+                let type: string;
+                if (event.putativeDriver) {
+                    type = 'sv_rec';
+                } else {
+                    type = 'sv';
+                }
+                dispSvCounts[type] = dispSvCounts[type] || 0;
+                dispSvCounts[type] += 1;
                 break;
         }
     }
-    newDatum.disp_structuralVariant = structuralVariantCounts > 0;
+    newDatum.disp_structuralVariant = selectDisplayValue(
+        dispSvCounts,
+        svRenderPriority
+    );
     newDatum.disp_cna = selectDisplayValue(dispCnaCounts, cnaRenderPriority);
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
