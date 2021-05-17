@@ -121,7 +121,7 @@ export type GeneticTrackDatum = {
     disp_cna?: string;
     disp_mrna?: string;
     disp_prot?: string;
-    disp_structuralVariant?: boolean;
+    disp_structuralVariant?: string;
     disp_germ?: boolean;
 };
 
