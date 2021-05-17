@@ -256,6 +256,7 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
+import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3647,32 +3648,43 @@ export class ResultsViewPageStore {
         {
             await: () => [this.studyToDataQueryFilter],
             invoke: async () => {
-                let sampleIdentifiers: SampleIdentifier[] = [];
-                let sampleListIds: string[] = [];
+                const customSampleListIds = new SampleSet();
+                const customSampleListStudyIds: string[] = [];
+                const sampleListIds: string[] = [];
                 _.each(
                     this.studyToDataQueryFilter.result,
                     (dataQueryFilter: IDataQueryFilter, studyId: string) => {
                         if (dataQueryFilter.sampleIds) {
-                            sampleIdentifiers = sampleIdentifiers.concat(
-                                dataQueryFilter.sampleIds.map(sampleId => ({
-                                    sampleId,
-                                    studyId,
-                                }))
+                            customSampleListIds.add(
+                                studyId,
+                                dataQueryFilter.sampleIds
                             );
+                            customSampleListStudyIds.push(studyId);
                         } else if (dataQueryFilter.sampleListId) {
                             sampleListIds.push(dataQueryFilter.sampleListId);
                         }
                     }
                 );
-                let promises: Promise<Sample[]>[] = [];
-                if (sampleIdentifiers.length) {
+
+                const promises: Promise<Sample[]>[] = [];
+
+                if (customSampleListStudyIds.length > 0) {
                     promises.push(
-                        client.fetchSamplesUsingPOST({
-                            sampleFilter: {
-                                sampleIdentifiers,
-                            } as SampleFilter,
-                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                        })
+                        client
+                            .fetchSamplesUsingPOST({
+                                sampleFilter: {
+                                    sampleListIds: customSampleListStudyIds.map(
+                                        studyId => `${studyId}_all`
+                                    ),
+                                } as SampleFilter,
+                                projection:
+                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                            })
+                            .then(samples => {
+                                return samples.filter(s =>
+                                    customSampleListIds.has(s)
+                                );
+                            })
                     );
                 }
                 if (sampleListIds.length) {
