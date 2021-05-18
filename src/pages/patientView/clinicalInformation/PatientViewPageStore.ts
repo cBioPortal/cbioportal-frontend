@@ -1534,7 +1534,7 @@ export class PatientViewPageStore {
         {
             await: () => [
                 this.mutatedGenes,
-                this.samples,
+                this.samplesWithUniqueKeys,
                 this.genePanelData,
                 this.genePanels,
             ],
@@ -1543,11 +1543,11 @@ export class PatientViewPageStore {
                 return computeGenePanelInformation(
                     this.genePanelData.result,
                     this.genePanels.result,
-                    this.samples.result!,
+                    this.samplesWithUniqueKeys.result!,
                     [
                         {
-                            uniquePatientKey: this.samples.result![0]
-                                .uniquePatientKey,
+                            uniquePatientKey: this.samplesWithUniqueKeys
+                                .result![0].uniquePatientKey,
                         },
                     ],
                     this.mutatedGenes.result!
