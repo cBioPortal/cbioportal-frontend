@@ -168,8 +168,10 @@ export async function getCoverageInformation(
     if (sampleMolecularIdentifiers.length && genes.result!.length) {
         genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
             {
-                sampleMolecularIdentifiers,
-            }
+                genePanelDataMultipleStudyFilter: {
+                    sampleMolecularIdentifiers,
+                },
+            } as any
         );
     } else {
         genePanelData = [];
