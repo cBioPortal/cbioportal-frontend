@@ -44,6 +44,7 @@ import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/Cust
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 import './styles.scss';
+import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 
 interface IVAFChartProps {
     mouseOverMutation: Readonly<Mutation> | null;
@@ -383,7 +384,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                             } = {
                                 mutationStatus: d.mutationStatus,
                                 sampleId: d.sampleId,
-                                vaf: d.y,
+                                vaf: getVariantAlleleFrequency(d.mutation)!,
                             };
 
                             const color = d.color;
