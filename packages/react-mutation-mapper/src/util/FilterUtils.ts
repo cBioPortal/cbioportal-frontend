@@ -141,7 +141,11 @@ export function applyDefaultMutationStatusFilter(
 ) {
     return (
         mutation.mutationStatus !== undefined &&
-        filter.values.includes(mutation.mutationStatus)
+        _.some(
+            filter.values,
+            value =>
+                value.toLowerCase() === mutation.mutationStatus!.toLowerCase()
+        )
     );
 }
 
