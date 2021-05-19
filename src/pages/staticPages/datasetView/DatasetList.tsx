@@ -237,8 +237,7 @@ export default class DataSetsPageTable extends React.Component<
                         showFilter={true}
                         showFilterClearButton={true}
                         showCopyDownload={
-                            false &&
-                            !AppConfig.serverConfig.skin_hide_download_controls
+                            false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                         }
                         initialItemsPerPage={this.props.datasets.length}
                     />

@@ -170,9 +170,7 @@ export default class GisticGeneSelector extends React.Component<
                     columns={this.columns}
                     rawData={this.props.data}
                     headerControlsProps={{
-                        showCopyAndDownload:
-                            false &&
-                            !AppConfig.serverConfig.skin_hide_download_controls,
+                        showCopyAndDownload: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                         showHideShowColumnButton: false,
                         showPagination: true,
                     }}

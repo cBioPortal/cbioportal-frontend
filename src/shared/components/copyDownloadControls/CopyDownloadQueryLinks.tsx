@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { If } from 'react-if';
 import { ICopyDownloadInputsProps } from './ICopyDownloadControls';
 import classnames from 'classnames';
 import styles from './copyDownloadControls.module.scss';
@@ -7,7 +6,6 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import VirtualStudy, {
     IVirtualStudyProps,
 } from 'pages/studyView/virtualStudy/VirtualStudy';
-import AppConfig from 'appConfig';
 
 export interface ICopyDownloadLinksProps extends ICopyDownloadInputsProps {
     copyLinkRef?: (el: HTMLAnchorElement | null) => void;

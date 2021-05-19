@@ -265,8 +265,7 @@ export default class QuerySummary extends React.Component<
                     forkedMode={false}
                     showQuickSearchTab={false}
                     showDownloadTab={
-                        false &&
-                        !AppConfig.serverConfig.skin_hide_download_controls
+                        false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                     }
                     showAlerts={true}
                     modifyQueryParams={this.props.store.modifyQueryParams}
