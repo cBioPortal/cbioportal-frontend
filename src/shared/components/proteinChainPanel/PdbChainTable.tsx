@@ -202,7 +202,7 @@ export default class PdbChainTable extends React.Component<
             <PdbChainTableComponent
                 showColumnVisibility={false}
                 showCopyDownload={
-                    false && !AppConfig.serverConfig.skin_hide_download_controls
+                    false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                 }
                 itemsLabel="PDB chain"
                 itemsLabelPlural="PDB chains"

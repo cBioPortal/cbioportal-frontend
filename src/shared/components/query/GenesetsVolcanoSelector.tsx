@@ -347,9 +347,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 showColumnVisibility={false}
                                 showFilter={true}
                                 showCopyDownload={
-                                    false &&
-                                    !AppConfig.serverConfig
-                                        .skin_hide_download_controls
+                                    false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                                 }
                             />
                         )}

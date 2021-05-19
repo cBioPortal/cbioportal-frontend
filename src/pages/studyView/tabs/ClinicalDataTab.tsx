@@ -217,10 +217,7 @@ export class ClinicalDataTab extends React.Component<
                                 }
                                 columns={this.columns.result}
                                 copyDownloadProps={{
-                                    showCopy:
-                                        false &&
-                                        !AppConfig.serverConfig
-                                            .skin_hide_download_controls,
+                                    showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                                     downloadFilename: this.props.store
                                         .clinicalDataDownloadFilename,
                                 }}

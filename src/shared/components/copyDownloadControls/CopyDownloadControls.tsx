@@ -1,17 +1,14 @@
 import * as React from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 import { ThreeBounce } from 'better-react-spinkit';
-import { If } from 'react-if';
 import fileDownload from 'react-file-download';
-import { action, observable, makeObservable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-const Clipboard = require('clipboard');
-
 import copyDownloadStyles from './copyDownloadControls.module.scss';
 import { CopyDownloadButtons } from './CopyDownloadButtons';
 import { ICopyDownloadControlsProps } from './ICopyDownloadControls';
-import autobind from 'autobind-decorator';
-import AppConfig from 'appConfig';
+
+const Clipboard = require('clipboard');
 
 export interface IAsyncCopyDownloadControlsProps
     extends ICopyDownloadControlsProps {

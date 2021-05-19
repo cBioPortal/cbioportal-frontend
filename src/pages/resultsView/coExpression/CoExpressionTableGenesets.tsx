@@ -163,9 +163,7 @@ export default class CoExpressionTableGenesets extends React.Component<
                     paginationProps={this.paginationProps}
                     initialItemsPerPage={25}
                     copyDownloadProps={{
-                        showCopy:
-                            false &&
-                            !AppConfig.serverConfig.skin_hide_download_controls,
+                        showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                     }}
                 />
             </div>

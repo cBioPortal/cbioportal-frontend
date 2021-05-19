@@ -94,8 +94,7 @@ export default class CosmicMutationTable extends React.Component<
                     initialSortDirection={initialSortDirection}
                     initialItemsPerPage={initialItemsPerPage}
                     showCopyDownload={
-                        false &&
-                        !AppConfig.serverConfig.skin_hide_download_controls
+                        false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                     }
                     showColumnVisibility={false}
                     showFilter={false}

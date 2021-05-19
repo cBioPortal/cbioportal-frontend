@@ -50,7 +50,7 @@ export default class SurvivalDescriptionTable extends React.Component<
                 showColumnVisibility={false}
                 showFilter={false}
                 showCopyDownload={
-                    false && !AppConfig.serverConfig.skin_hide_download_controls
+                    false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                 }
             />
         );
