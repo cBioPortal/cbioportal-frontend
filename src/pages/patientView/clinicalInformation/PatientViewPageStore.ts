@@ -2163,8 +2163,8 @@ export class PatientViewPageStore {
             this.mergedMutationDataIncludingUncalled,
             mutationList => {
                 return _.some(mutationList, m => {
-                    const vaf = getVariantAlleleFrequency(m);
-                    return vaf != null && vaf > 0;
+                    const vafReport = getVariantAlleleFrequency(m);
+                    return vafReport !== null && vafReport.vaf > 0;
                 });
             }
         );
