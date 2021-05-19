@@ -495,7 +495,7 @@ function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
 
     // move to hamburger icon when present in chart
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    if ($(hamburgerIcon).isExisting()) {
+    if ($(hamburgerIcon).isVisible()) {
         browser.moveToObject(hamburgerIcon);
         // wait for the menu available
         browser.waitForVisible(hamburgerIcon + ' li', timeout || 10000);

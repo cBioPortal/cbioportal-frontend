@@ -389,8 +389,11 @@ describe('hide download controls feature', function() {
                     assert.deepStrictEqual(
                         expectedTabNames,
                         observedTabNames,
-                        'There appears to be a new tab on the page.' +
-                            ' Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include' +
+                        'There appears to be a new tab on the page (observed names: [' +
+                            observedTabNames.join(', ') +
+                            '] expected names: [' +
+                            expectedTabNames.join(', ') +
+                            ']). Please make sure to hide download controls depending on the "skin_hide_download_controls" property and include' +
                             ' tests for this in hide-download-controls.spec.js.'
                     );
                 });
