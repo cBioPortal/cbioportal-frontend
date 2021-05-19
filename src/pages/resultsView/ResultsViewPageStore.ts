@@ -2706,52 +2706,23 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly studyToSampleIds = remoteData<{
-        [studyId: string]: { [sampleId: string]: boolean };
+    readonly studyToCustomSampleList = remoteData<{
+        [studyId: string]: string[];
     }>(
         {
             await: () => [this.samplesSpecification],
-            invoke: async () => {
-                const sampleListsToQuery: {
-                    studyId: string;
-                    sampleListId: string;
-                }[] = [];
+            invoke: () => {
                 const ret: {
-                    [studyId: string]: { [sampleId: string]: boolean };
+                    [studyId: string]: string[];
                 } = {};
                 for (const sampleSpec of this.samplesSpecification.result!) {
                     if (sampleSpec.sampleId) {
                         // add sample id to study
-                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
-                        ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
-                    } else if (sampleSpec.sampleListId) {
-                        // mark sample list to query later
-                        sampleListsToQuery.push(
-                            sampleSpec as {
-                                studyId: string;
-                                sampleListId: string;
-                            }
-                        );
+                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || [];
+                        ret[sampleSpec.studyId].push(sampleSpec.sampleId);
                     }
                 }
-                // query for sample lists
-                if (sampleListsToQuery.length > 0) {
-                    const sampleLists: SampleList[] = await client.fetchSampleListsUsingPOST(
-                        {
-                            sampleListIds: sampleListsToQuery.map(
-                                spec => spec.sampleListId
-                            ),
-                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                        }
-                    );
-                    // add samples from those sample lists to corresponding study
-                    for (const sampleList of sampleLists) {
-                        ret[sampleList.studyId] = stringListToSet(
-                            sampleList.sampleIds
-                        );
-                    }
-                }
-                return ret;
+                return Promise.resolve(ret);
             },
         },
         {}
@@ -4135,7 +4106,7 @@ export class ResultsViewPageStore {
     }>(
         {
             await: () => [
-                this.studyToSampleIds,
+                this.studyToCustomSampleList,
                 this.studyIds,
                 this.studyToSampleListId,
             ],
@@ -4144,8 +4115,8 @@ export class ResultsViewPageStore {
                 const ret: { [studyId: string]: IDataQueryFilter } = {};
                 for (const studyId of studies) {
                     ret[studyId] = generateDataQueryFilter(
-                        this.studyToSampleListId.result![studyId] || null,
-                        Object.keys(this.studyToSampleIds.result[studyId] || {})
+                        this.studyToSampleListId.result![studyId],
+                        this.studyToCustomSampleList.result![studyId]
                     );
                 }
                 return Promise.resolve(ret);
