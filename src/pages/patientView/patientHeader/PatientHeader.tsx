@@ -70,8 +70,7 @@ export default class PatientHeader extends React.Component<
                     <ClinicalInformationPatientTable
                         showFilter={false}
                         showCopyDownload={
-                            false &&
-                            !AppConfig.serverConfig.skin_hide_download_controls
+                            false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                         }
                         showTitleBar={false}
                         data={patient.clinicalData}

@@ -203,9 +203,7 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
                 paginationProps={{ itemsPerPageOptions: [20] }}
                 initialItemsPerPage={20}
                 copyDownloadProps={{
-                    showCopy:
-                        false &&
-                        !AppConfig.serverConfig.skin_hide_download_controls,
+                    showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
                 }}
             />
         );
