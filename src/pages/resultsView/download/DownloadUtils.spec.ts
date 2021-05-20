@@ -432,7 +432,7 @@ describe('DownloadUtils', () => {
                     ...sampleDataWithMutation,
                     ...sampleDataWithStructuralVariant,
                 ],
-                disp_structuralVariant: true,
+                disp_structuralVariant: 'sv',
                 disp_cna: 'amp',
                 disp_mut: 'missense_rec',
             };
