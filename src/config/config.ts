@@ -202,6 +202,7 @@ export function initializeAPIClients() {
                 '/clinical-data/fetch?clinicalDataType=SAMPLE',
                 '/gene-panel-data/fetch',
                 '/clinical-data/fetch?clinicalDataType=PATIENT',
+                '/structural-variant/fetch',
             ],
             getCbioPortalApiUrl()
         );
