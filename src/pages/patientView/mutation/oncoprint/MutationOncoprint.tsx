@@ -710,6 +710,7 @@ export default class MutationOncoprint extends React.Component<
                             clinicalTracks={[]}
                             geneticTracks={[]}
                             genesetHeatmapTracks={[]}
+                            categoricalTracks={[]}
                             heatmapTracks={this.heatmapTracks.result!}
                             heatmapTracksOrder={this.heatmapTracksOrder.result}
                             divId="MutationHeatmap"

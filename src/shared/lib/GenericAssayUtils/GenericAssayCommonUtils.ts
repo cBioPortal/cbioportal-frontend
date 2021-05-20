@@ -22,6 +22,12 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
     MUTATIONAL_SIGNATURE: 'MUTATIONAL_SIGNATURE',
 };
 
+export enum GenericAssayDataType {
+    LIMIT_VALUE = 'LIMIT-VALUE',
+    CATEGORICAL = 'CATEGORICAL',
+    BINARY = 'BINARY',
+}
+
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
     molecularProfiles: MolecularProfile[]
 ) {

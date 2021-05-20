@@ -100,6 +100,7 @@ describe('Oncoprint DeltaUtils', () => {
             clinicalTracks: [],
             geneticTracks: [],
             genesetHeatmapTracks: [],
+            categoricalTracks: [],
             heatmapTracks: [],
             divId: 'myDomId',
             width: 1000,
@@ -873,6 +874,7 @@ describe('Oncoprint DeltaUtils', () => {
             geneticTracks: [],
             genesetHeatmapTracks: [],
             heatmapTracks: [],
+            categoricalTracks: [],
             divId: 'myDomId',
             width: 1000,
         });
@@ -994,6 +996,7 @@ describe('Oncoprint DeltaUtils', () => {
             geneticTracks: [],
             genesetHeatmapTracks: [],
             heatmapTracks: [],
+            categoricalTracks: [],
             divId: 'myDomId',
             width: 1000,
         });
