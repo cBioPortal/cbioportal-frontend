@@ -19,6 +19,8 @@ enum EVENT_KEY {
     hidePutativePassengers = '0',
     showGermlineMutations = '1',
     hideUnprofiledSamples = '1.1',
+    hideAnyUnprofiledSamples = '1.2',
+    hideTotallyUnprofiledSamples = '1.3',
 
     dataTypeSample = '2',
     dataTypePatient = '3',
@@ -63,8 +65,17 @@ export default class SettingsMenu extends React.Component<
                     .props.store.driverAnnotationSettings.includeVUS;
                 break;
             case EVENT_KEY.hideUnprofiledSamples:
-                this.props.store.hideUnprofiledSamples = !this.props.store
-                    .hideUnprofiledSamples;
+                if (!this.props.store.hideUnprofiledSamples) {
+                    this.props.store.hideUnprofiledSamples = 'any';
+                } else {
+                    this.props.store.hideUnprofiledSamples = false;
+                }
+                break;
+            case EVENT_KEY.hideAnyUnprofiledSamples:
+                this.props.store.hideUnprofiledSamples = 'any';
+                break;
+            case EVENT_KEY.hideTotallyUnprofiledSamples:
+                this.props.store.hideUnprofiledSamples = 'totally';
                 break;
             case EVENT_KEY.showGermlineMutations:
                 this.props.store.includeGermlineMutations = !this.props.store
@@ -161,20 +172,58 @@ export default class SettingsMenu extends React.Component<
                         </label>
                     </div>
                     {this.props.resultsView && (
-                        <div className="checkbox">
-                            <label>
-                                <input
-                                    data-test="HideUnprofiled"
-                                    type="checkbox"
-                                    value={EVENT_KEY.hideUnprofiledSamples}
-                                    checked={
-                                        this.props.store.hideUnprofiledSamples
-                                    }
-                                    onClick={this.onInputClick}
-                                />{' '}
-                                Exclude samples that are not profiled for all
-                                queried genes in all queried profiles
-                            </label>
+                        <div>
+                            <div className="checkbox">
+                                <label>
+                                    <input
+                                        data-test="HideUnprofiled"
+                                        type="checkbox"
+                                        value={EVENT_KEY.hideUnprofiledSamples}
+                                        checked={
+                                            this.props.store
+                                                .hideUnprofiledSamples !== false
+                                        }
+                                        onClick={this.onInputClick}
+                                    />{' '}
+                                    Exclude unprofiled samples
+                                </label>
+                            </div>
+                            <div style={{ marginLeft: 10 }}>
+                                <div className="radio">
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            checked={
+                                                this.props.store
+                                                    .hideUnprofiledSamples ===
+                                                'any'
+                                            }
+                                            value={
+                                                EVENT_KEY.hideAnyUnprofiledSamples
+                                            }
+                                            onClick={this.onInputClick}
+                                        />
+                                        Exclude samples that are unprofiled in
+                                        any queried gene or profile
+                                    </label>
+                                    <label>
+                                        <input
+                                            type="radio"
+                                            checked={
+                                                this.props.store
+                                                    .hideUnprofiledSamples ===
+                                                'totally'
+                                            }
+                                            value={
+                                                EVENT_KEY.hideTotallyUnprofiledSamples
+                                            }
+                                            onClick={this.onInputClick}
+                                        />
+                                        Exclude samples that are unprofiled in
+                                        every queried gene and profile.
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
