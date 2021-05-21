@@ -18,7 +18,7 @@ export interface IExclusionSettings {
     includeGermlineMutations: boolean;
     includeSomaticMutations: boolean;
     includeUnknownStatusMutations: boolean;
-    hideUnprofiledSamples?: boolean;
+    hideUnprofiledSamples?: 'any' | 'totally' | false;
 }
 
 export interface DriverAnnotationSettings {
