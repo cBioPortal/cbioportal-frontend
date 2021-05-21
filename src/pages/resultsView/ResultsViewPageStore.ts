@@ -83,7 +83,6 @@ import {
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    fetchSurvivalDataExists,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
@@ -2302,12 +2301,35 @@ export class ResultsViewPageStore {
     });
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [this.samples, this.survivalClinicalAttributesPrefix],
-        invoke: () =>
-            fetchSurvivalDataExists(
-                this.samples.result!,
-                this.survivalClinicalAttributesPrefix.result!
-            ),
+        await: () => [
+            this.clinicalAttributeIdToAvailableSampleCount,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: async () => {
+            const attributeNames = _.reduce(
+                this.survivalClinicalAttributesPrefix.result,
+                (attributeNames, prefix: string) => {
+                    attributeNames.push(prefix + '_STATUS');
+                    attributeNames.push(prefix + '_MONTHS');
+                    return attributeNames;
+                },
+                [] as string[]
+            );
+            if (attributeNames.length === 0) {
+                return false;
+            }
+
+            const clinicalAttributeIdToAvailableSampleCount =
+                this.clinicalAttributeIdToAvailableSampleCount.result || {};
+
+            return _.some(
+                attributeNames,
+                attributeName =>
+                    clinicalAttributeIdToAvailableSampleCount[attributeName] !==
+                        undefined &&
+                    clinicalAttributeIdToAvailableSampleCount[attributeName] > 0
+            );
+        },
     });
 
     readonly filteredSamplesByDetailedCancerType = remoteData<{
@@ -5037,7 +5059,7 @@ export class ResultsViewPageStore {
                     let result;
                     try {
                         result = await fetchStructuralVariantOncoKbData(
-                            this.uniqueSampleKeyToTumorType.result || {},
+                            {},
                             this.oncoKbAnnotatedGenes.result!,
                             this.structuralVariants
                         );
@@ -5061,7 +5083,6 @@ export class ResultsViewPageStore {
     readonly cnaOncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [
-                this.uniqueSampleKeyToTumorType,
                 this.oncoKbAnnotatedGenes,
                 this.discreteCNAMolecularData,
             ],
@@ -5107,10 +5128,7 @@ export class ResultsViewPageStore {
               structuralVariant: StructuralVariant
           ) => IndicatorQueryResp | undefined)
     >({
-        await: () => [
-            this.structuralVariantOncoKbDataForOncoprint,
-            this.uniqueSampleKeyToTumorType,
-        ],
+        await: () => [this.structuralVariantOncoKbDataForOncoprint],
         invoke: () => {
             const structuralVariantOncoKbDataForOncoprint = this
                 .structuralVariantOncoKbDataForOncoprint.result!;
@@ -5124,7 +5142,7 @@ export class ResultsViewPageStore {
                             structuralVariant.site2EntrezGeneId,
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
-                                this.uniqueSampleKeyToTumorType.result || {}
+                                {}
                             )
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
