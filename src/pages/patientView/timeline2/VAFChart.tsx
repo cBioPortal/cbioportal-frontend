@@ -27,14 +27,14 @@ export interface IColorPoint extends IPoint {
     color: string;
 }
 
-type Datum = {
+export type TooltipDatum = {
     mutationStatus: MutationStatus | null;
     sampleId: string;
-    vaf: number;
+    vafReport: VAFReport | null;
 };
 
 type TooltipModel = {
-    datum: Datum | null;
+    datum: TooltipDatum | null;
     mutation: Mutation | null;
     mouseEvent: React.MouseEvent<any> | null;
     tooltipOnPoint: boolean;
@@ -44,7 +44,7 @@ import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/Cust
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 import './styles.scss';
-import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
+import { getVariantAlleleFrequency, VAFReport } from 'shared/lib/MutationUtils';
 
 interface IVAFChartProps {
     mouseOverMutation: Readonly<Mutation> | null;
@@ -68,7 +68,7 @@ const VAFPoint: React.FunctionComponent<{
     x: number;
     y: number;
     color: string;
-    datum: Datum | null;
+    datum: TooltipDatum | null;
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
@@ -133,7 +133,7 @@ const VAFPointConnector: React.FunctionComponent<{
     x2: number;
     y2: number;
     color: string;
-    datum: Datum | null;
+    datum: TooltipDatum | null;
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
@@ -311,7 +311,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 ? {
                       mutationStatus: tooltipData.datum.mutationStatus,
                       sampleId: tooltipData.datum.sampleId,
-                      vaf: tooltipData.datum.vaf,
+                      vafReport: tooltipData.datum.vafReport,
                   }
                 : undefined
         );
@@ -380,11 +380,13 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                             let tooltipDatum: {
                                 mutationStatus: MutationStatus;
                                 sampleId: string;
-                                vaf: number;
+                                vafReport: VAFReport;
                             } = {
                                 mutationStatus: d.mutationStatus,
                                 sampleId: d.sampleId,
-                                vaf: getVariantAlleleFrequency(d.mutation)!,
+                                vafReport: getVariantAlleleFrequency(
+                                    d.mutation
+                                )!,
                             };
 
                             const color = d.color;
