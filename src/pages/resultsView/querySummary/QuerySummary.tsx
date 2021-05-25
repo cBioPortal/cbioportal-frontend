@@ -34,6 +34,7 @@ import ResultsPageSettings from '../settings/ResultsPageSettings';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -261,9 +262,7 @@ export default class QuerySummary extends React.Component<
                     onSubmit={this.onSubmit}
                     forkedMode={false}
                     showQuickSearchTab={false}
-                    showDownloadTab={
-                        false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                    }
+                    showDownloadTab={shouldShowDownloadAndCopyControls()}
                     showAlerts={true}
                     modifyQueryParams={this.props.store.modifyQueryParams}
                     getQueryStore={() =>

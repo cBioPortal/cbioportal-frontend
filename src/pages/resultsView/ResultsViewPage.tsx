@@ -61,6 +61,7 @@ import OQLTextArea, {
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 import UserMessager from 'shared/components/userMessager/UserMessage';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export function initStore(
     appStore: AppStore,
@@ -600,9 +601,7 @@ export default class ResultsViewPage extends React.Component<
                     <QueryAndDownloadTabs
                         forkedMode={false}
                         showQuickSearchTab={false}
-                        showDownloadTab={
-                            false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                        }
+                        showDownloadTab={shouldShowDownloadAndCopyControls()}
                         showAlerts={true}
                         getQueryStore={() =>
                             createQueryStore(
