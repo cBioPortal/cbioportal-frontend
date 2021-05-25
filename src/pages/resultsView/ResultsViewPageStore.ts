@@ -7,10 +7,11 @@ import {
     ClinicalDataMultiStudyFilter,
     ClinicalDataSingleStudyFilter,
     CopyNumberSeg,
-    CosmicMutation,
     DiscreteCopyNumberData,
     DiscreteCopyNumberFilter,
     Gene,
+    GenePanelData,
+    GenePanelDataMultipleStudyFilter,
     GenericAssayData,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayMeta,
@@ -44,18 +45,17 @@ import {
 import {
     action,
     computed,
+    makeObservable,
     observable,
     ObservableMap,
     reaction,
-    makeObservable,
 } from 'mobx';
 import {
+    generateQueryStructuralVariantId,
     getProteinPositionFromProteinChange,
     IHotspotIndex,
     indexHotspotsData,
     IOncoKbData,
-    generateQueryStructuralVariantId,
-    isLinearClusterHotspot,
 } from 'cbioportal-utils';
 import {
     GenomeNexusAPI,
@@ -63,7 +63,7 @@ import {
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
-import { cached, labelMobxPromises, MobxPromise } from 'mobxpromise';
+import { cached, MobxPromise } from 'mobxpromise';
 import PubMedCache from 'shared/cache/PubMedCache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -72,6 +72,7 @@ import MutationCountCache from 'shared/cache/MutationCountCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
+    cancerTypeForOncoKb,
     evaluateDiscreteCNAPutativeDriverInfo,
     evaluateMutationPutativeDriverInfo,
     existsSomeMutationWithAscnPropertyInCollection,
@@ -82,6 +83,7 @@ import {
     fetchGermlineConsentedSamples,
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
+    fetchStructuralVariantOncoKbData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     fetchSurvivalDataExists,
     fetchVariantAnnotationsIndexedByGenomicLocation,
@@ -90,6 +92,7 @@ import {
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
     getGenomeNexusUrl,
+    getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
     groupBy,
     groupBySampleId,
@@ -99,9 +102,6 @@ import {
     makeIsHotspotForOncoprint,
     mapSampleIdToClinicalData,
     ONCOKB_DEFAULT,
-    fetchStructuralVariantOncoKbData,
-    cancerTypeForOncoKb,
-    getOncoKbOncogenic,
 } from 'shared/lib/StoreUtils';
 import {
     CoverageInformation,
@@ -115,7 +115,6 @@ import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter, {
     SimplifiedMutationType,
-    getSimplifiedMutationType,
 } from '../../shared/lib/oql/AccessorsForOqlFilter';
 import {
     doesQueryContainMutationOQL,
@@ -143,6 +142,7 @@ import {
 import { CancerStudyQueryUrlParams } from 'shared/components/query/QueryStore';
 import {
     compileMutations,
+    compileStructuralVariants,
     computeCustomDriverAnnotationReport,
     createDiscreteCopyNumberDataKey,
     DEFAULT_GENOME,
@@ -150,7 +150,9 @@ import {
     ExtendedClinicalAttribute,
     fetchPatients,
     fetchQueriedStudies,
+    filterAndAnnotateStructuralVariants,
     FilteredAndAnnotatedMutationsReport,
+    FilteredAndAnnotatedStructuralVariantsReport,
     filterSubQueryData,
     getExtendsClinicalAttributesFromCustomData,
     getMolecularProfiles,
@@ -160,15 +162,11 @@ import {
     isRNASeqProfile,
     OncoprintAnalysisCaseType,
     parseGenericAssayGroups,
-    filterAndAnnotateStructuralVariants,
-    compileStructuralVariants,
-    FilteredAndAnnotatedStructuralVariantsReport,
 } from './ResultsViewPageStoreUtils';
 import MobxPromiseCache from '../../shared/lib/MobxPromiseCache';
 import { isSampleProfiledInMultiple } from '../../shared/lib/isSampleProfiled';
 import ClinicalDataCache, {
     clinicalAttributeIsINCOMPARISONGROUP,
-    clinicalAttributeIsPROFILEDIN,
     SpecialAttribute,
 } from '../../shared/cache/ClinicalDataCache';
 import { getDefaultMolecularProfiles } from '../../shared/lib/getDefaultMolecularProfiles';
@@ -219,10 +217,9 @@ import { decideMolecularProfileSortingOrder } from './download/DownloadUtils';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { ChartTypeEnum } from 'pages/studyView/StudyViewConfig';
 import {
-    fetchGenericAssayDataByStableIdsAndMolecularIds,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
-    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
     COMMON_GENERIC_ASSAY_PROPERTY,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
     getGenericAssayMetaPropertyOrDefault,
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { createVariantAnnotationsByMutationFetcher } from 'shared/components/mutationMapper/MutationMapperUtils';
@@ -1967,7 +1964,7 @@ export class ResultsViewPageStore {
                 this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!,
                 this.filteredSamples.result!,
                 this.oqlText,
-                this.coverageInformation.result,
+                this.coverageInformation.result!,
                 this.selectedMolecularProfiles.result!.map(
                     profile => profile.molecularProfileId
                 ),
@@ -2034,26 +2031,40 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly coverageInformation = remoteData<CoverageInformation>(
-        {
-            await: () => [
-                this.studyToMolecularProfiles,
-                this.genes,
-                this.samples,
-                this.patients,
-            ],
-            invoke: () =>
-                getCoverageInformation(
-                    this.samples,
-                    this.genes,
-                    // const studyToMolecularProfiles = _.groupBy(this.studyToMolecularProfiles.result!, profile=>profile.studyId);
-                    sample =>
-                        this.studyToMolecularProfiles.result![sample.studyId],
-                    () => this.patients.result!
-                ),
-        },
-        { samples: {}, patients: {} }
-    );
+    readonly genePanelDataForSelectedProfiles = remoteData<GenePanelData[]>({
+        // fetch all gene panel data for profiles
+        // We do it this way - fetch all data for profiles, then filter based on samples -
+        //  because
+        //  (1) this means sending less data as parameters
+        //  (2) this means the requests can be cached on the server based on the molecular profile id
+        //  (3) We can initiate the gene panel data call before the samples call completes, thus
+        //      putting more response waiting time in parallel
+        await: () => [this.selectedMolecularProfiles],
+        invoke: () =>
+            client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                genePanelDataMultipleStudyFilter: {
+                    molecularProfileIds: this.selectedMolecularProfiles.result!.map(
+                        p => p.molecularProfileId
+                    ),
+                } as GenePanelDataMultipleStudyFilter,
+            }),
+    });
+
+    readonly coverageInformation = remoteData<CoverageInformation>({
+        await: () => [
+            this.genePanelDataForSelectedProfiles,
+            this.sampleKeyToSample,
+            this.patients,
+            this.genes,
+        ],
+        invoke: () =>
+            getCoverageInformation(
+                this.genePanelDataForSelectedProfiles.result!,
+                this.sampleKeyToSample.result!,
+                this.patients.result!,
+                this.genes.result!
+            ),
+    });
 
     readonly filteredSequencedSampleKeysByGene = remoteData<{
         [hugoGeneSymbol: string]: string[];

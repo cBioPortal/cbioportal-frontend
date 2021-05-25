@@ -118,7 +118,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                 const data = getAlterationData(
                     this.props.store.samples.result,
                     this.props.store.patients.result,
-                    this.props.store.coverageInformation.result,
+                    this.props.store.coverageInformation.result!,
                     this.props.store.filteredSequencedSampleKeysByGene.result!,
                     this.props.store.filteredSequencedPatientKeysByGene.result!,
                     this.props.store.selectedMolecularProfiles.result!,
@@ -145,7 +145,7 @@ export default class ResultsViewPathwayMapper extends React.Component<
                     const data = getAlterationData(
                         this.storeForAllData!.samples.result,
                         this.storeForAllData!.patients.result,
-                        this.storeForAllData!.coverageInformation.result,
+                        this.storeForAllData!.coverageInformation.result!,
                         this.storeForAllData!.filteredSequencedSampleKeysByGene
                             .result!,
                         this.storeForAllData!.filteredSequencedPatientKeysByGene
