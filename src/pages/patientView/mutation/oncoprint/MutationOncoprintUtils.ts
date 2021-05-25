@@ -73,13 +73,13 @@ export function makeMutationHeatmapData(
                 mutation.mutationStatus.toLowerCase() === 'uncalled';
             if (!isUncalled || mutation.tumorAltCount > 0) {
                 mutationKeys[mutationId] = true;
-                let vaf = getVariantAlleleFrequency(mutation);
+                let vafReport = getVariantAlleleFrequency(mutation);
 
                 let mutationStatus;
                 if (isUncalled) {
                     mutationStatus =
                         MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED;
-                } else if (vaf === null) {
+                } else if (vafReport === null) {
                     mutationStatus = MutationStatus.MUTATED_BUT_NO_VAF;
                 } else {
                     mutationStatus = MutationStatus.MUTATED_WITH_VAF;
@@ -87,7 +87,7 @@ export function makeMutationHeatmapData(
                 }
 
                 oncoprintData.push({
-                    profile_data: vaf,
+                    profile_data: vafReport ? vafReport.vaf : null,
                     sample: sample.sampleId,
                     patient: sample.patientId,
                     study_id: sample.studyId,

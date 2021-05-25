@@ -334,12 +334,20 @@ describe('patient view page screenshot test', function() {
     });
 
     it('patient view pathways tab msk_impact_2017 P-0000377', function() {
-        var url = `${CBIOPORTAL_URL}/patient?studyId=msk_impact_2017&caseId=P-0000377`;
+        var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
         goToUrlAndSetLocalStorage(url);
 
-        // go to pathways tab
-        browser.waitForVisible('a.tabAnchor_pathways');
-        browser.click('a.tabAnchor_pathways');
+        browser.waitForVisible('#cy', 10000);
+        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
+            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+        });
+
+        assertScreenShotMatch(res);
+    });
+
+    it('patient view pathways tab msk_impact_2017 P-0000377-T03-IM3', function() {
+        var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
+        goToUrlAndSetLocalStorage(url);
 
         browser.waitForVisible('#cy', 10000);
         var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
