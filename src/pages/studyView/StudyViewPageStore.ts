@@ -4410,20 +4410,11 @@ export class StudyViewPageStore {
     readonly resourceDefinitions = remoteData({
         await: () => [this.queriedPhysicalStudies],
         invoke: () => {
-            const promises = [];
-            const ret: ResourceDefinition[] = [];
-            for (const study of this.queriedPhysicalStudies.result) {
-                promises.push(
-                    internalClient
-                        .getAllResourceDefinitionsInStudyUsingGET({
-                            studyId: study.studyId,
-                        })
-                        .then(data => {
-                            ret.push(...data);
-                        })
-                );
-            }
-            return Promise.all(promises).then(() => ret);
+            return internalClient.fetchResourceDefinitionsUsingPOST({
+                studyIds: this.queriedPhysicalStudies.result.map(
+                    study => study.studyId
+                ),
+            });
         },
         onResult: defs => {
             if (defs) {

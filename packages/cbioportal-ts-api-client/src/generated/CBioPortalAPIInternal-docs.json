@@ -2458,6 +2458,62 @@
         "deprecated": false
       }
     },
+    "/resource-definitions/fetch": {
+      "post": {
+        "tags": [
+          "Resource Definitions"
+        ],
+        "summary": "Get all resource definitions for specified studies",
+        "operationId": "fetchResourceDefinitionsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "allowEmptyValue": false,
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceDefinition"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/sample-lists-counts/fetch": {
       "post": {
         "tags": [
@@ -2967,7 +3023,7 @@
         "tags": [
           "Resource Definitions"
         ],
-        "summary": "Get all resoruce definitions in the specified study",
+        "summary": "Get all resource definitions in the specified study",
         "operationId": "getAllResourceDefinitionsInStudyUsingGET",
         "produces": [
           "application/json"
