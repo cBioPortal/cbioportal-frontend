@@ -39,6 +39,7 @@ import DataTable, {
 import { MutationColumn } from './MutationColumnHelper';
 
 import './defaultMutationTable.scss';
+import { getClinVarData } from '../column/ClinVarHelper';
 
 export type DefaultMutationTableProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -165,6 +166,17 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @computed
+    get clinVarAccessor() {
+        return this.indexedVariantAnnotationDataStatus === 'pending'
+            ? () => undefined
+            : (mutation: Mutation) =>
+                  getClinVarData(
+                      mutation,
+                      this.props.indexedVariantAnnotations
+                  );
+    }
+
+    @computed
     get initialSortRemoteData() {
         return this.props.initialSortRemoteData || this.annotationColumnData;
     }
@@ -180,7 +192,7 @@ export default class DefaultMutationTable extends React.Component<
             case MutationColumn.GNOMAD:
                 return this.myVariantInfoAccessor;
             case MutationColumn.CLINVAR:
-                return this.myVariantInfoAccessor;
+                return this.clinVarAccessor;
             case MutationColumn.DBSNP:
                 return this.myVariantInfoAccessor;
             case MutationColumn.SIGNAL:
@@ -239,8 +251,8 @@ export default class DefaultMutationTable extends React.Component<
                 return (column: any) => (
                     <ClinVar
                         mutation={column.original}
-                        indexedMyVariantInfoAnnotations={
-                            this.props.indexedMyVariantInfoAnnotations
+                        indexedVariantAnnotations={
+                            this.props.indexedVariantAnnotations
                         }
                     />
                 );

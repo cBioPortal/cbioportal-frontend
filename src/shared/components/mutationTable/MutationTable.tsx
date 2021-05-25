@@ -1041,18 +1041,17 @@ export default class MutationTable<
             render: (d: Mutation[]) =>
                 ClinVarColumnFormatter.renderFunction(
                     d,
-                    this.props.indexedVariantAnnotations,
-                    this.props.indexedMyVariantInfoAnnotations
+                    this.props.indexedVariantAnnotations
                 ),
             sortBy: (d: Mutation[]) =>
                 ClinVarColumnFormatter.getSortValue(
                     d,
-                    this.props.indexedMyVariantInfoAnnotations
+                    this.props.indexedVariantAnnotations
                 ),
             download: (d: Mutation[]) =>
                 ClinVarColumnFormatter.download(
                     d,
-                    this.props.indexedMyVariantInfoAnnotations
+                    this.props.indexedVariantAnnotations
                 ),
             tooltip: (
                 <span>
