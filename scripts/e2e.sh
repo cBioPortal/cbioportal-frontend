@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 MY_PATH="`dirname \"$0\"`"              # relative
 MY_PATH="`( cd \"$MY_PATH\" && pwd )`"  # absolutized and normalized
 if [ -z "$MY_PATH" ] ; then
@@ -58,9 +60,11 @@ then
   #cleanup
   sudo rm -rf $E2E_WORKSPACE/kc_db_data
   sudo rm -rf $E2E_WORKSPACE/cbioportal-docker-compose
+  sudo rm -rf $E2E_WORKSPACE/cbio_db_data
 
   $TEST_HOME/docker_compose/setup.sh
-  $TEST_HOME/docker_compose/build.sh
+  [ $CUSTOM_BACKEND -eq 1 ] && $TEST_HOME/docker_compose/build.sh
+  mkdir -p $E2E_WORKSPACE/cbio_db_data
   $TEST_HOME/docker_compose/initdb.sh
 fi
 

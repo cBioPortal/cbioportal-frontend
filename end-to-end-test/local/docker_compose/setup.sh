@@ -12,11 +12,6 @@ cd $E2E_WORKSPACE
 git clone https://github.com/cBioPortal/cbioportal-docker-compose.git
 cd cbioportal-docker-compose
 
-compose_extensions="-f docker-compose.yml -f $TEST_HOME/docker_compose/cbioportal.yml"
-if [ $CUSTOM_BACKEND -eq 1 ]; then
-  compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
-fi
-
 # update keycloak config with permissions for test studies
 config_json="$(cat $TEST_HOME/docker_compose/keycloak/keycloak-config.json)"
 studies=$(find $TEST_HOME/studies -name meta_study.txt -exec grep cancer_study_identifier {} \; | awk 'NF>1{print $NF}')
