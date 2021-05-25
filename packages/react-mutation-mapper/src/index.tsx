@@ -3,14 +3,7 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export {
-    default as ClinVarSummary,
-    ClinVarRcvInterpretation,
-    getRcvCountMap,
-    getRcvData,
-    RcvCountMap,
-    RcvData,
-} from './component/clinvar/ClinVarSummary';
+export { default as ClinVarSummary } from './component/clinvar/ClinVarSummary';
 export {
     AnnotationProps,
     default as Annotation,
@@ -25,6 +18,7 @@ export {
     download as clinVarDownload,
     sortValue as clinVarSortValue,
 } from './component/column/ClinVar';
+export * from './component/column/ClinVarHelper';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
 export {
     default as Dbsnp,

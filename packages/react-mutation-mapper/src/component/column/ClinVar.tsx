@@ -1,41 +1,62 @@
-import { MyVariantInfo } from 'genome-nexus-ts-api-client';
+import {
+    Clinvar,
+    MyVariantInfo,
+    VariantAnnotation,
+} from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-import { defaultSortMethod } from 'cbioportal-utils';
-import ClinVarSummary, {
-    formatClinicalSignificanceText,
-    getRcvCountMap,
-    getRcvData,
-} from '../clinvar/ClinVarSummary';
+import { defaultSortMethod, Mutation, RemoteData } from 'cbioportal-utils';
+import ClinVarSummary from '../clinvar/ClinVarSummary';
 import {
     MyVariantInfoProps,
     renderMyVariantInfoContent,
 } from './MyVariantInfoHelper';
+import { getClinVarData } from './ClinVarHelper';
 
-export function download(myVariantInfo?: MyVariantInfo): string {
-    const value = sortValue(myVariantInfo);
+type ClinVarProps = {
+    mutation: Mutation;
+    indexedVariantAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >;
+};
 
-    return value ? value.toString() : '';
+export function download(clinvar?: Clinvar): string {
+    const clinicalSignificance = clinvar?.clinicalSignificance;
+    const conflictingClinicalSignificance =
+        clinvar?.conflictingClinicalSignificance;
+    if (clinicalSignificance && conflictingClinicalSignificance) {
+        return (
+            clinicalSignificance + '(' + conflictingClinicalSignificance + ')'
+        );
+    } else if (clinicalSignificance) {
+        return clinicalSignificance;
+    } else {
+        return '';
+    }
 }
 
-export function sortValue(myVariantInfo?: MyVariantInfo): string | null {
-    const rcvData =
-        myVariantInfo && myVariantInfo.clinVar
-            ? getRcvData(getRcvCountMap(myVariantInfo.clinVar))
-            : undefined;
-
-    return rcvData ? formatClinicalSignificanceText(rcvData) : null;
+export function sortValue(clinvar?: Clinvar): string | null {
+    if (clinvar && clinvar.clinicalSignificance) {
+        return clinvar.clinicalSignificance;
+    } else {
+        return null;
+    }
 }
 
-export function clinVarSortMethod(a: MyVariantInfo, b: MyVariantInfo) {
+export function clinVarSortMethod(a: Clinvar, b: Clinvar) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
-const ClinVar: React.FunctionComponent<MyVariantInfoProps> = observer(props => {
-    return renderMyVariantInfoContent(props, (myVariantInfo: MyVariantInfo) => (
-        <ClinVarSummary myVariantInfo={myVariantInfo} />
-    ));
-});
+export default class ClinVar extends React.Component<ClinVarProps, {}> {
+    get clinvar() {
+        return getClinVarData(
+            this.props.mutation,
+            this.props.indexedVariantAnnotations
+        );
+    }
 
-export default ClinVar;
+    public render() {
+        return <ClinVarSummary clinvar={this.clinvar} />;
+    }
+}
