@@ -2,17 +2,12 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
 import { computed, makeObservable } from 'mobx';
-import { ClinVar } from 'genome-nexus-ts-api-client';
+import { Clinvar } from 'genome-nexus-ts-api-client';
 import { Button } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import {
-    ClinVarRcvInterpretation,
-    getRcvCountMap,
-    getRcvData,
-} from 'react-mutation-mapper';
 
 export interface IClinVarInterpretationProps {
-    clinVar: ClinVar | undefined;
+    clinVar: Clinvar | undefined;
 }
 
 const ClinVarTooltip = () => {
@@ -37,40 +32,36 @@ class ClinVarInterpretation extends React.Component<
         makeObservable(this);
     }
 
-    @computed get rcvCountMap() {
+    @computed get clinvarData() {
         if (this.props.clinVar) {
-            return getRcvCountMap(this.props.clinVar);
+            if (
+                this.props.clinVar.clinicalSignificance &&
+                this.props.clinVar.conflictingClinicalSignificance
+            ) {
+                return (
+                    <div className={featureTableStyle['data-with-link']}>
+                        {`${this.props.clinVar.clinicalSignificance} (${this.props.clinVar.conflictingClinicalSignificance})`}
+                    </div>
+                );
+            } else if (this.props.clinVar.clinicalSignificance) {
+                return (
+                    <div className={featureTableStyle['data-with-link']}>
+                        {this.props.clinVar.clinicalSignificance}
+                    </div>
+                );
+            }
         }
 
-        return undefined;
-    }
-
-    @computed get rcvDisplayData() {
-        if (this.rcvCountMap) {
-            return getRcvData(this.rcvCountMap);
-        }
-        return undefined;
+        return <div>N/A</div>;
     }
 
     @computed get clinVarContent() {
-        return this.rcvDisplayData ? (
+        return (
             <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
                     <ClinVarTooltip />
                 </div>
-                <ClinVarRcvInterpretation
-                    className={featureTableStyle['data-with-link']}
-                    rcvData={this.rcvDisplayData}
-                />
-            </div>
-        ) : (
-            <div className={featureTableStyle['feature-table-layout']}>
-                <div className={featureTableStyle['data-source']}>
-                    <ClinVarTooltip />
-                </div>
-                <div className={featureTableStyle['data-with-link']}>
-                    <div>N/A</div>
-                </div>
+                {this.clinvarData}
             </div>
         );
     }
