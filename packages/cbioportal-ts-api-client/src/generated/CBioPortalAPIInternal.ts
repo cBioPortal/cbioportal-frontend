@@ -5507,6 +5507,95 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+    fetchResourceDefinitionsUsingPOSTURL(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'studyIds': Array < string > ,
+            $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/resource-definitions/fetch';
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all resource definitions for specified studies
+     * @method
+     * @name CBioPortalAPIInternal#fetchResourceDefinitionsUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} studyIds - List of Study IDs
+     */
+    fetchResourceDefinitionsUsingPOSTWithHttpInfo(parameters: {
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'studyIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/resource-definitions/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['studyIds'] !== undefined) {
+                body = parameters['studyIds'];
+            }
+
+            if (parameters['studyIds'] === undefined) {
+                reject(new Error('Missing required  parameter: studyIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all resource definitions for specified studies
+     * @method
+     * @name CBioPortalAPIInternal#fetchResourceDefinitionsUsingPOST
+     * @param {string} projection - Level of detail of the response
+     * @param {} studyIds - List of Study IDs
+     */
+    fetchResourceDefinitionsUsingPOST(parameters: {
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'studyIds': Array < string > ,
+                $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < ResourceDefinition >
+        > {
+            return this.fetchResourceDefinitionsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchCaseListCountsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
@@ -6317,7 +6406,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Get all resoruce definitions in the specified study
+     * Get all resource definitions in the specified study
      * @method
      * @name CBioPortalAPIInternal#getAllResourceDefinitionsInStudyUsingGET
      * @param {string} direction - Direction of the sort
@@ -6388,7 +6477,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Get all resoruce definitions in the specified study
+     * Get all resource definitions in the specified study
      * @method
      * @name CBioPortalAPIInternal#getAllResourceDefinitionsInStudyUsingGET
      * @param {string} direction - Direction of the sort
