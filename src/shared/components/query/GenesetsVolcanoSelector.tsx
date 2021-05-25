@@ -20,6 +20,7 @@ import {
 import { QueryStoreComponent } from './QueryStore';
 import { CBIOPORTAL_VICTORY_THEME } from 'cbioportal-frontend-commons';
 import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class GenesetsVolcanoTable extends LazyMobXTable<Geneset> {}
 
@@ -346,9 +347,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<
                                 initialItemsPerPage={100}
                                 showColumnVisibility={false}
                                 showFilter={true}
-                                showCopyDownload={
-                                    false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                                }
+                                showCopyDownload={shouldShowDownloadAndCopyControls()}
                             />
                         )}
                 </div>

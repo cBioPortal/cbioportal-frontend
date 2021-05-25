@@ -10,6 +10,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
 import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export type IPatientHeaderProps = {
     patient: any;
@@ -69,9 +70,7 @@ export default class PatientHeader extends React.Component<
                     <h5>{patient.id}</h5>
                     <ClinicalInformationPatientTable
                         showFilter={false}
-                        showCopyDownload={
-                            false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                        }
+                        showCopyDownload={shouldShowDownloadAndCopyControls()}
                         showTitleBar={false}
                         data={patient.clinicalData}
                     />

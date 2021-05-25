@@ -24,6 +24,7 @@ import ProgressIndicator, {
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
 import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -217,7 +218,7 @@ export class ClinicalDataTab extends React.Component<
                                 }
                                 columns={this.columns.result}
                                 copyDownloadProps={{
-                                    showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
+                                    showCopy: shouldShowDownloadAndCopyControls(),
                                     downloadFilename: this.props.store
                                         .clinicalDataDownloadFilename,
                                 }}
