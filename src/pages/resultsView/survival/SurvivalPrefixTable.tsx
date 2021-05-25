@@ -24,6 +24,7 @@ import { observable, computed, makeObservable, action } from 'mobx';
 import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
 import styles from 'pages/resultsView/survival/styles.module.scss';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ISurvivalPrefixTableProps {
     survivalPrefixes: SurvivalPrefixSummary[];
@@ -372,7 +373,7 @@ export default class SurvivalPrefixTable extends React.Component<
                 paginationProps={{ itemsPerPageOptions: [15] }}
                 initialItemsPerPage={15}
                 copyDownloadProps={{
-                    showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
+                    showCopy: shouldShowDownloadAndCopyControls(),
                 }}
                 filterBoxWidth={120}
             />

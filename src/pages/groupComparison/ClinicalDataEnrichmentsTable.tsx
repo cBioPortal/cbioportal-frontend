@@ -11,6 +11,7 @@ import { makeObservable, observable } from 'mobx';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { getServerConfig } from 'config/config';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface IClinicalDataEnrichmentsTableProps {
     dataStore: ClinicalDataEnrichmentStore;
@@ -203,7 +204,7 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
                 paginationProps={{ itemsPerPageOptions: [20] }}
                 initialItemsPerPage={20}
                 copyDownloadProps={{
-                    showCopy: false, // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
+                    showCopy: shouldShowDownloadAndCopyControls(),
                 }}
             />
         );

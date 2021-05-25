@@ -9,6 +9,7 @@ import { getBrowserWindow, getNCBIlink } from 'cbioportal-frontend-commons';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import { StudyDataDownloadLink } from '../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink';
 import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 interface IDataTableRow {
     name: string;
@@ -236,9 +237,7 @@ export default class DataSetsPageTable extends React.Component<
                         showColumnVisibility={true}
                         showFilter={true}
                         showFilterClearButton={true}
-                        showCopyDownload={
-                            false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                        }
+                        showCopyDownload={shouldShowDownloadAndCopyControls()}
                         initialItemsPerPage={this.props.datasets.length}
                     />
                 </div>

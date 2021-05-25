@@ -22,6 +22,7 @@ import { getAgeRangeDisplay } from './TrialMatchTableUtils';
 import TrialMatchFeedback from './TrialMatchFeedback';
 import { getServerConfig } from 'config/config';
 import { Button } from 'react-bootstrap';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export type ITrialMatchProps = {
     sampleManager: SampleManager | null;
@@ -652,9 +653,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                 <TrialMatchTableComponent
                     data={this.props.detailedTrialMatches}
                     columns={this._columns}
-                    showCopyDownload={
-                        false // note: under control of AppConfig.serverConfig.skin_hide_download_controls property
-                    }
+                    showCopyDownload={shouldShowDownloadAndCopyControls()}
                 />
                 <div className={styles.powered}>
                     Powered by{' '}
