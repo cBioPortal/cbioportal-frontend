@@ -1,7 +1,6 @@
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
     generateHgvsgByMutation,
-    getVariantAnnotation,
     Mutation,
     RemoteData,
 } from 'cbioportal-utils';

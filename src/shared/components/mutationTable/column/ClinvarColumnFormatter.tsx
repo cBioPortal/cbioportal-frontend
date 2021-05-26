@@ -9,13 +9,13 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import {
-    ClinVar,
-    clinVarSortValue,
-    clinVarDownload,
-    getClinVarData,
+    ClinvarInterpretation,
+    clinvarSortValue,
+    clinvarDownload,
+    getClinvarData,
 } from 'react-mutation-mapper';
 
-export default class ClinVarColumnFormatter {
+export default class ClinvarColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         indexedVariantAnnotations?: RemoteData<
@@ -24,7 +24,7 @@ export default class ClinVarColumnFormatter {
     ) {
         return (
             <div data-test="clinvar-data">
-                <ClinVar
+                <ClinvarInterpretation
                     mutation={data[0]}
                     indexedVariantAnnotations={indexedVariantAnnotations}
                 />
@@ -52,8 +52,8 @@ export default class ClinVarColumnFormatter {
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ): string {
-        return clinVarDownload(
-            getClinVarData(data[0], indexedVariantAnnotations)
+        return clinvarDownload(
+            getClinvarData(data[0], indexedVariantAnnotations)
         );
     }
 
@@ -63,8 +63,8 @@ export default class ClinVarColumnFormatter {
             { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ): string | null {
-        return clinVarSortValue(
-            getClinVarData(data[0], indexedVariantAnnotations)
+        return clinvarSortValue(
+            getClinvarData(data[0], indexedVariantAnnotations)
         );
     }
 }

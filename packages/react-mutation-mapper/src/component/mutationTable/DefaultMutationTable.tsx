@@ -18,7 +18,7 @@ import * as React from 'react';
 import { Column } from 'react-table';
 
 import Annotation, { getAnnotationData } from '../column/Annotation';
-import ClinVar from '../column/ClinVar';
+import ClinvarInterpretation from '../column/ClinvarInterpretation';
 import Dbsnp from '../column/Dbsnp';
 import Gnomad from '../column/Gnomad';
 import Hgvsc from '../column/Hgvsc';
@@ -39,7 +39,7 @@ import DataTable, {
 import { MutationColumn } from './MutationColumnHelper';
 
 import './defaultMutationTable.scss';
-import { getClinVarData } from '../column/ClinVarHelper';
+import { getClinvarData } from '../clinvar/ClinvarHelper';
 
 export type DefaultMutationTableProps = {
     hotspotData?: RemoteData<IHotspotIndex | undefined>;
@@ -166,11 +166,11 @@ export default class DefaultMutationTable extends React.Component<
     }
 
     @computed
-    get clinVarAccessor() {
+    get clinvarAccessor() {
         return this.indexedVariantAnnotationDataStatus === 'pending'
             ? () => undefined
             : (mutation: Mutation) =>
-                  getClinVarData(
+                  getClinvarData(
                       mutation,
                       this.props.indexedVariantAnnotations
                   );
@@ -192,7 +192,7 @@ export default class DefaultMutationTable extends React.Component<
             case MutationColumn.GNOMAD:
                 return this.myVariantInfoAccessor;
             case MutationColumn.CLINVAR:
-                return this.clinVarAccessor;
+                return this.clinvarAccessor;
             case MutationColumn.DBSNP:
                 return this.myVariantInfoAccessor;
             case MutationColumn.SIGNAL:
@@ -249,7 +249,7 @@ export default class DefaultMutationTable extends React.Component<
                 );
             case MutationColumn.CLINVAR:
                 return (column: any) => (
-                    <ClinVar
+                    <ClinvarInterpretation
                         mutation={column.original}
                         indexedVariantAnnotations={
                             this.props.indexedVariantAnnotations
