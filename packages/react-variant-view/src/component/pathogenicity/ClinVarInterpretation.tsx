@@ -3,25 +3,11 @@ import { observer } from 'mobx-react';
 import featureTableStyle from '../featureTable/FeatureTable.module.scss';
 import { computed, makeObservable } from 'mobx';
 import { Clinvar } from 'genome-nexus-ts-api-client';
-import { Button } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 export interface IClinVarInterpretationProps {
     clinVar: Clinvar | undefined;
 }
-
-const ClinVarTooltip = () => {
-    return (
-        <DefaultTooltip
-            placement="top"
-            overlay={<span>ClinVar Interpretation</span>}
-        >
-            <Button bsStyle="link" className="btn-sm p-0">
-                ClinVar Interpretation
-            </Button>
-        </DefaultTooltip>
-    );
-};
 
 @observer
 class ClinVarInterpretation extends React.Component<
@@ -32,7 +18,26 @@ class ClinVarInterpretation extends React.Component<
         makeObservable(this);
     }
 
+    @computed get clinvarTooltip() {
+        const clinvarUrl = this.props.clinVar
+            ? `https://www.ncbi.nlm.nih.gov/clinvar/variation/${this.props.clinVar.clinvarId}/`
+            : `https://www.ncbi.nlm.nih.gov/clinvar/`;
+        return (
+            <DefaultTooltip
+                placement="top"
+                overlay={<span>ClinVar Interpretation</span>}
+            >
+                <a href={clinvarUrl} target="_blank" rel="noopener noreferrer">
+                    ClinVar Interpretation
+                </a>
+            </DefaultTooltip>
+        );
+    }
+
     @computed get clinvarData() {
+        const clinvarUrl = this.props.clinVar
+            ? `https://www.ncbi.nlm.nih.gov/clinvar/variation/${this.props.clinVar.clinvarId}/`
+            : `https://www.ncbi.nlm.nih.gov/clinvar/`;
         if (this.props.clinVar) {
             if (
                 this.props.clinVar.clinicalSignificance &&
@@ -40,13 +45,27 @@ class ClinVarInterpretation extends React.Component<
             ) {
                 return (
                     <div className={featureTableStyle['data-with-link']}>
-                        {`${this.props.clinVar.clinicalSignificance} (${this.props.clinVar.conflictingClinicalSignificance})`}
+                        <a
+                            href={clinvarUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={featureTableStyle['data-with-link']}
+                        >
+                            {`${this.props.clinVar.clinicalSignificance} (${this.props.clinVar.conflictingClinicalSignificance})`}
+                        </a>
                     </div>
                 );
             } else if (this.props.clinVar.clinicalSignificance) {
                 return (
                     <div className={featureTableStyle['data-with-link']}>
-                        {this.props.clinVar.clinicalSignificance}
+                        <a
+                            href={clinvarUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={featureTableStyle['data-with-link']}
+                        >
+                            {this.props.clinVar.clinicalSignificance}
+                        </a>
                     </div>
                 );
             }
@@ -55,19 +74,15 @@ class ClinVarInterpretation extends React.Component<
         return <div>N/A</div>;
     }
 
-    @computed get clinVarContent() {
+    public render() {
         return (
             <div className={featureTableStyle['feature-table-layout']}>
                 <div className={featureTableStyle['data-source']}>
-                    <ClinVarTooltip />
+                    {this.clinvarTooltip}
                 </div>
                 {this.clinvarData}
             </div>
         );
-    }
-
-    public render() {
-        return this.clinVarContent;
     }
 }
 
