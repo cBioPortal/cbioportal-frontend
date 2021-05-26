@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
-    ClinVar,
+    Clinvar,
     MyVariantInfo,
     SignalAnnotation,
     VariantAnnotation,
@@ -25,7 +25,7 @@ interface IFeatureTableProps {
     myVariantInfo?: MyVariantInfo;
     variantAnnotation?: VariantAnnotation;
     oncokb?: IndicatorQueryResp;
-    clinVar?: ClinVar;
+    clinVar?: Clinvar;
     signalAnnotation?: SignalAnnotation;
     isCanonicalTranscriptSelected: boolean;
     mutation: Mutation;
