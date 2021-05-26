@@ -105,7 +105,7 @@ class Variant extends React.Component<IVariantProps> {
 
     @computed
     private get clinVar() {
-        return this.myVariantInfo?.clinVar;
+        return this.variantAnnotation?.clinvar.annotation;
     }
 
     @computed
