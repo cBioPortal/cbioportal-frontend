@@ -103,9 +103,13 @@ function runResultsTestSuite(prefix, options = {}) {
         $(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
         ).waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = browser.checkElement(
+            'div[data-test="ComparisonTabDiv"]',
+            '',
+            {
+                hide: ['.qtip'],
+            }
+        );
         assertScreenShotMatch(res);
     });
 
@@ -283,7 +287,7 @@ describe('patient view page screenshot test', function() {
         $('.//*[text()[contains(.,"21.6%")]]').waitForExist();
 
         // take screenshot
-        var res = browser.checkElement('#mainColumn', { hide: ['.qtip'] });
+        var res = browser.checkElement('#mainColumn', '', { hide: ['.qtip'] });
         assertScreenShotMatch(res);
     });
 
@@ -291,10 +295,14 @@ describe('patient view page screenshot test', function() {
         var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&caseId=P-0000377`;
         goToUrlAndSetLocalStorage(url);
 
-        browser.waitForVisible('#cy', 10000);
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
-            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-        });
+        $('#cy').waitForDisplayed({ timeout: 10000 });
+        var res = browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            {
+                hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+            }
+        );
 
         assertScreenShotMatch(res);
     });
@@ -303,10 +311,14 @@ describe('patient view page screenshot test', function() {
         var url = `${CBIOPORTAL_URL}/patient/pathways?studyId=msk_impact_2017&sampleId=P-0000377-T03-IM3`;
         goToUrlAndSetLocalStorage(url);
 
-        browser.waitForVisible('#cy', 10000);
-        var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
-            hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
-        });
+        $('#cy').waitForDisplayed({ timeout: 10000 });
+        var res = browser.checkElement(
+            '[data-test="pathwayMapperTabDiv"]',
+            '',
+            {
+                hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
+            }
+        );
 
         assertScreenShotMatch(res);
     });
