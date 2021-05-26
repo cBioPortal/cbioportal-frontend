@@ -1,7 +1,7 @@
 import { getVariantAnnotation, Mutation, RemoteData } from 'cbioportal-utils';
 import { Clinvar, VariantAnnotation } from 'genome-nexus-ts-api-client';
 
-export function getClinVarData(
+export function getClinvarData(
     mutation: Mutation,
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined

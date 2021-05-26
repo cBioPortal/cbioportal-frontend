@@ -7,10 +7,10 @@ import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import Oncokb from './Oncokb';
 import Penetrance from './Penetrance';
 import MSKExpertReview from './MSKExpertReview';
-import ClinVarInterpretation from './ClinVarInterpretation';
+import ClinvarInterpretation from './ClinvarInterpretation';
 
 interface IPathogenicityProps {
-    clinVar?: Clinvar;
+    clinvar?: Clinvar;
     oncokb?: IndicatorQueryResp;
     signalAnnotation?: SignalAnnotation;
     isCanonicalTranscriptSelected: boolean;
@@ -22,7 +22,7 @@ class Pathogenicity extends React.Component<IPathogenicityProps> {
         return (
             <div>
                 <Penetrance signalAnnotation={this.props.signalAnnotation} />
-                <ClinVarInterpretation clinVar={this.props.clinVar} />
+                <ClinvarInterpretation clinvar={this.props.clinvar} />
                 <Oncokb
                     oncokb={this.props.oncokb}
                     isCanonicalTranscriptSelected={

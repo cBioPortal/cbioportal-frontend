@@ -1,21 +1,13 @@
-import {
-    DefaultTooltip,
-    pluralize,
-    TruncatedText,
-} from 'cbioportal-frontend-commons';
-import {
-    Clinvar,
-    MyVariantInfo,
-    VariantAnnotation,
-} from 'genome-nexus-ts-api-client';
+import { DefaultTooltip, TruncatedText } from 'cbioportal-frontend-commons';
+import { Clinvar } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import * as React from 'react';
 
-export type ClinVarSummaryProps = {
+export type ClinvarSummaryProps = {
     clinvar?: Clinvar;
 };
 
-const NoClinVarData = () => {
+const NoClinvarData = () => {
     return (
         <DefaultTooltip
             placement="topLeft"
@@ -35,12 +27,12 @@ const NoClinVarData = () => {
     );
 };
 
-const ClinVarSummary = (props: ClinVarSummaryProps) => {
+const ClinvarSummary = (props: ClinvarSummaryProps) => {
     if (!props.clinvar) {
-        return <NoClinVarData />;
+        return <NoClinvarData />;
     } else {
-        const clinVarId = props.clinvar.clinvarId;
-        const clinVarLink = `https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinVarId}/`;
+        const clinvarId = props.clinvar.clinvarId;
+        const clinvarLink = `https://www.ncbi.nlm.nih.gov/clinvar/variation/${clinvarId}/`;
         const clinicalSignificance = props.clinvar.clinicalSignificance;
         const conflictingClinicalSignificance =
             props.clinvar.conflictingClinicalSignificance;
@@ -51,13 +43,14 @@ const ClinVarSummary = (props: ClinVarSummaryProps) => {
                 addTooltip="always"
                 tooltip={
                     <div style={{ maxWidth: 300 }}>
+                        <div>{clinicalSignificance}</div>
                         {conflictingClinicalSignificance && (
                             <div>{conflictingClinicalSignificance}</div>
                         )}
                         <div>
                             (ClinVar ID:{' '}
-                            <a href={clinVarLink} target="_blank">
-                                {clinVarId}
+                            <a href={clinvarLink} target="_blank">
+                                {clinvarId}
                             </a>
                             )
                         </div>
@@ -68,4 +61,4 @@ const ClinVarSummary = (props: ClinVarSummaryProps) => {
     }
 };
 
-export default ClinVarSummary;
+export default ClinvarSummary;

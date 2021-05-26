@@ -3,11 +3,11 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod, Mutation, RemoteData } from 'cbioportal-utils';
-import ClinVarSummary from '../clinvar/ClinVarSummary';
-import { getClinVarData } from './ClinVarHelper';
+import ClinvarSummary from '../clinvar/ClinvarSummary';
+import { getClinvarData } from '../clinvar/ClinvarHelper';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
 
-type ClinVarProps = {
+type ClinvarInterpretationProps = {
     mutation: Mutation;
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
@@ -37,12 +37,15 @@ export function sortValue(clinvar?: Clinvar): string | null {
     }
 }
 
-export function clinVarSortMethod(a: Clinvar, b: Clinvar) {
+export function clinvarSortMethod(a: Clinvar, b: Clinvar) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
 @observer
-export default class ClinVar extends React.Component<ClinVarProps, {}> {
+export default class ClinvarInterpretation extends React.Component<
+    ClinvarInterpretationProps,
+    {}
+> {
     public render() {
         if (this.props.indexedVariantAnnotations) {
             let content;
@@ -52,11 +55,11 @@ export default class ClinVar extends React.Component<ClinVarProps, {}> {
             } else if (status === 'error') {
                 content = errorIcon('Error fetching Genome Nexus annotation');
             } else {
-                const clinvarData = getClinVarData(
+                const clinvarData = getClinvarData(
                     this.props.mutation,
                     this.props.indexedVariantAnnotations
                 );
-                content = <ClinVarSummary clinvar={clinvarData} />;
+                content = <ClinvarSummary clinvar={clinvarData} />;
             }
             return content;
         } else {

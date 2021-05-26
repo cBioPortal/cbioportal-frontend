@@ -3,7 +3,7 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export { default as ClinVarSummary } from './component/clinvar/ClinVarSummary';
+export { default as ClinvarSummary } from './component/clinvar/ClinvarSummary';
 export {
     AnnotationProps,
     default as Annotation,
@@ -14,11 +14,11 @@ export {
     sortValue as annotationSortValue,
 } from './component/column/Annotation';
 export {
-    default as ClinVar,
-    download as clinVarDownload,
-    sortValue as clinVarSortValue,
-} from './component/column/ClinVar';
-export * from './component/column/ClinVarHelper';
+    default as ClinvarInterpretation,
+    download as clinvarDownload,
+    sortValue as clinvarSortValue,
+} from './component/column/ClinvarInterpretation';
+export * from './component/clinvar/ClinvarHelper';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
 export {
     default as Dbsnp,
