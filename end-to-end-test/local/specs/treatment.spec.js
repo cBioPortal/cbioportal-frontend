@@ -227,7 +227,7 @@ describe('treatment feature', function() {
                 );
                 selectReactSelectOption(vertDataSelect, 'Treatment Response');
 
-                var vertProfileSelect = $('[name=h-profile-name-selector]').$(
+                var vertProfileSelect = $('[name=v-profile-name-selector]').$(
                     '..'
                 );
                 assert(
@@ -396,7 +396,9 @@ describe('treatment feature', function() {
                     'EC50 values of compounds on cellular phenotype readout'
                 );
 
-                $('[data-test=generic-assay-info-icon]').waitForExist(10000);
+                $('[data-test=generic-assay-info-icon]').waitForExist({
+                    timeout: 10000,
+                });
 
                 // WHY WAS ASSERT BEING CALLED ON THIS?
                 browser.execute(function() {
@@ -408,7 +410,7 @@ describe('treatment feature', function() {
                 // browser.pause(1000);
 
                 $('[data-test=ViewLimitValues]').waitForExist();
-                assert($('[data-test=ViewLimitValues]').isVisible());
+                assert($('[data-test=ViewLimitValues]').isDisplayed());
             });
 
             it('shows checkbox for limit values (e.g., larger_than_8.00) checkbox when such profile selected on vert. axis', () => {
@@ -424,7 +426,9 @@ describe('treatment feature', function() {
                     vertProfileSelect,
                     'EC50 values of compounds on cellular phenotype readout'
                 );
-                $('[data-test=generic-assay-info-icon]').waitForExist(10000);
+                $('[data-test=generic-assay-info-icon]').waitForExist({
+                    timeout: 10000,
+                });
 
                 browser.execute(function() {
                     resultsViewPlotsTab.onVerticalAxisGenericAssaySelect({
@@ -434,7 +438,7 @@ describe('treatment feature', function() {
                 });
 
                 $('[data-test=ViewLimitValues]').waitForExist();
-                assert($('[data-test=ViewLimitValues]').isVisible());
+                assert($('[data-test=ViewLimitValues]').isDisplayed());
             });
 
             it('shows hint for handling of threshold values for treatment data in scatter plot', () => {

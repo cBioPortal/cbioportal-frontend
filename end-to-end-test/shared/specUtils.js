@@ -120,20 +120,28 @@ function setCheckboxChecked(checked, selector, failure_message) {
 
 function setDropdownOpen(
     open,
-    button_selector,
-    dropdown_selector,
+    button_selector_or_elt,
+    dropdown_selector_or_elt,
     failure_message
 ) {
     browser.waitUntil(
         () => {
+            const dropdown_elt =
+                typeof dropdown_selector_or_elt === 'string'
+                    ? $(dropdown_selector_or_elt)
+                    : dropdown_selector_or_elt;
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
-            const isOpen = $(dropdown_selector).isExisting()
-                ? $(dropdown_selector).isDisplayedInViewport()
+            const isOpen = dropdown_elt.isExisting()
+                ? dropdown_elt.isDisplayedInViewport()
                 : false;
             if (open === isOpen) {
                 return true;
             } else {
-                $(button_selector).click();
+                const button_elt =
+                    typeof button_selector_or_elt === 'string'
+                        ? $(button_selector_or_elt)
+                        : button_selector_or_elt;
+                button_elt.click();
                 return false;
             }
         },
@@ -310,7 +318,13 @@ function selectReactSelectOption(parent, optionText) {
 }
 
 function reactSelectOption(parent, optionText, loose = false) {
-    parent.$('.Select-control').click();
+    setDropdownOpen(
+        true,
+        parent.$('.Select-control'),
+        loose
+            ? parent.$('.Select-option*=' + optionText)
+            : parent.$('.Select-option=' + optionText)
+    );
     if (loose) {
         return parent.$('.Select-option*=' + optionText);
     }
@@ -519,7 +533,7 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     waitForNetworkQuiet();
     const chart = '[data-test=' + chartDataTest + ']';
     $(chart).waitForDisplayed({ timeout: timeout || 10000 });
-    $(chart).moveTo();
+    jsApiHover(chart);
     browser.waitUntil(
         () => {
             return $(chart + ' .controls').isExisting();
@@ -529,7 +543,7 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
 
     // move to hamburger icon
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    $(hamburgerIcon).moveTo();
+    jsApiHover(hamburgerIcon);
 
     // wait for the menu available
     $(hamburgerIcon).waitForDisplayed({ timeout: timeout || 10000 });
@@ -540,9 +554,12 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
         .$(hamburgerIcon)
         .$$('li')[1]
         .click();
+
+    browser.waitUntil(() => browser.getWindowHandles().length > 1); // wait until new tab opens
+
     const groupComparisonTabId = browser
         .getWindowHandles()
-        .filter(id => id !== studyViewTabId)[0];
+        .find(id => id !== studyViewTabId);
     browser.switchToWindow(groupComparisonTabId);
     waitForGroupComparisonTabOpen();
 }

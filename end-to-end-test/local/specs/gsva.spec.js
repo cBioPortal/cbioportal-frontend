@@ -44,41 +44,36 @@ describe('gsva feature', function() {
             it('shows GSVA-profile option when selecting study_es_0', () => {
                 checkTestStudy();
 
-                var gsvaProfileCheckbox = browser.$(
-                    '[data-test=GENESET_SCORE]'
-                );
-                assert(gsvaProfileCheckbox.isVisible());
+                var gsvaProfileCheckbox = $('[data-test=GENESET_SCORE]');
+                assert(gsvaProfileCheckbox.isDisplayed());
             });
 
             it('shows gene set entry component when selecting gsva-profile data type', () => {
                 checkTestStudy();
                 checkGSVAprofile();
 
-                assert(browser.$('h2=Enter Gene Sets:').isVisible());
+                assert($('h2=Enter Gene Sets:').isDisplayed());
                 assert(
                     browser
                         .$('[data-test=GENESET_HIERARCHY_BUTTON]')
-                        .isVisible()
+                        .isDisplayed()
                 );
-                assert(
-                    browser.$('[data-test=GENESET_VOLCANO_BUTTON]').isVisible()
-                );
-                assert(browser.$('[data-test=GENESETS_TEXT_AREA]').isVisible());
+                assert($('[data-test=GENESET_VOLCANO_BUTTON]').isDisplayed());
+                assert($('[data-test=GENESETS_TEXT_AREA]').isDisplayed());
             });
 
             it('adds gene set parameter to url after submit', () => {
                 checkTestStudy();
                 checkGSVAprofile();
 
-                browser.setValue(
-                    '[data-test=GENESETS_TEXT_AREA]',
+                $('[data-test=GENESETS_TEXT_AREA]').setValue(
                     'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
                 );
-                browser.setValue('[data-test=geneSet]', 'TP53');
-                var queryButton = browser.$('[data-test=queryButton]');
+                $('[data-test=geneSet]').setValue('TP53');
+                var queryButton = $('[data-test=queryButton]');
                 queryButton.waitForEnabled();
                 queryButton.click();
-                var url = browser.url().value;
+                var url = browser.getUrl();
                 var regex = /geneset_list=GO_ATP_DEPENDENT_CHROMATIN_REMODELING/;
                 assert(url.match(regex));
             });
@@ -91,7 +86,7 @@ describe('gsva feature', function() {
                 waitForStudyQueryPage();
                 checkTestStudy();
                 checkGSVAprofile();
-                browser.$('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
+                $('button[data-test=GENESET_HIERARCHY_BUTTON]').click();
                 waitForGsvaHierarchyDialog();
             });
 
@@ -102,15 +97,16 @@ describe('gsva feature', function() {
                 checkBox.click();
 
                 // wait for jstree to process the click
-                checkBox.$('.jstree-clicked').waitForExist();
+                browser.waitUntil(() =>
+                    checkBox.getAttribute('class').includes('jstree-clicked')
+                );
 
-                browser.$('button=Select').click();
+                $('button=Select').click();
 
                 $('span*=All gene sets are valid').waitForExist();
 
-                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
                 assert.equal(
-                    textArea.getText(),
+                    $('[data-test=GENESETS_TEXT_AREA]').getHTML(false),
                     'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
                 );
             });
@@ -118,8 +114,8 @@ describe('gsva feature', function() {
             it('filters gene sets with the GSVA score input field', () => {
                 var before = $$('*=GO_');
 
-                browser.$('[id=GSVAScore]').setValue('0');
-                browser.$('[id=filterButton]').click();
+                $('[id=GSVAScore]').setValue('0');
+                $('[id=filterButton]').click();
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
                 var after = $$('*=GO_');
@@ -130,8 +126,8 @@ describe('gsva feature', function() {
             it('filters gene sets with the search input field', () => {
                 var before = $$('*=GO_');
 
-                browser.$('[id=GSVAScore]').setValue('0');
-                browser.$('[id=filterButton]').click();
+                $('[id=GSVAScore]').setValue('0');
+                $('[id=filterButton]').click();
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
 
@@ -144,8 +140,8 @@ describe('gsva feature', function() {
             it('filters gene sets with the gene set pvalue input field', () => {
                 var before = $$('*=GO_');
 
-                browser.$('[id=Pvalue]').setValue('0.0005');
-                browser.$('[id=filterButton]').click();
+                $('[id=Pvalue]').setValue('0.0005');
+                $('[id=filterButton]').click();
 
                 browser.waitUntil(() => $$('*=GO_').length < before.length);
                 var after = $$('*=GO_');
@@ -179,7 +175,7 @@ describe('gsva feature', function() {
 
             it('adds gene set name to entry component', () => {
                 $('button[data-test=GENESET_VOLCANO_BUTTON]').waitForExist();
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
                 $('div.modal-dialog').waitForExist();
                 // find the GO_ATP_DEPENDENT_CHROMATIN_REMODELING entry and check its checkbox
                 $('span=GO_ATP_DEPENDENT_CHROMATIN_REMODELING').waitForExist();
@@ -188,30 +184,30 @@ describe('gsva feature', function() {
                     .$('..')
                     .$$('td')[3]
                     .$('label input');
-                checkBox.waitForVisible();
+                checkBox.waitForDisplayed();
                 browser.waitUntil(() => {
                     checkBox.click();
                     return checkBox.isSelected();
                 });
 
                 $('button=Add selection to the query').waitForExist();
-                browser.$('button=Add selection to the query').click();
+                $('button=Add selection to the query').click();
 
                 $('span*=All gene sets are valid').waitForExist();
 
-                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                var textArea = $('[data-test=GENESETS_TEXT_AREA]');
                 textArea.waitForExist();
                 assert.equal(
-                    textArea.getText(),
+                    textArea.getHTML(false),
                     'GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
                 );
             });
 
             it('selects gene sets from query page text area', () => {
-                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                var textArea = $('[data-test=GENESETS_TEXT_AREA]');
                 textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
                 $('div.modal-dialog').waitForExist();
 
@@ -225,10 +221,10 @@ describe('gsva feature', function() {
             });
 
             it('reset keeps gene sets from query page text area', () => {
-                var textArea = browser.$('[data-test=GENESETS_TEXT_AREA]');
+                var textArea = $('[data-test=GENESETS_TEXT_AREA]');
                 textArea.setValue('GO_ATP_DEPENDENT_CHROMATIN_REMODELING');
 
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
                 $('div.modal-dialog').waitForExist();
 
@@ -243,7 +239,7 @@ describe('gsva feature', function() {
             });
 
             it('searchbox filters gene set list', () => {
-                browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+                $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
 
                 $('div.modal-dialog').waitForExist();
 
@@ -280,21 +276,21 @@ describe('gsva feature', function() {
             });
 
             it('has GSVA profile option in heatmap menu', () => {
-                var addTracksButton = browser.$('button[id=addTracksDropdown]');
+                var addTracksButton = $('button[id=addTracksDropdown]');
                 addTracksButton.waitForExist();
                 addTracksButton.click();
 
-                var addTracksMenu = browser.$(ADD_TRACKS_HEATMAP_TAB);
+                var addTracksMenu = $(ADD_TRACKS_HEATMAP_TAB);
                 addTracksMenu.waitForExist();
                 addTracksMenu.click();
 
-                var heatmapDropdown = browser.$$('.Select-control')[0];
+                var heatmapDropdown = $$('.Select-control')[0];
                 heatmapDropdown.waitForExist();
                 heatmapDropdown.click();
                 assert(
                     $(
                         'div=GSVA scores on oncogenic signatures gene sets'
-                    ).isVisible()
+                    ).isDisplayed()
                 );
             });
         });
@@ -578,7 +574,7 @@ const checkTestStudy = () => {
 
 const checkGSVAprofile = () => {
     $('[data-test=GENESET_SCORE]').waitForExist();
-    var gsvaProfileCheckbox = browser.$('[data-test=GENESET_SCORE]');
+    var gsvaProfileCheckbox = $('[data-test=GENESET_SCORE]');
     gsvaProfileCheckbox.click();
     $('[data-test=GENESETS_TEXT_AREA]').waitForExist();
 };

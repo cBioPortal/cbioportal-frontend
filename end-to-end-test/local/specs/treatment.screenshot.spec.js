@@ -62,7 +62,7 @@ describe('treatment feature', () => {
             selectTreamentsBothAxes();
         });
 
-        it.only('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
+        it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
 
             browser.execute(() => {
@@ -73,7 +73,7 @@ describe('treatment feature', () => {
         });
 
         it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', () => {
-            $('[data-test=ViewLimitValues]').waitForExist(10000);
+            $('[data-test=ViewLimitValues]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewLimitValues]').click();
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
@@ -84,7 +84,7 @@ describe('treatment feature', () => {
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
             // make sure bars become visible (no mut data is available)
-            $('[data-test=ViewCopyNumber]').waitForExist(10000);
+            $('[data-test=ViewCopyNumber]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewCopyNumber]').click();
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
