@@ -12,6 +12,7 @@ var studyViewChartHoverHamburgerIcon = require('../../shared/specUtils')
 var setServerConfiguration = require('../../shared/specUtils')
     .setServerConfiguration;
 var openGroupComparison = require('../../shared/specUtils').openGroupComparison;
+var waitForNetworkQuiet = require('../../shared/specUtils').waitForNetworkQuiet;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -22,15 +23,18 @@ const clipboardIcon = '.fa-clipboard';
 describe('hide download controls feature', function() {
     if (useExternalFrontend) {
         describe('study query page', () => {
+            const expectedTabNames = ['Query'];
+
             before(() => {
                 openAndSetProperty(CBIOPORTAL_URL, {
                     skin_hide_download_controls: true,
                 });
+                // browser.debug();
                 waitForStudyQueryPage();
+                waitForTabs(expectedTabNames.length);
             });
 
             it('covers all tabs with download control tests', () => {
-                const expectedTabNames = ['Query'];
                 const observedTabNames = $$('.tabAnchor')
                     .filter(a => a.isVisible())
                     .map(a => a.getText());
@@ -62,26 +66,27 @@ describe('hide download controls feature', function() {
         });
 
         describe('results view page', () => {
+            const expectedTabNames = [
+                'OncoPrint',
+                'Cancer Types Summary',
+                'Mutual Exclusivity',
+                'Plots',
+                'Mutations',
+                'Co-expression',
+                'Comparison/Survival',
+                'CN Segments',
+                'Pathways',
+            ];
             before(() => {
                 openAndSetProperty(
                     `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=study_es_0_cnaseq&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=mrna`,
                     { skin_hide_download_controls: true }
                 );
                 waitForOncoprint();
+                waitForTabs(expectedTabNames.length);
             });
 
             it('covers all tabs with download control tests', () => {
-                const expectedTabNames = [
-                    'OncoPrint',
-                    'Cancer Types Summary',
-                    'Mutual Exclusivity',
-                    'Plots',
-                    'Mutations',
-                    'Co-expression',
-                    'Comparison/Survival',
-                    'CN Segments',
-                    'Pathways',
-                ];
                 const observedTabNames = $$('.tabAnchor')
                     .filter(a => a.isVisible())
                     .map(a => a.getText());
@@ -296,23 +301,24 @@ describe('hide download controls feature', function() {
         });
 
         describe('patient view', () => {
+            const expectedTabNames = [
+                'Summary',
+                'Pathways',
+                'Clinical Data',
+                'Files & Links',
+                'Tissue Image',
+                'Pathology Slide',
+                'Study Sponsors',
+            ];
             before(() => {
                 openAndSetProperty(
                     `${CBIOPORTAL_URL}/patient?studyId=study_es_0&caseId=TCGA-A1-A0SK`,
                     { skin_hide_download_controls: true }
                 );
                 waitForPatientView();
+                waitForTabs(expectedTabNames.length);
             });
             it('covers all tabs with download control tests', () => {
-                const expectedTabNames = [
-                    'Summary',
-                    'Pathways',
-                    'Clinical Data',
-                    'Files & Links',
-                    'Tissue Image',
-                    'Pathology Slide',
-                    'Study Sponsors',
-                ];
                 const observedTabNames = $$('.tabAnchor')
                     .filter(a => a.isVisible())
                     .map(a => a.getText());
@@ -379,22 +385,23 @@ describe('hide download controls feature', function() {
         });
 
         describe('study view', () => {
+            const expectedTabNames = [
+                'Summary',
+                'Clinical Data',
+                'CN Segments',
+                'Files & Links',
+                'Study Sponsors',
+            ];
             before(() => {
                 openAndSetProperty(
                     `${CBIOPORTAL_URL}/study/summary?id=study_es_0`,
                     { skin_hide_download_controls: true }
                 );
                 waitForStudyView();
+                waitForTabs(expectedTabNames.length);
             });
             describe('summary tab', () => {
                 it('covers all tabs with download control tests', () => {
-                    const expectedTabNames = [
-                        'Summary',
-                        'Clinical Data',
-                        'CN Segments',
-                        'Files & Links',
-                        'Study Sponsors',
-                    ];
                     const observedTabNames = $$('.tabAnchor')
                         .filter(a => a.isVisible())
                         .map(a => a.getText());
@@ -443,23 +450,6 @@ describe('hide download controls feature', function() {
                         1000
                     );
                     globalCheck();
-                    studyViewChartHoverHamburgerIcon(
-                        'chart-container-SAMPLE_COUNT',
-                        1000
-                    );
-                    globalCheck();
-                    studyViewChartHoverHamburgerIcon(
-                        'chart-container-study_es_0_mutations',
-                        1000
-                    );
-                    globalCheck();
-                });
-                it('does not show download option in chart-s', () => {
-                    studyViewChartHoverHamburgerIcon(
-                        'chart-container-SAMPLE_COUNT',
-                        1000
-                    );
-                    globalCheck();
                 });
             });
             describe('clinical data tab', () => {
@@ -493,6 +483,16 @@ describe('hide download controls feature', function() {
         });
 
         describe('group comparison', () => {
+            const expectedTabNames = [
+                'Overlap',
+                'Survival',
+                'Clinical',
+                'Genomic Alterations',
+                'mRNA',
+                'DNA Methylation',
+                'Treatment Response',
+                'Mutational Signature',
+            ];
             before(() => {
                 openAndSetProperty(browser.getUrl(), {
                     skin_hide_download_controls: false,
@@ -506,18 +506,9 @@ describe('hide download controls feature', function() {
                 openAndSetProperty(browser.getUrl(), {
                     skin_hide_download_controls: true,
                 });
+                waitForTabs(expectedTabNames.length);
             });
             it('covers all tabs with download control tests', () => {
-                const expectedTabNames = [
-                    'Overlap',
-                    'Survival',
-                    'Clinical',
-                    'Genomic Alterations',
-                    'mRNA',
-                    'DNA Methylation',
-                    'Treatment Response',
-                    'Mutational Signature',
-                ];
                 const observedTabNames = $$('.tabAnchor')
                     .filter(a => a.isVisible())
                     .map(a => a.getText());
@@ -645,4 +636,10 @@ const openAndSetProperty = (url, prop) => {
     goToUrlAndSetLocalStorage(url, true);
     setServerConfiguration(prop);
     goToUrlAndSetLocalStorage(url, true);
+};
+
+const waitForTabs = count => {
+    browser.waitUntil(() => {
+        return $$('.tabAnchor').length >= count;
+    }, 300000);
 };
