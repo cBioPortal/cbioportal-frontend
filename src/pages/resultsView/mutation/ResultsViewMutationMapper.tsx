@@ -30,7 +30,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     mutationCountCache?: MutationCountCache;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     userEmailAddress: string;
-    onClickSettingMenu?: () => void;
+    onClickSettingMenu?: (visible: boolean) => void;
 }
 
 @observer
