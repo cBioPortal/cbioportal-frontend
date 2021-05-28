@@ -77,6 +77,7 @@ export interface IServerConfig {
     skin_examples_right_column_html: string | null;
     skin_documentation_faq: string | null;
     skin_footer: string | null;
+    skin_footer_show_dev: boolean;
     skin_login_contact_html: string | null;
     skin_login_saml_registration_html: string | null;
     skin_citation_rule_text: string | null;
@@ -88,6 +89,7 @@ export interface IServerConfig {
     skin_right_nav_show_examples: boolean;
     skin_right_nav_show_testimonials: boolean;
     skin_right_nav_show_whats_new: boolean;
+    skin_right_nav_show_twitter: boolean;
     skin_right_nav_whats_new_blurb: string | null;
     skin_show_about_tab: boolean;
     skin_show_data_tab: boolean;
