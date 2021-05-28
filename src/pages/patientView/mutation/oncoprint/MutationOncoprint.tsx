@@ -49,7 +49,6 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import ReactDOM from 'react-dom';
 import Timeout = NodeJS.Timeout;
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
-import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 
 export interface IMutationOncoprintProps {
     store: PatientViewPageStore;
@@ -459,11 +458,10 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,
-                            vafReport,
+                            vaf: d.profile_data,
                         });
                         // convert JSX into HTML string by rendering to dummy element then using innerHTML
                         const dummyElt = document.createElement('div');
@@ -523,11 +521,10 @@ export default class MutationOncoprint extends React.Component<
                     hasColumnSpacing: true,
                     tooltip: (data: IMutationOncoprintTrackDatum[]) => {
                         const d = data[0];
-                        const vafReport = getVariantAlleleFrequency(d.mutation);
                         const tooltipJSX = mutationTooltip(d.mutation, {
                             sampleId: d.sample!,
                             mutationStatus: d.mutationStatus,
-                            vafReport,
+                            vaf: d.profile_data,
                         });
                         // convert JSX into HTML string by rendering to dummy element then using innerHTML
                         const dummyElt = document.createElement('div');

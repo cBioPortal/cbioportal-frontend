@@ -1534,7 +1534,7 @@ export class PatientViewPageStore {
         {
             await: () => [
                 this.mutatedGenes,
-                this.samplesWithUniqueKeys,
+                this.samples,
                 this.genePanelData,
                 this.genePanels,
             ],
@@ -1543,11 +1543,11 @@ export class PatientViewPageStore {
                 return computeGenePanelInformation(
                     this.genePanelData.result,
                     this.genePanels.result,
-                    this.samplesWithUniqueKeys.result!,
+                    this.samples.result!,
                     [
                         {
-                            uniquePatientKey: this.samplesWithUniqueKeys
-                                .result![0].uniquePatientKey,
+                            uniquePatientKey: this.samples.result![0]
+                                .uniquePatientKey,
                         },
                     ],
                     this.mutatedGenes.result!
@@ -2163,8 +2163,8 @@ export class PatientViewPageStore {
             this.mergedMutationDataIncludingUncalled,
             mutationList => {
                 return _.some(mutationList, m => {
-                    const vafReport = getVariantAlleleFrequency(m);
-                    return vafReport !== null && vafReport.vaf > 0;
+                    const vaf = getVariantAlleleFrequency(m);
+                    return vaf != null && vaf > 0;
                 });
             }
         );

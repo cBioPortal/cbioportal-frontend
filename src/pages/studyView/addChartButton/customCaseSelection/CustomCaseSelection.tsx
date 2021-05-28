@@ -50,6 +50,7 @@ export default class CustomCaseSelection extends React.Component<
 > {
     private validateContent: boolean = false;
     private chartNameValidation: ValidationResult = { warning: [], error: [] };
+    @observable dataFormatCollapsed: boolean = true;
     @observable.ref chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
@@ -178,6 +179,11 @@ export default class CustomCaseSelection extends React.Component<
         this.props.onSubmit(this.newChartInfo);
     }
 
+    @action.bound
+    protected handleDataFormatToggle() {
+        this.dataFormatCollapsed = !this.dataFormatCollapsed;
+    }
+
     @computed
     get addChartButtonDisabled() {
         return (
@@ -285,7 +291,28 @@ export default class CustomCaseSelection extends React.Component<
                                 currently unselected
                             </span>
                         </span>
+
+                        <div
+                            className="collapsible-header"
+                            onClick={this.handleDataFormatToggle}
+                        >
+                            <a>Data Format</a>
+                            <span style={{ paddingLeft: 4, cursor: 'pointer' }}>
+                                {this.dataFormatCollapsed ? (
+                                    <i className="fa fa-chevron-down" />
+                                ) : (
+                                    <i className="fa fa-chevron-up" />
+                                )}
+                            </span>
+                        </div>
                     </div>
+                    <Collapse isOpened={!this.dataFormatCollapsed}>
+                        <div style={{ marginTop: '5px' }}>
+                            <span style={{ whiteSpace: 'pre-line' }}>
+                                {this.dataFormatContent}
+                            </span>
+                        </div>
+                    </Collapse>
                 </span>
 
                 <textarea

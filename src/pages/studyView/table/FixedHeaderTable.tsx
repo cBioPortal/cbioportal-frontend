@@ -351,40 +351,41 @@ export default class FixedHeaderTable<T> extends React.Component<
     }
 
     getAddRemoveAllButton() {
-        const noneSelected = this.props.numberOfSelectedRows === 0;
         const allSelected =
             this.props.numberOfSelectedRows === this.props.data.length;
 
-        const selectAllContent = `Select all${
-            this.props.showSelectableNumber
-                ? ` (${this._store.dataStore.sortedFilteredData.length})`
-                : ''
-        }`;
-        const showSelectAll = !allSelected && this.props.addAll;
-        const showDeselectAll = !noneSelected && this.props.removeAll;
+        let dataTest: string, onClick: () => void, content: string;
+        let showButton = false;
 
-        return (
-            <>
-                {showSelectAll && (
-                    <button
-                        className="btn btn-default btn-xs"
-                        data-test={'fixed-header-table-add-all'}
-                        onClick={this.onAddAll}
-                    >
-                        {selectAllContent!}
-                    </button>
-                )}
-                {showDeselectAll && (
-                    <button
-                        className="btn btn-default btn-xs"
-                        data-test={'fixed-header-table-remove-all'}
-                        onClick={this.onRemoveAll}
-                    >
-                        {'Deselect all'}
-                    </button>
-                )}
-            </>
-        );
+        if (allSelected && this.props.removeAll) {
+            dataTest = 'fixed-header-table-remove-all';
+            onClick = this.onRemoveAll;
+            content = 'Deselect all';
+            showButton = true;
+        } else if (this.props.addAll) {
+            dataTest = 'fixed-header-table-add-all';
+            onClick = this.onAddAll;
+            content = `Select all${
+                this.props.showSelectableNumber
+                    ? ` (${this._store.dataStore.sortedFilteredData.length})`
+                    : ''
+            }`;
+            showButton = true;
+        }
+
+        if (showButton) {
+            return (
+                <button
+                    className="btn btn-default btn-xs"
+                    data-test={dataTest!}
+                    onClick={onClick!}
+                >
+                    {content!}
+                </button>
+            );
+        } else {
+            return null;
+        }
     }
 
     getControls() {

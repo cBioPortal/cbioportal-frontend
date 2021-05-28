@@ -646,8 +646,7 @@ export default class ResultsViewPage extends React.Component<
                         )}
 
                     {(this.resultsViewPageStore.studies.isPending ||
-                        (!tabsReady &&
-                            !this.resultsViewPageStore.queryFormVisible)) && (
+                        !tabsReady) && (
                         <LoadingIndicator
                             isLoading={true}
                             center={true}

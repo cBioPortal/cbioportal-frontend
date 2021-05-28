@@ -30,20 +30,20 @@ if (useExternalFrontend) {
             clickAlterationTypeCheckBox('Copy Number Alterations');
             $('[data-test=buttonSelectAlterations]').click();
             $('div=No data/result available').waitForExist();
-            assert($('div=No data/result available').isVisible());
+            assert($('div=No data/result available').isDisplayed());
         });
 
         it('filters mutation types', function() {
             clickAlterationTypeCheckBox('Copy Number Alterations');
             clickAlterationTypeCheckBox('Structural Variants / Fusions');
             submitEnrichmentRequest();
-            $('[data-test=LazyMobXTable]').waitForVisible();
+            $('[data-test=LazyMobXTable]').waitForDisplayed();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 8, 'table has 8 rows');
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
-            $('[data-test=LazyMobXTable]').waitForVisible();
+            $('[data-test=LazyMobXTable]').waitForDisplayed();
             rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 2, 'table has 2 rows');
         });
@@ -51,11 +51,11 @@ if (useExternalFrontend) {
         it('filters CNA types', function() {
             clickAlterationTypeCheckBox('Mutations');
             submitEnrichmentRequest();
-            $('[data-test=LazyMobXTable]').waitForVisible();
+            $('[data-test=LazyMobXTable]').waitForDisplayed();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
             clickAlterationTypeCheckBox('Deletion');
             submitEnrichmentRequest();
-            $('[data-test=LazyMobXTable]').waitForVisible();
+            $('[data-test=LazyMobXTable]').waitForDisplayed();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '7 (0.90%)');
         });
     });
@@ -69,7 +69,7 @@ var loadAlterationsTab = () => {
     for (const timeInterval of timeIntervals) {
         goToUrlAndSetLocalStorage(resultsViewComparisonTab, true);
         browser.pause(timeInterval);
-        if ($('[data-test=GroupComparisonAlterationEnrichments]').isVisible())
+        if ($('[data-test=GroupComparisonAlterationEnrichments]').isDisplayed())
             break;
     }
 };
@@ -106,5 +106,7 @@ var clickAlterationTypeCheckBox = name => {
 
 var submitEnrichmentRequest = () => {
     $('[data-test=buttonSelectAlterations]').click();
-    $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist(10000);
+    $('[data-test=GroupComparisonAlterationEnrichments]').waitForExist({
+        timeout: 10000,
+    });
 };

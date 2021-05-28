@@ -54,10 +54,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             this.props.store.germlineConsentedSamples &&
             this.props.store.germlineConsentedSamples.result &&
             this.props.store.mutationData.isComplete &&
-            this.props.store.mutationData.result.length > 0 &&
-            this.props.store.samples.isComplete &&
-            this.props.store.samples.result &&
-            this.props.store.samples.result.length > 0
+            this.props.store.mutationData.result.length > 0
         ) {
             return (
                 <MutationRateSummary

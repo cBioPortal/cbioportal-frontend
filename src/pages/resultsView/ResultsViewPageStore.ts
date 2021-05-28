@@ -83,6 +83,7 @@ import {
     fetchOncoKbCancerGenes,
     fetchOncoKbDataForOncoprint,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchSurvivalDataExists,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     filterAndAnnotateMolecularData,
     filterAndAnnotateMutations,
@@ -255,7 +256,6 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
-import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -2301,35 +2301,12 @@ export class ResultsViewPageStore {
     });
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
-        await: () => [
-            this.clinicalAttributeIdToAvailableSampleCount,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: async () => {
-            const attributeNames = _.reduce(
-                this.survivalClinicalAttributesPrefix.result,
-                (attributeNames, prefix: string) => {
-                    attributeNames.push(prefix + '_STATUS');
-                    attributeNames.push(prefix + '_MONTHS');
-                    return attributeNames;
-                },
-                [] as string[]
-            );
-            if (attributeNames.length === 0) {
-                return false;
-            }
-
-            const clinicalAttributeIdToAvailableSampleCount =
-                this.clinicalAttributeIdToAvailableSampleCount.result || {};
-
-            return _.some(
-                attributeNames,
-                attributeName =>
-                    clinicalAttributeIdToAvailableSampleCount[attributeName] !==
-                        undefined &&
-                    clinicalAttributeIdToAvailableSampleCount[attributeName] > 0
-            );
-        },
+        await: () => [this.samples, this.survivalClinicalAttributesPrefix],
+        invoke: () =>
+            fetchSurvivalDataExists(
+                this.samples.result!,
+                this.survivalClinicalAttributesPrefix.result!
+            ),
     });
 
     readonly filteredSamplesByDetailedCancerType = remoteData<{
@@ -2729,23 +2706,52 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly studyToCustomSampleList = remoteData<{
-        [studyId: string]: string[];
+    readonly studyToSampleIds = remoteData<{
+        [studyId: string]: { [sampleId: string]: boolean };
     }>(
         {
             await: () => [this.samplesSpecification],
-            invoke: () => {
+            invoke: async () => {
+                const sampleListsToQuery: {
+                    studyId: string;
+                    sampleListId: string;
+                }[] = [];
                 const ret: {
-                    [studyId: string]: string[];
+                    [studyId: string]: { [sampleId: string]: boolean };
                 } = {};
                 for (const sampleSpec of this.samplesSpecification.result!) {
                     if (sampleSpec.sampleId) {
                         // add sample id to study
-                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || [];
-                        ret[sampleSpec.studyId].push(sampleSpec.sampleId);
+                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
+                        ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
+                    } else if (sampleSpec.sampleListId) {
+                        // mark sample list to query later
+                        sampleListsToQuery.push(
+                            sampleSpec as {
+                                studyId: string;
+                                sampleListId: string;
+                            }
+                        );
                     }
                 }
-                return Promise.resolve(ret);
+                // query for sample lists
+                if (sampleListsToQuery.length > 0) {
+                    const sampleLists: SampleList[] = await client.fetchSampleListsUsingPOST(
+                        {
+                            sampleListIds: sampleListsToQuery.map(
+                                spec => spec.sampleListId
+                            ),
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        }
+                    );
+                    // add samples from those sample lists to corresponding study
+                    for (const sampleList of sampleLists) {
+                        ret[sampleList.studyId] = stringListToSet(
+                            sampleList.sampleIds
+                        );
+                    }
+                }
+                return ret;
             },
         },
         {}
@@ -3267,18 +3273,13 @@ export class ResultsViewPageStore {
     readonly mutationsByGene = remoteData<{
         [hugoGeneSymbol: string]: Mutation[];
     }>({
-        await: () => {
-            const promises: MobxPromise<any>[] = [
-                this.selectedMolecularProfiles,
-                this.defaultOQLQuery,
-                this.mutationsReportByGene,
-                this.structuralVariantsReportByGene,
-            ];
-            if (this.hideUnprofiledSamples) {
-                promises.push(this.filteredSampleKeyToSample);
-            }
-            return promises;
-        },
+        await: () => [
+            this.selectedMolecularProfiles,
+            this.defaultOQLQuery,
+            this.mutationsReportByGene,
+            this.filteredSampleKeyToSample,
+            this.structuralVariantsReportByGene,
+        ],
         invoke: () => {
             const mutationsByGene = _.mapValues(
                 this.mutationsReportByGene.result!,
@@ -3641,43 +3642,32 @@ export class ResultsViewPageStore {
         {
             await: () => [this.studyToDataQueryFilter],
             invoke: async () => {
-                const customSampleListIds = new SampleSet();
-                const customSampleListStudyIds: string[] = [];
-                const sampleListIds: string[] = [];
+                let sampleIdentifiers: SampleIdentifier[] = [];
+                let sampleListIds: string[] = [];
                 _.each(
                     this.studyToDataQueryFilter.result,
                     (dataQueryFilter: IDataQueryFilter, studyId: string) => {
                         if (dataQueryFilter.sampleIds) {
-                            customSampleListIds.add(
-                                studyId,
-                                dataQueryFilter.sampleIds
+                            sampleIdentifiers = sampleIdentifiers.concat(
+                                dataQueryFilter.sampleIds.map(sampleId => ({
+                                    sampleId,
+                                    studyId,
+                                }))
                             );
-                            customSampleListStudyIds.push(studyId);
                         } else if (dataQueryFilter.sampleListId) {
                             sampleListIds.push(dataQueryFilter.sampleListId);
                         }
                     }
                 );
-
-                const promises: Promise<Sample[]>[] = [];
-
-                if (customSampleListStudyIds.length > 0) {
+                let promises: Promise<Sample[]>[] = [];
+                if (sampleIdentifiers.length) {
                     promises.push(
-                        client
-                            .fetchSamplesUsingPOST({
-                                sampleFilter: {
-                                    sampleListIds: customSampleListStudyIds.map(
-                                        studyId => `${studyId}_all`
-                                    ),
-                                } as SampleFilter,
-                                projection:
-                                    REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                            })
-                            .then(samples => {
-                                return samples.filter(s =>
-                                    customSampleListIds.has(s)
-                                );
-                            })
+                        client.fetchSamplesUsingPOST({
+                            sampleFilter: {
+                                sampleIdentifiers,
+                            } as SampleFilter,
+                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        })
                     );
                 }
                 if (sampleListIds.length) {
@@ -4140,7 +4130,7 @@ export class ResultsViewPageStore {
     }>(
         {
             await: () => [
-                this.studyToCustomSampleList,
+                this.studyToSampleIds,
                 this.studyIds,
                 this.studyToSampleListId,
             ],
@@ -4149,8 +4139,8 @@ export class ResultsViewPageStore {
                 const ret: { [studyId: string]: IDataQueryFilter } = {};
                 for (const studyId of studies) {
                     ret[studyId] = generateDataQueryFilter(
-                        this.studyToSampleListId.result![studyId],
-                        this.studyToCustomSampleList.result![studyId]
+                        this.studyToSampleListId.result![studyId] || null,
+                        Object.keys(this.studyToSampleIds.result[studyId] || {})
                     );
                 }
                 return Promise.resolve(ret);
@@ -5030,7 +5020,7 @@ export class ResultsViewPageStore {
                     let result;
                     try {
                         result = await fetchStructuralVariantOncoKbData(
-                            {},
+                            this.uniqueSampleKeyToTumorType.result || {},
                             this.oncoKbAnnotatedGenes.result!,
                             this.structuralVariants
                         );
@@ -5054,6 +5044,7 @@ export class ResultsViewPageStore {
     readonly cnaOncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [
+                this.uniqueSampleKeyToTumorType,
                 this.oncoKbAnnotatedGenes,
                 this.discreteCNAMolecularData,
             ],
@@ -5099,7 +5090,10 @@ export class ResultsViewPageStore {
               structuralVariant: StructuralVariant
           ) => IndicatorQueryResp | undefined)
     >({
-        await: () => [this.structuralVariantOncoKbDataForOncoprint],
+        await: () => [
+            this.structuralVariantOncoKbDataForOncoprint,
+            this.uniqueSampleKeyToTumorType,
+        ],
         invoke: () => {
             const structuralVariantOncoKbDataForOncoprint = this
                 .structuralVariantOncoKbDataForOncoprint.result!;
@@ -5113,7 +5107,7 @@ export class ResultsViewPageStore {
                             structuralVariant.site2EntrezGeneId,
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
-                                {}
+                                this.uniqueSampleKeyToTumorType.result || {}
                             )
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![

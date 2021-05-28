@@ -28,7 +28,6 @@ import {
     MUT_COLOR_TRUNC_PASSENGER,
     PROT_COLOR_HIGH,
     PROT_COLOR_LOW,
-    STRUCTURAL_VARIANT_PASSENGER_COLOR,
 } from 'cbioportal-frontend-commons';
 // Feed this in as
 
@@ -58,8 +57,7 @@ enum ShapeId {
     protHighRectangle = 'protHighRectangle',
     protLowRectangle = 'protLowRectangle',
 
-    structuralVariantDriverRectangle = 'structuralVariantDriverRectangle',
-    structuralVariantVUSRectangle = 'structuralVariantVUSRectangle',
+    structuralVariantRectangle = 'structuralVariantRectangle',
 
     germlineRectangle = 'germlineRectangle',
 
@@ -157,18 +155,9 @@ const shapeBank = {
         height: 20,
         z: 4,
     },
-    [ShapeId.structuralVariantDriverRectangle]: {
+    [ShapeId.structuralVariantRectangle]: {
         type: 'rectangle',
         fill: STRUCTURAL_VARIANT_COLOR,
-        x: 0,
-        y: 20,
-        width: 100,
-        height: 60,
-        z: 5,
-    },
-    [ShapeId.structuralVariantVUSRectangle]: {
-        type: 'rectangle',
-        fill: STRUCTURAL_VARIANT_PASSENGER_COLOR,
         x: 0,
         y: 20,
         width: 100,
@@ -286,24 +275,48 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
     conditional: {
         // Copy number alteration
         disp_cna: {
-            'amp_rec,amp': {
+            amp_rec: {
                 shapes: [shapeBank[ShapeId.ampRectangle]],
-                legend_label: 'Amplification',
+                legend_label: 'Amplification (putative driver)',
                 legend_order: AMP_LEGEND_ORDER,
             },
-            'gain_rec,gain': {
+            // Red rectangle for amplification
+            amp: {
+                shapes: [shapeBank[ShapeId.ampRectangle]],
+                legend_label: 'Amplification (unknown significance)',
+                legend_order: AMP_LEGEND_ORDER,
+            },
+            gain_rec: {
                 shapes: [shapeBank[ShapeId.gainRectangle]],
-                legend_label: 'Gain',
+                legend_label: 'Gain (putative driver)',
                 legend_order: GAIN_LEGEND_ORDER,
             },
-            'homdel_rec,homdel': {
+            // Light red rectangle for gain
+            gain: {
+                shapes: [shapeBank[ShapeId.gainRectangle]],
+                legend_label: 'Gain (unknown significance)',
+                legend_order: GAIN_LEGEND_ORDER,
+            },
+            homdel_rec: {
                 shapes: [shapeBank[ShapeId.homdelRectangle]],
-                legend_label: 'Deep Deletion',
+                legend_label: 'Deep Deletion (putative driver)',
                 legend_order: HOMDEL_LEGEND_ORDER,
             },
-            'hetloss_rec,hetloss': {
+            // Blue rectangle for deep deletion
+            homdel: {
+                shapes: [shapeBank[ShapeId.homdelRectangle]],
+                legend_label: 'Deep Deletion (unknown significance)',
+                legend_order: HOMDEL_LEGEND_ORDER,
+            },
+            hetloss_rec: {
                 shapes: [shapeBank[ShapeId.hetlossRectangle]],
-                legend_label: 'Shallow Deletion',
+                legend_label: 'Shallow Deletion (putative driver)',
+                legend_order: HETLOSS_LEGEND_ORDER,
+            },
+            // Light blue rectangle for shallow deletion
+            hetloss: {
+                shapes: [shapeBank[ShapeId.hetlossRectangle]],
+                legend_label: 'Shallow Deletion (unknown significance)',
                 legend_order: HETLOSS_LEGEND_ORDER,
             },
         },
@@ -340,14 +353,9 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
         // structural variant
         disp_structuralVariant: {
             // tall inset purple rectangle for structural variant
-            sv_rec: {
-                shapes: [shapeBank[ShapeId.structuralVariantDriverRectangle]],
-                legend_label: 'Structural Variant (putative driver)',
-                legend_order: STRUCTURAL_VARIANT_LEGEND_ORDER,
-            },
-            sv: {
-                shapes: [shapeBank[ShapeId.structuralVariantVUSRectangle]],
-                legend_label: 'Structural Variant (unknown significance)',
+            true: {
+                shapes: [shapeBank[ShapeId.structuralVariantRectangle]],
+                legend_label: 'Structural Variant',
                 legend_order: STRUCTURAL_VARIANT_LEGEND_ORDER,
             },
         },

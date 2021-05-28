@@ -27,14 +27,14 @@ export interface IColorPoint extends IPoint {
     color: string;
 }
 
-export type TooltipDatum = {
+type Datum = {
     mutationStatus: MutationStatus | null;
     sampleId: string;
-    vafReport: VAFReport | null;
+    vaf: number;
 };
 
 type TooltipModel = {
-    datum: TooltipDatum | null;
+    datum: Datum | null;
     mutation: Mutation | null;
     mouseEvent: React.MouseEvent<any> | null;
     tooltipOnPoint: boolean;
@@ -44,7 +44,6 @@ import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/Cust
 import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
 import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
 import './styles.scss';
-import { getVariantAlleleFrequency, VAFReport } from 'shared/lib/MutationUtils';
 
 interface IVAFChartProps {
     mouseOverMutation: Readonly<Mutation> | null;
@@ -68,7 +67,7 @@ const VAFPoint: React.FunctionComponent<{
     x: number;
     y: number;
     color: string;
-    datum: TooltipDatum | null;
+    datum: Datum | null;
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
@@ -133,7 +132,7 @@ const VAFPointConnector: React.FunctionComponent<{
     x2: number;
     y2: number;
     color: string;
-    datum: TooltipDatum | null;
+    datum: Datum | null;
     mutation: Mutation;
     onMutationClick: (mutation: Mutation) => void;
     setTooltipModel(tooltipModel: TooltipModel): void;
@@ -311,7 +310,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                 ? {
                       mutationStatus: tooltipData.datum.mutationStatus,
                       sampleId: tooltipData.datum.sampleId,
-                      vafReport: tooltipData.datum.vafReport,
+                      vaf: tooltipData.datum.vaf,
                   }
                 : undefined
         );
@@ -380,13 +379,11 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
                             let tooltipDatum: {
                                 mutationStatus: MutationStatus;
                                 sampleId: string;
-                                vafReport: VAFReport;
+                                vaf: number;
                             } = {
                                 mutationStatus: d.mutationStatus,
                                 sampleId: d.sampleId,
-                                vafReport: getVariantAlleleFrequency(
-                                    d.mutation
-                                )!,
+                                vaf: d.y,
                             };
 
                             const color = d.color;
