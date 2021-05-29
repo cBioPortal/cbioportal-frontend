@@ -365,6 +365,8 @@ export type MolecularProfile = {
 
         'name': string
 
+        'patientLevel': boolean
+
         'pivotThreshold': number
 
         'showProfileInAnalysisTab': boolean

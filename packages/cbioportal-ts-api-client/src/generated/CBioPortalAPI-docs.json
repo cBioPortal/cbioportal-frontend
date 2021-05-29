@@ -5168,6 +5168,9 @@
         "name": {
           "type": "string"
         },
+        "patientLevel": {
+          "type": "boolean"
+        },
         "pivotThreshold": {
           "type": "number",
           "format": "float"
