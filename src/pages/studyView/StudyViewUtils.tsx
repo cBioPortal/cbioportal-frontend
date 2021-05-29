@@ -161,6 +161,7 @@ export type MolecularProfileOption = {
     description: string;
     sampleUniqueKeys: string[];
     dataType: string;
+    patientLevel: boolean;
 };
 
 // DataBin is a generic type for ClinicalDataBin, GenomicDataBin and GenericAssayDataBin
@@ -2374,6 +2375,7 @@ export function getChartSettingsMap(
                 genericAssayChart.genericAssayEntityId;
             chartSetting.profileType = genericAssayChart.profileType;
             chartSetting.dataType = genericAssayChart.dataType;
+            chartSetting.patientLevelProfile = genericAssayChart.patientLevel;
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
@@ -2694,9 +2696,14 @@ export function updateSavedUserPreferenceChartIds(
 
 export function getMolecularProfileOptions(
     molecularProfiles: MolecularProfile[],
-    sampleUniqueKeysByMolecularProfileIdSet: { [id: string]: string[] },
+    samplesByMolecularProfileIdSet: { [id: string]: Sample[] },
     filter?: (molecularProfile: MolecularProfile) => boolean
 ): MolecularProfileOption[] {
+    const sampleUniqueKeysByMolecularProfileIdSet = _.chain(
+        samplesByMolecularProfileIdSet
+    )
+        .mapValues(samples => samples.map(sample => sample.uniqueSampleKey))
+        .value();
     return _.chain(molecularProfiles)
         .filter(molecularProfile => {
             if (filter) {
@@ -2708,13 +2715,28 @@ export function getMolecularProfileOptions(
             getSuffixOfMolecularProfile(molecularProfile)
         )
         .map((profiles, value) => {
-            const uniqueProfiledSamples = _.chain(profiles)
-                .flatMap(
-                    molecularProfile =>
-                        sampleUniqueKeysByMolecularProfileIdSet[
-                            molecularProfile.molecularProfileId
-                        ] || []
-                )
+            // profiles have at least one profile
+            // and we can use the first profile to see if those profiles are patient level profiles
+            const patientLevel = profiles[0].patientLevel;
+            let uniqueProfiledSamples = _.chain(profiles)
+                .flatMap(molecularProfile => {
+                    if (patientLevel) {
+                        const samples =
+                            samplesByMolecularProfileIdSet[
+                                molecularProfile.molecularProfileId
+                            ] || [];
+                        return _.chain(samples)
+                            .uniqBy(sample => sample.uniquePatientKey)
+                            .map(sample => sample.uniqueSampleKey)
+                            .value();
+                    } else {
+                        return (
+                            sampleUniqueKeysByMolecularProfileIdSet[
+                                molecularProfile.molecularProfileId
+                            ] || []
+                        );
+                    }
+                })
                 .uniq()
                 .value();
 
@@ -2725,6 +2747,7 @@ export function getMolecularProfileOptions(
                 description: profiles[0].description,
                 sampleUniqueKeys: uniqueProfiledSamples,
                 dataType: profiles[0].datatype,
+                patientLevel,
             };
         })
         .filter(record => record.count > 0)
@@ -2946,12 +2969,14 @@ export function getMolecularProfileSamplesSet(
 
     return _.reduce(
         genePanelData,
-        (acc: { [id: string]: string[] }, next) => {
+        (acc: { [id: string]: Sample[] }, next) => {
             if (sampleKeySet[next.uniqueSampleKey] !== undefined) {
                 if (acc[next.molecularProfileId] === undefined) {
                     acc[next.molecularProfileId] = [];
                 }
-                acc[next.molecularProfileId].push(next.uniqueSampleKey);
+                acc[next.molecularProfileId].push(
+                    sampleKeySet[next.uniqueSampleKey]
+                );
             }
             return acc;
         },

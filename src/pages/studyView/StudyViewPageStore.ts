@@ -247,6 +247,7 @@ export type ChartUserSetting = {
     genericAssayEntityId?: string;
     dataType?: string;
     showNA?: boolean;
+    patientLevelProfile?: boolean;
 };
 
 export type StudyPageSettings = {
@@ -308,6 +309,7 @@ export type GenericAssayChart = {
     profileType: string;
     genericAssayType: string;
     genericAssayEntityId: string;
+    patientLevel: boolean;
 };
 
 export const DataBinMethodConstants: { [key: string]: 'DYNAMIC' | 'STATIC' } = {
@@ -4636,7 +4638,7 @@ export class StudyViewPageStore {
         {
             await: () => [
                 this.molecularProfiles,
-                this.sampleUniqueKeysByMolecularProfileIdSet,
+                this.samplesByMolecularProfileIdSet,
             ],
             invoke: async () => {
                 return Promise.resolve(
@@ -4650,8 +4652,7 @@ export class StudyViewPageStore {
                         .mapValues(profiles =>
                             getMolecularProfileOptions(
                                 profiles,
-                                this.sampleUniqueKeysByMolecularProfileIdSet
-                                    .result
+                                this.samplesByMolecularProfileIdSet.result
                             )
                         )
                         .value()
@@ -5515,6 +5516,7 @@ export class StudyViewPageStore {
                             genericAssayEntityId:
                                 chartUserSettings.genericAssayEntityId,
                             dataType: chartUserSettings.dataType,
+                            patientLevel: chartUserSettings.patientLevelProfile!,
                         },
                     ],
                     true
@@ -6070,6 +6072,8 @@ export class StudyViewPageStore {
                                                     genericAssayDataFilter.stableId,
                                                 dataType:
                                                     molecularProfileOption.dataType,
+                                                patientLevel:
+                                                    molecularProfileOption.patientLevel,
                                             },
                                         ],
                                         true
@@ -7384,8 +7388,8 @@ export class StudyViewPageStore {
         default: [],
     });
 
-    readonly sampleUniqueKeysByMolecularProfileIdSet = remoteData<{
-        [id: string]: string[];
+    readonly samplesByMolecularProfileIdSet = remoteData<{
+        [id: string]: Sample[];
     }>({
         await: () => [this.selectedSamples, this.filteredGenePanelData],
         invoke: async () => {
@@ -7400,13 +7404,13 @@ export class StudyViewPageStore {
     readonly molecularProfileOptions = remoteData({
         await: () => [
             this.molecularProfiles,
-            this.sampleUniqueKeysByMolecularProfileIdSet,
+            this.samplesByMolecularProfileIdSet,
         ],
         invoke: async () => {
             return Promise.resolve(
                 getMolecularProfileOptions(
                     this.molecularProfiles.result,
-                    this.sampleUniqueKeysByMolecularProfileIdSet.result,
+                    this.samplesByMolecularProfileIdSet.result,
                     (molecularProfile: MolecularProfile) => {
                         return (
                             [
@@ -7433,12 +7437,12 @@ export class StudyViewPageStore {
     >({
         await: () => [
             this.molecularProfiles,
-            this.sampleUniqueKeysByMolecularProfileIdSet,
+            this.samplesByMolecularProfileIdSet,
         ],
         invoke: async () => {
             const molecularProfileOptions: GenomicDataCountWithSampleUniqueKeys[] = getMolecularProfileOptions(
                 this.molecularProfiles.result,
-                this.sampleUniqueKeysByMolecularProfileIdSet.result!
+                this.samplesByMolecularProfileIdSet.result!
             );
 
             return molecularProfileOptions.map(molecularProfileOption => {
@@ -7602,7 +7606,7 @@ export class StudyViewPageStore {
                 }
 
                 const molecularProfileSamplesSet = this
-                    .sampleUniqueKeysByMolecularProfileIdSet.result!;
+                    .samplesByMolecularProfileIdSet.result!;
                 if (!_.isEmpty(this.mutationProfiles.result)) {
                     const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                         this.mutationProfiles.result.map(
