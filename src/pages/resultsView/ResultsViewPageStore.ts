@@ -2031,7 +2031,7 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly genePanelDataForSelectedProfiles = remoteData<GenePanelData[]>({
+    readonly genePanelDataForAllProfiles = remoteData<GenePanelData[]>({
         // fetch all gene panel data for profiles
         // We do it this way - fetch all data for profiles, then filter based on samples -
         //  because
@@ -2039,11 +2039,11 @@ export class ResultsViewPageStore {
         //  (2) this means the requests can be cached on the server based on the molecular profile id
         //  (3) We can initiate the gene panel data call before the samples call completes, thus
         //      putting more response waiting time in parallel
-        await: () => [this.selectedMolecularProfiles],
+        await: () => [this.molecularProfilesInStudies],
         invoke: () =>
             client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
                 genePanelDataMultipleStudyFilter: {
-                    molecularProfileIds: this.selectedMolecularProfiles.result!.map(
+                    molecularProfileIds: this.molecularProfilesInStudies.result.map(
                         p => p.molecularProfileId
                     ),
                 } as GenePanelDataMultipleStudyFilter,
@@ -2052,14 +2052,14 @@ export class ResultsViewPageStore {
 
     readonly coverageInformation = remoteData<CoverageInformation>({
         await: () => [
-            this.genePanelDataForSelectedProfiles,
+            this.genePanelDataForAllProfiles,
             this.sampleKeyToSample,
             this.patients,
             this.genes,
         ],
         invoke: () =>
             getCoverageInformation(
-                this.genePanelDataForSelectedProfiles.result!,
+                this.genePanelDataForAllProfiles.result!,
                 this.sampleKeyToSample.result!,
                 this.patients.result!,
                 this.genes.result!
