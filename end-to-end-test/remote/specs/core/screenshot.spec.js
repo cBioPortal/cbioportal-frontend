@@ -169,9 +169,8 @@ function runResultsTestSuite(prefix, options = {}) {
         browser.click('a.tabAnchor_pathways');
 
         browser.waitForVisible('#cy', 10000);
-        browser.waitForExist('div[data-test="pathwayMapperMessageBox"]', 4000);
 
-        waitForNetworkQuiet(1000);
+        waitForNetworkQuiet(4000);
 
         var res = browser.checkElement('[data-test="pathwayMapperTabDiv"]', {
             hide: ['.qtip', '.__react_component_tooltip', '.rc-tooltip'],
