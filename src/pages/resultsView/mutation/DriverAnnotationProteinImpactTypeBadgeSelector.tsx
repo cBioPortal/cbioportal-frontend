@@ -22,6 +22,7 @@ import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
 import './mutations.scss';
+import styles from './badgeSelector.module.scss';
 
 const PUTATIVE_DRIVER_TYPE = [
     ProteinImpactType.MISSENSE_PUTATIVE_DRIVER,
@@ -105,7 +106,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             return (
                 <span>
                     {option.label || option.value}
-                    <span className="driver-annotation-setting">
+                    <span className={styles['driver-annotation-setting']}>
                         <DefaultTooltip
                             placement="top"
                             overlay={
@@ -245,7 +246,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     public render() {
         return (
-            <div className="legend-panel">
+            <div className={styles['legend-panel']}>
                 <BadgeSelector
                     options={this.driverVsVusOptions}
                     getOptionLabel={this.getDriverVsVusOptionLabel}
