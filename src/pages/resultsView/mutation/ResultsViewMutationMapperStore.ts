@@ -2,6 +2,7 @@ import { IHotspotIndex } from 'cbioportal-utils';
 import {
     Mutation,
     Gene,
+    ClinicalAttribute,
     ClinicalData,
     CancerStudy,
     MolecularProfile,
@@ -68,6 +69,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
         public clinicalDataGroupedBySampleMap: MobxPromise<{
             [sampleId: string]: ClinicalData[];
+        }>,
+        public mutationsTabClinicalAttributes: MobxPromise<ClinicalAttribute[]>,
+        public clinicalAttributeIdToAvailableFrequency: MobxPromise<{
+            [clinicalAttributeId: string]: number;
         }>,
         protected genomenexusClient?: GenomeNexusAPI,
         protected genomenexusInternalClient?: GenomeNexusAPIInternal,

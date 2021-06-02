@@ -1,5 +1,7 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import { observer } from 'mobx-react';
+import MobxPromise from 'mobxpromise';
 import {
     IMutationTableProps,
     MutationTableColumnType,
@@ -7,15 +9,22 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
-import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
+import { Mutation, ClinicalAttribute } from 'cbioportal-ts-api-client';
 import ExonColumnFormatter from 'shared/components/mutationTable/column/ExonColumnFormatter';
+import ClinicalAttributeColumnFormatter from 'shared/components/mutationTable/column/ClinicalAttributeColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
+import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
+import AddColumns from './AddColumns';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
     totalNumberOfExons?: string;
     isCanonicalTranscript: boolean | undefined;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
+    mutationsTabClinicalAttributes: MobxPromise<ClinicalAttribute[]>;
+    clinicalAttributeIdToAvailableFrequency: MobxPromise<{
+        [clinicalAttributeId: string]: number;
+    }>;
 }
 //
 export default class ResultsViewMutationTable extends MutationTable<
@@ -53,7 +62,7 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
-            MutationTableColumnType.CANCER_TYPE,
+            MutationTableColumnType.CANCER_TYPE_DETAILED,
             MutationTableColumnType.NUM_MUTATIONS,
             MutationTableColumnType.EXON,
             MutationTableColumnType.HGVSC,
@@ -62,7 +71,29 @@ export default class ResultsViewMutationTable extends MutationTable<
             MutationTableColumnType.DBSNP,
             MutationTableColumnType.SIGNAL,
         ],
+        columnVisibilityProps: {},
     };
+
+    constructor(props: IResultsViewMutationTableProps) {
+        super(props);
+        this.props.columnVisibilityProps!.customDropdown = (
+            columnVisibilityControlsProps: IColumnVisibilityControlsProps
+        ) => (
+            <AddColumns
+                className={columnVisibilityControlsProps.className}
+                columnVisibility={
+                    columnVisibilityControlsProps.columnVisibility
+                }
+                onColumnToggled={columnVisibilityControlsProps.onColumnToggled}
+                clinicalAttributes={
+                    this.props.mutationsTabClinicalAttributes.result!
+                }
+                clinicalAttributeIdToAvailableFrequency={
+                    this.props.clinicalAttributeIdToAvailableFrequency
+                }
+            />
+        );
+    }
 
     componentWillUpdate(nextProps: IResultsViewMutationTableProps) {
         this._columns[MutationTableColumnType.STUDY].visible = !!(
@@ -74,9 +105,42 @@ export default class ResultsViewMutationTable extends MutationTable<
     protected generateColumns() {
         super.generateColumns();
 
+        // generate clinical attribute columns
+        let clinicalAttributes = this.props.mutationsTabClinicalAttributes
+            .result!;
+        for (let i = 0; i < clinicalAttributes.length; i++) {
+            const attributeId = clinicalAttributes[i].clinicalAttributeId;
+            if (
+                this.props.columns &&
+                !this.props.columns.includes(attributeId)
+            ) {
+                this.props.columns.push(attributeId);
+            }
+
+            this._columns[attributeId] = {
+                id: attributeId,
+                name: clinicalAttributes[i].displayName,
+                render: ClinicalAttributeColumnFormatter.makeRenderFunction(
+                    clinicalAttributes[i]
+                ),
+                download: (d: Mutation[]) =>
+                    ClinicalAttributeColumnFormatter.getTextValue(
+                        d,
+                        clinicalAttributes[i]
+                    ),
+                sortBy: (d: Mutation[]) =>
+                    ClinicalAttributeColumnFormatter.sortBy(
+                        d,
+                        clinicalAttributes[i]
+                    ),
+                visible: false,
+                order: 300,
+            };
+        }
+
         // override default visibility for some columns
         this._columns[
-            MutationTableColumnType.CANCER_TYPE
+            MutationTableColumnType.CANCER_TYPE_DETAILED
         ].visible = CancerTypeColumnFormatter.isVisible(
             this.props.dataStore
                 ? this.props.dataStore.allData
@@ -98,7 +162,9 @@ export default class ResultsViewMutationTable extends MutationTable<
         // order columns
         this._columns[MutationTableColumnType.STUDY].order = 0;
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
-        this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
+        if ('CANCER_TYPE' in this._columns)
+            this._columns['CANCER_TYPE'].order = 14;
+        this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
 
@@ -137,7 +203,7 @@ export default class ResultsViewMutationTable extends MutationTable<
 
         // exclude
         this._columns[
-            MutationTableColumnType.CANCER_TYPE
+            MutationTableColumnType.CANCER_TYPE_DETAILED
         ].shouldExclude = () => {
             return !this.props.uniqueSampleKeyToTumorType;
         };

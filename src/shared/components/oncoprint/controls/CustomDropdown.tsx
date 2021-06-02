@@ -9,14 +9,18 @@ import _ from 'lodash';
 export interface ICustomDropdownProps extends ButtonProps {
     titleElement?: JSX.Element;
     styles?: any;
+    buttonClassName?: string;
 }
 
 class CustomButton extends React.Component<any, {}> {
     // cant type this more specifically because of some typing issues w ES6 classes not having component.replaceState
     render() {
         const { bsRole, title, ...props } = this.props;
+        const className = this.props.buttonClassName
+            ? this.props.buttonClassName
+            : 'btn btn-default';
         return (
-            <Button className="btn btn-default" {...props}>
+            <Button className={className} {...props}>
                 {title} {this.props.titleElement} <span className="caret" />
             </Button>
         );

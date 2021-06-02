@@ -88,7 +88,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 this.props.store.mutationData,
                 this.props.store.indexedVariantAnnotations,
                 this.props.store.activeTranscript,
-                this.props.store.clinicalDataGroupedBySampleMap
+                this.props.store.clinicalDataGroupedBySampleMap,
+                this.props.store.mutationsTabClinicalAttributes
             ) === 'pending'
         );
     }
@@ -163,6 +164,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 existsSomeMutationWithAscnProperty={
                     this.props.existsSomeMutationWithAscnProperty
+                }
+                mutationsTabClinicalAttributes={
+                    this.props.store.mutationsTabClinicalAttributes
+                }
+                clinicalAttributeIdToAvailableFrequency={
+                    this.props.store.clinicalAttributeIdToAvailableFrequency
                 }
             />
         );

@@ -364,12 +364,13 @@ export default class FixedHeaderTable<T> extends React.Component<
         const showDeselectAll = !noneSelected && this.props.removeAll;
 
         return (
-            <>
+            <div style={{ overflow: 'auto', width: '50%' }}>
                 {showSelectAll && (
                     <button
                         className="btn btn-default btn-xs"
-                        data-test={'fixed-header-table-add-all'}
+                        data-test="fixed-header-table-add-all"
                         onClick={this.onAddAll}
+                        style={{ float: 'left' }}
                     >
                         {selectAllContent!}
                     </button>
@@ -377,13 +378,14 @@ export default class FixedHeaderTable<T> extends React.Component<
                 {showDeselectAll && (
                     <button
                         className="btn btn-default btn-xs"
-                        data-test={'fixed-header-table-remove-all'}
+                        data-test="fixed-header-table-remove-all"
                         onClick={this.onRemoveAll}
+                        style={{ float: 'left', maxWidth: '85px' }}
                     >
                         {'Deselect all'}
                     </button>
                 )}
-            </>
+            </div>
         );
     }
 

@@ -110,7 +110,7 @@ export interface IMutationTableProps {
     civicVariants?: RemoteData<ICivicVariant | undefined>;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
-    columns?: MutationTableColumnType[];
+    columns?: MutationTableColumnTypes[];
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
@@ -168,7 +168,7 @@ export enum MutationTableColumnType {
     VAR_READS_N,
     REF_READS,
     VAR_READS,
-    CANCER_TYPE,
+    CANCER_TYPE_DETAILED,
     NUM_MUTATIONS,
     EXON,
     HGVSC,
@@ -179,6 +179,7 @@ export enum MutationTableColumnType {
     GENE_PANEL,
     SIGNAL,
 }
+type MutationTableColumnTypes = MutationTableColumnType | string;
 
 type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
@@ -235,9 +236,10 @@ export function defaultFilter(
 export default class MutationTable<
     P extends IMutationTableProps
 > extends React.Component<P, {}> {
-    @observable protected _columns: {
-        [columnEnum: number]: MutationTableColumn;
-    };
+    @observable protected _columns: Record<
+        MutationTableColumnTypes,
+        MutationTableColumn
+    >;
     @observable.ref public table: LazyMobXTable<Mutation[]> | null = null;
 
     public static defaultProps = {
@@ -257,7 +259,10 @@ export default class MutationTable<
     constructor(props: P) {
         super(props);
         makeObservable(this);
-        this._columns = {};
+        this._columns = {} as Record<
+            MutationTableColumnTypes,
+            MutationTableColumn
+        >;
         this.generateColumns();
     }
 
@@ -289,10 +294,14 @@ export default class MutationTable<
     }
 
     protected generateColumns() {
-        this._columns = {};
+        this._columns = {} as Record<
+            MutationTableColumnTypes,
+            MutationTableColumn
+        >;
 
         this._columns[MutationTableColumnType.STUDY] = {
-            name: 'Study',
+            id: 'CANCER_STUDY',
+            name: 'Study of Origin',
             render: (d: Mutation[]) =>
                 StudyColumnFormatter.renderFunction(
                     d,
@@ -896,8 +905,9 @@ export default class MutationTable<
             align: 'left',
         };
 
-        this._columns[MutationTableColumnType.CANCER_TYPE] = {
-            name: 'Cancer Type',
+        this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED] = {
+            id: 'CANCER_TYPE_DETAILED',
+            name: 'Cancer Type Detailed',
             render: (d: Mutation[]) =>
                 CancerTypeColumnFormatter.render(
                     d,
@@ -927,6 +937,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
+            id: 'MUTATION_COUNT',
             name: '# Mut in Sample',
             render: MutationCountColumnFormatter.makeRenderFunction(this),
             headerRender: (name: string) => (
@@ -1157,10 +1168,11 @@ export default class MutationTable<
         };
     }
 
-    @computed protected get orderedColumns(): MutationTableColumnType[] {
-        const columns = (this.props.columns || []) as MutationTableColumnType[];
+    @computed protected get orderedColumns(): MutationTableColumnTypes[] {
+        const columns = (this.props.columns ||
+            []) as MutationTableColumnTypes[];
 
-        return _.sortBy(columns, (c: MutationTableColumnType) => {
+        return _.sortBy(columns, (c: MutationTableColumnTypes) => {
             let order: number = -1;
 
             if (this._columns[c] && this._columns[c].order) {
@@ -1173,7 +1185,7 @@ export default class MutationTable<
 
     @computed protected get columns(): Column<Mutation[]>[] {
         return this.orderedColumns.reduce(
-            (columns: Column<Mutation[]>[], next: MutationTableColumnType) => {
+            (columns: Column<Mutation[]>[], next: MutationTableColumnTypes) => {
                 let column = this._columns[next];
 
                 if (
