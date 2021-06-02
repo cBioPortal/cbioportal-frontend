@@ -19,6 +19,7 @@ export interface IColumnVisibilityControlsProps {
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
     ) => void;
+    customDropdown?: (props: IColumnVisibilityControlsProps) => JSX.Element;
 }
 
 /**
@@ -40,6 +41,16 @@ export class ColumnVisibilityControls extends React.Component<
     }
 
     public render() {
+        return (
+            <div>
+                {this.props.customDropdown
+                    ? this.props.customDropdown(this.props)
+                    : this.defaultDropdown}
+            </div>
+        );
+    }
+
+    private get defaultDropdown() {
         return (
             <Dropdown className={this.props.className} id="dropdown-custom-1">
                 <Dropdown.Toggle

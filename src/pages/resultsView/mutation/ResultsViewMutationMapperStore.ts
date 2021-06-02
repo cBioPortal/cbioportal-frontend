@@ -2,6 +2,7 @@ import { IHotspotIndex } from 'cbioportal-utils';
 import {
     Mutation,
     Gene,
+    ClinicalAttribute,
     ClinicalData,
     CancerStudy,
     MolecularProfile,
@@ -17,6 +18,7 @@ import {
 import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
+import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
@@ -43,6 +45,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         // and we will react when it changes to a new object.
         getMutations: () => Mutation[],
         private getMutationCountCache: () => MutationCountCache,
+        private getClinicalAttributeCache: () => ClinicalAttributeCache,
         private getGenomeNexusCache: () => GenomeNexusCache,
         private getGenomeNexusMutationAssessorCache: () => GenomeNexusMutationAssessorCache,
         private getDiscreteCNACache: () => DiscreteCNACache,
@@ -68,6 +71,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         public generateGenomeNexusHgvsgUrl: (hgvsg: string) => string,
         public clinicalDataGroupedBySampleMap: MobxPromise<{
             [sampleId: string]: ClinicalData[];
+        }>,
+        public mutationsTabClinicalAttributes: MobxPromise<ClinicalAttribute[]>,
+        public clinicalAttributeIdToAvailableFrequency: MobxPromise<{
+            [clinicalAttributeId: string]: number;
         }>,
         protected genomenexusClient?: GenomeNexusAPI,
         protected genomenexusInternalClient?: GenomeNexusAPIInternal,
@@ -99,10 +106,12 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
     protected getDownloadDataFetcher(): MutationTableDownloadDataFetcher {
         return new MutationTableDownloadDataFetcher(
             this.mutationData,
+            this.mutationsTabClinicalAttributes,
             this.studyToMolecularProfileDiscrete,
             this.getGenomeNexusCache,
             this.getGenomeNexusMutationAssessorCache,
             this.getMutationCountCache,
+            this.getClinicalAttributeCache,
             this.getDiscreteCNACache
         );
     }
