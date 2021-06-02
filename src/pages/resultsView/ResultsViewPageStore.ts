@@ -1304,44 +1304,42 @@ export class ResultsViewPageStore {
     );
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
-        await: () => [
-            this.studyToDataQueryFilter,
-            this.genes,
-            this.selectedMolecularProfiles,
-            this.samples,
-        ],
+        await: () => [this.samples, this.molecularData_preload],
         invoke: () => {
-            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
-            // filter out mutation genetic profile and structural variant profiles and generic assay profiles
-            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
-                this.selectedMolecularProfiles.result!
+            return Promise.resolve(
+                this.molecularData_preload.result.filter(
+                    m => m.uniqueSampleKey in this.sampleKeyToSample
+                )
             );
-            const genes = this.genes.result;
+        },
+    });
 
-            if (
-                profilesWithoutMutationProfile.length &&
-                genes != undefined &&
-                genes.length
-            ) {
-                const identifiers: SampleMolecularIdentifier[] = [];
-
-                profilesWithoutMutationProfile.forEach(
-                    (profile: MolecularProfile) => {
-                        // for each profile, find samples which share studyId with profile and add identifier
-                        this.samples.result.forEach((sample: Sample) => {
-                            if (sample.studyId === profile.studyId) {
-                                identifiers.push({
-                                    molecularProfileId:
-                                        profile.molecularProfileId,
-                                    sampleId: sample.sampleId,
-                                });
-                            }
-                        });
-                    }
+    // loading molecular data based on profileId (instead of individual samples) provides
+    // two optimizations.
+    // 1. we can load this data before we know samples
+    // 2. backend can cache based on finite set of profiles
+    // we then have to filter this using samples, which can be loaded concurrently instead of serially
+    readonly molecularData_preload = remoteData<NumericGeneMolecularData[]>(
+        {
+            await: () => [
+                this.studyToDataQueryFilter,
+                this.genes,
+                this.selectedMolecularProfiles,
+            ],
+            invoke: async () => {
+                // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
+                // filter out mutation genetic profile and structural variant profiles and generic assay profiles
+                const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
+                    this.selectedMolecularProfiles.result!
                 );
+                const genes = this.genes.result;
 
-                if (identifiers.length) {
-                    return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                if (
+                    profilesWithoutMutationProfile.length &&
+                    genes != undefined &&
+                    genes.length
+                ) {
+                    return await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
                         {
                             projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
                             molecularDataMultipleStudyFilter: {
@@ -1349,16 +1347,19 @@ export class ResultsViewPageStore {
                                     this.genes.result,
                                     (gene: Gene) => gene.entrezGeneId
                                 ),
-                                sampleMolecularIdentifiers: identifiers,
+                                molecularProfileIds: profilesWithoutMutationProfile.map(
+                                    p => p.molecularProfileId
+                                ),
                             } as MolecularDataMultipleStudyFilter,
                         }
                     );
                 }
-            }
 
-            return Promise.resolve([]);
+                return Promise.resolve([]);
+            },
         },
-    });
+        []
+    );
 
     // Isolate discrete CNA data from other NumericMolecularData
     // and add the custom driver annotations to data points
