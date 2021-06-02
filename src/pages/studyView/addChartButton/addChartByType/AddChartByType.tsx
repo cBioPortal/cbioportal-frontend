@@ -23,7 +23,7 @@ import ifNotDefined from '../../../../shared/lib/ifNotDefined';
 export type AddChartOption = Omit<ChartOption, 'chartType'>;
 export interface IAddChartByTypeProps {
     options: Omit<AddChartOption, 'freq'>[];
-    freqPromise: MobxPromise<ChartDataCountSet>;
+    freqPromise?: MobxPromise<ChartDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
@@ -59,12 +59,12 @@ export default class AddChartByType extends React.Component<
 
     @computed
     get options() {
-        if (this.props.freqPromise.isComplete) {
+        if (this.props.freqPromise?.isComplete) {
             const options = _.reduce(
                 this.props.options,
                 (acc, next) => {
                     const disabled =
-                        this.props.freqPromise.result![next.key] === 0;
+                        this.props.freqPromise!.result![next.key] === 0;
                     acc.push({
                         label: next.label,
                         key: next.key,
@@ -73,7 +73,7 @@ export default class AddChartByType extends React.Component<
                         isSharedChart: next.isSharedChart,
                         freq: disabled
                             ? 0
-                            : this.props.freqPromise.result![next.key],
+                            : this.props.freqPromise!.result![next.key],
                     });
                     return acc;
                 },
@@ -183,7 +183,9 @@ export default class AddChartByType extends React.Component<
                     (this.props.shareCharts || this.props.deleteChart ? 70 : 0),
                 defaultSortDirection: 'asc' as 'asc',
             },
-            {
+        ];
+        if (this.props.freqPromise) {
+            columns.push({
                 name: 'Freq',
                 tooltip: (
                     <span>
@@ -206,7 +208,7 @@ export default class AddChartByType extends React.Component<
                             }
                         )}
                     >
-                        {this.props.freqPromise.isComplete
+                        {this.props.freqPromise?.isComplete
                             ? getFrequencyStr(option.freq)
                             : ''}
                     </span>
@@ -214,8 +216,8 @@ export default class AddChartByType extends React.Component<
                 sortBy: (d: AddChartOption) => d.freq,
                 defaultSortDirection: 'desc' as 'desc',
                 width: 60,
-            },
-        ];
+            });
+        }
 
         if (this.props.shareCharts || this.props.deleteChart) {
             columns.push({
@@ -358,7 +360,8 @@ export default class AddChartByType extends React.Component<
                 style={{ display: 'flex', flexDirection: 'column' }}
                 data-test="add-by-type"
             >
-                {this.props.freqPromise.isComplete && (
+                {(!this.props.freqPromise ||
+                    this.props.freqPromise.isComplete) && (
                     <AddChartTableComponent
                         width={this.props.width! - 20}
                         height={this.tableHeight}
@@ -381,7 +384,7 @@ export default class AddChartByType extends React.Component<
                         extraButtons={this.extraButtons}
                     />
                 )}
-                {this.props.freqPromise.isPending && (
+                {this.props.freqPromise?.isPending && (
                     <div
                         style={{
                             display: 'flex',

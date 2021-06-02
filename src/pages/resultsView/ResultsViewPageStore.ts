@@ -69,6 +69,7 @@ import GenomeNexusCache from 'shared/cache/GenomeNexusCache';
 import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAssessorCache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
+import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import {
@@ -1143,6 +1144,26 @@ export class ResultsViewPageStore {
         },
     });
 
+    // TODO: Should include all clinical attributes, not just server attributes
+    readonly mutationsTabClinicalAttributes = remoteData<ClinicalAttribute[]>({
+        await: () => [this.studyIds],
+        invoke: async () => {
+            const clinicalAttributes = await client.fetchClinicalAttributesUsingPOST(
+                {
+                    studyIds: this.studyIds.result!,
+                }
+            );
+            const excludeList = ['CANCER_TYPE_DETAILED', 'MUTATION_COUNT'];
+
+            return _.uniqBy(
+                clinicalAttributes.filter(
+                    x => !excludeList.includes(x.clinicalAttributeId)
+                ),
+                x => x.clinicalAttributeId
+            );
+        },
+    });
+
     readonly clinicalAttributeIdToClinicalAttribute = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: () =>
@@ -1252,6 +1273,22 @@ export class ResultsViewPageStore {
                 ).length;
             }
             return ret;
+        },
+    });
+
+    readonly clinicalAttributeIdToAvailableFrequency = remoteData({
+        await: () => [
+            this.clinicalAttributeIdToAvailableSampleCount,
+            this.samples,
+        ],
+        invoke: () => {
+            const numSamples = this.samples.result!.length;
+            return Promise.resolve(
+                _.mapValues(
+                    this.clinicalAttributeIdToAvailableSampleCount.result!,
+                    count => (100 * count) / numSamples
+                )
+            );
         },
     });
 
@@ -3428,6 +3465,7 @@ export class ResultsViewPageStore {
             this.oncoKbCancerGenes,
             () => this.mutationsByGene.result![gene.hugoGeneSymbol] || [],
             () => this.mutationCountCache,
+            () => this.clinicalAttributeCache,
             () => this.genomeNexusCache,
             () => this.genomeNexusMutationAssessorCache,
             () => this.discreteCNACache,
@@ -3442,6 +3480,8 @@ export class ResultsViewPageStore {
             this.uniqueSampleKeyToTumorType.result!,
             this.generateGenomeNexusHgvsgUrl,
             this.clinicalDataGroupedBySampleMap,
+            this.mutationsTabClinicalAttributes,
+            this.clinicalAttributeIdToAvailableFrequency,
             this.genomeNexusClient,
             this.genomeNexusInternalClient,
             () => this.urlWrapper.query.mutations_transcript_id
@@ -5323,6 +5363,10 @@ export class ResultsViewPageStore {
 
     @cached @computed get mutationCountCache() {
         return new MutationCountCache();
+    }
+
+    @cached @computed get clinicalAttributeCache() {
+        return new ClinicalAttributeCache();
     }
 
     @cached @computed get pdbHeaderCache() {

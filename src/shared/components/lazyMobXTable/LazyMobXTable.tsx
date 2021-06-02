@@ -46,6 +46,7 @@ import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
 export type SortDirection = 'asc' | 'desc';
 
 export type Column<T> = {
+    id?: string;
     name: string;
     headerRender?: (name: string) => JSX.Element;
     headerDownload?: (name: string) => string;
@@ -61,8 +62,10 @@ export type Column<T> = {
     sortBy?:
         | ((data: T) => number | null)
         | ((data: T) => string | null)
+        | ((data: T) => string | number | null)
         | ((data: T) => (number | null)[])
-        | ((data: T) => (string | null)[]);
+        | ((data: T) => (string | null)[])
+        | ((data: T) => (string | number | null)[]);
     render: (data: T) => JSX.Element;
     download?: (data: T) => string | string[];
     tooltip?: JSX.Element;
@@ -503,9 +506,9 @@ export class LazyMobXTableStore<T> {
 
         this.columns.forEach((column: Column<T>) => {
             colVisProp.push({
-                id: column.name,
+                id: column.hasOwnProperty('id') ? column.id! : column.name,
                 name: column.name,
-                visible: this.columnVisibility[column.name],
+                visible: this.isVisible(column),
                 togglable: column.hasOwnProperty('togglable')
                     ? column.togglable
                     : true,
@@ -725,7 +728,8 @@ export class LazyMobXTableStore<T> {
     }
 
     public isVisible(column: Column<T>): boolean {
-        return this.columnVisibility[column.name] || false;
+        const index = column.hasOwnProperty('id') ? column.id! : column.name;
+        return this.columnVisibility[index] || false;
     }
 
     constructor(lazyMobXTableProps: LazyMobXTableProps<T>) {
