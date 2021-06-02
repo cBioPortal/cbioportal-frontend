@@ -26,6 +26,7 @@ import MutationMapperStore, {
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
 import { computed, makeObservable } from 'mobx';
+import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -69,6 +70,14 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
         public clinicalDataGroupedBySampleMap: MobxPromise<{
             [sampleId: string]: ClinicalData[];
         }>,
+        public mutationsTabClinicalAttributes: MobxPromise<
+            ExtendedClinicalAttribute[]
+        >,
+        public mutationsTabClinicalData: MobxPromise<ClinicalData[]>,
+        public clinicalAttributeIdToAvailableSampleCount: MobxPromise<{
+            [id: string]: number;
+        }>,
+        public sampleCount: MobxPromise<number>,
         protected genomenexusClient?: GenomeNexusAPI,
         protected genomenexusInternalClient?: GenomeNexusAPIInternal,
         public getTranscriptId?: () => string

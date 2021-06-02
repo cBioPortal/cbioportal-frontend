@@ -36,6 +36,7 @@ export interface IAddChartByTypeProps {
     deleteChart?: (chartId: string) => void;
     restoreChart?: (chartId: string) => void;
     markedForDeletion?: string[];
+    excludeFrequency?: boolean;
 }
 
 class AddChartTableComponent extends FixedHeaderTable<AddChartOption> {}
@@ -114,7 +115,7 @@ export default class AddChartByType extends React.Component<
     }
 
     @computed get columns() {
-        const columns: Column<AddChartOption>[] = [
+        let columns: Column<AddChartOption>[] = [
             {
                 name: this.props.firstColumnHeaderName!,
                 render: (option: AddChartOption) => {
@@ -183,7 +184,9 @@ export default class AddChartByType extends React.Component<
                     (this.props.shareCharts || this.props.deleteChart ? 70 : 0),
                 defaultSortDirection: 'asc' as 'asc',
             },
-            {
+        ];
+        if (!this.props.excludeFrequency) {
+            columns.push({
                 name: 'Freq',
                 tooltip: (
                     <span>
@@ -214,8 +217,8 @@ export default class AddChartByType extends React.Component<
                 sortBy: (d: AddChartOption) => d.freq,
                 defaultSortDirection: 'desc' as 'desc',
                 width: 60,
-            },
-        ];
+            });
+        }
 
         if (this.props.shareCharts || this.props.deleteChart) {
             columns.push({
@@ -358,7 +361,8 @@ export default class AddChartByType extends React.Component<
                 style={{ display: 'flex', flexDirection: 'column' }}
                 data-test="add-by-type"
             >
-                {this.props.freqPromise.isComplete && (
+                {(this.props.freqPromise.isComplete ||
+                    this.props.excludeFrequency) && (
                     <AddChartTableComponent
                         width={this.props.width! - 20}
                         height={this.tableHeight}
@@ -381,21 +385,22 @@ export default class AddChartByType extends React.Component<
                         extraButtons={this.extraButtons}
                     />
                 )}
-                {this.props.freqPromise.isPending && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: 100,
-                        }}
-                    >
-                        <LoadingIndicator isLoading={true} />
-                        <br />
-                        Calculating data availability...
-                    </div>
-                )}
+                {this.props.freqPromise.isPending &&
+                    !this.props.excludeFrequency && (
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                height: 100,
+                            }}
+                        >
+                            <LoadingIndicator isLoading={true} />
+                            <br />
+                            Calculating data availability...
+                        </div>
+                    )}
             </div>
         );
     }

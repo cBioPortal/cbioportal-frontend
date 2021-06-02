@@ -32,7 +32,7 @@ export default class TableCellStatusIndicator extends React.Component<
                 break;
             case TableCellStatus.NA:
                 alt = this.props.naAlt || 'Data not available.';
-                text = '';
+                text = 'n/a';
                 break;
         }
         return (

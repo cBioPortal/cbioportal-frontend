@@ -13,6 +13,7 @@ import {
     Mutation,
     ClinicalData,
 } from 'cbioportal-ts-api-client';
+import ClinicalAttributeColumnFormatter from './column/ClinicalAttributeColumnFormatter';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
 import NormalAlleleFreqColumnFormatter from './column/NormalAlleleFreqColumnFormatter';
@@ -74,6 +75,10 @@ import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutation
 import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import { ExtendedClinicalAttribute } from 'pages/resultsView/ResultsViewPageStoreUtils';
+import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
+import MobxPromise from 'mobxpromise';
+import AppConfig from 'appConfig';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -110,7 +115,7 @@ export interface IMutationTableProps {
     civicVariants?: RemoteData<ICivicVariant | undefined>;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
-    columns?: MutationTableColumnType[];
+    columns?: MutationTableColumnTypes[];
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
@@ -130,9 +135,14 @@ export interface IMutationTableProps {
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
+    mutationsTabClinicalAttributes?: MobxPromise<ExtendedClinicalAttribute[]>;
+    mutationsTabClinicalData?: MobxPromise<ClinicalData[]>;
+    clinicalAttributeIdToAvailableSampleCount?: MobxPromise<{
+        [id: string]: number;
+    }>;
+    sampleCount?: MobxPromise<number>;
+    isMutationsTabTable?: boolean;
 }
-import MobxPromise from 'mobxpromise';
-import AppConfig from 'appConfig';
 
 export enum MutationTableColumnType {
     STUDY,
@@ -179,6 +189,7 @@ export enum MutationTableColumnType {
     GENE_PANEL,
     SIGNAL,
 }
+type MutationTableColumnTypes = MutationTableColumnType | string;
 
 type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
@@ -235,9 +246,10 @@ export function defaultFilter(
 export default class MutationTable<
     P extends IMutationTableProps
 > extends React.Component<P, {}> {
-    @observable protected _columns: {
-        [columnEnum: number]: MutationTableColumn;
-    };
+    @observable protected _columns: Record<
+        MutationTableColumnTypes,
+        MutationTableColumn
+    >;
     @observable.ref public table: LazyMobXTable<Mutation[]> | null = null;
 
     public static defaultProps = {
@@ -252,12 +264,16 @@ export default class MutationTable<
         enableMyCancerGenome: true,
         enableHotspot: true,
         enableCivic: false,
+        isMutationsTabTable: false,
     };
 
     constructor(props: P) {
         super(props);
         makeObservable(this);
-        this._columns = {};
+        this._columns = {} as Record<
+            MutationTableColumnTypes,
+            MutationTableColumn
+        >;
         this.generateColumns();
     }
 
@@ -288,8 +304,58 @@ export default class MutationTable<
         return 'Unknown';
     }
 
+    protected generateClinicalAttributeColumns() {
+        let mutationsTabClinicalAttributes = this.props
+            .mutationsTabClinicalAttributes!.result!;
+
+        for (let i = 0; i < mutationsTabClinicalAttributes.length; i++) {
+            const attributeId =
+                mutationsTabClinicalAttributes[i].clinicalAttributeId;
+
+            this.props.columns?.push(attributeId);
+            this._columns[attributeId] = {
+                name: mutationsTabClinicalAttributes[i].displayName,
+                render: (d: Mutation[]) =>
+                    ClinicalAttributeColumnFormatter.render(
+                        d,
+                        this.props.mutationsTabClinicalData!.result!,
+                        mutationsTabClinicalAttributes[i].patientAttribute,
+                        mutationsTabClinicalAttributes[i].clinicalAttributeId
+                    ),
+                download: (d: Mutation[]) =>
+                    ClinicalAttributeColumnFormatter.getTextValue(
+                        d,
+                        this.props.mutationsTabClinicalData!.result!,
+                        mutationsTabClinicalAttributes[i].patientAttribute,
+                        mutationsTabClinicalAttributes[i].clinicalAttributeId
+                    ),
+                sortBy: (d: Mutation[]) =>
+                    ClinicalAttributeColumnFormatter.sortBy(
+                        d,
+                        this.props.mutationsTabClinicalData!.result!,
+                        mutationsTabClinicalAttributes[i].patientAttribute,
+                        mutationsTabClinicalAttributes[i].clinicalAttributeId,
+                        mutationsTabClinicalAttributes[i].datatype
+                    ),
+                visible: false,
+                clinicalAttributeId: attributeId,
+            };
+        }
+    }
+
     protected generateColumns() {
-        this._columns = {};
+        this._columns = {} as Record<
+            MutationTableColumnTypes,
+            MutationTableColumn
+        >;
+
+        if (
+            this.props.isMutationsTabTable &&
+            this.props.mutationsTabClinicalAttributes &&
+            this.props.mutationsTabClinicalData
+        ) {
+            this.generateClinicalAttributeColumns();
+        }
 
         this._columns[MutationTableColumnType.STUDY] = {
             name: 'Study',
@@ -924,6 +990,7 @@ export default class MutationTable<
                     this.props.uniqueSampleKeyToTumorType
                 ),
             tooltip: <span>Cancer Type</span>,
+            clinicalAttributeId: 'CANCER_TYPE_DETAILED',
         };
 
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
@@ -950,6 +1017,7 @@ export default class MutationTable<
                 </span>
             ),
             align: 'right',
+            clinicalAttributeId: 'MUTATION_COUNT',
         };
 
         this._columns[MutationTableColumnType.EXON] = {
@@ -1157,10 +1225,11 @@ export default class MutationTable<
         };
     }
 
-    @computed protected get orderedColumns(): MutationTableColumnType[] {
-        const columns = (this.props.columns || []) as MutationTableColumnType[];
+    @computed protected get orderedColumns(): MutationTableColumnTypes[] {
+        const columns = (this.props.columns ||
+            []) as MutationTableColumnTypes[];
 
-        return _.sortBy(columns, (c: MutationTableColumnType) => {
+        return _.sortBy(columns, (c: MutationTableColumnTypes) => {
             let order: number = -1;
 
             if (this._columns[c] && this._columns[c].order) {
@@ -1173,7 +1242,7 @@ export default class MutationTable<
 
     @computed protected get columns(): Column<Mutation[]>[] {
         return this.orderedColumns.reduce(
-            (columns: Column<Mutation[]>[], next: MutationTableColumnType) => {
+            (columns: Column<Mutation[]>[], next: MutationTableColumnTypes) => {
                 let column = this._columns[next];
 
                 if (
@@ -1209,6 +1278,12 @@ export default class MutationTable<
                 onRowClick={this.props.onRowClick}
                 onRowMouseEnter={this.props.onRowMouseEnter}
                 onRowMouseLeave={this.props.onRowMouseLeave}
+                clinicalAttributeIdToAvailableSampleCount={
+                    this.props.clinicalAttributeIdToAvailableSampleCount
+                        ?.result!
+                }
+                sampleCount={this.props.sampleCount?.result!}
+                isMutationsTabTable={this.props.isMutationsTabTable}
             />
         );
     }

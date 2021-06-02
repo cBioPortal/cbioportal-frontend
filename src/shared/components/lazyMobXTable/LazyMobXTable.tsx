@@ -61,14 +61,17 @@ export type Column<T> = {
     sortBy?:
         | ((data: T) => number | null)
         | ((data: T) => string | null)
+        | ((data: T) => string | number | null)
         | ((data: T) => (number | null)[])
-        | ((data: T) => (string | null)[]);
+        | ((data: T) => (string | null)[])
+        | ((data: T) => (string | number | null)[]);
     render: (data: T) => JSX.Element;
     download?: (data: T) => string | string[];
     tooltip?: JSX.Element;
     defaultSortDirection?: SortDirection;
     togglable?: boolean;
     resizable?: boolean;
+    clinicalAttributeId?: string;
 };
 
 type LazyMobXTableProps<T> = {
@@ -103,6 +106,9 @@ type LazyMobXTableProps<T> = {
     onRowMouseEnter?: (d: T) => void;
     onRowMouseLeave?: (d: T) => void;
     filterPlaceholder?: string;
+    clinicalAttributeIdToAvailableSampleCount?: { [id: string]: number };
+    sampleCount?: number;
+    isMutationsTabTable?: boolean;
 };
 
 function compareValues<U extends number | string>(
@@ -509,6 +515,11 @@ export class LazyMobXTableStore<T> {
                 togglable: column.hasOwnProperty('togglable')
                     ? column.togglable
                     : true,
+                clinicalAttributeId: column.hasOwnProperty(
+                    'clinicalAttributeId'
+                )
+                    ? column.clinicalAttributeId
+                    : undefined,
             });
         });
 
@@ -832,6 +843,14 @@ export default class LazyMobXTable<T> extends React.Component<
             clearFilterText: () => {
                 this.store.setFilterString('');
             },
+            visibilityEnable: (columnId: string): void => {
+                // enable visibility
+                this.updateColumnVisibility(columnId, true);
+            },
+            visibilityDisable: (columnId: string): void => {
+                // disable visibility
+                this.updateColumnVisibility(columnId, false);
+            },
             visibilityToggle: (columnId: string): void => {
                 // toggle visibility
                 this.updateColumnVisibility(
@@ -1007,7 +1026,15 @@ export default class LazyMobXTable<T> extends React.Component<
                         <ColumnVisibilityControls
                             className="pull-right"
                             columnVisibility={this.store.colVisProp}
+                            onColumnEnabled={this.handlers.visibilityEnable}
+                            onColumnDisabled={this.handlers.visibilityDisable}
                             onColumnToggled={this.handlers.visibilityToggle}
+                            clinicalAttributeIdToAvailableSampleCount={
+                                this.props
+                                    .clinicalAttributeIdToAvailableSampleCount
+                            }
+                            sampleCount={this.props.sampleCount}
+                            isMutationsTabTable={this.props.isMutationsTabTable}
                             {...this.props.columnVisibilityProps}
                         />
                     ) : (

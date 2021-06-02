@@ -3442,6 +3442,10 @@ export class ResultsViewPageStore {
             this.uniqueSampleKeyToTumorType.result!,
             this.generateGenomeNexusHgvsgUrl,
             this.clinicalDataGroupedBySampleMap,
+            this.mutationsTabClinicalAttributes,
+            this.mutationsTabClinicalData,
+            this.clinicalAttributeIdToAvailableSampleCount,
+            this.sampleCount,
             this.genomeNexusClient,
             this.genomeNexusInternalClient,
             () => this.urlWrapper.query.mutations_transcript_id
@@ -3586,6 +3590,70 @@ export class ResultsViewPageStore {
         {}
     );
 
+    readonly mutationsTabClinicalAttributes = remoteData<
+        ExtendedClinicalAttribute[]
+    >({
+        await: () => [this.studyIds],
+        invoke: async () => {
+            const clinicalAttributes = await client.fetchClinicalAttributesUsingPOST(
+                {
+                    studyIds: this.studyIds.result,
+                }
+            );
+            const excludeList = [
+                'CANCER_TYPE',
+                'CANCER_TYPE_DETAILED',
+                'MUTATION_COUNT',
+            ];
+
+            return clinicalAttributes.filter(
+                x => !excludeList.includes(x.clinicalAttributeId)
+            );
+        },
+    });
+
+    readonly mutationsTabClinicalData = remoteData<ClinicalData[]>(
+        {
+            await: () => [
+                this.studies,
+                this.patients,
+                this.samples,
+                this.mutationsTabClinicalAttributes,
+            ],
+            invoke: () => {
+                let patientAttributeIds = this.mutationsTabClinicalAttributes
+                    .result!.filter(attribute => attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId);
+                let sampleAttributeIds = this.mutationsTabClinicalAttributes
+                    .result!.filter(attribute => !attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId);
+
+                let patientData = Promise.resolve(new Array<ClinicalData>());
+                let sampleData = Promise.resolve(new Array<ClinicalData>());
+                if (patientAttributeIds.length > 0) {
+                    patientData = this.getClinicalData(
+                        REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_PATIENT,
+                        this.studies.result!,
+                        this.patients.result,
+                        patientAttributeIds
+                    );
+                }
+                if (sampleAttributeIds.length > 0) {
+                    sampleData = this.getClinicalData(
+                        REQUEST_ARG_ENUM.CLINICAL_DATA_TYPE_SAMPLE,
+                        this.studies.result!,
+                        this.samples.result,
+                        sampleAttributeIds
+                    );
+                }
+                return Promise.all([patientData, sampleData]).then(both =>
+                    both[0].concat(both[1])
+                );
+            },
+        },
+        []
+    );
+
     private getClinicalData(
         clinicalDataType: 'SAMPLE' | 'PATIENT',
         studies: any[],
@@ -3646,6 +3714,11 @@ export class ResultsViewPageStore {
         },
         []
     );
+
+    readonly sampleCount = remoteData<number>({
+        await: () => [this.samples],
+        invoke: () => Promise.resolve(this.samples.result!.length),
+    });
 
     readonly samples = remoteData(
         {

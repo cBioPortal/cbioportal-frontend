@@ -88,7 +88,11 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 this.props.store.mutationData,
                 this.props.store.indexedVariantAnnotations,
                 this.props.store.activeTranscript,
-                this.props.store.clinicalDataGroupedBySampleMap
+                this.props.store.clinicalDataGroupedBySampleMap,
+                this.props.store.mutationsTabClinicalAttributes,
+                this.props.store.mutationsTabClinicalData,
+                this.props.store.clinicalAttributeIdToAvailableSampleCount,
+                this.props.store.sampleCount
             ) === 'pending'
         );
     }
@@ -164,6 +168,17 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 existsSomeMutationWithAscnProperty={
                     this.props.existsSomeMutationWithAscnProperty
                 }
+                mutationsTabClinicalAttributes={
+                    this.props.store.mutationsTabClinicalAttributes
+                }
+                mutationsTabClinicalData={
+                    this.props.store.mutationsTabClinicalData
+                }
+                clinicalAttributeIdToAvailableSampleCount={
+                    this.props.store.clinicalAttributeIdToAvailableSampleCount
+                }
+                sampleCount={this.props.store.sampleCount}
+                isMutationsTabTable={true}
             />
         );
     }
