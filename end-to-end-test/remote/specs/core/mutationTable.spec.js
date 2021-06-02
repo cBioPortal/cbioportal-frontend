@@ -36,8 +36,12 @@ describe('Mutation Table', function() {
 
             // click on column button
             browser.click('button*=Columns');
-            // scroll down to activated "exon" selection
-            browser.scroll(1000, 1000);
+            // scroll down to activated "Exon" selection
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for exon checkbox to appear
+            browser.pause(2000);
             // click "exon"
             browser.click('//*[text()="Exon"]');
             // check if three exact matches for 6 appear
@@ -114,13 +118,15 @@ describe('Mutation Table', function() {
                 60000
             );
             // show the gnomad column
-            browser.scroll(1000, 0);
+            browser.scroll(0, 1000);
             // click on column button
             browser.click('button*=Columns');
             // scroll down to activated "GNOMAD" selection
-            browser.scroll(1000, 1000);
-            // wait for gnomad checkbox appear
-            browser.waitForVisible('[data-id=gnomAD]', 60000);
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for gnomad checkbox to appear
+            browser.pause(2000);
             // click "GNOMAD"
             browser.click('//*[text()="gnomAD"]');
             // find frequency
@@ -172,7 +178,11 @@ describe('Mutation Table', function() {
             // click on column button
             browser.click('button*=Columns');
             // scroll down to activated "ClinVar" selection
-            browser.scroll(1000, 1000);
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for clinvar checkbox to appear
+            browser.pause(2000);
             // click "clinvar"
             browser.click('//*[text()="ClinVar"]');
             let res;
@@ -206,7 +216,11 @@ describe('Mutation Table', function() {
             // click on column button
             browser.click('button*=Columns');
             // scroll down to activated "dbSNP" selection
-            browser.scroll(1000, 1000);
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for dbSNP checkbox to appear
+            browser.pause(2000);
             // click "dbSNP"
             browser.click('//*[text()="dbSNP"]');
             let res;
