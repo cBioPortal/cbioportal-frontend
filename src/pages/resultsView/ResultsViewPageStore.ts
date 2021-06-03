@@ -1307,9 +1307,10 @@ export class ResultsViewPageStore {
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
         await: () => [this.sampleKeyToSample, this.molecularData_preload],
         invoke: () => {
+            const sampleKeys = this.sampleKeyToSample.result!;
             return Promise.resolve(
                 this.molecularData_preload.result.filter(
-                    m => m.uniqueSampleKey in this.sampleKeyToSample.result!
+                    m => m.uniqueSampleKey in sampleKeys
                 )
             );
         },
@@ -3082,59 +3083,44 @@ export class ResultsViewPageStore {
         );
     }
 
-    readonly mutations = remoteData<Mutation[]>({
-        await: () => [
-            this.genes,
-            this.samples,
-            this.studyToMutationMolecularProfile,
-        ],
-        invoke: async () => {
-            if (_.isEmpty(this.studyToMutationMolecularProfile.result)) {
-                return [];
+    readonly mutations_preload = remoteData<Mutation[]>({
+        // fetch all mutation data for profiles
+        // We do it this way - fetch all data for profiles, then filter based on samples -
+        //  because
+        //  (1) this means sending less data as parameters
+        //  (2) this means the requests can be cached on the server based on the molecular profile id
+        //  (3) We can initiate the mutations call before the samples call completes, thus
+        //      putting more response waiting time in parallel
+        await: () => [this.genes, this.mutationProfiles],
+        invoke: () => {
+            if (
+                this.genes.result!.length === 0 ||
+                this.mutationProfiles.result!.length === 0
+            ) {
+                return Promise.resolve([]);
             }
-            const studyIdToProfileMap = this.studyToMutationMolecularProfile
-                .result;
 
-            const filters = this.samples.result.reduce(
-                (memo, sample: Sample) => {
-                    if (sample.studyId in studyIdToProfileMap) {
-                        memo.push({
-                            molecularProfileId:
-                                studyIdToProfileMap[sample.studyId]
-                                    .molecularProfileId,
-                            sampleId: sample.sampleId,
-                        });
-                    }
-                    return memo;
-                },
-                [] as any[]
+            return client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
+                projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                mutationMultipleStudyFilter: {
+                    entrezGeneIds: this.genes.result!.map(g => g.entrezGeneId),
+                    molecularProfileIds: this.mutationProfiles.result!.map(
+                        p => p.molecularProfileId
+                    ),
+                } as MutationMultipleStudyFilter,
+            });
+        },
+    });
+
+    readonly mutations = remoteData<Mutation[]>({
+        await: () => [this.mutations_preload, this.sampleKeyToSample],
+        invoke: () => {
+            const sampleKeys = this.sampleKeyToSample.result!;
+            return Promise.resolve(
+                this.mutations_preload.result!.filter(
+                    m => m.uniqueSampleKey in sampleKeys
+                )
             );
-
-            const multipleStudyFilter = {
-                entrezGeneIds: _.map(
-                    this.genes.result,
-                    (gene: Gene) => gene.entrezGeneId
-                ),
-                sampleMolecularIdentifiers: filters,
-            } as MutationMultipleStudyFilter;
-
-            const mutations = await chunkCalls(
-                chunk =>
-                    client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
-                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                        mutationMultipleStudyFilter: Object.assign(
-                            {},
-                            multipleStudyFilter,
-                            {
-                                sampleMolecularIdentifiers: chunk,
-                            }
-                        ) as MutationMultipleStudyFilter,
-                    }),
-                filters,
-                1000
-            );
-
-            return mutations;
         },
     });
 
