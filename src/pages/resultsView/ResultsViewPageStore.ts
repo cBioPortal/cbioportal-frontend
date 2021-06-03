@@ -253,6 +253,7 @@ import {
     createAnnotatedProteinImpactTypeFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
+import { chunkCalls } from 'cbioportal-utils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3109,7 +3110,7 @@ export class ResultsViewPageStore {
                 [] as any[]
             );
 
-            const data = {
+            const multipleStudyFilter = {
                 entrezGeneIds: _.map(
                     this.genes.result,
                     (gene: Gene) => gene.entrezGeneId
@@ -3117,12 +3118,23 @@ export class ResultsViewPageStore {
                 sampleMolecularIdentifiers: filters,
             } as MutationMultipleStudyFilter;
 
-            return await client.fetchMutationsInMultipleMolecularProfilesUsingPOST(
-                {
-                    projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                    mutationMultipleStudyFilter: data,
-                }
+            const mutations = await chunkCalls(
+                chunk =>
+                    client.fetchMutationsInMultipleMolecularProfilesUsingPOST({
+                        projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                        mutationMultipleStudyFilter: Object.assign(
+                            {},
+                            multipleStudyFilter,
+                            {
+                                sampleMolecularIdentifiers: chunk,
+                            }
+                        ) as MutationMultipleStudyFilter,
+                    }),
+                filters,
+                1000
             );
+
+            return mutations;
         },
     });
 
