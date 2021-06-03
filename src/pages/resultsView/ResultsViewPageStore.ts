@@ -1304,11 +1304,11 @@ export class ResultsViewPageStore {
     );
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
-        await: () => [this.samples, this.molecularData_preload],
+        await: () => [this.sampleKeyToSample, this.molecularData_preload],
         invoke: () => {
             return Promise.resolve(
                 this.molecularData_preload.result.filter(
-                    m => m.uniqueSampleKey in this.sampleKeyToSample
+                    m => m.uniqueSampleKey in this.sampleKeyToSample.result!
                 )
             );
         },
