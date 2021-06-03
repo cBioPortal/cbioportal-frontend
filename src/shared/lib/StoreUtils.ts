@@ -1320,8 +1320,8 @@ export function existsSomeMutationWithAscnPropertyInCollection(
 }
 
 export function generateDataQueryFilter(
-    sampleListId: string | null,
-    sampleIds?: string[]
+    sampleListId: string | undefined,
+    sampleIds: string[] | undefined
 ): IDataQueryFilter {
     let filter: IDataQueryFilter = {};
 
