@@ -74,8 +74,8 @@ export function computeRenderData(
         for (const mutation of mergedMutation) {
             const sampleKey = mutation.uniqueSampleKey;
             const sampleId = mutation.sampleId;
-            const vaf = getVariantAlleleFrequency(mutation);
-            if (vaf !== null) {
+            const vafReport = getVariantAlleleFrequency(mutation);
+            if (vafReport !== null) {
                 // has VAF data
 
                 if (mutation.mutationStatus.toLowerCase() === 'uncalled') {
@@ -83,7 +83,7 @@ export function computeRenderData(
                         // add point for uncalled mutation with supporting reads
                         thisLineData.push({
                             x: sampleIdIndex[sampleId],
-                            y: vaf,
+                            y: vafReport.vaf,
                             sampleId,
                             mutation,
                             mutationStatus:
@@ -95,7 +95,7 @@ export function computeRenderData(
                     // add point for called mutation with VAF data
                     thisLineData.push({
                         x: sampleIdIndex[sampleId],
-                        y: vaf,
+                        y: vafReport.vaf,
                         sampleId,
                         mutation,
                         mutationStatus: MutationStatus.MUTATED_WITH_VAF,

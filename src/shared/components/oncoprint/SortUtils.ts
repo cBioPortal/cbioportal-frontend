@@ -129,18 +129,25 @@ export function getGeneticTrackSortComparator(
             return _order[m];
         };
     })();
+    const sv_order = (function() {
+        let _order: { [s: string]: number };
+        if (sortByDrivers) {
+            _order = makeComparatorMetric(['sv_rec', 'sv', undefined]);
+        } else {
+            _order = makeComparatorMetric([['sv_rec', 'sv'], undefined]);
+        }
+        return function(m: any) {
+            return _order[m];
+        };
+    })();
     const regulation_order = makeComparatorMetric(['high', 'low', undefined]);
     const germline_order = makeComparatorMetric([true, false, undefined]); // germline mutation is prioritized
 
     function mandatoryHelper(d: GeneticTrackDatum): number[] {
         const vector = [];
 
-        // Test structural variant
-        if (d.disp_structuralVariant) {
-            vector.push(0);
-        } else {
-            vector.push(1);
-        }
+        // First, structural variant
+        vector.push(sv_order(d.disp_structuralVariant));
 
         // Next, CNA
         vector.push(cna_order(d.disp_cna));

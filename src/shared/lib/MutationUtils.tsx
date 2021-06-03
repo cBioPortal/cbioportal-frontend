@@ -483,7 +483,12 @@ export function uniqueGenomicLocations(
     return _.values(genomicLocationMap);
 }
 
-export function getVariantAlleleFrequency(m: Mutation) {
+export type VAFReport = {
+    vaf: number;
+    variantReadCount: number;
+    totalReadCount: number;
+};
+export function getVariantAlleleFrequency(m: Mutation): VAFReport | null {
     if (
         Number.isInteger(m.tumorRefCount) &&
         Number.isInteger(m.tumorAltCount)
@@ -492,7 +497,11 @@ export function getVariantAlleleFrequency(m: Mutation) {
         if (isNaN(vaf)) {
             return null;
         } else {
-            return vaf;
+            return {
+                vaf,
+                variantReadCount: m.tumorAltCount,
+                totalReadCount: m.tumorAltCount + m.tumorRefCount,
+            };
         }
     } else {
         return null;
