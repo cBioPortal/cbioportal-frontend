@@ -28,6 +28,7 @@ import {
     MUT_COLOR_TRUNC_PASSENGER,
     PROT_COLOR_HIGH,
     PROT_COLOR_LOW,
+    STRUCTURAL_VARIANT_PASSENGER_COLOR,
 } from 'cbioportal-frontend-commons';
 // Feed this in as
 
@@ -57,7 +58,8 @@ enum ShapeId {
     protHighRectangle = 'protHighRectangle',
     protLowRectangle = 'protLowRectangle',
 
-    structuralVariantRectangle = 'structuralVariantRectangle',
+    structuralVariantDriverRectangle = 'structuralVariantDriverRectangle',
+    structuralVariantVUSRectangle = 'structuralVariantVUSRectangle',
 
     germlineRectangle = 'germlineRectangle',
 
@@ -155,9 +157,18 @@ const shapeBank = {
         height: 20,
         z: 4,
     },
-    [ShapeId.structuralVariantRectangle]: {
+    [ShapeId.structuralVariantDriverRectangle]: {
         type: 'rectangle',
         fill: STRUCTURAL_VARIANT_COLOR,
+        x: 0,
+        y: 20,
+        width: 100,
+        height: 60,
+        z: 5,
+    },
+    [ShapeId.structuralVariantVUSRectangle]: {
+        type: 'rectangle',
+        fill: STRUCTURAL_VARIANT_PASSENGER_COLOR,
         x: 0,
         y: 20,
         width: 100,
@@ -329,9 +340,14 @@ const non_mutation_rule_params: GeneticAlterationRuleParams = {
         // structural variant
         disp_structuralVariant: {
             // tall inset purple rectangle for structural variant
-            true: {
-                shapes: [shapeBank[ShapeId.structuralVariantRectangle]],
-                legend_label: 'Structural Variant',
+            sv_rec: {
+                shapes: [shapeBank[ShapeId.structuralVariantDriverRectangle]],
+                legend_label: 'Structural Variant (putative driver)',
+                legend_order: STRUCTURAL_VARIANT_LEGEND_ORDER,
+            },
+            sv: {
+                shapes: [shapeBank[ShapeId.structuralVariantVUSRectangle]],
+                legend_label: 'Structural Variant (unknown significance)',
                 legend_order: STRUCTURAL_VARIANT_LEGEND_ORDER,
             },
         },

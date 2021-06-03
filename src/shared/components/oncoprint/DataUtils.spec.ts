@@ -677,7 +677,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 }
             );
         });
@@ -701,7 +701,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'missense_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'missense driver with no germline'
             );
@@ -725,7 +725,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'inframe',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'inframe non-driver'
             );
@@ -749,7 +749,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'trunc',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'truncating non-driver'
             );
@@ -772,7 +772,7 @@ describe('DataUtils', () => {
                     disp_mrna: undefined,
                     disp_prot: undefined,
                     disp_mut: undefined,
-                    disp_structuralVariant: true,
+                    disp_structuralVariant: 'sv',
                     disp_germ: undefined,
                 },
                 'fusion non-driver'
@@ -798,7 +798,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'amplification'
             );
@@ -821,7 +821,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'gain'
             );
@@ -845,7 +845,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'hetloss'
             );
@@ -869,7 +869,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'homdel'
             );
@@ -892,7 +892,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'diploid'
             );
@@ -919,7 +919,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'missense_rec',
                     disp_germ: true,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'missense driver with germline'
             );
@@ -943,7 +943,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'missense_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'missense driver without germline'
             );
@@ -977,7 +977,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'missense_rec',
                     disp_germ: true,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'missense driver with germline is stronger than missense passenger'
             );
@@ -1009,7 +1009,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'trunc_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'trunc driver is stronger than missense passenger w germline'
             );
@@ -1034,7 +1034,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'high'
             );
@@ -1057,7 +1057,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'low'
             );
@@ -1081,7 +1081,7 @@ describe('DataUtils', () => {
                     disp_prot: 'high',
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'high'
             );
@@ -1104,7 +1104,7 @@ describe('DataUtils', () => {
                     disp_prot: 'low',
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'low'
             );
@@ -1135,7 +1135,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'trunc_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'truncating driver beats missense driver'
             );
@@ -1165,7 +1165,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'missense_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'missense driver beats truncating non-driver'
             );
@@ -1195,7 +1195,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: 'trunc',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'truncating non-driver beats missense non-driver'
             );
@@ -1224,7 +1224,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'amplification beats gain'
             );
@@ -1252,7 +1252,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'homdel beats diploid'
             );
@@ -1285,7 +1285,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two homdels beats one amp'
             );
@@ -1318,7 +1318,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two amps beats one homdel'
             );
@@ -1352,7 +1352,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two downs beats one high'
             );
@@ -1385,7 +1385,7 @@ describe('DataUtils', () => {
                     disp_prot: undefined,
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two ups beats one low'
             );
@@ -1419,7 +1419,7 @@ describe('DataUtils', () => {
                     disp_prot: 'low',
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two downs beats one high'
             );
@@ -1452,7 +1452,7 @@ describe('DataUtils', () => {
                     disp_prot: 'high',
                     disp_mut: undefined,
                     disp_germ: undefined,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 },
                 'two ups beats one low'
             );
@@ -1528,7 +1528,7 @@ describe('DataUtils', () => {
                     disp_prot: 'low',
                     disp_mut: 'trunc_rec',
                     disp_germ: false,
-                    disp_structuralVariant: false,
+                    disp_structuralVariant: undefined,
                 }
             );
         });

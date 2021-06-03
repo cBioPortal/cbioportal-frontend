@@ -13,6 +13,7 @@ import {
     SELECTOR_VALUE_WITH_VUS,
 } from 'shared/lib/MutationUtils';
 import {
+    DefaultTooltip,
     DriverVsVusType,
     Option,
     ProteinImpactType,
@@ -20,6 +21,8 @@ import {
 import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, makeObservable, observable } from 'mobx';
+import './mutations.scss';
+import styles from './badgeSelector.module.scss';
 
 const PUTATIVE_DRIVER_TYPE = [
     ProteinImpactType.MISSENSE_PUTATIVE_DRIVER,
@@ -47,7 +50,7 @@ export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
         selectedOptionIds: string[],
         allValuesSelected?: boolean
     ) => void;
-    onClickSettingMenu?: () => void;
+    onClickSettingMenu?: (visible: boolean) => void;
 }
 
 @observer
@@ -63,6 +66,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         DriverVsVusType.DRIVER,
         DriverVsVusType.VUS,
     ];
+    @observable settingMenuVisible = false;
 
     public static defaultProps: Partial<
         IDriverAnnotationProteinImpactTypeBadgeSelectorProps
@@ -75,33 +79,45 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
 
     @action.bound
     private getDriverVsVusOptionLabel(option: Option): JSX.Element {
+        const driverAnnotationSettingIcon = (
+            <button
+                style={{
+                    marginLeft: 5,
+                    marginRight: 5,
+                    padding: '0px 4px 0px 4px',
+                    height: 18,
+                }}
+                className="btn btn-primary"
+                onClick={this.onSettingMenuClick}
+            >
+                <i
+                    className="fa fa-sliders"
+                    style={{
+                        fontSize: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                />
+            </button>
+        );
+
         if (option.value === DriverVsVusType.DRIVER) {
             return (
                 <span>
                     {option.label || option.value}
-                    <span
-                        style={{
-                            fontSize: 12,
-                            marginBottom: 2,
-                        }}
-                    >
-                        <button
-                            style={{
-                                marginLeft: 5,
-                                marginRight: 5,
-                                marginBottom: 0,
-                                width: 'auto',
-                                padding: '0px 4px 0px 4px',
-                            }}
-                            className="btn btn-primary"
-                            onClick={e => {
-                                e.stopPropagation(); // Prevent click being applied to parent element
-                                this.props.onClickSettingMenu &&
-                                    this.props.onClickSettingMenu();
-                            }}
+                    <span className={styles['driver-annotation-setting']}>
+                        <DefaultTooltip
+                            placement="top"
+                            overlay={
+                                <span>
+                                    Change driver filtering in{' '}
+                                    {driverAnnotationSettingIcon}
+                                </span>
+                            }
                         >
-                            <i className="fa fa-sliders" />
-                        </button>
+                            {driverAnnotationSettingIcon}
+                        </DefaultTooltip>
                     </span>
                 </span>
             );
@@ -220,9 +236,17 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             this.props.onSelect(selectedOption, allValuesSelected);
     }
 
+    @action.bound
+    protected onSettingMenuClick(e: React.MouseEvent<any>) {
+        e.stopPropagation(); // Prevent click being applied to parent element
+        this.settingMenuVisible = !this.settingMenuVisible;
+        this.props.onClickSettingMenu &&
+            this.props.onClickSettingMenu(this.settingMenuVisible);
+    }
+
     public render() {
         return (
-            <div>
+            <div className={styles['legend-panel']}>
                 <BadgeSelector
                     options={this.driverVsVusOptions}
                     getOptionLabel={this.getDriverVsVusOptionLabel}

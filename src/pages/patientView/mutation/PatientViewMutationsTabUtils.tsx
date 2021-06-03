@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
+import { TooltipDatum } from 'pages/patientView/timeline2/VAFChart';
+import { VAFReport } from 'shared/lib/MutationUtils';
 
 export enum MutationStatus {
     MUTATED_WITH_VAF,
@@ -11,19 +13,21 @@ export enum MutationStatus {
 
 export function mutationTooltip(
     mutation: Mutation,
-    sampleSpecificInfo?: {
-        sampleId: string;
-        mutationStatus: MutationStatus;
-        vaf?: number | null | undefined;
-    }
+    sampleSpecificInfo?: TooltipDatum
 ) {
+    function vafFraction(vafReport: VAFReport) {
+        return `${vafReport.variantReadCount} reads of ${vafReport.totalReadCount} total`;
+    }
+
     let sampleSpecificSection: any = null;
     if (sampleSpecificInfo) {
         // show tooltip when hovering a point
         let vafExplanation: string;
         switch (sampleSpecificInfo.mutationStatus) {
             case MutationStatus.MUTATED_WITH_VAF:
-                vafExplanation = `VAF: ${sampleSpecificInfo.vaf!.toFixed(2)}`;
+                vafExplanation = `VAF: ${sampleSpecificInfo.vafReport!.vaf.toFixed(
+                    2
+                )} (${vafFraction(sampleSpecificInfo.vafReport!)})`;
                 break;
             case MutationStatus.MUTATED_BUT_NO_VAF:
                 vafExplanation = `Mutated, but we don't have VAF data.`;
@@ -31,8 +35,8 @@ export function mutationTooltip(
             case MutationStatus.PROFILED_WITH_READS_BUT_UNCALLED:
             case MutationStatus.PROFILED_BUT_NOT_MUTATED:
                 vafExplanation = `Mutation not detected (VAF: ${(
-                    sampleSpecificInfo.vaf || 0
-                ).toFixed(2)})`;
+                    sampleSpecificInfo.vafReport?.vaf || 0
+                ).toFixed(2)} (${vafFraction(sampleSpecificInfo.vafReport!)}))`;
                 break;
             case MutationStatus.NOT_PROFILED:
             default:
