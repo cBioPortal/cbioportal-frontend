@@ -1480,8 +1480,10 @@ export class PatientViewPageStore {
                 if (sampleMolecularIdentifiers.length) {
                     genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            sampleMolecularIdentifiers,
-                        }
+                            genePanelDataMultipleStudyFilter: {
+                                sampleMolecularIdentifiers,
+                            },
+                        } as any
                     );
                 }
 
