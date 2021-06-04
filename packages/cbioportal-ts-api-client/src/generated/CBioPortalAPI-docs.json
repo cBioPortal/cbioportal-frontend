@@ -494,14 +494,11 @@
         "parameters": [
           {
             "in": "body",
-            "name": "sampleMolecularIdentifiers",
-            "description": "List of Molecular Profile ID and Sample ID pairs",
+            "name": "genePanelDataMultipleStudyFilter",
+            "description": "Gene panel data filter object",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/SampleMolecularIdentifier"
-              }
+              "$ref": "#/definitions/GenePanelDataMultipleStudyFilter"
             }
           }
         ],
@@ -4897,6 +4894,24 @@
         }
       },
       "title": "GenePanelDataFilter"
+    },
+    "GenePanelDataMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      },
+      "title": "GenePanelDataMultipleStudyFilter"
     },
     "GenePanelToGene": {
       "type": "object",
