@@ -949,7 +949,7 @@ export async function queryOncoKbData(
                 body: chunk,
             }),
         mutationQueryVariants,
-        1000
+        250
     );
 
     const structuralVariantQueryResult =
