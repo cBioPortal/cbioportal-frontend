@@ -73,9 +73,17 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     > = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,
-        unselectOthersWhenAllSelected: true,
+        unselectOthersWhenAllSelected: false,
         numberOfColumnsPerRow: 2,
     };
+
+    @action.bound
+    public reset() {
+        this.selectedDriverVsVusValues = [
+            DriverVsVusType.DRIVER,
+            DriverVsVusType.VUS,
+        ];
+    }
 
     @action.bound
     private getDriverVsVusOptionLabel(option: Option): JSX.Element {

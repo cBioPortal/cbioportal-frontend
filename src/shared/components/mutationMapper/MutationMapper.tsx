@@ -90,6 +90,8 @@ export default class MutationMapper<
         makeObservable(this);
     }
 
+    private driverVusVusSelectorComponent: DriverAnnotationProteinImpactTypeBadgeSelector | null = null;
+
     protected legendColorCodes = (
         <div style={{ maxWidth: 700, marginTop: 5 }}>
             <strong style={{ color: '#2153AA' }}>Color Codes</strong>
@@ -346,6 +348,7 @@ export default class MutationMapper<
                         }}
                     >
                         <DriverAnnotationProteinImpactTypeBadgeSelector
+                            ref={this.driverSelectorComponentRef}
                             filter={this.proteinImpactTypeFilter}
                             counts={this.mutationCountsByProteinImpactType}
                             onSelect={this.onProteinImpactTypeSelect}
@@ -534,7 +537,10 @@ export default class MutationMapper<
 
         return (
             <FilterResetPanel
-                resetFilters={() => dataStore.resetFilters()}
+                resetFilters={() => {
+                    dataStore.resetFilters();
+                    this.driverVusVusSelectorComponent?.reset();
+                }}
                 filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
                 className={classnames(
                     'alert',
@@ -656,5 +662,12 @@ export default class MutationMapper<
                 ? PROTEIN_IMPACT_TYPE_FILTER_ID
                 : ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID
         );
+    }
+
+    @action.bound
+    private driverSelectorComponentRef(
+        driverVusVusSelectorComponent: DriverAnnotationProteinImpactTypeBadgeSelector | null
+    ) {
+        this.driverVusVusSelectorComponent = driverVusVusSelectorComponent;
     }
 }
