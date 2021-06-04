@@ -264,6 +264,12 @@ export type GenePanelDataFilter = {
         'sampleListId': string
 
 };
+export type GenePanelDataMultipleStudyFilter = {
+    'molecularProfileIds': Array < string >
+
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
 export type GenePanelToGene = {
     'entrezGeneId': number
 
@@ -1431,7 +1437,7 @@ export default class CBioPortalAPI {
             });
         };
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
-        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
+        'genePanelDataMultipleStudyFilter': GenePanelDataMultipleStudyFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1451,10 +1457,10 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} sampleMolecularIdentifiers - List of Molecular Profile ID and Sample ID pairs
+     * @param {} genePanelDataMultipleStudyFilter - Gene panel data filter object
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
-        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
+        'genePanelDataMultipleStudyFilter': GenePanelDataMultipleStudyFilter,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -1470,12 +1476,12 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['sampleMolecularIdentifiers'] !== undefined) {
-                body = parameters['sampleMolecularIdentifiers'];
+            if (parameters['genePanelDataMultipleStudyFilter'] !== undefined) {
+                body = parameters['genePanelDataMultipleStudyFilter'];
             }
 
-            if (parameters['sampleMolecularIdentifiers'] === undefined) {
-                reject(new Error('Missing required  parameter: sampleMolecularIdentifiers'));
+            if (parameters['genePanelDataMultipleStudyFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genePanelDataMultipleStudyFilter'));
                 return;
             }
 
@@ -1495,10 +1501,10 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} sampleMolecularIdentifiers - List of Molecular Profile ID and Sample ID pairs
+     * @param {} genePanelDataMultipleStudyFilter - Gene panel data filter object
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(parameters: {
-            'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier > ,
+            'genePanelDataMultipleStudyFilter': GenePanelDataMultipleStudyFilter,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < GenePanelData >
