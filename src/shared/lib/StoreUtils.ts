@@ -232,11 +232,11 @@ export async function fetchAllReferenceGenomeGenes(
     genomeName: string,
     client: CBioPortalAPI = defaultClient
 ) {
-    if (AppConfig.serverConfig.app_name === 'public-portal') {
-        // this is temporary
+    if (/\.cbioportal\.org|\.mskcc\.org/.test(window.location.hostname)) {
         return $.ajax({
             url: getFrontendAssetUrl('reactapp/reference_genome_hg19.json'),
             dataType: 'json',
+            cache: true,
         });
     }
     if (genomeName) {
