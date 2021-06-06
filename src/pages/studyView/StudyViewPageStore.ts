@@ -5149,7 +5149,7 @@ export class StudyViewPageStore {
             this.mutationProfiles.isPending ||
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
-            this.survivalClinicalAttributesPrefix.isPending ||
+            this.survivalPlots.isPending ||
             this.displayPatientTreatments.isPending ||
             this.sharedCustomData.isPending;
 
