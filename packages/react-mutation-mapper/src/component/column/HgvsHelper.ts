@@ -1,10 +1,10 @@
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
     generateHgvsgByMutation,
-    getVariantAnnotation,
     Mutation,
     RemoteData,
 } from 'cbioportal-utils';
+import { getAnnotation } from './VariantAnnotationHelper';
 
 export function getHgvsgColumnData(mutation: Mutation): string | null {
     return generateHgvsgByMutation(mutation) || null;
@@ -42,15 +42,4 @@ export function getHgvscColumnData(
     }
 
     return data;
-}
-
-function getAnnotation(
-    mutation?: Mutation,
-    indexedVariantAnnotations?: RemoteData<
-        { [genomicLocation: string]: VariantAnnotation } | undefined
-    >
-) {
-    return indexedVariantAnnotations
-        ? getVariantAnnotation(mutation, indexedVariantAnnotations.result)
-        : undefined;
 }
