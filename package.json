@@ -211,7 +211,7 @@
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
     "oncokb-ts-api-client": "^1.1.6",
-    "oncoprintjs": "4.2.4",
+    "oncoprintjs": "5.0.0",
     "pako": "2.0.2",
     "parameter-validator": "^1.0.2",
     "pathway-mapper": "github:iVis-at-Bilkent/pathway-mapper#fd7dd234ea7aca987c0095264101b9e5a4e7c400",

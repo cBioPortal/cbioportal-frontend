@@ -1701,6 +1701,7 @@ export default class ResultsViewOncoprint extends React.Component<
                                 width={this.width}
                                 caseLinkOutInTooltips={true}
                                 suppressRendering={this.isLoading}
+                                keepSorted={!this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={
