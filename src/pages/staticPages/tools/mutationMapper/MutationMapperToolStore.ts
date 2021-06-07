@@ -223,6 +223,7 @@ export default class MutationMapperToolStore {
                     [
                         GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                         GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                        GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
                         AppConfig.serverConfig.show_signal
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',

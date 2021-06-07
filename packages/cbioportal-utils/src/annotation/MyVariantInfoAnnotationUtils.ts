@@ -63,15 +63,3 @@ export function getDbsnpRsId(myVariantInfo?: MyVariantInfo): string | null {
         return null;
     }
 }
-
-export function getClinVarId(myVariantInfo?: MyVariantInfo): string | null {
-    if (
-        myVariantInfo &&
-        myVariantInfo.clinVar &&
-        myVariantInfo.clinVar.variantId
-    ) {
-        return myVariantInfo.clinVar.variantId.toString();
-    } else {
-        return null;
-    }
-}
