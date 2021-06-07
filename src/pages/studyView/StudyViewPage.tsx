@@ -121,6 +121,8 @@ export default class StudyViewPage extends React.Component<
     constructor(props: IStudyViewPageProps) {
         super(props);
 
+        //
+
         makeObservable(this);
 
         this.urlWrapper = new StudyViewURLWrapper(this.props.routing);
