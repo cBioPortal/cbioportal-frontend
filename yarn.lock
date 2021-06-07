@@ -15383,7 +15383,7 @@ mobx-utils@6.0.1:
   resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-6.0.1.tgz#bc16c2c62794a48498685f3663e6162d42fb6106"
   integrity sha512-0p5xqHDt/arz3cswVcEHYKY/BwL+fifsNroT3Gjkz9lNC7ZDsJm3IuGsmYlvFcVRJRr1rwlFZGuZXrt/MhHEJQ==
 
-mobx@^6.0.0:
+mobx@6.0.0, mobx@^6.0.0:
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
   integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
@@ -15392,7 +15392,7 @@ mobx@^6.0.0:
   version "2.0.1"
   resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
   dependencies:
-    mobx "^6.0.0"
+    mobx "6.0.0"
 
 mocha@^5.2.0:
   version "5.2.0"
@@ -16397,7 +16397,18 @@ oncokb-styles@~1.1.0:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.1.0.tgz#2817ed1ed18720e18384ebf1e99c7706bac514e4"
   integrity sha512-GSfqB2uGfJD9HefZJXlmNHXYJe0TbfKwAE1y0E5xc/ZKuL2Wle+KoesLL0iIxCyOc89uovnCXDYxSbIBxzgLGA==
 
-oncoprintjs@4.2.4, oncoprintjs@^4.2.3:
+oncoprintjs@5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-5.0.0.tgz#04e1dbddf6a93c1989e5d96abcb64f7d41081760"
+  integrity sha512-qbGUO4QcCqr+9M93t582ZzxJuHeFQjHuyt6DK39DyMx9DuiD0uXjo/x3zm+Ix4Ky+HRXB7zzvKIVly7qvpW9LQ==
+  dependencies:
+    gl-matrix "2.3.2"
+    jquery "^3.0.0"
+    jstat "^1.7.1"
+    lodash "^4.17.15"
+    tayden-clusterfck "^0.7.0"
+
+oncoprintjs@^4.2.3:
   version "4.2.4"
   resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-4.2.4.tgz#ddfb3704b2a09a32585f3895622a5f5d3a6557aa"
   integrity sha512-YqFjtr4iDeW3mJPvPar2XUPiOac+pDfFtO0Q2UnA9XM4cAcjPQLsSsCIQ/LcfDEXLMpcRQDOkSXeGst6peLmgA==
