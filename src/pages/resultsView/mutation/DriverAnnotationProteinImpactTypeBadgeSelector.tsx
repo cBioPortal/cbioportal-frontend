@@ -5,6 +5,7 @@ import {
     BadgeSelector,
     getProteinImpactTypeOptionLabel,
     getProteinImpactTypeBadgeLabel,
+    DataFilter,
 } from 'react-mutation-mapper';
 import * as React from 'react';
 import {
@@ -20,7 +21,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, reaction } from 'mobx';
 import './mutations.scss';
 import styles from './badgeSelector.module.scss';
 
@@ -51,6 +52,7 @@ export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
         allValuesSelected?: boolean
     ) => void;
     onClickSettingMenu?: (visible: boolean) => void;
+    annotatedProteinImpactTypeFilter?: DataFilter<string>;
 }
 
 @observer
@@ -60,12 +62,41 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     constructor(props: IDriverAnnotationProteinImpactTypeBadgeSelectorProps) {
         super(props);
         makeObservable(this);
+        this.selectedDriverVsVusValues = [
+            DriverVsVusType.DRIVER,
+            DriverVsVusType.VUS,
+        ];
+
+        reaction(
+            () => this.props.annotatedProteinImpactTypeFilter,
+            filter => {
+                if (filter) {
+                    // If all driver(vus) mutation types are selected, select "Driver"("VUS") button
+                    let updatedDriverVsVusValues = [];
+                    if (
+                        _.intersection(filter.values, PUTATIVE_DRIVER_TYPE)
+                            .length === PUTATIVE_DRIVER_TYPE.length
+                    ) {
+                        updatedDriverVsVusValues.push(DriverVsVusType.DRIVER);
+                    }
+                    if (
+                        _.intersection(filter.values, UNKNOWN_SIGNIFICANCE_TYPE)
+                            .length === UNKNOWN_SIGNIFICANCE_TYPE.length
+                    ) {
+                        updatedDriverVsVusValues.push(DriverVsVusType.VUS);
+                    }
+                    this.selectedDriverVsVusValues = updatedDriverVsVusValues;
+                } else {
+                    this.selectedDriverVsVusValues = [
+                        DriverVsVusType.DRIVER,
+                        DriverVsVusType.VUS,
+                    ];
+                }
+            }
+        );
     }
 
-    @observable selectedDriverVsVusValues: string[] = [
-        DriverVsVusType.DRIVER,
-        DriverVsVusType.VUS,
-    ];
+    @observable selectedDriverVsVusValues: string[] = [];
     @observable settingMenuVisible = false;
 
     public static defaultProps: Partial<
@@ -76,14 +107,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         unselectOthersWhenAllSelected: false,
         numberOfColumnsPerRow: 2,
     };
-
-    @action.bound
-    public reset() {
-        this.selectedDriverVsVusValues = [
-            DriverVsVusType.DRIVER,
-            DriverVsVusType.VUS,
-        ];
-    }
 
     @action.bound
     private getDriverVsVusOptionLabel(option: Option): JSX.Element {
@@ -217,7 +240,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             }
         });
         this.props.onSelect && this.props.onSelect(selected, allValuesSelected);
-        this.selectedDriverVsVusValues = selectedOption;
     }
 
     @action.bound
@@ -239,7 +261,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         ) {
             updatedDriverVsVusValues.push(DriverVsVusType.VUS);
         }
-        this.selectedDriverVsVusValues = updatedDriverVsVusValues;
         this.props.onSelect &&
             this.props.onSelect(selectedOption, allValuesSelected);
     }

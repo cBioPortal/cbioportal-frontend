@@ -90,8 +90,6 @@ export default class MutationMapper<
         makeObservable(this);
     }
 
-    private driverVusVusSelectorComponent: DriverAnnotationProteinImpactTypeBadgeSelector | null = null;
-
     protected legendColorCodes = (
         <div style={{ maxWidth: 700, marginTop: 5 }}>
             <strong style={{ color: '#2153AA' }}>Color Codes</strong>
@@ -348,11 +346,15 @@ export default class MutationMapper<
                         }}
                     >
                         <DriverAnnotationProteinImpactTypeBadgeSelector
-                            ref={this.driverSelectorComponentRef}
                             filter={this.proteinImpactTypeFilter}
                             counts={this.mutationCountsByProteinImpactType}
                             onSelect={this.onProteinImpactTypeSelect}
                             onClickSettingMenu={this.props.onClickSettingMenu}
+                            annotatedProteinImpactTypeFilter={this.store.dataStore.dataFilters.find(
+                                filter =>
+                                    filter.type ===
+                                    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
+                            )}
                         />
                     </div>
                 ) : (
@@ -539,7 +541,6 @@ export default class MutationMapper<
             <FilterResetPanel
                 resetFilters={() => {
                     dataStore.resetFilters();
-                    this.driverVusVusSelectorComponent?.reset();
                 }}
                 filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
                 className={classnames(
@@ -662,12 +663,5 @@ export default class MutationMapper<
                 ? PROTEIN_IMPACT_TYPE_FILTER_ID
                 : ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID
         );
-    }
-
-    @action.bound
-    private driverSelectorComponentRef(
-        driverVusVusSelectorComponent: DriverAnnotationProteinImpactTypeBadgeSelector | null
-    ) {
-        this.driverVusVusSelectorComponent = driverVusVusSelectorComponent;
     }
 }
