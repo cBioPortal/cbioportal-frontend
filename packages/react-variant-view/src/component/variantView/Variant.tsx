@@ -66,7 +66,7 @@ class Variant extends React.Component<IVariantProps> {
                         annotationInternal={this.variantStore.annotationSummary}
                         variantAnnotation={this.variantAnnotation}
                         oncokb={this.oncokb}
-                        clinVar={this.clinVar}
+                        clinvar={this.clinvar}
                         signalAnnotation={this.signalAnnotation}
                         isCanonicalTranscriptSelected={
                             this.isCanonicalTranscriptSelected!
@@ -104,8 +104,8 @@ class Variant extends React.Component<IVariantProps> {
     }
 
     @computed
-    private get clinVar() {
-        return this.myVariantInfo?.clinVar;
+    private get clinvar() {
+        return this.variantAnnotation?.clinvar.annotation;
     }
 
     @computed

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import {
-    ClinVar,
+    Clinvar,
     MyVariantInfo,
     SignalAnnotation,
     VariantAnnotation,
@@ -25,7 +25,7 @@ interface IFeatureTableProps {
     myVariantInfo?: MyVariantInfo;
     variantAnnotation?: VariantAnnotation;
     oncokb?: IndicatorQueryResp;
-    clinVar?: ClinVar;
+    clinvar?: Clinvar;
     signalAnnotation?: SignalAnnotation;
     isCanonicalTranscriptSelected: boolean;
     mutation: Mutation;
@@ -42,7 +42,7 @@ class FeatureTable extends React.Component<IFeatureTableProps> {
                             <th>Pathogenicity:</th>
                             <td>
                                 <Pathogenicity
-                                    clinVar={this.props.clinVar}
+                                    clinvar={this.props.clinvar}
                                     oncokb={this.props.oncokb}
                                     signalAnnotation={
                                         this.props.signalAnnotation
