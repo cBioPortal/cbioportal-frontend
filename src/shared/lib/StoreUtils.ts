@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
 import $ from 'jquery';
+import localForage from 'localforage';
 import {
     fetchVariantAnnotationsByMutation as fetchDefaultVariantAnnotationsByMutation,
     fetchVariantAnnotationsIndexedByGenomicLocation as fetchDefaultVariantAnnotationsIndexedByGenomicLocation,
@@ -232,19 +233,38 @@ export async function fetchAllReferenceGenomeGenes(
     genomeName: string,
     client: CBioPortalAPI = defaultClient
 ) {
-    if (/\.cbioportal\.org|\.mskcc\.org/.test(window.location.hostname)) {
-        return $.ajax({
-            url: getFrontendAssetUrl('reactapp/reference_genome_hg19.json'),
-            dataType: 'json',
-            cache: true,
-        });
-    }
-    if (genomeName) {
-        return await internalClient.getAllReferenceGenomeGenesUsingGET({
-            genomeName: genomeName,
-        });
+    const doCaching = window.location.hostname.includes('.cbioportal.org');
+
+    // allows us to clear cache when data changes
+    const referenceGenomeKey = `referenceGenome-${AppConfig.serverConfig.referenceGenomeVersion}`;
+
+    const hg19cached = doCaching
+        ? await localForage.getItem(referenceGenomeKey)
+        : false;
+
+    if (doCaching) {
+        if (hg19cached) {
+            console.info('using locally cached reference genome data');
+            return hg19cached as ReferenceGenomeGene[];
+        } else {
+            return await internalClient
+                .getAllReferenceGenomeGenesUsingGET({
+                    genomeName: genomeName,
+                })
+                .then(d => {
+                    // this is async, but we can fire and forget
+                    localForage.setItem(referenceGenomeKey, d);
+                    return d;
+                });
+        }
     } else {
-        return [];
+        if (genomeName) {
+            return await internalClient.getAllReferenceGenomeGenesUsingGET({
+                genomeName: genomeName,
+            });
+        } else {
+            return [];
+        }
     }
 }
 
