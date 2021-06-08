@@ -3,6 +3,8 @@ import {
     ProteinImpactTypeBadgeSelectorProps,
     DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
     BadgeSelector,
+    getAllOptionValues,
+    getSelectedOptionValues,
     getProteinImpactTypeOptionLabel,
     getProteinImpactTypeBadgeLabel,
     DataFilter,
@@ -55,6 +57,31 @@ export interface IDriverAnnotationProteinImpactTypeBadgeSelectorProps
     annotatedProteinImpactTypeFilter?: DataFilter<string>;
 }
 
+function findSelectedDriverVsVus(
+    type: DriverVsVusType,
+    selectedOption: string[],
+    alreadySelectedValues: { value: string }[],
+    allTypes: ProteinImpactType[]
+): string[] {
+    let toSelect: string[] = [];
+
+    // If "type" is selected then also select all of corresponding mutation types
+    if (selectedOption.includes(type)) {
+        toSelect = allTypes;
+    }
+    // If "type" is not selected, decide whether we unselect all mutations corresponding to that type as well
+    else {
+        // if selected mutation types already includes ALL of the mutations corresponding to the given type
+        // then it means "type" is just UNSELECTED,
+        // we should not add "type" mutations back in the selected in that case
+        if (alreadySelectedValues.length !== allTypes.length) {
+            toSelect = alreadySelectedValues.map(v => v.value);
+        }
+    }
+
+    return toSelect;
+}
+
 @observer
 export default class DriverAnnotationProteinImpactTypeBadgeSelector extends ProteinImpactTypeBadgeSelector<
     IDriverAnnotationProteinImpactTypeBadgeSelectorProps
@@ -62,6 +89,27 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     constructor(props: IDriverAnnotationProteinImpactTypeBadgeSelectorProps) {
         super(props);
         makeObservable(this);
+    }
+
+    @observable settingMenuVisible = false;
+
+    @computed get selectedMutationTypeValues() {
+        return getSelectedOptionValues(
+            getAllOptionValues(this.options),
+            this.props.filter
+        );
+    }
+
+    @computed get selectedDriverMutationTypeValues() {
+        return this.selectedMutationTypeValues.filter(v =>
+            (PUTATIVE_DRIVER_TYPE as string[]).includes(v.value)
+        );
+    }
+
+    @computed get selectedVUSMutationTypeValues() {
+        return this.selectedMutationTypeValues.filter(v =>
+            (UNKNOWN_SIGNIFICANCE_TYPE as string[]).includes(v.value)
+        );
     }
 
     @computed get selectedDriverVsVusValues() {
@@ -89,7 +137,6 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
             return [DriverVsVusType.DRIVER, DriverVsVusType.VUS];
         }
     }
-    @observable settingMenuVisible = false;
 
     public static defaultProps: Partial<
         IDriverAnnotationProteinImpactTypeBadgeSelectorProps
@@ -221,40 +268,25 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
         selectedOption: string[],
         allValuesSelected: boolean
     ) {
-        let selected: string[] = [];
-        // If select "Driver" or "VUS", then also select corresponding mutation types
-        _.forEach(selectedOption, option => {
-            if (option === DriverVsVusType.DRIVER) {
-                selected = _.union(selected, PUTATIVE_DRIVER_TYPE);
-            }
-            if (option === DriverVsVusType.VUS) {
-                selected = _.union(selected, UNKNOWN_SIGNIFICANCE_TYPE);
-            }
-        });
-        this.props.onSelect && this.props.onSelect(selected, allValuesSelected);
-    }
+        const selectedDriver = findSelectedDriverVsVus(
+            DriverVsVusType.DRIVER,
+            selectedOption,
+            this.selectedDriverMutationTypeValues,
+            PUTATIVE_DRIVER_TYPE
+        );
 
-    @action.bound
-    protected onMutationTypeSelect(
-        selectedOption: string[],
-        allValuesSelected: boolean
-    ) {
-        // If all driver(vus) mutation types are selected, select "Driver"("VUS") button
-        let updatedDriverVsVusValues = [];
-        if (
-            _.intersection(selectedOption, PUTATIVE_DRIVER_TYPE).length ===
-            PUTATIVE_DRIVER_TYPE.length
-        ) {
-            updatedDriverVsVusValues.push(DriverVsVusType.DRIVER);
-        }
-        if (
-            _.intersection(selectedOption, UNKNOWN_SIGNIFICANCE_TYPE).length ===
-            UNKNOWN_SIGNIFICANCE_TYPE.length
-        ) {
-            updatedDriverVsVusValues.push(DriverVsVusType.VUS);
-        }
+        const selectedVus = findSelectedDriverVsVus(
+            DriverVsVusType.VUS,
+            selectedOption,
+            this.selectedVUSMutationTypeValues,
+            UNKNOWN_SIGNIFICANCE_TYPE
+        );
+
         this.props.onSelect &&
-            this.props.onSelect(selectedOption, allValuesSelected);
+            this.props.onSelect(
+                selectedDriver.concat(selectedVus),
+                allValuesSelected
+            );
     }
 
     @action.bound
@@ -284,7 +316,7 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
                     getOptionLabel={getProteinImpactTypeOptionLabel}
                     getBadgeLabel={getProteinImpactTypeBadgeLabel}
                     {...this.props}
-                    onSelect={this.onMutationTypeSelect}
+                    onSelect={this.props.onSelect}
                 />
             </div>
         );

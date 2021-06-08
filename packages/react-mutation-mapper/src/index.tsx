@@ -152,7 +152,6 @@ export { SequenceSpec } from './model/SequenceSpec';
 
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
-export * from 'cbioportal-utils';
 export {
     MUTATION_TYPE_PRIORITY,
     mutationTypeSort,
@@ -163,6 +162,7 @@ export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
 } from './util/OncoKbUtils';
+export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
 
 export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMutationMapperDataFetcher';
