@@ -21,7 +21,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 import { observer } from 'mobx-react';
-import { action, makeObservable, observable, reaction } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import './mutations.scss';
 import styles from './badgeSelector.module.scss';
 
@@ -62,41 +62,33 @@ export default class DriverAnnotationProteinImpactTypeBadgeSelector extends Prot
     constructor(props: IDriverAnnotationProteinImpactTypeBadgeSelectorProps) {
         super(props);
         makeObservable(this);
-        this.selectedDriverVsVusValues = [
-            DriverVsVusType.DRIVER,
-            DriverVsVusType.VUS,
-        ];
-
-        reaction(
-            () => this.props.annotatedProteinImpactTypeFilter,
-            filter => {
-                if (filter) {
-                    // If all driver(vus) mutation types are selected, select "Driver"("VUS") button
-                    let updatedDriverVsVusValues = [];
-                    if (
-                        _.intersection(filter.values, PUTATIVE_DRIVER_TYPE)
-                            .length === PUTATIVE_DRIVER_TYPE.length
-                    ) {
-                        updatedDriverVsVusValues.push(DriverVsVusType.DRIVER);
-                    }
-                    if (
-                        _.intersection(filter.values, UNKNOWN_SIGNIFICANCE_TYPE)
-                            .length === UNKNOWN_SIGNIFICANCE_TYPE.length
-                    ) {
-                        updatedDriverVsVusValues.push(DriverVsVusType.VUS);
-                    }
-                    this.selectedDriverVsVusValues = updatedDriverVsVusValues;
-                } else {
-                    this.selectedDriverVsVusValues = [
-                        DriverVsVusType.DRIVER,
-                        DriverVsVusType.VUS,
-                    ];
-                }
-            }
-        );
     }
 
-    @observable selectedDriverVsVusValues: string[] = [];
+    @computed get selectedDriverVsVusValues() {
+        if (this.props.annotatedProteinImpactTypeFilter) {
+            // If all driver(vus) mutation types are selected, select "Driver"("VUS") button
+            let driverVsVusValues = [];
+            if (
+                _.intersection(
+                    this.props.annotatedProteinImpactTypeFilter.values,
+                    PUTATIVE_DRIVER_TYPE
+                ).length === PUTATIVE_DRIVER_TYPE.length
+            ) {
+                driverVsVusValues.push(DriverVsVusType.DRIVER);
+            }
+            if (
+                _.intersection(
+                    this.props.annotatedProteinImpactTypeFilter.values,
+                    UNKNOWN_SIGNIFICANCE_TYPE
+                ).length === UNKNOWN_SIGNIFICANCE_TYPE.length
+            ) {
+                driverVsVusValues.push(DriverVsVusType.VUS);
+            }
+            return driverVsVusValues;
+        } else {
+            return [DriverVsVusType.DRIVER, DriverVsVusType.VUS];
+        }
+    }
     @observable settingMenuVisible = false;
 
     public static defaultProps: Partial<
