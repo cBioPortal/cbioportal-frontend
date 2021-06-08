@@ -132,4 +132,5 @@ export interface IServerConfig {
     patient_view_use_legacy_timeline: boolean;
     installation_map_url: string;
     enable_request_body_gzip_compression: boolean;
+    referenceGenomeVersion: string;
 }

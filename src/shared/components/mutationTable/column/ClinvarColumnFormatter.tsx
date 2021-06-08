@@ -9,29 +9,24 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import {
-    ClinVar,
-    clinVarSortValue,
-    clinVarDownload,
+    ClinvarInterpretation,
+    clinvarSortValue,
+    clinvarDownload,
+    getClinvarData,
 } from 'react-mutation-mapper';
 
-export default class ClinVarColumnFormatter {
+export default class ClinvarColumnFormatter {
     public static renderFunction(
         data: Mutation[],
         indexedVariantAnnotations?: RemoteData<
             { [genomicLocation: string]: VariantAnnotation } | undefined
-        >,
-        indexedMyVariantInfoAnnotations?: RemoteData<
-            IMyVariantInfoIndex | undefined
         >
     ) {
         return (
             <div data-test="clinvar-data">
-                <ClinVar
+                <ClinvarInterpretation
                     mutation={data[0]}
                     indexedVariantAnnotations={indexedVariantAnnotations}
-                    indexedMyVariantInfoAnnotations={
-                        indexedMyVariantInfoAnnotations
-                    }
                 />
             </div>
         );
@@ -53,29 +48,23 @@ export default class ClinVarColumnFormatter {
 
     public static download(
         data: Mutation[],
-        indexedMyVariantInfoAnnotations?: RemoteData<
-            IMyVariantInfoIndex | undefined
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ): string {
-        const myVariantInfo = ClinVarColumnFormatter.getData(
-            data,
-            indexedMyVariantInfoAnnotations
+        return clinvarDownload(
+            getClinvarData(data[0], indexedVariantAnnotations)
         );
-
-        return clinVarDownload(myVariantInfo);
     }
 
     public static getSortValue(
         data: Mutation[],
-        indexedMyVariantInfoAnnotations?: RemoteData<
-            IMyVariantInfoIndex | undefined
+        indexedVariantAnnotations?: RemoteData<
+            { [genomicLocation: string]: VariantAnnotation } | undefined
         >
     ): string | null {
-        const myVariantInfo = ClinVarColumnFormatter.getData(
-            data,
-            indexedMyVariantInfoAnnotations
+        return clinvarSortValue(
+            getClinvarData(data[0], indexedVariantAnnotations)
         );
-
-        return clinVarSortValue(myVariantInfo);
     }
 }
