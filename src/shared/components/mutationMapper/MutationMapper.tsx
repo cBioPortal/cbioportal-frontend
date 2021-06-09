@@ -333,6 +333,12 @@ export default class MutationMapper<
         return findProteinImpactTypeFilter(this.store.dataStore.dataFilters);
     }
 
+    @computed get annotatedProteinImpactTypeFilter() {
+        return this.store.dataStore.dataFilters.find(
+            filter => filter.type === ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
+        );
+    }
+
     /**
      * Overriding the parent method to have a customized filter panel.
      */
@@ -350,11 +356,9 @@ export default class MutationMapper<
                             counts={this.mutationCountsByProteinImpactType}
                             onSelect={this.onProteinImpactTypeSelect}
                             onClickSettingMenu={this.props.onClickSettingMenu}
-                            annotatedProteinImpactTypeFilter={this.store.dataStore.dataFilters.find(
-                                filter =>
-                                    filter.type ===
-                                    ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE
-                            )}
+                            annotatedProteinImpactTypeFilter={
+                                this.annotatedProteinImpactTypeFilter
+                            }
                         />
                     </div>
                 ) : (
@@ -539,9 +543,7 @@ export default class MutationMapper<
 
         return (
             <FilterResetPanel
-                resetFilters={() => {
-                    dataStore.resetFilters();
-                }}
+                resetFilters={() => dataStore.resetFilters()}
                 filterInfo={`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`}
                 className={classnames(
                     'alert',
