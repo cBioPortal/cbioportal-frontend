@@ -612,7 +612,7 @@ export function getAlterationEnrichmentColumns(
             ),
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) =>
-                formatLogOddsRatio(d.logRatio!),
+                d.logRatio ? formatLogOddsRatio(d.logRatio) : '-',
         });
 
         enrichedGroupColum.tooltip = (
