@@ -387,12 +387,6 @@ export default class VAFChartWrapper extends React.Component<
         let sampleGroups: { [groupIndex: number]: string[] } = {};
         this.sampleIds.forEach((sampleId, i) => {
             // check the group value of this sample id
-            console.info(
-                'Sample id ' +
-                    sampleId +
-                    ' is in group ' +
-                    this.sampleIdToClinicalValue[sampleId]
-            );
             if (
                 sampleGroups[
                     this.clinicalValuesForGrouping.indexOf(

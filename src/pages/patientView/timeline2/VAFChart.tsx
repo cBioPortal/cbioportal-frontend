@@ -15,16 +15,13 @@ import {
     MutationStatus,
     mutationTooltip,
 } from '../mutation/PatientViewMutationsTabUtils';
-import SampleManager, { clinicalValueToSamplesMap } from '../SampleManager';
-import {
-    stringListToIndexSet,
-    TruncatedText,
-} from 'cbioportal-frontend-commons';
-import { makeUniqueColorGetter } from '../../../shared/components/plots/PlotUtils';
-import { GROUP_BY_NONE } from './VAFChartControls';
 
 export interface IColorPoint extends IPoint {
     color: string;
+}
+
+interface ILine {
+    points: IColorPoint[];
 }
 
 export type TooltipDatum = {
@@ -192,6 +189,77 @@ const VAFPointConnector: React.FunctionComponent<{
     );
 };
 
+const LineHighlightSvg: React.FunctionComponent<{
+    highlightedMutations: Mutation[];
+    mutationLines: { [mutationKey: string]: ILine[] };
+}> = function({ highlightedMutations, mutationLines }) {
+    return (
+        <>
+            {highlightedMutations.map(highlightedMutation => {
+                // getting the chart lines of a mutation (can be multiple lines when GroupBy is selected)
+                const lines: ILine[] =
+                    mutationLines[
+                        highlightedMutation.proteinChange +
+                            '_' +
+                            highlightedMutation.gene.hugoGeneSymbol
+                    ];
+                if (!lines) {
+                    return <g />;
+                }
+                let linePath: JSX.Element[] = [];
+                let pointPaths: JSX.Element[][] = [];
+                _.forEach(lines, (line: ILine, index: number) => {
+                    if (line.points.length > 1) {
+                        // more than one point -> we should render a path
+                        let d = `M ${line.points[0].x} ${line.points[0].y}`;
+                        for (let i = 1; i < line.points.length; i++) {
+                            d = `${d} L ${line.points[i].x} ${line.points[i].y}`;
+                        }
+                        linePath.push(
+                            <path
+                                style={{
+                                    stroke: HIGHLIGHT_COLOR,
+                                    strokeOpacity: 1,
+                                    strokeWidth: HIGHLIGHT_LINE_STROKE_WIDTH,
+                                    fillOpacity: 0,
+                                    pointerEvents: 'none',
+                                }}
+                                d={d}
+                            />
+                        );
+                    }
+                    pointPaths.push(
+                        line.points.map(point => (
+                            <path
+                                d={`M ${point.x} ${point.y}
+                            m -${SCATTER_DATA_POINT_SIZE}, 0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2 *
+                                    SCATTER_DATA_POINT_SIZE},0
+                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2 *
+                                    SCATTER_DATA_POINT_SIZE},0
+                            `}
+                                style={{
+                                    stroke: HIGHLIGHT_COLOR,
+                                    fill: 'white',
+                                    strokeWidth: 2,
+                                    opacity: 1,
+                                    pointerEvents: 'none',
+                                }}
+                            />
+                        ))
+                    );
+                });
+                return (
+                    <g>
+                        {linePath}
+                        {pointPaths}
+                    </g>
+                );
+            })}
+        </>
+    );
+};
+
 @observer
 export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     @observable.ref private tooltipModel: TooltipModel;
@@ -199,6 +267,21 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     constructor(props: IVAFChartProps) {
         super(props);
         makeObservable(this);
+    }
+
+    getMutationKey(mutation: Mutation) {
+        return mutation.proteinChange + '_' + mutation.gene.hugoGeneSymbol;
+    }
+
+    @computed get mutationToLines(): { [mutationKey: string]: ILine[] } {
+        const mutationToLines: { [mutation: string]: ILine[] } = {};
+        for (const points of this.props.lineData) {
+            const line: ILine = { points: points };
+            const key = this.getMutationKey(points[0].mutation);
+            if (!mutationToLines[key]) mutationToLines[key] = [];
+            mutationToLines[key].push(line);
+        }
+        return mutationToLines;
     }
 
     @computed get headerHeight() {
@@ -240,64 +323,12 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
         }
         if (highlightedMutations.length > 0) {
             return (
-                <>
-                    {highlightedMutations.map(highlightedMutation => {
-                        const points = this.mutationToDataPoints.get({
-                            proteinChange: highlightedMutation.proteinChange,
-                            hugoGeneSymbol:
-                                highlightedMutation.gene.hugoGeneSymbol,
-                        });
-
-                        if (!points) {
-                            return <g />;
-                        }
-                        let linePath = null;
-                        if (points.length > 1) {
-                            // more than one point -> we should render a path
-                            let d = `M ${points[0].x} ${points[0].y}`;
-                            for (let i = 1; i < points.length; i++) {
-                                d = `${d} L ${points[i].x} ${points[i].y}`;
-                            }
-                            linePath = (
-                                <path
-                                    style={{
-                                        stroke: HIGHLIGHT_COLOR,
-                                        strokeOpacity: 1,
-                                        strokeWidth: HIGHLIGHT_LINE_STROKE_WIDTH,
-                                        fillOpacity: 0,
-                                        pointerEvents: 'none',
-                                    }}
-                                    d={d}
-                                />
-                            );
-                        }
-                        const pointPaths = points.map(point => (
-                            <path
-                                d={`M ${point.x} ${point.y}
-                            m -${SCATTER_DATA_POINT_SIZE}, 0
-                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${2 *
-                                    SCATTER_DATA_POINT_SIZE},0
-                            a ${SCATTER_DATA_POINT_SIZE}, ${SCATTER_DATA_POINT_SIZE} 0 1,0 ${-2 *
-                                    SCATTER_DATA_POINT_SIZE},0
-                            `}
-                                style={{
-                                    stroke: HIGHLIGHT_COLOR,
-                                    fill: 'white',
-                                    strokeWidth: 2,
-                                    opacity: 1,
-                                    pointerEvents: 'none',
-                                }}
-                            />
-                        ));
-
-                        return (
-                            <g>
-                                {linePath}
-                                {pointPaths}
-                            </g>
-                        );
-                    })}
-                </>
+                <g>
+                    <LineHighlightSvg
+                        highlightedMutations={highlightedMutations}
+                        mutationLines={this.mutationToLines}
+                    />
+                </g>
             );
         } else {
             return <g />;
@@ -318,7 +349,7 @@ export default class VAFChart extends React.Component<IVAFChartProps, {}> {
     }
 
     @autobind
-    private getTooltipComponent() {
+    private getTooltipComponent(): JSX.Element {
         let mutationTooltip = this.tooltipModel;
         if (
             !mutationTooltip ||
