@@ -7,7 +7,6 @@ import {
     IAnnotation,
     USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB,
     oncoKbAnnotationSortValue,
-    calculateOncoKbAvailableDataType,
 } from 'react-mutation-mapper';
 import { CancerStudy, StructuralVariant } from 'cbioportal-ts-api-client';
 import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/AnnotationColumnFormatter';
@@ -17,6 +16,7 @@ import {
     IOncoKbData,
     generateQueryStructuralVariantId,
     OncoKbCardDataType,
+    calculateOncoKbAvailableDataType,
 } from 'cbioportal-utils';
 
 export default class AnnotationColumnFormatter {
