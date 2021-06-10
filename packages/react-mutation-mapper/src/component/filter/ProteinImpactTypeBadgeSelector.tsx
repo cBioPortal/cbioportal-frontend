@@ -66,7 +66,7 @@ export class ProteinImpactTypeBadgeSelector<
     public static defaultProps: Partial<ProteinImpactTypeBadgeSelectorProps> = {
         colors: DEFAULT_PROTEIN_IMPACT_TYPE_COLORS,
         alignColumns: true,
-        unselectOthersWhenAllSelected: true,
+        unselectOthersWhenAllSelected: false,
         numberOfColumnsPerRow: 2,
     };
 
