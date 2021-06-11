@@ -1,12 +1,14 @@
 import {Datum} from "./oncoprintmodel";
+import {RGBAColor} from "./oncoprintruleset";
 
-type StringParameter = "stroke" | "fill" | "type";
+type StringParameter = "type";
 type PercentNumberParameter = "width" | "height" | "x" | "y" | "x1" | "x2" | "x3" | "y1" | "y2" | "y3";
 type PlainNumberParameter = "z" | "stroke-width" | "stroke-opacity";
+type RGBAParameter = "stroke" | "fill";
 type NumberParameter = PercentNumberParameter | PlainNumberParameter;
-type Parameter = StringParameter | NumberParameter;
+type Parameter = StringParameter | NumberParameter | RGBAParameter;
 
-const default_parameter_values:{[x in StringParameter]?:string} & {[x in NumberParameter]?:number} = {
+const default_parameter_values:{[x in StringParameter]?:string} & {[x in NumberParameter]?:number} & {[x in RGBAParameter]?:RGBAColor} = {
     'width': 100,
     'height': 100,
     'x': 0,
@@ -18,8 +20,8 @@ const default_parameter_values:{[x in StringParameter]?:string} & {[x in NumberP
     'y1': 0,
     'y2': 0,
     'y3': 0,
-    'stroke': 'rgba(0,0,0,0)',
-    'fill': 'rgba(23,23,23,1)',
+    'stroke': [0,0,0,0],
+    'fill': [23,23,23,1],
     'stroke-width': 0,
     'stroke-opacity': 0
 };
@@ -43,16 +45,23 @@ const hash_parameter_order:Parameter[] = [
 
 type StringParamFunction = (d:Datum)=>string;
 type NumberParamFunction = (d:Datum)=>number;
-type ParamFunction = StringParamFunction | NumberParamFunction;
+type RGBAParamFunction = (d:Datum)=>RGBAColor;
+type ParamFunction = StringParamFunction | NumberParamFunction | RGBAParamFunction;
 
-export type ShapeParams = {[x in StringParameter]?:string|StringParamFunction} & {[x in NumberParameter]?:number|NumberParamFunction};
+export type ShapeParams =
+    {[x in StringParameter]?:string|StringParamFunction} &
+    {[x in NumberParameter]?:number|NumberParamFunction} &
+    {[x in RGBAParameter]?:RGBAColor|RGBAParamFunction };
+
 type ShapeParamsWithType = {
     [x in StringParameter]?:({ type:"function", value:StringParamFunction} | {type:"value", value:string})
 } & {
     [x in NumberParameter]?:({ type:"function", value:NumberParamFunction} | {type:"value", value:number})
+} & {
+    [x in RGBAParameter]?:({ type:"function", value:RGBAParamFunction} | {type:"value", value:RGBAColor})
 };
 
-export type ComputedShapeParams = {[x in StringParameter]?:string} & {[x in NumberParameter]?:number};
+export type ComputedShapeParams = {[x in StringParameter]?:string} & {[x in NumberParameter]?:number} & {[x in RGBAParameter]?:RGBAColor};
 
 function isPercentParam(param_name:string):param_name is PercentNumberParameter {
     return param_name in percent_parameter_name_to_dimension_index;
@@ -157,7 +166,9 @@ export class Shape {
 }
 
 type SpecificComputedShapeParams<ShapeParamType> =
-    {[x in ShapeParamType & StringParameter]:string} & {[x in ShapeParamType & NumberParameter]:number};
+    {[x in ShapeParamType & StringParameter]:string} &
+    {[x in ShapeParamType & NumberParameter]:number} &
+    {[x in ShapeParamType & RGBAParameter]:RGBAColor};
 
 type RectangleParameter = "width" | "height" | "x" | "y" | "z" | "stroke" | "stroke-width" | "fill";
 export type ComputedRectangleParams = SpecificComputedShapeParams<RectangleParameter>;

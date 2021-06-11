@@ -6,6 +6,7 @@ import {
     ComputedShapeParams,
     ComputedTriangleParams
 } from "./oncoprintshape";
+import {rgbString} from "./utils";
 
 function extractColor(str:string) {
     if (str.indexOf("rgb(") > -1) {
@@ -22,61 +23,54 @@ function extractColor(str:string) {
 }
 
 function rectangleToSVG(params:ComputedRectangleParams, offset_x:number, offset_y:number) {
-    var stroke_color = extractColor(params.stroke);
-    var fill_color = extractColor(params.fill);
     return makeSVGElement('rect', {
         width: params.width,
         height: params.height,
         x: params.x + offset_x,
         y: params.y + offset_y,
-        stroke: stroke_color.rgb,
-        'stroke-opacity': stroke_color.opacity,
+        stroke: rgbString(params.stroke),
+        'stroke-opacity': params.stroke[3],
         'stroke-width': params['stroke-width'],
-        fill: fill_color.rgb,
-        'fill-opacity': fill_color.opacity
+        fill: rgbString(params.fill),
+        'fill-opacity': params.fill[3]
     });
 }
 
 function triangleToSVG(params:ComputedTriangleParams, offset_x:number, offset_y:number) {
-    var stroke_color = extractColor(params.stroke);
-    var fill_color = extractColor(params.fill);
     return makeSVGElement('polygon', {
         points: [[params.x1 + offset_x, params.y1 + offset_y], [params.x2 + offset_x, params.y2 + offset_y], [params.x3 + offset_x, params.y3 + offset_y]].map(function (a) {
             return a[0] + ',' + a[1];
         }).join(' '),
-        stroke: stroke_color.rgb,
-        'stroke-opacity': stroke_color.opacity,
+        stroke: rgbString(params.stroke),
+        'stroke-opacity': params.stroke[3],
         'stroke-width': params['stroke-width'],
-        fill: fill_color.rgb,
-        'fill-opacity': fill_color.opacity
+        fill: rgbString(params.fill),
+        'fill-opacity': params.fill[3]
     });
 }
 
 function ellipseToSVG(params:ComputedEllipseParams, offset_x:number, offset_y:number) {
-    var stroke_color = extractColor(params.stroke);
-    var fill_color = extractColor(params.fill);
     return makeSVGElement('ellipse', {
         rx: params.width / 2,
         height: params.height / 2,
         cx: params.x + offset_x,
         cy: params.y + offset_y,
-        stroke: stroke_color.rgb,
-        'stroke-opacity': stroke_color.opacity,
+        stroke: rgbString(params.stroke),
+        'stroke-opacity': params.stroke[3],
         'stroke-width': params['stroke-width'],
-        fill: fill_color.rgb,
-        'fill-opacity': fill_color.opacity
+        fill: rgbString(params.fill),
+        'fill-opacity': params.fill[3]
     });
 }
 
 function lineToSVG(params:ComputedLineParams, offset_x:number, offset_y:number) {
-    var stroke_color = extractColor(params.stroke);
     return makeSVGElement('line', {
         x1: params.x1 + offset_x,
         y1: params.y1 + offset_y,
         x2: params.x2 + offset_x,
         y2: params.y2 + offset_y,
-        stroke: stroke_color.rgb,
-        'stroke-opacity': stroke_color.opacity,
+        stroke: rgbString(params.stroke),
+        'stroke-opacity': params.stroke[3],
         'stroke-width': params['stroke-width'],
     });
 }

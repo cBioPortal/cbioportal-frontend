@@ -6,7 +6,7 @@ import CachedProperty from './CachedProperty';
 import {hclusterColumns, hclusterTracks} from './clustering';
 import $ from 'jquery';
 import * as BucketSort from "./bucketsort";
-import {cloneShallow, doesCellIntersectPixel, ifndef} from "./utils";
+import {cloneShallow, doesCellIntersectPixel, ifndef, z_comparator} from "./utils";
 import _ from "lodash";
 import {RuleSet, RuleSetParams, RuleWithId} from "./oncoprintruleset";
 import {InitParams} from "./oncoprint";
@@ -208,6 +208,7 @@ export default class OncoprintModel {
     // Global properties
     private sort_config:SortConfig;
     public rendering_suppressed_depth:number;
+    public keep_sorted = false;
 
     // Rendering properties
     public readonly max_height:number;
@@ -828,7 +829,36 @@ export default class OncoprintModel {
         }
     };
 
-    public getIdentifiedShapeListList(track_id:TrackId, use_base_size:boolean, sort_by_z:boolean):IdentifiedShapeList[] {
+    public getTrackUniversalShapes(
+        track_id:TrackId,
+        use_base_size:boolean,
+        sort_by_z:boolean
+    ):ComputedShapeParams[] {
+        const universalRule = this.getRuleSet(track_id).getUniversalRule();
+        if (!universalRule) {
+            return [];
+        }
+        const spacing = this.getTrackHasColumnSpacing(track_id);
+        const width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
+        const height = this.getCellHeight(track_id, use_base_size);
+        const shapes = universalRule.rule.apply(
+            {}, // a universal rule does not rely on anything specific to the data
+            width,
+            height
+        )
+
+        if (sort_by_z) {
+            shapes.sort(z_comparator);
+        }
+
+        return shapes;
+    }
+
+    public getSpecificShapesForData(
+        track_id:TrackId,
+        use_base_size:boolean,
+        sort_by_z:boolean
+    ):IdentifiedShapeList[] {
         const active_rules = {};
         const data = this.getTrackData(track_id);
         const id_key = this.getTrackDataIdKey(track_id);
@@ -840,18 +870,6 @@ export default class OncoprintModel {
 
         this.setTrackActiveRules(track_id, active_rules);
 
-
-        function z_comparator(shapeA:ComputedShapeParams, shapeB:ComputedShapeParams) {
-            const zA = shapeA.z;
-            const zB = shapeB.z;
-            if (zA < zB) {
-                return -1;
-            } else if (zA > zB) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
         return shapes.map(function(shape_list:ComputedShapeParams[], index:number) {
             if (sort_by_z) {
                 shape_list.sort(z_comparator);
@@ -861,12 +879,28 @@ export default class OncoprintModel {
                 shape_list: shape_list
             };
         });
+
+        /*
+        return shapes.reduce(function(ret:IdentifiedShapeList[], shape_list:ComputedShapeParams[], index:number) {
+            if (shape_list.length > 0) {
+                // only add entry for nonempty shape list
+                if (sort_by_z) {
+                    shape_list.sort(z_comparator);
+                }
+                ret.push({
+                    id: data[index][id_key],
+                    shape_list: shape_list
+                })
+            }
+            return ret;
+        }, []);
+         */
     }
 
     public getActiveRules(rule_set_id:RuleSetId) {
         const rule_set_active_rules = this.rule_set_active_rules[rule_set_id];
         if (rule_set_active_rules) {
-            return this.rule_sets[rule_set_id].getRulesWithId().filter(function(rule_with_id:RuleWithId) {
+            return this.rule_sets[rule_set_id].getSpecificRulesForDatum().filter(function(rule_with_id:RuleWithId) {
                 return !!rule_set_active_rules[rule_with_id.id];
             });
         } else {
@@ -1106,10 +1140,15 @@ export default class OncoprintModel {
         return this.track_groups;
     }
 
-    public addTracks(params_list:LibraryTrackSpec<Datum>[]) {
+    public async addTracks(params_list:LibraryTrackSpec<Datum>[]) {
         for (let i = 0; i < params_list.length; i++) {
             const params = params_list[i];
             this.addTrack(params);
+        }
+        if (this.rendering_suppressed_depth === 0) {
+            if (this.keep_sorted) {
+                await this.sort();
+            }
         }
         this.track_tops.update();
     }
@@ -1208,8 +1247,17 @@ export default class OncoprintModel {
         this.track_id_to_datum.update(this, track_id);
         this.track_present_ids.update(this, track_id);
         this.precomputed_comparator.update(this, track_id);
+    }
 
-        this.setIdOrder(Object.keys(this.present_ids.get()));
+    public getAllIds() {
+        return Object.keys(this.present_ids.get());
+    }
+
+    public async releaseRendering() {
+        if (this.keep_sorted) {
+            await this.sort();
+        }
+        this.track_tops.update();
     }
 
     private ensureTrackGroupExists(index:TrackGroupIndex) {
@@ -1882,7 +1930,7 @@ export default class OncoprintModel {
             return mandatory_values.concat(preferred_values);
         }
 
-        const ids_with_vectors = this.getIdOrder(true).map(function(id) {
+        const ids_with_vectors = this.getAllIds().map(function(id) {
             return {
                 id: id,
                 vector: getVector(id)

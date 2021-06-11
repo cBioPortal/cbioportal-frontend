@@ -90,7 +90,6 @@ export default class Oncoprint {
     public label_view: OncoprintLabelView;
     public legend_view: OncoprintLegendView;
 
-    private keep_sorted:boolean;
     private keep_horz_zoomed_to_fit:boolean;
     private keep_horz_zoomed_to_fit_ids:ColumnId[];
     private pending_resize_and_organize:boolean;
@@ -341,8 +340,6 @@ export default class Oncoprint {
 
         this.legend_view = new OncoprintLegendView($legend_div, 10, 20);
 
-        this.keep_sorted = false;
-
         this.keep_horz_zoomed_to_fit = false;
         this.keep_horz_zoomed_to_fit_ids = [];
 
@@ -525,7 +522,7 @@ export default class Oncoprint {
         this.track_info_view.moveTrack(this.model, this.getCellViewHeight);
         this.minimap_view.moveTrack(this.model, this.cell_view);
 
-        if (this.keep_sorted && this.model.isSortAffected([target_track, new_previous_track], "track")) {
+        if (this.model.keep_sorted && this.model.isSortAffected([target_track, new_previous_track], "track")) {
             this.sort();
         }
 
@@ -542,7 +539,7 @@ export default class Oncoprint {
         this.track_options_view.setTrackGroupOrder(this.model);
         this.track_info_view.setTrackGroupOrder(this.model, this.getCellViewHeight);
 
-        if (!dont_sort && this.keep_sorted && this.model.isSortAffected(index, "group")) {
+        if (!dont_sort && this.model.keep_sorted && this.model.isSortAffected(index, "group")) {
             this.sort();
         }
 
@@ -558,12 +555,13 @@ export default class Oncoprint {
         this.resizeAndOrganizeAfterTimeout();
     }
 
-    public keepSorted(keep_sorted:boolean) {
+    public keepSorted(keep_sorted?:boolean) {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.keep_sorted = (typeof keep_sorted === 'undefined' ? true : keep_sorted);
-        if (this.keep_sorted) {
+        const oldValue = this.model.keep_sorted;
+        this.model.keep_sorted = typeof keep_sorted === 'undefined' ? true : keep_sorted;
+        if (this.model.keep_sorted && this.model.keep_sorted !== oldValue) {
             this.sort();
         }
     }
@@ -591,7 +589,7 @@ export default class Oncoprint {
         this.legend_view.addTracks(this.model);
         this.minimap_view.addTracks(this.model, this.cell_view);
 
-        if (this.keep_sorted && this.model.isSortAffected(track_ids, "track")) {
+        if (this.model.keep_sorted && this.model.isSortAffected(track_ids, "track")) {
             this.sort();
         }
         this.resizeAndOrganizeAfterTimeout();
@@ -613,7 +611,7 @@ export default class Oncoprint {
         this.legend_view.removeTrack(this.model);
         this.minimap_view.removeTrack(this.model, this.cell_view);
 
-        if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
+        if (this.model.keep_sorted && this.model.isSortAffected(track_id, "track")) {
             this.sort();
         }
         this.resizeAndOrganizeAfterTimeout();
@@ -623,13 +621,9 @@ export default class Oncoprint {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.keepSorted(false);
-        this.suppressRendering();
         for (let i=0; i<track_ids.length; i++) {
             this.removeTrack(track_ids[i]);
         }
-        this.keepSorted(true);
-        this.releaseRendering();
     }
 
     public getTracks() {
@@ -934,7 +928,7 @@ export default class Oncoprint {
         this.legend_view.setTrackData(this.model);
         this.minimap_view.setTrackData(this.model, this.cell_view);
 
-        if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
+        if (this.model.keep_sorted && this.model.isSortAffected(track_id, "track")) {
             this.sort();
         }
         this.resizeAndOrganizeAfterTimeout();
@@ -957,7 +951,7 @@ export default class Oncoprint {
         this.model.setTrackGroupSortPriority(priority);
         this.cell_view.setTrackGroupSortPriority(this.model);
 
-        if (this.keep_sorted) {
+        if (this.model.keep_sorted) {
             this.sort();
         }
         this.resizeAndOrganizeAfterTimeout();
@@ -969,7 +963,7 @@ export default class Oncoprint {
         }
         this.model.resetSortableTracksSortDirection(true);
 
-        if (this.keep_sorted) {
+        if (this.model.keep_sorted) {
             this.sort();
         }
     }
@@ -981,7 +975,7 @@ export default class Oncoprint {
         if (this.model.isTrackSortDirectionChangeable(track_id)) {
             this.model.setTrackSortDirection(track_id, dir);
 
-            if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
+            if (this.model.keep_sorted && this.model.isSortAffected(track_id, "track")) {
                 this.sort();
             }
 
@@ -999,7 +993,7 @@ export default class Oncoprint {
             return;
         }
         this.model.setTrackSortComparator(track_id, sortCmpFn);
-        if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
+        if (this.model.keep_sorted && this.model.isSortAffected(track_id, "track")) {
             this.sort();
         }
     }
@@ -1104,7 +1098,7 @@ export default class Oncoprint {
         this.cell_view.setSortConfig(this.model);
         this.track_options_view.setSortConfig(this.model);
 
-        if (this.keep_sorted) {
+        if (this.model.keep_sorted) {
             this.sort();
         }
     }
@@ -1118,7 +1112,7 @@ export default class Oncoprint {
         this.cell_view.setIdOrder(this.model, ids);
         this.minimap_view.setIdOrder(this.model, this.cell_view);
 
-        if (this.keep_sorted) {
+        if (this.model.keep_sorted) {
             this.sort();
         }
     }
@@ -1175,17 +1169,20 @@ export default class Oncoprint {
         if(this.webgl_unavailable || this.destroyed) {
             return;
         }
-        this.model.rendering_suppressed_depth -= 1;
-        this.model.rendering_suppressed_depth = Math.max(0, this.model.rendering_suppressed_depth);
-        if (this.model.rendering_suppressed_depth === 0) {
-            this.label_view.releaseRendering(this.model, this.getCellViewHeight);
-            this.header_view.releaseRendering(this.model);
-            this.cell_view.releaseRendering(this.model);
-            this.track_options_view.releaseRendering(this.model, this.getCellViewHeight);
-            this.track_info_view.releaseRendering(this.model, this.getCellViewHeight);
-            this.legend_view.releaseRendering(this.model);
-            this.minimap_view.releaseRendering(this.model, this.cell_view);
-            this.resizeAndOrganizeAfterTimeout(onComplete);
+        if (this.model.rendering_suppressed_depth > 0) {
+            this.model.rendering_suppressed_depth -= 1;
+            this.model.rendering_suppressed_depth = Math.max(0, this.model.rendering_suppressed_depth);
+            if (this.model.rendering_suppressed_depth === 0) {
+                this.model.releaseRendering();
+                this.label_view.releaseRendering(this.model, this.getCellViewHeight);
+                this.header_view.releaseRendering(this.model);
+                this.cell_view.releaseRendering(this.model);
+                this.track_options_view.releaseRendering(this.model, this.getCellViewHeight);
+                this.track_info_view.releaseRendering(this.model, this.getCellViewHeight);
+                this.legend_view.releaseRendering(this.model);
+                this.minimap_view.releaseRendering(this.model, this.cell_view);
+                this.resizeAndOrganizeAfterTimeout(onComplete);
+            }
         }
     }
 
@@ -1287,7 +1284,7 @@ export default class Oncoprint {
         const everything_group = svgfactory.group(0,0);
         root.appendChild(everything_group);
 
-        const bgrect = svgfactory.bgrect(10,10,'#ffffff');
+        const bgrect = svgfactory.bgrect(10,10,[255,255,255,1]);
 
         if (with_background) {
             everything_group.appendChild(bgrect);

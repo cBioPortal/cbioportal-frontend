@@ -25,6 +25,7 @@ import binarysearch from "./binarysearch";
 import {Omit, cloneShallow, ifndef, objectValues, shallowExtend} from "./utils";
 import {ActiveRules, ColumnProp, Datum, RuleSetId} from "./oncoprintmodel";
 import _ from "lodash";
+import extractrgba, {hexToRGBA, rgbaToHex} from "./extractrgba";
 
 export type RuleSetParams = ILinearInterpRuleSetParams | ICategoricalRuleSetParams |
     IGradientRuleSetParams |
@@ -36,7 +37,7 @@ export type RuleSetParams = ILinearInterpRuleSetParams | ICategoricalRuleSetPara
 interface IGeneralRuleSetParams {
     type?:RuleSetType;
     legend_label?: string;
-    legend_base_color?: string;
+    legend_base_color?: RGBAColor;
     exclude_from_legend?: boolean;
     na_z?:number; // z index of na shapes (defaults to 1)
     na_legend_label?:string; // legend label associated to NA (defaults to 'No data')
@@ -53,7 +54,8 @@ interface ILinearInterpRuleSetParams extends IGeneralRuleSetParams {
 export interface ICategoricalRuleSetParams extends IGeneralRuleSetParams {
     type: RuleSetType.CATEGORICAL;
     category_key: string; // key into data which gives category
-    category_to_color?: {[category:string]:string};
+    category_to_color?: {[category:string]:RGBAColor};
+    universal_rule_categories?: {[category:string]:any};
 }
 
 export interface IGradientRuleSetParams extends ILinearInterpRuleSetParams {
@@ -62,7 +64,7 @@ export interface IGradientRuleSetParams extends ILinearInterpRuleSetParams {
     colors?: RGBAColor[]; // [r,g,b,a][]
     colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
     value_stop_points: number[];
-    null_color?: string;
+    null_color?: RGBAColor;
     null_legend_label?:string;
 }
 
@@ -72,30 +74,30 @@ export interface IGradientRuleSetParams extends ILinearInterpRuleSetParams {
 export interface IGradientAndCategoricalRuleSetParams extends IGeneralRuleSetParams {
     type: RuleSetType.GRADIENT_AND_CATEGORICAL;
     // either `colormap_name` or `colors` needs to be present
-    colors?: [number, number, number, number][]; // [r,g,b,a][]
+    colors?: RGBAColor[];
     colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
     value_stop_points: number[];
-    null_color?: string;
+    null_color?: RGBAColor;
 
     log_scale?:boolean;
     value_key: string;
     value_range: [number, number];
 
     category_key: string; // key into data which gives category
-    category_to_color?: {[category:string]:string};
+    category_to_color?: {[category:string]:RGBAColor};
 }
 
 export interface IBarRuleSetParams extends ILinearInterpRuleSetParams {
     type: RuleSetType.BAR;
-    fill?: string;
-    negative_fill?: string;
+    fill?: RGBAColor;
+    negative_fill?: RGBAColor;
 }
 
 export interface IStackedBarRuleSetParams extends IGeneralRuleSetParams {
     type: RuleSetType.STACKED_BAR;
     value_key: string;
     categories: string[];
-    fills?: string[];
+    fills?: RGBAColor[];
 }
 
 export interface IGeneticAlterationRuleSetParams extends IGeneralRuleSetParams {
@@ -128,7 +130,7 @@ type RuleParams = {
     exclude_from_legend?:boolean;
     legend_config?:RuleLegendConfig;
     legend_order?:number;
-    legend_base_color?:string;
+    legend_base_color?:RGBAColor;
 };
 
 type RuleLegendConfig =
@@ -137,14 +139,14 @@ type RuleLegendConfig =
         type: "number",
         range:[number, number],
         range_type:LinearInterpRangeType,
-        positive_color:string,
-        negative_color:string,
+        positive_color:RGBAColor,
+        negative_color:RGBAColor,
         interpFn:(val:number)=>number
     } | // range: [lower, upper]
     {
         type: "gradient",
         range:[number,number],
-        colorFn:(val:number)=>string
+        colorFn:(val:number)=>RGBAColor
     };
 
 
@@ -190,7 +192,7 @@ function makeUniqueColorGetter(init_used_colors:string[]) {
         "#651067", "#329262", "#5574a6", "#3b3eac",
         "#b77322", "#16d620", "#b91383", "#f4359e",
         "#9c5935", "#a9c413", "#2a778d", "#668d1c",
-        "#bea413", "#0c5922", "#743411"]; // Source: D3
+        "#bea413", "#0c5922", "#743411"];; // Source: D3
     let index = 0;
     const used_colors:{[color:string]:boolean} = {};
     for (let i=0; i<init_used_colors.length; i++) {
@@ -213,7 +215,7 @@ function makeUniqueColorGetter(init_used_colors:string[]) {
             used_colors[next_color] = true;
             index += 1;
 
-            return next_color;
+            return hexToRGBA(next_color);
         }
     };
 }
@@ -222,11 +224,11 @@ function makeNAShapes(z:number):ShapeParams[] {
     return [
         {
             'type': 'rectangle',
-            'fill': 'rgba(255,255,255,1)',
+            'fill': [255,255,255,1],
             'z':z
         }, {
             'type': 'line',
-            'stroke': 'rgba(190,190,190,1)',
+            'stroke': [190,190,190,1],
             'stroke-width': 1,
             'x1': 0,
             'x2': 100,
@@ -307,10 +309,11 @@ export class RuleSet {
 
     public rule_set_id:RuleSetId;
     public legend_label?:string;
-    protected legend_base_color?:string;
+    protected legend_base_color?:RGBAColor;
     public exclude_from_legend?:boolean;
     protected active_rule_ids:ActiveRules;
     protected rules_with_id:RuleWithId[];
+    protected universal_rule?:RuleWithId;
 
     constructor(params:Omit<RuleSetParams, "type">) {
         /* params:
@@ -323,7 +326,6 @@ export class RuleSet {
         this.exclude_from_legend = params.exclude_from_legend;
         this.active_rule_ids = {};
         this.rules_with_id = [];
-
     }
 
     public getLegendLabel() {
@@ -347,6 +349,10 @@ export class RuleSet {
         }
         this.rules_with_id.push({id: rule_id, rule: new Rule(params)});
         return rule_id;
+    }
+
+    public setUniversalRule(r:RuleWithId) {
+        this.universal_rule = r;
     }
 
     public removeRule(rule_id:RuleId) {
@@ -399,8 +405,12 @@ export class RuleSet {
         return shapes;
     }
 
-    public getRulesWithId(datum?:Datum):RuleWithId[] {
+    public getSpecificRulesForDatum(datum?:Datum):RuleWithId[] {
         throw "Not implemented on base class";
+    }
+
+    public getUniversalRule() {
+        return this.universal_rule;
     }
 
     public apply(data:Datum[], cell_width:number, cell_height:number, out_active_rules?:ActiveRules|undefined, data_id_key?:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
@@ -411,13 +421,17 @@ export class RuleSet {
         for (var i = 0; i < data.length; i++) {
             var datum = data[i];
             var should_mark_active = !important_ids || !!important_ids[datum[data_id_key!]];
-            var rules = this.getRulesWithId(datum);
+            var rules = this.getSpecificRulesForDatum(datum);
             if (typeof out_active_rules !== 'undefined' && should_mark_active) {
                 for (let j = 0; j < rules.length; j++) {
                     out_active_rules[rules[j].id] = true;
                 }
             }
             ret.push(this.applyRulesToDatum(rules, data[i], cell_width, cell_height));
+        }
+        // mark universal rule as active
+        if (this.getUniversalRule()) {
+            out_active_rules[this.getUniversalRule().id] = true;
         }
         return ret;
     }
@@ -426,17 +440,15 @@ export class RuleSet {
 class LookupRuleSet extends RuleSet {
     private lookup_map_by_key_and_value:{[key:string]:{[value:string]:RuleWithId}} = {};
     private lookup_map_by_key:{[key:string]:RuleWithId} = {};
-    private universal_rules:RuleWithId[] = [];
     private rule_id_to_conditions:{[ruleId:number]:{ key:string, value:string }[] } = {};
 
-    public getRulesWithId(datum?:Datum) {
+    public getSpecificRulesForDatum(datum?:Datum) {
         if (typeof datum === 'undefined') {
             return this.rules_with_id;
         }
         let ret:RuleWithId[] = [];
-        ret = ret.concat(this.universal_rules);
         for (var key in datum) {
-            if (typeof datum[key] !== 'undefined' && datum.hasOwnProperty(key)) {
+            if ((key in datum) && typeof datum[key] !== 'undefined') {
                 var key_rule = this.lookup_map_by_key[key];
                 if (typeof key_rule !== 'undefined') {
                     ret.push(key_rule);
@@ -452,7 +464,7 @@ class LookupRuleSet extends RuleSet {
 
     private indexRuleForLookup(condition_key:string, condition_value:string, rule_with_id:RuleWithId) {
         if (condition_key === null) {
-            this.universal_rules.push(rule_with_id);
+            this.setUniversalRule(rule_with_id);
         } else {
             if (condition_value === null) {
                 this.lookup_map_by_key[condition_key] = rule_with_id;
@@ -483,16 +495,8 @@ class LookupRuleSet extends RuleSet {
         while (this.rule_id_to_conditions[rule_id].length > 0) {
             var condition = this.rule_id_to_conditions[rule_id].pop();
             if (condition.key === null) {
-                var index = -1;
-                for (var i = 0; i < this.universal_rules.length; i++) {
-                    if (this.universal_rules[i].id === rule_id) {
-                        index = i;
-                        break;
-                    }
-                }
-                if (index > -1) {
-                    this.universal_rules.splice(index, 1);
-                }
+                // universal rule
+                this.universal_rule = undefined;
             } else {
                 if (condition.value === null) {
                     delete this.lookup_map_by_key[condition.key];
@@ -526,7 +530,7 @@ class ConditionRuleSet extends RuleSet {
         }
     }
 
-    public getRulesWithId(datum?:Datum) {
+    public getSpecificRulesForDatum(datum?:Datum) {
         if (typeof datum === 'undefined') {
             return this.rules_with_id;
         }
@@ -553,8 +557,9 @@ class ConditionRuleSet extends RuleSet {
 
 class CategoricalRuleSet extends LookupRuleSet {
     public readonly category_key:string;
-    private readonly category_to_color:{[category:string]:string};
-    private readonly getUnusedColor:(color?:string)=>string;
+    private readonly category_to_color:{[category:string]:RGBAColor};
+    private readonly getUnusedColor:(color?:string)=>RGBAColor;
+    private readonly universal_rule_categories?:{[category:string]:any};
     constructor(params:Omit<ICategoricalRuleSetParams, "type">, omitNArule?:boolean) {
         super(params);
         if (!omitNArule) {
@@ -568,16 +573,17 @@ class CategoricalRuleSet extends LookupRuleSet {
         }
 
         this.category_key = params.category_key;
+        this.universal_rule_categories = params.universal_rule_categories;
         this.category_to_color = cloneShallow(ifndef(params.category_to_color, {}));
-        this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex));
+        this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(rgbaToHex));
         for (const category of Object.keys(this.category_to_color)) {
             const color = this.category_to_color[category];
             this.addCategoryRule(category, color);
-            this.getUnusedColor(color);
+            this.getUnusedColor(rgbaToHex(color));
         }
     }
 
-    private addCategoryRule(category:string, color:string) {
+    private addCategoryRule(category:string, color:RGBAColor) {
         const legend_rule_target:any = {};
         legend_rule_target[this.category_key] = category;
         const rule_params:RuleParams = {
@@ -589,7 +595,12 @@ class CategoricalRuleSet extends LookupRuleSet {
             exclude_from_legend: false,
             legend_config: {'type': 'rule', 'target': legend_rule_target}
         };
-        this.addRule(this.category_key, category, rule_params);
+        if (this.universal_rule_categories && this.universal_rule_categories.hasOwnProperty(category)) {
+            // add universal rule
+            this.addRule(null, category, rule_params);
+        } else {
+            this.addRule(this.category_key, category, rule_params);
+        }
     }
 
     public apply(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
@@ -599,7 +610,7 @@ class CategoricalRuleSet extends LookupRuleSet {
                 continue;
             }
             const category = data[i][this.category_key];
-            if (!this.category_to_color.hasOwnProperty(category)) {
+            if (!(category in this.category_to_color)) {
                 const color = this.getUnusedColor();
 
                 this.category_to_color[category] = color;
@@ -727,7 +738,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
 class GradientRuleSet extends LinearInterpRuleSet {
     private colors:RGBAColor[] = [];
     private value_stop_points: number[];
-    private null_color?:string;
+    private null_color?:RGBAColor;
     private gradient_rule:RuleId;
 
     constructor(params:Omit<IGradientRuleSetParams, "type">) {
@@ -742,7 +753,7 @@ class GradientRuleSet extends LinearInterpRuleSet {
         }
 
         this.value_stop_points = params.value_stop_points;
-        this.null_color = params.null_color || "rgba(211,211,211,1)";
+        this.null_color = params.null_color || [211,211,211,1];
 
         var self = this;
         var value_key = this.value_key;
@@ -759,7 +770,7 @@ class GradientRuleSet extends LinearInterpRuleSet {
         });
     }
 
-    static linInterpColors(t:number, begin_color:RGBAColor, end_color:RGBAColor) {
+    static linInterpColors(t:number, begin_color:RGBAColor, end_color:RGBAColor):RGBAColor {
         // 0 <= t <= 1
         return [
             Math.round(begin_color[0]*(1-t) + end_color[0]*t),
@@ -777,21 +788,21 @@ class GradientRuleSet extends LinearInterpRuleSet {
         } else {
             stop_points = intRange(colors.length).map(function(x) { return x/(colors.length -1); });
         }
-        return function(t:number) {
+        return function(t:number):RGBAColor {
             // 0 <= t <= 1
             var begin_interval_index = binarysearch(stop_points, t, function(x) { return x; }, true);
             if (begin_interval_index === -1) {
-                return "rgba(0,0,0,1)";
+                return [0,0,0,1];
             }
             var end_interval_index = Math.min(colors.length - 1, begin_interval_index + 1);
             var spread = stop_points[end_interval_index] - stop_points[begin_interval_index];
             if (spread === 0) {
-                return "rgba(" + colors[end_interval_index].join(",") + ")";
+                return colors[end_interval_index];
             } else {
                 var interval_t = (t - stop_points[begin_interval_index]) / spread;
                 var begin_color = colors[begin_interval_index];
                 var end_color = colors[end_interval_index];
-                return "rgba(" + GradientRuleSet.linInterpColors(interval_t, begin_color, end_color).join(",") + ")";
+                return GradientRuleSet.linInterpColors(interval_t, begin_color, end_color);
             }
 
         };
@@ -815,7 +826,7 @@ class GradientRuleSet extends LinearInterpRuleSet {
                     type: 'rectangle',
                     fill: function(d) {
                         var t = interpFn(d[value_key]);
-                        return colorFn(t);
+                        return colorFn(t) as RGBAColor;
                     }
                 }],
                 exclude_from_legend: false,
@@ -826,14 +837,14 @@ class GradientRuleSet extends LinearInterpRuleSet {
 }
 
 class BarRuleSet extends LinearInterpRuleSet {
-    private fill:string;
-    private negative_fill:string;
+    private fill:RGBAColor;
+    private negative_fill:RGBAColor;
     private bar_rule?:RuleId;
 
     constructor(params:IBarRuleSetParams) {
         super(params);
-        this.fill = params.fill || 'rgba(0,128,0,1)'; // green
-        this.negative_fill = params.negative_fill || 'rgba(255,0,0,1)'; //red
+        this.fill = params.fill || [0,128,0,1]; // green
+        this.negative_fill = params.negative_fill || [255,0,0,1]; //red
     }
 
     protected updateLinearRules() {
@@ -917,7 +928,7 @@ class StackedBarRuleSet extends ConditionRuleSet {
         const value_key = params.value_key;
         const fills = params.fills || [];
         const categories = params.categories || [];
-        const getUnusedColor = makeUniqueColorGetter(fills);
+        const getUnusedColor = makeUniqueColorGetter(fills.map(rgbaToHex));
 
         // Initialize with default values
         while (fills.length < categories.length) {
@@ -995,7 +1006,7 @@ export class GeneticAlterationRuleSet extends LookupRuleSet {
                         {
                             shapes: ruleParams.shapes,
                             legend_config: {'type': 'rule' as 'rule', 'target': legend_rule_target},
-                            legend_base_color: ifndef(this.legend_base_color, "")
+                            legend_base_color: ifndef(this.legend_base_color, [255,255,255,1])
                         }
                     )
                 );
@@ -1019,7 +1030,7 @@ export class GeneticAlterationRuleSet extends LookupRuleSet {
 export class Rule {
     private shapes:Shape[];
     public legend_label:string;
-    public legend_base_color?:string;
+    public legend_base_color?:RGBAColor;
     public exclude_from_legend?:boolean;
     private legend_config?:RuleLegendConfig;
     public legend_order?:number;
@@ -1093,9 +1104,9 @@ class GradientCategoricalRuleSet extends RuleSet {
     }
 
     // RuleSet API
-    public getRulesWithId(datum?:Datum) {
-        const categoricalRules = this.categoricalRuleSet.getRulesWithId(datum);
-        const gradientRules = this.gradientRuleSet.getRulesWithId(datum);
+    public getSpecificRulesForDatum(datum?:Datum) {
+        const categoricalRules = this.categoricalRuleSet.getSpecificRulesForDatum(datum);
+        const gradientRules = this.gradientRuleSet.getSpecificRulesForDatum(datum);
         const rules = categoricalRules.concat(gradientRules);
         return rules;
     }

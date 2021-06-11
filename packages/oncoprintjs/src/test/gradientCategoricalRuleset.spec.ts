@@ -17,7 +17,7 @@ describe("GradientCategoricalRuleSet", function() {
         value_range: [1,8],
         value_stop_points: [1,2,8],
         colors: [[255,0,0,1],[0,0,0,1],[0,255,0,1]],
-        null_color: 'rgba(224,224,224,1)',
+        null_color: [224,224,224,1],
         category_key: "category"
     };
 
@@ -50,9 +50,9 @@ describe("GradientCategoricalRuleSet", function() {
         var mixRuleSet = OncoprintRuleSet(mixParams);
         var elements = mixRuleSet.apply([gradientDatumLargest, gradientDatumSmallest, naDatum], 12, 12,  undefined, "id");
         assert.equal(elements.length, 3);
-        assert.equal(elements[0][0].fill,'rgba(0,255,0,1)');
-        assert.equal(elements[1][0].fill,'rgba(255,0,0,1)');
-        assert.equal(elements[2][0].fill,'rgba(224,224,224,1)');
+        assert.deepEqual(elements[0][0].fill,[0,255,0,1]);
+        assert.deepEqual(elements[1][0].fill,[255,0,0,1]);
+        assert.deepEqual(elements[2][0].fill,[224,224,224,1]);
     });
 
     it("Formats categorical value", function() {
@@ -63,7 +63,7 @@ describe("GradientCategoricalRuleSet", function() {
 
     it("Suppresses duplicate No Data rules", function() {
         var mixRuleSet = OncoprintRuleSet(mixParams);
-        var elements = mixRuleSet.getRulesWithId();
+        var elements = mixRuleSet.getSpecificRulesForDatum();
         assert.equal(elements.length, 2);
     });
 

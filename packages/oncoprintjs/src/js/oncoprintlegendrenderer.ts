@@ -164,7 +164,10 @@ export default class OncoprintLegendView {
             const concrete_shapes = rule.apply(config.target, model.getCellWidth(true), this.base_height);
             if (rule.legend_base_color) {
                 // generate backgrounds
-                const baseRect = svgfactory.rect(0, 0, model.getCellWidth(true), this.base_height, rule.legend_base_color);
+                const baseRect = svgfactory.rect(0, 0, model.getCellWidth(true), this.base_height, {
+                    type: "rgba",
+                    value: rule.legend_base_color
+                });
                 root.appendChild(baseRect);
             }
             // generate shapes
@@ -223,7 +226,7 @@ export default class OncoprintLegendView {
             target_defs.appendChild(gradient);
             root.appendChild(svgfactory.text(display_range[0].toString(), 0, 0, 12, 'Arial', 'normal'));
             root.appendChild(svgfactory.text(display_range[1].toString(), 120, 0, 12, 'Arial', 'normal'));
-            root.appendChild(svgfactory.rect(30,0,60,20,"url(#"+gradient_id+")"));
+            root.appendChild(svgfactory.rect(30,0,60,20,{type:"gradientId", value: gradient_id}));
         }
         return root;
     }

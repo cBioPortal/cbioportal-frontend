@@ -172,21 +172,19 @@ function hclusterCases(casesAndEntitites:CasesAndEntities):CaseItem[] {
     //add orderedValueList to all items, so the values are
     //compared in same order:
     for (var caseId in casesAndEntitites) {
-        if (casesAndEntitites.hasOwnProperty(caseId)) {
-            var caseObj = casesAndEntitites[caseId];
-            var inputItem = new Object() as CaseItem;
-            inputItem.caseId = caseId;
-            inputItem.orderedValueList = [];
-            if (refEntityList == null) {
-                refEntityList = getRefList(caseObj);
-            }
-            for (var j = 0; j < refEntityList.length; j++) {
-                var entityId = refEntityList[j];
-                var value = caseObj[entityId];
-                inputItem.orderedValueList.push(value);
-            }
-            inputItems.push(inputItem);
+        var caseObj = casesAndEntitites[caseId];
+        var inputItem = new Object() as CaseItem;
+        inputItem.caseId = caseId;
+        inputItem.orderedValueList = [];
+        if (refEntityList == null) {
+            refEntityList = getRefList(caseObj);
         }
+        for (var j = 0; j < refEntityList.length; j++) {
+            var entityId = refEntityList[j];
+            var value = caseObj[entityId];
+            inputItem.orderedValueList.push(value);
+        }
+        inputItems.push(inputItem);
     }
     if (refEntityList.length == 1) {
         //this is a special case, where the "clustering" becomes a simple sorting in 1 dimension:
@@ -216,9 +214,7 @@ function hclusterCases(casesAndEntitites:CasesAndEntities):CaseItem[] {
 function getRefList(caseItem:CasesAndEntities[""]) {
     var result = [];
     for (var entityId in caseItem) {
-        if (caseItem.hasOwnProperty(entityId)) {
-            result.push(entityId);
-        }
+        result.push(entityId);
     }
     return result;
 }
@@ -235,14 +231,12 @@ function hclusterGeneticEntities(casesAndEntitites:CasesAndEntities):EntityItem[
     //add orderedValueList to all items, so the values are
     //compared in same order:
     for (var caseId in casesAndEntitites) {
-        if (casesAndEntitites.hasOwnProperty(caseId)) {
-            var caseObj = casesAndEntitites[caseId];
-            if (refEntityList == null) {
-                refEntityList = getRefList(caseObj);
-            }
-            //refCaseIdList:
-            refCaseIdList.push(caseId);
+        var caseObj = casesAndEntitites[caseId];
+        if (refEntityList == null) {
+            refEntityList = getRefList(caseObj);
         }
+        //refCaseIdList:
+        refCaseIdList.push(caseId);
     }
     //iterate over genes, and get sample values:
     for (var i = 0; i < refEntityList.length; i++) {

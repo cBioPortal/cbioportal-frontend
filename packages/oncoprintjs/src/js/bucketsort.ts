@@ -1,4 +1,4 @@
-import {extendArray, sgndiff} from "./utils";
+import {extendArray, fastParseInt10, sgndiff} from "./utils";
 
 const string_type = typeof "";
 
@@ -107,7 +107,7 @@ export function stringToVector(string:string) {
             // character is not numeric
             if (numberStartIncl > -1) {
                 // if we're in a number, then we need to add the number to the vector
-                vector.push(parseInt(string.substring(numberStartIncl, i), 10));
+                vector.push(fastParseInt10(string, numberStartIncl, i));
                 // and record no longer in a number
                 numberStartIncl = -1;
             }
@@ -117,7 +117,7 @@ export function stringToVector(string:string) {
     }
     if (numberStartIncl > -1) {
         // if we're in a number at the end of the string, add it to vector
-        vector.push(parseInt(string.substring(numberStartIncl), 10));
+        vector.push(fastParseInt10(string, numberStartIncl));
         // no need to reset numberStartIncl because the algorithm is done
     }
     return vector;
@@ -202,8 +202,8 @@ export function bucketSortHelper<T>(
             key = vector[vector_index];
             if (!(key in buckets)) {
                 keys.push(key);
+                buckets[key] = [];
             }
-            buckets[key] = buckets[key] || [];
             buckets[key].push(array[i]);
         } else {
             // if the vector has no entry at this index, sort earlier, in line w string sorting convention of shorter strings first

@@ -1,21 +1,8 @@
 import makeSVGElement from './makesvgelement';
 import shapeToSVG from './oncoprintshapetosvg';
-import extractRGBA from './extractrgba';
 import {ComputedShapeParams} from "./oncoprintshape";
-
-function extractColor(str:string) {
-    if (str.indexOf("rgb(") > -1 || str.indexOf("url(") > -1) {
-        return {
-            'rgb': str,
-            'opacity': 1
-        };
-    }
-    var rgba_arr = extractRGBA(str);
-    return {
-        'rgb': 'rgb('+Math.round(rgba_arr[0]*255)+','+Math.round(rgba_arr[1]*255)+','+Math.round(rgba_arr[2]*255)+')',
-        'opacity': rgba_arr[3]
-    };
-}
+import {RGBAColor} from "./oncoprintruleset";
+import {rgbString} from "./utils";
 
 function makeIdCounter() {
     let id = 0;
@@ -88,43 +75,48 @@ export default {
     fromShape: function(oncoprint_shape_computed_params:ComputedShapeParams, offset_x:number, offset_y:number) {
         return shapeToSVG(oncoprint_shape_computed_params, offset_x, offset_y);
     },
-    polygon: function(points:[number,number][], fill:string) {
-        const parsedColor = extractColor(fill);
-        return makeSVGElement('polygon', {'points': points, 'fill':parsedColor.rgb, 'fill-opacity':parsedColor.opacity}) as SVGPolygonElement;
+    polygon: function(points:[number,number][], fill:RGBAColor) {
+        return makeSVGElement('polygon', {'points': points, 'fill':rgbString(fill), 'fill-opacity':fill[3]}) as SVGPolygonElement;
     },
-    rect: function(x:number,y:number,width:number,height:number,fill:string) {
-        const parsedColor = extractColor(fill);
-        return makeSVGElement('rect', {'x':x, 'y':y, 'width':width, 'height':height, 'fill':parsedColor.rgb, 'fill-opacity':parsedColor.opacity}) as SVGRectElement;
+    rect: function(x:number,y:number,width:number,height:number,fillSpecification:{
+        type: "rgba",
+        value: RGBAColor
+    }| {
+        type: "gradientId",
+        value: string
+    }) {
+        let fill:string;
+        let fillOpacity = 1;
+        if (fillSpecification.type === "rgba") {
+            fill = rgbString(fillSpecification.value);
+            fillOpacity = fillSpecification.value[3];
+        } else {
+            fill = `url(#${fillSpecification.value})`;
+        }
+        return makeSVGElement('rect', {'x':x, 'y':y, 'width':width, 'height':height, 'fill':fill, 'fill-opacity':fillOpacity}) as SVGRectElement;
     },
-    bgrect: function(width:number, height:number, fill:string) {
-        const parsedColor = extractColor(fill);
-        return makeSVGElement('rect', {'width':width, 'height':height, 'fill':parsedColor.rgb, 'fill-opacity':parsedColor.opacity}) as SVGRectElement;
+    bgrect: function(width:number, height:number, fill:RGBAColor) {
+        return makeSVGElement('rect', {'width':width, 'height':height, 'fill':rgbString(fill), 'fill-opacity':fill[3]}) as SVGRectElement;
     },
-    path: function(points:[number,number][], stroke:string, fill:string, linearGradient:SVGGradientElement) {
+    path: function(points:[number,number][], stroke:RGBAColor, fill:RGBAColor, linearGradient:SVGGradientElement) {
         let pointsStrArray = points.map(function(pt) { return pt.join(","); });
         pointsStrArray[0] = 'M'+points[0];
         for (var i=1; i<points.length; i++) {
             pointsStrArray[i] = 'L'+points[i];
         }
-        let parsedStroke, parsedFill;
-        if (!linearGradient) {
-            parsedStroke = extractColor(stroke);
-            parsedFill = extractColor(fill);
-        }
         return makeSVGElement('path', {
             'd': pointsStrArray.join(" "),
-            'stroke': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedStroke.rgb,
-            'stroke-opacity': linearGradient ? 0 : parsedStroke.opacity,
-            'fill': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : parsedFill.rgb,
-            'fill-opacity': linearGradient ? 1 : parsedFill.opacity
+            'stroke': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : rgbString(stroke),
+            'stroke-opacity': linearGradient ? 0 : stroke[3],
+            'fill': linearGradient ? 'url(#'+linearGradient.getAttribute('id')+')' : rgbString(fill),
+            'fill-opacity': linearGradient ? 1 : fill[3]
         }) as SVGPathElement;
     },
-    stop: function (offset:number, color:string) {
-        const extracted = extractColor(color);
+    stop: function (offset:number, color:RGBAColor) {
         return makeSVGElement('stop', {
             'offset': offset + '%',
-            'stop-color': extracted.rgb,
-            'stop-opacity': extracted.opacity
+            'stop-color': rgbString(color),
+            'stop-opacity': color[3]
         }) as SVGStopElement;
     },
     linearGradient: function () {
@@ -133,7 +125,7 @@ export default {
     defs: function() {
         return makeSVGElement('defs', {}) as SVGDefsElement;
     },
-    gradient: function(colorFn:(val:number)=>string) {
+    gradient: function(colorFn:(val:number)=>RGBAColor) {
         const gradient = makeSVGElement('linearGradient', {
             'id': 'gradient'+gradientId(),
             'x1':0,

@@ -1,24 +1,15 @@
-import {ComputedShapeParams} from "./oncoprintshape";
+import {ComputedShapeParams, Rectangle} from "./oncoprintshape";
+import {RGBAColor} from "./oncoprintruleset";
 
 const halfsqrt2 = Math.sqrt(2) / 2;
 
-function extractRGBA(str:string):[number,number,number,number] {
-    let ret:[number,number,number,number] = [0, 0, 0, 1];
-    if (str[0] === "#") {
-        // hex, convert to rgba
-        const r = parseInt(str[1] + str[2], 16);
-        const g = parseInt(str[3] + str[4], 16);
-        const b = parseInt(str[5] + str[6], 16);
-        str = 'rgba('+r+','+g+','+b+',1)';
-    }
-    const match = str.match(/^[\s]*rgba\([\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*,[\s]*([0-9.]+)[\s]*\)[\s]*$/);
-    if (match && match.length === 5) {
-        ret = [parseFloat(match[1]) / 255,
-            parseFloat(match[2]) / 255,
-            parseFloat(match[3]) / 255,
-            parseFloat(match[4])];
-    }
-    return ret;
+function normalizeRGBA(color:RGBAColor):[number, number, number, number] {
+    return [
+        color[0],
+        color[1],
+        color[2],
+        color[3]*255
+    ]
 }
 
 type AddVertexCallback = (vertex:[number,number,number], color:[number,number,number,number])=>void;
@@ -27,7 +18,7 @@ function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVert
     const x = params.x, y = params.y, height = params.height, width = params.width;
 
     // Fill
-    const fill_rgba = extractRGBA(params.fill);
+    const fill_rgba = normalizeRGBA(params.fill);
     addVertex([x,y,z_index], fill_rgba);
     addVertex([x+width, y, z_index], fill_rgba);
     addVertex([x+width, y+height, z_index], fill_rgba);
@@ -40,7 +31,7 @@ function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVert
     const stroke_width = params['stroke-width'];
     if (stroke_width > 0) {
         // left side
-        const stroke_rgba = extractRGBA(params.stroke);
+        const stroke_rgba = normalizeRGBA(params.stroke);
         addVertex([x, y, z_index], stroke_rgba);
         addVertex([x + stroke_width, y, z_index], stroke_rgba);
         addVertex([x + stroke_width, y + height, z_index], stroke_rgba);
@@ -79,7 +70,7 @@ function rectangleToVertexes(params:ComputedShapeParams, z_index:number, addVert
 }
 
 function triangleToVertexes(params:ComputedShapeParams, z_index:number, addVertex:AddVertexCallback) {
-    const fill_rgba = extractRGBA(params.fill);
+    const fill_rgba = normalizeRGBA(params.fill);
     addVertex([params.x1, params.y1, z_index], fill_rgba);
     addVertex([params.x2, params.y2, z_index], fill_rgba);
     addVertex([params.x3, params.y3, z_index], fill_rgba);
@@ -90,7 +81,7 @@ function ellipseToVertexes(params:ComputedShapeParams, z_index:number, addVertex
     const horzrad =params.width / 2;
     const vertrad =params.height / 2;
 
-    const fill_rgba = extractRGBA(params.fill);
+    const fill_rgba = normalizeRGBA(params.fill);
     addVertex([center.x, center.y, z_index], fill_rgba);
     addVertex([center.x + horzrad, center.y, z_index], fill_rgba);
     addVertex([center.x + halfsqrt2 * horzrad, center.y + halfsqrt2 * vertrad, z_index], fill_rgba);
@@ -155,7 +146,7 @@ function lineToVertexes(params:ComputedShapeParams, z_index:number, addVertex:Ad
     const C = [x2 + direction1[0], y2 + direction1[1]];
     const D = [x2 + direction2[0], y2 + direction2[1]];
 
-    const stroke_rgba = extractRGBA(params.stroke);
+    const stroke_rgba = normalizeRGBA(params.stroke);
     addVertex([A[0], A[1], z_index], stroke_rgba);
     addVertex([B[0], B[1], z_index], stroke_rgba);
     addVertex([C[0], C[1], z_index], stroke_rgba);
@@ -180,4 +171,27 @@ export default function(oncoprint_shape_computed_params:ComputedShapeParams, z_i
     } else if (type === "line") {
         return lineToVertexes(oncoprint_shape_computed_params, z_index, addVertex);
     }
+}
+
+export function getNumWebGLVertexes(shape:ComputedShapeParams) {
+    let ret:number;
+    switch (shape.type) {
+        case 'rectangle':
+            if (shape['stroke-width'] > 0) {
+                ret = 30;
+            } else {
+                ret = 6;
+            }
+            break;
+        case 'triangle':
+            ret = 3;
+            break;
+        case 'ellipse':
+            ret = 24;
+            break;
+        case 'line':
+            ret = 6;
+            break;
+    }
+    return ret;
 }
