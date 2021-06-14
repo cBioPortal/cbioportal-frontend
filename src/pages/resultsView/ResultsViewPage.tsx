@@ -590,6 +590,10 @@ export default class ResultsViewPage extends React.Component<
     });
 
     @computed get pageContent() {
+        var preloads = [
+            this.resultsViewPageStore.oncoKbDataForOncoprint.isComplete,
+        ];
+
         if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
             return (
                 <div>
