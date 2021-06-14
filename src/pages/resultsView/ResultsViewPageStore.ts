@@ -3825,9 +3825,36 @@ export class ResultsViewPageStore {
         },
     });
 
+    readonly patients_preload = remoteData(
+        {
+            await: () => [this.studyIds],
+            invoke: async () => {
+                const proms = this.studyIds.result.map(studyId => {
+                    return client.getAllPatientsInStudyUsingGET({
+                        studyId: studyId,
+                    });
+                });
+
+                const patients = await Promise.all(proms);
+
+                return _.flatten(patients);
+            },
+        },
+        []
+    );
+
     readonly patients = remoteData({
-        await: () => [this.samples],
-        invoke: () => fetchPatients(this.samples.result!),
+        await: () => [this.patients_preload, this.samples],
+        invoke: async () => {
+            const uniquePatientsMap = _.chain(this.samples.result)
+                .keyBy(s => s.uniquePatientKey)
+                .value();
+            const matchingPatients = this.patients_preload.result!.filter(
+                patient => patient.uniquePatientKey in uniquePatientsMap
+            );
+
+            return Promise.resolve(matchingPatients);
+        },
         default: [],
     });
 
