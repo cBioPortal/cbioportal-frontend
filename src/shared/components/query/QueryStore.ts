@@ -122,7 +122,10 @@ export enum Focus {
 // mobx observable
 export class QueryStore {
     constructor(urlWithInitialParams?: string) {
+        getBrowserWindow().activeQueryStore = this;
+
         makeObservable(this);
+
         this.initialize(urlWithInitialParams);
     }
 
@@ -1017,6 +1020,10 @@ export class QueryStore {
             all: 0,
         },
     });
+
+    @computed get sampleCountForSelectedStudies() {
+        return _.sumBy(this.selectableSelectedStudies, s => s.allSampleCount);
+    }
 
     readonly sampleLists = remoteData({
         invoke: async () => {
