@@ -296,6 +296,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     }
 
     private refreshOncoprint(props: IOncoprintProps) {
+        const now = performance.now();
         if (!this.oncoprint) {
             // instantiate new one
             this.oncoprint = new OncoprintJS(
@@ -324,6 +325,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
             );
             this.lastTransitionProps = _.clone(props);
         }
+        console.log('oncoprint render time: ', performance.now() - now);
     }
 
     componentWillReceiveProps(nextProps: IOncoprintProps) {
