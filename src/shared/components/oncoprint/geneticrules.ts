@@ -168,7 +168,7 @@ const shapeBank = {
     },
     [ShapeId.structuralVariantVUSRectangle]: {
         type: 'rectangle',
-        fill: STRUCTURAL_VARIANT_PASSENGER_COLOR,
+        fill: hexToRGBA(STRUCTURAL_VARIANT_PASSENGER_COLOR),
         x: 0,
         y: 20,
         width: 100,
