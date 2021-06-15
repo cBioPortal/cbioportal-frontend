@@ -79,7 +79,7 @@ describe('hide download controls feature', function() {
             ];
             before(() => {
                 openAndSetProperty(
-                    `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=study_es_0_cnaseq&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=mrna`,
+                    `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&cancer_study_list=study_es_0&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=mutations%2Cfusion%2Cgistic&case_set_id=study_es_0_cnaseq&gene_list=CREB3L1%2520RPS11%2520PNMA1%2520MMP2%2520ZHX3%2520ERCC5%2520TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=mrna`,
                     { skin_hide_download_controls: true }
                 );
                 waitForOncoprint();
