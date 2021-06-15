@@ -130,51 +130,6 @@ export function cachePostMethod(
     };
 }
 
-export function s3CachePostMethod(
-    targetObj: any,
-    methodName: string,
-    apiCacheLimit?: number,
-    log?: (message: string) => void,
-    sentryLog?: (message: string) => void
-) {
-    const cachedMethods = {
-        fetchGenePanelDataInMultipleMolecularProfilesUsingPOST: (data: any) =>
-            true,
-        fetchStructuralVariantGenesUsingPOST: (data: any) => true,
-        fetchCNAGenesUsingPOST: (data: any) => true,
-        fetchMutatedGenesUsingPOST: (data: any) => true,
-        fetchClinicalDataBinCountsUsingPOST: (data: any) => true,
-    };
-
-    if (methodName in cachedMethods) {
-        const oldMethod = targetObj[methodName];
-
-        targetObj[methodName] = function(arg: any) {
-            const hash = getHash(arg);
-            const args = arguments; // keep them locally for closure
-            const fileName = `${methodName}-${hash}.json`;
-
-            return $.get(
-                `https://service-cache.s3.amazonaws.com/${fileName}`,
-                {}
-            )
-                .then(resp => {
-                    return resp;
-                })
-                .catch(() => {
-                    return oldMethod.apply(this, args).then((data: any) => {
-                        if (localStorage.harvestData) {
-                            (window as any)[`download${methodName}`] = () => {
-                                fileDownload(JSON.stringify(data), fileName);
-                            };
-                        }
-                        return data;
-                    });
-                });
-        };
-    }
-}
-
 export function cachePostMethodsOnClient(
     obj: any,
     excluded: string[] = [],
@@ -190,16 +145,6 @@ export function cachePostMethodsOnClient(
     postMethods.forEach(methodName => {
         if (!excluded.includes(methodName)) {
             cachePostMethod(
-                obj.prototype,
-                methodName,
-                apiCacheLimit,
-                log,
-                sentryLog
-            );
-        }
-
-        if (/genie-private|genie-public/.test(window.location.hostname)) {
-            s3CachePostMethod(
                 obj.prototype,
                 methodName,
                 apiCacheLimit,
