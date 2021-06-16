@@ -6,6 +6,8 @@ import {
     default as LazyMobXTable,
     Column,
     SortDirection,
+    NumericalFilterConfig,
+    defaultNumericalFilter,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
     CancerStudy,
@@ -363,6 +365,11 @@ export default class MutationTable<
             ),
             download: TumorAlleleFreqColumnFormatter.getTextValue,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    TumorAlleleFreqColumnFormatter.getSortValue(d)
+                ),
             tooltip: <span>Variant allele frequency in the tumor sample</span>,
             visible: true,
         };
@@ -377,6 +384,11 @@ export default class MutationTable<
             ),
             download: NormalAlleleFreqColumnFormatter.getTextValue,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    NormalAlleleFreqColumnFormatter.getSortValue(d)
+                ),
             tooltip: <span>Variant allele frequency in the normal sample</span>,
             visible: false,
         };
@@ -415,6 +427,20 @@ export default class MutationTable<
                     );
                 } else {
                     return 0;
+                }
+            },
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+                const cache = this.props.variantCountCache;
+                if (cache) {
+                    return defaultNumericalFilter(
+                        config,
+                        CohortColumnFormatter.getSortValue(
+                            d,
+                            cache as VariantCountCache
+                        )
+                    );
+                } else {
+                    return false;
                 }
             },
             tooltip: <span>Mutation frequency in cohort</span>,
@@ -508,6 +534,8 @@ export default class MutationTable<
                     'normalRefCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.normalRefCount),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(config, d[0].normalRefCount),
             visible: false,
             align: 'right',
         };
@@ -527,6 +555,8 @@ export default class MutationTable<
                     'normalAltCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.normalAltCount),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(config, d[0].normalAltCount),
             visible: false,
             align: 'right',
         };
@@ -546,6 +576,8 @@ export default class MutationTable<
                     'tumorRefCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorRefCount),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(config, d[0].tumorRefCount),
             visible: false,
             align: 'right',
         };
@@ -565,6 +597,8 @@ export default class MutationTable<
                     'tumorAltCount'
                 ),
             sortBy: (d: Mutation[]) => d.map(m => m.tumorAltCount),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(config, d[0].tumorAltCount),
             visible: false,
             align: 'right',
         };
@@ -576,6 +610,10 @@ export default class MutationTable<
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'startPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.startPosition),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+                const val = getTextForDataField(d, 'startPosition');
+                return defaultNumericalFilter(config, val ? +val : null);
+            },
             visible: false,
             align: 'right',
         };
@@ -586,6 +624,10 @@ export default class MutationTable<
                 getDivForDataField(d, 'endPosition', true),
             download: (d: Mutation[]) => getTextForDataField(d, 'endPosition'),
             sortBy: (d: Mutation[]) => d.map(m => m.endPosition),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+                const val = getTextForDataField(d, 'endPosition');
+                return defaultNumericalFilter(config, val ? +val : null);
+            },
             visible: false,
             align: 'right',
         };
@@ -683,6 +725,10 @@ export default class MutationTable<
                 (ChromosomeColumnFormatter.getData(d) + '')
                     .toUpperCase()
                     .includes(filterStringUpper),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+                const val = ChromosomeColumnFormatter.getData(d);
+                return defaultNumericalFilter(config, val ? +val : null);
+            },
             visible: false,
             align: 'right',
         };
@@ -790,6 +836,11 @@ export default class MutationTable<
                 CosmicColumnFormatter.getDownloadValue(
                     d,
                     this.props.cosmicData
+                ),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    CosmicColumnFormatter.getSortValue(d, this.props.cosmicData)
                 ),
             tooltip: <span>COSMIC occurrences</span>,
             defaultSortDirection: 'desc',
@@ -961,6 +1012,14 @@ export default class MutationTable<
                     Total number of nonsynonymous mutations in the sample
                 </span>
             ),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    MutationCountColumnFormatter.sortBy(
+                        d,
+                        this.props.mutationCountCache
+                    )
+                ),
             align: 'right',
         };
 
@@ -984,6 +1043,14 @@ export default class MutationTable<
                 ExonColumnFormatter.getSortValue(
                     d,
                     this.props.genomeNexusCache as GenomeNexusCache
+                ),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    ExonColumnFormatter.getSortValue(
+                        d,
+                        this.props.genomeNexusCache as GenomeNexusCache
+                    )
                 ),
             visible: false,
             align: 'right',
@@ -1043,6 +1110,14 @@ export default class MutationTable<
                     frequency for each specific population.
                 </span>
             ),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    GnomadColumnFormatter.getSortValue(
+                        d,
+                        this.props.indexedMyVariantInfoAnnotations
+                    )
+                ),
             defaultSortDirection: 'desc',
             visible: false,
             align: 'left',

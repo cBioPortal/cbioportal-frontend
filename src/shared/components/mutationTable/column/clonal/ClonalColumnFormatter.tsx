@@ -3,6 +3,10 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import ClonalElement from 'shared/components/mutationTable/column/clonal/ClonalElement';
+import {
+    NumericalFilterConfig,
+    defaultNumericalFilter,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 /**
  * @author Avery Wang
@@ -41,6 +45,10 @@ export const getDefaultClonalColumnDefinition = (
         sortBy: (d: Mutation[]) =>
             d.map(m => m.alleleSpecificCopyNumber.ccfExpectedCopiesUpper),
         download: (d: Mutation[]) => ClonalColumnFormatter.getClonalDownload(d),
+        numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+            const val = getClonalValue(d[0]);
+            return defaultNumericalFilter(config, val ? +val : null);
+        },
     };
 };
 

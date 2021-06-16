@@ -4,6 +4,10 @@ import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
 import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
+import {
+    NumericalFilterConfig,
+    defaultNumericalFilter,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 /**
  * @author Avery Wang
@@ -69,6 +73,10 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
             ),
         download: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.getExpectedAltCopiesDownload(d),
+        numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+            const val = getExpectedAltCopiesValue(d[0]);
+            return defaultNumericalFilter(config, val ? +val : null);
+        },
         visible: false,
     };
 };

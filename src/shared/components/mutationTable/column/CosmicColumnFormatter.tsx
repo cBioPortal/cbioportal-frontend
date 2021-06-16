@@ -8,11 +8,15 @@ import CosmicMutationTable from 'shared/components/cosmic/CosmicMutationTable';
 import styles from './cosmic.module.scss';
 import { ICosmicData } from 'shared/model/Cosmic';
 import generalStyles from './styles.module.scss';
+import { string } from 'yargs';
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
     arrowEl.style.left = '10px';
 }
+
+const positionCache = new Map<string, number | null>();
+const sortValueCache = new Map<string, number | null>();
 
 /**
  * @author Selcuk Onur Sumer
@@ -49,10 +53,16 @@ export default class CosmicColumnFormatter {
     }
 
     public static extractPosition(proteinChange: string) {
+        if (positionCache.has(proteinChange)) {
+            return positionCache.get(proteinChange);
+        }
+
         const pos = getProteinPositionFromProteinChange(proteinChange);
         if (pos) {
+            positionCache.set(proteinChange, pos.start);
             return pos.start;
         } else {
+            positionCache.set(proteinChange, null);
             return null;
         }
     }
@@ -65,8 +75,13 @@ export default class CosmicColumnFormatter {
             data,
             cosmicData
         );
-        let value: number | null = null;
 
+        const key = JSON.stringify(cosmic);
+        if (sortValueCache.has(key)) {
+            return sortValueCache.get(key) as any;
+        }
+
+        let value: number | null = null;
         // calculate sum of the all counts
         if (cosmic) {
             if (cosmic.length > 0) {
@@ -88,6 +103,7 @@ export default class CosmicColumnFormatter {
             value = null;
         }
 
+        sortValueCache.set(key, value);
         return value;
     }
 

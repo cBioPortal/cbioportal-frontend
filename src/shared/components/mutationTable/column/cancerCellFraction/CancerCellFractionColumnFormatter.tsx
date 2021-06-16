@@ -7,6 +7,10 @@ import {
     getClonalValue,
     ClonalValue,
 } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import {
+    NumericalFilterConfig,
+    defaultNumericalFilter,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
 
 /**
  * @author Avery Wang
@@ -34,6 +38,10 @@ export const getDefaultCancerCellFractionColumnDefinition = (
         sortBy: (d: Mutation[]) => d.map(m => +getCancerCellFractionValue(m)),
         download: (d: Mutation[]) =>
             CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d),
+        numericalFilter: (d: Mutation[], config: NumericalFilterConfig) => {
+            const val = getCancerCellFractionValue(d[0]);
+            return defaultNumericalFilter(config, val ? +val : null);
+        },
         visible: false,
     };
 };

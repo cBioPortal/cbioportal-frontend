@@ -3,6 +3,10 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import MobxPromise from 'mobxpromise';
 import {
+    NumericalFilterConfig,
+    defaultNumericalFilter,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import {
     IMutationTableProps,
     MutationTableColumnType,
     default as MutationTable,
@@ -153,6 +157,20 @@ export default class ResultsViewMutationTable extends MutationTable<
                 visible: false,
                 order: 300,
             };
+
+            if (clinicalAttributes[i].datatype === 'NUMBER') {
+                this._columns[attributeId].numericalFilter = (
+                    d: Mutation[],
+                    config: NumericalFilterConfig
+                ) => {
+                    const val = ClinicalAttributeColumnFormatter.getTextValue(
+                        d,
+                        clinicalAttributes[i],
+                        this.props.clinicalAttributeCache
+                    );
+                    return defaultNumericalFilter(config, val ? +val : null);
+                };
+            }
         }
 
         // override default visibility for some columns

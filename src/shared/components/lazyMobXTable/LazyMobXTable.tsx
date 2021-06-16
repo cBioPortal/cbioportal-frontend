@@ -42,8 +42,14 @@ import {
 import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
 import { maxPage } from './utils';
 import { inputBoxChangeTimeoutEvent } from '../../lib/EventUtils';
+import FilterIconModal from '../filterIconModal/FilterIconModal';
+import DoubleHandleSlider from '../doubleHandleSlider/DoubleHandleSlider';
 
 export type SortDirection = 'asc' | 'desc';
+export type NumericalFilterConfig = {
+    lowerBound: number;
+    upperBound: number;
+};
 
 export type Column<T> = {
     id?: string;
@@ -58,6 +64,7 @@ export type Column<T> = {
         filterStringUpper?: string,
         filterStringLower?: string
     ) => boolean;
+    numericalFilter?: (data: T, config: NumericalFilterConfig) => boolean;
     visible?: boolean;
     sortBy?:
         | ((data: T) => number | null)
@@ -254,6 +261,17 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
     return downloadObject;
 }
 
+export function defaultNumericalFilter(
+    config: NumericalFilterConfig,
+    value: number | null
+) {
+    return (
+        value !== null &&
+        value >= config.lowerBound &&
+        value <= config.upperBound
+    );
+}
+
 export class LazyMobXTableStore<T> {
     @observable.ref public filterString: string | undefined = undefined;
     @observable.ref private _itemsLabel: string | undefined = undefined;
@@ -422,14 +440,33 @@ export class LazyMobXTableStore<T> {
         this.page = 0;
     }
 
+    private columnFilterIsActive(column: Column<T>) {
+        return column.name in this.dataStore.numericalFilterConfigs!;
+    }
+    private deactivateColumnFilter(column: Column<T>) {
+        delete this.dataStore.numericalFilterConfigs![column.name];
+    }
+    private activateColumnFilter(column: Column<T>) {
+        if (!this.dataStore.minMaxColumns!.has(column)) {
+            this.dataStore.minMaxColumns!.add(column);
+        }
+
+        this.dataStore.numericalFilterConfigs![column.name] = {
+            lowerBound: +this.dataStore.columnMinMax![column.name].min,
+            upperBound: +this.dataStore.columnMinMax![column.name].max,
+        };
+
+        // triggers MobX update to this.dataStore.dataFilter
+        // need this for Patient View, but causes some performance issues
+        //this.setFilterString(this.dataStore.filterString);
+    }
+
     @computed
     get headers(): JSX.Element[] {
         return this.visibleColumns.map((column: Column<T>, index: number) => {
             const headerProps: {
                 role?: 'button';
-                className?:
-                    | 'multilineHeader sort-asc'
-                    | 'multilineHeader sort-des';
+                className?: 'sort-asc' | 'sort-des';
                 onClick?: (e: React.MouseEvent) => void;
             } = {};
             if (column.sortBy) {
@@ -448,8 +485,8 @@ export class LazyMobXTableStore<T> {
             }
             if (this.sortColumn === column.name) {
                 headerProps.className = this.sortAscending
-                    ? 'multilineHeader sort-asc'
-                    : 'multilineHeader sort-des';
+                    ? 'sort-asc'
+                    : 'sort-des';
             }
 
             let label;
@@ -469,6 +506,68 @@ export class LazyMobXTableStore<T> {
             } else {
                 thContents = label;
             }
+
+            thContents = <span {...headerProps}>{thContents}</span>;
+
+            if (
+                column.numericalFilter &&
+                this.dataStore.numericalFilterConfigs &&
+                this.dataStore.minMaxColumns &&
+                this.dataStore.columnMinMax
+            ) {
+                const alignToJustify = {
+                    left: 'flex-start',
+                    center: 'center',
+                    right: 'flex-end',
+                };
+
+                let sliderComponent;
+                if (this.columnFilterIsActive(column)) {
+                    sliderComponent = (
+                        <DoubleHandleSlider
+                            id={column.name}
+                            min={this.dataStore.columnMinMax![column.name].min}
+                            max={this.dataStore.columnMinMax![column.name].max}
+                            callbackLowerValue={newLowerBound => {
+                                this.dataStore.numericalFilterConfigs![
+                                    column.name
+                                ].lowerBound = newLowerBound;
+                            }}
+                            callbackUpperValue={newUpperBound => {
+                                this.dataStore.numericalFilterConfigs![
+                                    column.name
+                                ].upperBound = newUpperBound;
+                            }}
+                        />
+                    );
+                }
+
+                thContents = (
+                    <span
+                        style={{
+                            display: 'flex',
+                            justifyContent: column.align
+                                ? alignToJustify[column.align]
+                                : 'flex-start',
+                        }}
+                    >
+                        <FilterIconModal
+                            id={column.name}
+                            filterIsActive={this.columnFilterIsActive(column)}
+                            deactivateFilter={() =>
+                                this.deactivateColumnFilter(column)
+                            }
+                            activateFilter={() =>
+                                this.activateColumnFilter(column)
+                            }
+                            sliderComponent={sliderComponent}
+                        />
+                        &nbsp;&nbsp;&nbsp;
+                        {thContents}
+                    </span>
+                );
+            }
+
             let style: any = {};
             if (column.align) {
                 style.textAlign = column.align;
@@ -479,11 +578,7 @@ export class LazyMobXTableStore<T> {
 
             return (
                 <React.Fragment key={index}>
-                    <th
-                        className="multilineHeader"
-                        {...headerProps}
-                        style={style}
-                    >
+                    <th className="multilineHeader" style={style}>
                         {thContents}
                     </th>
                     {column.resizable && (
@@ -630,25 +725,53 @@ export class LazyMobXTableStore<T> {
                 filterStringUpper: string,
                 filterStringLower: string
             ) => {
-                if (!filterString) {
-                    return true; // dont filter if no input
-                }
-                let match = false;
+                const skipTextFiltering = filterString === '';
+                const skipNumericalFiltering =
+                    this.dataStore.numericalFilterConfigs === undefined ||
+                    this.dataStore.minMaxColumns === undefined ||
+                    this.dataStore.columnMinMax === undefined;
+
+                // return true iff all the following:
+                // 1. At least one column with a filter matches filterString
+                // 2. All columns with an active numericalFilter match the specifications
+                //    of this.dataStore.numericalFilterConfigs[column] for each column
+                let textMatch = false;
+                let numericalMatch = true;
                 for (const column of this.visibleColumns) {
-                    match =
-                        (column.filter &&
-                            column.filter(
-                                d,
-                                filterString,
-                                filterStringUpper,
-                                filterStringLower
-                            )) ||
-                        false;
-                    if (match) {
-                        break;
+                    if (!skipTextFiltering && !textMatch) {
+                        textMatch = column.filter
+                            ? column.filter(
+                                  d,
+                                  filterString,
+                                  filterStringUpper,
+                                  filterStringLower
+                              )
+                            : false;
+                    }
+
+                    if (
+                        !skipNumericalFiltering &&
+                        column.numericalFilter &&
+                        this.columnFilterIsActive(column)
+                    ) {
+                        const id = column.name;
+                        const columnMinMax = this.dataStore.columnMinMax!;
+                        const configs = this.dataStore.numericalFilterConfigs!;
+                        const isDefaultFilter =
+                            +columnMinMax[id].min === configs[id].lowerBound &&
+                            +columnMinMax[id].max === configs[id].upperBound;
+
+                        if (!isDefaultFilter) {
+                            numericalMatch =
+                                numericalMatch &&
+                                column.numericalFilter(d, configs[column.name]);
+                        }
                     }
                 }
-                return match;
+                return (
+                    (skipTextFiltering || textMatch) &&
+                    (skipNumericalFiltering || numericalMatch)
+                );
             }
         );
     }
@@ -837,6 +960,12 @@ export default class LazyMobXTable<T> extends React.Component<
                 this.store.setFilterString('');
             },
             visibilityToggle: (columnId: string): void => {
+                // deactivate numerical filter (if it exists)
+                const configs = this.dataStore.numericalFilterConfigs;
+                if (configs && columnId in configs) {
+                    delete configs[columnId];
+                }
+
                 // toggle visibility
                 this.updateColumnVisibility(
                     columnId,

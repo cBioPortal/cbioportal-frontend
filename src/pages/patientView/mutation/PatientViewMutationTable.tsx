@@ -1,6 +1,10 @@
 import * as React from 'react';
 import { computed, makeObservable } from 'mobx';
 import {
+    NumericalFilterConfig,
+    defaultNumericalFilter,
+} from 'shared/components/lazyMobXTable/LazyMobXTable';
+import {
     default as MutationTable,
     IMutationTableProps,
     MutationTableColumnType,
@@ -113,6 +117,14 @@ export default class PatientViewMutationTable extends MutationTable<
                 ),
             download: (d: Mutation[]) =>
                 AlleleFreqColumnFormatter.getFrequency(d),
+            numericalFilter: (d: Mutation[], config: NumericalFilterConfig) =>
+                defaultNumericalFilter(
+                    config,
+                    AlleleFreqColumnFormatter.getSortValue(
+                        d,
+                        this.props.sampleManager
+                    )[0]
+                ),
             tooltip: <span>Variant allele frequency in the tumor sample</span>,
             visible: AlleleFreqColumnFormatter.isVisible(
                 this.props.sampleManager,
