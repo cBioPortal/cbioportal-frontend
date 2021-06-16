@@ -30,6 +30,7 @@ import {
     DataFilterValue,
     DensityPlotBin,
     GeneFilter,
+    GeneFilterQuery,
     GenePanel,
     GenomicDataBin,
     GenomicDataBinFilter,
@@ -75,6 +76,8 @@ import {
     convertGenomicDataBinsToDataBins,
     DataBin,
     DataType,
+    geneFilterQueryFromOql,
+    geneFilterQueryToOql,
     generateScatterPlotDownloadData,
     GenomicDataCountWithSampleUniqueKeys,
     getChartMetaDataType,
@@ -1684,7 +1687,7 @@ export class StudyViewPageStore {
 
     @observable.ref private _geneFilterSet = observable.map<
         string,
-        string[][]
+        GeneFilterQuery[][]
     >();
 
     // TODO: make it computed
@@ -2508,11 +2511,14 @@ export class StudyViewPageStore {
     @action.bound
     addGeneFilters(chartMeta: ChartMeta, hugoGeneSymbols: string[][]): void {
         trackStudyViewFilterEvent('geneFilter', this);
-        let geneFilters =
+        let geneFilter =
             toJS(this._geneFilterSet.get(chartMeta.uniqueKey)) || [];
-        geneFilters = geneFilters.concat(hugoGeneSymbols);
-
-        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilters);
+        // convert OQL gene queries to GeneFilterObjects accepted by the backend
+        const queries: GeneFilterQuery[][] = _.map(hugoGeneSymbols, oqls =>
+            _.map(oqls, oql => geneFilterQueryFromOql(oql))
+        );
+        geneFilter = geneFilter.concat(queries);
+        this._geneFilterSet.set(chartMeta.uniqueKey, geneFilter);
     }
 
     @action.bound
@@ -2575,13 +2581,21 @@ export class StudyViewPageStore {
         geneFilters = _.reduce(
             geneFilters,
             (acc, next) => {
-                const newGroup = next.filter(oql => oql !== toBeRemoved);
+                const [
+                    hugoGeneSymbol,
+                    alteration,
+                ]: string[] = toBeRemoved.split(':');
+                const newGroup = next.filter(
+                    geneFilterQuery =>
+                        geneFilterQuery.hugoGeneSymbol !== hugoGeneSymbol &&
+                        !_.includes(geneFilterQuery.alterations, alteration)
+                );
                 if (newGroup.length > 0) {
                     acc.push(newGroup);
                 }
                 return acc;
             },
-            [] as string[][]
+            [] as GeneFilterQuery[][]
         );
         if (geneFilters.length === 0) {
             this._geneFilterSet.delete(chartUniqueKey);
@@ -3125,7 +3139,10 @@ export class StudyViewPageStore {
     }
 
     public getGeneFiltersByUniqueKey(uniqueKey: string): string[][] {
-        return toJS(this._geneFilterSet.get(uniqueKey)) || [];
+        const filters = _.map(this._geneFilterSet.get(uniqueKey), filterSet =>
+            _.map(filterSet, geneFilterQueryToOql)
+        );
+        return toJS(filters);
     }
 
     public getClinicalDataFiltersByUniqueKey(
