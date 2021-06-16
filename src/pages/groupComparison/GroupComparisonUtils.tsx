@@ -29,7 +29,7 @@ import ErrorMessage from '../../shared/components/ErrorMessage';
 import { stringListToIndexSet } from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
-import { DataType } from 'pages/studyView/StudyViewUtils';
+import { DataType, geneFilterQueryToOql } from 'pages/studyView/StudyViewUtils';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -551,6 +551,7 @@ export function getDefaultGroupName(
 
     const geneFilters = _.chain(filters.geneFilters || [])
         .flatMapDeep(geneFilter => geneFilter.geneQueries)
+        .map(geneQuery => geneFilterQueryToOql(geneQuery))
         .value();
 
     const caseListsFilters = _.chain(filters.caseLists || [])
