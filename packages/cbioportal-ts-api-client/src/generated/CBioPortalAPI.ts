@@ -19,6 +19,28 @@ export type AlleleSpecificCopyNumber = {
         'totalCopyNumber': number
 
 };
+export type AlterationFilter = {
+    'cnaBooleanMap': {}
+
+    'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'mutationBooleanMap': {}
+
+        'tiersBooleanMap': {}
+
+};
 export type AndedPatientTreatmentFilters = {
     'filters': Array < OredPatientTreatmentFilters >
 
@@ -226,10 +248,34 @@ export type Gene = {
 
 };
 export type GeneFilter = {
-    'geneQueries': Array < Array < string >
+    'geneQueries': Array < Array < GeneFilterQuery >
         >
 
         'molecularProfileIds': Array < string >
+
+};
+export type GeneFilterQuery = {
+    'alterations': Array < "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL" >
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'tiersBooleanMap': {}
 
 };
 export type GenePanel = {
@@ -723,7 +769,9 @@ export type StructuralVariantFilter = {
 
 };
 export type StudyViewFilter = {
-    'caseLists': Array < Array < string >
+    'alterationFilter': AlterationFilter
+
+        'caseLists': Array < Array < string >
         >
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
