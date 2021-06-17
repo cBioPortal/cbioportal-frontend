@@ -446,7 +446,7 @@ export class RuleSet {
             ret.push(shapes);
         }
         // mark universal rule as active
-        if (this.getUniversalRule()) {
+        if (this.getUniversalRule() && typeof out_active_rules !== 'undefined') {
             out_active_rules[this.getUniversalRule().id] = true;
         }
         return ret;
