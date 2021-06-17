@@ -321,10 +321,9 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             marginBottom: 1,
                                         }}
                                     />
-                                    Kaplan-Meier estimates of time-to-event
-                                    endpoints do not account for the lead time
-                                    bias introduced by the inclusion criteria
-                                    for the GENIE BPC Project.
+                                    Kaplan-Meier estimates do not account for 
+                                    the lead time bias introduced by the inclusion 
+                                    criteria for the GENIE BPC Project.
                                 </div>
                             )}
                             <OverlapExclusionIndicator
