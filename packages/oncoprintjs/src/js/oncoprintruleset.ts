@@ -22,7 +22,7 @@
 import {ComputedShapeParams, Ellipse, Line, Rectangle, Shape, ShapeParams, Triangle} from "./oncoprintshape";
 import heatmapColors from "./heatmapcolors";
 import binarysearch from "./binarysearch";
-import {Omit, cloneShallow, ifndef, objectValues, shallowExtend} from "./utils";
+import {Omit, cloneShallow, ifndef, objectValues, shallowExtend, z_comparator} from "./utils";
 import {ActiveRules, ColumnProp, Datum, RuleSetId} from "./oncoprintmodel";
 import _ from "lodash";
 import extractrgba, {hexToRGBA, rgbaToHex} from "./extractrgba";
@@ -413,21 +413,37 @@ export class RuleSet {
         return this.universal_rule;
     }
 
-    public apply(data:Datum[], cell_width:number, cell_height:number, out_active_rules?:ActiveRules|undefined, data_id_key?:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
+    public getUniversalShapes(cell_width:number, cell_height:number) {
+        if (this.getUniversalRule()) {
+            const shapes = this.getUniversalRule().rule.apply(
+                {}, // a universal rule does not rely on anything specific to the data
+                cell_width,
+                cell_height
+            );
+            shapes.sort(z_comparator);
+            return shapes;
+        } else {
+            return [];
+        }
+    }
+
+    public getSpecificShapesForDatum(data:Datum[], cell_width:number, cell_height:number, out_active_rules?:ActiveRules|undefined, data_id_key?:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
         // Returns a list of lists of concrete shapes, in the same order as data
         // optional parameter important_ids determines which ids count towards active rules (optional parameter data_id_key
         //		is used for this too)
-        var ret = [];
+        const ret = [];
         for (var i = 0; i < data.length; i++) {
-            var datum = data[i];
-            var should_mark_active = !important_ids || !!important_ids[datum[data_id_key!]];
-            var rules = this.getSpecificRulesForDatum(datum);
+            const datum = data[i];
+            const should_mark_active = !important_ids || !!important_ids[datum[data_id_key!]];
+            const rules = this.getSpecificRulesForDatum(datum);
             if (typeof out_active_rules !== 'undefined' && should_mark_active) {
                 for (let j = 0; j < rules.length; j++) {
                     out_active_rules[rules[j].id] = true;
                 }
             }
-            ret.push(this.applyRulesToDatum(rules, data[i], cell_width, cell_height));
+            const shapes = this.applyRulesToDatum(rules, data[i], cell_width, cell_height);
+            shapes.sort(z_comparator);
+            ret.push(shapes);
         }
         // mark universal rule as active
         if (this.getUniversalRule()) {
@@ -603,7 +619,7 @@ class CategoricalRuleSet extends LookupRuleSet {
         }
     }
 
-    public apply(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
+    public getSpecificShapesForDatum(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
         // First ensure there is a color for all categories
         for (let i = 0, data_len = data.length; i < data_len; i++) {
             if (data[i][NA_STRING]) {
@@ -618,7 +634,7 @@ class CategoricalRuleSet extends LookupRuleSet {
             }
         }
         // Then propagate the call up
-        return super.apply(data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
+        return super.getSpecificShapesForDatum(data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     }
 }
 
@@ -705,7 +721,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
         }
     }
 
-    public apply(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
+    public getSpecificShapesForDatum(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
         // First find value range
         let value_min = Number.POSITIVE_INFINITY;
         let value_max = Number.NEGATIVE_INFINITY;
@@ -727,7 +743,7 @@ class LinearInterpRuleSet extends ConditionRuleSet {
         this.updateLinearRules();
 
         // Then propagate the call up
-        return super.apply(data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
+        return super.getSpecificShapesForDatum(data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     }
 
     protected updateLinearRules() {
@@ -1087,7 +1103,7 @@ class GradientCategoricalRuleSet extends RuleSet {
     }
 
     // RuleSet API
-    public apply(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
+    public getSpecificShapesForDatum(data:Datum, cell_width:number, cell_height:number, out_active_rules:ActiveRules|undefined, data_id_key:string&keyof Datum, important_ids?:ColumnProp<boolean>) {
 
         const shapes = [];
         // check the type of datum (categorical or continuous) and delegate
@@ -1095,9 +1111,9 @@ class GradientCategoricalRuleSet extends RuleSet {
         for (let i = 0; i < data.length; i++) {
             const datum = data[i];
             if ( this.isCategorical(datum) ) {
-                shapes.push( this.categoricalRuleSet.apply([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
+                shapes.push( this.categoricalRuleSet.getSpecificShapesForDatum([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
             } else {
-                shapes.push( this.gradientRuleSet.apply([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
+                shapes.push( this.gradientRuleSet.getSpecificShapesForDatum([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
             }
         }
         return shapes;

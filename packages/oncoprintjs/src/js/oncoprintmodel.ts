@@ -831,70 +831,37 @@ export default class OncoprintModel {
 
     public getTrackUniversalShapes(
         track_id:TrackId,
-        use_base_size:boolean,
-        sort_by_z:boolean
+        use_base_size:boolean
     ):ComputedShapeParams[] {
-        const universalRule = this.getRuleSet(track_id).getUniversalRule();
-        if (!universalRule) {
-            return [];
-        }
+        const ruleSet = this.getRuleSet(track_id);
         const spacing = this.getTrackHasColumnSpacing(track_id);
         const width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
         const height = this.getCellHeight(track_id, use_base_size);
-        const shapes = universalRule.rule.apply(
-            {}, // a universal rule does not rely on anything specific to the data
-            width,
-            height
-        )
 
-        if (sort_by_z) {
-            shapes.sort(z_comparator);
-        }
-
-        return shapes;
+        return ruleSet.getUniversalShapes(width, height);
     }
 
     public getSpecificShapesForData(
         track_id:TrackId,
-        use_base_size:boolean,
-        sort_by_z:boolean
+        use_base_size:boolean
     ):IdentifiedShapeList[] {
         const active_rules = {};
         const data = this.getTrackData(track_id);
         const id_key = this.getTrackDataIdKey(track_id);
         const spacing = this.getTrackHasColumnSpacing(track_id);
         const width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
-        const shapes = this.getRuleSet(track_id).apply(
+        const shapes = this.getRuleSet(track_id).getSpecificShapesForDatum(
             data, width, this.getCellHeight(track_id, use_base_size), active_rules, id_key, this.getTrackImportantIds(track_id)
         );
 
         this.setTrackActiveRules(track_id, active_rules);
 
         return shapes.map(function(shape_list:ComputedShapeParams[], index:number) {
-            if (sort_by_z) {
-                shape_list.sort(z_comparator);
-            }
             return {
                 id: data[index][id_key],
                 shape_list: shape_list
             };
         });
-
-        /*
-        return shapes.reduce(function(ret:IdentifiedShapeList[], shape_list:ComputedShapeParams[], index:number) {
-            if (shape_list.length > 0) {
-                // only add entry for nonempty shape list
-                if (sort_by_z) {
-                    shape_list.sort(z_comparator);
-                }
-                ret.push({
-                    id: data[index][id_key],
-                    shape_list: shape_list
-                })
-            }
-            return ret;
-        }, []);
-         */
     }
 
     public getActiveRules(rule_set_id:RuleSetId) {

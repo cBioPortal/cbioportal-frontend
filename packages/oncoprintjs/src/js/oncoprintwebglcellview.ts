@@ -969,8 +969,8 @@ export default class OncoprintWebGLCellView {
         if (this.rendering_suppressed) {
             return;
         }
-        this.specific_shapes[track_id] = model.getSpecificShapesForData(track_id, true, true);
-        this.universal_shapes[track_id] = model.getTrackUniversalShapes(track_id, true, true);
+        this.specific_shapes[track_id] = model.getSpecificShapesForData(track_id, true);
+        this.universal_shapes[track_id] = model.getTrackUniversalShapes(track_id, true);
     }
 
     private refreshCanvas(model:OncoprintModel) {
@@ -1378,8 +1378,8 @@ export default class OncoprintWebGLCellView {
         for (let i=0; i<tracks.length; i++) {
             const track_id = tracks[i];
             const offset_y = cell_tops[track_id];
-            const universal_shapes = model.getTrackUniversalShapes(track_id, false, true);
-            const identified_shape_list_list = model.getSpecificShapesForData(track_id, false, true);
+            const universal_shapes = model.getTrackUniversalShapes(track_id, false);
+            const identified_shape_list_list = model.getSpecificShapesForData(track_id, false);
             for (let j=0; j<identified_shape_list_list.length; j++) {
                 const id_sl = identified_shape_list_list[j];
                 const id = id_sl.id;
