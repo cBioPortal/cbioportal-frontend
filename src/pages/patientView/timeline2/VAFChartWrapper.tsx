@@ -223,12 +223,14 @@ export default class VAFChartWrapper extends React.Component<
         let sampleIdToClinicalValue: { [sampleId: string]: string } = {};
         if (this.props.wrapperStore.groupingByIsSelected) {
             this.props.sampleManager.samples.forEach((sample, i) => {
-                sampleIdToClinicalValue[
-                    sample.id
-                ] = SampleManager!.getClinicalAttributeInSample(
+                const clinicalData = SampleManager!.getClinicalAttributeInSample(
                     sample,
                     this.props.wrapperStore.groupByOption!
-                )!.value;
+                );
+                sampleIdToClinicalValue[sample.id] =
+                    clinicalData != undefined
+                        ? clinicalData.value
+                        : 'undefined-group';
             });
         }
         return sampleIdToClinicalValue;
@@ -297,11 +299,13 @@ export default class VAFChartWrapper extends React.Component<
 
     @computed get groupColor() {
         return (sampleId: string) => {
+            const color = this.clinicalValueToColor[
+                this.sampleIdToClinicalValue[sampleId]
+            ];
             return this.props.wrapperStore.groupingByIsSelected &&
-                this.numGroupByGroups > 1
-                ? this.clinicalValueToColor[
-                      this.sampleIdToClinicalValue[sampleId]
-                  ]
+                this.numGroupByGroups > 1 &&
+                color != undefined
+                ? color
                 : 'rgb(0,0,0)';
         };
     }
@@ -365,11 +369,13 @@ export default class VAFChartWrapper extends React.Component<
     }
 
     groupColorByGroupIndex(groupIndex: number) {
+        const groupColor = this.clinicalValueToColor[
+            this.clinicalValuesForGrouping[groupIndex]
+        ];
         return this.props.wrapperStore.groupingByIsSelected &&
-            this.numGroupByGroups > 1
-            ? this.clinicalValueToColor[
-                  this.clinicalValuesForGrouping[groupIndex]
-              ]
+            this.numGroupByGroups > 1 &&
+            groupColor != undefined
+            ? groupColor
             : 'rgb(0,0,0)';
     }
 
