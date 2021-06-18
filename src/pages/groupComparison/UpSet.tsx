@@ -62,7 +62,7 @@ const MAX_LABEL_WIDTH = 200;
 const BarComponent = (props: any) => (
     <Bar
         className={`${props.caseType}_${_.sortBy(props.datum.groups)
-            .map(g => g.replace(/ /g, '_'))
+            .map(g => encodeURI(g.replace(/ /g, '_')))
             .join('_')}_bar`}
         {...props}
     />
