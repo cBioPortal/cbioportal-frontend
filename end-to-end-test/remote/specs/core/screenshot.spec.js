@@ -443,7 +443,7 @@ describe('results page tabs while excluding unprofiled samples', function() {
     });
 
     runResultsTestSuite('excluding unprofiled samples', {
-        mrnaEnrichmentsRowSelector: 'b=PRR22',
+        mrnaEnrichmentsRowSelector: 'b=DSC1',
     });
 });
 
