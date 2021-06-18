@@ -71,6 +71,11 @@ export function computeRenderData(
         let thisLineData: Partial<IPoint>[] = [];
         // keep track of which samples have mutations
         const samplesWithData: { [uniqueSampleKey: string]: boolean } = {};
+        const samplesWithDataGroup =
+            groupByOption && groupByOption != GROUP_BY_NONE
+                ? sampleIdToClinicalValue[mergedMutation[0].sampleId]
+                : undefined;
+
         for (const mutation of mergedMutation) {
             const sampleKey = mutation.uniqueSampleKey;
             const sampleId = mutation.sampleId;
@@ -118,29 +123,38 @@ export function computeRenderData(
         // add data points for samples without mutations
         for (const sample of samples) {
             if (!(sample.uniqueSampleKey in samplesWithData)) {
+                // check if it is in the same group as samplesWithData
                 if (
-                    !isSampleProfiled(
-                        sample.uniqueSampleKey,
-                        mutationProfileId,
-                        mutation.gene.hugoGeneSymbol,
-                        coverageInformation
-                    )
+                    groupByOption == undefined ||
+                    groupByOption == GROUP_BY_NONE ||
+                    sampleIdToClinicalValue[sample.sampleId] ==
+                        samplesWithDataGroup
                 ) {
-                    // not profiled
-                    thisLineData.push({
-                        x: sampleIdIndex[sample.sampleId],
-                        sampleId: sample.sampleId,
-                        mutation,
-                        mutationStatus: MutationStatus.NOT_PROFILED,
-                    });
-                } else {
-                    thisLineData.push({
-                        x: sampleIdIndex[sample.sampleId],
-                        y: 0,
-                        sampleId: sample.sampleId,
-                        mutation,
-                        mutationStatus: MutationStatus.PROFILED_BUT_NOT_MUTATED,
-                    });
+                    if (
+                        !isSampleProfiled(
+                            sample.uniqueSampleKey,
+                            mutationProfileId,
+                            mutation.gene.hugoGeneSymbol,
+                            coverageInformation
+                        )
+                    ) {
+                        // not profiled
+                        thisLineData.push({
+                            x: sampleIdIndex[sample.sampleId],
+                            sampleId: sample.sampleId,
+                            mutation,
+                            mutationStatus: MutationStatus.NOT_PROFILED,
+                        });
+                    } else {
+                        thisLineData.push({
+                            x: sampleIdIndex[sample.sampleId],
+                            y: 0,
+                            sampleId: sample.sampleId,
+                            mutation,
+                            mutationStatus:
+                                MutationStatus.PROFILED_BUT_NOT_MUTATED,
+                        });
+                    }
                 }
             }
         }
