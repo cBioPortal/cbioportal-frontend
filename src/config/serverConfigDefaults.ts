@@ -63,6 +63,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_documentation_markdown: true,
     skin_email_contact: 'cbioportal at googlegroups dot com',
     skin_documentation_faq: 'FAQ.md',
+    skin_footer_show_dev: false,
     skin_login_saml_registration_html: 'Sign in with MSK',
     skin_documentation_news: 'News.md',
     skin_documentation_oql: 'Onco-Query-Language.md',
@@ -71,6 +72,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_right_nav_show_examples: true,
     skin_right_nav_show_testimonials: true,
     skin_right_nav_show_whats_new: true,
+    skin_right_nav_show_twitter: false,
     skin_citation_rule_text:
         'Please cite: <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract" target="_blank">Cerami et al., 2012</a> &amp; <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210" target="_blank">Gao et al., 2013</a>',
     skin_show_about_tab: true,
