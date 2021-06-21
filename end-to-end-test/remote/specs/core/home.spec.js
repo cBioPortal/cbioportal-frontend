@@ -609,7 +609,7 @@ describe('genetic profile selection in front page query form', () => {
 });
 
 describe('auto-selecting needed profiles for oql in query form', () => {
-    before(() => {
+    beforeEach(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
@@ -635,6 +635,10 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         assert(!browser.isEnabled('button[data-test="queryButton"]'));
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
+        browser.waitForExist('.studyItem_chol_tcga_pan_can_atlas_2018', 20000);
+        browser.click('.studyItem_chol_tcga_pan_can_atlas_2018');
+        clickQueryByGeneButton();
+
         // make sure profiles selector is loaded
         browser.waitForExist(
             'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
@@ -662,13 +666,13 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 
         // enter oql
         browser.waitForExist('textarea[data-test="geneSet"]', 2000);
-        setInputText('textarea[data-test="geneSet"]', 'BRCA1: EXP>1');
+        setInputText('textarea[data-test="geneSet"]', 'TP53 BRCA1: EXP>1');
 
         browser.waitForEnabled('button[data-test="queryButton"]', 5000);
         browser.click('button[data-test="queryButton"]');
 
         // wait for query to load
-        waitForOncoprint(20000);
+        waitForOncoprint(30000);
 
         const profileFilter = (
             browser.execute(function() {
