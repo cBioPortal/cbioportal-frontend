@@ -39,7 +39,7 @@ if (useExternalFrontend) {
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForVisible();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
-            assert.strictEqual(rows.length, 8, 'table has 8 rows');
+            assert.strictEqual(rows.length, 7, 'table has 8 rows');
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
