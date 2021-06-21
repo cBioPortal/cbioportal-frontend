@@ -692,7 +692,7 @@ describe('results page quick oql edit', () => {
         );
     });
 
-    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
         browser.click('[data-test="oqlQuickEditButton"]');
 
