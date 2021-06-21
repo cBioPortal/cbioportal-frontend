@@ -797,6 +797,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: 'Annotation',
+            headerRender: AnnotationColumnFormatter.headerRender,
             render: (d: Mutation[]) =>
                 AnnotationColumnFormatter.renderFunction(d, {
                     hotspotData: this.props.hotspotData,
