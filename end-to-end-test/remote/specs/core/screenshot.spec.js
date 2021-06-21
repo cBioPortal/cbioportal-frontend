@@ -99,9 +99,9 @@ function runResultsTestSuite(prefix, options = {}) {
         browser.waitForVisible(
             'div[data-test="ComparisonPageOverlapTabContent"]'
         );
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
-            hide: ['.qtip'],
-        });
+        var res = checkElementWithMouseDisabled(
+            'div[data-test="ComparisonTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
