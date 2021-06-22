@@ -1030,10 +1030,12 @@ export default abstract class ComparisonStore {
                     },
                     alterationFilter: undefined,
                 };
+
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
+                    //@ts-ignore
                     groupsAndAlterationTypes,
                 });
             }
