@@ -487,18 +487,24 @@ function openGroupComparison(
 
 function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
     const chart = '[data-test=' + chartDataTest + ']';
+    console.log('Opening chart ' + chartDataTest);
     browser.waitForVisible(chart, timeout || 10000);
     browser.moveToObject(chart);
+    console.log('    Wait for controls');
     browser.waitUntil(() => {
         return browser.isExisting(chart + ' .controls');
     }, timeout || 10000);
 
     // move to hamburger icon when present in chart
     const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
+    console.log('');
     if ($(hamburgerIcon).isVisible()) {
         browser.moveToObject(hamburgerIcon);
         // wait for the menu available
+        console.log('    Wait for hamburger menu open');
         browser.waitForVisible(hamburgerIcon + ' li', timeout || 10000);
+    } else {
+        console.log('    Skip opening of hamburger menu');
     }
 }
 
