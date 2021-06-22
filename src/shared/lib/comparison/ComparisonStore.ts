@@ -19,7 +19,7 @@ import {
     stringListToMap,
 } from 'cbioportal-frontend-commons';
 import {
-    AlterationEnrichment,
+    AlterationFilter,
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
@@ -1018,20 +1018,17 @@ export default abstract class ComparisonStore {
                 const groupsAndAlterationTypes = {
                     molecularProfileCasesGroupFilter: this
                         .alterationsEnrichmentDataRequestGroups.result!,
-                    alterationFilter: {
-                        cnaBooleanMap: this
-                            .selectedCopyNumberEnrichmentEventTypes,
-                        mutationBooleanMap: this
-                            .selectedMutationEnrichmentEventTypes,
-                        includeDriver: true,
-                        includeVUS: true,
-                        includeUnknownOncogenicity: true,
-                        tiersBooleanMap: {},
-                        includeUnknownTier: true,
-                        includeGermline: true,
-                        includeSomatic: true,
-                        includeUnknownStatus: true,
-                    } as AlterationFilter,
+                    alterationEventTypes: {
+                        copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
+                            this.selectedCopyNumberEnrichmentEventTypes
+                        ),
+                        mutationEventTypes: getMutationEventTypesAPIParameter(
+                            this.selectedMutationEnrichmentEventTypes
+                        ),
+                        structuralVariants: !!this
+                            .isStructuralVariantEnrichmentSelected,
+                    },
+                    alterationFilter: undefined,
                 };
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
