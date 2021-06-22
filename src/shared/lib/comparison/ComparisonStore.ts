@@ -1035,6 +1035,7 @@ export default abstract class ComparisonStore {
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
+                    //@ts-ignore
                     groupsAndAlterationTypes,
                 });
             }
