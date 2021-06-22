@@ -1028,14 +1028,13 @@ export default abstract class ComparisonStore {
                         structuralVariants: !!this
                             .isStructuralVariantEnrichmentSelected,
                     },
-                    alterationFilter: undefined,
+                    alterationFilter: null,
                 };
 
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    //@ts-ignore
                     groupsAndAlterationTypes,
                 });
             }
