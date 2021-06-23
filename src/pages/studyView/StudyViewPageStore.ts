@@ -222,6 +222,7 @@ import {
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
+import { ensureBackwardCompatibilityOfFilters } from 'pages/studyView/utils/utils';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -1733,6 +1734,10 @@ export class StudyViewPageStore {
 
     @action
     updateStoreByFilters(filters: Partial<StudyViewFilter>): void {
+        // fixes filters in place to ensure backward compatiblity
+        // as filter specification changes
+        ensureBackwardCompatibilityOfFilters(filters);
+
         if (!_.isEmpty(filters.clinicalDataFilters)) {
             _.each(filters.clinicalDataFilters, filter => {
                 this._clinicalDataFilterSet.set(filter.attributeId, {
