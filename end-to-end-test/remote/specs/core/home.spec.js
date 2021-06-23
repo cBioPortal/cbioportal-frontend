@@ -690,14 +690,13 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 });
 
 describe('results page quick oql edit', () => {
-    before(() => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+            `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=chol_msk_2018&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Ccna&case_set_id=chol_msk_2018_cnaseq&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
-    });
 
-    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
+
         browser.click('[data-test="oqlQuickEditButton"]');
 
         browser.waitForExist('.quick_oql_edit [data-test="geneSet"]', 5000);
@@ -722,6 +721,20 @@ describe('results page quick oql edit', () => {
         );
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
+        goToUrlAndSetLocalStorage(
+            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+        );
+
+        browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
+
+        browser.click('[data-test="oqlQuickEditButton"]');
+
+        browser.waitForExist('.quick_oql_edit [data-test="geneSet"]', 5000);
+        setInputText(
+            '.quick_oql_edit [data-test="geneSet"]',
+            'TP53 PTEN: PROT>0'
+        );
+
         let query = browser.execute(function() {
             return urlWrapper.query;
         }).value;
