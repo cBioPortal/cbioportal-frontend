@@ -2969,6 +2969,26 @@ export function geneFilterQueryFromOql(
     };
 }
 
+export function ensureBackwardCompatibilityOfFilters(
+    filters: Partial<StudyViewFilter>
+) {
+    if (filters.geneFilters && filters.geneFilters.length) {
+        filters.geneFilters.forEach(f => {
+            f.geneQueries = f.geneQueries.map(arr => {
+                return arr.map(inner => {
+                    if (typeof inner === 'string') {
+                        return geneFilterQueryFromOql(inner);
+                    } else {
+                        return inner;
+                    }
+                });
+            });
+        });
+    }
+
+    return filters;
+}
+
 export function getFilteredMolecularProfilesByAlterationType(
     studyIdToMolecularProfiles: { [studyId: string]: MolecularProfile[] },
     alterationType: string,
