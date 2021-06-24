@@ -125,6 +125,7 @@ import {
     getFilteredMolecularProfilesByAlterationType,
     getStructuralVariantSamplesCount,
     MolecularProfileOption,
+    ensureBackwardCompatibilityOfFilters,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -222,7 +223,6 @@ import {
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
-import { ensureBackwardCompatibilityOfFilters } from 'pages/studyView/utils/utils';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
