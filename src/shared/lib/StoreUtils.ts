@@ -1298,6 +1298,17 @@ export function generateMutationIdByGeneAndProteinChangeAndEvent(
     ].join('_');
 }
 
+export function generateMutationIdByGeneAndProteinChangeSampleIdAndEvent(
+    m: Mutation
+): string {
+    return [
+        m.gene.hugoGeneSymbol,
+        m.proteinChange,
+        m.sampleId,
+        ...mutationEventFields(m),
+    ].join('_');
+}
+
 /** scan a collection of Mutations to see if any contain values for ASCN fields/properties
  *
  * all mutations (whether passed as a simple array or as an array of array)
