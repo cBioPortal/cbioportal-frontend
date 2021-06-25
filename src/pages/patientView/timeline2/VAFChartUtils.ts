@@ -24,7 +24,7 @@ function isPointBasedOnRealVAF(d: { mutationStatus: MutationStatus }) {
     );
 }
 
-function splitMutationsBySampleGroup(
+export function splitMutationsBySampleGroup(
     mutations: Mutation[][],
     sampleGroup: { [s: string]: string }
 ) {
