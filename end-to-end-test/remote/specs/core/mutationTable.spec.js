@@ -205,6 +205,11 @@ describe('Mutation Table', function() {
         it('should show the rs ids in dbsnp after adding the dbSNP column', () => {
             // click on column button
             browser.click('button*=Columns');
+
+            //wait for table to appear, then focus table
+            var allElements = $('[class*=ReactVirtualized__Table__row]');
+            allElements[allElements.length - 1].scrollIntoView();
+
             // scroll down to activated "dbSNP" selection
             browser.scroll(1000, 1000);
             // click "dbSNP"
