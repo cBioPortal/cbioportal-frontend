@@ -1,6 +1,8 @@
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import * as React from 'react';
 import { Tab, Table, Tabs } from 'react-bootstrap';
 import ReactTable from 'react-table';
+import OncokbLegendContent from './OncokbLegendContent';
 
 export type AnnotationHeaderTooltipCardInfoProps = {
     sourceUrl: string;
@@ -79,7 +81,16 @@ export const civicData: LegendDescription[] = [
                 style={{ height: 14, width: 14, marginLeft: 6 }}
             />
         ),
-        description: 'Is in CIViC',
+        description: 'Is in CIViC with oncogenic activity information',
+    },
+    {
+        legend: (
+            <img
+                src={require('../../../../../../src/rootImages/civic-logo-no-variants.png')}
+                style={{ height: 14, width: 14, marginLeft: 6 }}
+            />
+        ),
+        description: 'Is in CIViC but no oncogenic activity information',
     },
     {
         legend: <span />,
@@ -181,6 +192,88 @@ export const LegendTable: React.FunctionComponent<{
             pageSize={props.legendDescriptions.length}
             className="-striped -highlight"
         />
+    );
+};
+
+export const AnnotationHeader: React.FunctionComponent<{
+    name: string;
+    width: number;
+}> = props => {
+    return (
+        <span>
+            {props.name}
+            <br />
+            <DefaultTooltip
+                placement="top"
+                overlay={
+                    <AnnotationHeaderTooltipCard
+                        InfoProps={sourceTooltipInfo[AnnotationSources.ONCOKB]}
+                        legendDescriptions={civicData}
+                        overrideContent={<OncokbLegendContent />}
+                    />
+                }
+            >
+                <img
+                    src={require('../../../../../../src/rootImages/oncokb-oncogenic-1.svg')}
+                    style={{
+                        height: 16,
+                        width: 16,
+                        marginLeft: 5,
+                        marginBottom: 0,
+                        marginRight:
+                            props.width - 22 > 0 ? props.width - 22 : 0,
+                    }}
+                />
+            </DefaultTooltip>
+            <DefaultTooltip
+                placement="top"
+                overlay={
+                    <AnnotationHeaderTooltipCard
+                        InfoProps={sourceTooltipInfo[AnnotationSources.CIVIC]}
+                        legendDescriptions={civicData}
+                    />
+                }
+            >
+                <img
+                    src={require('../../../../../../src/rootImages/civic-logo.png')}
+                    style={{ height: 14, width: 14, marginLeft: 6 }}
+                />
+            </DefaultTooltip>
+            <DefaultTooltip
+                placement="top"
+                overlay={
+                    <AnnotationHeaderTooltipCard
+                        InfoProps={
+                            sourceTooltipInfo[
+                                AnnotationSources.MY_CANCER_GENOME
+                            ]
+                        }
+                        legendDescriptions={myCancerGenomeData}
+                    />
+                }
+            >
+                <img
+                    src={require('../../../../../../src/rootImages/mcg_logo.png')}
+                    style={{ height: 14, width: 14, marginLeft: 8 }}
+                />
+            </DefaultTooltip>
+            <DefaultTooltip
+                placement="top"
+                overlay={
+                    <AnnotationHeaderTooltipCard
+                        InfoProps={
+                            sourceTooltipInfo[AnnotationSources.CANCER_HOTSPOTS]
+                        }
+                        legendDescriptions={cancerHotspotsData}
+                    />
+                }
+            >
+                <img
+                    src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
+                    style={{ height: 14, width: 14, marginLeft: 7 }}
+                />
+            </DefaultTooltip>
+        </span>
     );
 };
 
