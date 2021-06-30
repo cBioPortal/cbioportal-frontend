@@ -1223,6 +1223,8 @@ export default class OncoprintModel {
     public async releaseRendering() {
         if (this.keep_sorted) {
             await this.sort();
+        } else {
+            this.setIdOrder(Object.keys(this.present_ids.get()));
         }
         this.track_tops.update();
     }

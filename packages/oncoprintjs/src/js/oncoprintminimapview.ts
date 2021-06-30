@@ -5,11 +5,12 @@ import zoomToFitIcon from '../img/zoomtofit.svg';
 import OncoprintModel, {ColumnIndex, TrackId} from "./oncoprintmodel";
 import OncoprintWebGLCellView, {
     OncoprintShaderProgram,
-    OncoprintTrackBuffer,
+    OncoprintTrackBuffer, OncoprintVertexTrackBuffer,
     OncoprintWebGLContext
 } from "./oncoprintwebglcellview";
 import MouseMoveEvent = JQuery.MouseMoveEvent;
 import {clamp, cloneShallow} from "./utils";
+import _ from "lodash";
 
 export type MinimapViewportSpec = {
     left_col:ColumnIndex; // leftmost col included in viewport
@@ -92,6 +93,7 @@ export default class OncoprintMinimapView {
     private vertical_zoom:OncoprintZoomSlider;
 
     private ctx:OncoprintWebGLContext|null;
+    private ext:ANGLE_instanced_arrays | null;
     private overlay_ctx:CanvasRenderingContext2D|null;
     private pMatrix:any;
     private mvMatrix:any;
@@ -653,6 +655,7 @@ export default class OncoprintMinimapView {
         parent_node.insertBefore(new_canvas, this.$overlay_canvas[0]);
         this.$canvas = $(new_canvas) as JQuery<HTMLCanvasElement>;
         this.ctx = null;
+        this.ext = null;
     }
 
     private getWebGLCanvasContext() {
@@ -726,6 +729,9 @@ export default class OncoprintMinimapView {
 
     private getWebGLContextAndSetUpMatrices() {
         this.ctx = this.getWebGLCanvasContext();
+        if (this.ctx) {
+            this.ext = this.ctx.getExtension('ANGLE_instanced_arrays');
+        }
         (function initializeMatrices(self) {
             const mvMatrix = gl_matrix.mat4.create();
             gl_matrix.mat4.lookAt(mvMatrix, [0, 0, 1], [0, 0, 0], [0, 1, 0]);
@@ -798,21 +804,24 @@ export default class OncoprintMinimapView {
     }
 
     private getTrackBuffers(cell_view:OncoprintWebGLCellView, track_id:TrackId) {
-        const pos_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const pos_buffer = this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
         const pos_array = cell_view.vertex_data[track_id].pos_array;
+        const universal_shapes_start_index = cell_view.vertex_data[track_id].universal_shapes_start_index;
 
         this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, pos_buffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(pos_array), this.ctx.STATIC_DRAW);
+        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, pos_array, this.ctx.STATIC_DRAW);
         pos_buffer.itemSize = 1;
-        pos_buffer.numItems = pos_array.length / pos_buffer.itemSize;
+        pos_buffer.specificShapesNumItems = universal_shapes_start_index / pos_buffer.itemSize;
+        pos_buffer.universalShapesNumItems = (pos_array.length - universal_shapes_start_index) / pos_buffer.itemSize;
 
-        const col_buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        const col_buffer = this.ctx.createBuffer() as OncoprintVertexTrackBuffer;
         const col_array = cell_view.vertex_data[track_id].col_array;
 
         this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, col_buffer);
-        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(col_array), this.ctx.STATIC_DRAW);
+        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, col_array, this.ctx.STATIC_DRAW);
         col_buffer.itemSize = 1;
-        col_buffer.numItems = col_array.length / col_buffer.itemSize;
+        col_buffer.specificShapesNumItems = universal_shapes_start_index / col_buffer.itemSize;
+        col_buffer.universalShapesNumItems = (col_array.length - universal_shapes_start_index) / col_buffer.itemSize;
 
         const tex = this.ctx.createTexture();
         this.ctx.bindTexture(this.ctx.TEXTURE_2D, tex);
@@ -842,6 +851,16 @@ export default class OncoprintMinimapView {
             'column': vertex_column_buffer};
     };
 
+    private getSimpleCountBuffer(model:OncoprintModel) {
+        const numColumns = model.getIdOrder().length;
+        const buffer = this.ctx.createBuffer() as OncoprintTrackBuffer;
+        this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffer);
+        this.ctx.bufferData(this.ctx.ARRAY_BUFFER, new Float32Array(_.range(0, numColumns)), this.ctx.STATIC_DRAW);
+        buffer.itemSize = 1;
+        buffer.numItems = numColumns;
+        return buffer;
+    }
+
     private drawOncoprint(model:OncoprintModel, cell_view:OncoprintWebGLCellView) {
         if (!this.shouldRender) {
             return;
@@ -855,6 +874,7 @@ export default class OncoprintMinimapView {
         this.ctx.clear(this.ctx.COLOR_BUFFER_BIT | this.ctx.DEPTH_BUFFER_BIT);
 
         const tracks = model.getTracks();
+        const simple_count_buffer = this.getSimpleCountBuffer(model);
         for (let i = 0; i < tracks.length; i++) {
             const track_id = tracks[i];
             const cell_top = model.getCellTops(track_id, true);
@@ -863,29 +883,60 @@ export default class OncoprintMinimapView {
                 continue;
             }
 
-            this.ctx.useProgram(this.shader_program);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
+            for (const forSpecificShapes of [false, true]) {
+                const shader_program = this.shader_program;
+                this.ctx.useProgram(shader_program);
 
-            this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
-            this.ctx.vertexAttribPointer(this.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
+                if (forSpecificShapes) {
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
+                    this.ctx.vertexAttribPointer(shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 0);
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
+                    this.ctx.vertexAttribPointer(shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 0);
 
-            this.ctx.activeTexture(this.ctx.TEXTURE0);
-            this.ctx.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
-            this.ctx.uniform1i(this.shader_program.samplerUniform, 0);
-            this.ctx.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.column);
+                    this.ctx.vertexAttribPointer(shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, this.ctx.FLOAT, false, 0, 0);
+                    // make sure to set divisor 0, otherwise the track will only use the first item in the column buffer
+                    this.ext.vertexAttribDivisorANGLE(shader_program.vertexOncoprintColumnAttribute, 0);
+                } else {
+                    // set up for drawArraysInstanced
+                    const universalShapesStart = buffers.position.specificShapesNumItems * buffers.position.itemSize;
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.position);
+                    this.ctx.vertexAttribPointer(shader_program.vertexPositionAttribute, buffers.position.itemSize, this.ctx.FLOAT, false, 0, 4*universalShapesStart);
 
-            this.ctx.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
-            this.ctx.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
-            this.ctx.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true));
-            this.ctx.uniform1f(this.shader_program.zoomXUniform, zoom.x);
-            this.ctx.uniform1f(this.shader_program.zoomYUniform, zoom.y);
-            this.ctx.uniform1f(this.shader_program.offsetYUniform, cell_top);
-            this.ctx.uniform1f(this.shader_program.positionBitPackBaseUniform, cell_view.position_bit_pack_base);
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, buffers.color);
+                    this.ctx.vertexAttribPointer(shader_program.vertexColorAttribute, buffers.color.itemSize, this.ctx.FLOAT, false, 0, 4*universalShapesStart);
 
-            this.ctx.drawArrays(this.ctx.TRIANGLES, 0, buffers.position.numItems);
+                    this.ctx.bindBuffer(this.ctx.ARRAY_BUFFER, simple_count_buffer);
+                    this.ctx.vertexAttribPointer(shader_program.vertexOncoprintColumnAttribute, 1, this.ctx.FLOAT, false, 0, 0);
+                    this.ext.vertexAttribDivisorANGLE(shader_program.vertexOncoprintColumnAttribute, 1);
+                }
+
+                this.ctx.activeTexture(this.ctx.TEXTURE0);
+                this.ctx.bindTexture(this.ctx.TEXTURE_2D, buffers.color_tex.texture);
+                this.ctx.uniform1i(this.shader_program.samplerUniform, 0);
+                this.ctx.uniform1f(this.shader_program.texSizeUniform, buffers.color_tex.size);
+
+                this.ctx.uniformMatrix4fv(this.shader_program.pMatrixUniform, false, this.pMatrix);
+                this.ctx.uniformMatrix4fv(this.shader_program.mvMatrixUniform, false, this.mvMatrix);
+                this.ctx.uniform1f(this.shader_program.columnWidthUniform, model.getCellWidth(true));
+                this.ctx.uniform1f(this.shader_program.zoomXUniform, zoom.x);
+                this.ctx.uniform1f(this.shader_program.zoomYUniform, zoom.y);
+                this.ctx.uniform1f(this.shader_program.offsetYUniform, cell_top);
+                this.ctx.uniform1f(this.shader_program.positionBitPackBaseUniform, cell_view.position_bit_pack_base);
+
+
+                if (forSpecificShapes) {
+                    this.ctx.drawArrays(this.ctx.TRIANGLES, 0, buffers.position.specificShapesNumItems);
+                } else {
+                    this.ext.drawArraysInstancedANGLE(
+                        this.ctx.TRIANGLES,
+                        0,
+                        buffers.position.itemSize * buffers.position.universalShapesNumItems,
+                        simple_count_buffer.numItems
+                    );
+                }
+            }
+            this.ctx.flush();
         }
     }
 
