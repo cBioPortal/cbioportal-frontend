@@ -20,15 +20,7 @@ import {
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import AnnotationHeaderTooltipCard, {
-    AnnotationSources,
-    cancerHotspotsData,
-    civicData,
-    myCancerGenomeData,
-    sourceTooltipInfo,
-} from './annotation/AnnotationHeaderTooltipCard';
-import OncokbLegendContent from './annotation/OncokbLegendContent';
+import { AnnotationHeader } from './annotation/AnnotationHeaderTooltipCard';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
@@ -99,87 +91,8 @@ export default class AnnotationColumnFormatter {
         ].join(';');
     }
 
-    public static headerRender(name: string) {
-        return (
-            <span>
-                {name}
-                <br />
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            InfoProps={
-                                sourceTooltipInfo[AnnotationSources.ONCOKB]
-                            }
-                            legendDescriptions={civicData}
-                            overrideContent={<OncokbLegendContent />}
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../src/rootImages/oncokb-oncogenic-1.svg')}
-                        style={{
-                            height: 16,
-                            width: 16,
-                            marginLeft: 5,
-                            marginBottom: 0,
-                        }}
-                    />
-                </DefaultTooltip>
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            InfoProps={
-                                sourceTooltipInfo[AnnotationSources.CIVIC]
-                            }
-                            legendDescriptions={civicData}
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../src/rootImages/civic-logo.png')}
-                        style={{ height: 14, width: 14, marginLeft: 6 }}
-                    />
-                </DefaultTooltip>
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            InfoProps={
-                                sourceTooltipInfo[
-                                    AnnotationSources.MY_CANCER_GENOME
-                                ]
-                            }
-                            legendDescriptions={myCancerGenomeData}
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../src/rootImages/mcg_logo.png')}
-                        style={{ height: 14, width: 14, marginLeft: 8 }}
-                    />
-                </DefaultTooltip>
-                <DefaultTooltip
-                    placement="top"
-                    overlay={
-                        <AnnotationHeaderTooltipCard
-                            InfoProps={
-                                sourceTooltipInfo[
-                                    AnnotationSources.CANCER_HOTSPOTS
-                                ]
-                            }
-                            legendDescriptions={cancerHotspotsData}
-                        />
-                    }
-                >
-                    <img
-                        src={require('../../../../../src/rootImages/cancer-hotspots.svg')}
-                        style={{ height: 14, width: 14, marginLeft: 7 }}
-                    />
-                </DefaultTooltip>
-            </span>
-        );
+    public static headerRender(name: string, width: number) {
+        return <AnnotationHeader name={name} width={width} />;
     }
 
     public static renderFunction(
