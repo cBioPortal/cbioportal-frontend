@@ -6,6 +6,10 @@ import {
     fetch as fetchMutationCountData,
 } from 'shared/cache/MutationCountCache';
 import {
+    default as ClinicalAttributeCache,
+    fetch as fetchClinicalData,
+} from 'shared/cache/ClinicalAttributeCache';
+import {
     default as GenomeNexusCache,
     defaultGNFetch as fetchGenomeNexusData,
 } from 'shared/cache/GenomeNexusCache';
@@ -13,7 +17,11 @@ import {
     default as DiscreteCNACache,
     fetch as fetchDiscreteCNAData,
 } from 'shared/cache/DiscreteCNACache';
-import { Mutation, MolecularProfile } from 'cbioportal-ts-api-client';
+import {
+    Mutation,
+    ClinicalAttribute,
+    MolecularProfile,
+} from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import {
     default as GenomeNexusMutationAssessorCache,
@@ -26,12 +34,14 @@ export class MutationTableDownloadDataFetcher
 
     constructor(
         private mutationData: MobxPromise<Mutation[]>,
+        private clinicalAttributes?: MobxPromise<ClinicalAttribute[]>,
         private studyToMolecularProfileDiscrete?: {
             [studyId: string]: MolecularProfile;
         },
         private genomeNexusCache?: () => GenomeNexusCache,
         private genomeNexusMutationAssessorCache?: () => GenomeNexusMutationAssessorCache,
         private mutationCountCache?: () => MutationCountCache,
+        private clinicalAttributeCache?: () => ClinicalAttributeCache,
         private discreteCNACache?: () => DiscreteCNACache
     ) {
         // TODO labelMobxPromises(this); ?
@@ -90,6 +100,11 @@ export class MutationTableDownloadDataFetcher
             caches.push(this.mutationCountCache());
         }
 
+        if (this.clinicalAttributeCache) {
+            promises.push(this.fetchAllClinicalData());
+            caches.push(this.clinicalAttributeCache());
+        }
+
         if (this.discreteCNACache) {
             promises.push(this.fetchAllDiscreteCNAData());
             caches.push(this.discreteCNACache());
@@ -106,6 +121,30 @@ export class MutationTableDownloadDataFetcher
             }));
 
             return await fetchMutationCountData(queries);
+        } else {
+            return undefined;
+        }
+    }
+
+    private async fetchAllClinicalData() {
+        if (
+            this.mutationData.result &&
+            this.clinicalAttributes &&
+            this.clinicalAttributes.result
+        ) {
+            const queries = _.flatten(
+                this.mutationData.result.map(mutation =>
+                    this.clinicalAttributes!.result!.map(attribute => ({
+                        clinicalAttribute: attribute,
+                        entityId: attribute.patientAttribute
+                            ? mutation.patientId
+                            : mutation.sampleId,
+                        studyId: mutation.studyId,
+                    }))
+                )
+            );
+
+            return await fetchClinicalData(queries);
         } else {
             return undefined;
         }

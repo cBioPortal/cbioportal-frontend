@@ -9,6 +9,7 @@ import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
+import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
 
 import {
     IMutationMapperProps,
@@ -28,6 +29,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     discreteCNACache?: DiscreteCNACache;
     cancerTypeCache?: CancerTypeCache;
     mutationCountCache?: MutationCountCache;
+    clinicalAttributeCache?: ClinicalAttributeCache;
     existsSomeMutationWithAscnProperty: { [property: string]: boolean };
     userEmailAddress: string;
     onClickSettingMenu?: (visible: boolean) => void;
@@ -88,7 +90,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 this.props.store.mutationData,
                 this.props.store.indexedVariantAnnotations,
                 this.props.store.activeTranscript,
-                this.props.store.clinicalDataGroupedBySampleMap
+                this.props.store.clinicalDataGroupedBySampleMap,
+                this.props.store.mutationsTabClinicalAttributes
             ) === 'pending'
         );
     }
@@ -122,6 +125,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
+                clinicalAttributeCache={this.props.clinicalAttributeCache}
                 genomeNexusCache={this.props.genomeNexusCache}
                 genomeNexusMutationAssessorCache={
                     this.props.genomeNexusMutationAssessorCache
@@ -163,6 +167,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 existsSomeMutationWithAscnProperty={
                     this.props.existsSomeMutationWithAscnProperty
+                }
+                mutationsTabClinicalAttributes={
+                    this.props.store.mutationsTabClinicalAttributes
+                }
+                clinicalAttributeIdToAvailableFrequency={
+                    this.props.store.clinicalAttributeIdToAvailableFrequency
                 }
             />
         );
