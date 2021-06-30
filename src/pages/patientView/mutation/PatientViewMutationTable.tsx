@@ -26,7 +26,7 @@ import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
-import { AnnotationHeader } from 'shared/components/mutationTable/column/annotation/AnnotationHeaderTooltipCard';
+import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;

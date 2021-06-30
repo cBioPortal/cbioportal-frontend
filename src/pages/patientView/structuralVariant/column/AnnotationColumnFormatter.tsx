@@ -18,7 +18,7 @@ import {
     OncoKbCardDataType,
     calculateOncoKbAvailableDataType,
 } from 'cbioportal-utils';
-import { AnnotationHeader } from 'shared/components/mutationTable/column/annotation/AnnotationHeaderTooltipCard';
+import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 
 export default class AnnotationColumnFormatter {
     public static getData(

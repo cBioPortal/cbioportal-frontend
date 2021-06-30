@@ -20,7 +20,7 @@ import {
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { AnnotationHeader } from './annotation/AnnotationHeaderTooltipCard';
+import AnnotationHeader from './annotation/AnnotationHeader';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
