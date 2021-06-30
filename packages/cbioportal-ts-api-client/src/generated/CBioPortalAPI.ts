@@ -429,6 +429,8 @@ export type Mutation = {
 
         'mutationType': string
 
+        'namespaceColumns': {}
+
         'ncbiBuild': string
 
         'normalAltCount': number
