@@ -448,6 +448,7 @@ export default class MutationMapperToolStore {
         return new MutationTableDownloadDataFetcher(
             this.mutations,
             undefined,
+            undefined,
             () => this.genomeNexusCache,
             () => this.genomeNexusMutationAssessorCache
         );
