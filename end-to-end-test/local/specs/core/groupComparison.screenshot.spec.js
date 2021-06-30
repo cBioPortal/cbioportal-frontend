@@ -51,7 +51,7 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             openGeneSelectorMenu();
-            $('input[data-test=numberOfGenes]').setValue('2\n');
+            setNumberOfGenes(2);
             browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
             browser.click('[data-test="addGenestoBarPlot"]');
             browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
@@ -133,5 +133,12 @@ function openGeneSelectorMenu() {
     const selectGenesDropdownButton = '[data-test="selectGenes"]';
     $(selectGenesDropdownButton).waitForExist(30000);
     browser.click(selectGenesDropdownButton);
-    $('input[data-test=numberOfGenes]').waitForExist();
+    $('input[data-test=numberOfGenes]').waitForVisible();
+}
+
+function setNumberOfGenes(number) {
+    // To prevent error 'ERROR webdriver: Request failed due to Error: element not interactable'
+    // double click the input (see https://github.com/webdriverio/webdriverio/issues/1406#issuecomment-468710200)
+    $('input[data-test=numberOfGenes]').doubleClick();
+    $('input[data-test=numberOfGenes]').setValue(number + '\n');
 }

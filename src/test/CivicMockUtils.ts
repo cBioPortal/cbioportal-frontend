@@ -180,6 +180,7 @@ export function getMutationData(): Mutation {
         driverTiersFilter: '',
         driverTiersFilterAnnotation: '',
         chr: '3',
+        namespaceColumns: {},
     };
 }
 
