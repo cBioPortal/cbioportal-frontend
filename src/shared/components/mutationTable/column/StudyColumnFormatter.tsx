@@ -50,6 +50,7 @@ export default class StudyColumnFormatter {
                             }}
                         />
                     )}
+                    placement="topLeft"
                 >
                     <a href={getStudySummaryUrl(study.studyId)} target="_blank">
                         {study.name}

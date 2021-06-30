@@ -47,6 +47,7 @@ export default class SampleColumnFormatter {
         return (
             <DefaultTooltip
                 overlay={() => <div style={{ maxWidth: 300 }}>{sampleId}</div>}
+                placement="topLeft"
             >
                 {content}
             </DefaultTooltip>
