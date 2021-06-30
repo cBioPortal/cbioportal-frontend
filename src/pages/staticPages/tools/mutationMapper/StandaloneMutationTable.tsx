@@ -7,7 +7,6 @@ import {
 } from 'shared/components/mutationTable/MutationTable';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
-import { AnnotationHeader } from 'shared/components/mutationTable/column/annotation/AnnotationHeaderTooltipCard';
 
 export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
