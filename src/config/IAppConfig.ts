@@ -43,6 +43,7 @@ export interface IServerConfig {
     g2s_url: string | null;
     google_analytics_profile_id: string | null;
     isoformOverrideSource: string;
+    ptmSources: string[] | undefined;
     oncoprint_hide_vus_default: boolean;
     mycancergenome_show: boolean | undefined;
     oncokb_public_api_url: string | null;

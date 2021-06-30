@@ -83,6 +83,7 @@ export type MutationMapperProps = {
     filterMutationsBySelectedTranscript?: boolean;
     transcriptSummaryUrlTemplate?: string;
     isoformOverrideSource?: string;
+    ptmSources?: string[];
     annotationFields?: string[];
     mainLoadingIndicator?: JSX.Element;
     geneSummaryLoadingIndicator?: JSX.Element;
@@ -111,6 +112,7 @@ export function initDefaultMutationMapperStore(props: MutationMapperProps) {
         {
             annotationFields: props.annotationFields,
             isoformOverrideSource: props.isoformOverrideSource,
+            ptmSources: props.ptmSources,
             filterMutationsBySelectedTranscript:
                 props.filterMutationsBySelectedTranscript,
             genomeNexusUrl: props.genomeNexusUrl,

@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
-import { MobxCache, Mutation } from 'cbioportal-utils';
+import {
+    MobxCache,
+    Mutation,
+    PTM_SOURCE_URL,
+    PtmSource,
+} from 'cbioportal-utils';
 
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
@@ -10,6 +15,7 @@ import OncoKbTrack from './OncoKbTrack';
 import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';
+import { PtmAnnotationTableColumnId } from '../ptm/PtmAnnotationTable';
 
 type TrackPanelProps = {
     store: MutationMapperStore<Mutation>;
@@ -25,7 +31,7 @@ type TrackPanelProps = {
 @observer
 export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     public static defaultProps: Partial<TrackPanelProps> = {
-        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.PTM],
+        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.dbPTM],
     };
 
     constructor(props: TrackPanelProps) {
@@ -66,24 +72,14 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                         proteinLength={this.proteinLength}
                     />
                 ) : null,
-            [TrackName.PTM]:
-                !this.props.trackVisibility ||
-                this.props.trackVisibility[TrackName.PTM] === 'visible' ? (
-                    <PtmTrack
-                        store={this.props.store}
-                        pubMedCache={this.props.pubMedCache}
-                        ensemblTranscriptId={
-                            this.props.store.activeTranscript &&
-                            this.props.store.activeTranscript.result
-                                ? this.props.store.activeTranscript.result
-                                : undefined
-                        }
-                        dataStore={this.props.store.dataStore}
-                        width={this.props.geneWidth}
-                        xOffset={this.props.geneXOffset}
-                        proteinLength={this.proteinLength}
-                    />
-                ) : null,
+            [TrackName.dbPTM]: this.getPtmTrack(
+                TrackName.dbPTM,
+                PtmSource.dbPTM
+            ),
+            [TrackName.UniprotPTM]: this.getPtmTrack(
+                TrackName.UniprotPTM,
+                PtmSource.Uniprot
+            ),
         };
     }
 
@@ -101,5 +97,38 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                     .filter(e => e !== undefined && e !== null)}
             </div>
         );
+    }
+
+    private getPtmTrack(trackName: TrackName, ptmSource: PtmSource) {
+        return !this.props.trackVisibility ||
+            this.props.trackVisibility[trackName] === 'visible' ? (
+            <PtmTrack
+                store={this.props.store}
+                pubMedCache={this.props.pubMedCache}
+                ensemblTranscriptId={this.props.store.activeTranscript?.result}
+                dataStore={this.props.store.dataStore}
+                width={this.props.geneWidth}
+                xOffset={this.props.geneXOffset}
+                proteinLength={this.proteinLength}
+                dataSource={ptmSource}
+                dataSourceUrl={PTM_SOURCE_URL[ptmSource]}
+                ptmTooltipColumnOverrides={this.getPtmTooltipColumnOverrides(
+                    ptmSource
+                )}
+            />
+        ) : null;
+    }
+
+    private getPtmTooltipColumnOverrides(ptmSource: PtmSource) {
+        if (ptmSource === PtmSource.dbPTM) {
+            // hide description column for dbPTM, we don't have description data.
+            return {
+                [PtmAnnotationTableColumnId.DESCRIPTION]: {
+                    show: false,
+                },
+            };
+        } else {
+            return undefined;
+        }
     }
 }
