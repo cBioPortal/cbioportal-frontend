@@ -100,6 +100,7 @@ export default class CancerTypeColumnFormatter {
             return (
                 <DefaultTooltip
                     overlay={() => <div style={{ maxWidth: 300 }}>{data}</div>}
+                    placement="topLeft"
                 >
                     <span>{data || ''}</span>
                 </DefaultTooltip>
