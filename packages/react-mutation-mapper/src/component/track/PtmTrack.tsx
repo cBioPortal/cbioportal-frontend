@@ -3,16 +3,20 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { Collapse } from 'react-collapse';
-import autobind from 'autobind-decorator';
+import { Column } from 'react-table';
 import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
-import { MobxCache, Mutation } from 'cbioportal-utils';
-import { PostTranslationalModification } from 'genome-nexus-ts-api-client';
+import {
+    compareByPtmTypePriority,
+    ptmColor,
+    MobxCache,
+    Mutation,
+    PostTranslationalModification,
+} from 'cbioportal-utils';
 
 import MutationMapperStore from '../../model/MutationMapperStore';
-import { compareByPtmTypePriority, ptmColor } from '../../util/PtmUtils';
 import PtmAnnotationTable from '../ptm/PtmAnnotationTable';
 import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackCircle';
@@ -24,18 +28,47 @@ type PtmTrackProps = TrackProps & {
     pubMedCache?: MobxCache;
     ensemblTranscriptId?: string;
     subTrackMargin?: number;
+    dataSource?: string;
+    dataSourceUrl?: string;
+    ptmTooltipColumnOverrides?: { [id: string]: Partial<Column> };
 };
 
 export const PtmTooltip: React.FunctionComponent<{
     ptms: PostTranslationalModification[];
     pubMedCache?: MobxCache;
+    columnOverrides?: { [id: string]: Partial<Column> };
 }> = props => {
     return (
-        <PtmAnnotationTable data={props.ptms} pubMedCache={props.pubMedCache} />
+        <PtmAnnotationTable
+            data={props.ptms}
+            pubMedCache={props.pubMedCache}
+            columnOverrides={props.columnOverrides}
+        />
     );
 };
 
-export function ptmInfoTooltip(transcriptId?: string) {
+export function ptmInfoTooltip(
+    transcriptId?: string,
+    dataSource?: string,
+    dataSourceUrl?: string
+) {
+    let dataSourceDiv = null;
+
+    if (dataSource) {
+        dataSourceDiv = (
+            <div>
+                Data Source:{' '}
+                {dataSourceUrl ? (
+                    <a href={dataSourceUrl} target="_blank">
+                        {dataSource}
+                    </a>
+                ) : (
+                    dataSource
+                )}
+            </div>
+        );
+    }
+
     return (
         <div style={{ maxWidth: 400 }}>
             <p>
@@ -69,14 +102,16 @@ export function ptmInfoTooltip(transcriptId?: string) {
                     </li>
                 </ul>
             </p>
-            <div>
-                Data Source:{' '}
-                <a href="http://dbptm.mbc.nctu.edu.tw/" target="_blank">
-                    dbPTM
-                </a>
-            </div>
+            {dataSourceDiv}
         </div>
     );
+}
+
+function filterPtmsBySource(
+    ptms: PostTranslationalModification[],
+    source?: string
+): PostTranslationalModification[] {
+    return source ? ptms.filter(ptm => ptm.source === source) : ptms;
 }
 
 const PTM_ID_CLASS_PREFIX = 'ptm-';
@@ -99,18 +134,11 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
             .ptmDataByProteinPosStart.result;
 
         if (ptmDataByProteinPosStart && !_.isEmpty(ptmDataByProteinPosStart)) {
-            return _.keys(ptmDataByProteinPosStart)
-                .filter(position => Number(position) >= 0)
-                .map(position => ({
-                    codon: Number(position),
-                    color: ptmColor(ptmDataByProteinPosStart[Number(position)]),
-                    tooltip: (
-                        <PtmTooltip
-                            ptms={ptmDataByProteinPosStart[Number(position)]}
-                            pubMedCache={this.props.pubMedCache}
-                        />
-                    ),
-                }));
+            return _.reduce(
+                ptmDataByProteinPosStart,
+                this.ptmDataToTrackItemSpecsReducer,
+                []
+            );
         } else {
             return [];
         }
@@ -128,27 +156,13 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                 .sort(compareByPtmTypePriority)
                 .map(type => ({
                     title: type,
-                    specs: _.keys(ptmDataByTypeAndProteinPosStart[type])
-                        .filter(position => Number(position) >= 0)
-                        .map(position => ({
-                            codon: Number(position),
-                            color: ptmColor(
-                                ptmDataByTypeAndProteinPosStart[type][
-                                    Number(position)
-                                ]
-                            ),
-                            tooltip: (
-                                <PtmTooltip
-                                    ptms={
-                                        ptmDataByTypeAndProteinPosStart[type][
-                                            Number(position)
-                                        ]
-                                    }
-                                    pubMedCache={this.props.pubMedCache}
-                                />
-                            ),
-                        })),
-                }));
+                    specs: _.reduce(
+                        ptmDataByTypeAndProteinPosStart[type],
+                        this.ptmDataToTrackItemSpecsReducer,
+                        []
+                    ),
+                }))
+                .filter(s => !_.isEmpty(s.specs));
         } else {
             return [];
         }
@@ -161,7 +175,11 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                 <DefaultTooltip
                     placement="left"
                     overlay={() =>
-                        ptmInfoTooltip(this.props.ensemblTranscriptId)
+                        ptmInfoTooltip(
+                            this.props.ensemblTranscriptId,
+                            this.props.dataSource,
+                            this.props.dataSourceUrl
+                        )
                     }
                     destroyTooltipOnHide={true}
                 >
@@ -169,7 +187,11 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                         style={{ marginLeft: 4 }}
                         onClick={this.handleToggleExpand}
                     >
-                        PTM Sites <i className="fa fa-info-circle" />
+                        PTM{' '}
+                        {this.props.dataSource
+                            ? `(${this.props.dataSource})`
+                            : 'Sites'}{' '}
+                        <i className="fa fa-info-circle" />
                     </span>
                 </DefaultTooltip>
             </span>
@@ -265,6 +287,33 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
             </span>
         );
     }
+
+    private ptmDataToTrackItemSpecsReducer = (
+        acc: TrackItemSpec[],
+        ptmData: PostTranslationalModification[],
+        position: string
+    ): TrackItemSpec[] => {
+        const ptms =
+            Number(position) >= 0
+                ? filterPtmsBySource(ptmData, this.props.dataSource)
+                : [];
+
+        if (!_.isEmpty(ptms)) {
+            acc.push({
+                codon: Number(position),
+                color: ptmColor(ptms),
+                tooltip: (
+                    <PtmTooltip
+                        ptms={ptms}
+                        pubMedCache={this.props.pubMedCache}
+                        columnOverrides={this.props.ptmTooltipColumnOverrides}
+                    />
+                ),
+            });
+        }
+
+        return acc;
+    };
 
     @action.bound
     private handleToggleExpand() {

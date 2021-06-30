@@ -8,6 +8,7 @@ export interface IMutationMapperConfig {
     mycancergenome_show?: boolean;
     show_civic?: boolean;
     isoformOverrideSource?: string;
+    ptmSources?: string[];
     mygene_info_url: string | null;
     uniprot_id_url: string | null;
     ensembl_transcript_url: string | null;

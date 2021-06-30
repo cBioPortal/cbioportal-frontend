@@ -6,6 +6,7 @@ import {
     IMyCancerGenomeData,
     IOncoKbData,
     Mutation,
+    PostTranslationalModification,
     RemoteData,
 } from 'cbioportal-utils';
 import {
@@ -13,7 +14,6 @@ import {
     Hotspot,
     MyVariantInfo,
     PfamDomain,
-    PostTranslationalModification,
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import {
@@ -44,6 +44,7 @@ export interface MutationMapperStore<T extends Mutation> {
         group: string;
         counts: { [pos: number]: number };
     }[];
+    ptmData: RemoteData<PostTranslationalModification[] | undefined>;
     ptmDataByProteinPosStart: RemoteData<
         { [pos: number]: PostTranslationalModification[] } | undefined
     >;
@@ -77,6 +78,7 @@ export interface MutationMapperStore<T extends Mutation> {
     setSelectedTranscript?: (id: string | undefined) => void;
     getTranscriptId?: () => string | undefined;
     selectedTranscript?: string | undefined;
+    ptmSources?: string[];
 }
 
 export default MutationMapperStore;

@@ -3,6 +3,7 @@ import {
     EvidenceType,
     IOncoKbData,
     Mutation,
+    UniprotFeature,
 } from 'cbioportal-utils';
 import {
     EnsemblFilter,
@@ -13,6 +14,7 @@ import {
     MyVariantInfo,
     PfamDomain,
     PostTranslationalModification,
+    // TODO UniprotFeature
     VariantAnnotation,
 } from 'genome-nexus-ts-api-client';
 import { CancerGene, OncoKbAPI, OncoKBInfo } from 'oncokb-ts-api-client';
@@ -54,6 +56,10 @@ export interface MutationMapperDataFetcher {
         ensemblId: string,
         client?: GenomeNexusAPI
     ): Promise<PostTranslationalModification[]>;
+    fetchUniprotFeatures(
+        swissProtId: string,
+        client?: GenomeNexusAPI
+    ): Promise<UniprotFeature[]>;
     fetchCancerHotspotData(
         ensemblId: string,
         client?: GenomeNexusAPIInternal
