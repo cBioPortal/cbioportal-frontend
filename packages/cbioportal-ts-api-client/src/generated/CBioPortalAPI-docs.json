@@ -4359,7 +4359,7 @@
     "AlterationFilter": {
       "type": "object",
       "properties": {
-        "cnaBooleanMap": {
+        "copyNumberAlterationEventTypes": {
           "type": "object",
           "additionalProperties": {
             "type": "boolean"
@@ -4386,11 +4386,14 @@
         "includeVUS": {
           "type": "boolean"
         },
-        "mutationBooleanMap": {
+        "mutationEventTypes": {
           "type": "object",
           "additionalProperties": {
             "type": "boolean"
           }
+        },
+        "structuralVariants": {
+          "type": "boolean"
         },
         "tiersBooleanMap": {
           "type": "object",

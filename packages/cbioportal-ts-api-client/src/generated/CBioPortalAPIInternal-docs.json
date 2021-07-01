@@ -3439,31 +3439,10 @@
       },
       "title": "AlterationEnrichment"
     },
-    "AlterationEventTypeFilter": {
-      "type": "object",
-      "properties": {
-        "copyNumberAlterationEventTypes": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean"
-          }
-        },
-        "mutationEventTypes": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "boolean"
-          }
-        },
-        "structuralVariants": {
-          "type": "boolean"
-        }
-      },
-      "title": "AlterationEventTypeFilter"
-    },
     "AlterationFilter": {
       "type": "object",
       "properties": {
-        "cnaBooleanMap": {
+        "copyNumberAlterationEventTypes": {
           "type": "object",
           "additionalProperties": {
             "type": "boolean"
@@ -3490,11 +3469,14 @@
         "includeVUS": {
           "type": "boolean"
         },
-        "mutationBooleanMap": {
+        "mutationEventTypes": {
           "type": "object",
           "additionalProperties": {
             "type": "boolean"
           }
+        },
+        "structuralVariants": {
+          "type": "boolean"
         },
         "tiersBooleanMap": {
           "type": "object",
@@ -4720,9 +4702,6 @@
       ],
       "properties": {
         "alterationEventTypes": {
-          "$ref": "#/definitions/AlterationEventTypeFilter"
-        },
-        "alterationFilter": {
           "$ref": "#/definitions/AlterationFilter"
         },
         "molecularProfileCasesGroupFilter": {
