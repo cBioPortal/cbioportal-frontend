@@ -20,7 +20,7 @@ export type AlleleSpecificCopyNumber = {
 
 };
 export type AlterationFilter = {
-    'cnaBooleanMap': {}
+    'copyNumberAlterationEventTypes': {}
 
     'includeDriver': boolean
 
@@ -36,7 +36,9 @@ export type AlterationFilter = {
 
         'includeVUS': boolean
 
-        'mutationBooleanMap': {}
+        'mutationEventTypes': {}
+
+        'structuralVariants': boolean
 
         'tiersBooleanMap': {}
 
