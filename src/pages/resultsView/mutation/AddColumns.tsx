@@ -102,6 +102,10 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
             }));
     }
 
+    @computed get numSelectedMutationsOptions() {
+        return this.mutationsOptions.filter(opt => opt.selected).length;
+    }
+
     @computed get mutationsTabContent() {
         return (
             <AddChartByType
@@ -133,6 +137,10 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
             }));
     }
 
+    @computed get numSelectedClinicalOptions() {
+        return this.clinicalOptions.filter(opt => opt.selected).length;
+    }
+
     @computed get clinicalTabContent() {
         return (
             <AddChartByType
@@ -157,6 +165,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
                 {Tab.MUTATIONS}
                 <span style={{ paddingLeft: 5 }}>
                     <span className="oncoprintDropdownCount">
+                        {this.numSelectedMutationsOptions} /{' '}
                         {this.mutationsOptions.length}
                     </span>
                 </span>
@@ -170,11 +179,20 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
                 {Tab.CLINICAL}
                 <span style={{ paddingLeft: 5 }}>
                     <span className="oncoprintDropdownCount">
+                        {this.numSelectedClinicalOptions} /{' '}
                         {this.clinicalOptions.length}
                     </span>
                 </span>
             </span>
         );
+    }
+
+    @computed get dropdownButtonText() {
+        const numSelected =
+            this.numSelectedMutationsOptions + this.numSelectedClinicalOptions;
+        const numTotal =
+            this.mutationsOptions.length + this.clinicalOptions.length;
+        return `Columns (${numSelected} / ${numTotal})`;
     }
 
     private getTextPixel(text: string, fontSize: string) {
@@ -207,7 +225,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
             <div style={{ float: 'right' }}>
                 <CustomDropdown
                     bsStyle="default"
-                    title="Columns"
+                    title={this.dropdownButtonText}
                     id="addColumnsDropdown"
                     className={this.props.className}
                     styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}
