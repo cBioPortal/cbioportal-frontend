@@ -197,6 +197,9 @@ describe('oncoprint', function() {
             browser.pause(500); // give it time to sort
 
             // Open menu again, which may have closed
+
+            mrnaElements = getGroupHeaderOptionsElements(2);
+
             setDropdownOpen(
                 true,
                 mrnaElements.button_selector,
@@ -221,6 +224,7 @@ describe('oncoprint', function() {
             browser.click(mrnaElements.dropdown_selector + ' li:nth-child(2)'); // Click Don't clsuter
             browser.pause(500); // give it time to sort
 
+            mrnaElements = getGroupHeaderOptionsElements(2);
             // Open menu again, which may have closed
             setDropdownOpen(
                 true,
