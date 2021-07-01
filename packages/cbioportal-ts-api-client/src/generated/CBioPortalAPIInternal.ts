@@ -29,16 +29,8 @@ export type AlterationEnrichment = {
         'pValue': number
 
 };
-export type AlterationEventTypeFilter = {
-    'copyNumberAlterationEventTypes': {}
-
-    'mutationEventTypes': {}
-
-    'structuralVariants': boolean
-
-};
 export type AlterationFilter = {
-    'cnaBooleanMap': {}
+    'copyNumberAlterationEventTypes': {}
 
     'includeDriver': boolean
 
@@ -54,7 +46,9 @@ export type AlterationFilter = {
 
         'includeVUS': boolean
 
-        'mutationBooleanMap': {}
+        'mutationEventTypes': {}
+
+        'structuralVariants': boolean
 
         'tiersBooleanMap': {}
 
@@ -597,9 +591,7 @@ export type MolecularProfileCaseIdentifier = {
 
 };
 export type MolecularProfileCasesGroupAndAlterationTypeFilter = {
-    'alterationEventTypes': AlterationEventTypeFilter
-
-        'alterationFilter': AlterationFilter
+    'alterationEventTypes': AlterationFilter
 
         'molecularProfileCasesGroupFilter': Array < MolecularProfileCasesGroupFilter >
 
