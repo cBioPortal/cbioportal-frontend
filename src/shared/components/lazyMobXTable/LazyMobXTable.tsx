@@ -9,7 +9,6 @@ import {
     makeObservable,
 } from 'mobx';
 import { observer, Observer } from 'mobx-react';
-import classnames from 'classnames';
 import './styles.scss';
 import {
     IPaginationControlsProps,
@@ -552,17 +551,16 @@ export class LazyMobXTableStore<T> {
     @computed get tds(): JSX.Element[][] {
         return this.visibleData.map((datum: T) => {
             return this.visibleColumns.map((column: Column<T>) => {
-                const result = (
-                    <td
-                        key={column.name}
-                        className={classnames({
-                            lazyMobXTableTruncatedCell:
-                                column.resizable && column.truncateOnResize,
-                        })}
-                    >
-                        {column.render(datum)}
-                    </td>
-                );
+                const cellProps: any = {
+                    key: column.name,
+                };
+
+                if (column.resizable && column.truncateOnResize) {
+                    cellProps.className = 'lazyMobXTableTruncatedCell';
+                }
+
+                const result = <td {...cellProps}>{column.render(datum)}</td>;
+
                 if (column.resizable) {
                     return (
                         <React.Fragment>

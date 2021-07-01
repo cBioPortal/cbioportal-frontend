@@ -8,9 +8,6 @@ import Adapter from 'enzyme-adapter-react-16';
 
 Enzyme.configure({ adapter: new Adapter() });
 
-/**
- * @author Selcuk Onur Sumer
- */
 describe('SampleColumnFormatter', () => {
     const mutationShort = initMutation({
         sampleId: 'Short_Id',
@@ -43,19 +40,19 @@ describe('SampleColumnFormatter', () => {
                 .indexOf('Short_Id') > -1,
             'Display value is correct for short sample id'
         );
-        assert.isFalse(
+        assert.isTrue(
             componentLong
                 .find(`span`)
                 .text()
                 .indexOf('This_is_a_quite_long_Sample_Id_in_my_opinion!') > -1,
-            'Display value for long sample id should not be equal to the actual value'
+            'Display value is correct for long sample id'
         );
     });
 
     it('generates component tooltip', () => {
-        assert.isFalse(
+        assert.isTrue(
             componentShort.find(DefaultTooltip).exists(),
-            'Tooltip should not exists for short sample id'
+            'Tooltip should exists for short sample id'
         );
         assert.isTrue(
             componentLong.find(DefaultTooltip).exists(),
