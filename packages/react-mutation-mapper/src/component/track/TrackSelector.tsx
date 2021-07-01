@@ -1,4 +1,3 @@
-import autobind from 'autobind-decorator';
 import * as React from 'react';
 import { action, computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
@@ -14,7 +13,8 @@ export enum TrackName {
     PDB = 'PDB',
     CancerHotspots = 'CANCER_HOTSPOTS',
     OncoKB = 'ONCO_KB',
-    PTM = 'PTM',
+    dbPTM = 'DB_PTM',
+    UniprotPTM = 'UNIPROT_PTM',
 }
 
 type TrackSelectorProps = {
@@ -41,7 +41,7 @@ export default class TrackSelector extends React.Component<
         tracks: [
             TrackName.CancerHotspots,
             TrackName.OncoKB,
-            TrackName.PTM,
+            TrackName.dbPTM,
             TrackName.PDB,
         ],
     };
@@ -78,14 +78,24 @@ export default class TrackSelector extends React.Component<
                 ),
                 value: TrackName.OncoKB,
             },
-            [TrackName.PTM]: {
+            [TrackName.dbPTM]: {
                 label: (
                     <span>
-                        Post Translational Modifications
-                        {this.isPending(TrackName.PTM) && this.loaderIcon()}
+                        Post Translational Modifications (dbPTM)
+                        {this.isPending(TrackName.dbPTM) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackName.PTM,
+                value: TrackName.dbPTM,
+            },
+            [TrackName.UniprotPTM]: {
+                label: (
+                    <span>
+                        Post Translational Modifications (Uniprot)
+                        {this.isPending(TrackName.UniprotPTM) &&
+                            this.loaderIcon()}
+                    </span>
+                ),
+                value: TrackName.UniprotPTM,
             },
             [TrackName.PDB]: {
                 label: (

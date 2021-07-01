@@ -10,6 +10,8 @@ import {
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
     IOncoKbData,
     Mutation,
+    UniprotFeature,
+    UniprotFeatureList,
     uniqueGenomicLocations,
     StructuralVariantType,
 } from 'cbioportal-utils';
@@ -211,6 +213,28 @@ export class DefaultMutationMapperDataFetcher
             return client.fetchPostTranslationalModificationsGET({
                 ensemblTranscriptId: ensemblId,
             });
+        } else {
+            return Promise.resolve([]);
+        }
+    }
+
+    public async fetchUniprotFeatures(
+        swissProtId: string,
+        client: GenomeNexusAPI = this.genomeNexusClient
+    ): Promise<UniprotFeature[]> {
+        if (swissProtId) {
+            // TODO for now fetching only PTM features
+            const uniprotData: Response = await request.get(
+                getUrl(
+                    `https://www.ebi.ac.uk/proteins/api/features/<%= uniprotAccession %>?categories=PTM`,
+                    { uniprotAccession: swissProtId }
+                )
+            );
+
+            const featureList: UniprotFeatureList = JSON.parse(
+                uniprotData.text
+            );
+            return featureList.features;
         } else {
             return Promise.resolve([]);
         }
