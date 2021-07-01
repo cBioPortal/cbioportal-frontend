@@ -262,16 +262,16 @@ describe('study laml_tcga tests', () => {
 });
 
 describe('add chart should not be shown in other irrelevant tabs', () => {
-    it('check', () => {
-        // This is one of the studies have MDACC heatmap enabled
+    it('should hide add chart button on cn segments tab', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
         browser.waitForVisible(
-            '#studyViewTabs a.tabAnchor_heatmaps',
+            '#studyViewTabs a.tabAnchor_cnSegments',
             WAIT_FOR_VISIBLE_TIMEOUT
         );
-        browser.click('#studyViewTabs a.tabAnchor_heatmaps');
-        assert(!browser.isExisting(ADD_CHART_BUTTON));
+        browser.click('#studyViewTabs a.tabAnchor_cnSegments');
+        browser.waitForVisible("[data-test='clinical-data-tab-content']");
+        assert(!browser(ADD_CHART_BUTTON));
     });
 });
 
