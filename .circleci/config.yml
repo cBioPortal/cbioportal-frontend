@@ -214,7 +214,7 @@ jobs:
       - run:
           name: Build custom backend
           command: |
-              (grep -q 0 /tmp/repo/custom_backend_switch && echo "Build of custom backend is not needed.") || $TEST_HOME/docker_compose/build.sh
+              grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
           no_output_timeout: 25m
       - save_cache:
           paths:
