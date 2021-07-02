@@ -44,6 +44,10 @@
       "description": " "
     },
     {
+      "name": "Custom driver annotations",
+      "description": " "
+    },
+    {
       "name": "Data Access Tokens",
       "description": " "
     },
@@ -638,6 +642,43 @@
         "deprecated": false
       }
     },
+    "/custom-driver-annotation-report/fetch": {
+      "post": {
+        "tags": [
+          "Custom driver annotations"
+        ],
+        "summary": "Return availability of custom driver annotations for molecular profiles",
+        "operationId": "fetchAlterationDriverAnnotationReportUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileIds",
+            "in": "query",
+            "description": "molecularProfileIds",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/CustomDriverAnnotationReport"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/data-access-token": {
       "get": {
         "tags": [
@@ -679,6 +720,156 @@
             "required": false,
             "type": "object"
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/data-access-token/oauth2": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "head": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingHEAD",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "put": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "options": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingOPTIONS",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "patch": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "downloadOAuth2DataAccessToken",
+        "operationId": "downloadOAuth2DataAccessTokenUsingPATCH",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
         ],
         "responses": {
           "200": {
@@ -3248,7 +3439,7 @@
       },
       "title": "AlterationEnrichment"
     },
-    "AlterationEventTypeFilter": {
+    "AlterationFilter": {
       "type": "object",
       "properties": {
         "copyNumberAlterationEventTypes": {
@@ -3256,6 +3447,27 @@
           "additionalProperties": {
             "type": "boolean"
           }
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
         },
         "mutationEventTypes": {
           "type": "object",
@@ -3265,9 +3477,15 @@
         },
         "structuralVariants": {
           "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
         }
       },
-      "title": "AlterationEventTypeFilter"
+      "title": "AlterationFilter"
     },
     "AndedPatientTreatmentFilters": {
       "type": "object",
@@ -3754,6 +3972,21 @@
       },
       "title": "CountSummary"
     },
+    "CustomDriverAnnotationReport": {
+      "type": "object",
+      "properties": {
+        "hasBinary": {
+          "type": "boolean"
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "CustomDriverAnnotationReport"
+    },
     "DataAccessToken": {
       "type": "object",
       "properties": {
@@ -3825,7 +4058,7 @@
           "items": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/definitions/GeneFilterQuery"
             }
           }
         },
@@ -3837,6 +4070,59 @@
         }
       },
       "title": "GeneFilter"
+    },
+    "GeneFilterQuery": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "AMP",
+              "GAIN",
+              "DIPLOID",
+              "HETLOSS",
+              "HOMDEL"
+            ]
+          }
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "includeDriver": {
+          "type": "boolean"
+        },
+        "includeGermline": {
+          "type": "boolean"
+        },
+        "includeSomatic": {
+          "type": "boolean"
+        },
+        "includeUnknownOncogenicity": {
+          "type": "boolean"
+        },
+        "includeUnknownStatus": {
+          "type": "boolean"
+        },
+        "includeUnknownTier": {
+          "type": "boolean"
+        },
+        "includeVUS": {
+          "type": "boolean"
+        },
+        "tiersBooleanMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        }
+      },
+      "title": "GeneFilterQuery"
     },
     "GenericAssayDataBin": {
       "type": "object",
@@ -4416,7 +4702,7 @@
       ],
       "properties": {
         "alterationEventTypes": {
-          "$ref": "#/definitions/AlterationEventTypeFilter"
+          "$ref": "#/definitions/AlterationFilter"
         },
         "molecularProfileCasesGroupFilter": {
           "type": "array",
@@ -4877,6 +5163,9 @@
     "StudyViewFilter": {
       "type": "object",
       "properties": {
+        "alterationFilter": {
+          "$ref": "#/definitions/AlterationFilter"
+        },
         "caseLists": {
           "type": "array",
           "items": {
