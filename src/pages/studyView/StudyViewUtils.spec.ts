@@ -222,7 +222,9 @@ describe('StudyViewUtils', () => {
                     },
                     {
                         geneQueries: [[geneFilterQueryFromOql('GENE1')]],
-                        molecularProfileIds: ['cancer_study_fusion'],
+                        molecularProfileIds: [
+                            'cancer_study_structural_variants',
+                        ],
                     },
                     {
                         geneQueries: [[geneFilterQueryFromOql('GENE2:HOMDEL')]],
@@ -255,7 +257,6 @@ describe('StudyViewUtils', () => {
                 genericAssayDataFilters: [],
                 customDataFilters: [],
             } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
-
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
