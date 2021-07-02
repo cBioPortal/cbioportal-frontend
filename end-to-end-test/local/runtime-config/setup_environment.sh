@@ -35,7 +35,8 @@ if [[ "$CIRCLECI" = true ]]; then
     # Check whether running in context of a pull request
     # by extracting the pull request number
     if [[ "$CIRCLE_PULL_REQUEST" =~ \/([0-9]+)$ ]] ; then
-        
+
+        CIRCLE_PULL_REQUEST=${CIRCLE_PULL_REQUESTS##*,} # in case there are multiple PRs take the last one
         GITHUB_PR_API_PATH="${CIRCLE_PULL_REQUEST/github\.com\//api\.github\.com\/repos/}"
         GITHUB_PR_API_PATH="${GITHUB_PR_API_PATH/\/pull\//\/pulls\/}"
 
