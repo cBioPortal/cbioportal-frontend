@@ -1018,7 +1018,7 @@ export default abstract class ComparisonStore {
                 const groupsAndAlterationTypes = {
                     molecularProfileCasesGroupFilter: this
                         .alterationsEnrichmentDataRequestGroups.result!,
-                    alterationEventTypes: {
+                    alterationEventTypes: ({
                         copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
                             this.selectedCopyNumberEnrichmentEventTypes
                         ),
@@ -1027,15 +1027,13 @@ export default abstract class ComparisonStore {
                         ),
                         structuralVariants: !!this
                             .isStructuralVariantEnrichmentSelected,
-                    },
-                    alterationFilter: null,
+                    } as unknown) as AlterationFilter,
                 };
 
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    //@ts-ignore
                     groupsAndAlterationTypes,
                 });
             }
