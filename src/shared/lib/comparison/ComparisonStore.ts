@@ -19,7 +19,7 @@ import {
     stringListToMap,
 } from 'cbioportal-frontend-commons';
 import {
-    AlterationEnrichment,
+    AlterationFilter,
     CancerStudy,
     ClinicalAttribute,
     ClinicalData,
@@ -1006,26 +1006,35 @@ export default abstract class ComparisonStore {
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
-                this.alterationsEnrichmentDataRequestGroups.result!.length > 1
+                this.alterationsEnrichmentDataRequestGroups.result &&
+                this.alterationsEnrichmentDataRequestGroups.result.length > 1 &&
+                (_(this.selectedMutationEnrichmentEventTypes)
+                    .values()
+                    .some() ||
+                    _(this.selectedCopyNumberEnrichmentEventTypes)
+                        .values()
+                        .some())
             ) {
+                const groupsAndAlterationTypes = {
+                    molecularProfileCasesGroupFilter: this
+                        .alterationsEnrichmentDataRequestGroups.result!,
+                    alterationEventTypes: ({
+                        copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
+                            this.selectedCopyNumberEnrichmentEventTypes
+                        ),
+                        mutationEventTypes: getMutationEventTypesAPIParameter(
+                            this.selectedMutationEnrichmentEventTypes
+                        ),
+                        structuralVariants: !!this
+                            .isStructuralVariantEnrichmentSelected,
+                    } as unknown) as AlterationFilter,
+                };
+
                 return internalClient.fetchAlterationEnrichmentsUsingPOST({
                     enrichmentType: this.usePatientLevelEnrichments
                         ? 'PATIENT'
                         : 'SAMPLE',
-                    groupsAndAlterationTypes: {
-                        molecularProfileCasesGroupFilter: this
-                            .alterationsEnrichmentDataRequestGroups.result!,
-                        alterationEventTypes: {
-                            copyNumberAlterationEventTypes: getCopyNumberEventTypesAPIParameter(
-                                this.selectedCopyNumberEnrichmentEventTypes
-                            ),
-                            mutationEventTypes: getMutationEventTypesAPIParameter(
-                                this.selectedMutationEnrichmentEventTypes
-                            ),
-                            structuralVariants: !!this
-                                .isStructuralVariantEnrichmentSelected,
-                        },
-                    },
+                    groupsAndAlterationTypes,
                 });
             }
             return Promise.resolve([]);

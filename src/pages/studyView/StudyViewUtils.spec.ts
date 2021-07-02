@@ -56,6 +56,8 @@ import {
     getNonZeroUniqueBins,
     DataBin,
     getPatientIdentifiers,
+    geneFilterQueryFromOql,
+    geneFilterQueryToOql,
 } from 'pages/studyView/StudyViewUtils';
 import {
     Sample,
@@ -189,7 +191,7 @@ describe('StudyViewUtils', () => {
             );
         });
         it('when filters are applied', () => {
-            let filter = {
+            let filter = ({
                 clinicalDataFilters: [
                     {
                         attributeId: 'attribute1',
@@ -215,17 +217,17 @@ describe('StudyViewUtils', () => {
                 genomicDataFilters: [],
                 geneFilters: [
                     {
-                        geneQueries: [['GENE1']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE1')]],
                         molecularProfileIds: ['cancer_study_sequenced'],
                     },
                     {
-                        geneQueries: [['GENE1']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE1')]],
                         molecularProfileIds: [
                             'cancer_study_structural_variants',
                         ],
                     },
                     {
-                        geneQueries: [['GENE2:HOMDEL']],
+                        geneQueries: [[geneFilterQueryFromOql('GENE2:HOMDEL')]],
                         molecularProfileIds: ['cancer_study_cna'],
                     },
                 ],
@@ -254,8 +256,7 @@ describe('StudyViewUtils', () => {
                 caseLists: [],
                 genericAssayDataFilters: [],
                 customDataFilters: [],
-            } as StudyViewFilterWithSampleIdentifierFilters;
-
+            } as unknown) as StudyViewFilterWithSampleIdentifierFilters;
             assert.isTrue(
                 getVirtualStudyDescription(
                     '',
@@ -3399,6 +3400,81 @@ describe('StudyViewUtils', () => {
                     { ...chartSetting1, id: 'CANCER_TYPE' },
                     { ...chartSetting2, id: 'SAMPLE_TYPE' },
                 ]
+            );
+        });
+    });
+
+    describe('geneFilterQuery and OQL conversion', () => {
+        it('converts simple gene filter to OQL', () => {
+            assert.strictEqual(
+                'BRCA1',
+                geneFilterQueryToOql({
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: [],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                })
+            );
+        });
+        it('adds CNA alterations to OQL', () => {
+            assert.strictEqual(
+                'BRCA1:AMP HETLOSS',
+                geneFilterQueryToOql({
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: ['AMP', 'HETLOSS'],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: [],
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                })
+            );
+        });
+        it('creates simple gene filter from OQL', () => {
+            assert.deepEqual(
+                {
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: [],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                },
+                geneFilterQueryFromOql('BRCA1')
+            );
+        });
+        it('creates simple gene filter with CNA alterations from OQL', () => {
+            assert.deepEqual(
+                {
+                    hugoGeneSymbol: 'BRCA1',
+                    entrezGeneId: 0,
+                    alterations: ['AMP', 'HETLOSS'],
+                    includeDriver: true,
+                    includeVUS: true,
+                    includeUnknownOncogenicity: true,
+                    tiersBooleanMap: {},
+                    includeUnknownTier: true,
+                    includeGermline: true,
+                    includeSomatic: true,
+                    includeUnknownStatus: true,
+                },
+                geneFilterQueryFromOql('BRCA1: AMP HETLOSS ')
             );
         });
     });
