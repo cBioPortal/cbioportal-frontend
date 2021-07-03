@@ -10,6 +10,7 @@ import {
     GenomicDataCount,
     GenericAssayDataMultipleStudyFilter,
     GenericAssayData,
+    GeneFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
@@ -739,7 +740,10 @@ export function getVirtualStudyDescription(
                 filterLines = filterLines.concat(
                     geneFilter.geneQueries
                         .map(geneQuery => {
-                            return geneQuery.join(', ').trim();
+                            return geneQuery
+                                .map(geneFilterQueryToOql)
+                                .join(', ')
+                                .trim();
                         })
                         .map(line => '  - ' + line)
                 );
@@ -2917,6 +2921,72 @@ export function getMolecularProfileSamplesSet(
         },
         {}
     );
+}
+
+export function geneFilterQueryToOql(query: GeneFilterQuery): string {
+    return query.alterations.length > 0
+        ? `${query.hugoGeneSymbol}:${query.alterations.join(' ')}`
+        : query.hugoGeneSymbol;
+}
+
+export function geneFilterQueryFromOql(
+    oql: string,
+    includeDriver?: boolean,
+    includeVUS?: boolean,
+    includeUnknownOncogenicity?: boolean,
+    selectedTiers?: { [tier: string]: boolean },
+    includeUnknownTier?: boolean,
+    includeGermline?: boolean,
+    includeSomatic?: boolean,
+    includeUnknownStatus?: boolean
+): GeneFilterQuery {
+    const [part1, part2]: string[] = oql.split(':');
+    const alterations = part2 ? part2.trim().split(' ') : [];
+    const hugoGeneSymbol = part1.trim();
+    return {
+        hugoGeneSymbol,
+        entrezGeneId: 0,
+        alterations: alterations as (
+            | 'HOMDEL'
+            | 'AMP'
+            | 'GAIN'
+            | 'DIPLOID'
+            | 'HETLOSS'
+        )[],
+        includeDriver: includeDriver === undefined ? true : includeDriver,
+        includeVUS: includeVUS === undefined ? true : includeVUS,
+        includeUnknownOncogenicity:
+            includeUnknownOncogenicity === undefined
+                ? true
+                : includeUnknownOncogenicity,
+        tiersBooleanMap: selectedTiers || ({} as { [tier: string]: boolean }),
+        includeUnknownTier:
+            includeUnknownTier === undefined ? true : includeUnknownTier,
+        includeGermline: includeGermline === undefined ? true : includeGermline,
+        includeSomatic: includeSomatic === undefined ? true : includeSomatic,
+        includeUnknownStatus:
+            includeUnknownStatus === undefined ? true : includeUnknownStatus,
+    };
+}
+
+export function ensureBackwardCompatibilityOfFilters(
+    filters: Partial<StudyViewFilter>
+) {
+    if (filters.geneFilters && filters.geneFilters.length) {
+        filters.geneFilters.forEach(f => {
+            f.geneQueries = f.geneQueries.map(arr => {
+                return arr.map(inner => {
+                    if (typeof inner === 'string') {
+                        return geneFilterQueryFromOql(inner);
+                    } else {
+                        return inner;
+                    }
+                });
+            });
+        });
+    }
+
+    return filters;
 }
 
 export function getFilteredMolecularProfilesByAlterationType(
