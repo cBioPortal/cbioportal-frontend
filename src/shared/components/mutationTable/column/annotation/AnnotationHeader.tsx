@@ -8,6 +8,7 @@ import {
     oncogenicityIconClassNames,
 } from 'react-mutation-mapper';
 import classnames from 'classnames';
+import AppConfig from 'appConfig';
 
 // oncokb
 enum OncokbTabs {
@@ -364,76 +365,100 @@ const AnnotationHeader: React.FunctionComponent<{
         <span>
             {props.name}
             <br />
-            <DefaultTooltip
-                placement="top"
-                overlay={
-                    <AnnotationHeaderTooltipCard
-                        InfoProps={sourceTooltipInfo[AnnotationSources.ONCOKB]}
-                        legendDescriptions={civicData}
-                        overrideContent={<OncokbLegendContent />}
+            {AppConfig.serverConfig.show_oncokb && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            InfoProps={
+                                sourceTooltipInfo[AnnotationSources.ONCOKB]
+                            }
+                            legendDescriptions={civicData}
+                            overrideContent={<OncokbLegendContent />}
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/oncokb-oncogenic-1.svg')}
+                        style={{
+                            height: 16,
+                            width: 16,
+                            marginLeft: 5,
+                            marginBottom: 0,
+                            marginRight:
+                                props.width - 21 > 0 ? props.width - 21 : 0,
+                        }}
                     />
-                }
-            >
-                <img
-                    src={require('../../../../../../src/rootImages/oncokb-oncogenic-1.svg')}
-                    style={{
-                        height: 16,
-                        width: 16,
-                        marginLeft: 5,
-                        marginBottom: 0,
-                        marginRight:
-                            props.width - 22 > 0 ? props.width - 22 : 0,
-                    }}
-                />
-            </DefaultTooltip>
-            <DefaultTooltip
-                placement="top"
-                overlay={
-                    <AnnotationHeaderTooltipCard
-                        InfoProps={sourceTooltipInfo[AnnotationSources.CIVIC]}
-                        legendDescriptions={civicData}
+                </DefaultTooltip>
+            )}
+            {AppConfig.serverConfig.show_civic && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            InfoProps={
+                                sourceTooltipInfo[AnnotationSources.CIVIC]
+                            }
+                            legendDescriptions={civicData}
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/civic-logo.png')}
+                        style={{
+                            height: 14,
+                            width: 14,
+                            marginLeft: 6,
+                            marginRight: 1,
+                        }}
                     />
-                }
-            >
-                <img
-                    src={require('../../../../../../src/rootImages/civic-logo.png')}
-                    style={{ height: 14, width: 14, marginLeft: 7 }}
-                />
-            </DefaultTooltip>
-            <DefaultTooltip
-                placement="top"
-                overlay={
-                    <AnnotationHeaderTooltipCard
-                        InfoProps={
-                            sourceTooltipInfo[
-                                AnnotationSources.MY_CANCER_GENOME
-                            ]
-                        }
-                        legendDescriptions={myCancerGenomeData}
+                </DefaultTooltip>
+            )}
+            {AppConfig.serverConfig.mycancergenome_show && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            InfoProps={
+                                sourceTooltipInfo[
+                                    AnnotationSources.MY_CANCER_GENOME
+                                ]
+                            }
+                            legendDescriptions={myCancerGenomeData}
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/mcg_logo.png')}
+                        style={{
+                            height: 14,
+                            width: 14,
+                            marginLeft: 7,
+                            marginRight: 1,
+                        }}
                     />
-                }
-            >
-                <img
-                    src={require('../../../../../../src/rootImages/mcg_logo.png')}
-                    style={{ height: 14, width: 14, marginLeft: 8 }}
-                />
-            </DefaultTooltip>
-            <DefaultTooltip
-                placement="top"
-                overlay={
-                    <AnnotationHeaderTooltipCard
-                        InfoProps={
-                            sourceTooltipInfo[AnnotationSources.CANCER_HOTSPOTS]
-                        }
-                        legendDescriptions={cancerHotspotsData}
+                </DefaultTooltip>
+            )}
+            {AppConfig.serverConfig.show_hotspot && (
+                <DefaultTooltip
+                    placement="top"
+                    overlay={
+                        <AnnotationHeaderTooltipCard
+                            InfoProps={
+                                sourceTooltipInfo[
+                                    AnnotationSources.CANCER_HOTSPOTS
+                                ]
+                            }
+                            legendDescriptions={cancerHotspotsData}
+                        />
+                    }
+                >
+                    <img
+                        src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
+                        style={{ height: 14, width: 14, marginLeft: 7 }}
                     />
-                }
-            >
-                <img
-                    src={require('../../../../../../src/rootImages/cancer-hotspots.svg')}
-                    style={{ height: 14, width: 14, marginLeft: 8 }}
-                />
-            </DefaultTooltip>
+                </DefaultTooltip>
+            )}
         </span>
     );
 };
