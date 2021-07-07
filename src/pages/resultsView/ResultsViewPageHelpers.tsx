@@ -5,6 +5,8 @@ import ResultsViewURLWrapper, {
     ResultsViewURLQueryEnum,
 } from './ResultsViewURLWrapper';
 import { VirtualStudy } from '../../shared/model/VirtualStudy';
+import * as React from 'react';
+import { observer } from 'mobx-react';
 
 export enum ResultsViewTab {
     ONCOPRINT = 'oncoprint',
@@ -219,3 +221,18 @@ export function addGenesToQuery(
         `results/${tab}`
     );
 }
+
+export const BoldedSpanList: React.FunctionComponent<{
+    words: string[];
+}> = observer(({ words }) => {
+    return (
+        <span>
+            {words.map((tab, index) => (
+                <span>
+                    <strong>{tab}</strong>
+                    {index < words.length - 1 ? ', ' : ''}
+                </span>
+            ))}
+        </span>
+    );
+});

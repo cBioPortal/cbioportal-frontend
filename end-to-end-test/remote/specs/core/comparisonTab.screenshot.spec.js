@@ -217,7 +217,7 @@ describe('results view comparison tab screenshot tests', function() {
 
         it('results view comparison tab alteration enrichments tab several groups', function() {
             browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
-            browser.waitForVisible(
+            browser.waitForExist(
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
@@ -241,7 +241,7 @@ describe('results view comparison tab screenshot tests', function() {
                 '[data-test="AlterationTypeSelectorMenu"] [data-test="buttonSelectAlterations"]'
             );
 
-            browser.waitForVisible(
+            browser.waitForExist(
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
@@ -686,5 +686,5 @@ var clickCheckBox = name => {
 
 var submit = () => {
     $('[data-test=changeSortOrderButton]').click();
-    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+    browser.waitForExist('[data-test=GroupComparisonAlterationEnrichments]');
 };

@@ -2,7 +2,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 const {
     waitForOncoprint,
-    setResultsPageSettingsMenuOpen,
+    setSettingsMenuOpen,
     setOncoprintMutationsMenuOpen,
     checkElementWithMouseDisabled,
     goToUrlAndSetLocalStorage,
@@ -117,7 +117,7 @@ function runResultsTestSuite(prefix, options = {}) {
 
     it(`${prefix} comparison tab mutation enrichments`, function() {
         browser.click('.comparisonTabSubTabs .tabAnchor_alterations');
-        browser.waitForVisible(
+        browser.waitForExist(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
@@ -130,7 +130,7 @@ function runResultsTestSuite(prefix, options = {}) {
         browser.execute(function() {
             comparisonTab.store.setUsePatientLevelEnrichments(true);
         });
-        browser.waitForVisible(
+        browser.waitForExist(
             'div[data-test="GroupComparisonAlterationEnrichments"]'
         );
         var res = browser.checkElement('div[data-test="ComparisonTabDiv"]', {
@@ -435,11 +435,11 @@ describe('results page tabs while excluding unprofiled samples', function() {
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=gbm_tcga&case_set_id=gbm_tcga_all&data_priority=0&gene_list=EGFR%250APTEN%250AIDH1%250ATP53&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=gbm_tcga_mrna_median_all_sample_Zscores&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_mutations&hide_unprofiled_samples=false&profileFilter=0&tab_index=tab_visualize`
         );
         waitForOncoprint(10000);
-        setResultsPageSettingsMenuOpen(true);
+        setSettingsMenuOpen(true);
         browser.waitForExist('input[data-test="HideUnprofiled"]');
         browser.click('input[data-test="HideUnprofiled"]');
         waitForOncoprint(10000);
-        setResultsPageSettingsMenuOpen(false);
+        setSettingsMenuOpen(false);
     });
 
     runResultsTestSuite('excluding unprofiled samples', {
