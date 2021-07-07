@@ -65,6 +65,12 @@ export enum GeneOptionLabel {
     SYNC_WITH_TABLE = 'Sync with table (up to 100 genes)',
 }
 
+export enum AlterationContainerType {
+    MUTATION = 'MUTATION',
+    COPY_NUMBER = 'COPY_NUMBER',
+    ALTERATIONS = 'ALTERATIONS',
+}
+
 export enum EnrichmentType {
     MRNA_EXPRESSION = 'mRNA expression',
     PROTEIN_EXPRESSION = 'protein expression',
@@ -644,7 +650,9 @@ export function getAlterationEnrichmentColumns(
             name: group.name,
             headerRender: PERCENTAGE_IN_headerRender,
             render: (d: AlterationEnrichmentRow) => (
-                <span>{formatPercentage(group.name, d)}</span>
+                <span data-test={`${group.name}-CountCell`}>
+                    {formatPercentage(group.name, d)}
+                </span>
             ),
             tooltip: (
                 <span>
