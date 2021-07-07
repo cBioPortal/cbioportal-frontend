@@ -281,27 +281,41 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
     } as AnnotateStructuralVariantQuery;
 }
 
+function genKey(annotations: IndicatorQueryResp[]): string {
+    return annotations.map(a => a.query.id).join('');
+}
+
+var memoized = new Map();
+
 export function calculateOncoKbAvailableDataType(
     annotations: IndicatorQueryResp[]
 ) {
+    // const key = genKey(annotations);
+    // const val = memoized.get(key);
+    // if (val) {
+    //     return val;
+    // }
     // Always show oncogenicity icon as long as the annotation exists
-    const availableDataTypes = [];
+    const availableDataTypes = new Set<OncoKbCardDataType>();
     if (annotations.length > 0) {
-        availableDataTypes.push(OncoKbCardDataType.BIOLOGICAL);
+        availableDataTypes.add(OncoKbCardDataType.BIOLOGICAL);
     }
     annotations.forEach(annotation => {
         if (!!annotation.highestSensitiveLevel) {
-            availableDataTypes.push(OncoKbCardDataType.TXS);
+            availableDataTypes.add(OncoKbCardDataType.TXS);
         }
         if (!!annotation.highestResistanceLevel) {
-            availableDataTypes.push(OncoKbCardDataType.TXR);
+            availableDataTypes.add(OncoKbCardDataType.TXR);
         }
         if (!!annotation.highestPrognosticImplicationLevel) {
-            availableDataTypes.push(OncoKbCardDataType.PX);
+            availableDataTypes.add(OncoKbCardDataType.PX);
         }
         if (!!annotation.highestDiagnosticImplicationLevel) {
-            availableDataTypes.push(OncoKbCardDataType.DX);
+            availableDataTypes.add(OncoKbCardDataType.DX);
         }
     });
-    return _.uniq(availableDataTypes);
+    // const ret = Array.from(availableDataTypes);
+
+    // memoized.set(key, ret);
+    return Array.from(availableDataTypes);
 }
