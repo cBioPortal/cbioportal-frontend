@@ -103,6 +103,7 @@ export interface IServerConfig {
     skin_show_tweet_button: boolean;
     skin_show_tissue_image_tab: boolean;
     skin_hide_logout_button: boolean;
+    skin_show_settings_menu: boolean;
     skin_title: string;
     skin_authorization_message: string | null;
     skin_patientview_filter_genes_profiled_all_samples: boolean;
