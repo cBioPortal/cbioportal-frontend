@@ -34,7 +34,6 @@ import {
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
 import SurvivalPrefixTable from 'pages/resultsView/survival/SurvivalPrefixTable';
-import autobind from 'autobind-decorator';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';

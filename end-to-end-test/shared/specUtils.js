@@ -48,6 +48,10 @@ function waitForOncoprint(timeout) {
     );
 }
 
+function waitForComparisonTab() {
+    $('[data-test=GroupComparisonAlterationEnrichments]').waitForDisplayed();
+}
+
 function getTextInOncoprintLegend() {
     return $$('#oncoprintDiv .oncoprint-legend-div svg text')
         .map(t => {
@@ -56,8 +60,8 @@ function getTextInOncoprintLegend() {
         .join(' ');
 }
 
-function setResultsPageSettingsMenuOpen(open) {
-    const button = 'button[data-test="GlobalSettingsButton"]';
+function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
+    const button = 'button[data-test="' + buttonId + '"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
     $(button).waitForDisplayed();
     browser.waitUntil(
@@ -66,6 +70,10 @@ function setResultsPageSettingsMenuOpen(open) {
                 return true;
             } else {
                 $(button).click();
+                $('[data-test=GlobalSettingsDropdown]').waitForDisplayed({
+                    timeout: 6000,
+                    reverse: !open,
+                });
                 return false;
             }
         },
@@ -300,7 +308,9 @@ function waitForStudyViewSelectedInfo() {
 }
 
 function waitForStudyView() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, { timeout: 10000 });
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, {
+        timeout: 100000,
+    });
 }
 
 function waitForGroupComparisonTabOpen() {
@@ -595,6 +605,7 @@ module.exports = {
     waitForOncoprint: waitForOncoprint,
     waitForCoExpressionTab: waitForCoExpressionTab,
     waitForPatientView: waitForPatientView,
+    waitForComparisonTab: waitForComparisonTab,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
     useExternalFrontend: useExternalFrontend,
@@ -628,7 +639,7 @@ module.exports = {
     selectCheckedOption: selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements: getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
-    setResultsPageSettingsMenuOpen: setResultsPageSettingsMenuOpen,
+    setSettingsMenuOpen: setSettingsMenuOpen,
     setDropdownOpen: setDropdownOpen,
     postDataToUrl: postDataToUrl,
     getPortalUrlFromEnv: getPortalUrlFromEnv,
