@@ -1,8 +1,9 @@
+import { observer } from 'mobx-react';
 import * as React from 'react';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
-import { Mutation, RemoteData } from 'cbioportal-utils';
 
-import { defaultSortMethod } from 'cbioportal-utils';
+import { defaultSortMethod, Mutation, RemoteData } from 'cbioportal-utils';
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+
 import { getHgvscColumnData } from './HgvsHelper';
 
 type HgvscProps = {
@@ -25,6 +26,7 @@ export function hgvscSortMethod(a: string | null, b: string | null) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
+@observer
 export default class Hgvsc extends React.Component<HgvscProps, {}> {
     get hgvsc() {
         return getHgvscColumnData(
