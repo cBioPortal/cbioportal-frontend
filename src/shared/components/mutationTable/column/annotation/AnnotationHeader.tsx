@@ -108,7 +108,7 @@ export const sourceTooltipInfo = {
     [AnnotationSources.ONCOKB]: [
         {
             sourceUrl: 'https://www.oncokb.org/',
-            sourceName: 'Oncokb',
+            sourceName: 'OncoKB',
             sourceDescription:
                 'a precision oncology knowledge base and contains information about the effects and treatment implications of variants in cancer',
             reference: 'Chakravarty et al. 2017',
