@@ -4,6 +4,7 @@ import { Mutation, RemoteData } from 'cbioportal-utils';
 
 import { defaultSortMethod } from 'cbioportal-utils';
 import { getHgvscColumnData } from './HgvsHelper';
+import { observer } from 'mobx-react';
 
 type HgvscProps = {
     mutation: Mutation;
@@ -25,6 +26,7 @@ export function hgvscSortMethod(a: string | null, b: string | null) {
     return defaultSortMethod(sortValue(a), sortValue(b));
 }
 
+@observer
 export default class Hgvsc extends React.Component<HgvscProps, {}> {
     get hgvsc() {
         return getHgvscColumnData(
