@@ -5,6 +5,8 @@ import {
     getColorForProteinImpactType as getDefaultColorForProteinImpactType,
     IProteinImpactTypeColors,
     ProteinImpactTypeFilter,
+    NumericalFilter,
+    CategoricalFilter,
 } from 'react-mutation-mapper';
 import {
     Gene,
@@ -225,6 +227,10 @@ export const ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID =
     '_cBioPortalAnnotatedProteinImpactTypeFilter_';
 export const ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE =
     'annotatedProteinImpactType';
+
+export function columnIdToFilterId(columnId: string) {
+    return '_cBioPortal' + columnId.replace(' ', '') + 'ColumnFilter_';
+}
 
 export function isFusion(mutation: Mutation) {
     return getSimplifiedMutationType(mutation.mutationType) === 'fusion';
@@ -564,4 +570,70 @@ export function createAnnotatedProteinImpactTypeFilter(
         );
     };
     return filter;
+}
+
+export function createNumericalFilter(getData: (d: Mutation) => number | null) {
+    const filter = (filter: NumericalFilter, mutation: Mutation) => {
+        const value = getData(mutation);
+        return (
+            (!filter.values[0].hideEmptyValues || value !== null) &&
+            (value === null || value >= filter.values[0].lowerBound) &&
+            (value === null || value <= filter.values[0].upperBound)
+        );
+    };
+    return filter;
+}
+
+export function createCategoricalFilter(getData: (d: Mutation) => string) {
+    const filter = (filter: CategoricalFilter, mutation: Mutation) => {
+        const value = getData(mutation) || '(Blanks)';
+        return (
+            matchCategoricalFilterSearch(
+                value,
+                filter.values[0].filterCondition,
+                filter.values[0].filterString
+            ) && filter.values[0].selections.has(value)
+        );
+    };
+    return filter;
+}
+
+export function matchCategoricalFilterSearch(
+    value: string,
+    filterCondition: string,
+    filterString: string
+) {
+    if (filterString === '') {
+        return true;
+    }
+
+    const valueUpper = value.toUpperCase();
+    const filterStringUpper = filterString.toUpperCase();
+    switch (filterCondition) {
+        case 'contains':
+            return valueUpper.includes(filterStringUpper);
+        case 'doesNotContain':
+            return !valueUpper.includes(filterStringUpper);
+        case 'equals':
+            return valueUpper === filterStringUpper;
+        case 'doesNotEqual':
+            return valueUpper !== filterStringUpper;
+        case 'beginsWith':
+            return valueUpper.startsWith(filterStringUpper);
+        case 'doesNotBeginWith':
+            return !valueUpper.startsWith(filterStringUpper);
+        case 'endsWith':
+            return valueUpper.endsWith(filterStringUpper);
+        case 'doesNotEndWith':
+            return !valueUpper.endsWith(filterStringUpper);
+        case 'regex':
+            try {
+                const regex = new RegExp(filterString);
+                return regex.test(value);
+            } catch (e) {
+                return false;
+            }
+        default:
+            return false;
+    }
 }

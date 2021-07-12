@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
+import { MutationTableColumnType } from '../../MutationTable';
 import ExpectedAltCopiesElement from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesElement';
 import { RESPONSE_VALUE_NA } from 'shared/constants';
 
@@ -40,7 +41,7 @@ export function getDisplayValueAsString(
     return displayValuesAsString.join('; ');
 }
 
-function getExpectedAltCopiesValue(mutation: Mutation): string {
+export function getExpectedAltCopiesValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'totalCopyNumber') &&
         hasASCNProperty(mutation, 'expectedAltCopies')
         ? mutation.alleleSpecificCopyNumber.expectedAltCopies.toString() +
@@ -54,7 +55,7 @@ export const getDefaultExpectedAltCopiesColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Mutant Integer Copy #',
+        name: MutationTableColumnType.EXPECTED_ALT_COPIES,
         tooltip: <span>Best Guess for Mutant Integer Cop #</span>,
         render: (d: Mutation[]) =>
             ExpectedAltCopiesColumnFormatter.renderFunction(
