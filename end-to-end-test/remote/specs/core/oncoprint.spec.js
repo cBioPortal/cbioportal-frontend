@@ -176,9 +176,9 @@ describe('oncoprint', function() {
                 mrnaElements.dropdown_selector
             );
 
-            browser.waitForVisible(
+            $(
                 mrnaElements.dropdown_selector + ' li:nth-child(1)'
-            );
+            ).waitForDisplayed();
 
             // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
             assert.equal(
