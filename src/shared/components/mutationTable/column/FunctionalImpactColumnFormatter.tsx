@@ -24,7 +24,7 @@ import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
 import * as _ from 'lodash';
-import { SHOW_MUTATION_ASSESSOR } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
@@ -66,7 +66,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                     <thead>
                         <tr>
                             <th>Legend</th>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {shouldShowMutationAssessor() && (
                                 <th>
                                     <span
                                         style={{
@@ -146,7 +146,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {shouldShowMutationAssessor() && (
                                 <td
                                     className={
                                         mutationAssessorStyles['ma-high']
@@ -168,7 +168,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                 probably_damaging
                             </td>
                         </tr>
-                        {SHOW_MUTATION_ASSESSOR && (
+                        {shouldShowMutationAssessor() && (
                             <tr>
                                 <td>
                                     <span
@@ -212,7 +212,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {shouldShowMutationAssessor() && (
                                 <td
                                     className={mutationAssessorStyles['ma-low']}
                                 >
@@ -254,7 +254,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {shouldShowMutationAssessor() && (
                                 <td
                                     className={
                                         mutationAssessorStyles['ma-neutral']
@@ -290,7 +290,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && <td>-</td>}
+                            {shouldShowMutationAssessor() && <td>-</td>}
                             <td className={siftStyles['sift-tolerated']}>
                                 tolerated
                             </td>
@@ -378,7 +378,7 @@ export default class FunctionalImpactColumnFormatter {
                 {name}
                 <br />
                 <div style={{ height: 14 }}>
-                    {SHOW_MUTATION_ASSESSOR && (
+                    {shouldShowMutationAssessor() && (
                         <DefaultTooltip
                             overlay={
                                 <FunctionalImpactColumnTooltip active="mutationAssessor" />
@@ -551,7 +551,7 @@ export default class FunctionalImpactColumnFormatter {
         );
         return (
             <div>
-                {SHOW_MUTATION_ASSESSOR &&
+                {shouldShowMutationAssessor() &&
                     FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
                         mutationAssessorCacheData,
                         FunctionalImpactColumnsName.MUTATION_ASSESSOR
