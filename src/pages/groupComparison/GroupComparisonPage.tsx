@@ -176,7 +176,7 @@ export default class GroupComparisonPage extends React.Component<
                             }
                         >
                             {(AppConfig.serverConfig
-                                .skin_show_annotation_filter_menu && (
+                                .skin_show_settings_menu && (
                                 <AlterationFilterMenuSection
                                     store={this.store}
                                     updateSelectedEnrichmentEventTypes={

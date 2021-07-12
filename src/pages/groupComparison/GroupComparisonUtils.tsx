@@ -468,7 +468,7 @@ export function MakeEnrichmentsTabUI(
                 const content: any = [];
                 const doShowInlineTypeSelectionMenu =
                     enrichmentType == 'alterations' &&
-                    !AppConfig.serverConfig.skin_show_annotation_filter_menu;
+                    !AppConfig.serverConfig.skin_show_settings_menu;
                 content.push(
                     // The alteration type selector is shown to left of the
                     // graph panels ('in-line'). This div element pushes the

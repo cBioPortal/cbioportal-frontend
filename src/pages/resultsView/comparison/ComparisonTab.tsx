@@ -185,7 +185,7 @@ export default class ComparisonTab extends React.Component<
                             {(this.store.activeGroups.isComplete &&
                                 this.store.activeGroups.result!.length > 1 &&
                                 AppConfig.serverConfig
-                                    .skin_show_annotation_filter_menu && (
+                                    .skin_show_settings_menu && (
                                     <AlterationFilterMenuSection
                                         store={this.store}
                                         updateSelectedEnrichmentEventTypes={

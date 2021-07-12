@@ -276,7 +276,7 @@ export class StudySummaryTab extends React.Component<
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
                 props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_annotation_filter_menu;
+                    AppConfig.serverConfig.skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
@@ -301,7 +301,7 @@ export class StudySummaryTab extends React.Component<
                 props.filterByCancerGenes = this.store.filterSVGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateSVGenesTableByCancerGenesFilter;
                 props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_annotation_filter_menu;
+                    AppConfig.serverConfig.skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
@@ -325,7 +325,7 @@ export class StudySummaryTab extends React.Component<
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
                 props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_annotation_filter_menu;
+                    AppConfig.serverConfig.skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalAlterationFilterActive;
                 break;
             }

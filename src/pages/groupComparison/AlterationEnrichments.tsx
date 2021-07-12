@@ -36,7 +36,7 @@ export default class AlterationEnrichments extends React.Component<
     );
 
     private useInlineTypeSelectorMenu = !AppConfig.serverConfig
-        .skin_show_annotation_filter_menu;
+        .skin_show_settings_menu;
 
     readonly enrichmentsUI = MakeMobxView({
         await: () => [
