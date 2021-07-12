@@ -311,8 +311,15 @@ export function getG2SApiUrl() {
 export function getDigitalSlideArchiveMetaUrl(patientId: string) {
     return AppConfig.serverConfig.digital_slide_archive_meta_url + patientId;
 }
-export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
-    return AppConfig.serverConfig.digital_slide_archive_iframe_url + patientId;
+export function getDigitalSlideArchiveIFrameUrl(
+    patientId: string,
+    studyId: string
+) {
+    const cancertype = studyId.split('_')[0];
+    return (
+        AppConfig.serverConfig.digital_slide_archive_iframe_url +
+        `#!/CDSA/${cancertype}/${patientId}`
+    );
 }
 
 export function getDarwinUrl(sampleIds: string[], caseId: string) {
