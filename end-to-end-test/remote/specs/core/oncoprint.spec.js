@@ -176,6 +176,10 @@ describe('oncoprint', function() {
                 mrnaElements.dropdown_selector
             );
 
+            browser.waitForVisible(
+                mrnaElements.dropdown_selector + ' li:nth-child(1)'
+            );
+
             // Confirm that 'Dont cluster' is bolded, reflecting current unclustered state
             assert.equal(
                 $(
@@ -195,6 +199,9 @@ describe('oncoprint', function() {
             browser.pause(500); // give it time to sort
 
             // Open menu again, which may have closed
+
+            mrnaElements = getGroupHeaderOptionsElements(2);
+
             setDropdownOpen(
                 true,
                 mrnaElements.button_selector,
@@ -219,6 +226,7 @@ describe('oncoprint', function() {
             $(mrnaElements.dropdown_selector + ' li:nth-child(2)').click(); // Click Don't clsuter
             browser.pause(500); // give it time to sort
 
+            mrnaElements = getGroupHeaderOptionsElements(2);
             // Open menu again, which may have closed
             setDropdownOpen(
                 true,

@@ -156,8 +156,8 @@ export default class PortalFooter extends React.Component<
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig.app_name ===
-                                            'public-portal'
+                                            AppConfig.serverConfig
+                                                .skin_right_nav_show_twitter
                                         }
                                     >
                                         <li>
@@ -174,8 +174,7 @@ export default class PortalFooter extends React.Component<
                         </If>
                         <If
                             condition={
-                                AppConfig.serverConfig.app_name ===
-                                'public-portal'
+                                AppConfig.serverConfig.skin_footer_show_dev
                             }
                         >
                             <div className="footer-elem">

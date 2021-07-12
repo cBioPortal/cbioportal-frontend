@@ -24,6 +24,7 @@ export const ANNOTATION_QUERY_FIELDS = [
     'my_variant_info',
     'mutation_assessor',
     'signal',
+    'clinvar',
 ];
 
 export enum Pathogenicity {

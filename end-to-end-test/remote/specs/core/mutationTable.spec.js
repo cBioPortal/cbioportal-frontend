@@ -35,8 +35,12 @@ describe('Mutation Table', function() {
 
             // click on column button
             $('button*=Columns').click();
-            // scroll down to activated "exon" selection
-            $('//*[text()="Exon"]').scrollIntoView();
+            // scroll down to activated "Exon" selection
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for exon checkbox to appear
+            browser.pause(2000);
             // click "exon"
             $('//*[text()="Exon"]').click();
             // check if three exact matches for 6 appear
@@ -116,7 +120,9 @@ describe('Mutation Table', function() {
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "GNOMAD" selection
-            $('[data-id=gnomAD]').scrollIntoView();
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
             // wait for gnomad checkbox appear
             $('[data-id=gnomAD]').waitForDisplayed({ timeout: 60000 });
             // click "GNOMAD"
@@ -171,7 +177,11 @@ describe('Mutation Table', function() {
             // click on column button
             $('button*=Columns').click();
             // scroll down to activated "ClinVar" selection
-            $('//*[text()="ClinVar"]').scrollIntoView();
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for clinvar checkbox to appear
+            browser.pause(2000);
             // click "clinvar"
             $('//*[text()="ClinVar"]').click();
             let res;
@@ -203,6 +213,12 @@ describe('Mutation Table', function() {
         it('should show the rs ids in dbsnp after adding the dbSNP column', () => {
             // click on column button
             $('button*=Columns').click();
+            // scroll down to activated "dbSNP" selection
+            browser.execute(
+                'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
+            );
+            // wait for dbSNP checkbox to appear
+            browser.pause(2000);
             // click "dbSNP"
             $('//*[text()="dbSNP"]').click();
             let res;

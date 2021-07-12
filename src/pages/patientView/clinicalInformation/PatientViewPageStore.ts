@@ -1030,6 +1030,7 @@ export class PatientViewPageStore {
                     [
                         GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                         GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
+                        GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
                         AppConfig.serverConfig.show_signal
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
@@ -1480,8 +1481,10 @@ export class PatientViewPageStore {
                 if (sampleMolecularIdentifiers.length) {
                     genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
                         {
-                            sampleMolecularIdentifiers,
-                        }
+                            genePanelDataMultipleStudyFilter: {
+                                sampleMolecularIdentifiers,
+                            },
+                        } as any
                     );
                 }
 

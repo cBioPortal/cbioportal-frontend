@@ -7,6 +7,7 @@ import {
     DataFilterValue,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
+    GeneFilterQuery,
     PatientTreatmentFilter,
     SampleTreatmentFilter,
 } from 'cbioportal-ts-api-client';
@@ -19,6 +20,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
+    geneFilterQueryToOql,
     getCNAColorByAlteration,
     getPatientIdentifiers,
     getSelectedGroupNames,
@@ -625,12 +627,12 @@ export default class UserSelections extends React.Component<
     }
 
     private groupedGeneQueries(
-        geneQueries: string[],
+        geneQueries: GeneFilterQuery[],
         chartMeta: ChartMeta & { chartType: ChartType }
     ): JSX.Element[] {
-        return geneQueries.map(oql => {
+        return geneQueries.map(geneQuery => {
             let color = DEFAULT_NA_COLOR;
-            let displayGeneSymbol = oql;
+            let displayGeneSymbol = geneQuery.hugoGeneSymbol;
             switch (chartMeta.chartType) {
                 case ChartTypeEnum.MUTATED_GENES_TABLE:
                     color = MUT_COLOR_MISSENSE;
@@ -639,10 +641,10 @@ export default class UserSelections extends React.Component<
                     color = STRUCTURAL_VARIANT_COLOR;
                     break;
                 case ChartTypeEnum.CNA_GENES_TABLE: {
-                    const oqlParts = oql.trim().split(':');
-                    if (oqlParts.length === 2) {
-                        displayGeneSymbol = oqlParts[0];
-                        let tagColor = getCNAColorByAlteration(oqlParts[1]);
+                    if (geneQuery.alterations.length === 1) {
+                        let tagColor = getCNAColorByAlteration(
+                            geneQuery.alterations[0]
+                        );
                         if (tagColor) {
                             color = tagColor;
                         }
@@ -655,7 +657,10 @@ export default class UserSelections extends React.Component<
                     content={displayGeneSymbol}
                     backgroundColor={color}
                     onDelete={() =>
-                        this.props.removeGeneFilter(chartMeta.uniqueKey, oql)
+                        this.props.removeGeneFilter(
+                            chartMeta.uniqueKey,
+                            geneFilterQueryToOql(geneQuery)
+                        )
                     }
                 />
             );
