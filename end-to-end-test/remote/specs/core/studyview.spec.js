@@ -271,7 +271,9 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
         );
         browser.click('#studyViewTabs a.tabAnchor_cnSegments');
         browser.waitForVisible("[data-test='clinical-data-tab-content']");
-        assert(!browser(ADD_CHART_BUTTON));
+
+        // unfortunately we just re-use button for columns instead of changing component
+        assert.equal(getTextFromElement(ADD_CHART_BUTTON), 'Columns ▾');
     });
 });
 
