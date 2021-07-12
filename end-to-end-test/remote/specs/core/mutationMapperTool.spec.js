@@ -280,7 +280,7 @@ describe('Mutation Mapper Tool', function() {
         // based on HLA-A user question
         // https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cbioportal/UQP41OIT5HI/1AaX24AcAwAJ
         it('should not show the canonical transcript when there are no matching annotations', () => {
-            var input = $('#standaloneMutationTextInput');
+            const input = $('#standaloneMutationTextInput');
             const hla = require('./data/hla_a_test_mutation_mapper_tool.txt');
 
             input.setValue(hla);
@@ -288,11 +288,15 @@ describe('Mutation Mapper Tool', function() {
 
             browser.waitForVisible('[class=borderedChart]', 20000);
 
-            // check total number of mutations (this gets Showing 1-14 of 14
-            // Mutations)
+            // the canonical transcript id for HLA-A is ENST00000376809, but
+            // these mutations apply to ENST00000376802
+            browser.waitForText('.//*[text()[contains(.,"ENST00000376802")]]');
+
+            // check total number of mutations (all should be successfully annotated)
             const mutationCount = browser.getText(
-                './/*[text()[contains(.,"14 Mutations")]]'
+                './/*[text()[contains(.,"16 Mutations")]]'
             );
+
             assert.ok(mutationCount.length > 0);
         });
     });

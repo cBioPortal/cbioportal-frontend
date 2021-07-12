@@ -270,16 +270,16 @@ export function annotateMutation(
         : undefined;
     let canonicalTranscript: TranscriptConsequenceSummary | undefined;
 
-    if (variantAnnotation) {
-        canonicalTranscript = findCanonicalTranscript(
-            variantAnnotation.annotation_summary
-        );
+    const annotationSummary = variantAnnotation?.annotation_summary;
+
+    if (annotationSummary) {
+        canonicalTranscript = findCanonicalTranscript(annotationSummary);
     }
 
-    if (variantAnnotation && canonicalTranscript) {
+    if (annotationSummary && canonicalTranscript) {
         return getAnnotatedMutationFromAnnotationSummary(
             mutation,
-            variantAnnotation.annotation_summary,
+            annotationSummary,
             canonicalTranscript,
             true,
             shouldOverwriteByAnnotatedMutation
