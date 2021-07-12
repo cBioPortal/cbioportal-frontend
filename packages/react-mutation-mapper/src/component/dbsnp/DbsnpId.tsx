@@ -4,12 +4,12 @@ import { MyVariantInfo } from 'genome-nexus-ts-api-client';
 import { observer } from 'mobx-react';
 import * as React from 'react';
 
-export type ClinVarIdProps = {
+export type DbsnpIdProps = {
     myVariantInfo?: MyVariantInfo;
 };
 
 @observer
-export default class DbsnpId extends React.Component<ClinVarIdProps, {}> {
+export default class DbsnpId extends React.Component<DbsnpIdProps, {}> {
     public render() {
         const rsId = getDbsnpRsId(this.props.myVariantInfo);
 

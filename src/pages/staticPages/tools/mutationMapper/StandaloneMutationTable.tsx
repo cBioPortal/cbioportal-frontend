@@ -23,7 +23,7 @@ export default class StandaloneMutationTable extends MutationTable<
         ...MutationTable.defaultProps,
         columns: [
             MutationTableColumnType.SAMPLE_ID,
-            MutationTableColumnType.CANCER_TYPE,
+            MutationTableColumnType.CANCER_TYPE_DETAILED,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.HGVSG,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
@@ -65,7 +65,7 @@ export default class StandaloneMutationTable extends MutationTable<
                 : this.props.data
         );
         this._columns[
-            MutationTableColumnType.CANCER_TYPE
+            MutationTableColumnType.CANCER_TYPE_DETAILED
         ].visible = CancerTypeColumnFormatter.isVisible(
             this.props.dataStore
                 ? this.props.dataStore.allData
@@ -77,7 +77,7 @@ export default class StandaloneMutationTable extends MutationTable<
         // order columns
         //this._columns[MutationTableColumnType.STUDY].order = 0;
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
-        this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
+        this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;

@@ -62,6 +62,7 @@ export function emptyMutation(): Mutation {
         driverTiersFilter: '',
         driverTiersFilterAnnotation: '',
         chr: '',
+        namespaceColumns: {},
         /*wildType:false,
         sequenced:true*/
     };

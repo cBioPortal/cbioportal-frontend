@@ -345,7 +345,7 @@ export default class PatientViewStructuralVariantTable extends React.Component<
                 ),
                 download: (d: StructuralVariant[]) => d[0].eventInfo,
                 sortBy: (d: StructuralVariant[]) => d[0].eventInfo,
-                visible: false,
+                visible: true,
                 order: 66,
             });
 

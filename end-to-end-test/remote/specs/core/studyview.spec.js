@@ -247,7 +247,6 @@ describe('study laml_tcga tests', () => {
 
 describe('add chart should not be shown in other irrelevant tabs', () => {
     it('check', () => {
-        // This is one of the studies have MDACC heatmap enabled
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
         $('#studyViewTabs a.tabAnchor_heatmaps').waitForDisplayed({
@@ -255,6 +254,18 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
         });
         $('#studyViewTabs a.tabAnchor_heatmaps').click();
         assert(!$(ADD_CHART_BUTTON).isExisting());
+    });
+    it('should hide add chart button on cn segments tab', () => {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
+        waitForNetworkQuiet(30000);
+        $('#studyViewTabs a.tabAnchor_cnSegments').waitForDisplayed({
+            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+        });
+        $('#studyViewTabs a.tabAnchor_cnSegments').click();
+        $("[data-test='clinical-data-tab-content']").waitForDisplayed();
+
+        // unfortunately we just re-use button for columns instead of changing component
+        assert.equal(getTextFromElement(ADD_CHART_BUTTON), 'Columns ▾');
     });
 });
 

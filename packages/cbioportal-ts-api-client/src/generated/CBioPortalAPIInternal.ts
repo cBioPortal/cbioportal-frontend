@@ -29,12 +29,28 @@ export type AlterationEnrichment = {
         'pValue': number
 
 };
-export type AlterationEventTypeFilter = {
+export type AlterationFilter = {
     'copyNumberAlterationEventTypes': {}
 
-    'mutationEventTypes': {}
+    'includeDriver': boolean
 
-    'structuralVariants': boolean
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'mutationEventTypes': {}
+
+        'structuralVariants': boolean
+
+        'tiersBooleanMap': {}
 
 };
 export type AndedPatientTreatmentFilters = {
@@ -245,6 +261,12 @@ export type CountSummary = {
         'profiledCount': number
 
 };
+export type CustomDriverAnnotationReport = {
+    'hasBinary': boolean
+
+        'tiers': Array < string >
+
+};
 export type DataAccessToken = {
     'creation': string
 
@@ -280,10 +302,34 @@ export type DensityPlotBin = {
 
 };
 export type GeneFilter = {
-    'geneQueries': Array < Array < string >
+    'geneQueries': Array < Array < GeneFilterQuery >
         >
 
         'molecularProfileIds': Array < string >
+
+};
+export type GeneFilterQuery = {
+    'alterations': Array < "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL" >
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'includeDriver': boolean
+
+        'includeGermline': boolean
+
+        'includeSomatic': boolean
+
+        'includeUnknownOncogenicity': boolean
+
+        'includeUnknownStatus': boolean
+
+        'includeUnknownTier': boolean
+
+        'includeVUS': boolean
+
+        'tiersBooleanMap': {}
 
 };
 export type GenericAssayDataBin = {
@@ -545,7 +591,7 @@ export type MolecularProfileCaseIdentifier = {
 
 };
 export type MolecularProfileCasesGroupAndAlterationTypeFilter = {
-    'alterationEventTypes': AlterationEventTypeFilter
+    'alterationEventTypes': AlterationFilter
 
         'molecularProfileCasesGroupFilter': Array < MolecularProfileCasesGroupFilter >
 
@@ -743,7 +789,9 @@ export type ServerStatusMessage = {
 
 };
 export type StudyViewFilter = {
-    'caseLists': Array < Array < string >
+    'alterationFilter': AlterationFilter
+
+        'caseLists': Array < Array < string >
         >
 
         'clinicalDataFilters': Array < ClinicalDataFilter >
@@ -1777,6 +1825,85 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchAlterationDriverAnnotationReportUsingPOSTURL(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/custom-driver-annotation-report/fetch';
+        if (parameters['molecularProfileIds'] !== undefined) {
+            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Return availability of custom driver annotations for molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
+     * @param {array} molecularProfileIds - molecularProfileIds
+     */
+    fetchAlterationDriverAnnotationReportUsingPOSTWithHttpInfo(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/custom-driver-annotation-report/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['molecularProfileIds'] !== undefined) {
+                queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+            }
+
+            if (parameters['molecularProfileIds'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Return availability of custom driver annotations for molecular profiles
+     * @method
+     * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
+     * @param {array} molecularProfileIds - molecularProfileIds
+     */
+    fetchAlterationDriverAnnotationReportUsingPOST(parameters: {
+        'molecularProfileIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < CustomDriverAnnotationReport > {
+        return this.fetchAlterationDriverAnnotationReportUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     downloadDataAccessTokenUsingGETURL(parameters: {
         'authenticated' ? : boolean,
         'authorities0Authority' ? : string,
@@ -2654,6 +2781,438 @@ export default class CBioPortalAPIInternal {
             $domain ? : string
     }): Promise < string > {
         return this.downloadDataAccessTokenUsingPATCHWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingGET
+     */
+    downloadOAuth2DataAccessTokenUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingGET
+     */
+    downloadOAuth2DataAccessTokenUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingHEADURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingHEAD
+     */
+    downloadOAuth2DataAccessTokenUsingHEADWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('HEAD', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingHEAD
+     */
+    downloadOAuth2DataAccessTokenUsingHEAD(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingHEADWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingPOSTURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPOST
+     */
+    downloadOAuth2DataAccessTokenUsingPOSTWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPOST
+     */
+    downloadOAuth2DataAccessTokenUsingPOST(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingPUTURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPUT
+     */
+    downloadOAuth2DataAccessTokenUsingPUTWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('PUT', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPUT
+     */
+    downloadOAuth2DataAccessTokenUsingPUT(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingPUTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingDELETEURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingDELETE
+     */
+    downloadOAuth2DataAccessTokenUsingDELETEWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingDELETE
+     */
+    downloadOAuth2DataAccessTokenUsingDELETE(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingOPTIONSURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingOPTIONS
+     */
+    downloadOAuth2DataAccessTokenUsingOPTIONSWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('OPTIONS', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingOPTIONS
+     */
+    downloadOAuth2DataAccessTokenUsingOPTIONS(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingOPTIONSWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    downloadOAuth2DataAccessTokenUsingPATCHURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-token/oauth2';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPATCH
+     */
+    downloadOAuth2DataAccessTokenUsingPATCHWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-token/oauth2';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('PATCH', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * downloadOAuth2DataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#downloadOAuth2DataAccessTokenUsingPATCH
+     */
+    downloadOAuth2DataAccessTokenUsingPATCH(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.downloadOAuth2DataAccessTokenUsingPATCHWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };

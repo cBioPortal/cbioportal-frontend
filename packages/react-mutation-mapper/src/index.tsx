@@ -3,14 +3,7 @@ export {
     download as civicDownload,
     sortValue as civicSortValue,
 } from './component/civic/Civic';
-export {
-    default as ClinVarSummary,
-    ClinVarRcvInterpretation,
-    getRcvCountMap,
-    getRcvData,
-    RcvCountMap,
-    RcvData,
-} from './component/clinvar/ClinVarSummary';
+export { default as ClinvarSummary } from './component/clinvar/ClinvarSummary';
 export {
     AnnotationProps,
     default as Annotation,
@@ -21,10 +14,11 @@ export {
     sortValue as annotationSortValue,
 } from './component/column/Annotation';
 export {
-    default as ClinVar,
-    download as clinVarDownload,
-    sortValue as clinVarSortValue,
-} from './component/column/ClinVar';
+    default as ClinvarInterpretation,
+    download as clinvarDownload,
+    sortValue as clinvarSortValue,
+} from './component/column/ClinvarInterpretation';
+export * from './component/clinvar/ClinvarHelper';
 export { default as ColumnHeader } from './component/column/ColumnHeader';
 export {
     default as Dbsnp,
@@ -158,7 +152,6 @@ export { SequenceSpec } from './model/SequenceSpec';
 
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
-export * from 'cbioportal-utils';
 export {
     MUTATION_TYPE_PRIORITY,
     mutationTypeSort,
@@ -169,6 +162,7 @@ export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
 } from './util/OncoKbUtils';
+export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
 
 export { default as DefaultMutationMapperDataFetcher } from './store/DefaultMutationMapperDataFetcher';

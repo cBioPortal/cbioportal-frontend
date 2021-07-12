@@ -82,14 +82,18 @@ function runResultsTestSuite(prefix, options = {}) {
         $(
             'div[data-test="ComparisonPageOverlapTabContent"]'
         ).waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
+        var res = checkElementWithMouseDisabled(
+            'div[data-test="ComparisonTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} comparison tab clinical`, function() {
         $('.comparisonTabSubTabs .tabAnchor_clinical').click();
         $('div[data-test="ComparisonPageClinicalTabDiv"]').waitForDisplayed();
-        var res = browser.checkElement('div[data-test="ComparisonTabDiv"]');
+        var res = checkElementWithMouseDisabled(
+            'div[data-test="ComparisonTabDiv"]'
+        );
         assertScreenShotMatch(res);
     });
 
@@ -160,7 +164,7 @@ function runResultsTestSuite(prefix, options = {}) {
         $('a.tabAnchor_pathways').waitForDisplayed();
         $('a.tabAnchor_pathways').click();
 
-        $('#cy').waitForDisplayed({timeout:10000});
+        $('#cy').waitForDisplayed({ timeout: 10000 });
 
         waitForNetworkQuiet(5000);
 
@@ -374,7 +378,7 @@ describe('results page tabs while excluding unprofiled samples', function() {
     });
 
     runResultsTestSuite('excluding unprofiled samples', {
-        mrnaEnrichmentsRowSelector: 'b=PRR22',
+        mrnaEnrichmentsRowSelector: 'b=DSC1',
     });
 });
 //

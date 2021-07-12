@@ -5,6 +5,7 @@ import {
     Gene,
     GenePanel,
     GenePanelData,
+    GenePanelDataMultipleStudyFilter,
     MolecularProfile,
     Patient,
     Sample,
@@ -143,56 +144,34 @@ export function computeGenePanelInformation(
 }
 
 export async function getCoverageInformation(
-    samples: MobxPromise<Sample[]>,
-    genes: MobxPromise<Pick<Gene, 'entrezGeneId' | 'hugoGeneSymbol'>[]>,
-    getProfiles: (sample: Sample) => MolecularProfile[],
-    getPatients: () => Pick<Patient, 'uniquePatientKey'>[]
+    genePanelData: GenePanelData[],
+    sampleKeyToSample: { [uniqueSampleKey: string]: Sample },
+    patients: Pick<Patient, 'uniquePatientKey'>[],
+    genes: Pick<Gene, 'entrezGeneId' | 'hugoGeneSymbol'>[]
 ) {
-    // gather sample molecular identifiers
-    //const studyToMolecularProfiles = _.groupBy(this.studyToMolecularProfiles.result!, profile=>profile.studyId);
-    const sampleMolecularIdentifiers: SampleMolecularIdentifier[] = [];
-    samples.result!.forEach(sample => {
-        const profiles = getProfiles(sample);
-        if (profiles) {
-            const sampleId = sample.sampleId;
-            for (const profile of profiles) {
-                sampleMolecularIdentifiers.push({
-                    molecularProfileId: profile.molecularProfileId,
-                    sampleId,
-                });
-            }
-        }
-    });
-    // query for gene panel data using sample molecular identifiers
-    let genePanelData: GenePanelData[];
-    if (sampleMolecularIdentifiers.length && genes.result!.length) {
-        genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(
-            {
-                sampleMolecularIdentifiers,
-            }
-        );
-    } else {
-        genePanelData = [];
-    }
+    // filter data only for our queried samples
+    genePanelData = genePanelData.filter(
+        d => d.uniqueSampleKey in sampleKeyToSample
+    );
 
     // query for gene panel metadata
     const genePanelIds = _.uniq(
         genePanelData.map(gpData => gpData.genePanelId).filter(id => !!id)
     );
     let genePanels: GenePanel[] = [];
-    if (genePanelIds.length) {
+    if (genePanelIds.length > 0) {
         genePanels = await client.fetchGenePanelsUsingPOST({
             genePanelIds,
             projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
         });
     }
 
-    // plug all data into computeGenePanelInformation to generate coverageInformation object
+    // plug all data into computeGenePanelInformation to generate CoverageInformation object
     return computeGenePanelInformation(
         genePanelData,
         genePanels,
-        samples.result!,
-        getPatients(),
-        genes.result!
+        _.values(sampleKeyToSample),
+        patients,
+        genes
     );
 }

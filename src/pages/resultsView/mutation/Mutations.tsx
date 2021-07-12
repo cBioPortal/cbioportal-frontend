@@ -226,6 +226,9 @@ export default class Mutations extends React.Component<
                         pubMedCache={this.props.store.pubMedCache}
                         cancerTypeCache={this.props.store.cancerTypeCache}
                         mutationCountCache={this.props.store.mutationCountCache}
+                        clinicalAttributeCache={
+                            this.props.store.clinicalAttributeCache
+                        }
                         genomeNexusCache={this.props.store.genomeNexusCache}
                         genomeNexusMutationAssessorCache={
                             this.props.store.genomeNexusMutationAssessorCache
@@ -245,6 +248,7 @@ export default class Mutations extends React.Component<
                         onTranscriptChange={this.onTranscriptChange}
                         onClickSettingMenu={this.onClickSettingMenu}
                         compactStyle={true}
+                        ptmSources={AppConfig.serverConfig.ptmSources}
                     />
                 </div>
             );

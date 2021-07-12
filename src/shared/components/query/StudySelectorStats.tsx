@@ -31,10 +31,7 @@ export const StudySelectorStats: React.FunctionComponent<{
                                 {numSelectedStudies === 1 ? 'study' : 'studies'}{' '}
                                 selected (
                                 <b>
-                                    {
-                                        props.store.profiledSamplesCount.result
-                                            .all
-                                    }
+                                    {props.store.sampleCountForSelectedStudies}
                                 </b>{' '}
                                 samples)
                             </a>
