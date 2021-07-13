@@ -181,6 +181,8 @@ export default class ResultsViewMutationTable extends MutationTable<
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
         if ('CANCER_TYPE' in this._columns) {
             this._columns['CANCER_TYPE'].order = 14;
+            this._columns['CANCER_TYPE'].resizable = true;
+            this._columns['CANCER_TYPE'].truncateOnResize = true;
         }
         this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
