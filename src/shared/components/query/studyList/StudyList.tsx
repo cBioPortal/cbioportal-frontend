@@ -160,15 +160,21 @@ export default class StudyList extends QueryStoreComponent<
             // this.logic.isHighlighted(study) && styles.highlighted
         );
 
-        const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
-        const overlapWarning = isOverlap ? (
+        const overlappingStudies = this.store.findOverlappingStudiesForStudy(
+            study.studyId
+        );
+        const overlaps =
+            overlappingStudies.length > 0 &&
+            this.store.selectableSelectedStudyIds.includes(study.studyId);
+
+        const overlapWarning = overlaps ? (
             <DefaultTooltip
                 mouseEnterDelay={0}
                 placement="top"
                 overlay={
                     <div>
-                        This study has overlapping data with another selected
-                        study.
+                        This study has overlapping data in the following
+                        studies: {overlappingStudies.join(', ')}
                     </div>
                 }
             >
@@ -213,7 +219,7 @@ export default class StudyList extends QueryStoreComponent<
                         const classes = classNames({
                             [styles.StudyName]: true,
                             overlappingStudy:
-                                isOverlap || isMixedReferenceGenome,
+                                overlaps || isMixedReferenceGenome,
                             [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(
                                 study.studyId
                             ),
