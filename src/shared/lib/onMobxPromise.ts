@@ -29,4 +29,10 @@ export function onMobxPromise<T>(
     return disposer;
 }
 
+export function toPromise<T>(promise: MobxPromise<T>): Promise<T> {
+    return new Promise(resolve => {
+        onMobxPromise(promise, resolve);
+    });
+}
+
 export default onMobxPromise;
