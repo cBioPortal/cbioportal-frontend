@@ -58,5 +58,6 @@ export {
     ClinicalAttributeCountFilter,
     MutationCountByPosition,
     ResourceDefinition,
+    CustomDriverAnnotationReport,
     default as CBioPortalAPIInternal,
 } from './generated/CBioPortalAPIInternal';

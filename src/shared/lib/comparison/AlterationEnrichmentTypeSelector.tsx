@@ -317,14 +317,8 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
     render() {
         return (
             <div
+                className={this.props.classNames}
                 data-test={'AlterationTypeSelectorMenu'}
-                style={{
-                    position: 'absolute',
-                    zIndex: 2,
-                    background: '#eee',
-                    borderRadius: '4px',
-                    padding: '10px',
-                }}
             >
                 <h5>Alteration Types</h5>
 

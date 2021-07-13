@@ -23,7 +23,7 @@ import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
 } from '../../shared/lib/oql/oqlfilter';
-import oql_parser, { Alteration } from '../../shared/lib/oql/oql-parser';
+import { Alteration } from '../../shared/lib/oql/oql-parser';
 import { getOncoKbOncogenic, groupBy } from '../../shared/lib/StoreUtils';
 import {
     AlterationTypeConstants,
@@ -53,11 +53,7 @@ import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { CustomChartSession } from 'shared/api/sessionServiceAPI';
-
-type CustomDriverAnnotationReport = {
-    hasBinary: boolean;
-    tiers: string[];
-};
+import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -75,7 +71,7 @@ export type SampleAlteredMap = { [trackOqlKey: string]: AlteredStatus[] };
 
 export function computeCustomDriverAnnotationReport(
     annotations: { driverFilter: string; driverTiersFilter: string }[]
-): CustomDriverAnnotationReport {
+): IDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap: { [tier: string]: boolean } = {};
     for (const annotation of annotations) {
@@ -99,7 +95,7 @@ export const DEFAULT_GENOME = 'hg19';
 
 export const initializeCustomDriverAnnotationSettings = action(
     (
-        report: CustomDriverAnnotationReport,
+        report: IDriverAnnotationReport,
         mutationAnnotationSettings: any,
         enableCustomTiers: boolean,
         enableOncoKb: boolean,

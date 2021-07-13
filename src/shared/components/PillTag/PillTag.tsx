@@ -8,6 +8,7 @@ import { computed, makeObservable } from 'mobx';
 export interface IPillTagProps {
     content: string;
     backgroundColor: string;
+    infoSection?: JSX.Element | null;
     onDelete?: () => void;
 }
 
@@ -36,7 +37,16 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
                     color: this.contentColor,
                 }}
             >
-                <span className={styles.content}>{this.props.content}</span>
+                <div
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                    }}
+                >
+                    <span className={styles.content}>{this.props.content}</span>
+                    {this.props.infoSection}
+                </div>
                 <If condition={_.isFunction(this.props.onDelete)}>
                     <span
                         data-test="pill-tag-delete"

@@ -67,6 +67,7 @@ export class GeneCell extends React.Component<IGeneCellProps, {}> {
                 destroyTooltipOnHide={true}
             >
                 <div
+                    data-test="geneNameCell"
                     className={classnames(
                         styles.geneSymbol,
                         styles.displayFlex

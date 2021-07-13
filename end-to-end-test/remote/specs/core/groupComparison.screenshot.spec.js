@@ -267,7 +267,7 @@ describe('group comparison page screenshot tests', function() {
             // go back to mutations tab
             browser.waitForExist('.tabAnchor_alterations', 10000);
             browser.click('.tabAnchor_alterations');
-            browser.waitForVisible(
+            browser.waitForExist(
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
@@ -280,7 +280,7 @@ describe('group comparison page screenshot tests', function() {
 
         it('group comparison page cna enrichments tab two groups', function() {
             browser.click('.tabAnchor_alterations');
-            browser.waitForVisible(
+            browser.waitForExist(
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 10000
             );
@@ -295,7 +295,7 @@ describe('group comparison page screenshot tests', function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
-            browser.waitForVisible(
+            browser.waitForExist(
                 'div[data-test="GroupComparisonAlterationEnrichments"]',
                 30000
             );
@@ -692,5 +692,5 @@ var clickTypeSelectorCheckBox = name => {
 
 var submitEnrichmentRequest = () => {
     $('[data-test=changeSortOrderButton]').click();
-    browser.waitForVisible('[data-test=GroupComparisonAlterationEnrichments]');
+    browser.waitForExist('[data-test=GroupComparisonAlterationEnrichments]');
 };

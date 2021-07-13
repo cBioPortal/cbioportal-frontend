@@ -14,6 +14,7 @@ import {
     getAlterationFrequencyScatterData,
     getAlterationRowData,
     getAlterationScatterData,
+    AlterationContainerType,
     getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -37,6 +38,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import AppConfig from 'appConfig';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -45,6 +47,8 @@ export interface IAlterationEnrichmentContainerProps {
     headerName: string;
     store?: ResultsViewPageStore;
     showCNAInTable?: boolean;
+    containerType: AlterationContainerType;
+    dashToRight?: boolean;
     patientLevelEnrichments: boolean;
     onSetPatientLevelEnrichments: (patientLevel: boolean) => void;
     comparisonStore?: ComparisonStore;
@@ -481,13 +485,21 @@ export default class AlterationEnrichmentContainer extends React.Component<
                 <div
                     className={'alert alert-info'}
                     style={{
-                        marginLeft: 244,
+                        marginLeft:
+                            this.props.containerType ===
+                                AlterationContainerType.ALTERATIONS &&
+                            this.props.dashToRight
+                                ? 244
+                                : 0,
                     }}
                 >
                     No data/result available
                 </div>
             );
         }
+
+        const useInlineTypeSelectorMenu = !AppConfig.serverConfig
+            .skin_show_settings_menu;
 
         return (
             <div
@@ -498,8 +510,16 @@ export default class AlterationEnrichmentContainer extends React.Component<
                     className={styles.ChartsPanel}
                     style={{
                         maxWidth: WindowStore.size.width - 60,
-                        position: 'relative',
-                        zIndex: 1,
+                        position:
+                            this.props.containerType ===
+                            AlterationContainerType.ALTERATIONS
+                                ? 'relative'
+                                : 'static',
+                        zIndex:
+                            this.props.containerType ===
+                            AlterationContainerType.ALTERATIONS
+                                ? 1
+                                : 'auto',
                     }}
                 >
                     {
@@ -508,10 +528,13 @@ export default class AlterationEnrichmentContainer extends React.Component<
                         // graph elements to the right when the type selector
                         // is shown 'in-line'.
                     }
-                    <div
-                        className={styles.inlineAlterationTypeSelectorMenuDash}
-                    />
-
+                    {useInlineTypeSelectorMenu && (
+                        <div
+                            className={
+                                styles.inlineAlterationTypeSelectorMenuDash
+                            }
+                        />
+                    )}
                     {this.isTwoGroupAnalysis && (
                         <MiniScatterChart
                             data={getAlterationScatterData(

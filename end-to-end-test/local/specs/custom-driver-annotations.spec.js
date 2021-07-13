@@ -2,14 +2,8 @@ var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
-var reactSelectOption = require('../../shared/specUtils').reactSelectOption;
-var getReactSelectOptions = require('../../shared/specUtils')
-    .getReactSelectOptions;
-var selectReactSelectOption = require('../../shared/specUtils')
-    .selectReactSelectOption;
 var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
-var setResultsPageSettingsMenuOpen = require('../../shared/specUtils')
-    .setResultsPageSettingsMenuOpen;
+var setSettingsMenuOpen = require('../../shared/specUtils').setSettingsMenuOpen;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const oncoprintTabUrl =
@@ -26,7 +20,7 @@ describe('custom driver annotations feature', function() {
             beforeEach(() => {
                 goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
                 waitForOncoprint(100000);
-                setResultsPageSettingsMenuOpen(true);
+                setSettingsMenuOpen(true, 'GlobalSettingsButton');
             });
 
             it('shows custom driver annotation elements in config menu', () => {
@@ -80,12 +74,95 @@ describe('custom driver annotations feature', function() {
             });
 
             it('(de-)selects custom driver checkboxes with main annotation select option', () => {
+                $('input[data-test=ColorByDriver]').click();
+                waitForOncoprint();
+
+                $('input[data-test=annotateCustomBinary]').waitForExist();
                 var topCheckBox = $('input[data-test=annotateCustomBinary]');
                 var tiersCheckboxes = $(
                     'span[data-test=annotateCustomTiers]'
                 ).$$('input');
+                assert(!topCheckBox.isSelected());
+                assert(!tiersCheckboxes[0].isSelected());
+                assert(!tiersCheckboxes[1].isSelected());
 
                 $('input[data-test=ColorByDriver]').click();
+                assert(topCheckBox.isSelected());
+                assert(tiersCheckboxes[0].isSelected());
+                assert(tiersCheckboxes[1].isSelected());
+            });
+        });
+
+        describe('oncoprint tab - discrete CNA', () => {
+            beforeEach(() => {
+                goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
+                waitForOncoprint();
+                setSettingsMenuOpen(true, 'GlobalSettingsButton');
+            });
+
+            it('shows custom driver annotation elements in config menu', () => {
+                var topCheckBox = $('input[data-test=annotateCustomBinary]');
+                assert(topCheckBox.isSelected());
+
+                var tiersCheckboxes = $(
+                    'span[data-test=annotateCustomTiers]'
+                ).$$('input');
+                assert(tiersCheckboxes[0].isSelected());
+                assert(tiersCheckboxes[1].isSelected());
+            });
+
+            it('allows deselection of Tiers checkboxes', () => {
+                var class1Checkbox = $('label*=Class 1').$('input');
+                class1Checkbox.click();
+                waitForOncoprint();
+                assert(!class1Checkbox.isSelected());
+
+                var class2Checkbox = $('label*=Class 2').$('input');
+                class2Checkbox.click();
+                waitForOncoprint();
+                assert(!class2Checkbox.isSelected());
+            });
+
+            it('updates selected samples when VUS alterations are excluded', () => {
+                // deselected all checkboxes except Custom driver annotation
+                $('input[data-test=annotateHotspots]').click();
+                $('label*=Class 1')
+                    .$('input')
+                    .click();
+                $('label*=Class 2')
+                    .$('input')
+                    .click();
+
+                $('input[data-test=HideVUS]').click();
+                waitForOncoprint();
+                assert(
+                    $('div.alert-info*=17 copy number alterations').isExisting()
+                );
+
+                $('label*=Class 1')
+                    .$('input')
+                    .click();
+                waitForOncoprint();
+                assert(
+                    $('div.alert-info*=17 copy number alterations').isExisting()
+                );
+
+                $('label*=Class 2')
+                    .$('input')
+                    .click();
+                waitForOncoprint();
+                assert(
+                    $('div.alert-info*=16 copy number alterations').isExisting()
+                );
+            });
+
+            it('(de-)selects custom driver checkboxes with main annotation select option', () => {
+                $('input[data-test=ColorByDriver]').click();
+                waitForOncoprint();
+                var topCheckBox = $('input[data-test=annotateCustomBinary]');
+                var tiersCheckboxes = $(
+                    'span[data-test=annotateCustomTiers]'
+                ).$$('input');
                 assert(!topCheckBox.isSelected());
                 assert(!tiersCheckboxes[0].isSelected());
                 assert(!tiersCheckboxes[1].isSelected());
@@ -97,85 +174,4 @@ describe('custom driver annotations feature', function() {
             });
         });
     }
-
-    describe('oncoprint tab - discrete CNA', () => {
-        beforeEach(() => {
-            goToUrlAndSetLocalStorage(oncoprintTabUrlCna, true);
-            waitForOncoprint();
-            setResultsPageSettingsMenuOpen(true);
-        });
-
-        it('shows custom driver annotation elements in config menu', () => {
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            assert(topCheckBox.isSelected());
-
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
-        });
-
-        it('allows deselection of Tiers checkboxes', () => {
-            var class1Checkbox = $('label*=Class 1').$('input');
-            class1Checkbox.click();
-            waitForOncoprint();
-            assert(!class1Checkbox.isSelected());
-
-            var class2Checkbox = $('label*=Class 2').$('input');
-            class2Checkbox.click();
-            waitForOncoprint();
-            assert(!class2Checkbox.isSelected());
-        });
-
-        it('updates selected samples when VUS alterations are excluded', () => {
-            // deselected all checkboxes except Custom driver annotation
-            $('input[data-test=annotateHotspots]').click();
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            $('label*=Class 2')
-                .$('input')
-                .click();
-
-            $('input[data-test=HideVUS]').click();
-            waitForOncoprint();
-            assert(
-                $('div.alert-info*=17 copy number alterations').isExisting()
-            );
-
-            $('label*=Class 1')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert(
-                $('div.alert-info*=17 copy number alterations').isExisting()
-            );
-
-            $('label*=Class 2')
-                .$('input')
-                .click();
-            waitForOncoprint();
-            assert(
-                $('div.alert-info*=16 copy number alterations').isExisting()
-            );
-        });
-
-        it('(de-)selects custom driver checkboxes with main annotation select option', () => {
-            var topCheckBox = $('input[data-test=annotateCustomBinary]');
-            var tiersCheckboxes = $('span[data-test=annotateCustomTiers]').$$(
-                'input'
-            );
-
-            $('input[data-test=ColorByDriver]').click();
-            assert(!topCheckBox.isSelected());
-            assert(!tiersCheckboxes[0].isSelected());
-            assert(!tiersCheckboxes[1].isSelected());
-
-            $('input[data-test=ColorByDriver]').click();
-            assert(topCheckBox.isSelected());
-            assert(tiersCheckboxes[0].isSelected());
-            assert(tiersCheckboxes[1].isSelected());
-        });
-    });
 });

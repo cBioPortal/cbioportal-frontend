@@ -26,10 +26,23 @@ import {
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
-import { stringListToIndexSet } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    stringListToIndexSet,
+} from 'cbioportal-frontend-commons';
 import { GroupComparisonTab } from './GroupComparisonTabs';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
-import { DataType, geneFilterQueryToOql } from 'pages/studyView/StudyViewUtils';
+import {
+    DataType,
+    geneFilterQueryToOql,
+    getButtonNameWithDownPointer,
+} from 'pages/studyView/StudyViewUtils';
+import styles from 'pages/groupComparison/styles.module.scss';
+import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
+import { observer } from 'mobx-react';
+import AppConfig from 'appConfig';
+import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
+import { EnrichmentEventType } from 'shared/lib/comparison/ComparisonStoreUtils';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 
@@ -453,6 +466,9 @@ export function MakeEnrichmentsTabUI(
                 );
             } else {
                 const content: any = [];
+                const doShowInlineTypeSelectionMenu =
+                    enrichmentType == 'alterations' &&
+                    !AppConfig.serverConfig.skin_show_settings_menu;
                 content.push(
                     // The alteration type selector is shown to left of the
                     // graph panels ('in-line'). This div element pushes the
@@ -460,8 +476,7 @@ export function MakeEnrichmentsTabUI(
                     // is shown 'in-line'.
                     <div
                         style={{
-                            marginLeft:
-                                enrichmentType == 'alterations' ? 244 : 0,
+                            marginLeft: doShowInlineTypeSelectionMenu ? 244 : 0,
                         }}
                     >
                         <OverlapExclusionIndicator
@@ -923,3 +938,119 @@ export function getStatisticalCautionInfo() {
         </div>
     );
 }
+
+export const AlterationFilterMenuSection: React.FunctionComponent<{
+    store: ComparisonStore;
+    updateSelectedEnrichmentEventTypes: (t: EnrichmentEventType[]) => void;
+}> = observer(({ store, updateSelectedEnrichmentEventTypes }) => {
+    return (
+        <div>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <AlterationEnrichmentTypeSelector
+                        classNames={styles.buttonAlterationTypeSelectorMenu}
+                        store={store}
+                        updateSelectedEnrichmentEventTypes={
+                            updateSelectedEnrichmentEventTypes
+                        }
+                        showMutations={store.hasMutationEnrichmentData}
+                        showCnas={store.hasCnaEnrichmentData}
+                        showStructuralVariants={store.hasStructuralVariantData}
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentTypeSelectorButton"
+                    className="btn btn-primary btn-sm"
+                    style={{ marginBottom: '10px' }}
+                >
+                    {getButtonNameWithDownPointer('Alteration Types')}
+                </button>
+            </DefaultTooltip>
+            <DefaultTooltip
+                trigger={['click']}
+                placement={'bottomRight'}
+                overlay={
+                    <SettingsMenu
+                        store={store}
+                        infoElement={
+                            <AlterationMenuHeader
+                                studyHasMutations={
+                                    store.hasMutationEnrichmentData
+                                }
+                                studyHasStructuralVariants={
+                                    store.hasStructuralVariantData
+                                }
+                                studyHasCnas={store.hasCnaEnrichmentData}
+                                showDriverSection={
+                                    store.showDriverAnnotationMenuSection
+                                }
+                                showTiersSection={
+                                    store.showTierAnnotationMenuSection
+                                }
+                            />
+                        }
+                        customDriverSourceName={
+                            AppConfig.serverConfig
+                                .oncoprint_custom_driver_annotation_binary_menu_label ||
+                            'undefined'
+                        }
+                        showDriverAnnotationSection={
+                            store.showDriverAnnotationMenuSection
+                        }
+                        showTierAnnotationSection={
+                            store.showTierAnnotationMenuSection
+                        }
+                    />
+                }
+            >
+                <button
+                    data-test="AlterationEnrichmentAnnotationsSelectorButton"
+                    style={{
+                        marginLeft: '10px',
+                        marginBottom: '10px',
+                    }}
+                    className="btn btn-primary btn-sm"
+                >
+                    {getButtonNameWithDownPointer('Annotations')}
+                </button>
+            </DefaultTooltip>
+        </div>
+    );
+});
+
+const AlterationMenuHeader: React.FunctionComponent<{
+    studyHasMutations: boolean;
+    studyHasStructuralVariants: boolean;
+    studyHasCnas: boolean;
+    showDriverSection: boolean;
+    showTiersSection: boolean;
+}> = observer(
+    ({
+        studyHasMutations,
+        studyHasStructuralVariants,
+        studyHasCnas,
+        showDriverSection,
+        showTiersSection,
+    }) => {
+        const sections = [];
+        studyHasMutations && sections.push('mutations');
+        studyHasStructuralVariants &&
+            (showDriverSection || showTiersSection) &&
+            sections.push('fusions');
+        studyHasCnas &&
+            (showDriverSection || showTiersSection) &&
+            sections.push('copy number alterations');
+        let text = sections.join(' and ');
+        if (sections.length === 3)
+            text = sections[0] + ', ' + sections[1] + ' and ' + sections[2];
+        return (
+            <span>
+                Select filters for {text} included in the over-representation
+                analysis.
+            </span>
+        );
+    }
+);

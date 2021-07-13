@@ -13,6 +13,7 @@ import {
     toJS,
 } from 'mobx';
 import {
+    AlterationFilter,
     AndedPatientTreatmentFilters,
     AndedSampleTreatmentFilters,
     CancerStudy,
@@ -30,7 +31,6 @@ import {
     DataFilterValue,
     DensityPlotBin,
     GeneFilter,
-    GeneFilterQuery,
     GenePanel,
     GenomicDataBin,
     GenomicDataBinFilter,
@@ -43,13 +43,13 @@ import {
     Patient,
     PatientTreatmentRow,
     ResourceData,
-    ResourceDefinition,
     Sample,
     SampleIdentifier,
     SampleTreatmentRow,
     StudyViewFilter,
     GenericAssayDataFilter,
     GenericAssayMeta,
+    GeneFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
@@ -125,6 +125,10 @@ import {
     getFilteredMolecularProfilesByAlterationType,
     getStructuralVariantSamplesCount,
     MolecularProfileOption,
+    statusFilterActive,
+    tierFilterActive,
+    buildSelectedTiersMap,
+    annotationFilterActive,
     ensureBackwardCompatibilityOfFilters,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
@@ -218,11 +222,22 @@ import {
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
     GenericAssayDataBin,
-    ClinicalDataBin,
     GenericAssayDataBinFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IAnnotationFilterSettings,
+    IDriverAnnotationReport,
+    initializeCustomDriverAnnotationSettings,
+} from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
+import {
+    CopyNumberEnrichmentEventType,
+    MutationEnrichmentEventType,
+} from 'shared/lib/comparison/ComparisonStoreUtils';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -336,13 +351,22 @@ export type OncokbCancerGene = {
     isCancerGene: boolean;
 };
 
-export class StudyViewPageStore {
+export class StudyViewPageStore
+    implements IAnnotationFilterSettings, ISettingsMenuButtonVisible {
     private reactionDisposers: IReactionDisposer[] = [];
 
     private chartItemToColor: Map<string, string>;
     private chartToUsedColors: Map<string, Set<string>>;
 
     public studyViewQueryFilter: StudyViewURLQuery;
+    @observable
+    driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
+        () => false
+    );
+    @observable includeGermlineMutations = true;
+    @observable includeSomaticMutations = true;
+    @observable includeUnknownStatusMutations = true;
+    @observable isSettingsMenuVisible = false;
 
     @observable showComparisonGroupUI = false;
     @observable showCustomDataSelectionUI = false;
@@ -2520,7 +2544,21 @@ export class StudyViewPageStore {
             toJS(this._geneFilterSet.get(chartMeta.uniqueKey)) || [];
         // convert OQL gene queries to GeneFilterObjects accepted by the backend
         const queries: GeneFilterQuery[][] = _.map(hugoGeneSymbols, oqls =>
-            _.map(oqls, oql => geneFilterQueryFromOql(oql))
+            _.map(oqls, oql =>
+                geneFilterQueryFromOql(
+                    oql,
+                    this.driverAnnotationSettings.includeDriver,
+                    this.driverAnnotationSettings.includeVUS,
+                    this.driverAnnotationSettings.includeUnknownOncogenicity,
+                    this.selectedTiersMap.isComplete
+                        ? this.selectedTiersMap.result!
+                        : {},
+                    this.driverAnnotationSettings.includeUnknownTier,
+                    this.includeGermlineMutations,
+                    this.includeSomaticMutations,
+                    this.includeUnknownStatusMutations
+                )
+            )
         );
         geneFilter = geneFilter.concat(queries);
         this._geneFilterSet.set(chartMeta.uniqueKey, geneFilter);
@@ -3128,6 +3166,32 @@ export class StudyViewPageStore {
                 filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
             }
         }
+
+        filters.alterationFilter = ({
+            // select all CNA types
+            copyNumberAlterationEventTypes: {
+                [CopyNumberEnrichmentEventType.AMP]: true,
+                [CopyNumberEnrichmentEventType.HOMDEL]: true,
+            },
+            // select all mutation types
+            mutationEventTypes: {
+                [MutationEnrichmentEventType.any]: true,
+            },
+            structuralVariants: null,
+            includeDriver: this.driverAnnotationSettings.includeDriver,
+            includeVUS: this.driverAnnotationSettings.includeVUS,
+            includeUnknownOncogenicity: this.driverAnnotationSettings
+                .includeUnknownOncogenicity,
+            includeUnknownTier: this.driverAnnotationSettings
+                .includeUnknownTier,
+            includeGermline: this.includeGermlineMutations,
+            includeSomatic: this.includeSomaticMutations,
+            includeUnknownStatus: this.includeUnknownStatusMutations,
+            tiersBooleanMap: this.selectedTiersMap.isComplete
+                ? this.selectedTiersMap.result!
+                : {},
+        } as unknown) as AlterationFilter;
+
         return filters as StudyViewFilter;
     }
 
@@ -4343,6 +4407,12 @@ export class StudyViewPageStore {
         onError: () => {},
         default: [],
     });
+
+    @computed get hasCnaProfileData() {
+        return (
+            this.cnaProfiles.isComplete && !_.isEmpty(this.cnaProfiles.result)
+        );
+    }
 
     private getDefaultClinicalDataBinFilter(
         attribute: ClinicalAttribute
@@ -6525,6 +6595,55 @@ export class StudyViewPageStore {
         },
     });
 
+    readonly selectedTiers = remoteData<string[]>({
+        await: () => [this.customDriverAnnotationReport],
+        invoke: () => {
+            return Promise.resolve(
+                this.customDriverAnnotationReport.result!.tiers.filter(tier =>
+                    this.driverAnnotationSettings.driverTiers.get(tier)
+                )
+            );
+        },
+    });
+
+    readonly selectedTiersMap = remoteData<{ [tier: string]: boolean }>({
+        await: () => [this.customDriverAnnotationReport, this.selectedTiers],
+        invoke: () => {
+            return Promise.resolve(
+                buildSelectedTiersMap(
+                    this.selectedTiers.result!,
+                    this.customDriverAnnotationReport.result!.tiers
+                )
+            );
+        },
+    });
+
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.molecularProfiles],
+            invoke: async () => {
+                const molecularProfileIds = this.molecularProfiles.result.map(
+                    molecularProfile => molecularProfile.molecularProfileId
+                );
+                const report = await internalClient.fetchAlterationDriverAnnotationReportUsingPOST(
+                    { molecularProfileIds }
+                );
+                return {
+                    ...report,
+                    hasCustomDriverAnnotations:
+                        report.hasBinary || report.tiers.length > 0,
+                };
+            },
+            onResult: result => {
+                initializeCustomDriverAnnotationSettings(
+                    result!,
+                    this.driverAnnotationSettings,
+                    this.driverAnnotationSettings.customTiersDefault
+                );
+            },
+        }
+    );
+
     readonly survivalPlots = remoteData<SurvivalType[]>({
         await: () => [
             this.survivalClinicalAttributesPrefix,
@@ -7312,7 +7431,7 @@ export class StudyViewPageStore {
     });
 
     readonly caseListSampleCounts = remoteData<MultiSelectionTableRow[]>({
-        await: () => [this.selectedSamples, this.selectedSamples],
+        await: () => [this.selectedSamples],
         invoke: async () => {
             // return empty if there are no filtered samples
             if (!this.hasFilteredSamples) {
@@ -8233,5 +8352,58 @@ export class StudyViewPageStore {
             .filter(outerFilter => outerFilter.filters.length > 0);
 
         this.setPatientTreatmentFilters({ filters: updatedFilters });
+    }
+
+    @computed get isGlobalMutationFilterActive(): boolean {
+        return this.isGlobalAlterationFilterActive || this.isStatusFilterActive;
+    }
+
+    @computed get isGlobalAlterationFilterActive(): boolean {
+        return this.isTiersFilterActive || this.isAnnotationsFilterActive;
+    }
+
+    @computed get isTiersFilterActive(): boolean {
+        return tierFilterActive(
+            _.fromPairs(this.driverAnnotationSettings.driverTiers.toJSON()),
+            this.driverAnnotationSettings.includeUnknownTier
+        );
+    }
+
+    @computed get isAnnotationsFilterActive(): boolean {
+        return annotationFilterActive(
+            this.driverAnnotationSettings.includeDriver,
+            this.driverAnnotationSettings.includeVUS,
+            this.driverAnnotationSettings.includeUnknownOncogenicity
+        );
+    }
+
+    @computed get isStatusFilterActive(): boolean {
+        return statusFilterActive(
+            this.includeGermlineMutations,
+            this.includeSomaticMutations,
+            this.includeUnknownStatusMutations
+        );
+    }
+
+    @computed get doShowDriverAnnotationSectionInGlobalMenu(): boolean {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.hasBinary &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
+    }
+
+    @computed get doShowTierAnnotationSectionInGlobalMenu(): boolean {
+        return !!(
+            this.customDriverAnnotationReport.isComplete &&
+            this.customDriverAnnotationReport.result!.tiers.length > 0 &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_binary_menu_label &&
+            AppConfig.serverConfig
+                .oncoprint_custom_driver_annotation_tiers_menu_label
+        );
     }
 }

@@ -16,13 +16,7 @@ import {
 } from './MutationOncoprintUtils';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../../../shared/components/ErrorMessage';
-import {
-    computed,
-    IReactionDisposer,
-    observable,
-    reaction,
-    makeObservable,
-} from 'mobx';
+import { computed, observable, makeObservable } from 'mobx';
 import OncoprintJS, {
     ColumnId,
     ColumnLabel,

@@ -6,23 +6,17 @@ import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
-import { Sample } from 'cbioportal-ts-api-client';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
 import AppConfig from 'appConfig';
 import OncoprintJS from 'oncoprintjs';
 import fileDownload from 'react-file-download';
-import {
-    isWebdriver,
-    FadeInteraction,
-    svgToPdfDownload,
-} from 'cbioportal-frontend-commons';
+import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import OncoprinterStore from './OncoprinterStore';
 import autobind from 'autobind-decorator';
 import onMobxPromise from '../../../../shared/lib/onMobxPromise';
 import WindowStore from '../../../../shared/components/window/WindowStore';
 import { getGeneticTrackKey } from './OncoprinterGeneticUtils';
-import SuccessBanner from '../../../studyView/infoBanner/SuccessBanner';
 import InfoBanner from '../../../../shared/components/banners/InfoBanner';
 import '../../../../globalStyles/oncoprintStyles.scss';
 
@@ -110,7 +104,7 @@ export default class Oncoprinter extends React.Component<
                     .cbioportalCount;
             },
             get hidePutativePassengers() {
-                return self.props.store.driverAnnotationSettings.excludeVUS;
+                return !self.props.store.driverAnnotationSettings.includeVUS;
             },
             get hideGermlineMutations() {
                 return self.props.store.hideGermlineMutations;
@@ -195,7 +189,7 @@ export default class Oncoprinter extends React.Component<
                     this.props.store.driverAnnotationSettings.oncoKb = false;
                     this.props.store.driverAnnotationSettings.cbioportalCount = false;
                     this.props.store.driverAnnotationSettings.customBinary = false;
-                    this.props.store.driverAnnotationSettings.excludeVUS = false;
+                    this.props.store.driverAnnotationSettings.includeVUS = true;
                 } else {
                     if (
                         !this.controlsState.annotateDriversOncoKbDisabled &&
@@ -228,8 +222,8 @@ export default class Oncoprinter extends React.Component<
             onSelectCustomDriverAnnotationBinary: action((s: boolean) => {
                 this.props.store.driverAnnotationSettings.customBinary = s;
             }),
-            onSelectHidePutativePassengers: (s: boolean) => {
-                this.props.store.driverAnnotationSettings.excludeVUS = s;
+            onSelectHideVUS: (s: boolean) => {
+                this.props.store.driverAnnotationSettings.includeVUS = !s;
             },
             onSelectHideGermlineMutations: (s: boolean) => {
                 this.props.store.hideGermlineMutations = s;

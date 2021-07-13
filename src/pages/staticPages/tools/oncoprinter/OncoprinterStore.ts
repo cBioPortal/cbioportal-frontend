@@ -1,5 +1,5 @@
-import { DriverAnnotationSettings } from '../../../resultsView/ResultsViewPageStore';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { DriverAnnotationSettings } from '../../../../shared/alterationFiltering/AnnotationFilteringSettings';
+import { action, computed, makeObservable, observable } from 'mobx';
 import AppConfig from 'appConfig';
 import {
     annotateGeneticTrackData,
@@ -13,8 +13,6 @@ import {
     initDriverAnnotationSettings,
     isAltered,
     isType2,
-    OncoprinterGeneticInputLine,
-    OncoprinterGeneticInputLineType2,
     parseGeneticInput,
 } from './OncoprinterGeneticUtils';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -44,7 +42,7 @@ import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 export type OncoprinterDriverAnnotationSettings = Pick<
     DriverAnnotationSettings,
-    | 'excludeVUS'
+    | 'includeVUS'
     | 'customBinary'
     | 'hotspots'
     | 'cbioportalCount'
@@ -553,7 +551,7 @@ export default class OncoprinterStore {
                 this.nonAnnotatedGeneticTrackData.result!,
                 this.annotationData.promisesMap,
                 this.annotationData.params,
-                this.driverAnnotationSettings.excludeVUS
+                !this.driverAnnotationSettings.includeVUS
             ),
     });
 
