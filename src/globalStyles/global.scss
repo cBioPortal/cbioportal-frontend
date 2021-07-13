@@ -665,3 +665,10 @@ h2.divider {
     padding-bottom: 10px;
     border-bottom: 1px solid $borderColor;
 }
+
+.dropdown-menu,
+.rc-tooltip {
+    .nav-tabs {
+        padding-top: 4px;
+    }
+}
