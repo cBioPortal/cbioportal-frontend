@@ -47,7 +47,7 @@ describe('treatment feature', () => {
 
             $('button=Add Track').click();
             // close add tracks menu
-            var addTracksButton = browser.$('button[id=addTracksDropdown]');
+            var addTracksButton = $('button[id=addTracksDropdown]');
             addTracksButton.click();
             waitForOncoprint();
             var res = browser.checkElement('[id=oncoprintDiv]');
@@ -64,11 +64,16 @@ describe('treatment feature', () => {
 
         it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
+
+            browser.execute(() => {
+                $('div').css({ border: '1px solid red !important' });
+            });
+
             assertScreenShotMatch(res);
         });
 
         it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', () => {
-            $('[data-test=ViewLimitValues]').waitForExist(10000);
+            $('[data-test=ViewLimitValues]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewLimitValues]').click();
             var res = browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
@@ -79,7 +84,7 @@ describe('treatment feature', () => {
             selectReactSelectOption(horzDataSelect, 'Ordered samples');
 
             // make sure bars become visible (no mut data is available)
-            $('[data-test=ViewCopyNumber]').waitForExist(10000);
+            $('[data-test=ViewCopyNumber]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewCopyNumber]').click();
 
             var res = browser.checkElement('[id=plots-tab-plot-svg]');

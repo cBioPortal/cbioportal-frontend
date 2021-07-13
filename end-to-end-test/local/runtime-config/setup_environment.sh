@@ -8,6 +8,10 @@ echo export CBIOPORTAL_URL="http://localhost:8080"
 echo export SCREENSHOT_DIRECTORY=./local/screenshots
 echo export JUNIT_REPORT_PATH=./local/junit/
 echo export SPEC_FILE_PATTERN=./local/specs/**/*.spec.js
+
+
+
+
 echo export CBIO_DB_DATA_DIR=$E2E_WORKSPACE/cbio_db_data
 echo export KC_DB_DATA_DIR=$E2E_WORKSPACE/kc_db_data
 
@@ -99,4 +103,4 @@ fi
 # rc, master and tagged releases (e.g. 3.0.1) of cbioportal are available as prebuilt images
 # update the reference to the corresponding image name when prebuilt image exists
 (([[ $BACKEND_PROJECT_USERNAME == "cbioportal" ]] && ( [[ $BACKEND_BRANCH == "rc" ]] || [[ $BACKEND_BRANCH == "master" ]] || [[ $BACKEND_BRANCH =~ [0-9.]+ ]] )) && echo export CUSTOM_BACKEND=0) || echo export CUSTOM_BACKEND=1
-echo export DOCKER_IMAGE_CBIOPORTAL="cbioportal/cbioportal:master"
+echo export DOCKER_IMAGE_CBIOPORTAL="cbioportal/cbioportal:latest"

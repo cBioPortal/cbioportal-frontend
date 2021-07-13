@@ -30,6 +30,7 @@ done
 rm -rf $E2E_WORKSPACE/keycloak/idp-metadata.xml
 wget -O $E2E_WORKSPACE/keycloak/idp-metadata.xml http://localhost:8081/auth/realms/cbio/protocol/saml/descriptor
 
+docker-compose $compose_extensions pull
 docker-compose $compose_extensions up -d
 
 healthy=

@@ -13,62 +13,56 @@ describe('Quick Search', () => {
         var url = `${CBIOPORTAL_URL}`;
         goToUrlAndSetLocalStorage(url);
         $('strong=Beta!').click();
-        browser.waitForText('div=e.g. Lung, EGFR, TCGA-OR-A5J2');
-        browser.click('div=e.g. Lung, EGFR, TCGA-OR-A5J2');
+        $('div=e.g. Lung, EGFR, TCGA-OR-A5J2').waitForExist();
+        $('div=e.g. Lung, EGFR, TCGA-OR-A5J2').click();
         // "BRAF" is nice because it matches studies, genes, patients, and samples
         $('input').setValue('BRAF');
-        browser.waitForText('div=Click on a study to open its summary');
-        browser.waitForText('div=Click on a patient to see a summary');
-        browser.waitForText('div=Click on a sample to open its summary');
+        $('div=Click on a study to open its summary').waitForExist();
+        $('div=Click on a patient to see a summary').waitForExist();
+        $('div=Click on a sample to open its summary').waitForExist();
     });
 
     it('should give results for studies', () => {
-        browser.click(
-            'strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        );
-        browser.waitForText(
+        $('strong=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)').click();
+        $(
             'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-        );
+        ).waitForExist();
 
         assert.equal(
-            browser.isVisible(
+            $(
                 'h3=Skin Cutaneous Melanoma(Broad, Cancer Discov 2014)'
-            ),
+            ).isDisplayed(),
             true,
             'modal is visible'
         );
     });
 
     it('should give results for genes', () => {
-        browser.click('strong=25 more genes (click to load 20 more)');
-        browser.waitForText('strong=BRAF_PS314');
-        browser.click('strong=BRAF_PS314');
-        browser.waitForText('a=BRAF_PS314');
+        $('strong=25 more genes (click to load 20 more)').click();
+        $('strong=BRAF_PS314').waitForExist();
+        $('strong=BRAF_PS314').click();
+        $('a=BRAF_PS314').waitForExist({ timeout: 60000 });
 
-        assert.equal(
-            browser.isVisible('a=BRAF_PS314'),
-            true,
-            'modal is visible'
-        );
+        assert.equal($('a=BRAF_PS314').isDisplayed(), true, 'modal is visible');
     });
 
     it('should give results for patients', () => {
-        browser.click('strong=Mel-BRAFi-03');
-        browser.waitForText('a=Mel-BRAFi-03');
+        $('strong=Mel-BRAFi-03').click();
+        $('a=Mel-BRAFi-03').waitForExist();
 
         assert.equal(
-            browser.isVisible('a=Mel-BRAFi-03')[0],
+            $('a=Mel-BRAFi-03').isDisplayed(),
             true,
             'modal is visible'
         );
     });
 
     it('should give results for samples', () => {
-        browser.click('strong=Mel_BRAFi_02_PRE');
-        browser.waitForText('a=Mel_BRAFi_02_PRE');
+        $('strong=Mel_BRAFi_02_PRE').click();
+        $('a=Mel_BRAFi_02_PRE').waitForExist();
 
         assert.equal(
-            browser.isVisible('a=Mel_BRAFi_02_PRE')[0],
+            $('a=Mel_BRAFi_02_PRE').isDisplayed(),
             true,
             'modal is visible'
         );

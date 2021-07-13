@@ -15,37 +15,34 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 describe('oncoprinter tests', function() {
     describe('custom driver annotation', () => {
         function doTestWithCustomDriver() {
-            browser.waitForExist('.oncoprinterGeneticExampleData');
-            browser.click('.oncoprinterGeneticExampleData');
-            browser.click('.oncoprinterSubmit');
+            $('.oncoprinterGeneticExampleData').waitForExist();
+            $('.oncoprinterGeneticExampleData').click();
+            $('.oncoprinterSubmit').click();
             waitForOncoprint(TIMEOUT);
 
             setOncoprintMutationsMenuOpen(true);
-            assert(!browser.isSelected('input[data-test="annotateOncoKb"]'));
+            assert(!$('input[data-test="annotateOncoKb"]').isSelected());
             assert(
-                !browser.isSelected(
-                    'input[data-test="annotateCBioPortalCount"]'
-                )
+                !$('input[data-test="annotateCBioPortalCount"]').isSelected()
             );
-            assert(
-                browser.isSelected('input[data-test="annotateCustomBinary"]')
-            );
+            assert($('input[data-test="annotateCustomBinary"]').isSelected());
         }
 
         function doTestWithoutCustomDriver() {
-            browser.waitForExist('.oncoprinterGeneticExampleData');
-            setInputText(
-                'textarea.oncoprinterGeneticDataInput',
-                'TCGA-25-2392-01 TP53 FUSION FUSION\nTCGA-04-1357-01 BRCA1 Q1538A MISSENSE'
-            );
-            browser.click('.oncoprinterSubmit');
+            $('.oncoprinterGeneticExampleData').waitForExist();
+            browser.execute(function(text) {
+                oncoprinterTool.onGeneticDataInputChange({
+                    currentTarget: {
+                        value: text,
+                    },
+                });
+            }, 'TCGA-25-2392-01 TP53 FUSION FUSION\nTCGA-04-1357-01 BRCA1 Q1538A MISSENSE');
+            $('.oncoprinterSubmit').click();
             waitForOncoprint(TIMEOUT);
 
             setOncoprintMutationsMenuOpen(true);
-            assert(browser.isSelected('input[data-test="annotateOncoKb"]'));
-            assert(
-                !browser.isExisting('input[data-test="annotateCustomBinary"]')
-            );
+            assert($('input[data-test="annotateOncoKb"]').isSelected());
+            assert(!$('input[data-test="annotateCustomBinary"]').isExisting());
         }
 
         it('only custom driver annotation is selected when input data includes a custom driver', () => {
@@ -59,7 +56,7 @@ describe('oncoprinter tests', function() {
         it('mutation annotation settings reset whenever oncoprint is submitted', () => {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
             doTestWithCustomDriver();
-            browser.click('.oncoprinterModifyInput');
+            $('.oncoprinterModifyInput').click();
             doTestWithoutCustomDriver();
         });
     });

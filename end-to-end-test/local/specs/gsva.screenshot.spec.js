@@ -26,7 +26,7 @@ describe('gsva feature', () => {
             waitForStudyQueryPage(20000);
             checkTestStudy();
             checkGSVAprofile();
-            browser.$('button[data-test=GENESET_VOLCANO_BUTTON]').click();
+            $('button[data-test=GENESET_VOLCANO_BUTTON]').click();
             $('div.modal-dialog').waitForExist();
         });
 
@@ -88,8 +88,8 @@ describe('gsva feature', () => {
                 $('.coexpression-select-query-profile'),
                 'GSVA scores on oncogenic signatures gene sets (5 samples)'
             );
-            $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
-            var res = browser.checkElement('//*[@id="coexpression-plot-svg"]');
+            $('#coexpressionTabGeneTabs').waitForExist();
+            var res = browser.checkElement('#coexpression-plot-svg');
             assertScreenShotMatch(res);
         });
     });
