@@ -1,11 +1,9 @@
 import * as React from 'react';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
-import { TruncatedText } from 'cbioportal-frontend-commons';
-import { getPatientViewUrl, getSampleViewUrl } from '../../../api/urls';
 
-/**
- * @author Selcuk Onur Sumer
- */
+import { getSampleViewUrl } from '../../../api/urls';
+
 export default class SampleColumnFormatter {
     public static getTextValue(data: Mutation[]): string {
         return SampleColumnFormatter.getData(data) || '';
@@ -26,13 +24,7 @@ export default class SampleColumnFormatter {
         }
     ) {
         const sampleId: string = SampleColumnFormatter.getTextValue(data);
-        let content = (
-            <TruncatedText
-                text={sampleId}
-                tooltip={<div style={{ maxWidth: 300 }}>{sampleId}</div>}
-                maxLength={16}
-            />
-        );
+        let content = <span>{sampleId}</span>;
 
         if (molecularProfileIdToMolecularProfile) {
             const profile =
@@ -52,6 +44,13 @@ export default class SampleColumnFormatter {
             }
         }
 
-        return content;
+        return (
+            <DefaultTooltip
+                overlay={() => <div style={{ maxWidth: 300 }}>{sampleId}</div>}
+                placement="topLeft"
+            >
+                {content}
+            </DefaultTooltip>
+        );
     }
 }
