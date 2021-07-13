@@ -979,9 +979,8 @@ export class ResultsViewPageStore {
         await: () => [
             this.studyIds,
             this.filteredAlteredSamples,
-            this.filteredUnalteredSamples,
-            this.filteredAlteredPatients,
-            this.filteredUnalteredPatients,
+            this.filteredUnalteredAndProfiledSamples,
+            this.unprofiledSamples,
             this.filteredSamples,
             this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             this.defaultOQLQuery,
@@ -995,8 +994,10 @@ export class ResultsViewPageStore {
                     this.usePatientLevelEnrichments,
                     this.studyIds.result!,
                     this.filteredAlteredSamples.result!,
-                    this.filteredUnalteredSamples.result!,
-                    this.queryContainsOql
+                    this.filteredUnalteredAndProfiledSamples.result!,
+                    this.unprofiledSamples.result!,
+                    this.queryContainsOql,
+                    this.hideUnprofiledSamples
                 )
             );
 
@@ -2227,52 +2228,22 @@ export class ResultsViewPageStore {
             ),
     });
 
-    readonly filteredUnalteredSampleKeys = remoteData({
-        await: () => [this.filteredSamples, this.oqlFilteredCaseAggregatedData],
-        invoke: () => {
-            const caseAggregatedData = this.oqlFilteredCaseAggregatedData
-                .result!;
-            return Promise.resolve(
-                this.filteredSamples
-                    .result!.map(s => s.uniqueSampleKey)
-                    .filter(
-                        sampleKey =>
-                            !caseAggregatedData.samples[sampleKey].length
-                    )
-            );
-        },
-    });
-
-    readonly filteredUnalteredSamples = remoteData<Sample[]>(
-        {
-            await: () => [
-                this.sampleKeyToSample,
-                this.filteredUnalteredSampleKeys,
-            ],
-            invoke: () => {
-                const unalteredSamples: Sample[] = [];
-                this.filteredUnalteredSampleKeys.result!.forEach(a =>
-                    unalteredSamples.push(this.sampleKeyToSample.result![a])
-                );
-                return Promise.resolve(unalteredSamples);
-            },
-        },
-        []
-    );
-
-    readonly filteredUnalteredPatients = remoteData({
+    readonly filteredUnalteredAndProfiledSamples = remoteData({
         await: () => [
-            this.filteredPatients,
+            this.filteredSamples,
             this.oqlFilteredCaseAggregatedData,
+            this.unprofiledSampleKeyToSample,
         ],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!;
+            const unprofiledSamples = this.unprofiledSampleKeyToSample.result!;
             return Promise.resolve(
-                this.filteredPatients.result!.filter(
-                    patient =>
-                        !caseAggregatedData.patients[patient.uniquePatientKey]
-                            .length
+                this.filteredSamples.result!.filter(
+                    sample =>
+                        !caseAggregatedData.samples[sample.uniqueSampleKey]
+                            .length &&
+                        !(sample.uniqueSampleKey in unprofiledSamples)
                 )
             );
         },
@@ -3759,6 +3730,23 @@ export class ResultsViewPageStore {
     });
 
     readonly filteredSamples = remoteData({
+        await: () => [this.samples, this.unprofiledSampleKeyToSample],
+        invoke: () => {
+            if (this.hideUnprofiledSamples) {
+                const unprofiledSampleKeys = this.unprofiledSampleKeyToSample
+                    .result!;
+                return Promise.resolve(
+                    this.samples.result!.filter(
+                        s => !(s.uniqueSampleKey in unprofiledSampleKeys)
+                    )
+                );
+            } else {
+                return Promise.resolve(this.samples.result!);
+            }
+        },
+    });
+
+    readonly unprofiledSamples = remoteData({
         await: () => [
             this.samples,
             this.coverageInformation,
@@ -3766,31 +3754,34 @@ export class ResultsViewPageStore {
             this.selectedMolecularProfiles,
         ],
         invoke: () => {
-            if (this.hideUnprofiledSamples) {
-                // only show samples that are profiled in every gene in every selected profile
-                const genes = this.genes.result!;
-                const coverageInfo = this.coverageInformation.result!;
-                const queryProfileIds = this.selectedMolecularProfiles.result!.map(
-                    p => p.molecularProfileId
-                );
-                return Promise.resolve(
-                    this.samples.result!.filter(sample => {
-                        return _.every(genes, gene => {
-                            return _.every(
-                                isSampleProfiledInMultiple(
-                                    sample.uniqueSampleKey,
-                                    queryProfileIds,
-                                    coverageInfo,
-                                    gene.hugoGeneSymbol
-                                )
-                            );
-                        });
-                    })
-                );
-            } else {
-                return Promise.resolve(this.samples.result!);
-            }
+            const genes = this.genes.result!;
+            const coverageInfo = this.coverageInformation.result!;
+            const queryProfileIds = this.selectedMolecularProfiles.result!.map(
+                p => p.molecularProfileId
+            );
+            return Promise.resolve(
+                this.samples.result!.filter(sample => {
+                    return _.every(genes, gene => {
+                        return !_.some(
+                            isSampleProfiledInMultiple(
+                                sample.uniqueSampleKey,
+                                queryProfileIds,
+                                coverageInfo,
+                                gene.hugoGeneSymbol
+                            )
+                        );
+                    });
+                })
+            );
         },
+    });
+
+    readonly unprofiledSampleKeyToSample = remoteData({
+        await: () => [this.unprofiledSamples],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.unprofiledSamples.result!, s => s.uniqueSampleKey)
+            ),
     });
 
     readonly filteredSampleKeyToSample = remoteData({
