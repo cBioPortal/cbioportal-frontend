@@ -26,6 +26,7 @@ import {
     AlterationTypeConstants,
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
+    DataTypeConstants,
 } from '../ResultsViewPageStore';
 import { MutationCountBy, AxisMenuSelection } from './PlotsTab';
 import {
@@ -747,7 +748,7 @@ describe('PlotsTabUtils', () => {
             const axisMenuSelection = ({
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
-                isGenericAssayType: true,
+                genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(10), 1);
@@ -760,7 +761,7 @@ describe('PlotsTabUtils', () => {
             const axisMenuSelection = ({
                 dataType: GenericAssayTypeConstants.TREATMENT_RESPONSE,
                 logScale: true,
-                isGenericAssayType: true,
+                genericAssayDataType: DataTypeConstants.LIMITVALUE,
             } as any) as AxisMenuSelection;
             const funcs = makeAxisLogScaleFunction(axisMenuSelection);
             assert.equal(funcs!.fLogScale(0, 10), 1);

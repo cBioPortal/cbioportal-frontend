@@ -1,4 +1,5 @@
 const clipboardy = require('clipboardy');
+const assertScreenShotMatch = require('./lib/testUtils').assertScreenShotMatch;
 
 function waitForStudyQueryPage(timeout) {
     $('div[data-test="cancerTypeListContainer"]').waitForExist(
@@ -16,6 +17,17 @@ function waitForGeneQueryPage(timeout) {
 
 function waitForPlotsTab(timeout) {
     $('div.axisBlock').waitForVisible(timeout || 20000);
+}
+
+function waitForAndCheckPlotsTab() {
+    browser.moveToObject('body', 0, 0);
+    browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+    var res = checkElementWithElementHidden(
+        'div[data-test="PlotsTabEntireDiv"]',
+        '.popover',
+        { hide: ['.qtip'] }
+    );
+    assertScreenShotMatch(res);
 }
 
 function waitForCoExpressionTab(timeout) {
@@ -496,6 +508,7 @@ function selectElementByText(text) {
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
+    waitForAndCheckPlotsTab: waitForAndCheckPlotsTab,
     waitForStudyQueryPage: waitForStudyQueryPage,
     waitForGeneQueryPage: waitForGeneQueryPage,
     waitForOncoprint: waitForOncoprint,
