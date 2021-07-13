@@ -9,7 +9,7 @@ const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 3;
+var defaultMaxInstances = 1;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
