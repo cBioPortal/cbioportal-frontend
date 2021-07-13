@@ -352,22 +352,49 @@ export class StudyViewPageStore {
     @action
     updateNAValue = (uniqueKey: string): void => {
         let newValue = this.isShowNAChecked(uniqueKey);
-        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        newFilter.showNA = newValue;
-        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        if (this.isGenericAssayChart(uniqueKey)) {
+            let newFilter = _.clone(
+                this._genericAssayDataBinFilterSet.get(uniqueKey)
+            )!;
+            newFilter.showNA = newValue;
+            this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
+        } else {
+            let newFilter = _.clone(
+                this._clinicalDataBinFilterSet.get(uniqueKey)
+            )!;
+            newFilter.showNA = newValue;
+            this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        }
     };
 
     @action
     toggleNAValue = (uniqueKey: string): void => {
         this.updateNAValue(uniqueKey);
-        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        let showNA = newFilter.showNA;
-        newFilter.showNA = !showNA;
-        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        if (this.isGenericAssayChart(uniqueKey)) {
+            let newFilter = _.clone(
+                this._genericAssayDataBinFilterSet.get(uniqueKey)
+            )!;
+            let showNA = newFilter.showNA;
+            newFilter.showNA = !showNA;
+            this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
+        } else {
+            let newFilter = _.clone(
+                this._clinicalDataBinFilterSet.get(uniqueKey)
+            )!;
+            let showNA = newFilter.showNA;
+            newFilter.showNA = !showNA;
+            this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        }
     };
 
     public isShowNAChecked = (uniqueKey: string): boolean => {
-        let filter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey));
+        let filter;
+        if (this.isGenericAssayChart(uniqueKey))
+            filter = _.clone(
+                this._genericAssayDataBinFilterSet.get(uniqueKey)
+            )!;
+        else filter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey));
+
         let showNA = filter ? filter.showNA : undefined;
 
         // Show NA bars by default
@@ -1683,7 +1710,7 @@ export class StudyViewPageStore {
     >();
     @observable private _genericAssayDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        GenericAssayDataBinFilter
+        GenericAssayDataBinFilter & { showNA?: boolean }
     >();
 
     @observable.ref private _geneFilterSet = observable.map<
