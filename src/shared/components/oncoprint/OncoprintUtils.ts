@@ -57,7 +57,7 @@ import {
     MUTATION_SPECTRUM_FILLS,
     SpecialAttribute,
 } from '../../cache/ClinicalDataCache';
-import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
+import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
 import { ISelectOption } from './controls/OncoprintControls';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
@@ -168,17 +168,6 @@ function formatGeneticTrackOql(
         : oqlFilter.oql_line;
 }
 
-export function doWithRenderingSuppressedAndSortingOff(
-    oncoprint: OncoprintJS,
-    task: () => void
-) {
-    oncoprint.suppressRendering();
-    oncoprint.keepSorted(false);
-    task();
-    oncoprint.keepSorted(true);
-    oncoprint.releaseRendering();
-}
-
 export function getHeatmapTrackRuleSetParams(
     trackSpec: IHeatmapTrackSpec
 ): RuleSetParams {
@@ -232,7 +221,7 @@ export function getHeatmapTrackRuleSetParams(
         value_range,
         colors,
         value_stop_points,
-        null_color: 'rgba(224,224,224,1)',
+        null_color: [224, 224, 224, 1],
         null_legend_label,
         na_legend_label,
         na_shapes: trackSpec.customNaShapes,
@@ -271,7 +260,9 @@ export function getGenericAssayTrackRuleSetParams(
     let legend_label: string;
     let colors: [number, number, number, number][];
     let value_stop_points: number[];
-    let category_to_color: { [d: string]: string } | undefined;
+    let category_to_color:
+        | { [d: string]: [number, number, number, number] }
+        | undefined;
 
     // - Legends for generic assay entities can be configured in two ways:
     //      1. Smaller values are `important` and darker blue (a.k.a. ASC sort order)
@@ -288,11 +279,11 @@ export function getGenericAssayTrackRuleSetParams(
     const dataPoints = trackSpec.data;
     const pivotThreshold = trackSpec.pivotThreshold;
     const sortOrder = trackSpec.sortOrder;
-    const categoryColorOptions = [
-        'rgba(240,228,66,1)',
-        'rgba(0,158,115,1)',
-        'rgba(204,121,167,1)',
-        'rgba(0,0,0,1)',
+    const categoryColorOptions: [number, number, number, number][] = [
+        [240, 228, 66, 1],
+        [0, 158, 115, 1],
+        [204, 121, 167, 1],
+        [0, 0, 0, 1],
     ];
 
     let maxValue = trackSpec.maxProfileValue!;
@@ -391,7 +382,7 @@ export function getGenericAssayTrackRuleSetParams(
         value_range,
         colors,
         value_stop_points,
-        null_color: 'rgba(224,224,224,1)',
+        null_color: [224, 224, 224, 1],
         category_key: 'category',
         category_to_color: category_to_color,
     };
@@ -435,7 +426,7 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             0.8,
             1,
         ],
-        null_color: 'rgba(224,224,224,1)',
+        null_color: [224, 224, 224, 1],
     } as IGradientRuleSetParams;
 }
 
@@ -488,8 +479,9 @@ export function getClinicalTrackRuleSetParams(track: ClinicalTrackSpec) {
                 category_to_color: Object.assign(
                     {},
                     track.category_to_color,
-                    RESERVED_CLINICAL_VALUE_COLORS
+                    _.mapValues(RESERVED_CLINICAL_VALUE_COLORS, hexToRGBA)
                 ),
+                universal_rule_categories: track.universal_rule_categories,
             };
             break;
     }
@@ -907,6 +899,12 @@ export function makeClinicalTracksMobxPromise(
                     // For "Profiled-In" clinical attribute: show "No" on N/A items
                     ret.na_tooltip_value = 'No';
                     ret.na_legend_label = 'No';
+
+                    // For "Profiled-In", it's just 'Yes' or 'N/A' so as an optimization
+                    //  make 'Yes' universal
+                    (ret as any).universal_rule_categories = {
+                        Yes: true,
+                    };
                 }
                 if (attribute.datatype === 'NUMBER') {
                     ret.datatype = 'number';
@@ -944,8 +942,10 @@ export function makeClinicalTracksMobxPromise(
                     }
                 } else if (attribute.datatype === 'STRING') {
                     ret.datatype = 'string';
-                    (ret as any).category_to_color =
-                        dataAndColors.categoryToColor;
+                    (ret as any).category_to_color = _.mapValues(
+                        dataAndColors.categoryToColor,
+                        hexToRGBA
+                    );
                 } else if (
                     attribute.clinicalAttributeId ===
                     SpecialAttribute.MutationSpectrum

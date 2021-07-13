@@ -261,7 +261,7 @@ describe('study laml_tcga tests', () => {
     });
 });
 
-describe('add chart should not be shown in other irrelevant tabs', () => {
+describe.skip('add chart should not be shown in other irrelevant tabs', () => {
     it('should hide add chart button on cn segments tab', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);

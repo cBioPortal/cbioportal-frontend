@@ -706,7 +706,9 @@ describe('getGenericAssayTrackRuleSetParams', () => {
         ) as IGradientAndCategoricalRuleSetParams;
 
         assert.isDefined(category_to_color);
-        assert.isString(category_to_color!['>8.00']);
+        // make sure its an rgba color as an array
+        assert.isArray(category_to_color!['>8.00']);
+        assert.equal(category_to_color!['>8.00'].length, 4);
     });
 });
 

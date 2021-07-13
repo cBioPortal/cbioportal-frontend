@@ -456,6 +456,7 @@ export default class Oncoprinter extends React.Component<
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
+                                keepSorted={true}
                                 hiddenIds={
                                     this.props.store.hiddenSampleIds.result
                                 }

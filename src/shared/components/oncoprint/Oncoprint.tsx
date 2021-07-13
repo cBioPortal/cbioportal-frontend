@@ -46,7 +46,7 @@ export type ClinicalTrackSpec = {
     | {
           datatype: 'counts';
           countsCategoryLabels: string[];
-          countsCategoryFills: string[];
+          countsCategoryFills: [number, number, number, number][];
       }
     | {
           datatype: 'number';
@@ -55,7 +55,10 @@ export type ClinicalTrackSpec = {
       }
     | {
           datatype: 'string';
-          category_to_color?: { [category: string]: string };
+          category_to_color?: {
+              [category: string]: [number, number, number, number];
+          };
+          universal_rule_categories?: { [category: string]: any };
       }
 );
 
@@ -240,6 +243,8 @@ export interface IOncoprintProps {
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;
     onReleaseRendering?: () => void;
+
+    keepSorted?: boolean;
 }
 
 @observer

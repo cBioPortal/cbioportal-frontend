@@ -169,3 +169,10 @@ export function getReservedGroupColor(value: string): string | undefined {
     });
     return groupColor;
 }
+
+export function hexToRGBA(str: string): [number, number, number, number] {
+    const r = parseInt(str[1] + str[2], 16);
+    const g = parseInt(str[3] + str[4], 16);
+    const b = parseInt(str[5] + str[6], 16);
+    return [r, g, b, 1];
+}

@@ -17,7 +17,7 @@ import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
 import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
-import { RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
+import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
 import { interpolateReds } from 'd3-scale-chromatic';
 import {
     getClinicalAttributeColoring,
@@ -50,7 +50,7 @@ export const MUTATION_SPECTRUM_FILLS = [
     '#FCE08E',
     '#F78F5E',
     '#D62B23',
-];
+].map(hexToRGBA);
 
 const locallyComputedSpecialAttributes = [
     SpecialAttribute.StudyOfOrigin,

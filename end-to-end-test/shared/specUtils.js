@@ -104,6 +104,7 @@ function setDropdownOpen(
             if (open === isOpen) {
                 return true;
             } else {
+                browser.waitForExist(button_selector, 3000);
                 browser.click(button_selector);
                 return false;
             }
