@@ -397,12 +397,29 @@ export function getGenericAssayTrackRuleSetParams(
     };
 }
 
-export function getGenesetHeatmapTrackRuleSetParams() {
+export function getGenesetHeatmapTrackRuleSetParams(
+    trackSpec: IGenesetHeatmapTrackSpec
+): RuleSetParams {
+    let maxValue = trackSpec.maxProfileValue! || 1;
+    let minValue = trackSpec.minProfileValue! || -1;
+
+    // calculate value range and value stop points
+    const largestValue = Math.ceil(
+        Math.max(Math.abs(maxValue), Math.abs(minValue))
+    );
+    const value_range = [-largestValue, largestValue];
+    const interval = (largestValue * 2) / 10;
+    const value_stop_points = _.map(
+        _.range(11),
+        (n: number) => -largestValue + n * interval
+    );
+
     return {
         type: RuleSetType.GRADIENT,
         legend_label: 'Gene Set Heatmap',
         value_key: 'profile_data',
-        value_range: [-1, 1] as [number, number],
+        value_range: value_range,
+        value_stop_points: value_stop_points,
         /*
          * The PiYG colormap is based on color specifications and designs
          * developed by Cynthia Brewer (http://colorbrewer.org).
@@ -422,19 +439,6 @@ export function getGenesetHeatmapTrackRuleSetParams() {
             [197, 27, 125, 1],
             [142, 1, 82, 1],
         ] as [number, number, number, number][],
-        value_stop_points: [
-            -1,
-            -0.8,
-            -0.6,
-            -0.4,
-            -0.2,
-            0,
-            0.2,
-            0.4,
-            0.6,
-            0.8,
-            1,
-        ],
         null_color: 'rgba(224,224,224,1)',
     } as IGradientRuleSetParams;
 }
