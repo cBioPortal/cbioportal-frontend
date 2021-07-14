@@ -61,6 +61,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - store_artifacts:
         path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
         destination: /customReport.json
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/junit/errors
+        destination: /errors
 
 version: 2
 jobs:
