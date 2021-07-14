@@ -194,9 +194,13 @@ describe('color chooser for groups menu in study view', function() {
     };
     const deleteAllGroups = () => {
         openGroupsMenu();
-        $('[data-test="deleteGroupButton"]').waitForExist();
-        for (const button of $$('[data-test="deleteGroupButton"]')) {
-            button.click();
+        try {
+            $('[data-test="deleteGroupButton"]').waitForExist();
+            for (const button of $$('[data-test="deleteGroupButton"]')) {
+                button.click();
+            }
+        } catch (e) {
+            // no groups to delete
         }
         closeGroupsMenu();
     };
