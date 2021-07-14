@@ -72,6 +72,7 @@ export type Column<T> = {
     defaultSortDirection?: SortDirection;
     togglable?: boolean;
     resizable?: boolean;
+    truncateOnResize?: boolean;
 };
 
 type LazyMobXTableProps<T> = {
@@ -550,9 +551,16 @@ export class LazyMobXTableStore<T> {
     @computed get tds(): JSX.Element[][] {
         return this.visibleData.map((datum: T) => {
             return this.visibleColumns.map((column: Column<T>) => {
-                const result = (
-                    <td key={column.name}>{column.render(datum)}</td>
-                );
+                const cellProps: any = {
+                    key: column.name,
+                };
+
+                if (column.resizable && column.truncateOnResize) {
+                    cellProps.className = 'lazyMobXTableTruncatedCell';
+                }
+
+                const result = <td {...cellProps}>{column.render(datum)}</td>;
+
                 if (column.resizable) {
                     return (
                         <React.Fragment>
