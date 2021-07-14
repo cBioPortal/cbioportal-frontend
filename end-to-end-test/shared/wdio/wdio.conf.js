@@ -9,7 +9,7 @@ const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 1;
+var defaultMaxInstances = 2;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -19,6 +19,8 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
 var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
+var errorDir =
+    (process.env.JUNIT_REPORT_PATH || './shared/results/') + 'errors/';
 
 console.log(`ENV SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
@@ -385,8 +387,22 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterTest: function(
+        test,
+        context,
+        { error, result, duration, passed, retries }
+    ) {
+        if (error) {
+            if (!fs.existsSync(errorDir)) {
+                fs.mkdirSync(errorDir, 0744);
+            }
+            git;
+            const title = test.title.replace(/\s/g, '_');
+            const img = `${errorDir}/${title}.png`;
+            console.log('ERROR SHOT PATH' + img);
+            browser.saveScreenshot(img);
+        }
+    },
 
     /**
      * Hook that gets executed after the suite has ended
