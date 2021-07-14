@@ -1,11 +1,5 @@
 import * as React from 'react';
-import {
-    autorun,
-    computed,
-    IReactionDisposer,
-    makeObservable,
-    observable,
-} from 'mobx';
+import { computed, makeObservable } from 'mobx';
 import {
     default as MutationTable,
     IMutationTableProps,
