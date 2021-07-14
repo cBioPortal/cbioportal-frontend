@@ -185,6 +185,7 @@ export default class GroupCheckbox extends React.Component<
         return (
             <div
                 key={group.uid}
+                data-test={group.name}
                 className={classnames(styles.groupRow, {
                     [styles.sharedGroup]: this.props.group.isSharedGroup,
                 })}
@@ -259,7 +260,10 @@ export default class GroupCheckbox extends React.Component<
                             </OverlayTrigger>
 
                             <DefaultTooltip overlay={'Delete Group'}>
-                                <span onClick={this.onDeleteClick}>
+                                <span
+                                    onClick={this.onDeleteClick}
+                                    data-test={'deleteGroupButton'}
+                                >
                                     <i
                                         className="fa fa-md fa-trash"
                                         style={{

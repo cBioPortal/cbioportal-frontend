@@ -31,9 +31,15 @@ describe('color chooser for groups menu in study view', function() {
     const gbGroupButton = '[data-test=groupSelectorButtonGB]';
     const oastGroupButton = '[data-test=groupSelectorButtonOAST]';
 
+    const gbGroupColorIcon = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIcon}`;
+    const gbGroupColorIconRect = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconRect}`;
+    const gbGroupColorIconEmpty = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconEmpty}`;
+    const gbGroupColorIconBlue = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconBlue}`;
+
     before(() => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
         waitForStudyView();
+        deleteAllGroups();
     });
 
     it('shows no icon color for new group', () => {
@@ -47,33 +53,33 @@ describe('color chooser for groups menu in study view', function() {
         $(finalizeGroupButton).click();
 
         // check color
-        $(colorIconRect).waitForExist();
-        const GroupGbColorIcon = $(colorIconRect);
+        $(gbGroupColorIconRect).waitForExist();
+        const GroupGbColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(GroupGbColorIcon.getAttribute('fill'), '#FFFFFF');
     });
 
     it('shows new color in icon when new color is selected', () => {
         // open color picker and select blue
-        setDropdownOpen(true, colorIcon, colorPickerBlue);
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         $(colorPickerBlue).click();
-        $(colorIconBlue).waitForExist();
+        $(gbGroupColorIconBlue).waitForExist();
         // check the color icon
-        const GroupGbColorIcon = $(colorIconRect);
+        const GroupGbColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(GroupGbColorIcon.getAttribute('fill'), '#2986e2');
     });
 
     it('selects no color after pressing same color', () => {
-        setDropdownOpen(true, colorIcon, colorPickerBlue);
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         // unselect blue and check the color icon
         $(colorPickerBlue).click();
-        $(colorIconEmpty).waitForExist();
-        const groupGBColorIcon = $(colorIconRect);
+        $(gbGroupColorIconEmpty).waitForExist();
+        const groupGBColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(groupGBColorIcon.getAttribute('fill'), '#FFFFFF');
     });
 
     it('warns of same color in groups selected for comparison', () => {
         // close the color picker and group menu
-        setDropdownOpen(false, colorIcon, colorPickerBlue);
+        setDropdownOpen(false, gbGroupColorIcon, colorPickerBlue);
         closeGroupsMenu();
 
         // unselect previous oncotree code and select another
@@ -87,10 +93,10 @@ describe('color chooser for groups menu in study view', function() {
 
         // select same color for both groups
         browser.waitUntil(() => $$(colorIcon).length === 2);
-        setDropdownOpen(true, colorIcon, colorPickerBlue);
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         $(colorPickerBlue).click();
         // close color picker 0 before going to next one
-        setDropdownOpen(false, colorIcon, colorPickerBlue);
+        setDropdownOpen(false, gbGroupColorIcon, colorPickerBlue);
         setDropdownOpen(true, $$(colorIcon)[1], colorPickerBlue);
         $(colorPickerBlue).click();
 
@@ -185,5 +191,13 @@ describe('color chooser for groups menu in study view', function() {
     };
     const closeGroupsMenu = () => {
         setDropdownOpen(false, groupsMenuButton, createNewGroupButton);
+    };
+    const deleteAllGroups = () => {
+        openGroupsMenu();
+        $('[data-test="deleteGroupButton"]').waitForExist();
+        for (const button of $$('[data-test="deleteGroupButton"]')) {
+            button.click();
+        }
+        closeGroupsMenu();
     };
 });
