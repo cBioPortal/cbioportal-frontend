@@ -87,6 +87,12 @@ export default class ResultsViewMutationTable extends MutationTable<
                     columnVisibilityControlsProps.columnVisibility
                 }
                 onColumnToggled={columnVisibilityControlsProps.onColumnToggled}
+                resetColumnVisibility={
+                    columnVisibilityControlsProps.resetColumnVisibility
+                }
+                showResetColumnsButton={
+                    columnVisibilityControlsProps.showResetColumnsButton
+                }
                 clinicalAttributes={
                     this.props.mutationsTabClinicalAttributes.result!
                 }
