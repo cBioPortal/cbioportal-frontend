@@ -4,9 +4,9 @@ import {
     fetchCivicGenes as fetchDefaultCivicGenes,
     fetchCivicVariants as fetchDefaultCivicVariants,
     getCivicGenes,
-    ICivicGene,
-    ICivicVariant,
-    ICivicVariantData,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
+    ICivicVariantSummary,
 } from 'cbioportal-utils';
 import { DiscreteCopyNumberData, Mutation } from 'cbioportal-ts-api-client';
 
@@ -15,9 +15,9 @@ import { concatMutationData } from './StoreUtils';
 export function getCivicCNAVariants(
     copyNumberData: DiscreteCopyNumberData[],
     geneSymbol: string,
-    civicVariants: ICivicVariant
-): { [name: string]: ICivicVariantData } {
-    let geneVariants: { [name: string]: ICivicVariantData } = {};
+    civicVariants: ICivicVariantIndex
+): { [name: string]: ICivicVariantSummary } {
+    let geneVariants: { [name: string]: ICivicVariantSummary } = {};
     if (copyNumberData[0].alteration === 2) {
         for (let alteration in civicVariants[geneSymbol]) {
             if (alteration === CivicAlterationType.AMPLIFICATION) {
@@ -54,7 +54,7 @@ export function fetchCivicGenes(
 }
 
 export function fetchCivicVariants(
-    civicGenes: ICivicGene,
+    civicGenes: ICivicGeneIndex,
     mutationData?: MobxPromise<Mutation[]>,
     uncalledMutationData?: MobxPromise<Mutation[]>
 ) {
@@ -68,7 +68,7 @@ export function fetchCivicVariants(
 
 export function fetchCnaCivicGenes(
     discreteCNAData: MobxPromise<DiscreteCopyNumberData[]>
-): Promise<ICivicGene> {
+): Promise<ICivicGeneIndex> {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         let entrezGeneSymbols: Set<number> = new Set([]);
 

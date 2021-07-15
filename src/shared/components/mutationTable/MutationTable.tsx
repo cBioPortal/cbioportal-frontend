@@ -52,8 +52,8 @@ import { IColumnVisibilityControlsProps } from '../columnVisibilityControls/Colu
 import {
     generateQueryVariantId,
     IOncoKbData,
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     RemoteData,
@@ -106,8 +106,8 @@ export interface IMutationTableProps {
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
-    civicGenes?: RemoteData<ICivicGene | undefined>;
-    civicVariants?: RemoteData<ICivicVariant | undefined>;
+    civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
+    civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];

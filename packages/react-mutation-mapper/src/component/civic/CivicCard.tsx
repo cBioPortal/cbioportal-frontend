@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { ICivicVariantData } from 'cbioportal-utils';
+import { ICivicVariantSummary } from 'cbioportal-utils';
 
 import civicTextLogo from '../../images/civic_text_logo.png';
 import './civicCard.scss';
@@ -10,7 +10,7 @@ export interface ICivicCardProps {
     geneName: string;
     geneDescription: string;
     geneUrl: string;
-    variants: { [name: string]: ICivicVariantData };
+    variants: { [name: string]: ICivicVariantSummary };
 }
 
 export default class CivicCard extends React.Component<ICivicCardProps, {}> {
@@ -19,7 +19,9 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
      * @param variantMap
      * @returns {JSX.Element[]}
      */
-    public generateVariants(variantMap: { [name: string]: ICivicVariantData }) {
+    public generateVariants(variantMap: {
+        [name: string]: ICivicVariantSummary;
+    }) {
         const list: JSX.Element[] = [];
 
         if (_.isEmpty(variantMap)) {
@@ -28,11 +30,11 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
             for (let name in variantMap) {
                 let variant = variantMap[name];
                 let entryTypes: string = '';
-                for (let evidenceType in variant.evidence) {
+                for (let evidenceType in variant.evidenceCounts) {
                     entryTypes +=
                         evidenceType.toLowerCase() +
                         ': ' +
-                        variant.evidence[evidenceType] +
+                        variant.evidenceCounts[evidenceType] +
                         ', ';
                 }
                 entryTypes = entryTypes.slice(0, -2) + '.';

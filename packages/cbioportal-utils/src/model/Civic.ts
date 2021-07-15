@@ -1,4 +1,4 @@
-export interface ICivicGeneData {
+export interface ICivicGeneSummary {
     id: number;
     name: string;
     description: string;
@@ -6,26 +6,27 @@ export interface ICivicGeneData {
     variants: { [variantName: string]: number };
 }
 
-export interface ICivicVariantData {
+export interface ICivicVariantSummary {
     id: number;
     name: string;
     geneId: number;
     description: string;
     url: string;
-    evidence: { [evidenceType: string]: number };
+    evidenceCounts: { [evidenceType: string]: number };
+    drugs: string[];
 }
 
-export interface ICivicGene {
-    [name: string]: ICivicGeneData;
+export interface ICivicGeneIndex {
+    [name: string]: ICivicGeneSummary;
 }
 
-export interface ICivicVariant {
-    [geneName: string]: { [variantName: string]: ICivicVariantData };
+export interface ICivicVariantIndex {
+    [geneName: string]: { [variantName: string]: ICivicVariantSummary };
 }
 
 export interface ICivicEntry {
     name: string;
     description: string;
     url: string;
-    variants: { [name: string]: ICivicVariantData };
+    variants: { [name: string]: ICivicVariantSummary };
 }

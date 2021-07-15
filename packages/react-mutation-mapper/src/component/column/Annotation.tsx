@@ -4,8 +4,8 @@ import {
     getMyCancerGenomeLinks,
     getRemoteDataGroupStatus,
     ICivicEntry,
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     IOncoKbData,
@@ -48,8 +48,8 @@ export type AnnotationProps = {
     resolveEntrezGeneId?: (mutation: Mutation) => number;
     resolveTumorType?: (mutation: Mutation) => string;
     myCancerGenomeData?: IMyCancerGenomeData;
-    civicGenes?: RemoteData<ICivicGene | undefined>;
-    civicVariants?: RemoteData<ICivicVariant | undefined>;
+    civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
+    civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     userEmailAddress?: string;
 };
 
@@ -110,8 +110,8 @@ export function getAnnotationData(
     myCancerGenomeData?: IMyCancerGenomeData,
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
     usingPublicOncoKbInstance?: boolean,
-    civicGenes?: RemoteData<ICivicGene | undefined>,
-    civicVariants?: RemoteData<ICivicVariant | undefined>,
+    civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
+    civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
     resolveTumorType: (mutation: Mutation) => string = getDefaultTumorType,
     resolveEntrezGeneId: (mutation: Mutation) => number = getDefaultEntrezGeneId
 ): IAnnotation {
