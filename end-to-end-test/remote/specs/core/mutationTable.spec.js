@@ -2,10 +2,11 @@ var executeInBrowser = require('../../../shared/specUtils').executeInBrowser;
 
 var assert = require('assert');
 var expect = require('chai').expect;
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
-var waitForNetworkQuiet = require('../../../shared/specUtils')
-    .waitForNetworkQuiet;
+var {
+    goToUrlAndSetLocalStorage,
+    waitForNetworkQuiet,
+    setCheckboxChecked,
+} = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
@@ -124,9 +125,11 @@ describe('Mutation Table', function() {
                 'document.getElementsByClassName("ReactVirtualized__Grid")[0].scroll(1000, 1000)'
             );
             // wait for gnomad checkbox appear
-            $('[data-id=gnomAD]').waitForDisplayed({ timeout: 60000 });
+            $('//label[div="gnomAD"]/input').waitForDisplayed({
+                timeout: 60000,
+            });
             // click "GNOMAD"
-            $('//*[text()="gnomAD"]').click();
+            setCheckboxChecked(true, '//label[div="gnomAD"]/input');
             // close columns menu
             $('button*=Columns').click();
             // find frequency
