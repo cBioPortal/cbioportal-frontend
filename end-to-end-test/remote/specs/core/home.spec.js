@@ -606,7 +606,7 @@ describe('auto-selecting needed profiles for oql in query form', () => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
-    it.only('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         $('.studyItem_nsclc_mskcc_2018').waitForExist({ timeout: 20000 });
         $('.studyItem_nsclc_mskcc_2018').click();
         clickQueryByGeneButton();
