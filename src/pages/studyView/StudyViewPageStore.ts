@@ -263,13 +263,15 @@ export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
     | StudyViewPageTabKeyEnum.SUMMARY
     | StudyViewPageTabKeyEnum.HEATMAPS
-    | StudyViewPageTabKeyEnum.CN_SEGMENTS;
+    | StudyViewPageTabKeyEnum.CN_SEGMENTS
+    | StudyViewPageTabKeyEnum.SANKEY_TREATMENT;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
     CLINICAL_DATA = 'Clinical Data',
     HEATMAPS = 'Heatmaps',
     CN_SEGMENTS = 'CN Segments',
+    SANKEY_TREATMENT = 'Treatment',
 }
 
 const DEFAULT_CHART_NAME = 'Custom Data';
@@ -4487,6 +4489,24 @@ export class StudyViewPageStore {
                             )
                         );
                     }
+                }
+                return []; // if not enabled or conditions not met, just return default answer
+            },
+        },
+        []
+    );
+
+    readonly SankeyTreatment = remoteData(
+        {
+            await: () => [this.queriedPhysicalStudyIds],
+            onError: () => {},
+            invoke: async () => {
+                if (
+                    AppConfig.serverConfig.show_treatment_sankey &&
+                    this.store.displaySampleTreatments &&
+                    this.store.displayPatientTreatments
+                ) {
+                    return []; // will fill in later with diagram
                 }
                 return []; // if not enabled or conditions not met, just return default answer
             },
