@@ -18,6 +18,7 @@ import {
     OncoKbCardDataType,
     calculateOncoKbAvailableDataType,
 } from 'cbioportal-utils';
+import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 
 export default class AnnotationColumnFormatter {
     public static getData(
@@ -202,6 +203,10 @@ export default class AnnotationColumnFormatter {
             civicSortValue(annotationData.civicEntry),
             annotationData.isOncoKbCancerGene ? 1 : 0,
         ]);
+    }
+
+    public static headerRender(name: string, width: number) {
+        return <AnnotationHeader name={name} width={width} />;
     }
 
     public static renderFunction(

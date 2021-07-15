@@ -26,6 +26,7 @@ import { IAnnotationColumnProps } from 'shared/components/mutationTable/column/A
 import { CancerGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
 import { getAlterationString } from 'shared/lib/CopyNumberUtils';
 import { getCivicCNAVariants } from 'shared/lib/CivicUtils';
+import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 
 /**
  * @author Selcuk Onur Sumer
@@ -291,5 +292,9 @@ export default class AnnotationColumnFormatter {
         );
 
         return <GenericAnnotation {...columnProps} annotation={annotation} />;
+    }
+
+    public static headerRender(name: string, width: number) {
+        return <AnnotationHeader name={name} width={width} />;
     }
 }

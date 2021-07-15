@@ -90,7 +90,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
             oncoKbContent = loaderIcon('pull-left');
         } else {
             oncoKbContent = (
-                <>
+                <span
+                    className="oncokb-content"
+                    style={{ display: 'inline-flex' }}
+                >
                     <AnnotationIcon
                         type={OncoKbCardDataType.BIOLOGICAL}
                         tooltipOverlay={this.tooltipContent(
@@ -121,7 +124,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                                 ))}
                             </>
                         )}
-                </>
+                </span>
             );
             if (!this.props.disableFeedback && this.showFeedback) {
                 oncoKbContent = (

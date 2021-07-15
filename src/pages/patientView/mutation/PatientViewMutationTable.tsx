@@ -20,6 +20,7 @@ import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/
 import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
+import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -265,6 +266,11 @@ export default class PatientViewMutationTable extends MutationTable<
                     />
                 </HeaderIconMenu>
             );
+        };
+        this._columns[MutationTableColumnType.ANNOTATION].headerRender = (
+            name: string
+        ) => {
+            return <AnnotationHeader name={name} width={this.oncokbWidth} />;
         };
 
         // order columns
