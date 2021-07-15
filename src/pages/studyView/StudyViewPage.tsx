@@ -607,6 +607,24 @@ export default class StudyViewPage extends React.Component<
                                         />
                                     </MSKTab>
                                     <MSKTab
+                                        key={2}
+                                        id={
+                                            StudyViewPageTabKeyEnum.SANKEY_TREATMENT
+                                        }
+                                        linkText={
+                                            StudyViewPageTabDescriptions.SANKEY_TREATMENT
+                                        }
+                                        hide={
+                                            this.store.SankeyTreatment.result
+                                                .length === 0
+                                        }
+                                    >
+                                        <div>
+                                            {' '}
+                                            <h3>Sankey Diagram goes here</h3>
+                                        </div>
+                                    </MSKTab>
+                                    <MSKTab
                                         key={3}
                                         id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
                                         linkText={
