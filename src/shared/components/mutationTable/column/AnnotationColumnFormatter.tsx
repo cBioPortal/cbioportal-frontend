@@ -10,8 +10,8 @@ import {
     oncoKbAnnotationDownload,
 } from 'react-mutation-mapper';
 import {
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     IOncoKbData,
@@ -36,8 +36,8 @@ export default class AnnotationColumnFormatter {
         myCancerGenomeData?: IMyCancerGenomeData,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
         usingPublicOncoKbInstance?: boolean,
-        civicGenes?: RemoteData<ICivicGene | undefined>,
-        civicVariants?: RemoteData<ICivicVariant | undefined>,
+        civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
+        civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
         resolveTumorType?: (mutation: Mutation) => string
     ): number[] {
         const annotationData: IAnnotation = getAnnotationData(
@@ -62,8 +62,8 @@ export default class AnnotationColumnFormatter {
         myCancerGenomeData?: IMyCancerGenomeData,
         oncoKbData?: RemoteData<IOncoKbData | Error | undefined>,
         usingPublicOncoKbInstance?: boolean,
-        civicGenes?: RemoteData<ICivicGene | undefined>,
-        civicVariants?: RemoteData<ICivicVariant | undefined>,
+        civicGenes?: RemoteData<ICivicGeneIndex | undefined>,
+        civicVariants?: RemoteData<ICivicVariantIndex | undefined>,
         resolveTumorType?: (mutation: Mutation) => string
     ) {
         const annotationData: IAnnotation = getAnnotationData(

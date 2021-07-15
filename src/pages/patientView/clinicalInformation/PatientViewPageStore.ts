@@ -159,8 +159,8 @@ import { getFilteredMolecularProfilesByAlterationType } from 'pages/studyView/St
 import {
     getMyCancerGenomeData,
     getMyVariantInfoAnnotationsFromIndexedVariantAnnotations,
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     IMyVariantInfoIndex,
@@ -1735,7 +1735,7 @@ export class PatientViewPageStore {
         ONCOKB_DEFAULT
     );
 
-    readonly civicGenes = remoteData<ICivicGene | undefined>(
+    readonly civicGenes = remoteData<ICivicGeneIndex | undefined>(
         {
             await: () => [
                 this.mutationData,
@@ -1756,7 +1756,7 @@ export class PatientViewPageStore {
         undefined
     );
 
-    readonly civicVariants = remoteData<ICivicVariant | undefined>(
+    readonly civicVariants = remoteData<ICivicVariantIndex | undefined>(
         {
             await: () => [
                 this.civicGenes,
@@ -1769,7 +1769,7 @@ export class PatientViewPageStore {
                     this.civicGenes.result
                 ) {
                     return fetchCivicVariants(
-                        this.civicGenes.result as ICivicGene,
+                        this.civicGenes.result as ICivicGeneIndex,
                         this.mutationData,
                         this.uncalledMutationData
                     );
@@ -1836,7 +1836,7 @@ export class PatientViewPageStore {
         ONCOKB_DEFAULT
     );
 
-    readonly cnaCivicGenes = remoteData<ICivicGene | undefined>(
+    readonly cnaCivicGenes = remoteData<ICivicGeneIndex | undefined>(
         {
             await: () => [this.discreteCNAData, this.clinicalDataForSamples],
             invoke: async () =>
@@ -1850,13 +1850,13 @@ export class PatientViewPageStore {
         undefined
     );
 
-    readonly cnaCivicVariants = remoteData<ICivicVariant | undefined>(
+    readonly cnaCivicVariants = remoteData<ICivicVariantIndex | undefined>(
         {
             await: () => [this.civicGenes, this.mutationData],
             invoke: async () => {
                 if (this.cnaCivicGenes.status == 'complete') {
                     return fetchCivicVariants(
-                        this.cnaCivicGenes.result as ICivicGene
+                        this.cnaCivicGenes.result as ICivicGeneIndex
                     );
                 }
             },

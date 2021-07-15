@@ -3,10 +3,10 @@ import * as _ from 'lodash';
 import CivicDataFetcher from './CivicDataFetcher';
 import {
     ICivicEntry,
-    ICivicGene,
-    ICivicGeneData,
-    ICivicVariant,
-    ICivicVariantData,
+    ICivicGeneIndex,
+    ICivicGeneSummary,
+    ICivicVariantIndex,
+    ICivicVariantSummary,
 } from '../model/Civic';
 import { Mutation } from '../model/Mutation';
 
@@ -28,15 +28,15 @@ export const CIVIC_NA_VALUE = 'NA';
  * Asynchronously adds the given variant from a gene to the variant map specified.
  */
 function lookupCivicVariantAndAddToMap(
-    variantMap: ICivicVariant,
+    variantMap: ICivicVariantIndex,
     variantId: number,
     variantName: string,
     geneSymbol: string,
     geneId: number
 ): Promise<void> {
     return civicClient
-        .getVariant(variantId, variantName, geneId)
-        .then((result: ICivicVariantData) => {
+        .getCivicVariantSummary(variantId, variantName, geneId)
+        .then((result: ICivicVariantSummary) => {
             if (result) {
                 if (!variantMap[geneSymbol]) {
                     variantMap[geneSymbol] = {};
@@ -49,9 +49,11 @@ function lookupCivicVariantAndAddToMap(
 /**
  * Asynchronously return a map with Civic information from the genes given.
  */
-export function getCivicGenes(entrezGeneIds: number[]): Promise<ICivicGene> {
+export function getCivicGenes(
+    entrezGeneIds: number[]
+): Promise<ICivicGeneIndex> {
     // Assemble a list of promises, each of which will retrieve a batch of genes
-    let promises: Array<Promise<Array<ICivicGeneData>>> = [];
+    let promises: Array<Promise<Array<ICivicGeneSummary>>> = [];
 
     // To prevent the request from growing too large, we send it off in multiple chunks
     const chunkedIds: number[][] = _.chunk(_.uniq(entrezGeneIds), 400);
@@ -61,11 +63,11 @@ export function getCivicGenes(entrezGeneIds: number[]): Promise<ICivicGene> {
     );
 
     // We're waiting for all promises to finish, then return civicGenes
-    return Promise.all(promises).then((responses: ICivicGeneData[][]) => {
+    return Promise.all(promises).then((responses: ICivicGeneSummary[][]) => {
         return responses.reduce(
             (
-                acc: { [name: string]: ICivicGeneData },
-                civicGenes: ICivicGeneData[]
+                acc: { [name: string]: ICivicGeneSummary },
+                civicGenes: ICivicGeneSummary[]
             ) => {
                 civicGenes.forEach(
                     civicGene => (acc[civicGene.name] = civicGene)
@@ -82,10 +84,10 @@ export function getCivicGenes(entrezGeneIds: number[]): Promise<ICivicGene> {
  * If no mutationSpecs are given, then return the Civic information of all the CNA variants of the genes in civicGenes.
  */
 export function getCivicVariants(
-    civicGenes: ICivicGene,
+    civicGenes: ICivicGeneIndex,
     mutationSpecs?: Array<MutationSpec>
-): Promise<ICivicVariant> {
-    let civicVariants: ICivicVariant = {};
+): Promise<ICivicVariantIndex> {
+    let civicVariants: ICivicVariantIndex = {};
     let promises: Array<Promise<void>> = [];
 
     if (mutationSpecs) {
@@ -153,8 +155,8 @@ export function getCivicVariants(
  * Build a Civic Entry with the data given.
  */
 export function buildCivicEntry(
-    geneEntry: ICivicGeneData,
-    geneVariants: { [name: string]: ICivicVariantData }
+    geneEntry: ICivicGeneSummary,
+    geneVariants: { [name: string]: ICivicVariantSummary }
 ) {
     return {
         name: geneEntry.name,
@@ -169,8 +171,8 @@ export function buildCivicEntry(
  */
 export function getCivicEntry(
     mutation: Mutation,
-    civicGenes: ICivicGene,
-    civicVariants: ICivicVariant
+    civicGenes: ICivicGeneIndex,
+    civicVariants: ICivicVariantIndex
 ): ICivicEntry | null {
     let geneSymbol: string = mutation.gene ? mutation.gene.hugoGeneSymbol : '';
     let civicEntry = null;
@@ -180,11 +182,11 @@ export function getCivicEntry(
         civicVariants[geneSymbol] &&
         civicVariants[geneSymbol][mutation.proteinChange]
     ) {
-        let geneVariants: { [name: string]: ICivicVariantData } = {
+        let geneVariants: { [name: string]: ICivicVariantSummary } = {
             [mutation.proteinChange]:
                 civicVariants[geneSymbol][mutation.proteinChange],
         };
-        let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
+        let geneEntry: ICivicGeneSummary = civicGenes[geneSymbol];
         civicEntry = buildCivicEntry(geneEntry, geneVariants);
     }
 
@@ -194,7 +196,7 @@ export function getCivicEntry(
 export function fetchCivicGenes(
     mutations: Partial<Mutation>[],
     getEntrezGeneId: (mutation: Partial<Mutation>) => number
-): Promise<ICivicGene> {
+): Promise<ICivicGeneIndex> {
     if (mutations.length === 0) {
         return Promise.resolve({});
     }
@@ -207,10 +209,10 @@ export function fetchCivicGenes(
 }
 
 export function fetchCivicVariants(
-    civicGenes: ICivicGene,
+    civicGenes: ICivicGeneIndex,
     mutations: Partial<Mutation>[]
-): Promise<ICivicVariant> {
-    let civicVariants: Promise<ICivicVariant>;
+): Promise<ICivicVariantIndex> {
+    let civicVariants: Promise<ICivicVariantIndex>;
 
     if (mutations.length > 0) {
         civicVariants = getCivicVariants(
