@@ -14,8 +14,8 @@ import {
     groupPtmDataByPosition,
     groupPtmDataByTypeAndPosition,
     indexHotspotsData,
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     IOncoKbData,
@@ -968,7 +968,7 @@ class DefaultMutationMapperStore<T extends Mutation>
         }
     }
 
-    readonly civicGenes: MobxPromise<ICivicGene | undefined> = remoteData({
+    readonly civicGenes: MobxPromise<ICivicGeneIndex | undefined> = remoteData({
         await: () => [this.mutationData],
         invoke: async () =>
             this.config.enableCivic
@@ -982,12 +982,12 @@ class DefaultMutationMapperStore<T extends Mutation>
         },
     });
 
-    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+    readonly civicVariants = remoteData<ICivicVariantIndex | undefined>({
         await: () => [this.civicGenes, this.mutationData],
         invoke: async () => {
             if (this.config.enableCivic && this.civicGenes.result) {
                 return fetchCivicVariants(
-                    this.civicGenes.result as ICivicGene,
+                    this.civicGenes.result as ICivicGeneIndex,
                     this.mutationData.result || []
                 );
             } else {

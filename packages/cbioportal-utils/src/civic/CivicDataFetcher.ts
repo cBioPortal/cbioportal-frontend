@@ -1,31 +1,57 @@
 import * as request from 'superagent';
+import _ from 'lodash';
 
-import { ICivicGeneData, ICivicVariantData } from '../model/Civic';
+import { ICivicGeneSummary, ICivicVariantSummary } from '../model/Civic';
 
 type CivicAPIGene = {
     id: number;
     name: string;
     description: string;
     variants: Array<CivicAPIGeneVariant>;
-    [propName: string]: any;
 };
 
 type CivicAPIGeneVariant = {
     name: string;
     id: number;
-    [propName: string]: any;
+    evidence_items: Evidence[];
+    assertions: Assertion[];
 };
 
 type Evidence = {
     evidence_type: string;
-    [propName: string]: any;
+};
+
+type Assertion = {
+    id: number;
+    name: string;
+    type: string;
+    evidence_type: string;
+    clinical_significance: string;
+    evidence_item_count: number;
+    fda_regulatory_approval: boolean;
+    drugs: Drug[];
+    disease: Disease;
+};
+
+type Disease = {
+    id: number;
+    name: string;
+    display_name: string;
+    url: string;
+};
+
+type Drug = {
+    id: number;
+    name: string;
+    ncit_id: string;
+    aliases: string[];
 };
 
 /**
  * Returns a map with the different types of evidence and the number of times that each evidence happens.
  */
 function countEvidenceTypes(
-    evidenceItems: Array<Evidence>
+    evidenceItems: Evidence[]
 ): { [evidenceType: string]: number } {
     let evidence: { [evidenceType: string]: number } = {};
     evidenceItems.forEach(function(evidenceItem: Evidence) {
@@ -39,11 +65,19 @@ function countEvidenceTypes(
     return evidence;
 }
 
+function getUniqueDrugs(assertions: Assertion[]): string[] {
+    return _.uniq(
+        _.flatten(
+            assertions.map(assertion => assertion.drugs.map(drug => drug.name))
+        )
+    );
+}
+
 /**
  * Returns a map with the different variant names and their variant id.
  */
 function createVariantMap(
-    variantArray: Array<CivicAPIGeneVariant>
+    variantArray: CivicAPIGeneVariant[]
 ): { [variantName: string]: number } {
     let variantMap: { [variantName: string]: number } = {};
     if (variantArray && variantArray.length > 0) {
@@ -61,18 +95,14 @@ export class CivicAPI {
     /**
      * Retrieves the gene entries for the ids given, if they are in the Civic API.
      */
-    getCivicGenesBatch(ids: string): Promise<Array<ICivicGeneData>> {
+    getCivicGenesBatch(ids: string): Promise<ICivicGeneSummary[]> {
         return request
             .get('https://civicdb.org/api/genes/' + ids)
             .query({ identifier_type: 'entrez_id' })
             .then(res => {
-                let response = res.body;
-                let result: Array<CivicAPIGene>;
-                if (response instanceof Array) {
-                    result = response;
-                } else {
-                    result = [response];
-                }
+                const response = res.body;
+                const result: CivicAPIGene[] =
+                    response instanceof Array ? response : [response];
                 return result.map((record: CivicAPIGene) => ({
                     id: record.id,
                     name: record.name,
@@ -89,11 +119,11 @@ export class CivicAPI {
     /**
      * Returns a promise that resolves with the variants for the parameters given.
      */
-    getVariant(
+    getCivicVariantSummary(
         id: number,
         name: string,
         geneId: number
-    ): Promise<ICivicVariantData> {
+    ): Promise<ICivicVariantSummary> {
         return request
             .get('https://civicdb.org/api/variants/' + id)
             .then(res => {
@@ -109,7 +139,8 @@ export class CivicAPI {
                         '/summary/variants/' +
                         id +
                         '/summary#variant',
-                    evidence: countEvidenceTypes(result.evidence_items),
+                    evidenceCounts: countEvidenceTypes(result.evidence_items),
+                    drugs: getUniqueDrugs(result.assertions),
                 };
             });
     }
