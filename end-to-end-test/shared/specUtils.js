@@ -442,7 +442,7 @@ function postDataToUrl(url, data, authenticated = true) {
     if (needToLogin) keycloakLogin();
 }
 
-function keycloakLogin(timeout) {
+function keycloakLogin(timeout = 10000) {
     browser.waitUntil(
         () => browser.getUrl().includes('/auth/realms/cbio'),
         timeout,
@@ -458,26 +458,22 @@ function keycloakLogin(timeout) {
     $('body').waitForVisible(timeout);
 }
 
-function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
-    goToUrlAndSetLocalStorage(studyViewUrl, true);
+function openGroupComparison(
+    studyViewUrl,
+    chartDataTest,
+    authenticated = false,
+    timeout
+) {
+    // goto hamburger menu for chart
+    goToUrlAndSetLocalStorage(studyViewUrl, authenticated);
     $('[data-test=summary-tab-content]').waitForVisible();
     waitForNetworkQuiet();
-    const chart = '[data-test=' + chartDataTest + ']';
-    browser.waitForVisible(chart, timeout || 10000);
-    browser.moveToObject(chart);
-    browser.waitUntil(() => {
-        return browser.isExisting(chart + ' .controls');
-    }, timeout || 10000);
-
-    // move to hamburger icon
-    const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
-    browser.moveToObject(hamburgerIcon);
-
-    // wait for the menu available
-    browser.waitForVisible(hamburgerIcon, timeout || 10000);
+    studyViewChartHoverHamburgerIcon(chartDataTest, timeout);
 
     // open comparison session
     const studyViewTabId = browser.getCurrentTabId();
+    const chart = '[data-test=' + chartDataTest + ']';
+    const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
     $(chart)
         .$(hamburgerIcon)
         .$$('li')[1]
@@ -489,8 +485,38 @@ function openGroupComparison(studyViewUrl, chartDataTest, timeout) {
     waitForGroupComparisonTabOpen();
 }
 
+function studyViewChartHoverHamburgerIcon(chartDataTest, timeout) {
+    const chart = '[data-test=' + chartDataTest + ']';
+    console.log('Opening chart ' + chartDataTest);
+    browser.waitForVisible(chart, timeout || 10000);
+    browser.moveToObject(chart);
+    console.log('    Wait for controls');
+    browser.waitUntil(() => {
+        return browser.isExisting(chart + ' .controls');
+    }, timeout || 10000);
+
+    // move to hamburger icon when present in chart
+    const hamburgerIcon = '[data-test=chart-header-hamburger-icon]';
+    console.log('');
+    if ($(hamburgerIcon).isVisible()) {
+        browser.moveToObject(hamburgerIcon);
+        // wait for the menu available
+        console.log('    Wait for hamburger menu open');
+        browser.waitForVisible(hamburgerIcon + ' li', timeout || 10000);
+    } else {
+        console.log('    Skip opening of hamburger menu');
+    }
+}
+
 function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
+}
+
+function setServerConfiguration(serverConfig) {
+    browser.localStorage('POST', {
+        key: 'frontendConfig',
+        value: JSON.stringify({ serverConfig: serverConfig }),
+    });
 }
 
 module.exports = {
@@ -539,4 +565,6 @@ module.exports = {
     getPortalUrlFromEnv: getPortalUrlFromEnv,
     openGroupComparison: openGroupComparison,
     selectElementByText: selectElementByText,
+    studyViewChartHoverHamburgerIcon: studyViewChartHoverHamburgerIcon,
+    setServerConfiguration: setServerConfiguration,
 };

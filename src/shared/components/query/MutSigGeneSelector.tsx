@@ -18,6 +18,8 @@ import { IColumnFormatterData } from '../enhancedReactTable/IColumnFormatter';
 import { IColumnDefMap } from '../enhancedReactTable/IEnhancedReactTableProps';
 import { Td } from 'reactable';
 import { toPrecision } from '../../lib/FormatUtils';
+import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 class MutSigTable extends EnhancedReactTable<MutSig> {}
 
@@ -155,7 +157,7 @@ export default class MutSigGeneSelector extends React.Component<
                     columns={this.columns}
                     rawData={this.props.data}
                     headerControlsProps={{
-                        showCopyAndDownload: false,
+                        showCopyAndDownload: shouldShowDownloadAndCopyControls(),
                         showHideShowColumnButton: false,
                         showPagination: true,
                     }}

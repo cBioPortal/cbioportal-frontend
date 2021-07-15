@@ -20,6 +20,7 @@ import { getPatientIdentifiers } from '../studyView/StudyViewUtils';
 import OverlapExclusionIndicator from './OverlapExclusionIndicator';
 import OverlapUpset from './OverlapUpset';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import AppConfig from 'appConfig';
 
 export interface IOverlapProps {
     store: ComparisonStore;
@@ -378,17 +379,20 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
                 data-test="ComparisonPageOverlapTabContent"
                 className="borderedChart posRelative"
             >
-                {this.plotExists && (
-                    <DownloadControls
-                        getSvg={this.getSvg}
-                        getData={this.props.store.getGroupsDownloadDataPromise}
-                        buttons={['SVG', 'PNG', 'PDF', 'Data']}
-                        filename={'overlap'}
-                        dontFade={true}
-                        style={{ position: 'absolute', right: 10, top: 10 }}
-                        type="button"
-                    />
-                )}
+                {this.plotExists &&
+                    !AppConfig.serverConfig.skin_hide_download_controls && (
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            getData={
+                                this.props.store.getGroupsDownloadDataPromise
+                            }
+                            buttons={['SVG', 'PNG', 'PDF', 'Data']}
+                            filename={'overlap'}
+                            dontFade={true}
+                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            type="button"
+                        />
+                    )}
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                     {this.plot.component}
                 </div>

@@ -1,6 +1,8 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
+import AppConfig from 'appConfig';
+import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
 
 export interface ISurvivalDescription {
     studyName: string;
@@ -48,7 +50,7 @@ export default class SurvivalDescriptionTable extends React.Component<
                 initialItemsPerPage={10}
                 showColumnVisibility={false}
                 showFilter={false}
-                showCopyDownload={false}
+                showCopyDownload={shouldShowDownloadAndCopyControls()}
             />
         );
     }

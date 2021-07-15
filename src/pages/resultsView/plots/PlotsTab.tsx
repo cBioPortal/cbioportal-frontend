@@ -122,6 +122,7 @@ import {
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 import ScrollWrapper from '../cancerSummary/ScrollWrapper';
+import AppConfig from 'appConfig';
 
 enum EventKey {
     horz_logScale,
@@ -5142,7 +5143,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                             )}
                             <Observer>
                                 {() => {
-                                    if (this.plotExists) {
+                                    if (
+                                        this.plotExists &&
+                                        !AppConfig.serverConfig
+                                            .skin_hide_download_controls
+                                    ) {
                                         return (
                                             <DownloadControls
                                                 getSvg={this.getSvg}
