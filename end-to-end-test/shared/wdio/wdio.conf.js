@@ -396,7 +396,6 @@ exports.config = {
             if (!fs.existsSync(errorDir)) {
                 fs.mkdirSync(errorDir, 0744);
             }
-            git;
             const title = test.title.replace(/\s/g, '_');
             const img = `${errorDir}/${title}.png`;
             console.log('ERROR SHOT PATH' + img);
