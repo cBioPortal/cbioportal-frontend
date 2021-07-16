@@ -54,7 +54,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         );
         assertScreenShotMatch(res);
     });
-    it('pvge hover a mutation with line chart', function() {
+    it.skip('pvge hover a mutation with line chart', function() {
         jsApiHover(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
