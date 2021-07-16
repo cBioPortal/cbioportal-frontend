@@ -40,7 +40,7 @@ describe('results view comparison tab screenshot tests', function() {
             });
         });
         it('results view comparison tab overlap tab upset plot view', function() {
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageOverlapTabDiv"]',
                 '',
@@ -57,7 +57,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]'
             ).waitForDisplayed({ timeout: 60000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]',
                 '',
@@ -73,7 +73,7 @@ describe('results view comparison tab screenshot tests', function() {
             $('div[data-test="ComparisonPageSurvivalTabDiv"]').waitForExist({
                 timeout: 60000,
             });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageSurvivalTabDiv"]',
                 '',
@@ -96,7 +96,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="LazyMobXTable"] span[data-test="Mutation Count"]'
             ).click();
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -112,7 +112,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -128,7 +128,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -144,7 +144,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -158,7 +158,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -172,7 +172,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -185,13 +185,13 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] input[data-test="SwapAxes"]'
             ).click();
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
-            var res = browser.checkElement(
+            var res = checkElementWithMouseDisabled(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
-                '',
+                0,
                 { hide: ['.qtip'] }
             );
             assertScreenShotMatch(res);
@@ -207,7 +207,7 @@ describe('results view comparison tab screenshot tests', function() {
             $(
                 'div[data-test="ComparisonPageClinicalTabDiv"] div[data-test="ClinicalTabPlotDiv"]'
             ).waitForDisplayed({ timeout: 20000 });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 'div[data-test="ComparisonPageClinicalTabDiv"]',
                 '',
@@ -268,7 +268,7 @@ describe('results view comparison tab screenshot tests', function() {
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
                 timeout: 20000,
             });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -286,7 +286,7 @@ describe('results view comparison tab screenshot tests', function() {
             ).waitForDisplayed({ timeout: 30000 });
             $('b=MERTK').waitForDisplayed({ timeout: 10000 });
             $('b=MERTK').click();
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -309,7 +309,7 @@ describe('results view comparison tab screenshot tests', function() {
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
                 timeout: 20000,
             });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -329,7 +329,7 @@ describe('results view comparison tab screenshot tests', function() {
             ).waitForDisplayed({ timeout: 10000 });
             $('b=FASN').waitForDisplayed({ timeout: 10000 });
             $('b=FASN').click();
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -352,7 +352,7 @@ describe('results view comparison tab screenshot tests', function() {
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
                 timeout: 20000,
             });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -372,7 +372,7 @@ describe('results view comparison tab screenshot tests', function() {
             ).waitForDisplayed({ timeout: 20000 });
             $('b=RER1').waitForDisplayed({ timeout: 10000 });
             $('b=RER1').click();
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -395,7 +395,7 @@ describe('results view comparison tab screenshot tests', function() {
             $('div[data-test="MiniBoxPlot"]').waitForDisplayed({
                 timeout: 20000,
             });
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
@@ -415,7 +415,7 @@ describe('results view comparison tab screenshot tests', function() {
             ).waitForDisplayed({ timeout: 10000 });
             $('b=Wolbachia').waitForDisplayed({ timeout: 10000 });
             $('b=Wolbachia').click();
-            $('body').moveTo(0, 0);
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
             var res = browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',

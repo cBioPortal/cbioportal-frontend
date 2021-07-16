@@ -90,6 +90,7 @@ describe('Results Page', function() {
 
             it('shows an alert message on tabs for missing genes', function() {
                 $('=CDKN2A').click();
+                $('body').moveTo({ xOffset: 0, yOffset: 0 });
                 var res = browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',

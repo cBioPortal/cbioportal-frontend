@@ -34,13 +34,13 @@ describe('coexpression tab screenshot tests', function() {
         $(
             'div[data-test="coExpressionTabDiv"] input[data-test="logScale"]'
         ).click();
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub log scale x and y with regression line', function() {
         $('input[data-test="ShowRegressionLine"]').click();
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
@@ -49,13 +49,13 @@ describe('coexpression tab screenshot tests', function() {
         $(
             'div[data-test="coExpressionTabDiv"] input[data-test="ShowMutations"]'
         ).click();
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch tabs', function() {
         $('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a').click(); // click on NRAS
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         browser.pause(100); // give time to start loading
         $('div[data-test="CoExpressionPlot"]').waitForExist({
             timeout: COEXPRESSION_TIMEOUT,

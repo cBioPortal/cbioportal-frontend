@@ -20,7 +20,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(patientViewUrl);
         $('a.tabAnchor_lineChart').waitForDisplayed({ timeout: 10000 });
         $('a.tabAnchor_lineChart').click();
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
         $('[data-test=VAFChartWrapper]').waitForDisplayed({ timeout: 5000 });
         waitForNetworkQuiet(10000);
     });
