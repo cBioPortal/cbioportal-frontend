@@ -268,46 +268,13 @@ describe('Mutation Mapper Tool', function() {
         // based on HLA-A user question
         // https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cbioportal/UQP41OIT5HI/1AaX24AcAwAJ
         it.skip('should not show the canonical transcript when there are no matching annotations', () => {
-            var input = $('#standaloneMutationTextInput');
-
-            input.setValue(exampleMaf);
-
-            browser.debug();
-            $('[data-test=MutationMapperToolVisualizeButton]').click();
-
-            $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
-
-            // check total number of mutations (this gets Showing 1-14 of 14
-            // Mutations)
-            assert.ok(
-                $('.//*[text()[contains(.,"14 Mutations")]]').isExisting()
-            );
-        });
-
-        it.skip('should not show the canonical transcript when there are no matching annotations', () => {
             const input = $('#standaloneMutationTextInput');
-
-            //const hla = fs.readFileSync('./data/hla_a_test_mutation_mapper_tool.txt', 'utf8');
-
-            const fs = require('fs');
-            const path = require('path');
-
-            const hla = fs.readFileSync(
-                path.resolve(
-                    __dirname,
-                    './data/hla_a_test_mutation_mapper_tool.txt'
-                ),
-                'utf8'
-            );
-
-            //
+            const hla = require('./data/hla_a_test_mutation_mapper_tool.txt');
 
             input.setValue(hla);
             $('[data-test=MutationMapperToolVisualizeButton]').click();
 
-            $('[class=borderedChart]').waitForDisplayed({
-                timeout: 20000,
-            });
+            $('[class=borderedChart]').waitForDisplayed({ timeout: 20000 });
 
             // the canonical transcript id for HLA-A is ENST00000376809, but
             // these mutations apply to ENST00000376802
