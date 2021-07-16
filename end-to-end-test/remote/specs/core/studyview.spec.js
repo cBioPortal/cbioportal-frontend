@@ -255,16 +255,16 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
         $('#studyViewTabs a.tabAnchor_heatmaps').click();
         assert(!$(ADD_CHART_BUTTON).isExisting());
     });
-    it('should hide add chart button on cn segments tab', () => {
+    it('should hide add chart button on clinical data tab', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
-        $('#studyViewTabs a.tabAnchor_cnSegments').waitForDisplayed({
+        $('#studyViewTabs a.tabAnchor_clinicalData').waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $('#studyViewTabs a.tabAnchor_cnSegments').click();
-        $("[data-test='clinical-data-tab-content']").waitForDisplayed();
+        $('#studyViewTabs a.tabAnchor_clinicalData').click();
 
         // unfortunately we just re-use button for columns instead of changing component
+        // so only way to test identity of button is to look at its contents
         assert.equal(getTextFromElement(ADD_CHART_BUTTON), 'Columns ▾');
     });
 });
