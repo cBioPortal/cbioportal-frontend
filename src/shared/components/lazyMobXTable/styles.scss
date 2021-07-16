@@ -35,3 +35,10 @@ th.sort-asc:after {
     border-left: #ccc 1px solid;
     padding: 0 !important;
 }
+
+.lazyMobXTableTruncatedCell {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

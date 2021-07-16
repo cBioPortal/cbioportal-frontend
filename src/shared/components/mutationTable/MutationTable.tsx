@@ -334,6 +334,8 @@ export default class MutationTable<
             },
             tooltip: <span>Study of Origin</span>,
             visible: false,
+            resizable: true,
+            truncateOnResize: true,
         };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
@@ -351,6 +353,8 @@ export default class MutationTable<
                 filterStringUpper: string
             ) => defaultFilter(d, 'sampleId', filterStringUpper),
             visible: true,
+            resizable: true,
+            truncateOnResize: true,
         };
 
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
@@ -935,6 +939,8 @@ export default class MutationTable<
                     this.props.uniqueSampleKeyToTumorType
                 ),
             tooltip: <span>Cancer Type Detailed</span>,
+            resizable: true,
+            truncateOnResize: true,
         };
 
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {

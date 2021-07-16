@@ -2,10 +2,10 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
 import {
+    DefaultTooltip,
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
-import { TruncatedText } from 'cbioportal-frontend-commons';
 
 export default class CancerTypeColumnFormatter {
     public static getData(
@@ -98,11 +98,12 @@ export default class CancerTypeColumnFormatter {
 
         if (data) {
             return (
-                <TruncatedText
-                    maxLength={30}
-                    text={data || ''}
-                    tooltip={<div style={{ maxWidth: 300 }}>{data}</div>}
-                />
+                <DefaultTooltip
+                    overlay={() => <div style={{ maxWidth: 300 }}>{data}</div>}
+                    placement="topLeft"
+                >
+                    <span>{data || ''}</span>
+                </DefaultTooltip>
             );
         } else {
             return (
