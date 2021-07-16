@@ -504,7 +504,7 @@ describe('study view lgg_tcga study tests', () => {
 
             it('table should be sorted by Freq in the default setting', () => {
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
-                $('body').moveTo(0, 0);
+                $('body').moveTo({ xOffset: 0, yOffset: 0 });
                 // Remove and add the table back to reset the table to prevent any side effects created in other tests
                 $(ADD_CHART_BUTTON).click();
                 $(ADD_CHART_CLINICAL_TAB).waitForDisplayed({
@@ -568,7 +568,7 @@ describe('check the simple filter(filterAttributeId, filterValues) is working pr
         const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE_TEST&filterValues=OAST`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
-        $('body').moveTo(0, 0);
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
 
         const res = checkElementWithMouseDisabled(
             "[data-test='study-view-header']"
