@@ -1,8 +1,11 @@
 import { assert } from 'chai';
 import * as _ from 'lodash';
 
+import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+
 import { Mutation } from '../model/Mutation';
 import {
+    annotateMutation,
     annotateMutations,
     indexAnnotationsByGenomicLocation,
     resolveMissingProteinPositions,
@@ -2207,6 +2210,37 @@ describe('MutationAnnotator', () => {
                 variantAllele: 'A',
             },
         ];
+    });
+
+    describe('annotateMutation', () => {
+        it('should handle failed annotations properly', () => {
+            const mutation: Partial<Mutation> = {
+                chromosome: '6',
+                startPosition: 29910348,
+                endPosition: 29910352,
+                referenceAllele: 'CCGAA',
+                variantAllele: 'C',
+            };
+
+            const indexedVariantAnnotations = {
+                '6,29910348,29910352,CCGAA,C': {
+                    originalVariantQuery: '6,29910348,29910352,CCGAA,C',
+                    successfully_annotated: false,
+                    variant: '6:g.29910349_29910352del',
+                } as VariantAnnotation,
+            };
+
+            const annotatedMutation = annotateMutation(
+                mutation,
+                indexedVariantAnnotations
+            );
+
+            assert.equal(
+                annotatedMutation.proteinChange,
+                '',
+                'protein change value should be empty due to annotation failure'
+            );
+        });
     });
 
     describe('annotateMutations', () => {

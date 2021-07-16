@@ -4,7 +4,7 @@ import {
     MolecularProfile,
     Mutation,
 } from 'cbioportal-ts-api-client';
-import { TruncatedText } from 'cbioportal-frontend-commons';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { getStudySummaryUrl } from '../../../api/urls';
 
 export default class StudyColumnFormatter {
@@ -41,20 +41,21 @@ export default class StudyColumnFormatter {
             return <span />;
         } else {
             return (
-                <a href={getStudySummaryUrl(study.studyId)} target="_blank">
-                    <TruncatedText
-                        text={study.name}
-                        tooltip={
-                            <div
-                                style={{ maxWidth: 300 }}
-                                dangerouslySetInnerHTML={{
-                                    __html: `${study.name}: ${study.description}`,
-                                }}
-                            />
-                        }
-                        maxLength={16}
-                    />
-                </a>
+                <DefaultTooltip
+                    overlay={() => (
+                        <div
+                            style={{ maxWidth: 300 }}
+                            dangerouslySetInnerHTML={{
+                                __html: `${study.name}: ${study.description}`,
+                            }}
+                        />
+                    )}
+                    placement="topLeft"
+                >
+                    <a href={getStudySummaryUrl(study.studyId)} target="_blank">
+                        {study.name}
+                    </a>
+                </DefaultTooltip>
             );
         }
     }
