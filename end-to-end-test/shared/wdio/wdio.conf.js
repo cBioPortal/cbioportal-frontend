@@ -153,10 +153,7 @@ exports.config = {
             //
             browserName: 'chrome',
             'goog:chromeOptions': {
-                args: [
-                    '--disable-composited-antialiasing',
-                    '--allow-insecure-localhost',
-                ],
+                args: chromeArgs,
             },
             acceptInsecureCerts: true,
             acceptSslCerts: true,
