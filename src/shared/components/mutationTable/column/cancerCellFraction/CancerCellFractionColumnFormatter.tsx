@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
+import { MutationTableColumnType } from '../../MutationTable';
 import CancerCellFractionElement from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
 import {
     getClonalValue,
@@ -12,7 +13,7 @@ import {
  * @author Avery Wang
  */
 
-function getCancerCellFractionValue(mutation: Mutation): string {
+export function getCancerCellFractionValue(mutation: Mutation): string {
     return hasASCNProperty(mutation, 'ccfExpectedCopies')
         ? mutation.alleleSpecificCopyNumber.ccfExpectedCopies.toFixed(2)
         : '';
@@ -23,7 +24,7 @@ export const getDefaultCancerCellFractionColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'CCF',
+        name: MutationTableColumnType.CANCER_CELL_FRACTION,
         tooltip: <span>Cancer Cell Fraction</span>,
         render: (d: Mutation[]) =>
             CancerCellFractionColumnFormatter.renderFunction(

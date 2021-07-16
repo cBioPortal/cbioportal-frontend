@@ -130,54 +130,58 @@ export interface IMutationTableProps {
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     sampleIdToClinicalDataMap?: MobxPromise<{ [x: string]: ClinicalData[] }>;
+    columnToHeaderFilterIconModal?: (
+        column: Column<Mutation[]>
+    ) => JSX.Element | undefined;
+    deactivateColumnFilter?: (columnId: string) => void;
 }
 import MobxPromise from 'mobxpromise';
 import AppConfig from 'appConfig';
 
 export enum MutationTableColumnType {
-    STUDY,
-    SAMPLE_ID,
-    SAMPLES,
-    GENE,
-    PROTEIN_CHANGE,
-    CHROMOSOME,
-    START_POS,
-    END_POS,
-    REF_ALLELE,
-    VAR_ALLELE,
-    MUTATION_STATUS,
-    VALIDATION_STATUS,
-    MUTATION_TYPE,
-    VARIANT_TYPE,
-    CLONAL,
-    CANCER_CELL_FRACTION,
-    EXPECTED_ALT_COPIES,
-    CENTER,
-    TUMOR_ALLELE_FREQ,
-    NORMAL_ALLELE_FREQ,
-    FUNCTIONAL_IMPACT,
-    ANNOTATION,
-    HGVSG,
-    COSMIC,
-    COPY_NUM,
-    ASCN_COPY_NUM,
-    ASCN_METHOD,
-    MRNA_EXPR,
-    COHORT,
-    REF_READS_N,
-    VAR_READS_N,
-    REF_READS,
-    VAR_READS,
-    CANCER_TYPE_DETAILED,
-    NUM_MUTATIONS,
-    EXON,
-    HGVSC,
-    GNOMAD,
-    CLINVAR,
-    SELECTED,
-    DBSNP,
-    GENE_PANEL,
-    SIGNAL,
+    STUDY = 'Study of Origin',
+    SAMPLE_ID = 'Sample ID',
+    SAMPLES = 'Samples',
+    GENE = 'Gene',
+    PROTEIN_CHANGE = 'Protein Change',
+    CHROMOSOME = 'Chromosome',
+    START_POS = 'Start Pos',
+    END_POS = 'End Pos',
+    REF_ALLELE = 'Ref',
+    VAR_ALLELE = 'Var',
+    MUTATION_STATUS = 'MS',
+    VALIDATION_STATUS = 'VS',
+    MUTATION_TYPE = 'Mutation Type',
+    VARIANT_TYPE = 'Variant Type',
+    CLONAL = 'Clonality',
+    CANCER_CELL_FRACTION = 'CCF',
+    EXPECTED_ALT_COPIES = 'Mutant Integer Copy #',
+    CENTER = 'Center',
+    TUMOR_ALLELE_FREQ = 'Allele Freq (T)',
+    NORMAL_ALLELE_FREQ = 'Allele Freq (N)',
+    FUNCTIONAL_IMPACT = 'Functional Impact',
+    ANNOTATION = 'Annotation',
+    HGVSG = 'HGVSg',
+    COSMIC = 'COSMIC',
+    COPY_NUM = 'Copy #',
+    ASCN_COPY_NUM = 'Total Integer Copy #',
+    ASCN_METHOD = 'ASCN Method',
+    MRNA_EXPR = 'mRNA Expr.',
+    COHORT = 'Cohort',
+    REF_READS_N = 'Ref Reads (Normal)',
+    VAR_READS_N = 'Variant Reads (Normal)',
+    REF_READS = 'Ref Reads',
+    VAR_READS = 'Variant Reads',
+    CANCER_TYPE_DETAILED = 'Cancer Type Detailed',
+    NUM_MUTATIONS = '# Mut in Sample',
+    EXON = 'Exon',
+    HGVSC = 'HGVSc',
+    GNOMAD = 'gnomAD',
+    CLINVAR = 'ClinVar',
+    SELECTED = 'Selected',
+    DBSNP = 'dbSNP',
+    GENE_PANEL = 'Gene panel',
+    SIGNAL = 'SIGNAL',
 }
 type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
@@ -301,7 +305,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.STUDY] = {
             id: 'CANCER_STUDY',
-            name: 'Study of Origin',
+            name: MutationTableColumnType.STUDY,
             render: (d: Mutation[]) =>
                 StudyColumnFormatter.renderFunction(
                     d,
@@ -339,7 +343,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
-            name: 'Sample ID',
+            name: MutationTableColumnType.SAMPLE_ID,
             render: (d: Mutation[]) =>
                 SampleColumnFormatter.renderFunction(
                     d,
@@ -358,7 +362,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
-            name: 'Allele Freq (T)',
+            name: MutationTableColumnType.TUMOR_ALLELE_FREQ,
             render: TumorAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => (
                 <span style={{ display: 'inline-block', maxWidth: 55 }}>
@@ -372,7 +376,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
-            name: 'Allele Freq (N)',
+            name: MutationTableColumnType.NORMAL_ALLELE_FREQ,
             render: NormalAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => (
                 <span style={{ display: 'inline-block', maxWidth: 55 }}>
@@ -386,7 +390,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.MRNA_EXPR] = {
-            name: 'mRNA Expr.',
+            name: MutationTableColumnType.MRNA_EXPR,
             render: (d: Mutation[]) =>
                 this.props.mrnaExprRankCache ? (
                     MrnaExprColumnFormatter.renderFunction(
@@ -399,7 +403,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.COHORT] = {
-            name: 'Cohort',
+            name: MutationTableColumnType.COHORT,
             render: (d: Mutation[]) =>
                 this.props.variantCountCache ? (
                     CohortColumnFormatter.renderFunction(
@@ -426,7 +430,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.COPY_NUM] = {
-            name: 'Copy #',
+            name: MutationTableColumnType.COPY_NUM,
             render: (d: Mutation[]) => {
                 if (
                     this.props.discreteCNACache &&
@@ -498,7 +502,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
-            name: 'Ref Reads (Normal)',
+            name: MutationTableColumnType.REF_READS_N,
             render: (d: Mutation[]) =>
                 AlleleCountColumnFormatter.renderFunction(
                     d,
@@ -517,7 +521,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.VAR_READS_N] = {
-            name: 'Variant Reads (Normal)',
+            name: MutationTableColumnType.VAR_READS_N,
             render: (d: Mutation[]) =>
                 AlleleCountColumnFormatter.renderFunction(
                     d,
@@ -536,7 +540,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.REF_READS] = {
-            name: 'Ref Reads',
+            name: MutationTableColumnType.REF_READS,
             render: (d: Mutation[]) =>
                 AlleleCountColumnFormatter.renderFunction(
                     d,
@@ -555,7 +559,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.VAR_READS] = {
-            name: 'Variant Reads',
+            name: MutationTableColumnType.VAR_READS,
             render: (d: Mutation[]) =>
                 AlleleCountColumnFormatter.renderFunction(
                     d,
@@ -574,7 +578,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.START_POS] = {
-            name: 'Start Pos',
+            name: MutationTableColumnType.START_POS,
             render: (d: Mutation[]) =>
                 getDivForDataField(d, 'startPosition', true),
             download: (d: Mutation[]) =>
@@ -585,7 +589,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.END_POS] = {
-            name: 'End Pos',
+            name: MutationTableColumnType.END_POS,
             render: (d: Mutation[]) =>
                 getDivForDataField(d, 'endPosition', true),
             download: (d: Mutation[]) => getTextForDataField(d, 'endPosition'),
@@ -595,7 +599,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.REF_ALLELE] = {
-            name: 'Ref',
+            name: MutationTableColumnType.REF_ALLELE,
             render: (d: Mutation[]) => getDivForDataField(d, 'referenceAllele'),
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'referenceAllele'),
@@ -604,7 +608,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.VAR_ALLELE] = {
-            name: 'Var',
+            name: MutationTableColumnType.VAR_ALLELE,
             render: (d: Mutation[]) => getDivForDataField(d, 'variantAllele'),
             download: (d: Mutation[]) =>
                 getTextForDataField(d, 'variantAllele'),
@@ -613,7 +617,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.MUTATION_STATUS] = {
-            name: 'MS',
+            name: MutationTableColumnType.MUTATION_STATUS,
             tooltip: <span>Mutation Status</span>,
             render: MutationStatusColumnFormatter.renderFunction,
             download: MutationStatusColumnFormatter.download,
@@ -627,7 +631,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
-            name: 'VS',
+            name: MutationTableColumnType.VALIDATION_STATUS,
             tooltip: <span>Validation Status</span>,
             render: ValidationStatusColumnFormatter.renderFunction,
             download: ValidationStatusColumnFormatter.download,
@@ -641,7 +645,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.CENTER] = {
-            name: 'Center',
+            name: MutationTableColumnType.CENTER,
             render: (d: Mutation[]) => getDivForDataField(d, 'center'),
             download: (d: Mutation[]) => getTextForDataField(d, 'center'),
             sortBy: (d: Mutation[]) => d.map(m => m.center),
@@ -654,7 +658,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.GENE] = {
-            name: 'Gene',
+            name: MutationTableColumnType.GENE,
             render: (d: Mutation[]) => GeneColumnFormatter.renderFunction(d),
             download: (d: Mutation[]) => GeneColumnFormatter.getTextValue(d),
             sortBy: (d: Mutation[]) => GeneColumnFormatter.getSortValue(d),
@@ -669,7 +673,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.CHROMOSOME] = {
-            name: 'Chromosome',
+            name: MutationTableColumnType.CHROMOSOME,
             render: (d: Mutation[]) => (
                 <div className={generalStyles['integer-data']}>
                     {ChromosomeColumnFormatter.getData(d)}
@@ -692,7 +696,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
-            name: 'Protein Change',
+            name: MutationTableColumnType.PROTEIN_CHANGE,
             render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
@@ -701,7 +705,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {
-            name: 'Mutation Type',
+            name: MutationTableColumnType.MUTATION_TYPE,
             render: MutationTypeColumnFormatter.renderFunction,
             download: MutationTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
@@ -717,7 +721,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.VARIANT_TYPE] = {
-            name: 'Variant Type',
+            name: MutationTableColumnType.VARIANT_TYPE,
             render: VariantTypeColumnFormatter.renderFunction,
             download: VariantTypeColumnFormatter.getTextValue,
             sortBy: (d: Mutation[]) =>
@@ -757,7 +761,7 @@ export default class MutationTable<
         ] = getDefaultExpectedAltCopiesColumnDefinition();
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
-            name: 'Functional Impact',
+            name: MutationTableColumnType.FUNCTIONAL_IMPACT,
             render: (d: Mutation[]) => {
                 if (
                     this.props.genomeNexusCache ||
@@ -785,7 +789,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.COSMIC] = {
-            name: 'COSMIC',
+            name: MutationTableColumnType.COSMIC,
             render: (d: Mutation[]) =>
                 CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
             sortBy: (d: Mutation[]) =>
@@ -801,7 +805,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
-            name: 'Annotation',
+            name: MutationTableColumnType.ANNOTATION,
             render: (d: Mutation[]) =>
                 AnnotationColumnFormatter.renderFunction(d, {
                     hotspotData: this.props.hotspotData,
@@ -898,7 +902,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.HGVSG] = {
-            name: 'HGVSg',
+            name: MutationTableColumnType.HGVSG,
             render: (d: Mutation[]) =>
                 HgvsgColumnFormatter.renderFunction(
                     d,
@@ -912,7 +916,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.CANCER_TYPE_DETAILED] = {
             id: 'CANCER_TYPE_DETAILED',
-            name: 'Cancer Type Detailed',
+            name: MutationTableColumnType.CANCER_TYPE_DETAILED,
             render: (d: Mutation[]) =>
                 CancerTypeColumnFormatter.render(
                     d,
@@ -945,7 +949,7 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             id: 'MUTATION_COUNT',
-            name: '# Mut in Sample',
+            name: MutationTableColumnType.NUM_MUTATIONS,
             render: MutationCountColumnFormatter.makeRenderFunction(this),
             headerRender: (name: string) => (
                 <span style={{ display: 'inline-block', maxWidth: 55 }}>
@@ -971,7 +975,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.EXON] = {
-            name: 'Exon',
+            name: MutationTableColumnType.EXON,
             render: (d: Mutation[]) =>
                 this.props.genomeNexusCache ? (
                     ExonColumnFormatter.renderFunction(
@@ -996,7 +1000,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.HGVSC] = {
-            name: 'HGVSc',
+            name: MutationTableColumnType.HGVSC,
             render: (d: Mutation[]) =>
                 this.props.indexedVariantAnnotations ? (
                     HgvscColumnFormatter.renderFunction(
@@ -1024,7 +1028,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.GNOMAD] = {
-            name: 'gnomAD',
+            name: MutationTableColumnType.GNOMAD,
             render: (d: Mutation[]) =>
                 GnomadColumnFormatter.renderFunction(
                     d,
@@ -1055,7 +1059,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.CLINVAR] = {
-            name: 'ClinVar',
+            name: MutationTableColumnType.CLINVAR,
             render: (d: Mutation[]) =>
                 ClinvarColumnFormatter.renderFunction(
                     d,
@@ -1089,7 +1093,7 @@ export default class MutationTable<
         };
 
         this._columns[MutationTableColumnType.DBSNP] = {
-            name: 'dbSNP',
+            name: MutationTableColumnType.DBSNP,
             render: (d: Mutation[]) =>
                 DbsnpColumnFormatter.renderFunction(
                     d,
@@ -1140,7 +1144,7 @@ export default class MutationTable<
             align: 'right',
         };
         this._columns[MutationTableColumnType.SIGNAL] = {
-            name: 'SIGNAL',
+            name: MutationTableColumnType.SIGNAL,
             render: (d: Mutation[]) =>
                 SignalColumnFormatter.renderFunction(
                     d,
@@ -1230,6 +1234,10 @@ export default class MutationTable<
                 onRowClick={this.props.onRowClick}
                 onRowMouseEnter={this.props.onRowMouseEnter}
                 onRowMouseLeave={this.props.onRowMouseLeave}
+                columnToHeaderFilterIconModal={
+                    this.props.columnToHeaderFilterIconModal
+                }
+                deactivateColumnFilter={this.props.deactivateColumnFilter}
             />
         );
     }

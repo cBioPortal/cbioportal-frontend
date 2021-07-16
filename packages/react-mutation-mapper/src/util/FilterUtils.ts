@@ -9,6 +9,8 @@ import { MutationFilter, MutationFilterValue } from '../filter/MutationFilter';
 import { MutationStatusFilter } from '../filter/MutationStatusFilter';
 import { PositionFilter } from '../filter/PositionFilter';
 import { ProteinImpactTypeFilter } from '../filter/ProteinImpactTypeFilter';
+import { NumericalFilterValue } from '../filter/NumericalFilter';
+import { CategoricalFilterValue } from '../filter/CategoricalFilter';
 import DataStore from '../model/DataStore';
 import { DataFilter, DataFilterType } from '../model/DataFilter';
 import { ApplyFilterFn } from '../model/FilterApplier';
@@ -206,7 +208,10 @@ export function groupDataByProteinImpactType(sortedFilteredData: any[]) {
 }
 
 export function onFilterOptionSelect(
-    selectedValues: string[],
+    selectedValues:
+        | string[]
+        | NumericalFilterValue[]
+        | CategoricalFilterValue[],
     allValuesSelected: boolean,
     dataStore: DataStore,
     dataFilterType: string,

@@ -139,6 +139,8 @@ export { MutationFilter } from './filter/MutationFilter';
 export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
+export { NumericalFilter } from './filter/NumericalFilter';
+export { CategoricalFilter } from './filter/CategoricalFilter';
 
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';

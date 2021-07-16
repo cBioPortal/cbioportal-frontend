@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
+import { MutationTableColumnType } from '../../MutationTable';
 import ASCNCopyNumberElement from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCNCopyNumberValueEnum } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberElement';
 import { ASCN_BLACK } from 'shared/lib/Colors';
@@ -114,7 +115,7 @@ export const getDefaultASCNCopyNumberColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Total Integer Copy #',
+        name: MutationTableColumnType.ASCN_COPY_NUM,
         render: (d: Mutation[]) =>
             ASCNCopyNumberColumnFormatter.renderFunction(
                 d,
