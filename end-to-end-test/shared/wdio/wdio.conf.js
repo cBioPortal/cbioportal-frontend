@@ -56,6 +56,22 @@ function proxyComparisonMethod(target) {
     };
 }
 
+const chromeArgs = [
+    '--disable-composited-antialiasing',
+    '--allow-insecure-localhost',
+].concat(
+    (function() {
+        return process.env.HEADLESS_CHROME
+            ? [
+                  '--headless',
+                  '--no-sandbox',
+                  '--disable-gpu',
+                  '--disable-setuid-sandbox',
+              ]
+            : [];
+    })()
+);
+
 proxyComparisonMethod(LocalCompare);
 
 const TEST_TYPE = process.env.TEST_TYPE || 'remote';
