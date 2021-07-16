@@ -10,7 +10,7 @@ var checkElementWithElementHidden = require('../../../shared/specUtils')
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 function waitForAndCheckPlotsTab() {
-    $('body').moveTo(0, 0);
+    $('body').moveTo({ xOffset: 0, yOffset: 0 });
     $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
     var res = checkElementWithElementHidden(
         'div[data-test="PlotsTabEntireDiv"]',

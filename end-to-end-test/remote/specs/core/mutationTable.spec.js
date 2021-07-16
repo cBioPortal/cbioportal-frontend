@@ -146,7 +146,7 @@ describe('Mutation Table', function() {
                 'Frequency data not in Gnoamd column'
             );
             // mouse over the frequency
-            $(frequency).moveTo(0, 0);
+            $(frequency).moveTo({ xOffset: 0, yOffset: 0 });
             // wait for gnomad table showing up
             $('[data-test="gnomad-table"]').waitForExist({ timeout: 300000 });
             // check if the gnomad table show up
