@@ -45,8 +45,9 @@ function proxyComparisonMethod(target) {
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
         const resp = oldProcessScreenshot.apply(this, arguments);
-        console.log(`SEEKING REFERENCE SCREENSHOT: ${referencePath}`);
+
         if (referenceExists === false) {
+            console.log(`MISSING REFERENCE SCREENSHOT: ${referencePath}`);
             return {
                 ...this.createResultReport(1000, false, true),
                 referenceExists,
