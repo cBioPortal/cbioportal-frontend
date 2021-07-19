@@ -2,6 +2,7 @@ var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 var waitForPatientView = require('../../../shared/specUtils')
     .waitForPatientView;
+var { setDropdownOpen } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 
@@ -82,23 +83,26 @@ describe('patient view page', function() {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(genericAssayPatientViewUrl, true);
             waitForPatientView();
-            browser.waitForVisible('a.tabAnchor_mutationalSignatures', 20000);
-            browser.click('a.tabAnchor_mutationalSignatures');
-            browser.waitForVisible(
-                'div[data-test="MutationalSignaturesContainer"]',
-                20000
-            );
+            $('a.tabAnchor_mutationalSignatures').waitForDisplayed({
+                timeout: 20000,
+            });
+            $('a.tabAnchor_mutationalSignatures').click();
+            $(
+                'div[data-test="MutationalSignaturesContainer"]'
+            ).waitForDisplayed({
+                timeout: 20000,
+            });
         });
 
         it('show stacked bar chart for patient who has significant v2 significant signatures', () => {
-            browser.waitForVisible('div.patientSamples', 20000);
+            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
             var res = browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
         it('show tooltip for patient who has significant v2 significant signatures', () => {
-            browser.waitForVisible('div.progress', 20000);
-            browser.moveToObject('div.progress', 0, 0);
+            $('div.progress').waitForDisplayed({ timeout: 20000 });
+            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
             assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
 
@@ -111,19 +115,19 @@ describe('patient view page', function() {
 
         it('show stacked bar chart for patient who has significant v3 significant signatures', () => {
             selectMutationalSignaturesVersion3();
-            browser.waitForVisible('div.patientSamples', 20000);
+            $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
             var res = browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
-        it.skip('show tooltip for patient who has significant v3 significant signatures', () => {
+        it('show tooltip for patient who has significant v3 significant signatures', () => {
             selectMutationalSignaturesVersion3();
-            browser.waitForVisible('div.progress', 20000);
-            browser.moveToObject('div.progress', 0, 0);
+            $('div.progress').waitForDisplayed({ timeout: 20000 });
+            $('div.progress').moveTo({ xOffset: 0, yOffset: 0 });
 
-            browser.waitForVisible(
+            $(
                 'div[data-test="SignificantMutationalSignaturesTooltip"]'
-            );
+            ).waitForDisplayed();
 
             assertScreenShotMatch(browser.checkElement('div.patientViewPage'));
         });
@@ -139,19 +143,20 @@ describe('patient view page', function() {
 });
 
 const switchGeneFilter = selectedOption => {
-    var filterIcon = $('div[data-test=patientview-mutation-table]').$(
-        'i[data-test=gene-filter-icon]'
+    const selectMenu = '.rc-tooltip';
+    const filterIcon =
+        'div[data-test=patientview-mutation-table] i[data-test=gene-filter-icon]';
+    setDropdownOpen(true, filterIcon, selectMenu);
+    const allGenesRadio = $(selectMenu).$(
+        'input[value=' + selectedOption + ']'
     );
-    filterIcon.click();
-    var selectMenu = $('.rc-tooltip');
-    const allGenesRadio = selectMenu.$('input[value=' + selectedOption + ']');
     allGenesRadio.click();
-    filterIcon.click();
+    setDropdownOpen(false, filterIcon, selectMenu);
 };
 
 const doVafPlotScreenshotTest = () => {
     var res = browser.checkElement('[data-test=vaf-plot]'); // grabs the full plot
-    browser.moveToObject('svg[data-test=vaf-plot]'); // moves pointer to plot thumbnail
+    $('svg[data-test=vaf-plot]').moveTo(); // moves pointer to plot thumbnail
     var res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
     $('div[role=tooltip] [data-test=vaf-plot]').waitForExist();
     res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
@@ -159,11 +164,10 @@ const doVafPlotScreenshotTest = () => {
 };
 
 const selectMutationalSignaturesVersion3 = () => {
-    browser.waitForVisible(
-        'div.mutationalSignaturesVersionSelector__indicators',
-        10000
-    );
-    browser.click('div.mutationalSignaturesVersionSelector__indicators');
-    browser.waitForVisible('div=Mutational Signature V3', 10000);
-    browser.click('div=Mutational Signature V3');
+    $('div.mutationalSignaturesVersionSelector__indicators').waitForDisplayed({
+        timeout: 10000,
+    });
+    $('div.mutationalSignaturesVersionSelector__indicators').click();
+    $('div=Mutational Signature V3').waitForDisplayed({ timeout: 10000 });
+    $('div=Mutational Signature V3').click();
 };

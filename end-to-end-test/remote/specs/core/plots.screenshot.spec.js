@@ -10,8 +10,8 @@ var checkElementWithElementHidden = require('../../../shared/specUtils')
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 function waitForAndCheckPlotsTab() {
-    browser.moveToObject('body', 0, 0);
-    browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+    $('body').moveTo({ xOffset: 0, yOffset: 0 });
+    $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({ timeout: 20000 });
     var res = checkElementWithElementHidden(
         'div[data-test="PlotsTabEntireDiv"]',
         '.popover',
@@ -31,22 +31,26 @@ describe('plots tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2&Z_SCORE_THRESHOLD=2&cancer_study_id=brca_tcga&case_set_id=brca_tcga_cnaseq&data_priority=0&gene_list=TP53%20MDM2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedDataSourceOption"%3A"mrna"%7D&plots_vert_selection=%7B"selectedDataSourceOption"%3A"rna_seq_v2_mrna_median_Zscores"%7D&tab_index=tab_visualize`
         );
-        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
-        browser.waitForExist('input[data-test="ViewCopyNumber"]');
-        browser.click('input[data-test="ViewCopyNumber"]');
+        $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({
+            timeout: 20000,
+        });
+        $('input[data-test="ViewCopyNumber"]').waitForExist();
+        $('input[data-test="ViewCopyNumber"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab molecular vs molecular same gene changed gene', function() {
         browser.execute(function() {
             resultsViewPlotsTab.test__selectGeneOption(false, 4193);
         });
-        browser.waitForExist('input[data-test="ShowRegressionline"]', 10000);
-        browser.click('input[data-test="ShowRegressionline"]');
+        $('input[data-test="ShowRegressionline"]').waitForExist({
+            timeout: 10000,
+        });
+        $('input[data-test="ShowRegressionline"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number view', function() {
-        browser.click('input[data-test="ShowRegressionline"]');
-        browser.click('input[data-test="ViewCopyNumber"]');
+        $('input[data-test="ShowRegressionline"]').click();
+        $('input[data-test="ViewCopyNumber"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab molecular vs molecular different genes', function() {
@@ -61,17 +65,19 @@ describe('plots tab screenshot tests', function() {
                 value: 'rna_seq_v2_mrna',
             });
         });
-        browser.waitForExist('input[data-test="ShowRegressionline"]', 3000);
-        browser.click('input[data-test="ShowRegressionline"]');
+        $('input[data-test="ShowRegressionline"]').waitForExist({
+            timeout: 3000,
+        });
+        $('input[data-test="ShowRegressionline"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab molecular vs molecular swapped axes', function() {
-        browser.click('input[data-test="ShowRegressionline"]');
-        browser.click('[data-test="swapHorzVertButton"]');
+        $('input[data-test="ShowRegressionline"]').click();
+        $('[data-test="swapHorzVertButton"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab search case id', function() {
-        browser.click('input[data-test="ViewMutationType"]');
+        $('input[data-test="ViewMutationType"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchCase('TCGA-E2 TCGA-A8-A08G');
         });
@@ -92,7 +98,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab log scale off', function() {
-        browser.click('input[data-test="VerticalLogCheckbox"]');
+        $('input[data-test="VerticalLogCheckbox"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab clinical vs molecular', function() {
@@ -120,17 +126,17 @@ describe('plots tab screenshot tests', function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchMutation('');
         });
-        browser.click('[data-test="swapHorzVertButton"]');
+        $('[data-test="swapHorzVertButton"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical boxplot', function() {
-        browser.click('[data-test="swapHorzVertButton"]');
+        $('[data-test="swapHorzVertButton"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
                 value: 'AGE',
             });
         });
-        browser.click('[data-test="swapHorzVertButton"]');
+        $('[data-test="swapHorzVertButton"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'MUTATION_EXTENDED',
@@ -165,8 +171,8 @@ describe('plots tab screenshot tests', function() {
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             });
         });
-        browser.waitForExist('[data-test="swapHorzVertButton"]');
-        browser.click('[data-test="swapHorzVertButton"]');
+        $('[data-test="swapHorzVertButton"]').waitForExist();
+        $('[data-test="swapHorzVertButton"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'clinical_attribute',
@@ -214,7 +220,8 @@ describe('plots tab screenshot tests', function() {
                 value: 'StackedBar',
             });
         });
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab clinical vs clinical horizontal grouped bar plot', function() {
@@ -234,7 +241,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab clinical vs clinical table plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Table',
@@ -256,7 +264,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical horizontal stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical horizontal percentage stacked bar plot', function() {
@@ -268,7 +277,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical percentage stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab copy number vs clinical table plot', function() {
@@ -298,7 +308,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical horizontal stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical horizontal percentage stacked bar plot', function() {
@@ -310,7 +321,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical percentage stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations wildtype mode vs clinical table plot', function() {
@@ -335,7 +347,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical horizontal stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical horizontal percentage stacked bar plot', function() {
@@ -347,7 +360,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical percentage stacked bar plot', function() {
-        browser.click('input[data-test="horizontalBars"]');
+        $('input[data-test="horizontalBars"]').waitForExist();
+        $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab mutations vs clinical table plot', function() {
@@ -362,7 +376,9 @@ describe('plots tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT`
         );
-        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({
+            timeout: 20000,
+        });
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'clinical_attribute',
@@ -380,7 +396,9 @@ describe('plots tab screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`
         );
-        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({
+            timeout: 20000,
+        });
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'MUTATION_EXTENDED',
@@ -396,8 +414,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab scatter plot color by tumor type highlight categories', () => {
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        $(`svg#plots-tab-plot-svg .legendLabel_breast`).click();
+        $(`svg#plots-tab-plot-svg .legendLabel_glioma`).click();
         waitForAndCheckPlotsTab();
     });
 
@@ -408,8 +426,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab box plot color by tumor type highlight categories', () => {
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        $(`svg#plots-tab-plot-svg .legendLabel_breast`).click();
+        $(`svg#plots-tab-plot-svg .legendLabel_glioma`).click();
         waitForAndCheckPlotsTab();
     });
 
@@ -420,8 +438,8 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab waterfall plot color by tumor type highlight categories', () => {
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_breast`);
-        browser.click(`svg#plots-tab-plot-svg .legendLabel_glioma`);
+        $(`svg#plots-tab-plot-svg .legendLabel_breast`).click();
+        $(`svg#plots-tab-plot-svg .legendLabel_glioma`).click();
         waitForAndCheckPlotsTab();
     });
 
@@ -432,7 +450,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab scatter plot color by mutation count log scale', () => {
-        browser.click('.coloringLogScale');
+        $('.coloringLogScale').click();
         waitForAndCheckPlotsTab();
     });
 
@@ -443,7 +461,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab box plot color by mutation count log scale', () => {
-        browser.click('.coloringLogScale');
+        $('.coloringLogScale').click();
         waitForAndCheckPlotsTab();
     });
 
@@ -454,7 +472,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     it('plots tab waterfall plot color by mutation count log scale', () => {
-        browser.click('.coloringLogScale');
+        $('.coloringLogScale').click();
         waitForAndCheckPlotsTab();
     });
     it('plots tab with structural variant coloring', () => {
@@ -470,7 +488,9 @@ describe('plots tab multiple studies screenshot tests', function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=lgg_ucsf_2014%2Cbrca_tcga&case_set_id=all&data_priority=0&gene_list=TP53&geneset_list=%20&plots_coloring_selection=%7B%7D&plots_horz_selection=%7B"selectedGeneOption"%3A7157%2C"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"CANCER_TYPE_DETAILED"%7D&plots_vert_selection=%7B"selectedGeneOption"%3A7157%2C"dataType"%3A"clinical_attribute"%2C"selectedDataSourceOption"%3A"CANCER_TYPE"%7D&profileFilter=0&tab_index=tab_visualize`
         );
-        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        $('div[data-test="PlotsTabPlotDiv"]').waitForDisplayed({
+            timeout: 20000,
+        });
     });
     it('plots tab multiple studies with data availability alert', function() {
         waitForAndCheckPlotsTab();
