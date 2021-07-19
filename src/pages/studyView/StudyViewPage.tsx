@@ -65,6 +65,7 @@ import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { CustomChart } from 'shared/api/sessionServiceAPI';
 import { parse } from 'query-string';
+import Sankey from './sankey';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -614,14 +615,11 @@ export default class StudyViewPage extends React.Component<
                                         linkText={
                                             StudyViewPageTabDescriptions.SANKEY_TREATMENT
                                         }
-                                        hide={
-                                            this.store.SankeyTreatment.result
-                                                .length === 0
-                                        }
+                                        hide={false}
                                     >
                                         <div>
                                             {' '}
-                                            <h3>Sankey Diagram goes here</h3>
+                                            <Sankey store={this.store}></Sankey>
                                         </div>
                                     </MSKTab>
                                     <MSKTab

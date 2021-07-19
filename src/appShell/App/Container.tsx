@@ -64,30 +64,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
-        if (
-            !isLocalDBServer() &&
-            !isWebdriver() &&
-            !ServerConfigHelpers.sessionServiceIsEnabled()
-        ) {
-            return (
-                <div className="contentWrapper">
-                    <ErrorScreen
-                        title={'No session service configured'}
-                        body={
-                            <p>
-                                As of version 3.0.0, all cBioPortal
-                                installations require a session service. Please
-                                review these instructions for how to do so.{' '}
-                                <a href="https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service">
-                                    https://docs.cbioportal.org/2.1.2-deploy-without-docker/deploying#run-cbioportal-session-service
-                                </a>
-                            </p>
-                        }
-                    />
-                </div>
-            );
-        }
-
         return (
             <div>
                 <Helmet>

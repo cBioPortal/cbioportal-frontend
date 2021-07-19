@@ -4496,24 +4496,6 @@ export class StudyViewPageStore {
         []
     );
 
-    readonly SankeyTreatment = remoteData(
-        {
-            await: () => [this.queriedPhysicalStudyIds],
-            onError: () => {},
-            invoke: async () => {
-                if (
-                    AppConfig.serverConfig.show_treatment_sankey &&
-                    this.store.displaySampleTreatments &&
-                    this.store.displayPatientTreatments
-                ) {
-                    return []; // will fill in later with diagram
-                }
-                return []; // if not enabled or conditions not met, just return default answer
-            },
-        },
-        []
-    );
-
     readonly oncokbCancerGenes = remoteData<CancerGene[]>({
         await: () => [],
         invoke: async () => {
@@ -8184,6 +8166,21 @@ export class StudyViewPageStore {
                 });
             }
             return Promise.resolve([]);
+        },
+    });
+
+    public readonly treatmentSequences = remoteData({
+        await: () => [this.selectedSamples, this.displayPatientTreatments],
+        invoke: () => {
+            if (
+                this.hasFilteredSamples &&
+                this.displayPatientTreatments.result
+            ) {
+                return defaultClient.getTreatmentSequencesUsingPOST({
+                    studyViewFilter: this.filters,
+                });
+            }
+            return Promise.resolve({ edges: [], nodes: [] });
         },
     });
 
