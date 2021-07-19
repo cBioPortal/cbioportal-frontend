@@ -211,6 +211,8 @@ import {
     doesChartHaveComparisonGroupsLimit,
     getCnaData,
     getMutationData,
+    getSvData,
+    groupSvDataByGene,
 } from 'pages/studyView/StudyViewComparisonUtils';
 import {
     CNA_AMP_VALUE,
@@ -1274,6 +1276,47 @@ export class StudyViewPageStore {
         });
     }
 
+    private createSvGeneComparisonSession(
+        chartMeta: ChartMeta,
+        hugoGeneSymbols: string[],
+        statusCallback: (phase: LoadingPhase) => void
+    ): Promise<string> {
+        statusCallback(LoadingPhase.DOWNLOADING_GROUPS);
+
+        // Get mutations among currently selected samples
+        const promises: any[] = [
+            this.selectedSamples,
+            this.structuralVariantProfiles,
+        ];
+
+        return new Promise<string>(resolve => {
+            onMobxPromise<any>(
+                promises,
+                async (
+                    selectedSamples: Sample[],
+                    svProfiles: MolecularProfile[]
+                ) => {
+                    const svData = await getSvData(
+                        selectedSamples,
+                        svProfiles,
+                        hugoGeneSymbols
+                    );
+
+                    const svByGene = groupSvDataByGene(svData, hugoGeneSymbols);
+
+                    return resolve(
+                        await createAlteredGeneComparisonSession(
+                            chartMeta,
+                            this.studyIds,
+                            svByGene,
+                            statusCallback
+                        )
+                    );
+                }
+            );
+        });
+    }
+
     private createCnaGeneComparisonSession(
         chartMeta: ChartMeta,
         hugoGeneSymbols: string[],
@@ -1596,6 +1639,13 @@ export class StudyViewPageStore {
                 break;
             case ChartTypeEnum.CNA_GENES_TABLE:
                 comparisonId = await this.createCnaGeneComparisonSession(
+                    chartMeta,
+                    params.hugoGeneSymbols!,
+                    statusCallback
+                );
+                break;
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
+                comparisonId = await this.createSvGeneComparisonSession(
                     chartMeta,
                     params.hugoGeneSymbols!,
                     statusCallback
