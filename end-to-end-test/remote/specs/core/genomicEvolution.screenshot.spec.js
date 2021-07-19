@@ -7,8 +7,10 @@ var checkElementWithMouseDisabled = require('../../../shared/specUtils')
     .checkElementWithMouseDisabled;
 var waitForNetworkQuiet = require('../../../shared/specUtils')
     .waitForNetworkQuiet;
+var { setCheckboxChecked } = require('../../../shared/specUtils');
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
+var { jsApiHover } = require('../../../shared/specUtils');
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&studyId=lgg_ucsf_2014`;
@@ -16,33 +18,35 @@ const patientViewUrl = `${CBIOPORTAL_URL}/patient/genomicEvolution?caseId=P04&st
 describe('Patient View Genomic Evolution tab screenshot tests', function() {
     before(() => {
         goToUrlAndSetLocalStorage(patientViewUrl);
-        browser.waitForVisible('a.tabAnchor_lineChart', 10000);
-        browser.click('a.tabAnchor_lineChart');
-        browser.moveToObject('body', 0, 0);
-        browser.waitForVisible('[data-test=VAFChartWrapper]', 5000);
+        $('a.tabAnchor_lineChart').waitForDisplayed({ timeout: 10000 });
+        $('a.tabAnchor_lineChart').click();
+        $('body').moveTo({ xOffset: 0, yOffset: 0 });
+        $('[data-test=VAFChartWrapper]').waitForDisplayed({ timeout: 5000 });
         waitForNetworkQuiet(10000);
     });
     it('pvge initial view with line chart', function() {
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
+            '',
             { hide: ['.qtip'] }
         );
         assertScreenShotMatch(res);
     });
     it('pvge show timeline', function() {
-        browser.click('button[data-test="ToggleTimeline"]');
-        browser.waitForVisible('div.tl-timeline-wrapper');
+        $('button[data-test="ToggleTimeline"]').click();
+        $('div.tl-timeline-wrapper').waitForDisplayed();
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
+            '',
             { hide: ['.qtip'] }
         );
         assertScreenShotMatch(res);
     });
     it('pvge one mutation selected with line chart', function() {
-        browser.click('button[data-test="ToggleTimeline"]'); // toggle timeline off
-        browser.click(
+        $('button[data-test="ToggleTimeline"]').click(); // toggle timeline off
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-        );
+        ).click();
         const res = checkElementWithMouseDisabled(
             'div[data-test="GenomicEvolutionTab"]',
             0,
@@ -51,59 +55,61 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it.skip('pvge hover a mutation with line chart', function() {
-        browser.moveToObject(
+        jsApiHover(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
         );
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
+            '',
             { hide: ['.qtip'] }
         );
         assertScreenShotMatch(res);
     });
 
     it('pvge switch to sequential mode', function() {
-        browser.click('input[data-test="VAFSequentialMode"]');
+        setCheckboxChecked(true, 'input[data-test="VAFSequentialMode"]');
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
-        browser.click('input[data-test="VAFSequentialMode"]');
     });
 
     it('pvge only show highlighted in line chart', function() {
-        browser.click('input[data-test="VAFOnlyHighlighted"]');
+        setCheckboxChecked(false, 'input[data-test="VAFSequentialMode"]');
+        $('input[data-test="VAFOnlyHighlighted"]').click();
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart log scale', function() {
-        browser.click('input[data-test="VAFLogScale"]');
+        $('input[data-test="VAFLogScale"]').click();
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge line chart with data range y axis', function() {
-        browser.click('input[data-test="VAFDataRange"]');
+        $('input[data-test="VAFDataRange"]').click();
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge add a mutation to line chart', function() {
-        browser.click(
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(2)'
-        );
+        ).click();
         const res = browser.checkElement('[data-test=VAFChartWrapper]');
         assertScreenShotMatch(res);
     });
     it('pvge heatmap with two mutations selected from before', function() {
-        browser.click('a.tabAnchor_heatmap');
-        browser.waitForVisible('div#MutationHeatmap', 3000);
+        $('a.tabAnchor_heatmap').click();
+        $('div#MutationHeatmap').waitForDisplayed({ timeout: 3000 });
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
+            '',
             { hide: ['.qtip'] }
         );
         assertScreenShotMatch(res);
     });
     it('pvge one mutation selected with heatmap', function() {
-        browser.click(
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-        );
-        browser.moveToObject('#cbioportal-logo');
+        ).click();
+        $('#cbioportal-logo').moveTo();
         const res = checkElementWithMouseDisabled(
             'div[data-test="GenomicEvolutionTab"]',
             0,
@@ -112,17 +118,18 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge hover a mutation with heatmap', function() {
-        browser.moveToObject(
+        $(
             'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(9)'
-        );
+        ).moveTo();
         const res = browser.checkElement(
             'div[data-test="GenomicEvolutionTab"]',
+            '',
             { hide: ['.qtip'] }
         );
         assertScreenShotMatch(res);
     });
     it('pvge uncluster heatmap', function() {
-        browser.click('input[data-test="HeatmapCluster"]');
+        $('input[data-test="HeatmapCluster"]').click();
         browser.pause(2000); // give time to uncluster
         const res = checkElementWithMouseDisabled('div#MutationHeatmap', 0, {
             hide: ['.qtip', '.dropdown-menu'],
@@ -130,7 +137,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge transpose heatmap', function() {
-        browser.click('input[data-test="HeatmapTranspose"]');
+        $('input[data-test="HeatmapTranspose"]').click();
         browser.pause(2000); // give time to transpose
         const res = checkElementWithMouseDisabled('div#MutationHeatmap', 0, {
             hide: ['.qtip', '.dropdown-menu'],
@@ -138,7 +145,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge transposed heatmap hide labels', function() {
-        browser.click('input[data-test="HeatmapMutationLabels"]');
+        $('input[data-test="HeatmapMutationLabels"]').click();
         browser.pause(400); // give time to rerender
         const res = checkElementWithMouseDisabled('div#MutationHeatmap', 0, {
             hide: ['.qtip', '.dropdown-menu'],
@@ -146,7 +153,7 @@ describe('Patient View Genomic Evolution tab screenshot tests', function() {
         assertScreenShotMatch(res);
     });
     it('pvge heatmap hide labels', function() {
-        browser.click('input[data-test="HeatmapTranspose"]');
+        $('input[data-test="HeatmapTranspose"]').click();
         browser.pause(2000); // give time to untranspose
 
         const res = checkElementWithMouseDisabled('div#MutationHeatmap', 0, {

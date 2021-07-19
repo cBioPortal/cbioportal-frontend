@@ -7,6 +7,7 @@ var openGroupComparison = require('../../../shared/specUtils')
 var assertScreenShotMatch = require('../../../shared/lib/testUtils')
     .assertScreenShotMatch;
 var setInputText = require('../../../shared/specUtils').setInputText;
+var { setDropdownOpen } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const selectGenesDropdownButton = '[data-test="selectGenes"]';
@@ -19,17 +20,21 @@ describe('group comparison page screenshot tests', function() {
                 'chart-container-ONCOTREE_CODE',
                 5000
             );
-            browser.click('.tabAnchor_alterations');
+            $('.tabAnchor_alterations').click();
             $(
                 '[data-test="GroupComparisonAlterationEnrichments"]'
-            ).waitForExist(20000);
+            ).waitForExist({ timeout: 20000 });
         });
 
         it('group comparison page alteration enrichments tab several groups', function() {
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
         it('group comparison page alteration enrichments tab patient mode', function() {
@@ -38,11 +43,15 @@ describe('group comparison page screenshot tests', function() {
             });
             $(
                 '[data-test="GroupComparisonAlterationEnrichments"]'
-            ).waitForExist(20000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            ).waitForExist({ timeout: 20000 });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -51,14 +60,22 @@ describe('group comparison page screenshot tests', function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
             openGeneSelectorMenu();
-            setNumberOfGenes(2);
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
+            $('input[data-test=numberOfGenes]').setValue('2\n');
+            $('[data-test="addGenestoBarPlot"]').waitForEnabled({
+                timeout: 10000,
             });
+            $('[data-test="addGenestoBarPlot"]').click();
+            $('div[data-test="GeneBarPlotDiv"]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                'div[data-test="GeneBarPlotDiv"]',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -70,13 +87,21 @@ describe('group comparison page screenshot tests', function() {
                 });
             });
             waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
+            $('[data-test="addGenestoBarPlot"]').waitForEnabled({
+                timeout: 10000,
             });
+            $('[data-test="addGenestoBarPlot"]').click();
+            $('div[data-test="GeneBarPlotDiv"]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                'div[data-test="GeneBarPlotDiv"]',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -88,13 +113,21 @@ describe('group comparison page screenshot tests', function() {
                 });
             });
             waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
+            $('[data-test="addGenestoBarPlot"]').waitForEnabled({
+                timeout: 10000,
             });
+            $('[data-test="addGenestoBarPlot"]').click();
+            $('div[data-test="GeneBarPlotDiv"]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                'div[data-test="GeneBarPlotDiv"]',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -102,13 +135,21 @@ describe('group comparison page screenshot tests', function() {
             openGeneSelectorMenu();
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             waitForNetworkQuiet();
-            browser.waitForEnabled('[data-test="addGenestoBarPlot"]', 10000);
-            browser.click('[data-test="addGenestoBarPlot"]');
-            browser.waitForVisible('div[data-test="GeneBarPlotDiv"]', 10000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('div[data-test="GeneBarPlotDiv"]', {
-                hide: ['.qtip'],
+            $('[data-test="addGenestoBarPlot"]').waitForEnabled({
+                timeout: 10000,
             });
+            $('[data-test="addGenestoBarPlot"]').click();
+            $('div[data-test="GeneBarPlotDiv"]').waitForDisplayed({
+                timeout: 10000,
+            });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                'div[data-test="GeneBarPlotDiv"]',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
 
@@ -119,26 +160,24 @@ describe('group comparison page screenshot tests', function() {
             );
             $(
                 '[data-test="GroupComparisonAlterationEnrichments"]'
-            ).waitForExist(20000);
-            browser.moveToObject('body', 0, 0);
-            var res = browser.checkElement('.msk-tab:not(.hiddenByPosition)', {
-                hide: ['.qtip'],
-            });
+            ).waitForExist({ timeout: 20000 });
+            $('body').moveTo({ xOffset: 0, yOffset: 0 });
+            var res = browser.checkElement(
+                '.msk-tab:not(.hiddenByPosition)',
+                '',
+                {
+                    hide: ['.qtip'],
+                }
+            );
             assertScreenShotMatch(res);
         });
     });
 });
 
 function openGeneSelectorMenu() {
-    const selectGenesDropdownButton = '[data-test="selectGenes"]';
-    $(selectGenesDropdownButton).waitForExist(30000);
-    browser.click(selectGenesDropdownButton);
-    $('input[data-test=numberOfGenes]').waitForVisible();
-}
-
-function setNumberOfGenes(number) {
-    // To prevent error 'ERROR webdriver: Request failed due to Error: element not interactable'
-    // double click the input (see https://github.com/webdriverio/webdriverio/issues/1406#issuecomment-468710200)
-    $('input[data-test=numberOfGenes]').doubleClick();
-    $('input[data-test=numberOfGenes]').setValue(number + '\n');
+    setDropdownOpen(
+        true,
+        '[data-test="selectGenes"]',
+        'input[data-test=numberOfGenes]'
+    );
 }

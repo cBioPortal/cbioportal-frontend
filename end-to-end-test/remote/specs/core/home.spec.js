@@ -29,7 +29,7 @@ describe('homepage', function() {
             assert.equal(
                 browser.execute(function() {
                     return window.frontendConfig.frontendUrl;
-                }).value,
+                }),
                 '//localhost:3000/'
             );
         });
@@ -41,18 +41,17 @@ describe('homepage', function() {
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
 
-        studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
+        studies.waitForExist({ timeout: 10000 }); // same as `$('.notification').waitForExist({timeout: 10000})`
 
         expect(0).to.be.below(
-            browser.elements('[data-test="cancerTypeListContainer"] > ul > ul')
-                .value.length
+            $$('[data-test="cancerTypeListContainer"] > ul > ul').length
         );
     });
 
     it('should filter study list according to filter text input', function() {
         var input = $(searchInputSelector);
 
-        input.waitForExist(10000);
+        input.waitForExist({ timeout: 10000 });
 
         setInputText(searchInputSelector, 'bladder');
 
@@ -64,29 +63,29 @@ describe('homepage', function() {
 
         var checkBox = $('[data-test="StudySelect"]');
 
-        checkBox.waitForExist(10000);
+        checkBox.waitForExist({ timeout: 10000 });
 
-        assert.equal(browser.isExisting(caseSetSelectorClass), false);
+        assert.equal($(caseSetSelectorClass).isExisting(), false);
 
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
         var caseSetSelector = $(caseSetSelectorClass);
-        caseSetSelector.waitForExist(10000);
+        caseSetSelector.waitForExist({ timeout: 10000 });
 
-        assert.equal(browser.isExisting(caseSetSelectorClass), true);
+        assert.equal($(caseSetSelectorClass).isExisting(), true);
     });
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', () => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        browser.waitForExist('.autosuggest input[type=text]', 10000);
+        $('.autosuggest input[type=text]').waitForExist({ timeout: 10000 });
         setInputText('.autosuggest input[type=text]', 'breast -invasive');
 
         browser.pause(500);
-        browser.waitForExist('[data-test="StudySelect"]', 10000);
-        browser.click('[data-test="selectAllStudies"]');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="selectAllStudies"]').click();
 
         clickQueryByGeneButton();
 
@@ -94,35 +93,35 @@ describe('homepage', function() {
         setInputText(oqlEntrySel, 'PTEN: EXP>1');
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
-        browser.waitForExist(errorMessageSel);
-        browser.waitForText(
-            'span=Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
+        $(errorMessageSel).waitForExist();
+        browser.waitUntil(
+            () =>
+                $(errorMessageSel).getText() ===
+                'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
         );
 
         assert.equal(
-            browser.getText(errorMessageSel),
+            $(errorMessageSel).getText(),
             'Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.'
         );
 
         var submitButtonSel = 'button[data-test="queryButton"]';
-        assert.equal(
-            browser.getAttribute(submitButtonSel, 'disabled'),
-            'true',
+        assert.ok(
+            !$(submitButtonSel).isEnabled(),
             'submit should be disabled w/ EXP in oql'
         );
 
         setInputText(oqlEntrySel, 'PTEN: PROT>1');
-        browser.waitForExist(errorMessageSel);
-        browser.waitForText(
+        $(errorMessageSel).waitForExist();
+        $(
             'span=Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
-        );
+        ).waitForExist();
         assert.equal(
-            browser.getText(errorMessageSel),
+            $(errorMessageSel).getText(),
             'Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.'
         );
-        assert.equal(
-            browser.getAttribute(submitButtonSel, 'disabled'),
-            'true',
+        assert.ok(
+            !$(submitButtonSel).isEnabled(),
             'submit should be disabled w/ PROT in oql'
         );
     });
@@ -130,15 +129,11 @@ describe('homepage', function() {
     describe.skip('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            browser.waitForExist(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            );
+            $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
         });
 
         function getVisibleCheckboxes() {
-            return browser.elements(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            ).value;
+            return $$('[data-test="StudySelect"] input[type=checkbox]');
         }
 
         it('clicking select all studies checkbox selects all studies', function() {
@@ -152,7 +147,7 @@ describe('homepage', function() {
 
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
-            browser.element('[data-test=selectAllStudies]').click();
+            $('[data-test=selectAllStudies]').click();
 
             selectedStudies = studyCheckboxes.filter(function(el) {
                 return el.isSelected();
@@ -164,7 +159,7 @@ describe('homepage', function() {
                 'all studies are selected'
             );
 
-            browser.element('[data-test=selectAllStudies]').click();
+            $('[data-test=selectAllStudies]').click();
 
             selectedStudies = studyCheckboxes.filter(function(el) {
                 return el.isSelected();
@@ -237,19 +232,18 @@ describe('case set selection in front page query form', function() {
 
     it('selects the default case set for single study selections', () => {
         var input = '.autosuggest input[type=text]';
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ovarian nature 2011');
         waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
+                $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation and CNA data (316)',
             5000
         );
@@ -257,68 +251,65 @@ describe('case set selection in front page query form', function() {
     it('selects the right default case sets in a single->multiple->single study selection flow', () => {
         // Select Ampullary Carcinoma
         var input = '.autosuggest input[type=text]';
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
+                $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation data (160)',
-            10000
+            30000
         );
 
         clickModifyStudySelectionButton();
 
         // select Adrenocortical Carcinoma
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(
             1,
             'Adrenocortical Carcinoma (TCGA, Firehose Legacy)'
         );
-        checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
-            10000
-        );
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
-            () => browser.getText(selectedCaseSet_sel) === 'All (252)',
+            () => $(selectedCaseSet_sel).getText() === 'All (252)',
             10000
         );
 
         clickModifyStudySelectionButton();
 
         // Deselect Ampullary Carcinoma
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
+                $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation and CNA data (88)',
             10000
         );
@@ -326,19 +317,18 @@ describe('case set selection in front page query form', function() {
     it('selects the right default case sets in a single->select all filtered->single study selection flow', () => {
         // Select Ampullary Carcinoma
         var input = '.autosuggest input[type=text]';
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
+                $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation data (160)',
             10000
         );
@@ -346,80 +336,84 @@ describe('case set selection in front page query form', function() {
         clickModifyStudySelectionButton();
 
         // select all TCGA non-provisional
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'tcga -provisional');
         browser.pause(500);
-        browser.click(
+        $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-        );
+        ).waitForExist({ timeout: 10000 });
+        $(
+            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+        ).click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
-            10000
-        );
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="cna-gistic-cna_rae"]',
-            10000
-        );
-        browser.waitForExist(selectedCaseSet_sel, 10000);
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(
-            () => /All \(\d+\)/.test(browser.getText(selectedCaseSet_sel)),
+            () => /All \(\d+\)/.test($(selectedCaseSet_sel).getText()),
             10000
         ); // since sample #s change across studies, dont depend this test on specific number
 
         clickModifyStudySelectionButton();
 
         // Deselect all tcga -provisional studies
-        browser.click(
+        $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-        );
+        ).waitForExist({ timeout: 10000 });
+        $(
+            'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
+        ).click();
         browser.pause(100);
 
         // select Adrenocortical Carcinoma
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'adrenocortical carcinoma tcga firehose legacy');
         waitForNumberOfStudyCheckboxes(1);
-        checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
-            10000
-        );
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
-            10000
-        );
-        browser.waitForExist(selectedCaseSet_sel, 10000);
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $(selectedCaseSet_sel).waitForExist({ timeout: 10000 });
         browser.waitUntil(
-            () => browser.getText(selectedCaseSet_sel) === 'All (252)',
+            () => $(selectedCaseSet_sel).getText() === 'All (252)',
             10000
         );
 
         clickModifyStudySelectionButton();
 
         // Deselect Ampullary Carcinoma
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
-        browser.waitForExist(selectedCaseSet_sel);
+        $(selectedCaseSet_sel).waitForExist();
         browser.waitUntil(
             () =>
-                browser.getText(selectedCaseSet_sel) ===
+                $(selectedCaseSet_sel).getText() ===
                 'Samples with mutation and CNA data (88)',
             10000
         );
@@ -433,176 +427,175 @@ describe('genetic profile selection in front page query form', () => {
     it('selects the right default genetic profiles in a single->multiple->single study selection flow', () => {
         // select a study
         var input = '.autosuggest input[type=text]';
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ovarian nature 2011');
         waitForNumberOfStudyCheckboxes(1);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
         browser.pause(200);
 
         clickQueryByGeneButton();
 
         // wait for profiles selector to load
-        browser.waitForExist(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
-            6000
-        );
+        $(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
+        ).waitForExist({ timeout: 6000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
 
         clickModifyStudySelectionButton();
 
         // select another study
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'ampullary baylor');
         waitForNumberOfStudyCheckboxes(
             1,
             'Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)'
         );
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"]').waitForExist({ timeout: 10000 });
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
         // wait for data type priority selector to load
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
-            10000
-        );
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
-            10000
-        );
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
-            ),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Mutations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]'
-            ),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Copy number alterations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Copy number alterations' should be selected"
         );
 
         clickModifyStudySelectionButton();
 
         //deselect other study
-        browser.click('[data-test="StudySelect"] input');
+        $('[data-test="StudySelect"] input').click();
 
         clickQueryByGeneButton();
 
         // wait for profiles selector to load
-        browser.waitForExist(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
-            10000
-        );
+        $(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
+        ).waitForExist({ timeout: 10000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
 
         clickModifyStudySelectionButton();
 
         // select all tcga firehose legacy studies
-        browser.waitForExist(input, 10000);
+        $(input).waitForExist({ timeout: 10000 });
         setInputText(input, 'tcga firehose');
         browser.pause(500);
-        browser.click(
+        $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-        );
+        ).click();
 
         clickQueryByGeneButton();
 
         // wait for data type priority selector to load
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]',
-            10000
-        );
-        browser.waitForExist(
-            '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]',
-            10000
-        );
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Mutations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
+        $('[data-test="dataTypePrioritySelector"]')
+            .$('label*=Copy number alterations')
+            .$('input[type="checkbox"]')
+            .waitForExist({ timeout: 10000 });
         assert(
-            browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="mutations"]'
-            ),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Mutations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Mutation' should be selected"
         );
         assert(
-            browser.isSelected(
-                '[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="gistic"]'
-            ),
+            $('[data-test="dataTypePrioritySelector"]')
+                .$('label*=Copy number alterations')
+                .$('input[type="checkbox"]')
+                .isSelected(),
             "'Copy number alterations' should be selected"
         );
 
         clickModifyStudySelectionButton();
 
         // Deselect all tcga firehose legacy studies
-        browser.click(
+        $(
             'div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]'
-        );
+        ).click();
         browser.pause(100);
 
         clickQueryByGeneButton();
 
         // wait for profiles selector to load
-        browser.waitForExist(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
-            3000
-        );
+        $(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
+        ).waitForExist({ timeout: 6000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
     });
@@ -614,70 +607,74 @@ describe('auto-selecting needed profiles for oql in query form', () => {
     });
 
     it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
-        browser.waitForExist('.studyItem_nsclc_mskcc_2018', 20000);
-        browser.click('.studyItem_nsclc_mskcc_2018');
+        $('.studyItem_nsclc_mskcc_2018').waitForExist({ timeout: 20000 });
+        $('.studyItem_nsclc_mskcc_2018').click();
         clickQueryByGeneButton();
 
         // enter oql
-        browser.waitForExist('textarea[data-test="geneSet"]', 2000);
+        $('textarea[data-test="geneSet"]').waitForExist({ timeout: 2000 });
         setInputText('textarea[data-test="geneSet"]', 'BRCA1: PROT>1');
 
         // error appears
-        browser.waitUntil(() => {
-            return (
-                browser.isExisting('[data-test="oqlErrorMessage"]') &&
-                browser.getText('[data-test="oqlErrorMessage"]') ===
-                    'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
-            );
-        }, 20000);
+        browser.waitUntil(
+            () => {
+                return (
+                    $('[data-test="oqlErrorMessage"]').isExisting() &&
+                    $('[data-test="oqlErrorMessage"]').getText() ===
+                        'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
+                );
+            },
+            { timeout: 20000 }
+        );
 
         // submit is disabled
-        assert(!browser.isEnabled('button[data-test="queryButton"]'));
+        assert(!$('button[data-test="queryButton"]').isEnabled());
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
-        browser.waitForExist('.studyItem_chol_tcga_pan_can_atlas_2018', 20000);
-        browser.click('.studyItem_chol_tcga_pan_can_atlas_2018');
+        $('.studyItem_chol_tcga_pan_can_atlas_2018').waitForExist({
+            timeout: 20000,
+        });
+        $('.studyItem_chol_tcga_pan_can_atlas_2018').click();
         clickQueryByGeneButton();
 
         // make sure profiles selector is loaded
-        browser.waitForExist(
-            'div[data-test="molecularProfileSelector"] input[type="checkbox"]',
-            3000
-        );
+        $(
+            'div[data-test="molecularProfileSelector"] input[type="checkbox"]'
+        ).waitForExist({ timeout: 3000 });
         // mutations, CNA should be selected
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'
-            ),
+            ).isSelected(),
             'mutation profile should be selected'
         );
         assert(
-            browser.isSelected(
+            $(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'
-            ),
+            ).isSelected(),
             'cna profile should be selected'
         );
         assert(
-            !browser.isSelected(
+            !$(
                 'div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'
-            ),
+            ).isSelected(),
             'mrna profile not selected'
         );
 
         // enter oql
-        browser.waitForExist('textarea[data-test="geneSet"]', 2000);
+        $('textarea[data-test="geneSet"]').waitForExist({ timeout: 2000 });
         setInputText('textarea[data-test="geneSet"]', 'TP53 BRCA1: EXP>1');
 
-        browser.waitForEnabled('button[data-test="queryButton"]', 5000);
-        browser.click('button[data-test="queryButton"]');
+        $('button[data-test="queryButton"]').waitForEnabled({ timeout: 5000 });
+        $('button[data-test="queryButton"]').click();
 
         // wait for query to load
         waitForOncoprint(30000);
 
         const profileFilter = (
             browser.execute(function() {
-                return urlWrapper.query;
-            }).value.profileFilter || ''
+                return { ...urlWrapper.query };
+            }).profileFilter || ''
         ).split(',');
         // mutation, cna, mrna profiles are there
         assert.equal(profileFilter.includes('mutations'), true);
@@ -690,54 +687,58 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 });
 
 describe('results page quick oql edit', () => {
-    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=chol_msk_2018&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations%2Cfusion%2Ccna&case_set_id=chol_msk_2018_cnaseq&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
-        browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
+        $('[data-test="oqlQuickEditButton"]').waitForExist({ timeout: 20000 });
+        $('[data-test="oqlQuickEditButton"]').click();
 
-        browser.click('[data-test="oqlQuickEditButton"]');
-
-        browser.waitForExist('.quick_oql_edit [data-test="geneSet"]', 5000);
+        $('.quick_oql_edit [data-test="geneSet"]').waitForExist({
+            timeout: 5000,
+        });
         setInputText('.quick_oql_edit [data-test="geneSet"]', 'PTEN: PROT>0');
 
         // error appears
-        browser.waitUntil(() => {
-            return (
-                browser.isExisting(
-                    '.quick_oql_edit [data-test="oqlErrorMessage"]'
-                ) &&
-                browser.getText(
-                    '.quick_oql_edit [data-test="oqlErrorMessage"]'
-                ) ===
-                    'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
-            );
-        }, 20000);
+        browser.waitUntil(
+            () => {
+                return (
+                    $(
+                        '.quick_oql_edit [data-test="oqlErrorMessage"]'
+                    ).isExisting() &&
+                    $(
+                        '.quick_oql_edit [data-test="oqlErrorMessage"]'
+                    ).getText() ===
+                        'Protein level data query specified in OQL, but no protein level profile is available in the selected study.'
+                );
+            },
+            { timeout: 20000 }
+        );
 
         // submit is disabled
-        assert(
-            !browser.isEnabled('button[data-test="oqlQuickEditSubmitButton"]')
-        );
+        assert(!$('button[data-test="oqlQuickEditSubmitButton"]').isEnabled());
     });
     it('auto-selects an mrna profile when mrna oql is entered', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
-        browser.waitForExist('[data-test="oqlQuickEditButton"]', 20000);
+        $('[data-test="oqlQuickEditButton"]').waitForExist({ timeout: 20000 });
 
-        browser.click('[data-test="oqlQuickEditButton"]');
+        $('[data-test="oqlQuickEditButton"]').click();
 
-        browser.waitForExist('.quick_oql_edit [data-test="geneSet"]', 5000);
+        $('.quick_oql_edit [data-test="geneSet"]').waitForExist({
+            timeout: 5000,
+        });
         setInputText(
             '.quick_oql_edit [data-test="geneSet"]',
             'TP53 PTEN: PROT>0'
         );
 
         let query = browser.execute(function() {
-            return urlWrapper.query;
-        }).value;
+            return { ...urlWrapper.query };
+        });
         // mutation and cna profile are there
         assert.equal(
             query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
@@ -764,11 +765,10 @@ describe('results page quick oql edit', () => {
         );
 
         browser.pause(1000); // give it a second
-        browser.waitForEnabled(
-            'button[data-test="oqlQuickEditSubmitButton"]',
-            5000
-        );
-        browser.click('button[data-test="oqlQuickEditSubmitButton"]');
+        $('button[data-test="oqlQuickEditSubmitButton"]').waitForEnabled({
+            timeout: 5000,
+        });
+        $('button[data-test="oqlQuickEditSubmitButton"]').click();
 
         // wait for query to load
         waitForOncoprint(20000);
@@ -776,8 +776,8 @@ describe('results page quick oql edit', () => {
         // mutation, cna, mrna profiles are there
         let profileFilter = (
             browser.execute(function() {
-                return urlWrapper.query;
-            }).value.profileFilter || ''
+                return { ...urlWrapper.query };
+            }).profileFilter || ''
         ).split(',');
         // mutation, cna, mrna profiles are there
         assert.equal(profileFilter.includes('mutations'), true);

@@ -54,7 +54,7 @@ describe('posting query parameters (instead of GET) to query page', function() {
 
             const postData = browser.execute(() => {
                 return window.postData;
-            }).value;
+            });
 
             assert(
                 postData === null,
