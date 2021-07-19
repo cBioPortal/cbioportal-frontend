@@ -798,6 +798,26 @@ export type StudyViewFilter = {
         'studyIds': Array < string >
 
 };
+export type TreatmentSankeyGraph = {
+    'edges': Array < TreatmentSequenceEdge >
+
+        'nodes': Array < TreatmentSequenceNode >
+
+};
+export type TreatmentSequenceEdge = {
+    'count': number
+
+        'from': TreatmentSequenceNode
+
+        'to': TreatmentSequenceNode
+
+};
+export type TreatmentSequenceNode = {
+    'index': number
+
+        'treatment': string
+
+};
 export type TypeOfCancer = {
     'cancerTypeId': string
 
@@ -7540,4 +7560,80 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getTreatmentSequencesUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/treatments/sankey';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all patient level treatments
+     * @method
+     * @name CBioPortalAPI#getTreatmentSequencesUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getTreatmentSequencesUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/treatments/sankey';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all patient level treatments
+     * @method
+     * @name CBioPortalAPI#getTreatmentSequencesUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    getTreatmentSequencesUsingPOST(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < TreatmentSankeyGraph > {
+        return this.getTreatmentSequencesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 }

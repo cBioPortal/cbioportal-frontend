@@ -158,6 +158,7 @@
     "cssnano": "^3.10.0",
     "d3": "3.5.6",
     "d3-dsv": "1.0.8",
+    "react-google-charts": "3.0.15",
     "d3-scale": "^2.0.0",
     "d3-scale-chromatic": "^1.3.3",
     "datatables.net": "^1.10.13",

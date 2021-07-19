@@ -4317,6 +4317,41 @@
         },
         "deprecated": false
       }
+    },
+    "/treatments/sankey": {
+      "post": {
+        "tags": [
+          "Treatments"
+        ],
+        "summary": "Get all patient level treatments",
+        "operationId": "getTreatmentSequencesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/TreatmentSankeyGraph"
+            }
+          }
+        },
+        "deprecated": false
+      }
     }
   },
   "definitions": {
@@ -6094,6 +6129,53 @@
         }
       },
       "title": "StudyViewFilter"
+    },
+    "TreatmentSankeyGraph": {
+      "type": "object",
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreatmentSequenceEdge"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TreatmentSequenceNode"
+          }
+        }
+      },
+      "title": "TreatmentSankeyGraph"
+    },
+    "TreatmentSequenceEdge": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "from": {
+          "$ref": "#/definitions/TreatmentSequenceNode"
+        },
+        "to": {
+          "$ref": "#/definitions/TreatmentSequenceNode"
+        }
+      },
+      "title": "TreatmentSequenceEdge"
+    },
+    "TreatmentSequenceNode": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "treatment": {
+          "type": "string"
+        }
+      },
+      "title": "TreatmentSequenceNode"
     },
     "TypeOfCancer": {
       "type": "object",
