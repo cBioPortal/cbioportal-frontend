@@ -49,10 +49,12 @@ export default class ExonColumnFormatter {
         showTotalNumberOfExons?: boolean
     ) {
         let status: TableCellStatus | null = null;
-
         if (genomeNexusCacheData === null) {
             status = TableCellStatus.LOADING;
-        } else if (genomeNexusCacheData.status === 'error') {
+        } else if (
+            genomeNexusCacheData.status === 'error' ||
+            genomeNexusCacheData.data?.successfully_annotated === false
+        ) {
             status = TableCellStatus.ERROR;
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
