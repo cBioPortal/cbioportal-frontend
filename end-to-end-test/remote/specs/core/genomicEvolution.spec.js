@@ -20,51 +20,48 @@ describe('Patient View Genomic Evolution tab', function() {
         });
         it('shows only highlighted, or all mutations, depending on setting', () => {
             // at first, showing all mutations
-            browser.waitForExist(
-                'input[data-test="TableShowOnlyHighlighted"]',
-                3000
-            );
+            $('input[data-test="TableShowOnlyHighlighted"]').waitForExist({
+                timeout: 3000,
+            });
             assert(
-                !browser.isSelected(
-                    'input[data-test="TableShowOnlyHighlighted"]'
-                )
+                !$('input[data-test="TableShowOnlyHighlighted"]').isSelected()
             );
 
             // at first, more than 2 mutations (making this ambiguous to be unaffected by data changes
-            browser.waitForExist(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-            );
-            let numMutationsText = browser.getText(
+            ).waitForExist();
+            let numMutationsText = $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-            );
+            ).getText();
             let numMutations = parseInt(numMutationsText, 10);
             assert(numMutations > 2);
 
             // now select two mutations
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
-            browser.click(
+            ).click();
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(4)'
-            );
+            ).click();
 
             // should still show all
-            browser.waitForExist(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-            );
-            numMutationsText = browser.getText(
+            ).waitForExist();
+            numMutationsText = $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-            );
+            ).getText();
             numMutations = parseInt(numMutationsText, 10);
             assert(numMutations > 2);
 
             // now select "show only highlighted"
-            browser.click('input[data-test="TableShowOnlyHighlighted"]');
+            $('input[data-test="TableShowOnlyHighlighted"]').click();
             browser.waitUntil(
                 () => {
-                    numMutationsText = browser.getText(
+                    numMutationsText = $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-                    );
+                    ).getText();
                     numMutations = parseInt(numMutationsText, 10);
                     return numMutations === 2;
                 },
@@ -73,14 +70,14 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on one of the 2 mutations
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
+            ).click();
             browser.waitUntil(
                 () => {
-                    numMutationsText = browser.getText(
+                    numMutationsText = $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-                    );
+                    ).getText();
                     numMutations = parseInt(numMutationsText, 10);
                     return numMutations === 1;
                 },
@@ -89,14 +86,14 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on the last remaining mutation
-            browser.click(
+            $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
-            );
+            ).click();
             browser.waitUntil(
                 () => {
-                    numMutationsText = browser.getText(
+                    numMutationsText = $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
-                    );
+                    ).getText();
                     numMutations = parseInt(numMutationsText, 10);
                     return numMutations > 2;
                 },

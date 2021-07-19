@@ -66,6 +66,7 @@ export default class OncoprinterTool extends React.Component<
     constructor(props: IOncoprinterToolProps) {
         super(props);
         makeObservable(this);
+        (window as any).oncoprinterTool = this;
     }
 
     componentDidMount() {
@@ -105,7 +106,7 @@ export default class OncoprinterTool extends React.Component<
     }
 
     @action.bound
-    private onGeneticDataInputChange(e: any) {
+    public onGeneticDataInputChange(e: any) {
         this.geneticDataInput = e.currentTarget.value;
     }
 
