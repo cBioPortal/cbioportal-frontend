@@ -16,6 +16,22 @@ let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 // correct if screenshot directory has trailing slash
 screenshotRoot = screenshotRoot.replace(/\/$/, '');
 
+const chromeArgs = [
+    '--disable-composited-antialiasing',
+    '--allow-insecure-localhost',
+].concat(
+    (function() {
+        return process.env.HEADLESS_CHROME
+            ? [
+                  '--headless',
+                  '--no-sandbox',
+                  '--disable-gpu',
+                  '--disable-setuid-sandbox',
+              ]
+            : [];
+    })()
+);
+
 var diffDir = path.join(process.cwd(), `${screenshotRoot}/diff/`);
 var refDir = path.join(process.cwd(), `${screenshotRoot}/reference/`);
 var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
@@ -138,10 +154,7 @@ exports.config = {
             //
             browserName: 'chrome',
             'goog:chromeOptions': {
-                args: [
-                    '--disable-composited-antialiasing',
-                    '--allow-insecure-localhost',
-                ],
+                args: chromeArgs,
             },
             acceptInsecureCerts: true,
             acceptSslCerts: true,
