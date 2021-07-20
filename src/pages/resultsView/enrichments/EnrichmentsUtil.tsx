@@ -11,7 +11,10 @@ import {
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
 import * as _ from 'lodash';
-import { AlterationTypeConstants } from '../ResultsViewPageStore';
+import {
+    AlterationTypeConstants,
+    DataTypeConstants,
+} from '../ResultsViewPageStore';
 import { filterAndSortProfiles } from '../coExpression/CoExpressionTabUtils';
 import { IMiniFrequencyScatterChartData } from './MiniFrequencyScatterChart';
 import {
@@ -535,9 +538,12 @@ export function pickMethylationEnrichmentProfiles(
 export function pickGenericAssayEnrichmentProfiles(
     profiles: MolecularProfile[]
 ) {
+    // TODO: Pick profiles from all Generic Assay dataTypes after we implement related features
     return profiles.filter(p => {
         return (
-            p.molecularAlterationType === AlterationTypeConstants.GENERIC_ASSAY
+            p.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY &&
+            p.datatype === DataTypeConstants.LIMITVALUE
         );
     });
 }
