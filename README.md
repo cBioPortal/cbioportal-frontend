@@ -132,52 +132,19 @@ End-to-end tests can be run against public cbioportal instances or against a loc
 
 ## Run of `remote e2e-tests`
 
-First, install webdriver-manager, which manages standalone Selenium installation:
-```
-yarn global add webdriver-manager
-```
-Run updater to get necessary binaries
-```
-webdriver-manager update
-
-// ALTERNATIVE
-// Specify chrome version if your local chrome version is not up to date.
-// This ensures that chromedriver is compatible with your local chrome
-// If it's out of sync, tests will not run
-webdriver-manager update --versions.chrome=[e.g. 86.0.4240.198]
+Follow instructions to boot up frontend dev server. This is the frontend that will be under test in the e2e tests (running against production backend/api)
 
 ```
-Start the webdriver-manager
-```
-webdriver-manager start
-```
-
-> **Tip:** To verify that your webdriver-manager is running, go to:  http://127.0.0.1:4444/wd/hub/static/resource/hub.html.
-
-> **Windows Tip:** If you are developing on Ubuntu under Windows Subsystem for Linux (WSL), we recommend that you install and run webdriver-manager via Powershell/Windows.  If you install and run webdriver-manager via Ubuntu, webdriver-manager has a hard time finding the Chrome browser, and this will cause all the end-to-end tests to fail.
-
-In a second terminal, run the frontend
-```bash
-
-# export any custom external API URLs by editing env/custom.sh
-yarn run startSSL
-```
-> **Tip:** Before going to the next step, verify that your front end code is running by going to: https://localhost:3000/.
-
-In a third terminal, run the e2e tests
-```bash
-export SPEC_FILE_PATTERN=./remote/specs/**/*.spec.js
-export SCREENSHOT_DIRECTORY=./remote/screenshots
-export BRANCH_ENV=master # or rc if branching from rc
-# export any custom external API URLs in env/custom.sh
 cd end-to-end-test
-yarn install
-yarn run test-webdriver-manager
-# use `test-webdriver-manager-debug` for debugging of tests
-```
-If all goes well, you will soon seen the end-to-end tests running via your Chrome browser.
 
-> **Tip:** If you want to run just one end-to-end test, you can modify `SPEC_FILE_PATTERN` accordingly.  For example, if you want to only run the `genomicEvolution.spec.js` test, you can use:  `export SPEC_FILE_PATTERN=./remote/specs/core/genomicEvolution.spec.js`.
+// install deps
+yarn 
+
+```
+
+```
+yarn run e2e:remote --grep=some.spec* 
+```
 
 ### Mount of frontend onto HTTPS backend
 A custom frontend can be tested against any backend in the web browser using a local node server (command `yarn run start`) and the `localdev` flag passed to th e browser (see section 'Check in cBioPortal context'). For remote backends that communicate over a HTTP over SSL (https) connection (e.g., cbioportal.org or rc.cbioportal.org), the frontend has to be served over SSL as well. In this case run `yarn run startSSL` in stead of `yarn run start`.
