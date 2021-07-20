@@ -1,15 +1,15 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.4.23",
+  "version": "0.5.0",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "typings": "dist/index.d.ts",
   "styles": "dist/styles.css",
   "engines": {
-    "node": ">=8.12.0",
-    "yarn": ">=1.22.4"
+    "node": "15.2.1",
+    "yarn": "1.22.5"
   },
   "files": [
     "dist"
@@ -38,14 +38,14 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-utils": "^0.2.36",
+    "cbioportal-utils": "^0.3.0",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "measure-text": "0.0.4",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "object-sizeof": "^1.2.0",
-    "oncokb-ts-api-client": "^1.1.6",
+    "oncokb-ts-api-client": "^1.1.7",
     "rc-tooltip": "^5.0.2",
     "rc-trigger": "^5.2.1",
     "rc-util": "^5.8.0",

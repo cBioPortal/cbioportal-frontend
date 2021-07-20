@@ -6,26 +6,25 @@ defaults: &defaults
   working_directory: /tmp/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.12.0-browsers
+    - image: circleci/node:15.2.1-browsers
 
 run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
   steps:
-    - run:
-        name: "Install yarn at specific version"
-        command:
-          sudo npm install --global yarn@1.22.4
+    #    - run:
+    #        name: "Install yarn at specific version"
+    #        command:
+    #          sudo npm install --global yarn@1.22.4
     - attach_workspace:
         at: /tmp/
     - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
+          sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
           yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' --gekko false && \
-          ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '70.0.3538.110' --versions.standalone '3.141.59' & \
-          ./scripts/env_vars.sh && \
-          eval "$(./scripts/env_vars.sh)" && \
+          ../scripts/env_vars.sh && \
+          eval "$(../scripts/env_vars.sh)" && \
           curl $CBIOPORTAL_URL > /dev/null && \
           sleep 5s && \
           curl $CBIOPORTAL_URL > /dev/null && \
@@ -34,9 +33,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 20s && \
           (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
           sleep 1s && \
-          cd end-to-end-test && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
-          yarn run e2e
+          yarn run test-webdriver-manager-remote
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: true
@@ -45,14 +43,14 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/screenshots
-        destination: /screenshots
+         path: /tmp/repo/end-to-end-test/remote/screenshots
+         destination: /screenshots
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/shared/image-compare
-        destination: /image-compare
+         path: /tmp/repo/end-to-end-test/shared/image-compare
+         destination: /image-compare
     -  store_artifacts:
-        path: /tmp/repo/end-to-end-test/remote/error
-        destination: /errorShots
+         path: /tmp/repo/end-to-end-test/remote/error
+         destination: /errorShots
     - store_test_results:
         path: /tmp/repo/end-to-end-test/remote/junit
     - store_artifacts:
@@ -60,17 +58,22 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - store_artifacts:
         path: /tmp/repo/end-to-end-test/shared/imageCompare.html
         destination: /imageCompare.html
-
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/junit/customReport.json
+        destination: /customReport.json
+    - store_artifacts:
+        path: /tmp/repo/end-to-end-test/remote/junit/errors
+        destination: /errors
 
 version: 2
 jobs:
   install:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+      #      - run:
+      #          name: "Install yarn at specific version"
+      #          command:
+      #            sudo npm install --global yarn@1.22.4
       - run:
           name: "Show yarn and node versions"
           command: |
@@ -84,8 +87,8 @@ jobs:
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
       - restore_cache:
           keys:
-          - v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-          - v6-dependencies-{{ checksum "yarn.lock" }}
+            - v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+            - v6-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
@@ -126,10 +129,10 @@ jobs:
   unit_tests:
     <<: *defaults
     steps:
-      - run:
-          name: "Install yarn at specific version"
-          command:
-            sudo npm install --global yarn@1.22.4
+      #      - run:
+      #          name: "Install yarn at specific version"
+      #          command:
+      #            sudo npm install --global yarn@1.22.4
       - attach_workspace:
           at: /tmp/
       # run tests!
@@ -170,7 +173,7 @@ jobs:
   end_to_end_tests:
     <<: *defaults
     environment:
-      SPEC_FILE_PATTERN: ./remote/specs/core/**/*.spec.js
+      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
@@ -186,22 +189,26 @@ jobs:
       - run:
           # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
           name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-          command: pyenv local 3.5.2 && virtualenv venv
+          command: pyenv local 3.6.5 && virtualenv venv
       - run:
           name: Setup python libraries
           command: |
-              pip3 install requests pyyaml
+            pip3 install requests pyyaml
+      #      - run:
+      #          name: Install canvas deps [for screenshot comparison]
+      #          command: |
+      #              sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
       - run:
           name: Install dependencies
           command: |
-              sudo apt-get update && \
-              sudo apt-get install jq unzip
+            sudo apt-get update && \
+            sudo apt-get install jq unzip
       - run:
           name: Setup e2e-environment
           command: |
-              source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
-              cd $TEST_HOME/runtime-config && \
-              ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
+            source $PORTAL_SOURCE_DIR/env/custom.sh || true && \
+            cd $TEST_HOME/runtime-config && \
+            ./setup_environment.sh && ./setup_environment.sh >> $BASH_ENV
       - run:
           name: Check build whether custom backend is needed
           command: |
@@ -214,7 +221,7 @@ jobs:
       - run:
           name: Build custom backend
           command: |
-              grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
+            grep -q 0 /tmp/repo/custom_backend_switch || $TEST_HOME/docker_compose/build.sh
           no_output_timeout: 25m
       - save_cache:
           paths:
@@ -223,7 +230,7 @@ jobs:
       - run:
           name: Setup docker compose assets
           command: |
-              $TEST_HOME/docker_compose/setup.sh
+            $TEST_HOME/docker_compose/setup.sh
           no_output_timeout: 25m
       - run:
           name: Generate checksum of data that populates the test database
@@ -236,10 +243,10 @@ jobs:
             docker volume rm --force cbioportal-docker-compose_cbioportal_mysql_data && mkdir -p $CBIO_DB_DATA_DIR && rm -rf $CBIO_DB_DATA_DIR/*
       - restore_cache:
           keys:
-          - v6-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
+            - v6-cbio-database-files-{{ checksum "/tmp/db_data_md5key" }}
       - restore_cache:
           keys:
-          - v6-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+            - v6-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
           name: Init database
           command: |
@@ -248,8 +255,8 @@ jobs:
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
-              sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
-              sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
+            sudo chmod -R 777 $CBIO_DB_DATA_DIR && \
+            sudo chown -R circleci:circleci $CBIO_DB_DATA_DIR
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/cbio_db_data
@@ -257,7 +264,7 @@ jobs:
       - run:
           name: Start cbioportal and other services
           command: |
-              $TEST_HOME/docker_compose/start.sh
+            $TEST_HOME/docker_compose/start.sh
       - run:
           name: Change owner of MySQL database files (needed by cache)
           command: |
@@ -270,96 +277,105 @@ jobs:
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
-              cd $PORTAL_SOURCE_DIR && \
-              $TEST_HOME/docker_compose/test.sh
+            cd $PORTAL_SOURCE_DIR && \
+            $TEST_HOME/docker_compose/test.sh
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
           command: 'for f in $TEST_HOME/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/screenshots
-          destination: /screenshots
+           path: /tmp/repo/end-to-end-test/local/screenshots
+           destination: /screenshots
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/shared/image-compare
-          destination: /image-compare
+           path: /tmp/repo/end-to-end-test/shared/image-compare
+           destination: /image-compare
       -  store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/errorShots
-          destination: /errorShots
+           path: /tmp/repo/end-to-end-test/local/errorShots
+           destination: /errorShots
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
-      - store_artifacts:
-          path: /tmp/repo/end-to-end-test/local/junit
+          destination: /results
+      #      - store_artifacts:
+      #          path: /tmp/repo/end-to-end-test/local/junit
+      #          destination: /results
       - store_artifacts:
           path: /tmp/repo/end-to-end-test/shared/imageCompare.html
           destination: /imageCompare.html
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit/customReport.json
+          destination: /customReport.json
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/remote/junit/errors
+          destination: /errors
+
     environment:
-        PORTAL_SOURCE_DIR: /tmp/repo
-        TEST_HOME: /tmp/repo/end-to-end-test/local
-        E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
-        CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
-        KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
+      PORTAL_SOURCE_DIR: /tmp/repo
+      TEST_HOME: /tmp/repo/end-to-end-test/local
+      E2E_WORKSPACE: /tmp/repo/e2e-localdb-workspace
+      CBIO_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/cbio_db_data
+      KC_DB_DATA_DIR: /tmp/repo/e2e-localdb-workspace/kc_db_data
 
   prettier:
     <<: *defaults
     steps:
-    - attach_workspace:
-        at: /tmp/
-    - run:
-        name: 'Check code style with Prettier'
-        command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
+      - attach_workspace:
+          at: /tmp/
+      - run:
+          name: 'Check code style with Prettier'
+          command: cd /tmp/repo/ && yarn run prettierCheckCircleCI
 
 workflows:
-    version: 2
-    install_and_test:
-        jobs:
+  version: 2
+  install_and_test:
+    jobs:
+      - install
+      - prettier:
+          requires:
             - install
-            - prettier:
-                requires:
-                    - install
-                filters:
-                    branches:
-                       ignore:
-                           - master
-                           - release-*
-                           - rc
-            - unit_tests:
-                requires:
-                    - install
-            - end_to_end_tests:
-                requires:
-                    - install
-            - end_to_end_tests_localdb:
-                requires:
-                    - install
-            - api_sync:
-                requires:
-                    - install
-            - check_forgotten_spec_only_statements:
-                requires:
-                    - install
-            - check_incorrect_import_statements:
-                requires:
-                    - install
-    nightly:
-       triggers:
-           - schedule:
-               cron: "0 22 * * *"
-               filters:
-                   branches:
-                       only:
-                           - master
-                           - rc
-       jobs:
-           - install
-           - api_sync:
-               requires:
-                   - install
-           - unit_tests:
-               requires:
-                   - install
-           - end_to_end_tests:
-               requires:
-                   - install
-           - end_to_end_tests_localdb:
-               requires:
-                   - install
+          filters:
+            branches:
+              ignore:
+                - master
+                - release-*
+                - rc
+      - unit_tests:
+          requires:
+            - install
+      - end_to_end_tests:
+          requires:
+            - install
+      - end_to_end_tests_localdb:
+          requires:
+            - install
+      - api_sync:
+          requires:
+            - install
+      - check_forgotten_spec_only_statements:
+          requires:
+            - install
+      - check_incorrect_import_statements:
+          requires:
+            - install
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 22 * * *"
+          filters:
+            branches:
+              only:
+                - master
+                - rc
+    jobs:
+      - install
+      - api_sync:
+          requires:
+            - install
+      - unit_tests:
+          requires:
+            - install
+      - end_to_end_tests:
+          requires:
+            - install
+      - end_to_end_tests_localdb:
+          requires:
+            - install
 

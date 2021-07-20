@@ -1,15 +1,15 @@
 {
   "name": "cbioportal-utils",
   "description": "cBioPortal Utilities",
-  "version": "0.2.36",
+  "version": "0.3.0",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "typings": "dist/index.d.ts",
   "styles": "dist/styles.css",
   "engines": {
-    "node": ">=8.12.0",
-    "yarn": ">=1.22.4"
+    "node": "15.2.1",
+    "yarn": "1.22.5"
   },
   "files": [
     "dist"
@@ -29,9 +29,9 @@
     "test:watch": "yarn run test -- --watch"
   },
   "dependencies": {
-    "genome-nexus-ts-api-client": "^1.1.15",
+    "genome-nexus-ts-api-client": "^1.1.16",
     "lodash": "^4.17.11",
-    "oncokb-ts-api-client": "^1.1.6",
+    "oncokb-ts-api-client": "^1.1.7",
     "superagent": "^3.8.3",
     "typescript": "4.0.3"
   },

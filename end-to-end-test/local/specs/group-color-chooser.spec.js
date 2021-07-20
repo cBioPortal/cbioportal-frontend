@@ -4,6 +4,7 @@ const goToUrlAndSetLocalStorage = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 const waitForGroupComparisonTabOpen = require('../../shared/specUtils')
     .waitForGroupComparisonTabOpen;
+const { setDropdownOpen } = require('../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014_test_generic_assay`;
@@ -30,9 +31,15 @@ describe('color chooser for groups menu in study view', function() {
     const gbGroupButton = '[data-test=groupSelectorButtonGB]';
     const oastGroupButton = '[data-test=groupSelectorButtonOAST]';
 
+    const gbGroupColorIcon = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIcon}`;
+    const gbGroupColorIconRect = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconRect}`;
+    const gbGroupColorIconEmpty = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconEmpty}`;
+    const gbGroupColorIconBlue = `[data-test="group-checkboxes"] [data-test="GB"] ${colorIconBlue}`;
+
     before(() => {
         goToUrlAndSetLocalStorage(studyViewUrl, true);
         waitForStudyView();
+        deleteAllGroups();
     });
 
     it('shows no icon color for new group', () => {
@@ -46,34 +53,34 @@ describe('color chooser for groups menu in study view', function() {
         $(finalizeGroupButton).click();
 
         // check color
-        $(colorIconRect).waitForExist();
-        const GroupGbColorIcon = $(colorIconRect);
+        $(gbGroupColorIconRect).waitForExist();
+        const GroupGbColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(GroupGbColorIcon.getAttribute('fill'), '#FFFFFF');
     });
 
     it('shows new color in icon when new color is selected', () => {
         // open color picker and select blue
-        $(colorIcon).click();
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         $(colorPickerBlue).click();
-        $(colorIconBlue).waitForExist();
+        $(gbGroupColorIconBlue).waitForExist();
         // check the color icon
-        const GroupGbColorIcon = $(colorIconRect);
+        const GroupGbColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(GroupGbColorIcon.getAttribute('fill'), '#2986e2');
     });
 
     it('selects no color after pressing same color', () => {
-        // color picker already open from previous test
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         // unselect blue and check the color icon
         $(colorPickerBlue).click();
-        $(colorIconEmpty).waitForExist();
-        const groupGBColorIcon = $(colorIconRect);
+        $(gbGroupColorIconEmpty).waitForExist();
+        const groupGBColorIcon = $(gbGroupColorIconRect);
         assert.strictEqual(groupGBColorIcon.getAttribute('fill'), '#FFFFFF');
     });
 
     it('warns of same color in groups selected for comparison', () => {
         // close the color picker and group menu
-        $(colorIcon).click();
-        $(groupsMenuButton).click();
+        setDropdownOpen(false, gbGroupColorIcon, colorPickerBlue);
+        closeGroupsMenu();
 
         // unselect previous oncotree code and select another
         $$(oncotreePies)[1].click();
@@ -86,11 +93,11 @@ describe('color chooser for groups menu in study view', function() {
 
         // select same color for both groups
         browser.waitUntil(() => $$(colorIcon).length === 2);
-        $$(colorIcon)[0].click();
+        setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         $(colorPickerBlue).click();
         // close color picker 0 before going to next one
-        $$(colorIcon)[0].click();
-        $$(colorIcon)[1].click();
+        setDropdownOpen(false, gbGroupColorIcon, colorPickerBlue);
+        setDropdownOpen(true, $$(colorIcon)[1], colorPickerBlue);
         $(colorPickerBlue).click();
 
         // assert that warning sign exists
@@ -159,12 +166,13 @@ describe('color chooser for groups menu in study view', function() {
         $(colorPickerGreen).click();
 
         // open comparison tab
+        const studyViewTabId = browser.getWindowHandles()[0];
         $(compareButton).click();
-        const studyViewTabId = browser.getCurrentTabId();
+        browser.waitUntil(() => browser.getWindowHandles().length > 1); // wait until new tab opens
         const groupComparisonTabId = browser
-            .windowHandles()
-            .value.filter(id => id !== studyViewTabId)[0];
-        browser.window(groupComparisonTabId);
+            .getWindowHandles()
+            .find(id => id !== studyViewTabId);
+        browser.switchToWindow(groupComparisonTabId);
         waitForGroupComparisonTabOpen();
 
         // check that selected colors are used
@@ -179,7 +187,21 @@ describe('color chooser for groups menu in study view', function() {
     });
 
     const openGroupsMenu = () => {
-        $(groupsMenuButton).click();
-        $(createNewGroupButton).waitForExist();
+        setDropdownOpen(true, groupsMenuButton, createNewGroupButton);
+    };
+    const closeGroupsMenu = () => {
+        setDropdownOpen(false, groupsMenuButton, createNewGroupButton);
+    };
+    const deleteAllGroups = () => {
+        openGroupsMenu();
+        try {
+            $('[data-test="deleteGroupButton"]').waitForExist();
+            for (const button of $$('[data-test="deleteGroupButton"]')) {
+                button.click();
+            }
+        } catch (e) {
+            // no groups to delete
+        }
+        closeGroupsMenu();
     };
 });

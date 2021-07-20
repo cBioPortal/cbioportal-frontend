@@ -1,15 +1,15 @@
 {
   "name": "cbioportal-ts-api-client",
   "description": "cBioPortal API Client for TypeScript",
-  "version": "0.9.25",
+  "version": "0.9.26",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
   "typings": "dist/index.d.ts",
   "styles": "dist/styles.css",
   "engines": {
-    "node": ">=8.12.0",
-    "yarn": ">=1.22.4"
+    "node": "15.2.1",
+    "yarn": "1.22.5"
   },
   "files": [
     "dist"

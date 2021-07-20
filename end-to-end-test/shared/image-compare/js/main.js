@@ -1,3 +1,9 @@
+const isLocalHost = /127.0.0.1|localhost/.test(window.location.hostname);
+
+var runMode = 'remote';
+
+const LI_INDEX_ATTR = 'data-index';
+
 function getURLParameterByName(name) {
     name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
     var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
@@ -17,6 +23,10 @@ function getRootUrl(href) {
 
 var rootUrl = getRootUrl(window.location.href);
 
+var reportUrl = isLocalHost
+    ? './results/customReport.json'
+    : `./customReport.json`;
+
 var diffSliderMode = true;
 
 function updateComparisonMode() {
@@ -34,37 +44,67 @@ $(document).on('click', '#toggleDiffModeBtn', () => {
     updateComparisonMode();
 });
 
-$(document).ready(function() {
-    var selectedSSIndex = 0;
+function buildData(reportData) {
+    const data = reportData.map(test => {
+        const testName = test.title.replace(/\s/g, '_').toLowerCase();
+        const imagePath = `/${testName}_element_chrome_1600x1000.png`;
+        const rootUrl = isLocalHost
+            ? `/${runMode}/screenshots/`
+            : './screenshots/';
+        return {
+            screenImagePath: `${rootUrl}screen${imagePath}`,
+            diffImagePath: `${rootUrl}diff${imagePath}`,
+            refImagePath: `${rootUrl}reference${imagePath}`,
+            imageName: testName,
+            test,
+        };
+    });
 
-    var $list = $('<ul></ul>').prependTo('body');
+    return data;
+}
 
-    errorImages.forEach((item, index) => {
+function renderList(data) {
+    var $div = $('<div></div>')
+        .prependTo('body')
+        .css({
+            'max-height': 350,
+            overflow: 'scroll',
+        });
+    var $list = $('<ul></ul>').appendTo($div);
+
+    data.forEach((item, index) => {
+        var test = item.test;
         $(
-            `<li><a data-index='${index}' data-path='${item}' href="javascript:void">${item}</a></li>`
-        ).appendTo($list);
+            `<li><a ${LI_INDEX_ATTR}='${index}' href="javascript:void(0)">${item.imageName}</a></li>`
+        )
+            .appendTo($list)
+            .click(function() {
+                $list.find('a').removeClass('active');
+                $(this)
+                    .find('a')
+                    .addClass('active');
+                selectedSSIndex = parseInt(
+                    $(this)
+                        .find('a')
+                        .attr(LI_INDEX_ATTR)
+                );
+                buildDisplay(item, data, '', runMode);
+                clearSideBySideInterval();
+            });
     });
 
-    $list.on('click', 'a', function() {
-        selectedSSIndex = parseInt($(this).attr('data-index'), 10);
-        $list.find('a').removeClass('active');
-
-        $(this).addClass('active');
-        buildDisplay($(this).attr('data-path'), rootUrl, runMode);
-        clearSideBySideInterval();
-    });
-
+    // click first one
     $list
         .find('a')
         .get(0)
         .click();
 
     function clampSSIndex(i) {
-        return Math.max(Math.min(i, errorImages.length - 1), 0);
+        return Math.max(Math.min(i, data.length - 1), 0);
     }
 
     function selectSS() {
-        $(`a[data-index="${selectedSSIndex}"]`).click();
+        $(`a[${LI_INDEX_ATTR}="${selectedSSIndex}"]`).click();
     }
 
     $('#nextSS').click(() => {
@@ -75,27 +115,56 @@ $(document).ready(function() {
         selectedSSIndex = clampSSIndex(selectedSSIndex - 1);
         selectSS();
     });
+}
+
+async function bootstrap() {
+    const reportData = await getResultsReport();
+    //'https://circle-production-customer-artifacts.s3.amazonaws.com/picard/57cbb4ee69052f70a6140478/60021ce16cb7c3145511b486-0-build/artifacts'
+
+    runMode = reportData.testHome || 'remote';
+
+    const filteredReportData = reportData.tests.filter(test => {
+        return (
+            test.state === 'failed' &&
+            /isWithinMisMatchTolerance/i.test(test.error.message)
+        );
+    });
+
+    const data = buildData(filteredReportData);
+
+    renderList(data);
+}
+
+var selectedSSIndex = 0;
+$(document).ready(function() {
+    bootstrap();
 });
 
 var sideBySideCycleInterval = null;
 
 function buildImagePath(ref, rootUrl) {
     return {
-        screenImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'screen/'),
-        diffImagePath:
-            `${rootUrl}screenshots/` + ref.replace(/^reference\//, 'diff/'),
+        screenImagePath: `${rootUrl}` + ref.replace(/reference\//, 'screen/'),
+        diffImagePath: `${rootUrl}` + ref.replace(/reference\//, 'diff/'),
         refImagePath: `${rootUrl}screenshots/${ref}`,
         imageName: ref.substring(ref.lastIndexOf('/') + 1),
     };
 }
 
-function buildCurlStatement(data, runMode) {
+function buildCurlStatement(data) {
     // -L means follow redirects
     //      CircleCI seems to be hosting their files differently now, with the real URL
     //      being behind a redirect, and so if we don't use the -L option we end up with a corrupted file.
     //      -L makes curl "follow" the redirect so it downloads the file correctly.
-    return `curl -L '${data.screenImagePath}' > 'end-to-end-test/${runMode}/screenshots/reference/${data.imageName}'; git add 'end-to-end-test/${runMode}/screenshots/reference/${data.imageName}';`;
+
+    const imageUrl = window.location.href.replace(
+        /imageCompare\.html?/,
+        data.screenImagePath
+    );
+
+    const imageName = data.imageName;
+
+    return `curl -L '${imageUrl}' > 'end-to-end-test/${runMode}/screenshots/reference/${imageName}'; git add 'end-to-end-test/${runMode}/screenshots/reference/${imageName}';`;
 }
 
 function updateSideBySide(opacity) {
@@ -108,13 +177,13 @@ function clearSideBySideInterval() {
     $('#sidebyside_cycleBtn')[0].style['background-color'] = '#ffffff';
 }
 
-function buildDisplay(ref, rootUrl, runMode) {
-    var data = buildImagePath(ref, rootUrl);
-
-    var curlStatements = errorImages.map(item => {
-        var data = buildImagePath(item, rootUrl);
-        return buildCurlStatement(data, runMode);
+function buildDisplay(data, allData, rootUrl) {
+    var curlStatements = allData.map(item => {
+        var data = buildImagePath(item.refImagePath, rootUrl);
+        return buildCurlStatement(data);
     });
+
+    var thisData = buildImagePath(data.refImagePath, rootUrl);
 
     var template = `
      <h3 class="screenshot-name"></h3>
@@ -174,7 +243,7 @@ function buildDisplay(ref, rootUrl, runMode) {
         to the repo, commit it and push it to your PR's branch, that is:
         <br />
         <br />
-        <textarea class="curls">${buildCurlStatement(data)}</textarea>
+        <textarea class="curls">${buildCurlStatement(thisData)}</textarea>
         <br />
         <br />
         Then preferably use git commit --amend and change your commit message
@@ -240,6 +309,10 @@ function buildDisplay(ref, rootUrl, runMode) {
             makeResponsive: true,
         }
     );
+}
+
+function getResultsReport() {
+    return $.get(reportUrl);
 }
 
 function buildPage() {
