@@ -10,6 +10,8 @@ import {
     Sample,
     SampleIdentifier,
     SampleMolecularIdentifier,
+    StructuralVariant,
+    StructuralVariantFilter,
 } from 'cbioportal-ts-api-client';
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
 import { LoadingPhase } from 'pages/groupComparison/GroupComparisonLoading';
@@ -128,6 +130,53 @@ export async function getCnaData(
     });
 }
 
+export async function getSvData(
+    selectedSamples: Sample[],
+    svProfiles: MolecularProfile[],
+    hugoGeneSymbols: string[]
+) {
+    const sampleMolecularIdentifiers = getSampleMolecularIdentifiers(
+        selectedSamples,
+        svProfiles
+    );
+
+    const genes = await client.fetchGenesUsingPOST({
+        geneIdType: 'HUGO_GENE_SYMBOL',
+        geneIds: hugoGeneSymbols,
+    });
+
+    return client.fetchStructuralVariantsUsingPOST({
+        structuralVariantFilter: {
+            entrezGeneIds: genes.map(g => g.entrezGeneId),
+            sampleMolecularIdentifiers,
+        } as StructuralVariantFilter,
+    });
+}
+
+export function groupSvDataByGene(
+    svData: StructuralVariant[],
+    comparisonGenes: string[]
+) {
+    // group structural variants both by site 1 and site 2, but only for comparisonGenes
+    // We dont care to group data by the gene on the other side of the fusion, because
+    //  our comparison groups should just be based on the selected genes
+
+    const data: { [hugoSymbol: string]: StructuralVariant[] } = {};
+    for (const g of comparisonGenes) {
+        data[g] = [];
+    }
+
+    for (const d of svData) {
+        if (d.site1HugoSymbol in data) {
+            data[d.site1HugoSymbol].push(d);
+        }
+        if (d.site2HugoSymbol in data) {
+            data[d.site2HugoSymbol].push(d);
+        }
+    }
+    return data;
+}
+
 export function getComparisonParamsForTable(
     selectedRowsKeys: string[],
     chartType: ChartType
@@ -135,6 +184,7 @@ export function getComparisonParamsForTable(
     switch (chartType) {
         case ChartTypeEnum.MUTATED_GENES_TABLE:
         case ChartTypeEnum.CNA_GENES_TABLE:
+        case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             const hugoGeneSymbols = getHugoGeneSymbols(
                 chartType,
                 selectedRowsKeys.slice() // slice() gets rid of mobx wrapping which messes up API calls
