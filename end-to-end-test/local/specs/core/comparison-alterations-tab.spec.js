@@ -9,6 +9,8 @@ var selectReactSelectOption = require('../../../shared/specUtils')
     .selectReactSelectOption;
 var waitForNetworkQuiet = require('../../../shared/specUtils')
     .waitForNetworkQuiet;
+var openAlterationTypeSelectionMenu = require('../../../shared/specUtils')
+    .openAlterationTypeSelectionMenu;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const resultsViewComparisonTab = `${CBIOPORTAL_URL}/results/comparison?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=study_es_0&case_set_id=study_es_0_cnaseq&data_priority=0&gene_list=BRCA1%2520BRCA2&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=study_es_0_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=study_es_0_mutations&profileFilter=0&tab_index=tab_visualize&comparison_subtab=alterations`;
@@ -17,7 +19,7 @@ if (useExternalFrontend) {
     describe('comparison alterations tab', function() {
         beforeEach(() => {
             loadAlterationsTab();
-            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
+            openAlterationTypeSelectionMenu();
         });
 
         it('shows basic counts', function() {
@@ -41,7 +43,7 @@ if (useExternalFrontend) {
             $('[data-test=LazyMobXTable]').waitForDisplayed();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 8, 'table has 8 rows');
-            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
+            openAlterationTypeSelectionMenu();
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
@@ -55,7 +57,7 @@ if (useExternalFrontend) {
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForDisplayed();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
-            $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
+            openAlterationTypeSelectionMenu();
             clickAlterationTypeCheckBox('Deletion');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForDisplayed();

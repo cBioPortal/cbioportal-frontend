@@ -5,6 +5,8 @@ var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 var waitForStudyView = require('../../shared/specUtils').waitForStudyView;
 var waitForComparisonTab = require('../../shared/specUtils')
     .waitForComparisonTab;
+var openAlterationTypeSelectionMenu = require('../../shared/specUtils')
+    .openAlterationTypeSelectionMenu;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const studyViewUrl = `${CBIOPORTAL_URL}/study/summary?id=study_es_0`;
@@ -749,10 +751,4 @@ var openAlterationFilterMenuGroupComparison = () => {
     ).waitForDisplayed();
     $('[data-test=AlterationEnrichmentAnnotationsSelectorButton]').click();
     $('[data-test=GlobalSettingsDropdown]').waitForDisplayed();
-};
-
-var openAlterationTypeSelectionMenu = () => {
-    $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
-    $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
-    $('[data-test=AlterationTypeSelectorMenu]').waitForDisplayed();
 };
