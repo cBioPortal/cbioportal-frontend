@@ -597,6 +597,12 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
+var openAlterationTypeSelectionMenu = () => {
+    $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
+    $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
+    $('[data-test=AlterationTypeSelectorMenu]').waitForDisplayed();
+};
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -648,4 +654,5 @@ module.exports = {
     jsApiHover,
     jsApiClick,
     setCheckboxChecked,
+    openAlterationTypeSelectionMenu,
 };
