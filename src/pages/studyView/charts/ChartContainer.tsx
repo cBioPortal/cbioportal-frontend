@@ -88,6 +88,7 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.CNA_GENES_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
+    ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
 ];
 
 export interface IChartContainerProps {
