@@ -196,6 +196,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 );
             case ChartTypeEnum.MUTATED_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
+            case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                 return (
