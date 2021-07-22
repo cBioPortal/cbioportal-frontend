@@ -42,7 +42,7 @@ const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
 const STUDY_SUMMARY_RAW_DATA_DOWNLOAD =
     "[data-test='studySummaryRawDataDownloadIcon']";
 const CNA_GENES_TABLE = "[data-test='copy number alterations-table']";
-const CANCER_GENE_FILTER_ICON = "[data-test='cancer-gene-filter']";
+const CANCER_GENE_FILTER_ICON = "[data-test='header-filter-icon']";
 
 const WAIT_FOR_VISIBLE_TIMEOUT = 30000;
 
@@ -348,7 +348,7 @@ describe('check the fusion filter is working properly', () => {
     });
 });
 
-describe('cancer gene filter', () => {
+describe.only('cancer gene filter', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
         goToUrlAndSetLocalStorage(url);
