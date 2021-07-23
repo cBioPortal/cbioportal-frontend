@@ -231,6 +231,12 @@ export function getAnnotationData(
                 oncoKbIndicator,
                 oncoKbAvailableDataTypes,
             };
+        } else if (oncoKbData && oncoKbData.isPending) {
+            value = {
+                ...value,
+                oncoKbStatus: 'pending',
+                oncoKbIndicator: undefined,
+            };
         } else {
             value = {
                 ...value,

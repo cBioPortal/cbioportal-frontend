@@ -71,9 +71,18 @@ class CustomReporter extends WDIOReporter {
     }
     onSuiteEnd() {}
     onRunnerEnd() {
+        //console.log(this.runnerStat);
+
         let tests = Object.keys(this.testsByUid).map(k => {
             const test = this.testsByUid[k];
             const { output, ...simplified } = test;
+
+            const title = test.title.trim().replace(/\s/g, '_');
+
+            simplified.network = this.runnerStat.config.networkLog[title];
+
+            simplified.file = this.runnerStat.specs[0];
+
             return simplified;
         });
 
