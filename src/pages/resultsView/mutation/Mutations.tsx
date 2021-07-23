@@ -222,6 +222,12 @@ export default class Mutations extends React.Component<
                         trackVisibility={
                             this.userSelectionStore.trackVisibility
                         }
+                        columnVisibility={
+                            this.userSelectionStore.columnVisibility
+                        }
+                        storeColumnVisibility={
+                            this.userSelectionStore.storeColumnVisibility
+                        }
                         discreteCNACache={this.props.store.discreteCNACache}
                         pubMedCache={this.props.store.pubMedCache}
                         cancerTypeCache={this.props.store.cancerTypeCache}
