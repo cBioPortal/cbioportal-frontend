@@ -95,6 +95,7 @@ export {
     download as oncoKbAnnotationDownload,
     IOncoKbProps,
 } from './component/oncokb/OncoKB';
+export { default as OncoKbHelper } from './component/oncokb/OncoKbHelper';
 export { default as OncoKBSuggestAnnotationLinkout } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
 export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
 export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
@@ -161,6 +162,9 @@ export {
 export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
+    oncogenicityIconClassNames,
+    normalizeLevel,
+    levelIconClassNames,
 } from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';
