@@ -401,6 +401,8 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
+    networkLog: {},
+
     afterTest: function(
         test,
         context,
@@ -410,10 +412,23 @@ exports.config = {
             if (!fs.existsSync(errorDir)) {
                 fs.mkdirSync(errorDir, 0744);
             }
-            const title = test.title.replace(/\s/g, '_');
+            const title = test.title.trim().replace(/\s/g, '_');
             const img = `${errorDir}/${title}.png`;
             console.log('ERROR SHOT PATH' + img);
             browser.saveScreenshot(img);
+
+            var networkLog = browser.execute(function() {
+                Object.keys(window.ajaxRequests).forEach(key => {
+                    window.ajaxRequests[key].end = Date.now();
+                    window.ajaxRequests[key].duration =
+                        window.ajaxRequests[key].end -
+                        window.ajaxRequests[key].started;
+                });
+
+                return JSON.stringify(window.ajaxRequests);
+            });
+
+            this.networkLog[title.trim()] = networkLog;
         }
     },
 
