@@ -155,6 +155,17 @@ const switchGeneFilter = selectedOption => {
 };
 
 const doVafPlotScreenshotTest = () => {
+    // we need to hide annotation column in mutations table first
+    // because annotation column header icons will add extra height, the extra height will sometimes make scroll bar showing up on the right
+    // browser.checkElement() doesn't work correctly on tooltip when there is a scroll bar
+    // because scroll bar also takes some space and makes the total width shorter than tooltip, then tooltip will move to the right but browser.checkElement() still grabs the "old" position
+
+    // open columns dropdown
+    $('button*=Columns').click();
+    // click "Annotation" to hide annotation column
+    $('//*[text()="Annotation"]').click();
+    // close on columns dropdown
+    $('button*=Columns').click();
     var res = browser.checkElement('[data-test=vaf-plot]'); // grabs the full plot
     $('svg[data-test=vaf-plot]').moveTo(); // moves pointer to plot thumbnail
     var res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot

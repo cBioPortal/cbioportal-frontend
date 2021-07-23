@@ -136,6 +136,7 @@ export interface IMutationTableProps {
 }
 import MobxPromise from 'mobxpromise';
 import AppConfig from 'appConfig';
+import Timeout = NodeJS.Timeout;
 
 export enum MutationTableColumnType {
     STUDY,
@@ -244,6 +245,8 @@ export default class MutationTable<
         MutationTableColumn
     >;
     @observable.ref public table: LazyMobXTable<Mutation[]> | null = null;
+    @observable oncokbWidth = 22;
+    private oncokbInterval: Timeout;
 
     public static defaultProps = {
         initialItemsPerPage: 25,
@@ -267,6 +270,19 @@ export default class MutationTable<
             MutationTableColumn
         >;
         this.generateColumns();
+        this.oncokbInterval = setInterval(() => {
+            const oncokbContentWidth = document
+                .getElementById('mutation-annotation')
+                ?.getElementsByClassName('oncokb-content')[0]?.clientWidth;
+            if (oncokbContentWidth) {
+                this.oncokbWidth = Number(oncokbContentWidth) || 22;
+                clearInterval(this.oncokbInterval);
+            }
+        }, 500);
+    }
+
+    public destroy() {
+        clearInterval(this.oncokbInterval);
     }
 
     @autobind
@@ -805,25 +821,30 @@ export default class MutationTable<
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: 'Annotation',
-            render: (d: Mutation[]) =>
-                AnnotationColumnFormatter.renderFunction(d, {
-                    hotspotData: this.props.hotspotData,
-                    myCancerGenomeData: this.props.myCancerGenomeData,
-                    oncoKbData: this.props.oncoKbData,
-                    oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                    usingPublicOncoKbInstance: this.props
-                        .usingPublicOncoKbInstance,
-                    pubMedCache: this.props.pubMedCache,
-                    civicGenes: this.props.civicGenes,
-                    civicVariants: this.props.civicVariants,
-                    enableCivic: this.props.enableCivic as boolean,
-                    enableOncoKb: this.props.enableOncoKb as boolean,
-                    enableMyCancerGenome: this.props
-                        .enableMyCancerGenome as boolean,
-                    enableHotspot: this.props.enableHotspot as boolean,
-                    userEmailAddress: this.props.userEmailAddress,
-                    resolveTumorType: this.resolveTumorType,
-                }),
+            headerRender: (name: string) =>
+                AnnotationColumnFormatter.headerRender(name, this.oncokbWidth),
+            render: (d: Mutation[]) => (
+                <span id="mutation-annotation">
+                    {AnnotationColumnFormatter.renderFunction(d, {
+                        hotspotData: this.props.hotspotData,
+                        myCancerGenomeData: this.props.myCancerGenomeData,
+                        oncoKbData: this.props.oncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        pubMedCache: this.props.pubMedCache,
+                        civicGenes: this.props.civicGenes,
+                        civicVariants: this.props.civicVariants,
+                        enableCivic: this.props.enableCivic as boolean,
+                        enableOncoKb: this.props.enableOncoKb as boolean,
+                        enableMyCancerGenome: this.props
+                            .enableMyCancerGenome as boolean,
+                        enableHotspot: this.props.enableHotspot as boolean,
+                        userEmailAddress: this.props.userEmailAddress,
+                        resolveTumorType: this.resolveTumorType,
+                    })}
+                </span>
+            ),
             filter: (
                 d: Mutation[],
                 filterString: string,
