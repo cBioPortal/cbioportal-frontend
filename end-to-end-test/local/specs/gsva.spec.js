@@ -102,6 +102,7 @@ describe('gsva feature', function() {
                 );
 
                 $('button=Select').click();
+                waitForTreeUpdate();
 
                 $('span*=All gene sets are valid').waitForExist();
 
@@ -116,6 +117,7 @@ describe('gsva feature', function() {
 
                 $('[id=GSVAScore]').setValue('0');
                 $('[id=filterButton]').click();
+                waitForTreeUpdate();
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
                 var after = $$('*=GO_');
@@ -128,6 +130,7 @@ describe('gsva feature', function() {
 
                 $('[id=GSVAScore]').setValue('0');
                 $('[id=filterButton]').click();
+                waitForTreeUpdate();
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
 
@@ -142,6 +145,7 @@ describe('gsva feature', function() {
 
                 $('[id=Pvalue]').setValue('0.0005');
                 $('[id=filterButton]').click();
+                waitForTreeUpdate();
 
                 browser.waitUntil(() => $$('*=GO_').length < before.length);
                 var after = $$('*=GO_');
@@ -156,6 +160,7 @@ describe('gsva feature', function() {
                 modal.$('.Select-value-label').click();
                 modal.$('.Select-option=100%').click();
                 modal.$('[id=filterButton]').click();
+                waitForTreeUpdate();
 
                 browser.waitUntil(() => $$('*=GO_').length > before.length);
                 var after = $$('*=GO_');
@@ -582,6 +587,12 @@ const checkGSVAprofile = () => {
 const waitForGsvaHierarchyDialog = () => {
     $('div.modal-dialog').waitForExist();
     $('div[data-test=gsva-tree-container] ul').waitForExist();
+};
+
+const waitForTreeUpdate = () => {
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, {
+        timeout: 100000,
+    });
 };
 
 module.exports = {
