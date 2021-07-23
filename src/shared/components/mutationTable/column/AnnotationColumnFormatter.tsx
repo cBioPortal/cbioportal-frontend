@@ -20,6 +20,7 @@ import {
 import OncokbPubMedCache from 'shared/cache/PubMedCache';
 import { CancerStudy, Mutation } from 'cbioportal-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
+import AnnotationHeader from './annotation/AnnotationHeader';
 
 export interface IAnnotationColumnProps extends AnnotationProps {
     pubMedCache?: OncokbPubMedCache;
@@ -88,6 +89,10 @@ export default class AnnotationColumnFormatter {
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
             `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
         ].join(';');
+    }
+
+    public static headerRender(name: string, width: number) {
+        return <AnnotationHeader name={name} width={width} />;
     }
 
     public static renderFunction(

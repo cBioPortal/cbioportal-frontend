@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { computed } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import LazyMobXTable, {
@@ -19,6 +19,7 @@ import AppConfig from 'appConfig';
 import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
 import { remoteData } from 'cbioportal-frontend-commons';
+import Timeout = NodeJS.Timeout;
 
 export interface IPatientViewStructuralVariantTableProps {
     store: PatientViewPageStore;
@@ -36,8 +37,33 @@ export default class PatientViewStructuralVariantTable extends React.Component<
     IPatientViewStructuralVariantTableProps,
     {}
 > {
+    @observable oncokbWidth = 22;
+    private oncokbInterval: Timeout;
+
     constructor(props: IPatientViewStructuralVariantTableProps) {
         super(props);
+        makeObservable(this);
+
+        this.oncokbInterval = setInterval(() => {
+            if (
+                document
+                    .getElementById('sv-annotation')
+                    ?.getElementsByClassName('oncokb-content')[0]?.clientWidth
+            ) {
+                this.oncokbWidth =
+                    Number(
+                        document
+                            .getElementById('sv-annotation')
+                            ?.getElementsByClassName('oncokb-content')[0]
+                            ?.clientWidth
+                    ) || 22;
+                clearInterval(this.oncokbInterval);
+            }
+        }, 500);
+    }
+
+    public destroy() {
+        clearInterval(this.oncokbInterval);
     }
 
     readonly columns = remoteData({
@@ -198,24 +224,34 @@ export default class PatientViewStructuralVariantTable extends React.Component<
 
             columns.push({
                 name: 'Annotation',
-                render: (d: StructuralVariant[]) =>
-                    AnnotationColumnFormatter.renderFunction(d, {
-                        uniqueSampleKeyToTumorType: this.props.store
-                            .uniqueSampleKeyToTumorType,
-                        oncoKbData: this.props.store
-                            .structuralVariantOncoKbData,
-                        oncoKbCancerGenes: this.props.store.oncoKbCancerGenes,
-                        usingPublicOncoKbInstance: this.props.store
-                            .usingPublicOncoKbInstance,
-                        enableOncoKb: AppConfig.serverConfig
-                            .show_oncokb as boolean,
-                        pubMedCache: this.props.store.pubMedCache,
-                        enableCivic: false,
-                        enableMyCancerGenome: false,
-                        enableHotspot: false,
-                        userEmailAddress: ServerConfigHelpers.getUserEmailAddress(),
-                        studyIdToStudy: this.props.store.studyIdToStudy.result,
-                    }),
+                headerRender: (name: string) =>
+                    AnnotationColumnFormatter.headerRender(
+                        name,
+                        this.oncokbWidth
+                    ),
+                render: (d: StructuralVariant[]) => (
+                    <span id="sv-annotation">
+                        {AnnotationColumnFormatter.renderFunction(d, {
+                            uniqueSampleKeyToTumorType: this.props.store
+                                .uniqueSampleKeyToTumorType,
+                            oncoKbData: this.props.store
+                                .structuralVariantOncoKbData,
+                            oncoKbCancerGenes: this.props.store
+                                .oncoKbCancerGenes,
+                            usingPublicOncoKbInstance: this.props.store
+                                .usingPublicOncoKbInstance,
+                            enableOncoKb: AppConfig.serverConfig
+                                .show_oncokb as boolean,
+                            pubMedCache: this.props.store.pubMedCache,
+                            enableCivic: false,
+                            enableMyCancerGenome: false,
+                            enableHotspot: false,
+                            userEmailAddress: ServerConfigHelpers.getUserEmailAddress(),
+                            studyIdToStudy: this.props.store.studyIdToStudy
+                                .result,
+                        })}
+                    </span>
+                ),
                 sortBy: (d: StructuralVariant[]) => {
                     return AnnotationColumnFormatter.sortValue(
                         d,
