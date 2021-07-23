@@ -28,7 +28,7 @@ describe('patient view page', function() {
 
             it('mutation table shows correct sample icons, non-profiled icons and invisible icons', () => {
                 const sampleIcon = {
-                    ERBB2: [n, n, n, p, n],
+                    ERBB2: [n, n, n, p, p],
                     ABLIM1: [p, p, n, p, p],
                     PIEZO1: [n, n, p, p, p],
                     CADM2: [p, p, p, p, p],
