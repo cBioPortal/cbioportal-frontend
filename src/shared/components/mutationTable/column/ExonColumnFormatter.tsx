@@ -49,17 +49,17 @@ export default class ExonColumnFormatter {
         showTotalNumberOfExons?: boolean
     ) {
         let status: TableCellStatus | null = null;
-
         if (genomeNexusCacheData === null) {
             status = TableCellStatus.LOADING;
-        } else if (genomeNexusCacheData.status === 'error') {
+        } else if (
+            genomeNexusCacheData.status === 'error' ||
+            genomeNexusCacheData.data?.successfully_annotated === false
+        ) {
             status = TableCellStatus.ERROR;
         } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            let exonData = ExonColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData);
             if (exonData == null) {
                 return exonData;
             } else {
@@ -112,43 +112,41 @@ export default class ExonColumnFormatter {
     }
 
     public static getData(
-        genomeNexusData: VariantAnnotation | null
+        genomeNexusCache: GenomeNexusCacheDataType | null
     ): string | null {
-        if (!genomeNexusData) {
-            return null;
-        }
-        const exon =
-            genomeNexusData.annotation_summary.transcriptConsequenceSummary
-                .exon;
-        if (exon) {
-            return exon;
-        } else {
-            // find any other mutation affecting the exon on the same transcript
-            const transcriptConsequence = genomeNexusData.transcript_consequences.filter(
-                x =>
-                    x.transcript_id ===
-                        genomeNexusData.annotation_summary
-                            .transcriptConsequenceSummary.transcriptId && x.exon
-            )[0];
-            if (transcriptConsequence) {
-                return transcriptConsequence.exon;
-            } else {
-                return null;
+        let exonData: string | null = null;
+        if (genomeNexusCache?.data) {
+            const genomeNexusData = genomeNexusCache.data;
+            const exon =
+                genomeNexusData.annotation_summary?.transcriptConsequenceSummary
+                    .exon;
+            if (exon) {
+                exonData = exon;
+            } else if (genomeNexusData.transcript_consequences) {
+                const transcriptConsequence = genomeNexusData.transcript_consequences.filter(
+                    x =>
+                        x.transcript_id ===
+                            genomeNexusData.annotation_summary
+                                ?.transcriptConsequenceSummary.transcriptId &&
+                        x.exon
+                )[0];
+                exonData = transcriptConsequence?.exon || null;
             }
         }
+        return exonData;
     }
 
     public static download(
         data: Mutation[],
         genomeNexusCache: GenomeNexusCache
     ): string {
-        const genomeNexusData = ExonColumnFormatter.getGenomeNexusDataFromCache(
+        const genomeNexusCacheData = ExonColumnFormatter.getGenomeNexusDataFromCache(
             data,
             genomeNexusCache
         );
         const exonData =
-            genomeNexusData &&
-            ExonColumnFormatter.getData(genomeNexusData.data);
+            genomeNexusCacheData &&
+            ExonColumnFormatter.getData(genomeNexusCacheData);
 
         if (!exonData) {
             return '';
@@ -166,9 +164,7 @@ export default class ExonColumnFormatter {
             genomeNexusCache
         );
         if (genomeNexusCacheData) {
-            let exonData = ExonColumnFormatter.getData(
-                genomeNexusCacheData.data
-            );
+            let exonData = ExonColumnFormatter.getData(genomeNexusCacheData);
             if (exonData == null) {
                 return null;
             } else {

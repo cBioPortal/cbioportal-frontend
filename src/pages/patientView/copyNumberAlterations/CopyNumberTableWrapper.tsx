@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import * as _ from 'lodash';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
@@ -32,6 +32,7 @@ import {
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getPercentage } from 'shared/lib/FormatUtils';
+import Timeout = NodeJS.Timeout;
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -74,9 +75,33 @@ export default class CopyNumberTableWrapper extends React.Component<
     ICopyNumberTableWrapperProps,
     {}
 > {
+    @observable oncokbWidth = 22;
+    private oncokbInterval: Timeout;
+
     constructor(props: ICopyNumberTableWrapperProps) {
         super(props);
         makeObservable(this);
+
+        this.oncokbInterval = setInterval(() => {
+            if (
+                document
+                    .getElementById('copy-number-annotation')
+                    ?.getElementsByClassName('oncokb-content')[0]?.clientWidth
+            ) {
+                this.oncokbWidth =
+                    Number(
+                        document
+                            .getElementById('copy-number-annotation')
+                            ?.getElementsByClassName('oncokb-content')[0]
+                            ?.clientWidth
+                    ) || 22;
+                clearInterval(this.oncokbInterval);
+            }
+        }, 500);
+    }
+
+    public destroy() {
+        clearInterval(this.oncokbInterval);
     }
 
     public static defaultProps = {
@@ -209,24 +234,29 @@ export default class CopyNumberTableWrapper extends React.Component<
 
         columns.push({
             name: 'Annotation',
-            render: (d: DiscreteCopyNumberData[]) =>
-                AnnotationColumnFormatter.renderFunction(d, {
-                    uniqueSampleKeyToTumorType: this.props
-                        .uniqueSampleKeyToTumorType,
-                    oncoKbData: this.props.cnaOncoKbData,
-                    oncoKbCancerGenes: this.props.oncoKbCancerGenes,
-                    usingPublicOncoKbInstance: this.props
-                        .usingPublicOncoKbInstance,
-                    enableOncoKb: this.props.enableOncoKb as boolean,
-                    pubMedCache: this.props.pubMedCache,
-                    civicGenes: this.props.cnaCivicGenes,
-                    civicVariants: this.props.cnaCivicVariants,
-                    enableCivic: this.props.enableCivic as boolean,
-                    enableMyCancerGenome: false,
-                    enableHotspot: false,
-                    userEmailAddress: this.props.userEmailAddress,
-                    studyIdToStudy: this.props.studyIdToStudy,
-                }),
+            headerRender: (name: string) =>
+                AnnotationColumnFormatter.headerRender(name, this.oncokbWidth),
+            render: (d: DiscreteCopyNumberData[]) => (
+                <span id="copy-number-annotation">
+                    {AnnotationColumnFormatter.renderFunction(d, {
+                        uniqueSampleKeyToTumorType: this.props
+                            .uniqueSampleKeyToTumorType,
+                        oncoKbData: this.props.cnaOncoKbData,
+                        oncoKbCancerGenes: this.props.oncoKbCancerGenes,
+                        usingPublicOncoKbInstance: this.props
+                            .usingPublicOncoKbInstance,
+                        enableOncoKb: this.props.enableOncoKb as boolean,
+                        pubMedCache: this.props.pubMedCache,
+                        civicGenes: this.props.cnaCivicGenes,
+                        civicVariants: this.props.cnaCivicVariants,
+                        enableCivic: this.props.enableCivic as boolean,
+                        enableMyCancerGenome: false,
+                        enableHotspot: false,
+                        userEmailAddress: this.props.userEmailAddress,
+                        studyIdToStudy: this.props.studyIdToStudy,
+                    })}
+                </span>
+            ),
             sortBy: (d: DiscreteCopyNumberData[]) => {
                 return AnnotationColumnFormatter.sortValue(
                     d,

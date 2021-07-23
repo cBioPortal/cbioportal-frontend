@@ -12,10 +12,12 @@ import {
     getAlterationEnrichmentColumns,
     getEnrichmentBarPlotData,
     getGeneListOptions,
+    pickGenericAssayEnrichmentProfiles,
 } from './EnrichmentsUtil';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import * as _ from 'lodash';
+import { MolecularProfile } from 'cbioportal-ts-api-client';
 
 expect.extend(expectJSX);
 
@@ -890,6 +892,58 @@ describe('EnrichmentsUtil', () => {
                     { label: 'Sync with table (up to 100 genes)', genes: [] },
                 ]
             );
+        });
+    });
+
+    describe('#pickGenericAssayEnrichmentProfiles()', () => {
+        it('returns picked Generic Assay profiles', () => {
+            const profiles = [
+                {
+                    molecularProfileId: 'profile_1',
+                    molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+                    datatype: 'DISCRETE',
+                },
+                {
+                    molecularProfileId: 'profile_2',
+                    molecularAlterationType: 'MUTATION_EXTENDED',
+                    datatype: 'MAF',
+                },
+                {
+                    molecularProfileId: 'profile_3',
+                    molecularAlterationType: 'MRNA_EXPRESSION',
+                    datatype: 'CONTINUOUS',
+                },
+                {
+                    molecularProfileId: 'profile_4',
+                    molecularAlterationType: 'STRUCTURAL_VARIANT',
+                    datatype: 'FUSION',
+                },
+                {
+                    molecularProfileId: 'profile_5',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    datatype: 'LIMIT-VALUE',
+                },
+                {
+                    molecularProfileId: 'profile_6',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    datatype: 'CATEGORICAL',
+                },
+                {
+                    molecularProfileId: 'profile_7',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    datatype: 'BINARY',
+                },
+            ] as MolecularProfile[];
+            const expectedResult = [
+                {
+                    molecularProfileId: 'profile_5',
+                    molecularAlterationType: 'GENERIC_ASSAY',
+                    datatype: 'LIMIT-VALUE',
+                } as MolecularProfile,
+            ];
+            const result = pickGenericAssayEnrichmentProfiles(profiles);
+            assert.equal(result.length, 1);
+            assert.deepEqual(result, expectedResult);
         });
     });
 });
