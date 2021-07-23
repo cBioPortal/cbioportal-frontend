@@ -45,10 +45,10 @@ class CustomReporter extends WDIOReporter {
     }
 
     addTest(test) {
-        const existingTest = this.testsByUid[test.uid];
+        const existingTest = this.testsByUid[test.title];
         const locked = existingTest && existingTest.locked === true;
         if (!locked) {
-            this.testsByUid[test.uid] = test;
+            this.testsByUid[test.title] = test;
         }
     }
 
@@ -67,7 +67,7 @@ class CustomReporter extends WDIOReporter {
         //this.report.tests.push(test);
     }
     onTestEnd(test) {
-        this.testsByUid[test.uid] = test;
+        this.testsByUid[test.title] = test;
     }
     onSuiteEnd() {}
     onRunnerEnd() {
