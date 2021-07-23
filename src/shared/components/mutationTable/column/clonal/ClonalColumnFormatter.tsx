@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';
+import { MutationTableColumnType } from '../../MutationTable';
 import ClonalElement from 'shared/components/mutationTable/column/clonal/ClonalElement';
 
 /**
@@ -31,7 +32,7 @@ export const getDefaultClonalColumnDefinition = (
     sampleManager?: SampleManager | null
 ) => {
     return {
-        name: 'Clonality',
+        name: MutationTableColumnType.CLONAL,
         render: (d: Mutation[]) =>
             ClonalColumnFormatter.renderFunction(
                 d,

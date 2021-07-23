@@ -5,6 +5,10 @@ import {
     getColorForProteinImpactType as getDefaultColorForProteinImpactType,
     IProteinImpactTypeColors,
     ProteinImpactTypeFilter,
+    NumericalFilter,
+    NumericalFilterValue,
+    CategoricalFilter,
+    CategoricalFilterValue,
 } from 'react-mutation-mapper';
 import {
     Gene,
@@ -225,6 +229,10 @@ export const ANNOTATED_PROTEIN_IMPACT_TYPE_FILTER_ID =
     '_cBioPortalAnnotatedProteinImpactTypeFilter_';
 export const ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE =
     'annotatedProteinImpactType';
+
+export function columnIdToFilterId(columnId: string) {
+    return '_cBioPortal' + columnId.replace(' ', '') + 'ColumnFilter_';
+}
 
 export function isFusion(mutation: Mutation) {
     return getSimplifiedMutationType(mutation.mutationType) === 'fusion';
@@ -561,6 +569,77 @@ export function createAnnotatedProteinImpactTypeFilter(
                       getProteinImpactType(mutation.mutationType || 'other'),
                       isPutativeDriver
                   )
+        );
+    };
+    return filter;
+}
+
+export function matchNumericalFilter(
+    value: number | null,
+    config: NumericalFilterValue
+) {
+    return (
+        (!config.hideEmptyValues || value !== null) &&
+        (value === null || value >= config.lowerBound) &&
+        (value === null || value <= config.upperBound)
+    );
+}
+
+export function createNumericalFilter(getData: (d: Mutation) => number | null) {
+    const filter = (filter: NumericalFilter, mutation: Mutation) => {
+        const value = getData(mutation);
+        return matchNumericalFilter(value, filter.values[0]);
+    };
+    return filter;
+}
+
+export function matchCategoricalFilterSearch(
+    value: string,
+    config: CategoricalFilterValue
+) {
+    const filterCondition = config.filterCondition;
+    const filterString = config.filterString;
+    if (filterString === '') {
+        return true;
+    }
+
+    const valueUpper = value.toUpperCase();
+    const filterStringUpper = filterString.toUpperCase();
+    switch (filterCondition) {
+        case 'contains':
+            return valueUpper.includes(filterStringUpper);
+        case 'doesNotContain':
+            return !valueUpper.includes(filterStringUpper);
+        case 'equals':
+            return valueUpper === filterStringUpper;
+        case 'doesNotEqual':
+            return valueUpper !== filterStringUpper;
+        case 'beginsWith':
+            return valueUpper.startsWith(filterStringUpper);
+        case 'doesNotBeginWith':
+            return !valueUpper.startsWith(filterStringUpper);
+        case 'endsWith':
+            return valueUpper.endsWith(filterStringUpper);
+        case 'doesNotEndWith':
+            return !valueUpper.endsWith(filterStringUpper);
+        case 'regex':
+            try {
+                const regex = new RegExp(filterString);
+                return regex.test(value);
+            } catch (e) {
+                return false;
+            }
+        default:
+            return false;
+    }
+}
+
+export function createCategoricalFilter(getData: (d: Mutation) => string) {
+    const filter = (filter: CategoricalFilter, mutation: Mutation) => {
+        const value = getData(mutation) || '(Blanks)';
+        return (
+            matchCategoricalFilterSearch(value, filter.values[0]) &&
+            filter.values[0].selections.has(value)
         );
     };
     return filter;
