@@ -348,7 +348,7 @@ describe('check the fusion filter is working properly', () => {
     });
 });
 
-describe.only('cancer gene filter', () => {
+describe('cancer gene filter', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
         goToUrlAndSetLocalStorage(url);
