@@ -140,6 +140,14 @@ export { MutationFilter } from './filter/MutationFilter';
 export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
+export {
+    NumericalFilter,
+    NumericalFilterValue,
+} from './filter/NumericalFilter';
+export {
+    CategoricalFilter,
+    CategoricalFilterValue,
+} from './filter/CategoricalFilter';
 
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
