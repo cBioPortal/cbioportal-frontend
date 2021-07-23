@@ -3625,13 +3625,11 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            return this.mutationMapperStoreByGeneWithDriverKey[
-                this.getGeneWithDriverKey(gene)
-            ]
-                ? this.mutationMapperStoreByGeneWithDriverKey[
-                      this.getGeneWithDriverKey(gene)
-                  ]
-                : this.createMutationMapperStoreForSelectedGene(gene);
+            return (
+                this.mutationMapperStoreByGeneWithDriverKey[
+                    this.getGeneWithDriverKey(gene)
+                ] || this.createMutationMapperStoreForSelectedGene(gene)
+            );
         }
         return undefined;
     }

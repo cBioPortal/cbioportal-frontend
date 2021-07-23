@@ -182,6 +182,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 isCanonicalTranscript={this.props.store.isCanonicalTranscript}
                 selectedTranscriptId={this.props.store.activeTranscript.result}
+                columnVisibility={this.props.columnVisibility}
+                storeColumnVisibility={this.props.storeColumnVisibility}
                 sampleIdToClinicalDataMap={
                     this.props.store.clinicalDataGroupedBySampleMap
                 }

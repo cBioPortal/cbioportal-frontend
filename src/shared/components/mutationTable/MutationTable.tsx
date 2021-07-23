@@ -125,6 +125,9 @@ export interface IMutationTableProps {
     selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    storeColumnVisibility?: (columnVisibility: {
+        [columnId: string]: boolean;
+    }) => void;
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
@@ -1252,6 +1255,7 @@ export default class MutationTable<
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
                 columnVisibilityProps={this.props.columnVisibilityProps}
+                storeColumnVisibility={this.props.storeColumnVisibility}
                 onRowClick={this.props.onRowClick}
                 onRowMouseEnter={this.props.onRowMouseEnter}
                 onRowMouseLeave={this.props.onRowMouseLeave}
