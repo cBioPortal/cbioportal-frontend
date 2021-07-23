@@ -367,7 +367,7 @@ describe('results page tabs while excluding unprofiled samples', function() {
         $('input[data-test="HideUnprofiled"]').waitForExist();
         $('input[data-test="HideUnprofiled"]').click();
         waitForOncoprint(10000);
-        setResultsPageSettingsMenuOpen(false);
+        setSettingsMenuOpen(false);
     });
 
     runResultsTestSuite('excluding unprofiled samples', {
