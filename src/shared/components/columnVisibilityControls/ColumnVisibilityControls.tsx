@@ -19,6 +19,8 @@ export interface IColumnVisibilityControlsProps {
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
     ) => void;
+    resetColumnVisibility?: () => void;
+    showResetColumnsButton?: boolean;
     customDropdown?: (props: IColumnVisibilityControlsProps) => JSX.Element;
 }
 

@@ -101,6 +101,9 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?: boolean;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     columnVisibility?: { [columnId: string]: boolean };
+    storeColumnVisibility?: (columnVisibility: {
+        [columnId: string]: boolean;
+    }) => void;
     pageToHighlight?: boolean;
     showCountHeader?: boolean;
     onRowClick?: (d: T) => void;
@@ -271,6 +274,7 @@ export class LazyMobXTableStore<T> {
     @observable private onRowMouseLeave: ((d: T) => void) | undefined;
 
     // this observable is intended to always refer to props.columnVisibility
+    // except possibly once "Reset columns" has been clicked
     @observable private _columnVisibility:
         | { [columnId: string]: boolean }
         | undefined;
@@ -339,6 +343,13 @@ export class LazyMobXTableStore<T> {
         return resolveColumnVisibilityByColumnDefinition(this.columns);
     }
 
+    @computed public get showResetColumnsButton() {
+        return (
+            JSON.stringify(this.columnVisibility) !==
+            JSON.stringify(this.columnVisibilityByColumnDefinition)
+        );
+    }
+
     @computed public get downloadData() {
         const tableDownloadData: string[][] = [];
 
@@ -383,8 +394,7 @@ export class LazyMobXTableStore<T> {
 
     @computed get sortColumnObject(): Column<T> | undefined {
         return this.columns.find(
-            (col: Column<T>) =>
-                this.isVisible(col) && col.name === this.sortColumn
+            (col: Column<T>) => col.name === this.sortColumn
         );
     }
 
@@ -735,6 +745,12 @@ export class LazyMobXTableStore<T> {
         }
     }
 
+    @action.bound
+    resetColumnVisibility() {
+        this._columnVisibility = undefined;
+        this._columnVisibilityOverride = undefined;
+    }
+
     public isVisible(column: Column<T>): boolean {
         const index = column.hasOwnProperty('id') ? column.id! : column.name;
         return this.columnVisibility[index] || false;
@@ -896,6 +912,9 @@ export default class LazyMobXTable<T> extends React.Component<
     componentWillUnmount() {
         this.filterInputReaction();
         this.pageToHighlightReaction();
+        if (this.props.storeColumnVisibility) {
+            this.props.storeColumnVisibility(this.store.columnVisibility);
+        }
     }
 
     @action componentWillReceiveProps(nextProps: LazyMobXTableProps<T>) {
@@ -1020,6 +1039,12 @@ export default class LazyMobXTable<T> extends React.Component<
                             className="pull-right"
                             columnVisibility={this.store.colVisProp}
                             onColumnToggled={this.handlers.visibilityToggle}
+                            resetColumnVisibility={
+                                this.store.resetColumnVisibility
+                            }
+                            showResetColumnsButton={
+                                this.store.showResetColumnsButton
+                            }
                             {...this.props.columnVisibilityProps}
                         />
                     ) : (
