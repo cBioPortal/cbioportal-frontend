@@ -1,35 +1,38 @@
 const clipboardy = require('clipboardy');
 
 function waitForStudyQueryPage(timeout) {
-    $('div[data-test="cancerTypeListContainer"]').waitForExist(
-        timeout || 10000
-    );
+    $('div[data-test="cancerTypeListContainer"]').waitForExist({
+        timeout: timeout || 10000,
+    });
 }
 
 function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    $('[data-test=studyList]').waitForExist(timeout, true);
-    $('div[data-test="molecularProfileSelector"]').waitForExist(
-        timeout || 10000
-    );
+    $('[data-test=studyList]').waitForExist({
+        timeout: timeout,
+        reverse: true,
+    });
+    $('div[data-test="molecularProfileSelector"]').waitForExist({
+        timeout: timeout || 10000,
+    });
 }
 
 function waitForPlotsTab(timeout) {
-    $('div.axisBlock').waitForDisplayed(timeout || 20000);
+    $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
 }
 
 function waitForCoExpressionTab(timeout) {
-    $('#coexpressionTabGeneTabs').waitForExist(timeout || 20000);
+    $('#coexpressionTabGeneTabs').waitForExist({ timeout: timeout || 20000 });
 }
 
 function waitForPatientView(timeout) {
-    $('#patientViewPageTabs').waitForExist(timeout || 20000);
-    $('[data-test=patientview-copynumber-table]').waitForDisplayed(
-        timeout || 20000
-    );
-    $('[data-test=patientview-mutation-table]').waitForDisplayed(
-        timeout || 20000
-    );
+    $('#patientViewPageTabs').waitForExist({ timeout: timeout || 20000 });
+    $('[data-test=patientview-copynumber-table]').waitForDisplayed({
+        timeout: timeout || 20000,
+    });
+    $('[data-test=patientview-mutation-table]').waitForDisplayed({
+        timeout: timeout || 20000,
+    });
 }
 
 function waitForOncoprint(timeout) {
