@@ -24,7 +24,7 @@ import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
 import * as _ from 'lodash';
-import { SHOW_MUTATION_ASSESSOR } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {
     active: 'mutationAssessor' | 'sift' | 'polyPhen2';
@@ -60,13 +60,14 @@ class FunctionalImpactColumnTooltip extends React.Component<
     }
 
     legend() {
+        const showMutationAssessor = shouldShowMutationAssessor();
         return (
             <div>
                 <table className="table table-striped table-border-top">
                     <thead>
                         <tr>
                             <th>Legend</th>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {showMutationAssessor && (
                                 <th>
                                     <span
                                         style={{
@@ -146,7 +147,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {showMutationAssessor && (
                                 <td
                                     className={
                                         mutationAssessorStyles['ma-high']
@@ -168,7 +169,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                 probably_damaging
                             </td>
                         </tr>
-                        {SHOW_MUTATION_ASSESSOR && (
+                        {showMutationAssessor && (
                             <tr>
                                 <td>
                                     <span
@@ -212,7 +213,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {showMutationAssessor && (
                                 <td
                                     className={mutationAssessorStyles['ma-low']}
                                 >
@@ -254,7 +255,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && (
+                            {showMutationAssessor && (
                                 <td
                                     className={
                                         mutationAssessorStyles['ma-neutral']
@@ -290,7 +291,7 @@ class FunctionalImpactColumnTooltip extends React.Component<
                                     ></i>
                                 </span>
                             </td>
-                            {SHOW_MUTATION_ASSESSOR && <td>-</td>}
+                            {showMutationAssessor && <td>-</td>}
                             <td className={siftStyles['sift-tolerated']}>
                                 tolerated
                             </td>
@@ -373,12 +374,13 @@ export function placeArrow(tooltipEl: any) {
 export default class FunctionalImpactColumnFormatter {
     public static headerRender(name: string) {
         const arrowContent = <div className="rc-tooltip-arrow-inner" />;
+        const showMutationAssessor = shouldShowMutationAssessor();
         return (
             <div>
                 {name}
                 <br />
                 <div style={{ height: 14 }}>
-                    {SHOW_MUTATION_ASSESSOR && (
+                    {showMutationAssessor && (
                         <DefaultTooltip
                             overlay={
                                 <FunctionalImpactColumnTooltip active="mutationAssessor" />
@@ -549,9 +551,10 @@ export default class FunctionalImpactColumnFormatter {
             data,
             mutationAssessorCache
         );
+        const showMutationAssessor = shouldShowMutationAssessor();
         return (
             <div>
-                {SHOW_MUTATION_ASSESSOR &&
+                {showMutationAssessor &&
                     FunctionalImpactColumnFormatter.makeFunctionalImpactViz(
                         mutationAssessorCacheData,
                         FunctionalImpactColumnsName.MUTATION_ASSESSOR

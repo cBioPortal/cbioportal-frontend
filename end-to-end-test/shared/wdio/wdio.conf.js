@@ -5,11 +5,12 @@ var path = require('path');
 var VisualRegressionCompare = require('wdio-novus-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
 
+const TEST_TYPE = process.env.TEST_TYPE || 'remote';
+
 const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
-var defaultMaxInstances = 1;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -38,6 +39,8 @@ var screenDir = path.join(process.cwd(), `${screenshotRoot}/screen/`);
 var errorDir =
     (process.env.JUNIT_REPORT_PATH || './shared/results/') + 'errors/';
 
+console.log(`TEST TYPE: ${TEST_TYPE}`);
+
 console.log(`ENV SCREENSHOT_DIRECTORY: ${process.env.SCREENSHOT_DIRECTORY}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
 console.log(`ENV JUNIT_REPORT_PATH PATH: ${process.env.JUNIT_REPORT_PATH}`);
@@ -46,6 +49,8 @@ console.log(`screenshot root: ${screenshotRoot}`);
 console.log(`diff dir: ${diffDir}`);
 console.log(`ref dir: ${refDir}`);
 console.log(`screen dir: ${screenDir}`);
+
+var defaultMaxInstances = TEST_TYPE === 'remote' ? 2 : 1;
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
@@ -74,8 +79,6 @@ function proxyComparisonMethod(target) {
 }
 
 proxyComparisonMethod(LocalCompare);
-
-const TEST_TYPE = process.env.TEST_TYPE || 'remote';
 
 const grep = process.argv.find(l => /--grep=/.test(l));
 
@@ -280,7 +283,7 @@ exports.config = {
         [
             CustomReporter,
             {
-                testHome: process.env.TEST_TYPE,
+                testHome: TEST_TYPE,
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
                 outputFileFormat: function(opts) {
                     // optional
@@ -401,6 +404,8 @@ exports.config = {
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
+    networkLog: {},
+
     afterTest: function(
         test,
         context,
@@ -410,10 +415,23 @@ exports.config = {
             if (!fs.existsSync(errorDir)) {
                 fs.mkdirSync(errorDir, 0744);
             }
-            const title = test.title.replace(/\s/g, '_');
+            const title = test.title.trim().replace(/\s/g, '_');
             const img = `${errorDir}/${title}.png`;
             console.log('ERROR SHOT PATH' + img);
             browser.saveScreenshot(img);
+
+            var networkLog = browser.execute(function() {
+                Object.keys(window.ajaxRequests).forEach(key => {
+                    window.ajaxRequests[key].end = Date.now();
+                    window.ajaxRequests[key].duration =
+                        window.ajaxRequests[key].end -
+                        window.ajaxRequests[key].started;
+                });
+
+                return JSON.stringify(window.ajaxRequests);
+            });
+
+            this.networkLog[title.trim()] = networkLog;
         }
     },
 

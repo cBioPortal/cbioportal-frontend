@@ -1,15 +1,30 @@
 import autobind from 'autobind-decorator';
 import * as React from 'react';
-import { DataFilterType, onFilterOptionSelect } from 'react-mutation-mapper';
+import * as _ from 'lodash';
+import {
+    DataFilter,
+    DataFilterType,
+    onFilterOptionSelect,
+} from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
-import { action, computed, makeObservable } from 'mobx';
+import { action, computed, observable, makeObservable } from 'mobx';
 
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
+import { Mutation } from 'cbioportal-ts-api-client';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
+import { Checkbox } from 'react-bootstrap';
+import {
+    columnIdToFilterId,
+    matchCategoricalFilterSearch,
+} from 'shared/lib/MutationUtils';
 import DiscreteCNACache from 'shared/cache/DiscreteCNACache';
 import CancerTypeCache from 'shared/cache/CancerTypeCache';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
+import { Column } from 'shared/components/lazyMobXTable/LazyMobXTable';
+import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
+import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
+import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 
 import {
     IMutationMapperProps,
@@ -39,9 +54,14 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
 export default class ResultsViewMutationMapper extends MutationMapper<
     IResultsViewMutationMapperProps
 > {
+    @observable private minMaxColumns: Set<Column<Mutation[]>>;
+    @observable private allUniqDataColumns: Set<Column<Mutation[]>>;
+
     constructor(props: IResultsViewMutationMapperProps) {
         super(props);
         makeObservable(this);
+        this.minMaxColumns = new Set();
+        this.allUniqDataColumns = new Set();
     }
 
     @computed get mutationStatusFilter() {
@@ -162,6 +182,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 }
                 isCanonicalTranscript={this.props.store.isCanonicalTranscript}
                 selectedTranscriptId={this.props.store.activeTranscript.result}
+                columnVisibility={this.props.columnVisibility}
+                storeColumnVisibility={this.props.storeColumnVisibility}
                 sampleIdToClinicalDataMap={
                     this.props.store.clinicalDataGroupedBySampleMap
                 }
@@ -174,6 +196,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 clinicalAttributeIdToAvailableFrequency={
                     this.props.store.clinicalAttributeIdToAvailableFrequency
                 }
+                columnToHeaderFilterIconModal={
+                    this.columnToHeaderFilterIconModal
+                }
+                deactivateColumnFilter={this.deactivateColumnFilter}
             />
         );
     }
@@ -200,4 +226,445 @@ export default class ResultsViewMutationMapper extends MutationMapper<
             MUTATION_STATUS_FILTER_ID
         );
     }
+
+    @computed get dataFilterColumns() {
+        return [
+            ...this.props.store.numericalFilterColumns,
+            ...this.props.store.categoricalFilterColumns,
+        ];
+    }
+
+    @computed get getFilters() {
+        const filters: { [columnId: string]: DataFilter } = {};
+        for (let columnId of this.dataFilterColumns) {
+            const filter = this.store.dataStore.dataFilters.find(
+                f => f.type === columnId
+            );
+            if (filter) {
+                filters[columnId] = filter;
+            }
+        }
+        return filters;
+    }
+
+    protected columnFilterIsActive(columnId: string) {
+        return columnId in this.getFilters;
+    }
+
+    @computed get columnMinMax() {
+        const minMax: {
+            [columnId: string]: {
+                min: string;
+                max: string;
+                hasEmptyValues: boolean;
+            };
+        } = {};
+        for (let column of this.minMaxColumns) {
+            const columnId = column.name;
+            let minText = '0';
+            let maxText = '100';
+            let hasEmptyValues = false;
+
+            if (column.sortBy) {
+                let min = Infinity;
+                let max = -Infinity;
+                let dMin, dMax;
+
+                for (const d of this.store.dataStore.allData) {
+                    const val = column.sortBy(d);
+                    if (val !== null) {
+                        if (+val < min) {
+                            min = +val;
+                            dMin = d;
+                        }
+                        if (+val > max) {
+                            max = +val;
+                            dMax = d;
+                        }
+                    } else {
+                        hasEmptyValues = true;
+                    }
+                }
+
+                if (dMin && dMax) {
+                    if (column.download) {
+                        minText = _.flatten([column.download(dMin)])[0];
+                        maxText = _.flatten([column.download(dMax)])[0];
+                    }
+                    if (
+                        !column.download ||
+                        isNaN(+minText) ||
+                        isNaN(+maxText)
+                    ) {
+                        minText = '' + min;
+                        maxText = '' + max;
+                    }
+                }
+            }
+
+            minMax[columnId] = {
+                min: minText,
+                max: maxText,
+                hasEmptyValues: hasEmptyValues,
+            };
+        }
+        return minMax;
+    }
+
+    private resolveMutationToColumnValue(
+        d: Mutation[],
+        column: Column<Mutation[]>
+    ) {
+        let value = '';
+        if (column.name === 'Mutation Type' && column.sortBy) {
+            value = '' + (_.flatten([column.sortBy(d)])[0] || '');
+        } else {
+            value = _.flatten([column.download!(d)])[0];
+        }
+        return value || '(Blanks)';
+    }
+
+    @computed get allUniqColumnData() {
+        const allUniqColumnData: { [columnId: string]: Set<string> } = {};
+        for (let column of this.allUniqDataColumns) {
+            const columnId = column.name;
+            if (column.download) {
+                allUniqColumnData[columnId] = new Set();
+                for (const d of this.store.dataStore.allData) {
+                    const value = this.resolveMutationToColumnValue(d, column);
+                    allUniqColumnData[columnId].add(value);
+                }
+            } else {
+                allUniqColumnData[columnId] = new Set();
+            }
+        }
+        return allUniqColumnData;
+    }
+
+    @computed get allUniqColumnDataFiltered() {
+        const allUniqColumnDataFiltered: {
+            [columnId: string]: Set<string>;
+        } = {};
+        for (let column of this.allUniqDataColumns) {
+            const columnId = column.name;
+            if (column.download) {
+                allUniqColumnDataFiltered[columnId] = new Set();
+
+                for (const d of this.store.dataStore.sortedFilteredData) {
+                    const value = this.resolveMutationToColumnValue(d, column);
+                    allUniqColumnDataFiltered[columnId].add(value);
+                }
+
+                if (this.columnFilterIsActive(columnId)) {
+                    const filter = this.getFilters[columnId];
+                    for (const d of this.store.dataStore.allData) {
+                        const value = this.resolveMutationToColumnValue(
+                            d,
+                            column
+                        );
+                        const filteredOutByOwnSelectionFilter =
+                            matchCategoricalFilterSearch(
+                                value,
+                                filter.values[0]
+                            ) && !filter.values[0].selections.has(value);
+
+                        if (filteredOutByOwnSelectionFilter) {
+                            allUniqColumnDataFiltered[columnId].add(value);
+                        }
+                    }
+                }
+            } else {
+                allUniqColumnDataFiltered[columnId] = new Set();
+            }
+        }
+        return allUniqColumnDataFiltered;
+    }
+
+    protected isDefaultNumericalFilter(columnId: string) {
+        const filter = this.getFilters[columnId];
+        const columnMinMax = this.columnMinMax[columnId];
+        return (
+            +filter.values[0].lowerBound === +columnMinMax.min &&
+            +filter.values[0].upperBound === +columnMinMax.max &&
+            filter.values[0].hideEmptyValues === false
+        );
+    }
+
+    protected isDefaultCategoricalFilter(columnId: string) {
+        const filter = this.getFilters[columnId];
+        return (
+            filter.values[0].filterCondition === 'contains' &&
+            filter.values[0].filterString === '' &&
+            _.isEqual(
+                filter.values[0].selections,
+                this.allUniqColumnData[columnId]
+            )
+        );
+    }
+
+    protected activateNumericalFilter(
+        columnId: string,
+        lowerBound?: number,
+        upperBound?: number,
+        hideEmptyValues?: boolean
+    ) {
+        const min = +this.columnMinMax[columnId].min;
+        const max = +this.columnMinMax[columnId].max;
+        onFilterOptionSelect(
+            [
+                {
+                    lowerBound: lowerBound === undefined ? min : lowerBound,
+                    upperBound: upperBound === undefined ? max : upperBound,
+                    hideEmptyValues:
+                        hideEmptyValues === undefined ? false : hideEmptyValues,
+                },
+            ],
+            false,
+            this.store.dataStore,
+            columnId,
+            columnIdToFilterId(columnId)
+        );
+    }
+
+    protected activateCategoricalFilter(
+        columnId: string,
+        filterCondition?: string,
+        filterString?: string,
+        selections?: Set<string>
+    ) {
+        onFilterOptionSelect(
+            [
+                {
+                    filterCondition: filterCondition || 'contains',
+                    filterString: filterString || '',
+                    selections: selections || this.allUniqColumnData[columnId],
+                },
+            ],
+            false,
+            this.store.dataStore,
+            columnId,
+            columnIdToFilterId(columnId)
+        );
+    }
+
+    protected deactivateColumnFilter = (columnId: string) => {
+        onFilterOptionSelect(
+            [],
+            true,
+            this.store.dataStore,
+            columnId,
+            columnIdToFilterId(columnId)
+        );
+    };
+
+    protected setupColumnFilter = (column: Column<Mutation[]>) => {
+        const columnId = column.name;
+        if (this.props.store.numericalFilterColumns.has(columnId)) {
+            this.minMaxColumns.add(column);
+        } else if (this.props.store.categoricalFilterColumns.has(columnId)) {
+            this.allUniqDataColumns.add(column);
+        }
+    };
+
+    @computed get numericalFilterComponents() {
+        const components: { [columnId: string]: JSX.Element } = {};
+        for (let column of this.minMaxColumns) {
+            const columnId = column.name;
+            const filter = this.columnFilterIsActive(columnId)
+                ? this.getFilters[columnId]
+                : undefined;
+
+            components[columnId] = (
+                <div>
+                    <DoubleHandleSlider
+                        id={columnId}
+                        min={this.columnMinMax[columnId].min}
+                        max={this.columnMinMax[columnId].max}
+                        lowerValue={filter?.values[0].lowerBound}
+                        upperValue={filter?.values[0].upperBound}
+                        callbackLowerValue={newLowerBound => {
+                            if (filter) {
+                                filter.values[0].lowerBound = newLowerBound;
+                                if (this.isDefaultNumericalFilter(columnId)) {
+                                    this.deactivateColumnFilter(columnId);
+                                }
+                            } else {
+                                this.activateNumericalFilter(
+                                    columnId,
+                                    newLowerBound
+                                );
+                            }
+                        }}
+                        callbackUpperValue={newUpperBound => {
+                            if (filter) {
+                                filter.values[0].upperBound = newUpperBound;
+                                if (this.isDefaultNumericalFilter(columnId)) {
+                                    this.deactivateColumnFilter(columnId);
+                                }
+                            } else {
+                                this.activateNumericalFilter(
+                                    columnId,
+                                    undefined,
+                                    newUpperBound
+                                );
+                            }
+                        }}
+                    />
+
+                    {this.columnMinMax[columnId].hasEmptyValues && (
+                        <label style={{ fontWeight: 100 }}>
+                            <input
+                                type="checkbox"
+                                style={{
+                                    marginTop: '10px',
+                                    marginLeft: '5px',
+                                    marginRight: '4px',
+                                }}
+                                checked={
+                                    filter
+                                        ? filter.values[0].hideEmptyValues
+                                        : false
+                                }
+                                onChange={(e: any) => {
+                                    if (filter) {
+                                        filter.values[0].hideEmptyValues = !filter
+                                            .values[0].hideEmptyValues;
+                                        if (
+                                            this.isDefaultNumericalFilter(
+                                                columnId
+                                            )
+                                        ) {
+                                            this.deactivateColumnFilter(
+                                                columnId
+                                            );
+                                        }
+                                    } else {
+                                        this.activateNumericalFilter(
+                                            columnId,
+                                            undefined,
+                                            undefined,
+                                            true
+                                        );
+                                    }
+                                }}
+                            />
+                            {'Hide empty values'}
+                        </label>
+                    )}
+                </div>
+            );
+        }
+        return components;
+    }
+
+    @computed get categoricalFilterComponents() {
+        const components: { [columnId: string]: JSX.Element } = {};
+        for (let column of this.allUniqDataColumns) {
+            const columnId = column.name;
+            const filter = this.columnFilterIsActive(columnId)
+                ? this.getFilters[columnId]
+                : undefined;
+
+            components[columnId] = (
+                <CategoricalFilterMenu
+                    id={columnId}
+                    emptyFilterString={!filter}
+                    currSelections={
+                        filter
+                            ? filter.values[0].selections
+                            : this.allUniqColumnDataFiltered[columnId]
+                    }
+                    allSelections={this.allUniqColumnDataFiltered[columnId]}
+                    updateFilterCondition={newFilterCondition => {
+                        if (filter) {
+                            filter.values[0].filterCondition = newFilterCondition;
+                            if (this.isDefaultCategoricalFilter(columnId)) {
+                                this.deactivateColumnFilter(columnId);
+                            }
+                        } else {
+                            this.activateCategoricalFilter(
+                                columnId,
+                                newFilterCondition
+                            );
+                        }
+                    }}
+                    updateFilterString={newFilterString => {
+                        if (filter) {
+                            filter.values[0].filterString = newFilterString;
+                            if (this.isDefaultCategoricalFilter(columnId)) {
+                                this.deactivateColumnFilter(columnId);
+                            }
+                        } else {
+                            this.activateCategoricalFilter(
+                                columnId,
+                                undefined,
+                                newFilterString
+                            );
+                        }
+                    }}
+                    toggleSelections={toggledSelections => {
+                        if (filter) {
+                            const selections = filter.values[0].selections;
+                            toggledSelections.forEach(selection => {
+                                if (selections.has(selection)) {
+                                    selections.delete(selection);
+                                } else {
+                                    selections.add(selection);
+                                }
+                            });
+                            if (this.isDefaultCategoricalFilter(columnId)) {
+                                this.deactivateColumnFilter(columnId);
+                            }
+                        } else {
+                            const selections = this.allUniqColumnData[columnId];
+                            toggledSelections.forEach(selection => {
+                                selections.delete(selection);
+                            });
+                            this.activateCategoricalFilter(
+                                columnId,
+                                undefined,
+                                undefined,
+                                selections
+                            );
+                        }
+                    }}
+                />
+            );
+        }
+        return components;
+    }
+
+    protected columnToHeaderFilterIconModal = (column: Column<Mutation[]>) => {
+        const columnId = column.name;
+        const isNumericalFilterColumn = this.props.store.numericalFilterColumns.has(
+            columnId
+        );
+        const isCategoricalFilterColumn = this.props.store.categoricalFilterColumns.has(
+            columnId
+        );
+
+        if (isNumericalFilterColumn || isCategoricalFilterColumn) {
+            let menuComponent;
+            if (isNumericalFilterColumn && this.minMaxColumns.has(column)) {
+                menuComponent = this.numericalFilterComponents[columnId];
+            } else if (
+                isCategoricalFilterColumn &&
+                this.allUniqDataColumns.has(column)
+            ) {
+                menuComponent = this.categoricalFilterComponents[columnId];
+            }
+
+            return (
+                <FilterIconModal
+                    id={columnId}
+                    filterIsActive={this.columnFilterIsActive(columnId)}
+                    deactivateFilter={() =>
+                        this.deactivateColumnFilter(columnId)
+                    }
+                    setupFilter={() => this.setupColumnFilter(column)}
+                    menuComponent={menuComponent}
+                />
+            );
+        }
+    };
 }
