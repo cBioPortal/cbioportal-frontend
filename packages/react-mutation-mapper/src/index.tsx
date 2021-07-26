@@ -95,6 +95,7 @@ export {
     download as oncoKbAnnotationDownload,
     IOncoKbProps,
 } from './component/oncokb/OncoKB';
+export { default as OncoKbHelper } from './component/oncokb/OncoKbHelper';
 export { default as OncoKBSuggestAnnotationLinkout } from './component/oncokb/OncoKBSuggestAnnotationLinkout';
 export { default as OncoKbTreatmentTable } from './component/oncokb/OncoKbTreatmentTable';
 export { default as OncoKbFeedback } from './component/oncokb/OncoKbFeedback';
@@ -139,6 +140,14 @@ export { MutationFilter } from './filter/MutationFilter';
 export { OncoKbFilter } from './filter/OncoKbFilter';
 export { PositionFilter } from './filter/PositionFilter';
 export { ProteinImpactTypeFilter } from './filter/ProteinImpactTypeFilter';
+export {
+    NumericalFilter,
+    NumericalFilterValue,
+} from './filter/NumericalFilter';
+export {
+    CategoricalFilter,
+    CategoricalFilterValue,
+} from './filter/CategoricalFilter';
 
 export { DataFilter, DataFilterType } from './model/DataFilter';
 export { DataStore } from './model/DataStore';
@@ -161,6 +170,9 @@ export {
 export {
     defaultOncoKbFilter,
     groupOncoKbIndicatorDataByMutations,
+    oncogenicityIconClassNames,
+    normalizeLevel,
+    levelIconClassNames,
 } from './util/OncoKbUtils';
 export * from './util/SelectorUtils';
 export * from './util/TrackUtils';

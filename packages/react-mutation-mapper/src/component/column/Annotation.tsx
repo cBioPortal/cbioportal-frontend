@@ -103,6 +103,7 @@ function getDefaultTumorType(): string {
     return 'Unknown';
 }
 
+const memoized: Map<string, IAnnotation> = new Map();
 export function getAnnotationData(
     mutation?: Mutation,
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>,
@@ -118,6 +119,27 @@ export function getAnnotationData(
     let value: Partial<IAnnotation>;
 
     if (mutation) {
+        var key = '';
+        const memoize =
+            !!oncoKbCancerGenes &&
+            oncoKbCancerGenes?.isComplete &&
+            !!hotspotData &&
+            hotspotData?.isComplete &&
+            !!myCancerGenomeData &&
+            !!oncoKbData &&
+            oncoKbData?.isComplete &&
+            !!civicGenes &&
+            civicGenes?.isComplete &&
+            !!civicVariants &&
+            civicVariants?.isComplete;
+        if (memoize) {
+            key = JSON.stringify(mutation) + !!usingPublicOncoKbInstance;
+            const val = memoized.get(key);
+            if (val) {
+                return val;
+            }
+        }
+
         const entrezGeneId = resolveEntrezGeneId(mutation);
 
         let oncoKbIndicator: IndicatorQueryResp | undefined;
@@ -231,12 +253,21 @@ export function getAnnotationData(
                 oncoKbIndicator,
                 oncoKbAvailableDataTypes,
             };
+        } else if (oncoKbData && oncoKbData.isPending) {
+            value = {
+                ...value,
+                oncoKbStatus: 'pending',
+                oncoKbIndicator: undefined,
+            };
         } else {
             value = {
                 ...value,
                 oncoKbStatus: 'complete',
                 oncoKbIndicator: undefined,
             };
+        }
+        if (memoize) {
+            memoized.set(key, value as any);
         }
     } else {
         value = DEFAULT_ANNOTATION_DATA;

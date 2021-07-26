@@ -13,11 +13,11 @@ import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 
 export default class DiscreteCNAColumnFormatter {
     private static altToFilterString: { [a: number]: string } = {
-        '2': 'amp',
-        '1': 'gain',
-        '0': 'diploid',
-        '-1': 'shallowdel',
-        '-2': 'deepdel',
+        '2': 'Amp',
+        '1': 'Gain',
+        '0': 'Diploid',
+        '-1': 'ShallowDel',
+        '-2': 'DeepDel',
     };
 
     public static renderFunction(
@@ -93,13 +93,13 @@ export default class DiscreteCNAColumnFormatter {
             cache
         );
         if (cnaData && cnaData.data) {
-            return (
-                !!DiscreteCNAColumnFormatter.altToFilterString[
-                    cnaData.data.alteration
-                ] &&
+            const value =
                 DiscreteCNAColumnFormatter.altToFilterString[
                     cnaData.data.alteration
-                ].indexOf(filterString.toLowerCase()) > -1
+                ];
+            return (
+                !!value &&
+                value.toLowerCase().indexOf(filterString.toLowerCase()) > -1
             );
         } else {
             return false;
