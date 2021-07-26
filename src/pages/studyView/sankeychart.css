@@ -1,0 +1,154 @@
+body {
+    font-family: Helvetica;
+}
+
+.node rect {
+    fill: #888888;
+    shape-rendering: crispEdges;
+}
+
+.node {
+    fill-opacity: 0.7;
+}
+
+.node:hover {
+    cursor: pointer;
+    fill-opacity: 1;
+}
+
+.node text {
+    fill: #888888;
+    stroke: none;
+    font-size: 0.8em;
+}
+
+.link {
+    stroke: #cccccc;
+    stroke-opacity: 0.4;
+    fill: none;
+}
+
+.link:hover {
+    stroke-opacity: 0.6;
+    cursor: pointer;
+}
+
+.ReactModal__Overlay {
+    -webkit-perspective: 600;
+    perspective: 600;
+    opacity: 0;
+}
+
+.ReactModal__Overlay--after-open {
+    opacity: 1;
+    transition: opacity 150ms ease-out;
+}
+
+.ReactModal__Content {
+    -webkit-transform: scale(0.5) rotateX(-30deg);
+}
+
+.ReactModal__Content--after-open {
+    -webkit-transform: scale(1) rotateX(0deg);
+    transition: all 150ms ease-in;
+}
+
+.ReactModal__Overlay--before-close {
+    opacity: 0;
+}
+
+.ReactModal__Content--before-close {
+    -webkit-transform: scale(0.5) rotateX(30deg);
+    transition: all 150ms ease-in;
+}
+
+.container {
+    max-width: 720px;
+    margin-top: 35px;
+}
+
+.header h3 {
+    margin-top: 8px;
+}
+
+select.btn {
+    -webkit-appearance: none;
+    max-width: 115px;
+}
+
+.col-xs-4,
+.col-xs-8 {
+    z-index: 0;
+}
+
+.btn-file {
+    position: relative;
+    overflow: hidden;
+    margin-right: 10px;
+}
+
+.footer {
+    clear: both;
+}
+
+.btn-file input[type='file'] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
+.btn-primary {
+    background-color: #5badf0;
+    border-color: #4ca1e7;
+}
+
+.btn-primary:hover {
+    background-color: #2389dc;
+    border-color: #2389dc;
+}
+a {
+    color: #5badf0;
+}
+
+a:hover {
+    color: #4ca1e7;
+}
+
+#app {
+    margin-bottom: 35px;
+}
+
+.clearFix {
+    clear: both;
+}
+
+.startNew {
+    margin-left: 10px;
+}
+
+.toolBar {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.chart {
+    margin-bottom: 20px;
+}
+
+.legend {
+    background-color: #fcf8e3;
+    padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 5px;
+    color: #666;
+}

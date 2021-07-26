@@ -65,7 +65,7 @@ import $ from 'jquery';
 import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
 import { CustomChart } from 'shared/api/sessionServiceAPI';
 import { parse } from 'query-string';
-import Sankey from './Sankey';
+import TreatmentSankeyDiagram from './Sankey';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -619,7 +619,9 @@ export default class StudyViewPage extends React.Component<
                                     >
                                         <div>
                                             {' '}
-                                            <Sankey store={this.store}></Sankey>
+                                            <TreatmentSankeyDiagram
+                                                store={this.store}
+                                            ></TreatmentSankeyDiagram>
                                         </div>
                                     </MSKTab>
                                     <MSKTab
