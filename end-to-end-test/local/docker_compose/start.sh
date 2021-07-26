@@ -14,7 +14,7 @@ if [ $CUSTOM_BACKEND -eq 1 ]; then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/cbioportal-custombranch.yml"
 fi
 
-if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then
+if ! (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then
   compose_extensions="$compose_extensions -f $TEST_HOME/docker_compose/keycloak_init.yml"
 fi
 
