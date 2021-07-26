@@ -1036,12 +1036,13 @@ const AlterationMenuHeader: React.FunctionComponent<{
         showTiersSection,
     }) => {
         const sections = [];
-        studyHasMutations && sections.push('mutations');
-        studyHasStructuralVariants &&
-            (showDriverSection || showTiersSection) &&
+        if (studyHasMutations) sections.push('mutations');
+        if (
+            studyHasStructuralVariants &&
+            (showDriverSection || showTiersSection)
+        )
             sections.push('structural variants');
-        studyHasCnas &&
-            (showDriverSection || showTiersSection) &&
+        if (studyHasCnas && (showDriverSection || showTiersSection))
             sections.push('copy number alterations');
         let text = sections.join(' and ');
         if (sections.length === 3)
