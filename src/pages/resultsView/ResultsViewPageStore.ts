@@ -251,10 +251,31 @@ import oql_parser, {
 import {
     ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE,
     createAnnotatedProteinImpactTypeFilter,
+    createNumericalFilter,
+    createCategoricalFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
 import { chunkCalls } from 'cbioportal-utils';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
+import {
+    MutationTableColumnType,
+    getTextForDataField,
+} from 'shared/components/mutationTable/MutationTable';
+import { getClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getCancerCellFractionValue } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
+import { getExpectedAltCopiesValue } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
+import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
+import NormalAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/NormalAlleleFreqColumnFormatter';
+import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
+import { getASCNMethodValue } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
+import SampleColumnFormatter from 'shared/components/mutationTable/column/SampleColumnFormatter';
+import GeneColumnFormatter from 'shared/components/mutationTable/column/GeneColumnFormatter';
+import ProteinChangeColumnFormatter from 'shared/components/mutationTable/column/ProteinChangeColumnFormatter';
+import MutationTypeColumnFormatter from 'shared/components/mutationTable/column/MutationTypeColumnFormatter';
+import VariantTypeColumnFormatter from 'shared/components/mutationTable/column/VariantTypeColumnFormatter';
+import HgvsgColumnFormatter from 'shared/components/mutationTable/column/HgvsgColumnFormatter';
+import ClinvarColumnFormatter from 'shared/components/mutationTable/column/ClinvarColumnFormatter';
+import SignalColumnFormatter from 'shared/components/mutationTable/column/SignalColumnFormatter';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -3449,16 +3470,118 @@ export class ResultsViewPageStore {
         },
     });
 
+    @computed get customDataFilterAppliers() {
+        return {
+            [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
+                this.isPutativeDriver
+            ),
+            [MutationTableColumnType.CLONAL]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getClonalValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.CANCER_CELL_FRACTION]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getCancerCellFractionValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.EXPECTED_ALT_COPIES]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getExpectedAltCopiesValue(d);
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.TUMOR_ALLELE_FREQ]: createNumericalFilter(
+                (d: Mutation) =>
+                    TumorAlleleFreqColumnFormatter.getSortValue([d])
+            ),
+            [MutationTableColumnType.NORMAL_ALLELE_FREQ]: createNumericalFilter(
+                (d: Mutation) =>
+                    NormalAlleleFreqColumnFormatter.getSortValue([d])
+            ),
+            [MutationTableColumnType.REF_READS_N]: createNumericalFilter(
+                (d: Mutation) => d.normalRefCount
+            ),
+            [MutationTableColumnType.VAR_READS_N]: createNumericalFilter(
+                (d: Mutation) => d.normalAltCount
+            ),
+            [MutationTableColumnType.REF_READS]: createNumericalFilter(
+                (d: Mutation) => d.tumorRefCount
+            ),
+            [MutationTableColumnType.VAR_READS]: createNumericalFilter(
+                (d: Mutation) => d.tumorAltCount
+            ),
+            [MutationTableColumnType.START_POS]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getTextForDataField([d], 'startPosition');
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.END_POS]: createNumericalFilter(
+                (d: Mutation) => {
+                    const val = getTextForDataField([d], 'endPosition');
+                    return val ? +val : null;
+                }
+            ),
+            [MutationTableColumnType.SAMPLE_ID]: createCategoricalFilter(
+                (d: Mutation) => SampleColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.GENE]: createCategoricalFilter(
+                (d: Mutation) => GeneColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.PROTEIN_CHANGE]: createCategoricalFilter(
+                (d: Mutation) => ProteinChangeColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.CHROMOSOME]: createCategoricalFilter(
+                (d: Mutation) => ChromosomeColumnFormatter.getData([d]) || ''
+            ),
+            [MutationTableColumnType.REF_ALLELE]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'referenceAllele')
+            ),
+            [MutationTableColumnType.VAR_ALLELE]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'variantAllele')
+            ),
+            [MutationTableColumnType.MUTATION_TYPE]: createCategoricalFilter(
+                (d: Mutation) =>
+                    MutationTypeColumnFormatter.getDisplayValue([d])
+            ),
+            [MutationTableColumnType.VARIANT_TYPE]: createCategoricalFilter(
+                (d: Mutation) => VariantTypeColumnFormatter.getTextValue([d])
+            ),
+            [MutationTableColumnType.CENTER]: createCategoricalFilter(
+                (d: Mutation) => getTextForDataField([d], 'center')
+            ),
+            [MutationTableColumnType.HGVSG]: createCategoricalFilter(
+                (d: Mutation) => HgvsgColumnFormatter.download([d])
+            ),
+            [MutationTableColumnType.ASCN_METHOD]: createCategoricalFilter(
+                (d: Mutation) => getASCNMethodValue(d)
+            ),
+            [MutationTableColumnType.CLINVAR]: createCategoricalFilter(
+                (d: Mutation) =>
+                    ClinvarColumnFormatter.download(
+                        [d],
+                        this.indexedVariantAnnotations
+                    )
+            ),
+            [MutationTableColumnType.SIGNAL]: createCategoricalFilter(
+                (d: Mutation) =>
+                    SignalColumnFormatter.download(
+                        [d],
+                        this.indexedVariantAnnotations
+                    )
+            ),
+        };
+    }
+
     public createMutationMapperStoreForSelectedGene(gene: Gene) {
         const store = new ResultsViewMutationMapperStore(
             AppConfig.serverConfig,
             {
                 filterMutationsBySelectedTranscript: true,
-                filterAppliersOverride: {
-                    [ANNOTATED_PROTEIN_IMPACT_FILTER_TYPE]: createAnnotatedProteinImpactTypeFilter(
-                        this.isPutativeDriver
-                    ),
-                },
+                filterAppliersOverride: this.customDataFilterAppliers,
             },
             gene,
             this.filteredSamples,
@@ -3502,13 +3625,11 @@ export class ResultsViewPageStore {
             this.mutations.isComplete &&
             this.mutationsByGene.isComplete
         ) {
-            return this.mutationMapperStoreByGeneWithDriverKey[
-                this.getGeneWithDriverKey(gene)
-            ]
-                ? this.mutationMapperStoreByGeneWithDriverKey[
-                      this.getGeneWithDriverKey(gene)
-                  ]
-                : this.createMutationMapperStoreForSelectedGene(gene);
+            return (
+                this.mutationMapperStoreByGeneWithDriverKey[
+                    this.getGeneWithDriverKey(gene)
+                ] || this.createMutationMapperStoreForSelectedGene(gene)
+            );
         }
         return undefined;
     }

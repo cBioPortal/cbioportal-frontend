@@ -73,7 +73,7 @@ export default class TumorColumnFormatter {
 
             return (
                 <li className={isProfiled && !isMutated ? 'invisible' : ''}>
-                    {isMutated ? (
+                    {isProfiled ? (
                         sampleManager.getComponentForSample(
                             sample.id,
                             mutatedSamples[sample.id] ? 1 : 0.1,

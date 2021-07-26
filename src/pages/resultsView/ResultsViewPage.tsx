@@ -346,6 +346,7 @@ export default class ResultsViewPage extends React.Component<
                             key={6}
                             id={ResultsViewTab.CN_SEGMENTS}
                             linkText="CN Segments"
+                            className="cnSegmentsMSKTab"
                         >
                             <CNSegments store={store} />
                         </MSKTab>
