@@ -1039,7 +1039,7 @@ const AlterationMenuHeader: React.FunctionComponent<{
         studyHasMutations && sections.push('mutations');
         studyHasStructuralVariants &&
             (showDriverSection || showTiersSection) &&
-            sections.push('fusions');
+            sections.push('structural variants');
         studyHasCnas &&
             (showDriverSection || showTiersSection) &&
             sections.push('copy number alterations');
