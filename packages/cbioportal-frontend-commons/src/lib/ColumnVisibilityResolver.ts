@@ -33,9 +33,13 @@ export function resolveColumnVisibility(
 ): { [columnId: string]: boolean } {
     let colVis: { [columnId: string]: boolean };
 
-    // if a custom columnVisibility object is provided use that one
     if (columnVisibility) {
-        colVis = { ...columnVisibility };
+        colVis = {
+            // if a custom columnVisibility object is provided use that one
+            ...columnVisibility,
+            // if exists override with the state from the latest user selection
+            ...(columnVisibilityOverride || {}),
+        };
     } else {
         colVis = {
             // resolve visibility by column definition

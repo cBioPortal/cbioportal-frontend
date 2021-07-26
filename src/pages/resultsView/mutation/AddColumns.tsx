@@ -220,6 +220,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
     render() {
         const haveMutationsOptions = this.mutationsOptions.length > 0;
         const haveClinicalOptions = this.clinicalOptions.length > 0;
+        const showTabs = haveMutationsOptions || haveClinicalOptions;
 
         return (
             <div style={{ float: 'right' }}>
@@ -237,7 +238,7 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
                             flexDirection: 'column',
                         }}
                     >
-                        {(haveMutationsOptions || haveClinicalOptions) && (
+                        {showTabs && (
                             <MSKTabs
                                 activeTabId={this.tabId}
                                 onTabClick={this.updateTabId}
@@ -263,6 +264,20 @@ export default class AddColumns extends React.Component<IAddColumnsProps, {}> {
                                     </MSKTab>
                                 )}
                             </MSKTabs>
+                        )}
+                        {showTabs && this.props.showResetColumnsButton && (
+                            <button
+                                style={{
+                                    position: 'absolute',
+                                    top: 11,
+                                    right: 12,
+                                    zIndex: 2,
+                                }}
+                                className="btn btn-primary btn-xs"
+                                onClick={this.props.resetColumnVisibility}
+                            >
+                                Reset columns
+                            </button>
                         )}
                     </div>
                 </CustomDropdown>
