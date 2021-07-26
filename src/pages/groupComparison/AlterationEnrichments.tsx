@@ -70,9 +70,7 @@ export default class AlterationEnrichments extends React.Component<
                         store={this.props.resultsViewStore}
                         comparisonStore={this.props.store}
                         dashToRight={this.useInlineTypeSelectorMenu}
-                    >
-                        {this.props.children}
-                    </AlterationEnrichmentContainer>
+                    />
                 </div>
             );
         },
