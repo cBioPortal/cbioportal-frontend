@@ -21,8 +21,7 @@ import {
     updatePositionHighlightFilters,
     updatePositionSelectionFilters,
 } from '../../util/FilterUtils';
-import TrackCircle, { TrackItemSpec } from './TrackCircle';
-
+import TrackItem, { TrackItemSpec } from './TrackItem';
 import styles from './trackStyles.module.scss';
 
 const DEFAULT_ID_CLASS_PREFIX = 'track-circle-';
@@ -45,7 +44,7 @@ export default class Track extends React.Component<TrackProps, {}> {
     @observable private shiftPressed = false;
     private tooltipActive = false;
 
-    private circles: { [index: string]: TrackCircle };
+    private shapes: { [index: string]: TrackItem };
 
     constructor(props: TrackProps) {
         super(props);
@@ -110,20 +109,20 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     @action.bound
-    onTrackCircleClick(circleComponent: TrackCircle) {
+    onTrackCircleClick(circleComponent: TrackItem) {
         updatePositionSelectionFilters(
             this.props.dataStore,
-            circleComponent.props.spec.codon,
+            circleComponent.props.spec.startCodon,
             this.shiftPressed,
             this.props.defaultFilters
         );
     }
 
     @action.bound
-    onTrackCircleHover(circleComponent: TrackCircle) {
+    onTrackCircleHover(circleComponent: TrackItem) {
         updatePositionHighlightFilters(
             this.props.dataStore,
-            circleComponent.props.spec.codon,
+            circleComponent.props.spec.startCodon,
             this.props.defaultFilters
         );
         circleComponent.isHovered = true;
@@ -153,7 +152,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         const componentIndex: number | null = this.getComponentIndex(className);
 
         if (componentIndex !== null) {
-            const circleComponent = this.circles[componentIndex];
+            const circleComponent = this.shapes[componentIndex];
 
             if (circleComponent) {
                 this.setHitZone(
@@ -198,40 +197,64 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     get items() {
-        this.circles = {};
+        this.shapes = {};
 
         return (this.props.trackItems || []).map((spec, index) => {
-            return (
-                <TrackCircle
-                    ref={(circle: TrackCircle) => {
-                        if (circle !== null) {
-                            this.circles[index] = circle;
+            if (spec.endCodon !== undefined) {
+                return (
+                    <TrackItem
+                        ref={(rect: TrackItem) => {
+                            if (rect !== null) {
+                                this.shapes[index] = rect;
+                            }
+                        }}
+                        key={spec.startCodon}
+                        hitZoneClassName={`${this.props.idClassPrefix}${index}`}
+                        hitZoneXOffset={this.props.xOffset}
+                        x={spec.startCodon}
+                        y={this.svgHeight / 2}
+                        dim1={spec.endCodon! - spec.startCodon}
+                        dim2={50}
+                        spec={{ ...spec, endCodon: spec.endCodon! }}
+                    />
+                );
+            } else {
+                return (
+                    <TrackItem
+                        ref={(circle: TrackItem) => {
+                            if (circle !== null) {
+                                this.shapes[index] = circle;
+                            }
+                        }}
+                        key={spec.startCodon}
+                        hitZoneClassName={`${this.props.idClassPrefix}${index}`}
+                        hitZoneXOffset={this.props.xOffset}
+                        x={
+                            (this.props.width / this.props.proteinLength) *
+                            spec.startCodon
                         }
-                    }}
-                    key={spec.codon}
-                    hitZoneClassName={`${this.props.idClassPrefix}${index}`}
-                    hitZoneXOffset={this.props.xOffset}
-                    x={
-                        (this.props.width / this.props.proteinLength) *
-                        spec.codon
-                    }
-                    y={this.svgHeight / 2}
-                    radius={
-                        this.props.dataStore.isPositionSelected(spec.codon) ||
-                        this.props.dataStore.isPositionHighlighted(spec.codon)
-                            ? 5
-                            : 2.8
-                    }
-                    hoverRadius={5}
-                    spec={spec}
-                />
-            );
+                        y={this.svgHeight / 2}
+                        dim1={
+                            this.props.dataStore.isPositionSelected(
+                                spec.startCodon
+                            ) ||
+                            this.props.dataStore.isPositionHighlighted(
+                                spec.startCodon
+                            )
+                                ? 5
+                                : 2.8
+                        }
+                        dim2={5}
+                        spec={spec}
+                    />
+                );
+            }
         });
     }
 
     @action
     private unhoverAllComponents() {
-        unhoverAllComponents(this.circles);
+        unhoverAllComponents(this.shapes);
         this.props.dataStore.clearHighlightFilters();
     }
 

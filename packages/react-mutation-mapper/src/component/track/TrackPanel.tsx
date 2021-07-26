@@ -12,6 +12,7 @@ import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
 import HotspotTrack from './HotspotTrack';
 import OncoKbTrack from './OncoKbTrack';
+import ExonNumTrack from './ExonNumTrack';
 import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';
@@ -31,7 +32,12 @@ type TrackPanelProps = {
 @observer
 export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     public static defaultProps: Partial<TrackPanelProps> = {
-        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.dbPTM],
+        tracks: [
+            TrackName.CancerHotspots,
+            TrackName.OncoKB,
+            TrackName.dbPTM,
+            TrackName.ExonNum,
+        ],
     };
 
     constructor(props: TrackPanelProps) {
@@ -80,6 +86,48 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 TrackName.UniprotPTM,
                 PtmSource.Uniprot
             ),
+            [TrackName.ExonNum]:
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.ExonNum] === 'visible' ? (
+                    <ExonNumTrack
+                        store={this.props.store}
+                        dataStore={this.props.store.dataStore}
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : // <svg
+                //     xmlns="http://www.w3.org/2000/svg"
+                //     width={100}
+                //     height={50}
+                //     className="lollipop-svgnode"
+                // >
+                //     <rect
+                //         fill="deeppink"
+
+                //         x={0}
+                //         y={0}
+                //         width={100}
+                //         height={50}
+                //     />
+                // </svg>
+
+                // <HotspotTrack
+                //     store={this.props.store}
+                //     dataStore={this.props.store.dataStore}
+                //     hotspotIndex={
+                //         this.props.store.indexedHotspotData.result || {}
+                //     }
+                //     width={this.props.geneWidth}
+                //     xOffset={this.props.geneXOffset}
+                //     proteinLength={this.proteinLength}
+                // />
+                null,
+            // [TrackName.ExonNum]:this.getPtmTrack(
+            //     TrackName.ExonNum,
+            //     PtmSource.Uniprot),
+            // [TrackName.ExonNum]:(
+            //         <div> Exon Num</div>
         };
     }
 

@@ -45,6 +45,7 @@ import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { PtmSource } from 'cbioportal-utils';
+import { completeSessionGroups } from 'pages/resultsView/comparison/ResultsViewComparisonUtils';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -329,6 +330,7 @@ export default class MutationMapper<
             [TrackName.dbPTM]: dbPtmDataStatus,
             [TrackName.UniprotPTM]: uniprotPtmDataStatus,
             [TrackName.PDB]: alignmentDataStatus,
+            [TrackName.ExonNum]: 'complete',
         };
     }
 
@@ -546,7 +548,7 @@ export default class MutationMapper<
         } else {
             tracks.push(TrackName.dbPTM);
         }
-
+        tracks.push(TrackName.ExonNum);
         tracks.push(TrackName.PDB);
 
         return tracks;
