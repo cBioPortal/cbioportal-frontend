@@ -955,8 +955,8 @@ export default class LazyMobXTable<T> extends React.Component<
     }
 
     componentDidMount() {
-        if (window.onmousemove === null) {
-            window.onmousemove = (mouse: any) => {
+        if (document.onmousemove === null) {
+            document.onmousemove = (mouse: any) => {
                 const headerInfo: {
                     left: number;
                     filterIcon?: any;
