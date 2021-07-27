@@ -19,6 +19,7 @@ const getTextFromElement = require('../../../shared/specUtils')
     .getTextFromElement;
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
+var waitForStudyView = require('../../../shared/specUtils').waitForStudyView;
 const { setDropdownOpen, jsApiHover } = require('../../../shared/specUtils');
 
 var {
@@ -89,7 +90,7 @@ describe('study laml_tcga tests', () => {
         $("[data-test='add-chart-option-blast-count'] input").click();
 
         // Pause a bit time to let the page render the charts
-        browser.pause();
+        waitForStudyView();
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
@@ -103,12 +104,13 @@ describe('study laml_tcga tests', () => {
         ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
 
         // Pause a bit time to let the table render
-        browser.pause();
+        waitForStudyView();
 
         $("[data-test='add-chart-option-other-sample-id'] input").click();
         $("[data-test='chart-container-OTHER_SAMPLE_ID']").waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
+        waitForStudyView();
         const res = browser.checkElement(
             "[data-test='chart-container-OTHER_SAMPLE_ID']"
         );
@@ -196,7 +198,7 @@ describe('study laml_tcga tests', () => {
             it('add chart button should be disabled when content is invalid', () => {
                 $(ADD_CHART_CUSTOM_GROUPS_TEXTAREA).setValue('test');
                 // pause to wait for the content validation
-                browser.pause();
+                $('[data-test=ValidationResultWarning]').waitForDisplayed();
                 assert(
                     !$(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).isEnabled()
                 );
@@ -205,8 +207,10 @@ describe('study laml_tcga tests', () => {
                 $(ADD_CHART_CUSTOM_GROUPS_TEXTAREA).setValue(
                     'laml_tcga:TCGA-AB-2802-03'
                 );
-                // pause to wait for the content validation
-                browser.pause();
+                // pause to wait for the content validation (remove the error message from the previous test)
+                $('[data-test=ValidationResultWarning]').waitForDisplayed({
+                    reverse: true,
+                });
                 assert($(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).isEnabled());
             });
             //Skipping it for now since this feature is dependent on session-service and
@@ -541,8 +545,7 @@ describe('virtual study', () => {
     it('loads a virtual study', () => {
         const url = `${CBIOPORTAL_URL}/study/summary?id=5dd408f0e4b0f7d2de7862a8`;
         goToUrlAndSetLocalStorage(url);
-        waitForNetworkQuiet();
-        browser.pause(1000);
+        waitForStudyView();
         assertScreenShotMatch(checkElementWithMouseDisabled('#mainColumn'));
     });
 });
