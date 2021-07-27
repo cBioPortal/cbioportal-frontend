@@ -175,6 +175,24 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     //browser.moveToObject('body', 0, 0);
 }
 
+const goToUrlAndSetLocalStorageWithProperty = (url, authenticated, props) => {
+    goToUrlAndSetLocalStorage(url, authenticated);
+    setServerConfiguration(props);
+    goToUrlAndSetLocalStorage(url, authenticated);
+};
+
+function setServerConfiguration(props) {
+    browser.execute(
+        function(frontendConf) {
+            this.localStorage.setItem(
+                'frontendConfig',
+                JSON.stringify(frontendConf)
+            );
+        },
+        { serverConfig: props }
+    );
+}
+
 function sessionServiceIsEnabled() {
     return browser.execute(function() {
         return window.frontendConfig.serverConfig.sessionServiceEnabled;
@@ -578,6 +596,7 @@ module.exports = {
     waitForCoExpressionTab: waitForCoExpressionTab,
     waitForPatientView: waitForPatientView,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
+    goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
