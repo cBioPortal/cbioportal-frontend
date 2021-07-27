@@ -136,7 +136,12 @@ export default class PortalHeader extends React.Component<
                     </nav>
                 </div>
                 <div id="rightHeaderContent">
-                    <If condition={!AppConfig.hide_login}>
+                    <If
+                        condition={
+                            !AppConfig.hide_login &&
+                            !AppConfig.serverConfig.skin_hide_logout_button
+                        }
+                    >
                         <If condition={this.props.appStore.isLoggedIn}>
                             <Then>
                                 <div className="identity">
