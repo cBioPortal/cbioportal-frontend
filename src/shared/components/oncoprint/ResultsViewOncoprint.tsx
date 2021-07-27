@@ -1104,28 +1104,27 @@ export default class ResultsViewOncoprint extends React.Component<
             this.props.store.molecularProfileIdToMolecularProfile
         );
 
-        const heatmap_track_groups = _.chain(tracksMap)
-            .filter((track, molecularProfileId) => {
-                const profile = profileIdToProfile[molecularProfileId];
-                if (
-                    profile.molecularAlterationType ===
-                    AlterationTypeConstants.GENERIC_ASSAY
-                ) {
-                    return isGenericAssayHeatmapProfile(profile);
-                } else {
-                    return true;
-                }
-            })
-            .map((track, molecularProfileId) => {
-                return `${molecularProfileId},${_.keys(track.entities).join(
-                    ','
-                )}`;
-            })
-            .value()
-            .join(';');
+        const heatmap_track_groups: string[] = [];
+
+        _.forEach(tracksMap, (track, molecularProfileId) => {
+            const profile = profileIdToProfile[molecularProfileId];
+            let shouldAdd = true;
+            if (
+                profile.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+            ) {
+                shouldAdd = isGenericAssayHeatmapProfile(profile);
+            }
+
+            if (shouldAdd) {
+                heatmap_track_groups.push(
+                    `${molecularProfileId},${_.keys(track.entities).join(',')}`
+                );
+            }
+        });
 
         this.urlWrapper.updateURL({
-            heatmap_track_groups,
+            heatmap_track_groups: heatmap_track_groups.join(';'),
         });
     }
 
