@@ -246,7 +246,7 @@ describe('study laml_tcga tests', () => {
 });
 
 describe('add chart should not be shown in other irrelevant tabs', () => {
-    it('check', () => {
+    it('check add chart button doesnt exist on heatmap', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
         $('#studyViewTabs a.tabAnchor_heatmaps').waitForDisplayed({
