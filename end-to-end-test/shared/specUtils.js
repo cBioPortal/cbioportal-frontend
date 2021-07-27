@@ -141,6 +141,7 @@ function setDropdownOpen(
                     typeof button_selector_or_elt === 'string'
                         ? $(button_selector_or_elt)
                         : button_selector_or_elt;
+                button_elt.waitForExist();
                 button_elt.click();
                 return false;
             }
