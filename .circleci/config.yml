@@ -176,6 +176,7 @@ jobs:
       SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
+      HEADLESS_CHROME: true
     <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_localdb:
