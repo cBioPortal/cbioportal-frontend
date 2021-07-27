@@ -59,7 +59,7 @@ import {
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     annotationFilterActive,
-    tierFilterActive,
+    driverTierFilterActive,
     statusFilterActive,
 } from 'pages/studyView/StudyViewUtils';
 import {
@@ -3497,16 +3497,16 @@ describe('StudyViewUtils', () => {
 
     describe('tierFilterActive', () => {
         it('false when all tier types included', () => {
-            assert.isFalse(tierFilterActive({ tier1: true }, true));
+            assert.isFalse(driverTierFilterActive({ tier1: true }, true));
         });
         it('false when all tier types excluded', () => {
-            assert.isFalse(tierFilterActive({ tier1: false }, false));
+            assert.isFalse(driverTierFilterActive({ tier1: false }, false));
         });
         it('true when single tier not selected', () => {
-            assert(tierFilterActive({ tier1: true, tier2: false }, true));
+            assert(driverTierFilterActive({ tier1: true, tier2: false }, true));
         });
         it('true when unkown tier not selected', () => {
-            assert(tierFilterActive({ tier1: true, tier2: true }, false));
+            assert(driverTierFilterActive({ tier1: true, tier2: true }, false));
         });
     });
 

@@ -126,8 +126,8 @@ import {
     getStructuralVariantSamplesCount,
     MolecularProfileOption,
     statusFilterActive,
-    tierFilterActive,
-    buildSelectedTiersMap,
+    driverTierFilterActive,
+    buildSelectedDriverTiersMap,
     annotationFilterActive,
     ensureBackwardCompatibilityOfFilters,
 } from './StudyViewUtils';
@@ -2600,8 +2600,8 @@ export class StudyViewPageStore
                     this.driverAnnotationSettings.includeDriver,
                     this.driverAnnotationSettings.includeVUS,
                     this.driverAnnotationSettings.includeUnknownOncogenicity,
-                    this.selectedTiersMap.isComplete
-                        ? this.selectedTiersMap.result!
+                    this.selectedDriverTiersMap.isComplete
+                        ? this.selectedDriverTiersMap.result!
                         : {},
                     this.driverAnnotationSettings.includeUnknownTier,
                     this.includeGermlineMutations,
@@ -3237,8 +3237,8 @@ export class StudyViewPageStore
             includeGermline: this.includeGermlineMutations,
             includeSomatic: this.includeSomaticMutations,
             includeUnknownStatus: this.includeUnknownStatusMutations,
-            tiersBooleanMap: this.selectedTiersMap.isComplete
-                ? this.selectedTiersMap.result!
+            tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                ? this.selectedDriverTiersMap.result!
                 : {},
         } as unknown) as AlterationFilter;
 
@@ -6645,7 +6645,7 @@ export class StudyViewPageStore
         },
     });
 
-    readonly selectedTiers = remoteData<string[]>({
+    readonly selectedDriverTiers = remoteData<string[]>({
         await: () => [this.customDriverAnnotationReport],
         invoke: () => {
             return Promise.resolve(
@@ -6656,12 +6656,15 @@ export class StudyViewPageStore
         },
     });
 
-    readonly selectedTiersMap = remoteData<{ [tier: string]: boolean }>({
-        await: () => [this.customDriverAnnotationReport, this.selectedTiers],
+    readonly selectedDriverTiersMap = remoteData<{ [tier: string]: boolean }>({
+        await: () => [
+            this.customDriverAnnotationReport,
+            this.selectedDriverTiers,
+        ],
         invoke: () => {
             return Promise.resolve(
-                buildSelectedTiersMap(
-                    this.selectedTiers.result!,
+                buildSelectedDriverTiersMap(
+                    this.selectedDriverTiers.result!,
                     this.customDriverAnnotationReport.result!.tiers
                 )
             );
@@ -8413,7 +8416,7 @@ export class StudyViewPageStore
     }
 
     @computed get isTiersFilterActive(): boolean {
-        return tierFilterActive(
+        return driverTierFilterActive(
             _.fromPairs(this.driverAnnotationSettings.driverTiers.toJSON()),
             this.driverAnnotationSettings.includeUnknownTier
         );
