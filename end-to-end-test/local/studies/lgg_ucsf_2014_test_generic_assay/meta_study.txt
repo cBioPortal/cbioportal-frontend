@@ -5,4 +5,3 @@ description: Whole exome sequencing of 23 grade II glioma tumor/normal pairs.
 citation: Johnson et al. Science 2014
 pmid: 24336570
 groups: PUBLIC
-short_name: Glioma (UCSF)
