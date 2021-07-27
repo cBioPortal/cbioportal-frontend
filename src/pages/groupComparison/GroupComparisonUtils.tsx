@@ -988,7 +988,7 @@ export const AlterationFilterMenuSection: React.FunctionComponent<{
                                     store.showDriverAnnotationMenuSection
                                 }
                                 showTiersSection={
-                                    store.showTierAnnotationMenuSection
+                                    store.showDriverTierAnnotationMenuSection
                                 }
                             />
                         }
@@ -1001,7 +1001,7 @@ export const AlterationFilterMenuSection: React.FunctionComponent<{
                             store.showDriverAnnotationMenuSection
                         }
                         showTierAnnotationSection={
-                            store.showTierAnnotationMenuSection
+                            store.showDriverTierAnnotationMenuSection
                         }
                     />
                 }

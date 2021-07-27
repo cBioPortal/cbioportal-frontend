@@ -61,7 +61,7 @@ import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     getFilteredMolecularProfilesByAlterationType,
     getPatientIdentifiers,
-    buildSelectedTiersMap,
+    buildSelectedDriverTiersMap,
 } from 'pages/studyView/StudyViewUtils';
 import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
@@ -1043,7 +1043,7 @@ export default abstract class ComparisonStore
                         includeUnknownOncogenicity: this
                             .driverAnnotationSettings
                             .includeUnknownOncogenicity,
-                        tiersBooleanMap: this.selectedTiersMap,
+                        tiersBooleanMap: this.selectedDriverTiersMap,
                         includeUnknownTier: this.driverAnnotationSettings
                             .includeUnknownTier,
                         includeGermline: this.includeGermlineMutations,
@@ -2037,31 +2037,13 @@ export default abstract class ComparisonStore
         });
     }
 
-    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
-        {
-            await: () => [this.studies],
-            invoke: () => {
-                const studyIds = _.map(
-                    this.studies.result,
-                    (s: CancerStudy) => s.studyId
-                );
-                return client.fetchMolecularProfilesUsingPOST({
-                    molecularProfileFilter: {
-                        studyIds: studyIds,
-                    } as MolecularProfileFilter,
-                });
-            },
-        },
-        []
-    );
-
     readonly customDriverAnnotationProfiles = remoteData<MolecularProfile[]>(
         {
-            await: () => [this.molecularProfilesInStudies],
+            await: () => [this.molecularProfilesInActiveStudies],
             invoke: () => {
                 return Promise.resolve(
                     _.filter(
-                        this.molecularProfilesInStudies.result,
+                        this.molecularProfilesInActiveStudies.result,
                         (molecularProfile: MolecularProfile) =>
                             // discrete CNA's
                             (molecularProfile.molecularAlterationType ===
@@ -2121,7 +2103,7 @@ export default abstract class ComparisonStore
         );
     }
 
-    @computed get showTierAnnotationMenuSection() {
+    @computed get showDriverTierAnnotationMenuSection() {
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.tiers.length > 0 &&
@@ -2132,21 +2114,21 @@ export default abstract class ComparisonStore
         );
     }
 
-    @computed get selectedTiers() {
-        return this.allTiers.filter(tier =>
+    @computed get selectedDriverTiers() {
+        return this.allDriverTiers.filter(tier =>
             this.driverAnnotationSettings.driverTiers.get(tier)
         );
     }
 
-    @computed get allTiers() {
+    @computed get allDriverTiers() {
         return this.customDriverAnnotationReport.isComplete
             ? this.customDriverAnnotationReport.result!.tiers
             : [];
     }
 
-    @computed get selectedTiersMap() {
-        return buildSelectedTiersMap(
-            this.selectedTiers || [],
+    @computed get selectedDriverTiersMap() {
+        return buildSelectedDriverTiersMap(
+            this.selectedDriverTiers || [],
             this.customDriverAnnotationReport.result!.tiers
         );
     }
