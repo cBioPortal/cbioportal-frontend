@@ -466,17 +466,11 @@ export default abstract class ComparisonStore
 
     readonly molecularProfilesInActiveStudies = remoteData<MolecularProfile[]>(
         {
-            await: () => [this.activeStudyIds],
+            await: () => [this.activeStudyIds, this.molecularProfilesInStudies],
             invoke: async () => {
-                if (this.activeStudyIds.result!.length > 0) {
-                    return client.fetchMolecularProfilesUsingPOST({
-                        molecularProfileFilter: {
-                            studyIds: this.activeStudyIds.result!,
-                        } as MolecularProfileFilter,
-                    });
-                } else {
-                    return Promise.resolve([]);
-                }
+                return _.filter(this.molecularProfilesInStudies.result!, s =>
+                    this.activeStudyIds.result!.includes(s.studyId)
+                );
             },
         },
         []
@@ -2037,13 +2031,31 @@ export default abstract class ComparisonStore
         });
     }
 
+    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>(
+        {
+            await: () => [this.studies],
+            invoke: () => {
+                const studyIds = _.map(
+                    this.studies.result,
+                    (s: CancerStudy) => s.studyId
+                );
+                return client.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: {
+                        studyIds: studyIds,
+                    } as MolecularProfileFilter,
+                });
+            },
+        },
+        []
+    );
+
     readonly customDriverAnnotationProfiles = remoteData<MolecularProfile[]>(
         {
-            await: () => [this.molecularProfilesInActiveStudies],
+            await: () => [this.molecularProfilesInStudies],
             invoke: () => {
                 return Promise.resolve(
                     _.filter(
-                        this.molecularProfilesInActiveStudies.result,
+                        this.molecularProfilesInStudies.result,
                         (molecularProfile: MolecularProfile) =>
                             // discrete CNA's
                             (molecularProfile.molecularAlterationType ===
