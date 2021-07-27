@@ -2933,8 +2933,8 @@ export function geneFilterQueryFromOql(
     includeDriver?: boolean,
     includeVUS?: boolean,
     includeUnknownOncogenicity?: boolean,
-    selectedTiers?: { [tier: string]: boolean },
-    includeUnknownTier?: boolean,
+    selectedDriverTiers?: { [tier: string]: boolean },
+    includeUnknownDriverTier?: boolean,
     includeGermline?: boolean,
     includeSomatic?: boolean,
     includeUnknownStatus?: boolean
@@ -2958,9 +2958,12 @@ export function geneFilterQueryFromOql(
             includeUnknownOncogenicity === undefined
                 ? true
                 : includeUnknownOncogenicity,
-        tiersBooleanMap: selectedTiers || ({} as { [tier: string]: boolean }),
+        tiersBooleanMap:
+            selectedDriverTiers || ({} as { [tier: string]: boolean }),
         includeUnknownTier:
-            includeUnknownTier === undefined ? true : includeUnknownTier,
+            includeUnknownDriverTier === undefined
+                ? true
+                : includeUnknownDriverTier,
         includeGermline: includeGermline === undefined ? true : includeGermline,
         includeSomatic: includeSomatic === undefined ? true : includeSomatic,
         includeUnknownStatus:
@@ -3009,7 +3012,7 @@ export const AlterationMenuHeader: React.FunctionComponent<{
     }
 });
 
-export function buildSelectedTiersMap(
+export function buildSelectedDriverTiersMap(
     selectedTiers: string[],
     allTiers: string[]
 ): { [tier: string]: boolean } {
@@ -3028,7 +3031,7 @@ export const FilterIconMessage: React.FunctionComponent<{
         geneFilterQuery.includeVUS,
         geneFilterQuery.includeUnknownOncogenicity
     );
-    const tierFilterIsActive = tierFilterActive(
+    const tierFilterIsActive = driverTierFilterActive(
         geneFilterQuery.tiersBooleanMap,
         geneFilterQuery.includeUnknownTier
     );
@@ -3139,7 +3142,7 @@ export const FilterIconMessage: React.FunctionComponent<{
     );
 });
 
-export function tierFilterActive(
+export function driverTierFilterActive(
     tiersMap: { [tier: string]: boolean },
     includeUnknownTier: boolean
 ): boolean {
