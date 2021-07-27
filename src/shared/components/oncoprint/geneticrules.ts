@@ -5,7 +5,7 @@ import {
     RuleSetParams,
     RuleSetType,
 } from 'oncoprintjs';
-import { DEFAULT_GREY } from 'shared/lib/Colors';
+import { DEFAULT_GREY, hexToRGBA } from 'shared/lib/Colors';
 import _ from 'lodash';
 import {
     CNA_COLOR_AMP,
@@ -78,12 +78,12 @@ enum ShapeId {
 const shapeBank = {
     [ShapeId.defaultGrayRectangle]: {
         type: 'rectangle',
-        fill: DEFAULT_GREY,
+        fill: hexToRGBA(DEFAULT_GREY),
         z: 1,
     },
     [ShapeId.ampRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_AMP,
+        fill: hexToRGBA(CNA_COLOR_AMP),
         x: 0,
         y: 0,
         width: 100,
@@ -92,7 +92,7 @@ const shapeBank = {
     },
     [ShapeId.gainRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_GAIN,
+        fill: hexToRGBA(CNA_COLOR_GAIN),
         x: 0,
         y: 0,
         width: 100,
@@ -101,7 +101,7 @@ const shapeBank = {
     },
     [ShapeId.homdelRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_HOMDEL,
+        fill: hexToRGBA(CNA_COLOR_HOMDEL),
         x: 0,
         y: 0,
         width: 100,
@@ -110,7 +110,7 @@ const shapeBank = {
     },
     [ShapeId.hetlossRectangle]: {
         type: 'rectangle',
-        fill: CNA_COLOR_HETLOSS,
+        fill: hexToRGBA(CNA_COLOR_HETLOSS),
         x: 0,
         y: 0,
         width: 100,
@@ -119,8 +119,8 @@ const shapeBank = {
     },
     [ShapeId.mrnaHighRectangle]: {
         type: 'rectangle',
-        fill: 'rgba(0, 0, 0, 0)',
-        stroke: MRNA_COLOR_HIGH,
+        fill: [0, 0, 0, 0] as [number, number, number, number],
+        stroke: hexToRGBA(MRNA_COLOR_HIGH),
         'stroke-width': 2,
         x: 0,
         y: 0,
@@ -130,8 +130,8 @@ const shapeBank = {
     },
     [ShapeId.mrnaLowRectangle]: {
         type: 'rectangle',
-        fill: 'rgba(0, 0, 0, 0)',
-        stroke: MRNA_COLOR_LOW,
+        fill: [0, 0, 0, 0] as [number, number, number, number],
+        stroke: hexToRGBA(MRNA_COLOR_LOW),
         'stroke-width': 2,
         x: 0,
         y: 0,
@@ -141,7 +141,7 @@ const shapeBank = {
     },
     [ShapeId.protHighRectangle]: {
         type: 'rectangle',
-        fill: PROT_COLOR_HIGH,
+        fill: hexToRGBA(PROT_COLOR_HIGH),
         x: 0,
         y: 0,
         width: 100,
@@ -150,7 +150,7 @@ const shapeBank = {
     },
     [ShapeId.protLowRectangle]: {
         type: 'rectangle',
-        fill: PROT_COLOR_LOW,
+        fill: hexToRGBA(PROT_COLOR_LOW),
         x: 0,
         y: 80,
         width: 100,
@@ -159,7 +159,7 @@ const shapeBank = {
     },
     [ShapeId.structuralVariantDriverRectangle]: {
         type: 'rectangle',
-        fill: STRUCTURAL_VARIANT_COLOR,
+        fill: hexToRGBA(STRUCTURAL_VARIANT_COLOR),
         x: 0,
         y: 20,
         width: 100,
@@ -168,7 +168,7 @@ const shapeBank = {
     },
     [ShapeId.structuralVariantVUSRectangle]: {
         type: 'rectangle',
-        fill: STRUCTURAL_VARIANT_PASSENGER_COLOR,
+        fill: hexToRGBA(STRUCTURAL_VARIANT_PASSENGER_COLOR),
         x: 0,
         y: 20,
         width: 100,
@@ -177,7 +177,7 @@ const shapeBank = {
     },
     [ShapeId.germlineRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_GERMLINE,
+        fill: hexToRGBA(MUT_COLOR_GERMLINE),
         x: 0,
         y: 46,
         width: 100,
@@ -186,7 +186,7 @@ const shapeBank = {
     },
     [ShapeId.spliceMutationDriverRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_SPLICE,
+        fill: hexToRGBA(MUT_COLOR_SPLICE),
         x: 0,
         y: 33.33,
         width: 100,
@@ -195,7 +195,7 @@ const shapeBank = {
     },
     [ShapeId.spliceMutationVUSRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_SPLICE_PASSENGER,
+        fill: hexToRGBA(MUT_COLOR_SPLICE_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -204,7 +204,7 @@ const shapeBank = {
     },
     [ShapeId.missenseMutationDriverRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_MISSENSE,
+        fill: hexToRGBA(MUT_COLOR_MISSENSE),
         x: 0,
         y: 33.33,
         width: 100,
@@ -213,7 +213,7 @@ const shapeBank = {
     },
     [ShapeId.missenseMutationVUSRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_MISSENSE_PASSENGER,
+        fill: hexToRGBA(MUT_COLOR_MISSENSE_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -222,7 +222,7 @@ const shapeBank = {
     },
     [ShapeId.otherMutationRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_OTHER,
+        fill: hexToRGBA(MUT_COLOR_OTHER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -231,7 +231,7 @@ const shapeBank = {
     },
     [ShapeId.promoterMutationRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_PROMOTER,
+        fill: hexToRGBA(MUT_COLOR_PROMOTER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -240,7 +240,7 @@ const shapeBank = {
     },
     [ShapeId.truncatingMutationDriverRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_TRUNC,
+        fill: hexToRGBA(MUT_COLOR_TRUNC),
         x: 0,
         y: 33.33,
         width: 100,
@@ -249,7 +249,7 @@ const shapeBank = {
     },
     [ShapeId.truncatingMutationVUSRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_TRUNC_PASSENGER,
+        fill: hexToRGBA(MUT_COLOR_TRUNC_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -258,7 +258,7 @@ const shapeBank = {
     },
     [ShapeId.inframeMutationDriverRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_INFRAME,
+        fill: hexToRGBA(MUT_COLOR_INFRAME),
         x: 0,
         y: 33.33,
         width: 100,
@@ -267,7 +267,7 @@ const shapeBank = {
     },
     [ShapeId.inframeMutationVUSRectangle]: {
         type: 'rectangle',
-        fill: MUT_COLOR_INFRAME_PASSENGER,
+        fill: hexToRGBA(MUT_COLOR_INFRAME_PASSENGER),
         x: 0,
         y: 33.33,
         width: 100,
@@ -380,7 +380,7 @@ const base_genetic_rule_set_params: Partial<IGeneticAlterationRuleSetParams> = {
     type: RuleSetType.GENE,
     legend_label: 'Genetic Alteration',
     na_legend_label: 'Not profiled',
-    legend_base_color: DEFAULT_GREY,
+    legend_base_color: hexToRGBA(DEFAULT_GREY),
 };
 
 export const genetic_rule_set_same_color_for_all_no_recurrence: IGeneticAlterationRuleSetParams = _.assign(
