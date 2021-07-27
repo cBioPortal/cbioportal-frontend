@@ -80,6 +80,7 @@ export default class GenericAssaySelection extends React.Component<
                             genericAssayType: this.props.genericAssayType,
                             dataType: option.dataType,
                             genericAssayEntityId: entityId,
+                            patientLevel: option.patientLevel,
                         };
                     }
                 );
