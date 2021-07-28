@@ -1,5 +1,7 @@
 const { join } = require('path');
 
+const mergeReports = require('./merge-e2e-reports');
+
 const fs = require('fs');
 var path = require('path');
 var VisualRegressionCompare = require('wdio-novus-visual-regression-service/compare');
@@ -11,6 +13,8 @@ const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
+
+const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -116,11 +120,11 @@ exports.config = {
     // NPM script (see https://docs.npmjs.com/cli/run-script) then the current working
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
-    //specs: ['remote/specs/core/screenshot.spec.js'],
-    //specs: ['local/specs/treatment.screenshot.spec.js']
     //
 
     specs: [SPEC_FILE_PATTERN],
+
+    //specs: ["./remote/specs/core/home.spec.js", 'remote/specs/core/screenshot.spec.js'],
 
     // Patterns to exclude.
     exclude: [
@@ -281,6 +285,15 @@ exports.config = {
     reporters: [
         'spec',
         [
+            'json',
+            {
+                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
+                outputFileFormat: function(opts) {
+                    return `results-${opts.cid}.json`;
+                },
+            },
+        ],
+        [
             CustomReporter,
             {
                 testHome: TEST_TYPE,
@@ -303,22 +316,6 @@ exports.config = {
     ],
 
     testHome: process.env.JUNIT_REPORT_PATH,
-
-    // reporterOptions: {
-    //     junit: {
-    //         outputDir: process.env.JUNIT_REPORT_PATH || './',
-    //         outputFileFormat: function(opts) {
-    //             // optional
-    //             return `results-${opts.cid}.${opts.capabilities}.xml`;
-    //         },
-    //     },
-    //     custom: {
-    //         outputDir: process.env.JUNIT_REPORT_PATH || './',
-    //         outputFileFormat: function(opts) {
-    //             // optional
-    //             return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
-    //         },
-    //     },
 
     //
     // Options to be passed to Mocha.
@@ -466,6 +463,7 @@ exports.config = {
      * @param {Array.<String>} specs List of spec file paths that ran
      */
     // afterSession: function (config, capabilities, specs) {
+    //
     // },
     /**
      * Gets executed after all workers got shut down and the process is about to exit. An error
@@ -475,8 +473,9 @@ exports.config = {
      * @param {Array.<Object>} capabilities list of capabilities details
      * @param {<Object>} results object containing test results
      */
-    // onComplete: function(exitCode, config, capabilities, results) {
-    // },
+    onComplete: function(exitCode, config, capabilities, results) {
+        mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
+    },
     /**
      * Gets executed when a refresh happens.
      * @param {String} oldSessionId session ID of the old session
