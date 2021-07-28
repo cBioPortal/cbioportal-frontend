@@ -16,22 +16,22 @@ const ipc = require('node-ipc');
 const oldIt = it;
 const oldSkip = oldIt.skip;
 
-context.it = function(...args) {
-    ipc.connectTo('runnerProcess', () => {
-        ipc.of['runnerProcess'].on('connect', () => {
-            ipc.of['runnerProcess'].emit('test_it', args[0]);
-        });
-    });
-    return oldIt.apply(this, args);
-};
+// context.it = function(...args) {
+//     ipc.connectTo('runnerProcess', () => {
+//         ipc.of['runnerProcess'].on('connect', () => {
+//             ipc.of['runnerProcess'].emit('test_it', args[0]);
+//         });
+//     });
+//     return oldIt.apply(this, args);
+// };
 
-context.it.skip = function(...args) {
-    ipc.connectTo('runnerProcess', () => {
-        ipc.of['runnerProcess'].on('connect', () => {
-            ipc.of['runnerProcess'].emit('test_skipped', args[0]);
-        });
-    });
-    return oldSkip.apply(this, arguments);
-};
+// context.it.skip = function(...args) {
+//     ipc.connectTo('runnerProcess', () => {
+//         ipc.of['runnerProcess'].on('connect', () => {
+//             ipc.of['runnerProcess'].emit('test_skipped', args[0]);
+//         });
+//     });
+//     return oldSkip.apply(this, arguments);
+// };
 
-context.it.only = it.only;
+//context.it.only = it.only;
