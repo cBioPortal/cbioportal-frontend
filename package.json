@@ -60,7 +60,7 @@
     "syncmock": "node src/test/fetchMockData.js --diff",
     "e2e:spinup": "./scripts/e2e.sh",
     "e2e:local": "export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-local",
-    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-remote",
+    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ &&  rm -r -f end-to-end-test/shared/results && cd end-to-end-test && yarn run test-webdriver-manager-remote",
     "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
   },
   "engines": {
