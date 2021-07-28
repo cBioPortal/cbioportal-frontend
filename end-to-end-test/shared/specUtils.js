@@ -183,6 +183,7 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     //browser.setViewportSize({ height: 1000, width: 1600 });
 
     // move mouse out of the way
+    // move mouse out of the way
     //browser.moveToObject('body', 0, 0);
 }
 
