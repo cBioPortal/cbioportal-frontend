@@ -3,6 +3,7 @@ import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import TrackCircle from './TrackCircle';
 import TrackRect from './TrackRect';
+import ExonNumTrack from './ExonNumTrack';
 
 type TrackItemProps = {
     x: number;
@@ -14,9 +15,15 @@ type TrackItemProps = {
     spec: TrackItemSpec;
 };
 
+export enum TrackItemType {
+    CIRCLE,
+    RECTANGLE,
+}
+
 export type TrackItemSpec = {
     startCodon: number;
     endCodon?: number;
+    itemType: TrackItemType;
     label?: string;
     color?: string;
     tooltip?: JSX.Element;
@@ -40,14 +47,25 @@ export default class TrackItem extends React.Component<
     @observable public isHovered = false;
 
     @computed public get hitRectangle() {
-        const hoverRadius =
-            this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+        let hoverWidth;
+        let hoverHeight;
+        if (this.props.spec.itemType === TrackItemType.CIRCLE) {
+            hoverHeight =
+                this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+
+            hoverWidth =
+                this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+        } else {
+            hoverHeight = this.props.dim2! / 2;
+
+            hoverWidth = this.props.dim1! / 2;
+        }
 
         return {
-            x: this.props.x - hoverRadius + (this.props.hitZoneXOffset || 0),
+            x: this.props.x - hoverWidth + (this.props.hitZoneXOffset || 0),
             y: this.props.y,
-            width: hoverRadius * 2,
-            height: hoverRadius * 2,
+            width: hoverWidth * 2,
+            height: hoverHeight * 2,
         };
     }
 

@@ -21,7 +21,7 @@ import {
     updatePositionHighlightFilters,
     updatePositionSelectionFilters,
 } from '../../util/FilterUtils';
-import TrackItem, { TrackItemSpec } from './TrackItem';
+import TrackItem, { TrackItemSpec, TrackItemType } from './TrackItem';
 import styles from './trackStyles.module.scss';
 
 const DEFAULT_ID_CLASS_PREFIX = 'track-circle-';
@@ -119,6 +119,16 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     @action.bound
+    onTrackRectClick(rectComponent: TrackItem) {
+        updatePositionSelectionFilters(
+            this.props.dataStore,
+            rectComponent.props.spec.startCodon,
+            this.shiftPressed,
+            this.props.defaultFilters
+        );
+    }
+
+    @action.bound
     onTrackCircleHover(circleComponent: TrackItem) {
         updatePositionHighlightFilters(
             this.props.dataStore,
@@ -126,6 +136,16 @@ export default class Track extends React.Component<TrackProps, {}> {
             this.props.defaultFilters
         );
         circleComponent.isHovered = true;
+    }
+
+    @action.bound
+    onTrackRectHover(rectComponent: TrackItem) {
+        updatePositionHighlightFilters(
+            this.props.dataStore,
+            rectComponent.props.spec.startCodon,
+            this.props.defaultFilters
+        );
+        rectComponent.isHovered = true;
     }
 
     @action.bound
@@ -152,14 +172,26 @@ export default class Track extends React.Component<TrackProps, {}> {
         const componentIndex: number | null = this.getComponentIndex(className);
 
         if (componentIndex !== null) {
-            const circleComponent = this.shapes[componentIndex];
+            const shapeComponent = this.shapes[componentIndex];
 
-            if (circleComponent) {
+            if (shapeComponent.props.spec.itemType === TrackItemType.CIRCLE) {
+                let circleComponent = shapeComponent;
                 this.setHitZone(
                     circleComponent.hitRectangle,
                     circleComponent.props.spec.tooltip,
                     action(() => this.onTrackCircleHover(circleComponent)),
                     action(() => this.onTrackCircleClick(circleComponent)),
+                    this.onHitzoneMouseOut,
+                    'pointer',
+                    'bottom'
+                );
+            } else {
+                let rectComponent = shapeComponent;
+                this.setHitZone(
+                    rectComponent.hitRectangle,
+                    rectComponent.props.spec.tooltip,
+                    action(() => this.onTrackRectHover(rectComponent)),
+                    action(() => this.onTrackRectClick(rectComponent)),
                     this.onHitzoneMouseOut,
                     'pointer',
                     'bottom'
@@ -200,7 +232,7 @@ export default class Track extends React.Component<TrackProps, {}> {
         this.shapes = {};
 
         return (this.props.trackItems || []).map((spec, index) => {
-            if (spec.endCodon !== undefined) {
+            if (spec.itemType === TrackItemType.RECTANGLE) {
                 return (
                     <TrackItem
                         ref={(rect: TrackItem) => {

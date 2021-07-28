@@ -8,7 +8,7 @@ import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { OncoKbTrackTooltip } from './OncoKbTrackTooltip';
 import { default as Track, TrackProps } from './Track';
-import { TrackItemSpec } from './TrackItem';
+import { TrackItemSpec, TrackItemType } from './TrackItem';
 import { Mutation } from 'cbioportal-utils';
 
 import oncoKbImg from '../../images/oncogenic-only.svg';
@@ -91,10 +91,15 @@ export default class ExonNumTrack extends React.Component<
             }
         }
 
-        return data.map((exon: number[]) => ({
-            color: '#007FFF',
+        const altColors = ['#007FFF', '#35BAF6'];
+
+        return data.map((exon: number[], index: number) => ({
+            color: altColors[index % 2],
             startCodon: this.props.width * exon[2],
             endCodon: this.props.width * exon[1] + this.props.width * exon[2],
+            label: exon[0].toString(),
+            labelColor: '#FFFFFF',
+            itemType: TrackItemType.RECTANGLE,
         }));
     }
 

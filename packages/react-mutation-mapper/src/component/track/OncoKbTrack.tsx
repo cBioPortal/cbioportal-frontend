@@ -8,7 +8,7 @@ import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { OncoKbTrackTooltip } from './OncoKbTrackTooltip';
 import { default as Track, TrackProps } from './Track';
-import { TrackItemSpec } from './TrackItem';
+import { TrackItemSpec, TrackItemType } from './TrackItem';
 import { Mutation } from 'cbioportal-utils';
 
 import oncoKbImg from '../../images/oncogenic-only.svg';
@@ -40,6 +40,7 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
                 .map(position => ({
                     startCodon: Number(position),
                     color: '#007FFF',
+                    itemType: TrackItemType.CIRCLE,
                     tooltip: (
                         <OncoKbTrackTooltip
                             usingPublicOncoKbInstance={
