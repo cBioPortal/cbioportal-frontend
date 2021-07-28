@@ -107,10 +107,11 @@ describe('study laml_tcga tests', () => {
         waitForStudyView();
 
         $("[data-test='add-chart-option-other-sample-id'] input").click();
-        $("[data-test='chart-container-OTHER_SAMPLE_ID']").waitForDisplayed({
+        $(
+            "[data-test='chart-container-OTHER_SAMPLE_ID'] .ReactVirtualized__Table"
+        ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        waitForStudyView();
         const res = browser.checkElement(
             "[data-test='chart-container-OTHER_SAMPLE_ID']"
         );
