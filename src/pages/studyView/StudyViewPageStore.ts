@@ -3686,63 +3686,60 @@ export class StudyViewPageStore
                         if (!this.chartToUsedColors.has(attributeId))
                             this.chartToUsedColors.set(attributeId, new Set());
                     }
-
-                    let res = getClinicalDataCountWithColorByClinicalDataCount(
-                        counts
-                    );
-                    res.forEach(item => {
-                        let colorMapKey = this.generateColorMapKey(
-                            attributeId,
-                            item.value
-                        );
-                        // If the item doesn't has an assigned color
-                        if (!this.chartItemToColor.has(colorMapKey)) {
-                            // If the color has not been used
-                            if (
-                                !this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.has(item.color)
-                            ) {
-                                this.chartItemToColor.set(
-                                    colorMapKey,
-                                    item.color
-                                );
-                                this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.add(item.color);
-                            } else {
-                                // Pick up a new color if the color has been used
-                                let d = {
-                                    value: item.value,
-                                    count: item.count,
-                                };
-                                let newColor = pickNewColorForClinicData(
-                                    d,
-                                    this.chartToUsedColors.get(attributeId) ||
-                                        new Set()
-                                );
-                                this.chartItemToColor.set(
-                                    colorMapKey,
-                                    newColor
-                                );
-                                this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.add(newColor);
-                                item.color = newColor;
-                            }
-                        } else {
-                            item.color = this.chartItemToColor.get(
-                                colorMapKey
-                            )!;
-                        }
-                    });
-                    return res;
+                    return this.addColorToCategories(counts, attributeId);
                 },
                 onError: () => {},
                 default: [],
             });
         }
         return this.clinicalDataCountPromises[uniqueKey];
+    }
+
+    private addColorToCategories(
+        counts: ClinicalDataCount[],
+        attributeId: string
+    ): ClinicalDataCountSummary[] {
+        return getClinicalDataCountWithColorByClinicalDataCount(counts).map(
+            item => {
+                let colorMapKey = this.generateColorMapKey(
+                    attributeId,
+                    item.value
+                );
+                // If the item doesn't has an assigned color
+                if (!this.chartItemToColor.has(colorMapKey)) {
+                    // If the color has not been used
+                    if (
+                        !this.chartToUsedColors
+                            .get(attributeId)
+                            ?.has(item.color)
+                    ) {
+                        this.chartItemToColor.set(colorMapKey, item.color);
+                        this.chartToUsedColors
+                            .get(attributeId)
+                            ?.add(item.color);
+                    } else {
+                        // Pick up a new color if the color has been used
+                        let d = {
+                            value: item.value,
+                            count: item.count,
+                        };
+                        let newColor = pickNewColorForClinicData(
+                            d,
+                            this.chartToUsedColors.get(attributeId) || new Set()
+                        );
+                        this.chartItemToColor.set(colorMapKey, newColor);
+                        this.chartToUsedColors.get(attributeId)?.add(newColor);
+                        item.color = newColor;
+                    }
+                    return item;
+                } else {
+                    return {
+                        ...item,
+                        color: this.chartItemToColor.get(colorMapKey)!,
+                    };
+                }
+            }
+        );
     }
 
     public getCustomDataCount(
@@ -3811,57 +3808,7 @@ export class StudyViewPageStore
                         if (!this.chartToUsedColors.has(attributeId))
                             this.chartToUsedColors.set(attributeId, new Set());
                     }
-
-                    let res = getClinicalDataCountWithColorByClinicalDataCount(
-                        counts
-                    );
-                    res.forEach(item => {
-                        let colorMapKey = this.generateColorMapKey(
-                            attributeId,
-                            item.value
-                        );
-                        // If the item doesn't has an assigned color
-                        if (!this.chartItemToColor.has(colorMapKey)) {
-                            // If the color has not been used
-                            if (
-                                !this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.has(item.color)
-                            ) {
-                                this.chartItemToColor.set(
-                                    colorMapKey,
-                                    item.color
-                                );
-                                this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.add(item.color);
-                            } else {
-                                // Pick up a new color if the color has been used
-                                let d = {
-                                    value: item.value,
-                                    count: item.count,
-                                };
-                                let newColor = pickNewColorForClinicData(
-                                    d,
-                                    this.chartToUsedColors.get(attributeId) ||
-                                        new Set()
-                                );
-                                this.chartItemToColor.set(
-                                    colorMapKey,
-                                    newColor
-                                );
-                                this.chartToUsedColors
-                                    .get(attributeId)
-                                    ?.add(newColor);
-                                item.color = newColor;
-                            }
-                        } else {
-                            item.color = this.chartItemToColor.get(
-                                colorMapKey
-                            )!;
-                        }
-                    });
-                    return res;
+                    return this.addColorToCategories(counts, attributeId);
                 },
                 onError: () => {},
                 default: [],
@@ -8026,25 +7973,27 @@ export class StudyViewPageStore
             } else {
                 selectedSamples = this.selectedSamples.result;
             }
-            return getClinicalDataCountWithColorByClinicalDataCount(
-                _.values(
-                    _.reduce(
-                        selectedSamples,
-                        (acc, sample) => {
-                            const studyId = sample.studyId;
-                            if (acc[studyId]) {
-                                acc[studyId].count = acc[studyId].count + 1;
-                            } else {
-                                acc[studyId] = {
-                                    value: `${studyId}`,
-                                    count: 1,
-                                };
-                            }
-                            return acc;
-                        },
-                        {} as { [id: string]: ClinicalDataCount }
-                    )
+            const counts = _.values(
+                _.reduce(
+                    selectedSamples,
+                    (acc, sample) => {
+                        const studyId = sample.studyId;
+                        if (acc[studyId]) {
+                            acc[studyId].count = acc[studyId].count + 1;
+                        } else {
+                            acc[studyId] = {
+                                value: `${studyId}`,
+                                count: 1,
+                            };
+                        }
+                        return acc;
+                    },
+                    {} as { [id: string]: ClinicalDataCount }
                 )
+            );
+            return this.addColorToCategories(
+                counts,
+                SpecialChartsUniqueKeyEnum.CANCER_STUDIES
             );
         },
         onError: () => {},
