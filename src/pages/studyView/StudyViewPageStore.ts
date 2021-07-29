@@ -268,6 +268,7 @@ export type ChartUserSetting = {
     genericAssayEntityId?: string;
     dataType?: string;
     showNA?: boolean;
+    patientLevelProfile?: boolean;
 };
 
 export type StudyPageSettings = {
@@ -329,6 +330,7 @@ export type GenericAssayChart = {
     profileType: string;
     genericAssayType: string;
     genericAssayEntityId: string;
+    patientLevel?: boolean;
 };
 
 export const DataBinMethodConstants: { [key: string]: 'DYNAMIC' | 'STATIC' } = {
@@ -4743,6 +4745,7 @@ export class StudyViewPageStore
                                     label: profiles[0].name,
                                     description: profiles[0].description,
                                     dataType: profiles[0].datatype,
+                                    patientLevel: profiles[0].patientLevel,
                                 };
                             })
                             .filter(record => record.count > 0)
@@ -5607,6 +5610,7 @@ export class StudyViewPageStore
                             genericAssayEntityId:
                                 chartUserSettings.genericAssayEntityId,
                             dataType: chartUserSettings.dataType,
+                            patientLevel: chartUserSettings.patientLevelProfile,
                         },
                     ],
                     true
@@ -6161,6 +6165,8 @@ export class StudyViewPageStore
                                                     genericAssayDataFilter.stableId,
                                                 dataType:
                                                     molecularProfileOption.dataType,
+                                                patientLevel:
+                                                    molecularProfileOption.patientLevel,
                                             },
                                         ],
                                         true
