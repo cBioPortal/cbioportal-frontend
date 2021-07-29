@@ -20,6 +20,10 @@
       "description": " "
     },
     {
+      "name": "Cache",
+      "description": "Cache Controller"
+    },
+    {
       "name": "Clinical Attributes Count",
       "description": " "
     },
@@ -178,6 +182,45 @@
               "items": {
                 "$ref": "#/definitions/AlterationEnrichment"
               }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/cache": {
+      "delete": {
+        "tags": [
+          "Cache"
+        ],
+        "summary": "Clear and reinitialize caches",
+        "operationId": "clearAllCachesUsingDELETE",
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "springManagedCache",
+            "in": "query",
+            "description": "Clear Spring-managed caches",
+            "required": false,
+            "type": "boolean",
+            "default": true,
+            "allowEmptyValue": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
             }
           }
         },
