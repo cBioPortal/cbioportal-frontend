@@ -60,63 +60,6 @@ export function updatePositionSelectionFilters(
     ]);
 }
 
-export function updatePositionRangeSelectionFilters(
-    dataStore: DataStore,
-    startPosition: number,
-    endPosition: number,
-    isMultiSelect: boolean = false,
-    defaultFilters: DataFilter[] = []
-) {
-    let currentlySelected = true;
-    // if any position is not selected within range, set as false
-    for (let i = startPosition; i <= endPosition; i++) {
-        if (!dataStore.isPositionSelected(i)) {
-            currentlySelected = false;
-            break;
-        }
-    }
-    let selectedPositions: number[] = [];
-
-    if (isMultiSelect) {
-        // we need to keep previous positions if shift pressed,
-        // but we still want to clear other filters tied with these positions
-        selectedPositions = findAllUniquePositions(dataStore.selectionFilters);
-
-        // if all are selected, remove all
-        if (currentlySelected) {
-            for (let i = startPosition; i <= endPosition; i++) {
-                selectedPositions = _.without(selectedPositions, i);
-            }
-        }
-    }
-
-    // if not all are selected, add the ones that are not
-    if (!currentlySelected) {
-        for (let i = startPosition; i <= endPosition; i++) {
-            if (!dataStore.isPositionSelected(i)) {
-                selectedPositions.push(i);
-            }
-        }
-    }
-
-    const positionFilter = {
-        type: DataFilterType.POSITION,
-        values: selectedPositions,
-    };
-    // we want to keep other filters (filters not related to positions) as is
-    const otherFilters = dataStore.selectionFilters.filter(
-        f => f.type !== DataFilterType.POSITION
-    );
-
-    // reset filters
-    dataStore.clearSelectionFilters();
-    dataStore.setSelectionFilters([
-        positionFilter,
-        ...defaultFilters,
-        ...otherFilters,
-    ]);
-}
-
 export function updatePositionHighlightFilters(
     dataStore: DataStore,
     position: number,

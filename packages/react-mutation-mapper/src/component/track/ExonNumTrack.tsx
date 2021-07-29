@@ -113,10 +113,16 @@ export default class ExonNumTrack extends React.Component<
                 itemType: TrackItemType.RECTANGLE,
                 tooltip: (
                     <span>
-                        Exon {exon[0]}, start: {Math.trunc(startCodon)}, end:{' '}
-                        {Math.trunc(endCodon)}, amino acid length:{' '}
-                        {Math.trunc(exonLength)}, exon is skippable:{' '}
-                        {isSkippable}
+                        <h1> Exon {exon[0]} </h1>
+                        <br></br>
+                        Start: {startCodon.toFixed(2).toString()}
+                        <br></br>
+                        End: {endCodon.toFixed(2).toString()}
+                        <br></br>
+                        Exon length (amino acid):{' '}
+                        {exonLength.toFixed(2).toString()}
+                        <br></br>
+                        Exon is a multiple of 3: {isSkippable}
                     </span>
                 ),
             };

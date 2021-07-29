@@ -21,7 +21,6 @@ import {
     updatePositionHighlightFilters,
     updatePositionSelectionFilters,
     updatePositionRangeHighlightFilters,
-    updatePositionRangeSelectionFilters,
 } from '../../util/FilterUtils';
 import TrackItem, { TrackItemSpec, TrackItemType } from './TrackItem';
 import styles from './trackStyles.module.scss';
@@ -122,10 +121,9 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     @action.bound
     onTrackRectClick(rectComponent: TrackItem) {
-        updatePositionRangeSelectionFilters(
+        updatePositionSelectionFilters(
             this.props.dataStore,
-            Math.trunc(rectComponent.props.spec.startCodon),
-            Math.trunc(rectComponent.props.spec.endCodon!),
+            rectComponent.props.spec.startCodon,
             this.shiftPressed,
             this.props.defaultFilters
         );
