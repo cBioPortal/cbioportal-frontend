@@ -82,25 +82,45 @@ export default class ExonNumTrack extends React.Component<
                     }
                 }
                 exonLocList.sort((n1, n2) => n1[0] - n2[0]);
-                let propSoFar = 0;
+                if (totLength !== this.props.proteinLength) {
+                    exonLocList[exonLocList.length - 1][1] =
+                        exonLocList[exonLocList.length - 1][1] - 1;
+                    totLength--;
+                }
+                let startOfExon = 0;
                 for (let i = 0; i < exonLocList.length; i++) {
-                    let prop = exonLocList[i][1] / totLength;
-                    data.push([exonLocList[i][0], prop, propSoFar]);
-                    propSoFar += prop;
+                    let exonLen = exonLocList[i][1];
+                    data.push([exonLocList[i][0], exonLen, startOfExon]);
+                    startOfExon += exonLen;
                 }
             }
         }
 
         const altColors = ['#007FFF', '#35BAF6'];
 
-        return data.map((exon: number[], index: number) => ({
-            color: altColors[index % 2],
-            startCodon: this.props.width * exon[2],
-            endCodon: this.props.width * exon[1] + this.props.width * exon[2],
-            label: exon[0].toString(),
-            labelColor: '#FFFFFF',
-            itemType: TrackItemType.RECTANGLE,
-        }));
+        return data.map((exon: number[], index: number) => {
+            let startCodon = exon[2];
+            let endCodon = exon[2] + exon[1];
+            let exonLength = exon[1];
+            let isSkippable = Number.isInteger(exonLength).toString();
+
+            return {
+                color: altColors[index % 2],
+                startCodon: startCodon,
+                endCodon: endCodon,
+                label: exon[0].toString(),
+                labelColor: '#FFFFFF',
+                itemType: TrackItemType.RECTANGLE,
+                tooltip: (
+                    <span>
+                        Exon {exon[0]}, start: {Math.trunc(startCodon)}, end:{' '}
+                        {Math.trunc(endCodon)}, amino acid length:{' '}
+                        {Math.trunc(exonLength)}, exon is skippable:{' '}
+                        {isSkippable}
+                    </span>
+                ),
+            };
+        });
     }
 
     @computed get trackTitle() {

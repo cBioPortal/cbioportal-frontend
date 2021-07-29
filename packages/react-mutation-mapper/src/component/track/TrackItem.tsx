@@ -49,20 +49,26 @@ export default class TrackItem extends React.Component<
     @computed public get hitRectangle() {
         let hoverWidth;
         let hoverHeight;
+        let xOffset;
         if (this.props.spec.itemType === TrackItemType.CIRCLE) {
             hoverHeight =
                 this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
 
             hoverWidth =
                 this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+
+            xOffset =
+                this.props.x - hoverWidth + (this.props.hitZoneXOffset || 0);
         } else {
             hoverHeight = this.props.dim2! / 2;
 
             hoverWidth = this.props.dim1! / 2;
+
+            xOffset = this.props.x + (this.props.hitZoneXOffset || 0);
         }
 
         return {
-            x: this.props.x - hoverWidth + (this.props.hitZoneXOffset || 0),
+            x: xOffset,
             y: this.props.y,
             width: hoverWidth * 2,
             height: hoverHeight * 2,
@@ -70,7 +76,7 @@ export default class TrackItem extends React.Component<
     }
 
     public render() {
-        if (this.props.spec.endCodon === undefined) {
+        if (this.props.spec.itemType === TrackItemType.CIRCLE) {
             return (
                 <TrackCircle
                     isHovered={this.isHovered}
@@ -80,7 +86,13 @@ export default class TrackItem extends React.Component<
                 />
             );
         } else {
-            return <TrackRect width={this.props.dim1} {...this.props} />;
+            return (
+                <TrackRect
+                    isHovered={this.isHovered}
+                    width={this.props.dim1}
+                    {...this.props}
+                />
+            );
         }
     }
 }

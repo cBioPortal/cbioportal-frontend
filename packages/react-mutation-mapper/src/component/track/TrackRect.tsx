@@ -7,6 +7,7 @@ type TrackRectProps = {
     y: number;
     width?: number;
     height?: number;
+    isHovered: boolean;
     hitZoneClassName?: string;
     hitZoneXOffset?: number;
     spec: TrackRectSpec;
@@ -110,12 +111,20 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
         return <text {...props}>{text}</text>;
     }
 
+    @computed get strokeWidth() {
+        return this.props.isHovered ? 2 : 0.5;
+    }
+
+    @computed get strokeColor() {
+        return this.props.isHovered ? '#666666' : '#BABDB6';
+    }
+
     public render() {
         return (
             <g>
                 <rect
-                    stroke="#BABDB6"
-                    strokeWidth="0.5"
+                    stroke={this.strokeColor}
+                    strokeWidth={this.strokeWidth}
                     fill={this.props.spec.color}
                     width={this.props.width}
                     height={this.props.height}

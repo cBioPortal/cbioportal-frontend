@@ -20,6 +20,8 @@ import DataStore from '../../model/DataStore';
 import {
     updatePositionHighlightFilters,
     updatePositionSelectionFilters,
+    updatePositionRangeHighlightFilters,
+    updatePositionRangeSelectionFilters,
 } from '../../util/FilterUtils';
 import TrackItem, { TrackItemSpec, TrackItemType } from './TrackItem';
 import styles from './trackStyles.module.scss';
@@ -120,9 +122,10 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     @action.bound
     onTrackRectClick(rectComponent: TrackItem) {
-        updatePositionSelectionFilters(
+        updatePositionRangeSelectionFilters(
             this.props.dataStore,
-            rectComponent.props.spec.startCodon,
+            Math.trunc(rectComponent.props.spec.startCodon),
+            Math.trunc(rectComponent.props.spec.endCodon!),
             this.shiftPressed,
             this.props.defaultFilters
         );
@@ -140,9 +143,10 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     @action.bound
     onTrackRectHover(rectComponent: TrackItem) {
-        updatePositionHighlightFilters(
+        updatePositionRangeHighlightFilters(
             this.props.dataStore,
-            rectComponent.props.spec.startCodon,
+            Math.trunc(rectComponent.props.spec.startCodon),
+            Math.trunc(rectComponent.props.spec.endCodon!),
             this.props.defaultFilters
         );
         rectComponent.isHovered = true;
@@ -243,9 +247,16 @@ export default class Track extends React.Component<TrackProps, {}> {
                         key={spec.startCodon}
                         hitZoneClassName={`${this.props.idClassPrefix}${index}`}
                         hitZoneXOffset={this.props.xOffset}
-                        x={spec.startCodon}
+                        x={
+                            (spec.startCodon / this.props.proteinLength) *
+                            this.props.width
+                        }
                         y={this.svgHeight / 2}
-                        dim1={spec.endCodon! - spec.startCodon}
+                        dim1={
+                            ((spec.endCodon! - spec.startCodon) /
+                                this.props.proteinLength) *
+                            this.props.width
+                        }
                         dim2={50}
                         spec={{ ...spec, endCodon: spec.endCodon! }}
                     />
