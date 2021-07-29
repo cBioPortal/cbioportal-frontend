@@ -112,7 +112,10 @@ export default class AlterationEnrichmentTable extends React.Component<
                             }
                         />
                     )}
-                    <span className={styles.GeneName}>
+                    <span
+                        data-test={'geneNameCell'}
+                        className={styles.GeneName}
+                    >
                         <b>{d.hugoGeneSymbol}</b>
                     </span>
                 </div>

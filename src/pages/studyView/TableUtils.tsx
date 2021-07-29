@@ -13,7 +13,6 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import { GenePanelList } from 'pages/studyView/table/StudyViewGenePanelModal';
 import { CSSProperties } from 'react';
-import * as _ from 'lodash';
 
 export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
     return [hugoGeneSymbol, getCNAByAlteration(alteration)].join(':');
@@ -21,42 +20,6 @@ export function getGeneCNAOQL(hugoGeneSymbol: string, alteration: number) {
 
 export function getGeneFromUniqueKey(key: string) {
     return key.split(':')[0];
-}
-
-export function getGeneColumnHeaderRender(
-    cellMargin: number,
-    headerName: string,
-    cancerGeneListFilterEnabled: boolean,
-    isFilteredByCancerGeneList: boolean,
-    cancerGeneIconToggle: (event: any) => void
-) {
-    return (
-        <div
-            style={{ marginLeft: cellMargin }}
-            className={styles.displayFlex}
-            data-test="gene-column-header"
-        >
-            {cancerGeneListFilterEnabled && (
-                <DefaultTooltip
-                    mouseEnterDelay={0}
-                    placement="top"
-                    overlay={getCancerGeneToggledOverlay(
-                        isFilteredByCancerGeneList
-                    )}
-                >
-                    <div
-                        onClick={cancerGeneIconToggle}
-                        className={styles.displayFlex}
-                    >
-                        {getCancerGeneFilterToggleIcon(
-                            isFilteredByCancerGeneList
-                        )}
-                    </div>
-                </DefaultTooltip>
-            )}
-            {headerName}
-        </div>
-    );
 }
 
 export function getGeneColumnCellOverlaySimple(

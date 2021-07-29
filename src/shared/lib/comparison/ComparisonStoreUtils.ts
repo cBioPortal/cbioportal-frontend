@@ -1,6 +1,4 @@
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
-import { action } from 'mobx';
-import _ from 'lodash';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { stringListToMap } from 'cbioportal-frontend-commons';
 

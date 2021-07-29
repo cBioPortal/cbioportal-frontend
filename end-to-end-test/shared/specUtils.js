@@ -1,35 +1,38 @@
 const clipboardy = require('clipboardy');
 
 function waitForStudyQueryPage(timeout) {
-    $('div[data-test="cancerTypeListContainer"]').waitForExist(
-        timeout || 10000
-    );
+    $('div[data-test="cancerTypeListContainer"]').waitForExist({
+        timeout: timeout || 10000,
+    });
 }
 
 function waitForGeneQueryPage(timeout) {
     // wait until fade effect on studyList has finished (if running in forkedMode)
-    $('[data-test=studyList]').waitForExist(timeout, true);
-    $('div[data-test="molecularProfileSelector"]').waitForExist(
-        timeout || 10000
-    );
+    $('[data-test=studyList]').waitForExist({
+        timeout: timeout,
+        reverse: true,
+    });
+    $('div[data-test="molecularProfileSelector"]').waitForExist({
+        timeout: timeout || 10000,
+    });
 }
 
 function waitForPlotsTab(timeout) {
-    $('div.axisBlock').waitForDisplayed(timeout || 20000);
+    $('div.axisBlock').waitForDisplayed({ timeout: timeout || 20000 });
 }
 
 function waitForCoExpressionTab(timeout) {
-    $('#coexpressionTabGeneTabs').waitForExist(timeout || 20000);
+    $('#coexpressionTabGeneTabs').waitForExist({ timeout: timeout || 20000 });
 }
 
 function waitForPatientView(timeout) {
-    $('#patientViewPageTabs').waitForExist(timeout || 20000);
-    $('[data-test=patientview-copynumber-table]').waitForDisplayed(
-        timeout || 20000
-    );
-    $('[data-test=patientview-mutation-table]').waitForDisplayed(
-        timeout || 20000
-    );
+    $('#patientViewPageTabs').waitForExist({ timeout: timeout || 20000 });
+    $('[data-test=patientview-copynumber-table]').waitForDisplayed({
+        timeout: timeout || 20000,
+    });
+    $('[data-test=patientview-mutation-table]').waitForDisplayed({
+        timeout: timeout || 20000,
+    });
 }
 
 function waitForOncoprint(timeout) {
@@ -48,6 +51,10 @@ function waitForOncoprint(timeout) {
     );
 }
 
+function waitForComparisonTab() {
+    $('[data-test=GroupComparisonAlterationEnrichments]').waitForDisplayed();
+}
+
 function getTextInOncoprintLegend() {
     return $$('#oncoprintDiv .oncoprint-legend-div svg text')
         .map(t => {
@@ -56,8 +63,8 @@ function getTextInOncoprintLegend() {
         .join(' ');
 }
 
-function setResultsPageSettingsMenuOpen(open) {
-    const button = 'button[data-test="GlobalSettingsButton"]';
+function setSettingsMenuOpen(open, buttonId = 'GlobalSettingsButton') {
+    const button = 'button[data-test="' + buttonId + '"]';
     const dropdown = 'div[data-test="GlobalSettingsDropdown"]';
     $(button).waitForDisplayed();
     browser.waitUntil(
@@ -66,6 +73,10 @@ function setResultsPageSettingsMenuOpen(open) {
                 return true;
             } else {
                 $(button).click();
+                $('[data-test=GlobalSettingsDropdown]').waitForDisplayed({
+                    timeout: 6000,
+                    reverse: !open,
+                });
                 return false;
             }
         },
@@ -171,6 +182,7 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
 
     //browser.setViewportSize({ height: 1000, width: 1600 });
 
+    // move mouse out of the way
     // move mouse out of the way
     //browser.moveToObject('body', 0, 0);
 }
@@ -300,7 +312,9 @@ function waitForStudyViewSelectedInfo() {
 }
 
 function waitForStudyView() {
-    browser.waitUntil(() => $$('.sk-spinner').length === 0, { timeout: 10000 });
+    browser.waitUntil(() => $$('.sk-spinner').length === 0, {
+        timeout: 100000,
+    });
 }
 
 function waitForGroupComparisonTabOpen() {
@@ -587,6 +601,12 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
+var openAlterationTypeSelectionMenu = () => {
+    $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
+    $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
+    $('[data-test=AlterationTypeSelectorMenu]').waitForDisplayed();
+};
+
 module.exports = {
     checkElementWithElementHidden: checkElementWithElementHidden,
     waitForPlotsTab: waitForPlotsTab,
@@ -595,6 +615,7 @@ module.exports = {
     waitForOncoprint: waitForOncoprint,
     waitForCoExpressionTab: waitForCoExpressionTab,
     waitForPatientView: waitForPatientView,
+    waitForComparisonTab: waitForComparisonTab,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
     useExternalFrontend: useExternalFrontend,
@@ -628,7 +649,7 @@ module.exports = {
     selectCheckedOption: selectCheckedOption,
     getOncoprintGroupHeaderOptionsElements: getOncoprintGroupHeaderOptionsElements,
     showGsva: showGsva,
-    setResultsPageSettingsMenuOpen: setResultsPageSettingsMenuOpen,
+    setSettingsMenuOpen: setSettingsMenuOpen,
     setDropdownOpen: setDropdownOpen,
     postDataToUrl: postDataToUrl,
     getPortalUrlFromEnv: getPortalUrlFromEnv,
@@ -637,4 +658,5 @@ module.exports = {
     jsApiHover,
     jsApiClick,
     setCheckboxChecked,
+    openAlterationTypeSelectionMenu,
 };
