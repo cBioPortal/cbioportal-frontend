@@ -42,14 +42,7 @@ import {
     remoteData,
     stringListToSet,
 } from 'cbioportal-frontend-commons';
-import {
-    action,
-    computed,
-    makeObservable,
-    observable,
-    ObservableMap,
-    reaction,
-} from 'mobx';
+import { action, computed, makeObservable, observable, reaction } from 'mobx';
 import {
     generateQueryStructuralVariantId,
     getProteinPositionFromProteinChange,
@@ -244,6 +237,13 @@ import {
     REQUEST_ARG_ENUM,
     SAMPLE_CANCER_TYPE_UNKNOWN,
 } from 'shared/constants';
+import {
+    buildDriverAnnotationSettings,
+    DriverAnnotationSettings,
+    IAnnotationFilterSettings,
+    IDriverAnnotationReport,
+} from '../../shared/alterationFiltering/AnnotationFilteringSettings';
+import { ISettingsMenuButtonVisible } from 'shared/components/driverAnnotations/SettingsMenuButton';
 import oql_parser, {
     Alteration,
     SingleGeneQuery,
@@ -512,30 +512,27 @@ export function extendSamplesWithCancerType(
     return extendedSamples;
 }
 
-export type DriverAnnotationSettings = {
-    excludeVUS: boolean;
-    cbioportalCount: boolean;
-    cbioportalCountThreshold: number;
-    cosmicCount: boolean;
-    cosmicCountThreshold: number;
-    customBinary: boolean;
-    customTiersDefault: boolean;
-    driverTiers: ObservableMap<string, boolean>;
-    hotspots: boolean;
-    oncoKb: boolean;
-    driversAnnotated: boolean;
-};
-
 export type ModifyQueryParams = {
     selectedSampleListId: string;
     selectedSampleIds: string[];
     caseIdsMode: 'sample' | 'patient';
 };
 
+interface IResultsViewExclusionSettings {
+    setExcludeGermlineMutations: (value: boolean) => void;
+    setHideUnprofiledSamples: (value: boolean) => void;
+}
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
-export class ResultsViewPageStore {
+export class ResultsViewPageStore
+    implements
+        IAnnotationFilterSettings,
+        IResultsViewExclusionSettings,
+        ISettingsMenuButtonVisible {
+    @observable driverAnnotationSettings: DriverAnnotationSettings;
+
     constructor(private appStore: AppStore, urlWrapper: ResultsViewURLWrapper) {
         makeObservable(this);
         //labelMobxPromises(this);
@@ -549,84 +546,15 @@ export class ResultsViewPageStore {
 
         const store = this;
 
-        this.driverAnnotationSettings = observable({
-            cbioportalCount: false,
-            cbioportalCountThreshold: 0,
-            cosmicCount: false,
-            cosmicCountThreshold: 0,
-            driverTiers: observable.map<string, boolean>(),
-
-            _hotspots: false,
-            _oncoKb: false,
-            _excludeVUS: false,
-            _customBinary: undefined,
-
-            set hotspots(val: boolean) {
-                this._hotspots = val;
-            },
-            get hotspots() {
-                return (
-                    !!AppConfig.serverConfig.show_hotspot &&
-                    this._hotspots &&
-                    !store.didHotspotFailInOncoprint
-                );
-            },
-            set oncoKb(val: boolean) {
-                this._oncoKb = val;
-            },
-            get oncoKb() {
-                return (
-                    AppConfig.serverConfig.show_oncokb &&
-                    this._oncoKb &&
-                    !store.didOncoKbFailInOncoprint
-                );
-            },
-            set excludeVUS(val: boolean) {
-                this._excludeVUS = val;
-            },
-            get excludeVUS() {
-                return this._excludeVUS && this.driversAnnotated;
-            },
-            get driversAnnotated() {
-                const anyCustomDriverTiersSelected = Array.from(
-                    this.driverTiers.entries()
-                ).reduce(
-                    (oneSelected: boolean, nextEntry: [string, boolean]) => {
-                        return oneSelected || nextEntry[1];
-                    },
-                    false
-                );
-
-                const anySelected =
-                    this.oncoKb ||
-                    this.hotspots ||
-                    this.cbioportalCount ||
-                    this.cosmicCount ||
-                    this.customBinary ||
-                    anyCustomDriverTiersSelected;
-
-                return anySelected;
-            },
-
-            set customBinary(val: boolean) {
-                this._customBinary = val;
-            },
-            get customBinary() {
-                return this._customBinary === undefined
-                    ? AppConfig.serverConfig
-                          .oncoprint_custom_driver_annotation_binary_default
-                    : this._customBinary;
-            },
-            get customTiersDefault() {
-                return AppConfig.serverConfig
-                    .oncoprint_custom_driver_annotation_tiers_default;
-            },
-        });
-
+        this.driverAnnotationSettings = buildDriverAnnotationSettings(
+            () => store.didHotspotFailInOncoprint
+        );
         this.driverAnnotationsReactionDisposer = reaction(
             () => this.urlWrapper.query.cancer_study_list,
             () => {
-                this.initDriverAnnotationSettings();
+                this.driverAnnotationSettings = buildDriverAnnotationSettings(
+                    () => store.didHotspotFailInOncoprint
+                );
             },
             { fireImmediately: true }
         );
@@ -698,7 +626,7 @@ export class ResultsViewPageStore {
         return this.urlWrapper.tabId || ResultsViewTab.ONCOPRINT;
     }
 
-    @observable public resultsPageSettingsVisible = false;
+    @observable public isSettingsMenuVisible = false;
 
     @observable public checkingVirtualStudies = false;
 
@@ -727,8 +655,6 @@ export class ResultsViewPageStore {
         | ModifyQueryParams
         | undefined = undefined;
 
-    public driverAnnotationSettings: DriverAnnotationSettings;
-
     @action.bound
     public setOncoprintAnalysisCaseType(e: OncoprintAnalysisCaseType) {
         this.urlWrapper.updateURL({
@@ -737,8 +663,8 @@ export class ResultsViewPageStore {
     }
 
     @computed
-    public get excludeGermlineMutations() {
-        return this.urlWrapper.query.exclude_germline_mutations === 'true';
+    public get includeGermlineMutations() {
+        return this.urlWrapper.query.exclude_germline_mutations !== 'true';
     }
 
     @action.bound
@@ -746,6 +672,20 @@ export class ResultsViewPageStore {
         this.urlWrapper.updateURL({
             exclude_germline_mutations: e.toString(),
         });
+    }
+
+    public set includeGermlineMutations(include: boolean) {
+        this.setExcludeGermlineMutations(!include);
+    }
+
+    // Somatic mutation filtering is not supported for Results View atm.
+    public get includeSomaticMutations() {
+        return true;
+    }
+
+    // Unknown status mutation filtering is not supported for Results View atm.
+    public get includeUnknownStatusMutations() {
+        return true;
     }
 
     @computed
@@ -768,6 +708,10 @@ export class ResultsViewPageStore {
         this.urlWrapper.updateURL({
             hide_unprofiled_samples: e.toString(),
         });
+    }
+
+    public set hideUnprofiledSamples(include: boolean) {
+        this.setHideUnprofiledSamples(include);
     }
 
     @computed get hugoGeneSymbols() {
@@ -801,23 +745,6 @@ export class ResultsViewPageStore {
         }
     }
 
-    public initDriverAnnotationSettings() {
-        this.driverAnnotationSettings.cbioportalCount = false;
-        this.driverAnnotationSettings.cbioportalCountThreshold = 10;
-        this.driverAnnotationSettings.cosmicCount = false;
-        this.driverAnnotationSettings.cosmicCountThreshold = 10;
-        this.driverAnnotationSettings.driverTiers = observable.map<
-            string,
-            boolean
-        >();
-        (this.driverAnnotationSettings as any)._oncoKb = !!AppConfig
-            .serverConfig.oncoprint_oncokb_default;
-        this.driverAnnotationSettings.hotspots = !!AppConfig.serverConfig
-            .oncoprint_hotspots_default;
-        (this.driverAnnotationSettings as any)._excludeVUS = !!AppConfig
-            .serverConfig.oncoprint_hide_vus_default;
-    }
-
     private makeMutationsTabFilteringSettings() {
         const self = this;
         let _excludeVus = observable.box<boolean | undefined>(undefined);
@@ -826,14 +753,14 @@ export class ResultsViewPageStore {
             useOql: true,
             get excludeVus() {
                 if (_excludeVus.get() === undefined) {
-                    return self.driverAnnotationSettings.excludeVUS;
+                    return !self.driverAnnotationSettings.includeVUS;
                 } else {
                     return _excludeVus.get()!;
                 }
             },
             get excludeGermline() {
                 if (_excludeGermline.get() === undefined) {
-                    return self.excludeGermlineMutations;
+                    return !self.includeGermlineMutations;
                 } else {
                     return _excludeGermline.get()!;
                 }
@@ -4735,29 +4662,28 @@ export class ResultsViewPageStore {
         },
     });
 
-    readonly customDriverAnnotationReport = remoteData<{
-        hasBinary: boolean;
-        tiers: string[];
-    }>({
-        await: () => [this.mutations, this.discreteCNAMolecularData],
-        invoke: () => {
-            return Promise.resolve(
-                computeCustomDriverAnnotationReport([
-                    ...this.mutations.result!,
-                    ...this.discreteCNAMolecularData.result!,
-                ])
-            );
-        },
-        onResult: result => {
-            initializeCustomDriverAnnotationSettings(
-                result!,
-                this.driverAnnotationSettings,
-                this.driverAnnotationSettings.customTiersDefault,
-                this.driverAnnotationSettings.oncoKb,
-                this.driverAnnotationSettings.hotspots
-            );
-        },
-    });
+    readonly customDriverAnnotationReport = remoteData<IDriverAnnotationReport>(
+        {
+            await: () => [this.mutations, this.discreteCNAMolecularData],
+            invoke: () => {
+                return Promise.resolve(
+                    computeCustomDriverAnnotationReport([
+                        ...this.mutations.result!,
+                        ...this.discreteCNAMolecularData.result!,
+                    ])
+                );
+            },
+            onResult: result => {
+                initializeCustomDriverAnnotationSettings(
+                    result!,
+                    this.driverAnnotationSettings,
+                    this.driverAnnotationSettings.customTiersDefault,
+                    this.driverAnnotationSettings.oncoKb,
+                    this.driverAnnotationSettings.hotspots
+                );
+            },
+        }
+    );
 
     readonly _filteredAndAnnotatedMutationsReport = remoteData({
         await: () => [
@@ -4799,8 +4725,8 @@ export class ResultsViewPageStore {
         invoke: () => {
             const filteredMutations = compileMutations(
                 this._filteredAndAnnotatedMutationsReport.result!,
-                this.driverAnnotationSettings.excludeVUS,
-                this.excludeGermlineMutations
+                !this.driverAnnotationSettings.includeVUS,
+                !this.includeGermlineMutations
             );
             const filteredSampleKeyToSample = this.filteredSampleKeyToSample
                 .result!;
@@ -4820,8 +4746,8 @@ export class ResultsViewPageStore {
             Promise.resolve(
                 compileStructuralVariants(
                     this._filteredAndAnnotatedStructuralVariantsReport.result!,
-                    this.driverAnnotationSettings.excludeVUS,
-                    this.excludeGermlineMutations
+                    !this.driverAnnotationSettings.includeVUS,
+                    !this.includeGermlineMutations
                 )
             ),
     });
@@ -4876,7 +4802,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             let data = this._filteredAndAnnotatedMolecularDataReport.result!
                 .data;
-            if (!this.driverAnnotationSettings.excludeVUS) {
+            if (this.driverAnnotationSettings.includeVUS) {
                 data = data.concat(
                     this._filteredAndAnnotatedMolecularDataReport.result!.vus
                 );

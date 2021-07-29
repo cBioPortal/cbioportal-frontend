@@ -5,15 +5,9 @@ import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import classNames from 'classnames';
 import './styles.scss';
-import {
-    DefaultTooltip,
-    getBrowserWindow,
-    setArrowLeft,
-} from 'cbioportal-frontend-commons';
-import Loader, {
-    default as LoadingIndicator,
-} from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { action, computed, makeObservable } from 'mobx';
 import QueryAndDownloadTabs from '../../../shared/components/query/QueryAndDownloadTabs';
 import autobind from 'autobind-decorator';
 import ExtendedRouterStore from '../../../shared/lib/ExtendedRouterStore';
@@ -30,10 +24,10 @@ import {
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import { getGAInstance } from '../../../shared/lib/tracking';
 import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
-import ResultsPageSettings from '../settings/ResultsPageSettings';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import _ from 'lodash';
 import { mixedReferenceGenomeWarning } from 'shared/lib/referenceGenomeUtils';
+import SettingsMenuButton from 'shared/components/driverAnnotations/SettingsMenuButton';
 
 interface QuerySummaryProps {
     routingStore: ExtendedRouterStore;
@@ -307,33 +301,10 @@ export default class QuerySummary extends React.Component<
                                             ? 'Cancel Modify Query'
                                             : 'Modify Query'}
                                     </button>
-                                    <DefaultTooltip
-                                        trigger={['click']}
-                                        placement="bottomRight"
-                                        overlay={
-                                            <ResultsPageSettings
-                                                store={this.props.store}
-                                            />
-                                        }
-                                        visible={
-                                            this.props.store
-                                                .resultsPageSettingsVisible
-                                        }
-                                        onVisibleChange={visible => {
-                                            this.props.store.resultsPageSettingsVisible = !!visible;
-                                        }}
-                                        onPopupAlign={tooltipEl =>
-                                            setArrowLeft(tooltipEl, '22px')
-                                        }
-                                    >
-                                        <button
-                                            data-test="GlobalSettingsButton"
-                                            style={{ marginLeft: 5 }}
-                                            className="btn btn-primary"
-                                        >
-                                            <i className="fa fa-sliders fa-lg" />
-                                        </button>
-                                    </DefaultTooltip>
+                                    <SettingsMenuButton
+                                        store={this.props.store}
+                                        resultsView={true}
+                                    />
                                 </div>
                             )}
 
