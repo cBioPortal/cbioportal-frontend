@@ -1654,8 +1654,12 @@ export default class PatientViewPage extends React.Component<
                                         .map((tab: any, i: number) => {
                                             return (
                                                 <MSKTab
-                                                    key={100 + i}
-                                                    id={'customTab' + 1}
+                                                    key={getPatientViewResourceTabId(
+                                                        'customTab' + i
+                                                    )}
+                                                    id={getPatientViewResourceTabId(
+                                                        'customTab' + i
+                                                    )}
                                                     unmountOnHide={
                                                         tab.unmountOnHide ===
                                                         true
