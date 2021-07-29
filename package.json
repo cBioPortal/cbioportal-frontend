@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.117",
+  "version": "3.3.118",
   "workspaces": {
     "packages": [
       ".",
@@ -60,7 +60,7 @@
     "syncmock": "node src/test/fetchMockData.js --diff",
     "e2e:spinup": "./scripts/e2e.sh",
     "e2e:local": "export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-local",
-    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-remote",
+    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ &&  rm -r -f end-to-end-test/shared/results && cd end-to-end-test && yarn run test-webdriver-manager-remote",
     "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
   },
   "engines": {
@@ -147,7 +147,7 @@
     "bootstrap-sass": "3.3.7",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-clinical-timeline": "^0.3.2",
+    "cbioportal-clinical-timeline": "^0.3.3",
     "cbioportal-frontend-commons": "^0.5.2",
     "cbioportal-ts-api-client": "^0.9.26",
     "cbioportal-utils": "^0.3.1",

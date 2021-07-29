@@ -196,6 +196,9 @@ export function sortNestedTracks(tracks: TimelineTrackSpecification[]) {
 }
 
 export function formatDate(dayCount: number) {
+    let negative = dayCount < 0;
+    dayCount = Math.abs(dayCount);
+
     let years, months, days;
 
     years = Math.floor(dayCount / 365);
@@ -209,7 +212,8 @@ export function formatDate(dayCount: number) {
     if (dayCount === 0 || days > 0)
         arr.push(`${days} day${days === 1 ? '' : 's'}`);
 
-    return arr.join(', ');
+    const formattedDate = arr.join(', ');
+    return `${negative ? '-' : ''}${formattedDate}`;
 }
 
 function getAllDescendantData(
