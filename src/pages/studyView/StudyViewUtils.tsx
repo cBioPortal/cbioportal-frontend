@@ -160,6 +160,7 @@ export type MolecularProfileOption = {
     label: string;
     description: string;
     dataType: string;
+    patientLevel?: boolean;
 };
 
 // DataBin is a generic type for ClinicalDataBin, GenomicDataBin and GenericAssayDataBin
@@ -2376,6 +2377,7 @@ export function getChartSettingsMap(
                 genericAssayChart.genericAssayEntityId;
             chartSetting.profileType = genericAssayChart.profileType;
             chartSetting.dataType = genericAssayChart.dataType;
+            chartSetting.patientLevelProfile = genericAssayChart.patientLevel;
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
