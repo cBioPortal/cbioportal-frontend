@@ -24,9 +24,15 @@ const mergeReports = function(resultsDir, targetPath) {
         resultsDir,
         (filename, content) => {
             if (/results.*json$/.test(filename)) {
-                const parsedContent = JSON.parse(content);
-                console.log(`adding ${filename}`);
-                reports.push(parsedContent);
+                try {
+                    console.log(`adding ${filename}`);
+                    const parsedContent = JSON.parse(content);
+                    reports.push(parsedContent);
+                } catch (ex) {
+                    console.log(`json merge error `);
+                    console.log(ex);
+                    reports.push(content);
+                }
             }
         },
         err => {
