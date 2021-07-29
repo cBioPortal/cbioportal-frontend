@@ -13,7 +13,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import {
     DataType,
-    getUniqueKeyFromMolecularProfileIds,
+    FilterIconMessage,
     ChartType,
     getGenomicChartUniqueKey,
     getGenericAssayChartUniqueKey,
@@ -24,6 +24,7 @@ import {
     getCNAColorByAlteration,
     getPatientIdentifiers,
     getSelectedGroupNames,
+    getUniqueKeyFromMolecularProfileIds,
     intervalFiltersDisplayValue,
     StudyViewFilterWithSampleIdentifierFilters,
 } from 'pages/studyView/StudyViewUtils';
@@ -41,7 +42,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
-} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+} from 'cbioportal-ts-api-client';
 import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 import {
     STRUCTURAL_VARIANT_COLOR,
@@ -656,6 +657,12 @@ export default class UserSelections extends React.Component<
                 <PillTag
                     content={displayGeneSymbol}
                     backgroundColor={color}
+                    infoSection={
+                        <FilterIconMessage
+                            chartType={chartMeta.chartType}
+                            geneFilterQuery={geneQuery}
+                        />
+                    }
                     onDelete={() =>
                         this.props.removeGeneFilter(
                             chartMeta.uniqueKey,

@@ -24,7 +24,7 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute, MolecularProfile } from 'cbioportal-ts-api-client';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;

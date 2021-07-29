@@ -10,8 +10,8 @@ var getTextInOncoprintLegend = require('../../../shared/specUtils')
     .getTextInOncoprintLegend;
 var setOncoprintMutationsMenuOpen = require('../../../shared/specUtils')
     .setOncoprintMutationsMenuOpen;
-var setResultsPageSettingsMenuOpen = require('../../../shared/specUtils')
-    .setResultsPageSettingsMenuOpen;
+var setSettingsMenuOpen = require('../../../shared/specUtils')
+    .setSettingsMenuOpen;
 var useExternalFrontend = require('../../../shared/specUtils')
     .useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('../../../shared/specUtils')
@@ -279,7 +279,7 @@ describe('oncoprint', function() {
                 ' input[data-test="annotateCOSMICCount"]';
         });
         it('annotates all types of mutations with cbioportal count and cosmic', () => {
-            setResultsPageSettingsMenuOpen(true);
+            setSettingsMenuOpen(true);
             // select only mutation coloring by cbioportal count
             $(cbioportalCheckbox).click();
             waitForOncoprint(2000);
@@ -309,7 +309,7 @@ describe('oncoprint', function() {
             );
 
             // select only mutation coloring by cosmic count
-            setResultsPageSettingsMenuOpen(true);
+            setSettingsMenuOpen(true);
             $(cosmicCheckbox).click();
             waitForOncoprint(2000);
             $(cbioportalCheckbox).click();
@@ -413,7 +413,7 @@ describe('oncoprint', function() {
                 'by default, 12% altered'
             );
 
-            setResultsPageSettingsMenuOpen(true);
+            setSettingsMenuOpen(true);
             const hideGermlineButton = 'input[data-test="HideGermline"]';
             $(hideGermlineButton).waitForDisplayed({ timeout: 1000 });
             $(hideGermlineButton).click();
@@ -426,7 +426,7 @@ describe('oncoprint', function() {
             );
             assert(oncoprintDivText.indexOf('4%') > -1, 'now, 4% altered');
 
-            setResultsPageSettingsMenuOpen(true);
+            setSettingsMenuOpen(true);
             $(hideGermlineButton).waitForDisplayed({ timeout: 1000 });
             $(hideGermlineButton).click();
             waitForOncoprint(ONCOPRINT_TIMEOUT);
