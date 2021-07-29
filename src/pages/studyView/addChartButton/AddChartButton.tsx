@@ -434,7 +434,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 const molecularProfileOptions = options.map(option => {
                     return {
                         ...option,
-                        label: `${option.label} (${option.count} samples)`,
+                        label: `${option.label} (${option.count} ${
+                            option.patientLevel ? 'patients' : 'samples'
+                        })`,
                         profileName: option.label,
                     };
                 });
