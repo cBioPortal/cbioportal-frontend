@@ -5,7 +5,7 @@ import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import * as _ from 'lodash';
-import { computed, makeObservable } from 'mobx';
+import { makeObservable } from 'mobx';
 
 export interface IStudyPageHeaderProps {
     store: StudyViewPageStore;
@@ -20,11 +20,6 @@ export default class StudyPageHeader extends React.Component<
     constructor(props: IStudyPageHeaderProps) {
         super(props);
         makeObservable(this);
-    }
-    @computed get customChartsFilter() {
-        return _.fromPairs(
-            this.props.store.preDefinedCustomChartFilterSet.toJSON()
-        );
     }
 
     render() {
@@ -71,7 +66,9 @@ export default class StudyPageHeader extends React.Component<
                             this.props.store
                                 .numberOfSelectedSamplesInCustomSelection
                         }
-                        customChartsFilter={this.customChartsFilter}
+                        customChartsFilter={Array.from(
+                            this.props.store.preDefinedCustomChartFilterSet.values()
+                        )}
                         attributesMetaSet={
                             this.props.store.chartMetaSetWithChartType
                         }
