@@ -1465,8 +1465,11 @@ export default class ResultsViewOncoprint extends React.Component<
             this.molecularProfileIdToAdditionalTracks
         ).find(group => group.trackGroupIndex === index);
         if (groupEntry) {
-            if (isGenericAssayCategoricalProfile(groupEntry.molecularProfile)) {
-                this.removeCategoricalTracksByMolecularProfileId(
+            if (
+                isGenericAssayHeatmapProfile(groupEntry.molecularProfile) ||
+                isGenericAssayCategoricalProfile(groupEntry.molecularProfile)
+            ) {
+                this.removeGenericAssayTracksByMolecularProfileId(
                     groupEntry.molecularProfileId
                 );
             } else {
@@ -1478,7 +1481,7 @@ export default class ResultsViewOncoprint extends React.Component<
     }
 
     @action.bound
-    public removeCategoricalTracksByMolecularProfileId(
+    public removeGenericAssayTracksByMolecularProfileId(
         molecularProfileId: string
     ) {
         delete this.molecularProfileIdToTrackGroupIndex[molecularProfileId];

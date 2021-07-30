@@ -1311,7 +1311,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                             const newEntities = _.keys(
                                 trackGroup.entities
                             ).filter(entity => entity !== entityId);
-                            oncoprint.addHeatmapTracks(
+                            oncoprint.addGenericAssayTracks(
                                 molecularProfileId,
                                 newEntities
                             );
