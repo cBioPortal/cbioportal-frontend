@@ -20,6 +20,7 @@ async function fetch(
         genesetId,
         geneticProfileId: molecularProfileId,
         ...sampleFilterByProfile[molecularProfileId],
+        correlationThreshold: 0,
     };
     return client.fetchCorrelatedGenesUsingPOST(param);
 }

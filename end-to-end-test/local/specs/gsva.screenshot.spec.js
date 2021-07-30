@@ -17,6 +17,11 @@ var coexpressionTabUrl = require('./gsva.spec').coexpressionTabUrl;
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
 var showGsva = require('../../shared/specUtils').showGsva;
+var getNthOncoprintTrackOptionsElements = require('../../shared/specUtils')
+    .getNthOncoprintTrackOptionsElements;
+var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
+var { setDropdownOpen } = require('../../shared/specUtils.js');
+const { checkOncoprintElement } = require('../../shared/specUtils');
 
 describe('gsva feature', () => {
     describe('GenesetVolcanoPlotSelector', () => {
@@ -54,6 +59,24 @@ describe('gsva feature', () => {
 
         it('shows GSVA heatmap track', () => {
             var res = browser.checkElement('div[id=oncoprintDiv]');
+            assertScreenShotMatch(res);
+        });
+
+        it('expands and shows correlation genes for GO_ATP_DEPENDENT_CHROMATIN_REMODELING', () => {
+            var trackOptionsElts = getNthOncoprintTrackOptionsElements(12);
+            // open menu
+            setDropdownOpen(
+                true,
+                trackOptionsElts.button_selector,
+                trackOptionsElts.dropdown_selector
+            );
+            // click Show genes
+            $(
+                trackOptionsElts.dropdown_selector + ' li:nth-child(7)'
+            ).waitForDisplayed();
+            $(trackOptionsElts.dropdown_selector + ' li:nth-child(7)').click();
+
+            var res = checkOncoprintElement('.oncoprintContainer');
             assertScreenShotMatch(res);
         });
     });
