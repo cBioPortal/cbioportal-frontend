@@ -1079,7 +1079,7 @@ export function makeHeatmapTracksMobxPromise(
                                     molecularProfileId
                                 );
                             } else {
-                                oncoprint.addHeatmapTracks(
+                                oncoprint.setHeatmapTracks(
                                     molecularProfileId,
                                     newEntities
                                 );
@@ -1194,7 +1194,7 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
                             const newEntities = _.keys(
                                 trackGroup.entities
                             ).filter(entity => entity !== entityId);
-                            oncoprint.addGenericAssayTracks(
+                            oncoprint.setGenericAssayTracks(
                                 molecularProfileId,
                                 newEntities
                             );
@@ -1311,7 +1311,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                             const newEntities = _.keys(
                                 trackGroup.entities
                             ).filter(entity => entity !== entityId);
-                            oncoprint.addGenericAssayTracks(
+                            oncoprint.setGenericAssayTracks(
                                 molecularProfileId,
                                 newEntities
                             );

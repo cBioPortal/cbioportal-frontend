@@ -777,13 +777,13 @@ export default class ResultsViewOncoprint extends React.Component<
                 const genes = parseOQLQuery(
                     this.heatmapGeneInputValue.toUpperCase().trim()
                 ).map(q => q.gene);
-                this.addHeatmapTracks(this.selectedHeatmapProfileId, genes);
+                this.setHeatmapTracks(this.selectedHeatmapProfileId, genes);
             },
             onSelectGenericAssayProfile: (id: string) => {
                 this.selectedGenericAssayProfileId = id;
             },
             onClickAddGenericAssays: (info: GenericAssayTrackInfo[]) => {
-                this.addGenericAssayTracks(
+                this.setGenericAssayTracks(
                     // selectedGenericAssayProfileId will be updated in GenericAssaySelection component
                     this.selectedGenericAssayProfileId!,
                     info.map(d => d.genericAssayEntityId)
@@ -1034,7 +1034,7 @@ export default class ResultsViewOncoprint extends React.Component<
         invoke: async () => getUnalteredUids(this.geneticTracks.result!),
     });
 
-    public addGenericAssayTracks(
+    public setGenericAssayTracks(
         molecularProfileId: string,
         entities: string[]
     ) {
@@ -1065,7 +1065,7 @@ export default class ResultsViewOncoprint extends React.Component<
         });
     }
 
-    public async addHeatmapTracks(
+    public async setHeatmapTracks(
         molecularProfileId: string,
         entities: string[]
     ) {
@@ -1485,13 +1485,13 @@ export default class ResultsViewOncoprint extends React.Component<
         molecularProfileId: string
     ) {
         delete this.molecularProfileIdToTrackGroupIndex[molecularProfileId];
-        this.addGenericAssayTracks(molecularProfileId, []);
+        this.setGenericAssayTracks(molecularProfileId, []);
     }
 
     @action.bound
     public removeHeatmapTracksByMolecularProfileId(molecularProfileId: string) {
         delete this.molecularProfileIdToTrackGroupIndex[molecularProfileId];
-        this.addHeatmapTracks(molecularProfileId, []);
+        this.setHeatmapTracks(molecularProfileId, []);
     }
 
     readonly additionalTrackGroupHeaders = remoteData({
