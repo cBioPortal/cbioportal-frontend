@@ -502,6 +502,7 @@ export function getCategoricalTrackRuleSetParams(
 ): ICategoricalRuleSetParams {
     return {
         type: RuleSetType.CATEGORICAL,
+        legend_label: track.molecularProfileName,
         category_key: 'attr_val',
         category_to_color: _.mapValues(
             RESERVED_CLINICAL_VALUE_COLORS,
