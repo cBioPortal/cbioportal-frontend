@@ -153,7 +153,7 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         _oncoKb,
         _cbioportalCount,
         _customBinary,
-        _excludeVUS: false,
+        _includeVUS: true,
         hotspots: false, // for now
 
         get customBinary() {
@@ -181,11 +181,11 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
                 !store.didOncoKbFail
             );
         },
-        set excludeVUS(val: boolean) {
-            this._excludeVUS = val;
+        set includeVUS(val: boolean) {
+            this._includeVUS = val;
         },
-        get excludeVUS() {
-            return this._excludeVUS && this.driversAnnotated;
+        get includeVUS() {
+            return this._includeVUS || !this.driversAnnotated;
         },
         get driversAnnotated() {
             const anySelected =

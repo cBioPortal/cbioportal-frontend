@@ -1,7 +1,7 @@
 var assert = require('assert');
 var waitForOncoprint = require('../../../shared/specUtils').waitForOncoprint;
-var setResultsPageSettingsMenuOpen = require('../../../shared/specUtils')
-    .setResultsPageSettingsMenuOpen;
+var setSettingsMenuOpen = require('../../../shared/specUtils')
+    .setSettingsMenuOpen;
 var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
 
@@ -13,9 +13,9 @@ describe('mutations tab', function() {
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=acc_tcga_pan_can_atlas_2018&case_set_id=acc_tcga_pan_can_atlas_2018_cnaseq&data_priority=0&gene_list=HSD17B4&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_pan_can_atlas_2018_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_pan_can_atlas_2018_mutations&tab_index=tab_visualize`
         );
         waitForOncoprint(60000);
-        setResultsPageSettingsMenuOpen(true);
+        setSettingsMenuOpen(true);
         $('input[data-test="HideVUS"]').click();
-        setResultsPageSettingsMenuOpen(false);
+        setSettingsMenuOpen(false);
         $('a.tabAnchor_mutations').waitForExist();
         $('a.tabAnchor_mutations').click();
         $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed();
@@ -39,11 +39,11 @@ describe('mutations tab', function() {
             'unfiltered is 19 mutations'
         );
 
-        setResultsPageSettingsMenuOpen(true);
+        setSettingsMenuOpen(true);
         $(
             'div[data-test="GlobalSettingsDropdown"] input[data-test="HideGermline"]'
         ).click();
-        setResultsPageSettingsMenuOpen(false);
+        setSettingsMenuOpen(false);
 
         $('[data-test="LazyMobXTable_CountHeader"]').waitForDisplayed({
             timeout: 10000,
