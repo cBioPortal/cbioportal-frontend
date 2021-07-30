@@ -18,8 +18,6 @@ type ExonNumTrackProps = TrackProps & {
     store: MutationMapperStore<Mutation>;
 };
 
-const ONCOKB_ID_CLASS_PREFIX = 'onco-kb-';
-
 export function getOncoKbImage() {
     return <img src={oncoKbImg} alt="OncoKB Oncogenic Symbol" />;
 }
@@ -35,85 +33,82 @@ export default class ExonNumTrack extends React.Component<
     }
 
     @computed get exonNumSpecs(): TrackItemSpec[] {
-        let currentTranscriptId = this.props.store.activeTranscript?.result;
-        let data: number[][] = [];
-        if (currentTranscriptId !== undefined) {
-            let currentTranscript = this.props.store.transcriptsByTranscriptId[
-                currentTranscriptId
-            ];
-            if (currentTranscript !== undefined) {
-                let exonArr = currentTranscript['exons'];
-                let utrArr = currentTranscript['utrs'];
-                if (utrArr === undefined) {
-                    utrArr = [];
-                }
-                let totLength = 0;
-                let exonLocList: number[][] = [];
-                // loop through exons
-                for (let i = 0; i < exonArr.length; i++) {
-                    let exonStart = exonArr[i].exonStart;
-                    let exonEnd = exonArr[i].exonEnd;
-                    let weDidIt = false;
-                    for (let j = 0; j < utrArr.length; j++) {
-                        let currentUtr = utrArr[j];
-                        // if utr start is within exon, add only translated length of exon to exonLocList
-                        if (
-                            exonStart <= currentUtr.start &&
-                            exonEnd >= currentUtr.start
-                        ) {
-                            weDidIt = true;
-                            let aaLength =
-                                (currentUtr.start -
-                                    exonStart +
-                                    (exonEnd - currentUtr.end)) /
-                                3;
-                            if (aaLength !== 0) {
-                                exonLocList.push([exonArr[i].rank, aaLength]);
-                                totLength += aaLength;
-                            }
-                            break;
-                        }
-                    }
-                    // if there are no utr start sites within exon
-                    if (!weDidIt) {
-                        let aaLength = (exonEnd - exonStart + 1) / 3;
-                        exonLocList.push([exonArr[i].rank, aaLength]);
+        const currentTranscriptId = this.props.store.activeTranscript?.result;
+        type ExonDatum = { rank: number; length: number; start: number };
+        const currentTranscript = this.props.store.transcriptsByTranscriptId[
+            currentTranscriptId as string
+        ];
+        if (!currentTranscriptId || !currentTranscript) {
+            return [];
+        }
+        const exonArr = currentTranscript.exons;
+        const utrArr = currentTranscript.utrs || [];
+        let totLength = 0;
+        let exonLocList: number[][] = [];
+        exonArr.forEach(exon => {
+            let accountedForExon = false;
+            for (let j = 0; j < utrArr.length; j++) {
+                const currentUtr = utrArr[j];
+                // if utr start is within exon, add only translated length of exon to exonLocList
+                if (
+                    exon.exonStart <= currentUtr.start &&
+                    exon.exonEnd >= currentUtr.start
+                ) {
+                    accountedForExon = true;
+                    const aaLength =
+                        (currentUtr.start -
+                            exon.exonStart +
+                            (exon.exonEnd - currentUtr.end)) /
+                        3;
+                    if (aaLength !== 0) {
+                        exonLocList.push([exon.rank, aaLength]);
                         totLength += aaLength;
                     }
-                }
-                exonLocList.sort((n1, n2) => n1[0] - n2[0]);
-                if (totLength !== this.props.proteinLength) {
-                    exonLocList[exonLocList.length - 1][1] =
-                        exonLocList[exonLocList.length - 1][1] - 1;
-                    totLength--;
-                }
-                let startOfExon = 0;
-                for (let i = 0; i < exonLocList.length; i++) {
-                    let exonLen = exonLocList[i][1];
-                    data.push([exonLocList[i][0], exonLen, startOfExon]);
-                    startOfExon += exonLen;
+                    break;
                 }
             }
+            // if there are no utr start sites within exon
+            if (!accountedForExon) {
+                const aaLength = (exon.exonEnd - exon.exonStart + 1) / 3;
+                exonLocList.push([exon.rank, aaLength]);
+                totLength += aaLength;
+            }
+        });
+        exonLocList.sort((n1, n2) => n1[0] - n2[0]);
+        if (totLength !== this.props.proteinLength) {
+            exonLocList[exonLocList.length - 1][1] =
+                exonLocList[exonLocList.length - 1][1] - 1;
+            totLength--;
         }
+        let startOfExon = 0;
+        let exonInfo: ExonDatum[] = exonLocList.map(exonLocation => {
+            const ret = {
+                rank: exonLocation[0],
+                length: exonLocation[1],
+                start: startOfExon,
+            };
+            startOfExon += exonLocation[1];
+            return ret;
+        });
 
         const altColors = ['#007FFF', '#35BAF6'];
 
-        return data.map((exon: number[], index: number) => {
-            let startCodon = exon[2];
-            let endCodon = exon[2] + exon[1];
-            let exonLength = exon[1];
-            let isSkippable = Number.isInteger(exonLength).toString();
+        return exonInfo.map((exon: ExonDatum, index: number) => {
+            const startCodon = exon.start;
+            const endCodon = exon.start + exon.length;
+            const exonLength = exon.length;
+            const isSkippable = Number.isInteger(exonLength).toString();
 
             return {
                 color: altColors[index % 2],
                 startCodon: startCodon,
                 endCodon: endCodon,
-                label: exon[0].toString(),
+                label: exon.rank.toString(),
                 labelColor: '#FFFFFF',
                 itemType: TrackItemType.RECTANGLE,
                 tooltip: (
                     <span>
-                        <h1> Exon {exon[0]} </h1>
+                        <h1> Exon {exon.rank} </h1>
                         <br></br>
                         Start: {startCodon.toFixed(2).toString()}
                         <br></br>
@@ -122,7 +117,7 @@ export default class ExonNumTrack extends React.Component<
                         Exon length (amino acid):{' '}
                         {exonLength.toFixed(2).toString()}
                         <br></br>
-                        Exon is a multiple of 3: {isSkippable}
+                        Exon {isSkippable ? 'is' : "isn't"} a multiple of 3
                     </span>
                 ),
             };
@@ -153,7 +148,7 @@ export default class ExonNumTrack extends React.Component<
                 proteinLength={this.props.proteinLength}
                 trackTitle={this.trackTitle}
                 trackItems={this.exonNumSpecs}
-                idClassPrefix={ONCOKB_ID_CLASS_PREFIX}
+                idClassPrefix={'exon-num-'}
             />
         );
     }

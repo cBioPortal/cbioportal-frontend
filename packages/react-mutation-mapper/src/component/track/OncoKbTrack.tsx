@@ -17,8 +17,6 @@ type OncoKbTrackProps = TrackProps & {
     store: MutationMapperStore<Mutation>;
 };
 
-const ONCOKB_ID_CLASS_PREFIX = 'onco-kb-';
-
 export function getOncoKbImage() {
     return <img src={oncoKbImg} alt="OncoKB Oncogenic Symbol" />;
 }
@@ -91,7 +89,7 @@ export default class OncoKbTrack extends React.Component<OncoKbTrackProps, {}> {
                 proteinLength={this.props.proteinLength}
                 trackTitle={this.trackTitle}
                 trackItems={this.oncoKbSpecs}
-                idClassPrefix={ONCOKB_ID_CLASS_PREFIX}
+                idClassPrefix={'onco-kb-'}
             />
         );
     }

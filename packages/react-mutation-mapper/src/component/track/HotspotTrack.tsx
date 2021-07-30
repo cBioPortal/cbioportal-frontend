@@ -26,8 +26,6 @@ type HotspotTrackProps = TrackProps & {
     hotspotIndex: IHotspotIndex;
 };
 
-const HOTSPOT_ID_CLASS_PREFIX = 'cancer-hotspot-';
-
 export function hotspotTooltip(
     mutations: Mutation[],
     hotspotIndex: IHotspotIndex,
@@ -123,7 +121,7 @@ export default class HotspotTrack extends React.Component<
                 proteinLength={this.props.proteinLength}
                 trackTitle={this.trackTitle}
                 trackItems={this.hotspotSpecs}
-                idClassPrefix={HOTSPOT_ID_CLASS_PREFIX}
+                idClassPrefix={'cancer-hotspot-'}
             />
         );
     }

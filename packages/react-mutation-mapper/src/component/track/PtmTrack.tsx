@@ -114,8 +114,6 @@ function filterPtmsBySource(
     return source ? ptms.filter(ptm => ptm.source === source) : ptms;
 }
 
-const PTM_ID_CLASS_PREFIX = 'ptm-';
-
 @observer
 export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     constructor(props: any) {
@@ -254,7 +252,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                       width={this.props.width}
                       proteinLength={this.props.proteinLength}
                       trackItems={item.specs}
-                      idClassPrefix={`${PTM_ID_CLASS_PREFIX}${index}-`}
+                      idClassPrefix={`ptm-${index}-`}
                   />
               ))
             : null;
@@ -279,7 +277,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                     trackTitle={this.mainTrackTitle}
                     trackItems={this.mainTrackHidden ? [] : this.ptmSpecs}
                     hideBaseline={this.mainTrackHidden}
-                    idClassPrefix={PTM_ID_CLASS_PREFIX}
+                    idClassPrefix={'ptm-'}
                 />
                 <Collapse isOpened={this.mainTrackHidden}>
                     <span>{this.subTracks}</span>
