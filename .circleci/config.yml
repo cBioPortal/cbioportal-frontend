@@ -293,10 +293,8 @@ jobs:
            destination: /errorShots
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
-          destination: /results
-      #      - store_artifacts:
-      #          path: /tmp/repo/end-to-end-test/local/junit
-      #          destination: /results
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit
       - store_artifacts:
           path: /tmp/repo/end-to-end-test/shared/imageCompare.html
           destination: /imageCompare.html
