@@ -823,6 +823,7 @@ export default class LazyMobXTable<T> extends React.Component<
     private filterInput: HTMLInputElement;
     private filterInputReaction: IReactionDisposer;
     private pageToHighlightReaction: IReactionDisposer;
+    private isChildTable: boolean;
 
     public static defaultProps = {
         showFilter: true,
@@ -1010,11 +1011,15 @@ export default class LazyMobXTable<T> extends React.Component<
                     }
                 }
             };
+        } else {
+            this.isChildTable = true;
         }
     }
 
     componentWillUnmount() {
-        window.onmousemove = null;
+        if (!this.isChildTable) {
+            document.onmousemove = null;
+        }
         this.filterInputReaction();
         this.pageToHighlightReaction();
         if (this.props.storeColumnVisibility) {
