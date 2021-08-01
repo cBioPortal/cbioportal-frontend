@@ -71,10 +71,10 @@ export default class QuerySummary extends React.Component<
                     submitToStudyViewPage(
                         this.props.store.queriedStudies.result,
                         this.props.store.filteredSamples.result!,
-                        this.props.store.queriedVirtualStudies.result.length >
-                            0,
                         this.props.store.filteredSamples.result!.length <
                             this.props.store.samples.result!.length,
+                        this.props.store.queriedVirtualStudies.result.length >
+                            0,
                         this.props.store.sampleLists.result
                     );
                 }}
