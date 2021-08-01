@@ -3523,6 +3523,7 @@ export class ResultsViewPageStore
             () => this.discreteCNACache,
             this.studyToMolecularProfileDiscreteCna.result!,
             this.studyIdToStudy,
+            this.queriedStudies,
             this.molecularProfileIdToMolecularProfile,
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
