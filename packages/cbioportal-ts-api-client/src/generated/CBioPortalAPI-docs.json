@@ -144,7 +144,6 @@
             "enum": [
               "cancerTypeId",
               "name",
-              "clinicalTrialKeywords",
               "dedicatedColor",
               "shortName",
               "parent"
@@ -2723,7 +2722,6 @@
               "studyId",
               "cancerTypeId",
               "name",
-              "shortName",
               "description",
               "publicStudy",
               "pmid",
@@ -4505,9 +4503,6 @@
           "type": "integer",
           "format": "int32"
         },
-        "shortName": {
-          "type": "string"
-        },
         "status": {
           "type": "integer",
           "format": "int32"
@@ -5244,6 +5239,7 @@
       "type": "object",
       "required": [
         "molecularProfileId",
+        "patientLevel",
         "studyId"
       ],
       "properties": {
@@ -6105,9 +6101,6 @@
       ],
       "properties": {
         "cancerTypeId": {
-          "type": "string"
-        },
-        "clinicalTrialKeywords": {
           "type": "string"
         },
         "dedicatedColor": {
