@@ -131,6 +131,8 @@ export interface IServerConfig {
     query_product_limit: number;
     dat_method: string;
     skin_show_gsva: boolean;
+    skin_geneset_hierarchy_default_gsva_score: number;
+    skin_geneset_hierarchy_default_p_value: number;
     oncoKbTokenDefined: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
