@@ -366,6 +366,24 @@ export type GenericAssayDataBinFilter = {
         'start': number
 
 };
+export type GenericAssayDataCount = {
+    'count': number
+
+        'value': string
+
+};
+export type GenericAssayDataCountFilter = {
+    'genericAssayDataFilters': Array < GenericAssayDataFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type GenericAssayDataCountItem = {
+    'counts': Array < GenericAssayDataCount >
+
+        'stableId': string
+
+};
 export type GenericAssayDataFilter = {
     'profileType': string
 
@@ -2903,6 +2921,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < GenericAssayDataBin >
         > {
             return this.fetchGenericAssayDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchGenericAssayDataCountsUsingPOSTURL(parameters: {
+        'genericAssayDataCountFilter': GenericAssayDataCountFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/generic-assay-data-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch generic assay data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayDataCountsUsingPOST
+     * @param {} genericAssayDataCountFilter - Generic assay data count filter
+     */
+    fetchGenericAssayDataCountsUsingPOSTWithHttpInfo(parameters: {
+        'genericAssayDataCountFilter': GenericAssayDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/generic-assay-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['genericAssayDataCountFilter'] !== undefined) {
+                body = parameters['genericAssayDataCountFilter'];
+            }
+
+            if (parameters['genericAssayDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: genericAssayDataCountFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch generic assay data counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenericAssayDataCountsUsingPOST
+     * @param {} genericAssayDataCountFilter - Generic assay data count filter
+     */
+    fetchGenericAssayDataCountsUsingPOST(parameters: {
+            'genericAssayDataCountFilter': GenericAssayDataCountFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenericAssayDataCountItem >
+        > {
+            return this.fetchGenericAssayDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
