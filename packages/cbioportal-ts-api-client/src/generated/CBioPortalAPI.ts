@@ -92,8 +92,6 @@ export type CancerStudy = {
 
         'sequencedSampleCount': number
 
-        'shortName': string
-
         'status': number
 
         'studyId': string
@@ -803,8 +801,6 @@ export type StudyViewFilter = {
 export type TypeOfCancer = {
     'cancerTypeId': string
 
-        'clinicalTrialKeywords': string
-
         'dedicatedColor': string
 
         'name': string
@@ -874,7 +870,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+        'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -924,7 +920,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+        'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -986,7 +982,7 @@ export default class CBioPortalAPI {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+            'sortBy' ? : "cancerTypeId" | "name" | "dedicatedColor" | "shortName" | "parent",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < TypeOfCancer >
@@ -4893,7 +4889,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -4949,7 +4945,7 @@ export default class CBioPortalAPI {
         'pageNumber' ? : number,
         'pageSize' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
@@ -5017,7 +5013,7 @@ export default class CBioPortalAPI {
             'pageNumber' ? : number,
             'pageSize' ? : number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerStudy >
