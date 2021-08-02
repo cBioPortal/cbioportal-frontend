@@ -97,7 +97,7 @@ export default class ExonNumTrack extends React.Component<
             const startCodon = exon.start;
             const endCodon = exon.start + exon.length;
             const exonLength = exon.length;
-            const isSkippable = Number.isInteger(exonLength).toString();
+            const isSkippable = Number.isInteger(exonLength);
 
             return {
                 color: altColors[index % 2],
