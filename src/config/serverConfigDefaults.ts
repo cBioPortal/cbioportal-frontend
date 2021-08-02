@@ -171,6 +171,10 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     skin_show_gsva: false,
 
+    skin_geneset_hierarchy_default_gsva_score: 0.5,
+
+    skin_geneset_hierarchy_default_p_value: 0.05,
+
     generic_assay_display_text:
         'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
 
