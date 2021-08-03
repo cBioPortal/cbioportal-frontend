@@ -1141,6 +1141,44 @@
         "deprecated": false
       }
     },
+    "/generic-assay-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch generic assay data counts by study view filter",
+        "operationId": "fetchGenericAssayDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genericAssayDataCountFilter",
+            "description": "Generic assay data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenericAssayDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenericAssayDataCountItem"
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/generic-assay-enrichments/fetch": {
       "post": {
         "tags": [
@@ -4083,6 +4121,49 @@
         }
       },
       "title": "GenericAssayDataBinFilter"
+    },
+    "GenericAssayDataCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayDataCount"
+    },
+    "GenericAssayDataCountFilter": {
+      "type": "object",
+      "properties": {
+        "genericAssayDataFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "GenericAssayDataCountFilter"
+    },
+    "GenericAssayDataCountItem": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenericAssayDataCount"
+          }
+        },
+        "stableId": {
+          "type": "string"
+        }
+      },
+      "title": "GenericAssayDataCountItem"
     },
     "GenericAssayDataFilter": {
       "type": "object",
