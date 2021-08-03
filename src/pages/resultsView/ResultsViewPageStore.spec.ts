@@ -82,7 +82,6 @@ describe('extendSamplesWithCancerType', () => {
             studyId: 'cellline_nci60',
             cancerType: {
                 name: 'Mixed Cancer Types',
-                clinicalTrialKeywords: 'mixed cancer types',
                 dedicatedColor: 'Black',
                 shortName: 'MIXED',
                 parent: 'cup',
