@@ -176,7 +176,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_geneset_hierarchy_default_p_value: 0.05,
 
     generic_assay_display_text:
-        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
+        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA',
 
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
