@@ -59,9 +59,11 @@ export function buildCBioPortalPageUrl(
         typeof pathnameOrParams === 'string'
             ? { pathname: pathnameOrParams, query, hash }
             : pathnameOrParams;
+
+    // AppConfig.frontendUrl format is '//url/', hence the specified slice to get just 'url'
     return URL.format({
         protocol: window.location.protocol,
-        host: AppConfig.baseUrl,
+        host: AppConfig.baseUrl || AppConfig.frontendUrl?.slice(2, -1),
         ...params,
     });
 }
