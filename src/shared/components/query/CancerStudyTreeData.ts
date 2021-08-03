@@ -33,7 +33,6 @@ export default class CancerStudyTreeData {
     }
 
     rootCancerType: CancerTypeWithVisibility = {
-        clinicalTrialKeywords: '',
         dedicatedColor: '',
         name: 'All',
         parent: '',
@@ -42,7 +41,6 @@ export default class CancerStudyTreeData {
     };
 
     virtualStudyCategory: CancerTypeWithVisibility = {
-        clinicalTrialKeywords: '',
         dedicatedColor: '',
         name: VIRTUAL_STUDY_NAME,
         parent: CANCER_TYPE_ROOT,
@@ -52,7 +50,6 @@ export default class CancerStudyTreeData {
     };
 
     physicalStudyCategory: CancerTypeWithVisibility = {
-        clinicalTrialKeywords: '',
         dedicatedColor: '',
         name: PHYSICAL_STUDY_NAME,
         parent: CANCER_TYPE_ROOT,
@@ -110,7 +107,6 @@ export default class CancerStudyTreeData {
         // add priority categories
         for (let name in priorityStudies) {
             this.priorityCategories.push({
-                clinicalTrialKeywords: '',
                 dedicatedColor: '',
                 name,
                 parent: CANCER_TYPE_ROOT,
