@@ -3,13 +3,14 @@ import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import TrackCircle from './TrackCircle';
 import TrackRect from './TrackRect';
-import ExonNumTrack from './ExonNumTrack';
+import ExonNumTrack from './ExonTrack';
 
 type TrackItemProps = {
     x: number;
     y: number;
-    dim1?: number; // radius or width
-    dim2?: number; // hoverRadius or height
+    dim1: number; // radius or width
+    dim2?: number; // height if necessary
+    hoverdim1?: number;
     hitZoneClassName?: string;
     hitZoneXOffset?: number;
     spec: TrackItemSpec;
@@ -23,7 +24,7 @@ export enum TrackItemType {
 export type TrackItemSpec = {
     startCodon: number;
     endCodon?: number;
-    itemType: TrackItemType;
+    itemType?: TrackItemType;
     label?: string;
     color?: string;
     tooltip?: JSX.Element;
@@ -39,11 +40,6 @@ export default class TrackItem extends React.Component<
         makeObservable(this);
     }
 
-    public static defaultProps = {
-        dim1: 2.8,
-        dim2: 5,
-    };
-
     @observable public isHovered = false;
 
     @computed public get hitRectangle() {
@@ -52,10 +48,10 @@ export default class TrackItem extends React.Component<
         let xOffset;
         if (this.props.spec.itemType === TrackItemType.CIRCLE) {
             hoverHeight =
-                this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+                this.props.hoverdim1 || TrackCircle.defaultProps.hoverRadius;
 
             hoverWidth =
-                this.props.dim2 || TrackCircle.defaultProps.hoverRadius;
+                this.props.hoverdim1 || TrackCircle.defaultProps.hoverRadius;
 
             xOffset =
                 this.props.x - hoverWidth + (this.props.hitZoneXOffset || 0);
@@ -81,7 +77,7 @@ export default class TrackItem extends React.Component<
                 <TrackCircle
                     isHovered={this.isHovered}
                     radius={this.props.dim1}
-                    hoverRadius={this.props.dim2}
+                    hoverRadius={this.props.hoverdim1}
                     {...this.props}
                 />
             );

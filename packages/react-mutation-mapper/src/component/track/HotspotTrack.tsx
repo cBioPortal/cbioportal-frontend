@@ -17,7 +17,7 @@ import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { HotspotInfo } from '../hotspot/HotspotInfo';
 import Track, { TrackProps } from './Track';
-import { TrackItemSpec, TrackItemType } from './TrackItem';
+import { TrackItemSpec } from './TrackItem';
 
 import hotspotImg from '../../images/cancer-hotspots.svg';
 
@@ -85,7 +85,6 @@ export default class HotspotTrack extends React.Component<
                 .map(position => ({
                     startCodon: Number(position),
                     color: '#FF9900',
-                    itemType: TrackItemType.CIRCLE,
                     tooltip: hotspotTooltip(
                         this.props.store.mutationsByPosition[Number(position)],
                         this.props.store.indexedHotspotData.result || {},

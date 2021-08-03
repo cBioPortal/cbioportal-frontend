@@ -110,44 +110,28 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     @action.bound
-    onTrackCircleClick(circleComponent: TrackItem) {
+    onTrackItemClick(shapeComponent: TrackItem) {
         updatePositionSelectionFilters(
             this.props.dataStore,
-            circleComponent.props.spec.startCodon,
+            shapeComponent.props.spec.startCodon,
             this.shiftPressed,
             this.props.defaultFilters
         );
     }
 
     @action.bound
-    onTrackRectClick(rectComponent: TrackItem) {
-        updatePositionSelectionFilters(
-            this.props.dataStore,
-            rectComponent.props.spec.startCodon,
-            this.shiftPressed,
-            this.props.defaultFilters
-        );
-    }
+    onTrackItemHover(shapeComponent: TrackItem) {
+        const endCodon: number = shapeComponent.props.spec.endCodon
+            ? Math.trunc(shapeComponent.props.spec.endCodon)
+            : Math.trunc(shapeComponent.props.spec.startCodon);
 
-    @action.bound
-    onTrackCircleHover(circleComponent: TrackItem) {
-        updatePositionHighlightFilters(
-            this.props.dataStore,
-            circleComponent.props.spec.startCodon,
-            this.props.defaultFilters
-        );
-        circleComponent.isHovered = true;
-    }
-
-    @action.bound
-    onTrackRectHover(rectComponent: TrackItem) {
         updatePositionRangeHighlightFilters(
             this.props.dataStore,
-            Math.trunc(rectComponent.props.spec.startCodon),
-            Math.trunc(rectComponent.props.spec.endCodon!),
+            Math.trunc(shapeComponent.props.spec.startCodon),
+            endCodon,
             this.props.defaultFilters
         );
-        rectComponent.isHovered = true;
+        shapeComponent.isHovered = true;
     }
 
     @action.bound
@@ -175,30 +159,15 @@ export default class Track extends React.Component<TrackProps, {}> {
 
         if (componentIndex !== null) {
             const shapeComponent = this.shapes[componentIndex];
-
-            if (shapeComponent.props.spec.itemType === TrackItemType.CIRCLE) {
-                let circleComponent = shapeComponent;
-                this.setHitZone(
-                    circleComponent.hitRectangle,
-                    circleComponent.props.spec.tooltip,
-                    action(() => this.onTrackCircleHover(circleComponent)),
-                    action(() => this.onTrackCircleClick(circleComponent)),
-                    this.onHitzoneMouseOut,
-                    'pointer',
-                    'bottom'
-                );
-            } else {
-                let rectComponent = shapeComponent;
-                this.setHitZone(
-                    rectComponent.hitRectangle,
-                    rectComponent.props.spec.tooltip,
-                    action(() => this.onTrackRectHover(rectComponent)),
-                    action(() => this.onTrackRectClick(rectComponent)),
-                    this.onHitzoneMouseOut,
-                    'pointer',
-                    'bottom'
-                );
-            }
+            this.setHitZone(
+                shapeComponent.hitRectangle,
+                shapeComponent.props.spec.tooltip,
+                action(() => this.onTrackItemHover(shapeComponent)),
+                action(() => this.onTrackItemClick(shapeComponent)),
+                this.onHitzoneMouseOut,
+                'pointer',
+                'bottom'
+            );
         }
     }
 
@@ -234,62 +203,52 @@ export default class Track extends React.Component<TrackProps, {}> {
         this.shapes = {};
 
         return (this.props.trackItems || []).map((spec, index) => {
-            if (spec.itemType === TrackItemType.RECTANGLE) {
-                return (
-                    <TrackItem
-                        ref={(rect: TrackItem) => {
-                            if (rect !== null) {
-                                this.shapes[index] = rect;
-                            }
-                        }}
-                        key={spec.startCodon}
-                        hitZoneClassName={`${this.props.idClassPrefix}${index}`}
-                        hitZoneXOffset={this.props.xOffset}
-                        x={
-                            (spec.startCodon / this.props.proteinLength) *
-                            this.props.width
-                        }
-                        y={this.svgHeight / 2}
-                        dim1={
-                            ((spec.endCodon! - spec.startCodon) /
-                                this.props.proteinLength) *
-                            this.props.width
-                        }
-                        dim2={50}
-                        spec={{ ...spec, endCodon: spec.endCodon! }}
-                    />
-                );
+            let dim1;
+            let dim2;
+            let hoverdim1;
+            let specFeats;
+            if (spec.endCodon !== undefined) {
+                dim1 =
+                    ((spec.endCodon! - spec.startCodon) /
+                        this.props.proteinLength) *
+                    this.props.width;
+                dim2 = 50;
+                hoverdim1 = dim1;
+                specFeats = {
+                    ...spec,
+                    endCodon: spec.endCodon!,
+                    itemType: TrackItemType.RECTANGLE,
+                };
             } else {
-                return (
-                    <TrackItem
-                        ref={(circle: TrackItem) => {
-                            if (circle !== null) {
-                                this.shapes[index] = circle;
-                            }
-                        }}
-                        key={spec.startCodon}
-                        hitZoneClassName={`${this.props.idClassPrefix}${index}`}
-                        hitZoneXOffset={this.props.xOffset}
-                        x={
-                            (this.props.width / this.props.proteinLength) *
-                            spec.startCodon
-                        }
-                        y={this.svgHeight / 2}
-                        dim1={
-                            this.props.dataStore.isPositionSelected(
-                                spec.startCodon
-                            ) ||
-                            this.props.dataStore.isPositionHighlighted(
-                                spec.startCodon
-                            )
-                                ? 5
-                                : 2.8
-                        }
-                        dim2={5}
-                        spec={spec}
-                    />
-                );
+                dim1 =
+                    this.props.dataStore.isPositionSelected(spec.startCodon) ||
+                    this.props.dataStore.isPositionHighlighted(spec.startCodon)
+                        ? 5
+                        : 2.8;
+                hoverdim1 = 5;
+                dim2 = dim1;
+                specFeats = { ...spec, itemType: TrackItemType.CIRCLE };
             }
+            return (
+                <TrackItem
+                    ref={(item: TrackItem) => {
+                        if (item !== null) {
+                            this.shapes[index] = item;
+                        }
+                    }}
+                    key={spec.startCodon}
+                    hitZoneClassName={`${this.props.idClassPrefix}${index}`}
+                    hitZoneXOffset={this.props.xOffset}
+                    x={
+                        (spec.startCodon / this.props.proteinLength) *
+                        this.props.width
+                    }
+                    y={this.svgHeight / 2}
+                    dim1={dim1}
+                    dim2={dim2}
+                    spec={specFeats}
+                />
+            );
         });
     }
 

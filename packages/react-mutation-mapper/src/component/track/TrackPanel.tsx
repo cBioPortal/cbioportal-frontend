@@ -12,7 +12,7 @@ import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
 import HotspotTrack from './HotspotTrack';
 import OncoKbTrack from './OncoKbTrack';
-import ExonNumTrack from './ExonNumTrack';
+import ExonNumTrack from './ExonTrack';
 import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';

@@ -152,7 +152,7 @@ export default class LollipopPlotNoTooltip extends React.Component<
                             if (this.props.dataStore) {
                                 updatePositionHighlightFilters(
                                     this.props.dataStore,
-                                    lollipopComponent.props.spec.codon
+                                    [lollipopComponent.props.spec.codon]
                                 );
                             }
                             lollipopComponent.isHovered = true;

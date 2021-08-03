@@ -19,7 +19,7 @@ import {
 import MutationMapperStore from '../../model/MutationMapperStore';
 import PtmAnnotationTable from '../ptm/PtmAnnotationTable';
 import { default as Track, TrackProps } from './Track';
-import { TrackItemSpec, TrackItemType } from './TrackItem';
+import { TrackItemSpec } from './TrackItem';
 
 import styles from './ptmTrackStyles.module.scss';
 
@@ -300,7 +300,6 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
             acc.push({
                 startCodon: Number(position),
                 color: ptmColor(ptms),
-                itemType: TrackItemType.CIRCLE,
                 tooltip: (
                     <PtmTooltip
                         ptms={ptms}

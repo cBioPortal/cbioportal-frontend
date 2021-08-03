@@ -112,7 +112,7 @@ export default class TrackSelector extends React.Component<
             [TrackName.ExonNum]: {
                 label: (
                     <span>
-                        Exon Number
+                        Exon
                         {this.isPending(TrackName.ExonNum) && this.loaderIcon()}
                     </span>
                 ),

@@ -45,7 +45,6 @@ import { ProteinImpactType } from 'cbioportal-frontend-commons';
 import { AnnotatedMutation } from 'pages/resultsView/ResultsViewPageStore';
 import DriverAnnotationProteinImpactTypeBadgeSelector from 'pages/resultsView/mutation/DriverAnnotationProteinImpactTypeBadgeSelector';
 import { PtmSource } from 'cbioportal-utils';
-import { completeSessionGroups } from 'pages/resultsView/comparison/ResultsViewComparisonUtils';
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
