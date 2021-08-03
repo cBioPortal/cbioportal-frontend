@@ -113,9 +113,18 @@ export class StudySummaryTab extends React.Component<
                 chartMeta: ChartMeta,
                 dataBins: GenericAssayDataBin[]
             ) => {
-                this.store.updateGenericAssayDataIntervalFilters(
+                this.store.updateGenericAssayDataFilters(
                     chartMeta.uniqueKey,
                     dataBins
+                );
+            },
+            onGenericAssayCategoricalValueSelection: (
+                chartMeta: ChartMeta,
+                values: string[]
+            ) => {
+                this.store.updateCategoricalGenericAssayDataFilters(
+                    chartMeta.uniqueKey,
+                    values
                 );
             },
         };
@@ -153,6 +162,22 @@ export class StudySummaryTab extends React.Component<
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
+                } else if (
+                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
+                ) {
+                    props.filters = this.store
+                        .getGenericAssayDataFiltersByUniqueKey(
+                            props.chartMeta!.uniqueKey
+                        )
+                        .map(
+                            genericAssayDataFilter =>
+                                genericAssayDataFilter.value
+                        );
+                    props.onValueSelection = this.handlers.onGenericAssayCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenericAssayCategoricalValueSelection;
+                    props.promise = this.store.getGenericAssayChartDataCount(
+                        chartMeta
+                    );
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store
@@ -194,7 +219,7 @@ export class StudySummaryTab extends React.Component<
                     props.promise = this.store.getGenericAssayChartDataBin(
                         chartMeta
                     );
-                    props.filters = this.store.getGenericAssayDataIntervalFiltersByUniqueKey(
+                    props.filters = this.store.getGenericAssayDataFiltersByUniqueKey(
                         props.chartMeta!.uniqueKey
                     );
                     props.onDataBinSelection = this.handlers.onGenericAssayDataBinSelection;
@@ -242,6 +267,22 @@ export class StudySummaryTab extends React.Component<
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
+                } else if (
+                    this.store.isGenericAssayChart(chartMeta.uniqueKey)
+                ) {
+                    props.filters = this.store
+                        .getGenericAssayDataFiltersByUniqueKey(
+                            props.chartMeta!.uniqueKey
+                        )
+                        .map(
+                            genericAssayDataFilter =>
+                                genericAssayDataFilter.value
+                        );
+                    props.onValueSelection = this.handlers.onGenericAssayCategoricalValueSelection;
+                    props.onResetSelection = this.handlers.onGenericAssayCategoricalValueSelection;
+                    props.promise = this.store.getGenericAssayChartDataCount(
+                        chartMeta
+                    );
                 } else {
                     props.filters = this.store
                         .getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey)
