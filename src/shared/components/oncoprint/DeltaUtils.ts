@@ -4,13 +4,20 @@ import {
     GENETIC_TRACK_GROUP_INDEX,
     GeneticTrackSpec,
     IBaseHeatmapTrackDatum,
+    ICategoricalTrackSpec,
     IGenesetHeatmapTrackSpec,
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from './Oncoprint';
-import OncoprintJS, { SortConfig, TrackId, UserTrackSpec } from 'oncoprintjs';
+import OncoprintJS, {
+    ICategoricalRuleSetParams,
+    SortConfig,
+    TrackId,
+    UserTrackSpec,
+} from 'oncoprintjs';
 import _ from 'lodash';
 import {
+    getCategoricalTrackRuleSetParams,
     getClinicalTrackRuleSetParams,
     getGenesetHeatmapTrackRuleSetParams,
     getGeneticTrackRuleSetParams,
@@ -20,9 +27,11 @@ import {
     getClinicalTrackSortComparator,
     getGeneticTrackSortComparator,
     heatmapTrackSortComparator,
+    categoricalTrackSortComparator,
 } from './SortUtils';
 import {
     linebreakGenesetId,
+    makeCategoricalTrackTooltip,
     makeClinicalTrackTooltip,
     makeGeneticTrackTooltip,
     makeHeatmapTrackTooltip,
@@ -30,6 +39,12 @@ import {
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import ifNotDefined from '../../lib/ifNotDefined';
+
+// This file implements functions that call imperative OncoprintJS library
+//  methods in order to keep the oncoprint in a state consistent with the
+//  specified props. In essence, it's transforming declarative logic into
+//  imperative logic by executing "transitions" from the previous props
+//  to the new props.
 
 export function transition(
     nextProps: IOncoprintProps,
@@ -103,10 +118,13 @@ function transitionTrackHeaders(
     oncoprint: OncoprintJS
 ) {
     if (
-        !_.isEqual(nextProps.heatmapTrackHeaders, prevProps.heatmapTrackHeaders)
+        !_.isEqual(
+            nextProps.additionalTrackGroupHeaders,
+            prevProps.additionalTrackGroupHeaders
+        )
     ) {
-        const nextHeaders = nextProps.heatmapTrackHeaders || {};
-        const prevHeaders = prevProps.heatmapTrackHeaders || {};
+        const nextHeaders = nextProps.additionalTrackGroupHeaders || {};
+        const prevHeaders = prevProps.additionalTrackGroupHeaders || {};
 
         const nextIndexes = Object.keys(nextHeaders).map(x => parseInt(x, 10));
         const prevIndexes = Object.keys(prevHeaders).map(x => parseInt(x, 10));
@@ -581,7 +599,8 @@ function transitionTracks(
         genesetHeatmap: undefined as undefined | TrackId,
         heatmap: undefined as undefined | TrackId,
         heatmap01: undefined as undefined | TrackId,
-        genericAssay: ({} as any) as GenericAssayProfileToTrackIdMap,
+        genericAssayHeatmap: ({} as any) as GenericAssayProfileToTrackIdMap,
+        genericAssayCategorical: ({} as any) as GenericAssayProfileToTrackIdMap,
     };
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (
@@ -643,7 +662,9 @@ function transitionTracks(
     // collect trackId of last assigned track for each generic assay profile
     // Note: the resolution of `trackIds for ruleset sharing` is different from
     // the section above because different formatting is applied to each generic assay profile (molecularProfileId)
-    trackIdForRuleSetSharing.genericAssay = _.chain(prevProps.heatmapTracks)
+    trackIdForRuleSetSharing.genericAssayHeatmap = _.chain(
+        prevProps.heatmapTracks
+    )
         .filter(
             (s: IHeatmapTrackSpec) =>
                 s.molecularAlterationType ===
@@ -652,6 +673,19 @@ function transitionTracks(
         .groupBy((track: IHeatmapTrackSpec) => track.molecularProfileId)
         .mapValues((o: IHeatmapTrackSpec[]) => _.last(o))
         .mapValues((o: IHeatmapTrackSpec) => trackSpecKeyToTrackId[o.key])
+        .value();
+
+    trackIdForRuleSetSharing.genericAssayCategorical = _.chain(
+        prevProps.categoricalTracks
+    )
+        .filter(
+            (s: ICategoricalTrackSpec) =>
+                s.molecularAlterationType ===
+                AlterationTypeConstants.GENERIC_ASSAY
+        )
+        .groupBy((track: ICategoricalTrackSpec) => track.molecularProfileId)
+        .mapValues((o: ICategoricalTrackSpec[]) => _.last(o))
+        .mapValues((o: ICategoricalTrackSpec) => trackSpecKeyToTrackId[o.key])
         .value();
 
     const genericAssayProfilesMap = _.chain(nextProps.heatmapTracks)
@@ -839,6 +873,36 @@ function transitionTracks(
         oncoprint,
         getTrackSpecKeyToTrackId
     );
+
+    // Transition categorical tracks
+    const prevCategoricalTracks = _.keyBy(
+        prevProps.categoricalTracks,
+        (track: ICategoricalTrackSpec) => track.key
+    );
+    for (const track of nextProps.categoricalTracks) {
+        transitionCategoricalTrack(
+            track,
+            prevCategoricalTracks[track.key],
+            getTrackSpecKeyToTrackId,
+            oncoprint,
+            nextProps,
+            trackIdForRuleSetSharing
+        );
+        delete prevCategoricalTracks[track.key];
+    }
+    for (const track of prevProps.categoricalTracks || []) {
+        if (prevCategoricalTracks.hasOwnProperty(track.key)) {
+            // if its still there, then this track no longer exists
+            transitionCategoricalTrack(
+                undefined,
+                prevCategoricalTracks[track.key],
+                getTrackSpecKeyToTrackId,
+                oncoprint,
+                nextProps,
+                trackIdForRuleSetSharing
+            );
+        }
+    }
 }
 
 function transitionGeneticTrackOrder(
@@ -1347,7 +1411,7 @@ export function transitionHeatmapTrack(
     trackIdForRuleSetSharing: {
         heatmap?: TrackId;
         heatmap01?: TrackId;
-        genericAssay?: GenericAssayProfileToTrackIdMap;
+        genericAssayHeatmap?: GenericAssayProfileToTrackIdMap;
     },
     expansionParentKey?: string
 ) {
@@ -1433,7 +1497,7 @@ export function transitionHeatmapTrack(
         } else {
             // if the track is a generic assay profile, add to trackIdForRuleSetSharing under its `molecularProfileId`
             // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
-            trackIdForRuleSetSharing.genericAssay![
+            trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ] = newTrackId;
         }
@@ -1459,11 +1523,11 @@ export function transitionHeatmapTrack(
         if (
             nextSpec.molecularAlterationType ===
                 AlterationTypeConstants.GENERIC_ASSAY &&
-            trackIdForRuleSetSharing.genericAssay![
+            trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ] !== undefined
         ) {
-            const rulesetTrackId = trackIdForRuleSetSharing.genericAssay![
+            const rulesetTrackId = trackIdForRuleSetSharing.genericAssayHeatmap![
                 nextSpec.molecularProfileId
             ];
             oncoprint.shareRuleSet(rulesetTrackId!, trackId);
@@ -1476,6 +1540,93 @@ export function transitionHeatmapTrack(
                     nextSpec,
                     nextProps.caseLinkOutInTooltips
                 )
+        );
+    }
+}
+
+export function transitionCategoricalTrack(
+    nextSpec: ICategoricalTrackSpec | undefined,
+    prevSpec: ICategoricalTrackSpec | undefined,
+    getTrackSpecKeyToTrackId: () => { [key: string]: TrackId },
+    oncoprint: OncoprintJS,
+    nextProps: IOncoprintProps,
+    trackIdForRuleSetSharing: {
+        genericAssayCategorical?: GenericAssayProfileToTrackIdMap;
+    }
+) {
+    const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+    if (tryRemoveTrack(nextSpec, prevSpec, trackSpecKeyToTrackId, oncoprint)) {
+        return;
+    } else if (nextSpec && !prevSpec) {
+        // Add track
+        const rule_set_params: ICategoricalRuleSetParams = getCategoricalTrackRuleSetParams(
+            nextSpec
+        );
+        rule_set_params.na_legend_label = nextSpec.naLegendLabel;
+        const trackParams: UserTrackSpec<any> = {
+            rule_set_params,
+            data: nextSpec.data,
+            data_id_key: 'uid',
+            track_padding: 0,
+            label: nextSpec.label,
+            target_group: nextSpec.trackGroupIndex,
+            removable:
+                !!nextSpec.onRemove || !!nextSpec.onClickRemoveInTrackMenu,
+            removeCallback: () => {
+                delete getTrackSpecKeyToTrackId()[nextSpec.key];
+                nextSpec.onRemove && nextSpec.onRemove();
+            },
+            onClickRemoveInTrackMenu: () => {
+                nextSpec.onClickRemoveInTrackMenu &&
+                    nextSpec.onClickRemoveInTrackMenu();
+            },
+            sort_direction_changeable: true,
+            sortCmpFn: categoricalTrackSortComparator,
+            init_sort_direction: 0 as 0,
+            description: ifNotDefined(
+                nextSpec.description,
+                `${nextSpec.label} data from ${nextSpec.molecularProfileId}`
+            ),
+            link_url: nextSpec.trackLinkUrl,
+            tooltipFn: makeCategoricalTrackTooltip(
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
+            ),
+            track_info: nextSpec.info || '',
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+        };
+        const newTrackId = oncoprint.addTracks([trackParams])[0];
+        trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
+        //  add to trackIdForRuleSetSharing under its `molecularProfileId`
+        // this makes the trackId available for existing tracks of the same mol.profile for ruleset sharing
+        trackIdForRuleSetSharing.genericAssayCategorical![
+            nextSpec.molecularProfileId
+        ] = newTrackId;
+    } else if (nextSpec && prevSpec) {
+        // Transition track
+        const trackId = trackSpecKeyToTrackId[nextSpec.key];
+        if (nextSpec.data !== prevSpec.data) {
+            // shallow equality check
+            oncoprint.setTrackData(trackId, nextSpec.data, 'uid');
+        }
+        // generic assay profile tracks always are associated with the last added added track id
+        if (
+            trackIdForRuleSetSharing.genericAssayCategorical![
+                nextSpec.molecularProfileId
+            ] !== undefined
+        ) {
+            const rulesetTrackId = trackIdForRuleSetSharing.genericAssayCategorical![
+                nextSpec.molecularProfileId
+            ];
+            oncoprint.shareRuleSet(rulesetTrackId!, trackId);
+        }
+        // set tooltip, its cheap
+        oncoprint.setTrackTooltipFn(
+            trackId,
+            makeCategoricalTrackTooltip(
+                nextSpec,
+                nextProps.caseLinkOutInTooltips
+            )
         );
     }
 }
