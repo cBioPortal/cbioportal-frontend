@@ -1,10 +1,12 @@
 import autobind from 'autobind-decorator';
 import * as React from 'react';
 import * as _ from 'lodash';
+import classnames from 'classnames';
 import {
     DataFilter,
     DataFilterType,
     onFilterOptionSelect,
+    FilterResetPanel,
 } from 'react-mutation-mapper';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable } from 'mobx';
@@ -26,6 +28,7 @@ import FilterIconModal from 'shared/components/filterIconModal/FilterIconModal';
 import DoubleHandleSlider from 'shared/components/doubleHandleSlider/DoubleHandleSlider';
 import CategoricalFilterMenu from 'shared/components/categoricalFilterMenu/CategoricalFilterMenu';
 
+import styles from 'shared/components/mutationMapper/mutationMapper.module.scss';
 import {
     IMutationMapperProps,
     default as MutationMapper,
@@ -38,6 +41,10 @@ import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary'
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
+import {
+    getPatientSampleSummary,
+    submitToStudyViewPage,
+} from '../querySummary/QuerySummaryUtils';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -62,6 +69,51 @@ export default class ResultsViewMutationMapper extends MutationMapper<
         makeObservable(this);
         this.minMaxColumns = new Set();
         this.allUniqDataColumns = new Set();
+    }
+
+    protected get filterResetPanel(): JSX.Element | null {
+        const dataStore = this.props.store.dataStore as MutationMapperDataStore;
+        let filterInfo:
+            | JSX.Element
+            | string = `Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations.`;
+        if (this.props.store.queriedStudies.isComplete) {
+            const linkToFilteredStudyView = (
+                <a
+                    onClick={() => {
+                        submitToStudyViewPage(
+                            this.props.store.queriedStudies.result!,
+                            dataStore.tableDataSamples,
+                            true
+                        );
+                    }}
+                >
+                    {getPatientSampleSummary(
+                        dataStore.tableDataSamples,
+                        dataStore.tableDataPatients
+                    )}
+                </a>
+            );
+            filterInfo = (
+                <span>
+                    {`Showing ${dataStore.tableData.length} of ${dataStore.allData.length} mutations in `}
+                    {linkToFilteredStudyView}
+                    {'.'}
+                </span>
+            );
+        }
+
+        return (
+            <FilterResetPanel
+                resetFilters={() => dataStore.resetFilters()}
+                filterInfo={filterInfo}
+                className={classnames(
+                    'alert',
+                    'alert-success',
+                    styles.filterResetPanel
+                )}
+                buttonClass="btn btn-default btn-xs"
+            />
+        );
     }
 
     @computed get mutationStatusFilter() {
