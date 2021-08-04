@@ -84,11 +84,22 @@ export default class ComparisonGroupManager extends React.Component<
     @action.bound
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
+        const preDefinedCustomChartFilterSet = _.reduce(
+            Array.from(
+                this.props.store.preDefinedCustomChartFilterSet.entries()
+            ),
+            (acc, [chartUniqueKey, clinicalDataFilter]) => {
+                acc[chartUniqueKey] = clinicalDataFilter.values.map(
+                    datum => datum.value
+                );
+                return acc;
+            },
+            {} as { [id: string]: string[] }
+        );
+
         this._inputGroupName = getDefaultGroupName(
             this.props.store.filters,
-            _.fromPairs(
-                this.props.store.preDefinedCustomChartFilterSet.toJSON()
-            ),
+            preDefinedCustomChartFilterSet,
             this.props.store.clinicalAttributeIdToDataType.result!
         );
     }

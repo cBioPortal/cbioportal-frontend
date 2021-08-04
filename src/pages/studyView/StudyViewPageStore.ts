@@ -2124,7 +2124,7 @@ export class StudyViewPageStore
 
     public preDefinedCustomChartFilterSet = observable.map<
         ChartUniqueKey,
-        string[]
+        ClinicalDataFilter
     >();
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
@@ -2469,38 +2469,46 @@ export class StudyViewPageStore
 
     @action.bound
     setCustomChartFilters(chartUniqueKey: string, values: string[]): void {
-        if (chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES) {
+        if (this.chartMetaSet[chartUniqueKey]) {
             if (values.length > 0) {
-                let filteredSampleIdentifiers = getFilteredSampleIdentifiers(
-                    this.samples.result.filter(sample =>
-                        values.includes(sample.studyId)
-                    )
-                );
-                this._chartSampleIdentifiersFilterSet.set(
-                    chartUniqueKey,
-                    filteredSampleIdentifiers
-                );
-                this.preDefinedCustomChartFilterSet.set(chartUniqueKey, values);
-            } else {
-                this._chartSampleIdentifiersFilterSet.delete(chartUniqueKey);
-                this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
-            }
-        } else {
-            if (this.chartMetaSet[chartUniqueKey]) {
-                let chartMeta = this.chartMetaSet[chartUniqueKey];
-                if (values.length > 0) {
-                    const clinicalDataFilter = {
-                        attributeId: chartMeta.uniqueKey,
-                        values: values.map(
-                            value => ({ value } as DataFilterValue)
-                        ),
-                    };
-                    this._customDataFilterSet.set(
-                        chartMeta.uniqueKey,
+                const clinicalDataFilter = {
+                    attributeId: chartUniqueKey,
+                    values: values.map(value => ({ value } as DataFilterValue)),
+                };
+                if (
+                    chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
+                ) {
+                    // this is for pre-defined custom charts
+                    let filteredSampleIdentifiers = getFilteredSampleIdentifiers(
+                        this.samples.result.filter(sample =>
+                            values.includes(sample.studyId)
+                        )
+                    );
+                    this._chartSampleIdentifiersFilterSet.set(
+                        chartUniqueKey,
+                        filteredSampleIdentifiers
+                    );
+                    this.preDefinedCustomChartFilterSet.set(
+                        chartUniqueKey,
                         clinicalDataFilter
                     );
                 } else {
-                    this._customDataFilterSet.delete(chartMeta.uniqueKey);
+                    this._customDataFilterSet.set(
+                        chartUniqueKey,
+                        clinicalDataFilter
+                    );
+                }
+            } else {
+                if (
+                    chartUniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES
+                ) {
+                    // this is for pre-defined custom charts
+                    this._chartSampleIdentifiersFilterSet.delete(
+                        chartUniqueKey
+                    );
+                    this.preDefinedCustomChartFilterSet.delete(chartUniqueKey);
+                } else {
+                    this._customDataFilterSet.delete(chartUniqueKey);
                 }
             }
         }
@@ -2786,10 +2794,6 @@ export class StudyViewPageStore
         chartKey: string
     ): SampleIdentifier[] {
         return this._chartSampleIdentifiersFilterSet.get(chartKey) || [];
-    }
-
-    public getPreDefinedCustomChartFilters(chartKey: string): string[] {
-        return this.preDefinedCustomChartFilterSet.get(chartKey) || [];
     }
 
     public isPreDefinedCustomChart(uniqueKey: string): boolean {
@@ -3276,7 +3280,13 @@ export class StudyViewPageStore
     public getCustomDataFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
-        const filter = this._customDataFilterSet.get(uniqueKey);
+        let filter: ClinicalDataFilter | undefined = undefined;
+        // pre-defined custom chart
+        if (uniqueKey === SpecialChartsUniqueKeyEnum.CANCER_STUDIES) {
+            filter = this.preDefinedCustomChartFilterSet.get(uniqueKey);
+        } else {
+            filter = this._customDataFilterSet.get(uniqueKey);
+        }
         return filter ? filter.values : [];
     }
 
