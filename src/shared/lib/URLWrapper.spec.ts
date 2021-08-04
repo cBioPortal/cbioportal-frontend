@@ -36,9 +36,10 @@ type TestQuery = {
 class TestURLWrapper extends URLWrapper<TestQuery> {
     constructor(routing: ExtendedRouterStore) {
         super(routing, {
-            name: { isSessionProp: true },
+            name: { isSessionProp: true, isHashedProp: true },
             data: {
                 isSessionProp: true,
+                isHashedProp: true,
                 nestedObjectProps: { d1: '', d2: '' },
                 aliases: ['aliasForData'],
             },
@@ -285,7 +286,7 @@ describe('URLWrapper', () => {
         disposer();
     });
 
-    it('hash composed only of session props', () => {
+    it('hash composed only of hash props', () => {
         routingStore.updateRoute({ case_ids: 'bar', non_property: 'foo' });
         let beforeChange = wrapper.hash;
 
@@ -293,14 +294,14 @@ describe('URLWrapper', () => {
         assert.equal(
             wrapper.hash,
             beforeChange,
-            "hash doesn't change if we mutate non session prop"
+            "hash doesn't change if we mutate non hashed prop"
         );
 
         routingStore.updateRoute({ case_ids: 'blah', non_property: 'foo' });
         assert.notEqual(
             wrapper.hash,
             beforeChange,
-            'hash changes if we mutate session prop'
+            'hash changes if we mutate hashed prop'
         );
 
         const testWrapper = new TestURLWrapper(routingStore);
@@ -316,7 +317,7 @@ describe('URLWrapper', () => {
         assert.notEqual(
             testWrapper.hash,
             beforeChange,
-            'hash changes if we mutate nested object session prop'
+            'hash changes if we mutate nested object hashed prop'
         );
     });
 
