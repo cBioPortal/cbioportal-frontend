@@ -177,6 +177,15 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
+  
+  end_to_end_tests_against_master:
+    <<: *defaults
+    environment:
+      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+      JUNIT_REPORT_PATH: ./remote/junit/
+      SCREENSHOT_DIRECTORY: ./remote/screenshots
+      CBIOPORTAL_URL: https://master.cbioportal.org
+    <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_localdb:
     working_directory: /tmp/repo
@@ -343,6 +352,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
+      - end_to_end_tests_against_master:
+          requires:
+            - install
       - end_to_end_tests_localdb:
           requires:
             - install
@@ -375,7 +387,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
+      - end_to_end_tests_against_master:
+          requires:
+            - install
       - end_to_end_tests_localdb:
           requires:
             - install
-
