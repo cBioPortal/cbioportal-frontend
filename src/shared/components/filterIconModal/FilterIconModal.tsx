@@ -22,11 +22,11 @@ class FilterIcon extends React.Component<any, {}> {
                 onClick={this.props.onClickFilter}
                 style={{
                     color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
-                    position: 'absolute',
-                    top: '-1.37px',
-                    fontSize: '14px',
+                    display: 'inline-block',
                     cursor: 'pointer',
                     visibility: 'hidden',
+                    marginLeft: 5,
+                    marginTop: -1,
                 }}
             >
                 <i className="fa fa-filter"></i>
