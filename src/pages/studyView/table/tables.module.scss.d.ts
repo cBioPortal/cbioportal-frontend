@@ -15,7 +15,8 @@ declare const styles: {
   readonly "gistic": string;
   readonly "headerColumn": string;
   readonly "headerRow": string;
-  readonly "headerSortingIcon": string;
+  readonly "headerSortingIconAsc": string;
+  readonly "headerSortingIconDesc": string;
   readonly "highlightedEvenRow": string;
   readonly "highlightedOddRow": string;
   readonly "highlightedRow": string;

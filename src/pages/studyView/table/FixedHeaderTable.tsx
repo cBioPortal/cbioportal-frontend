@@ -277,7 +277,9 @@ export default class FixedHeaderTable<T> extends React.Component<
                     label.push(
                         <i
                             className={classnames(
-                                styles.headerSortingIcon,
+                                this._sortDirection === 'desc'
+                                    ? styles.headerSortingIconDesc
+                                    : styles.headerSortingIconAsc,
                                 'fa',
                                 this._sortDirection === 'desc'
                                     ? 'fa-sort-desc'
