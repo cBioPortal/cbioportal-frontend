@@ -61,7 +61,7 @@ export function extractExonInformation(
     return exonInfo;
 }
 
-export function makeStringRepresentation(exonLocation: number) {
+export function formatExonLocation(exonLocation: number) {
     const numNucleotidesOver = Math.trunc((exonLocation * 3) % 3);
     if (numNucleotidesOver === 0) {
         return exonLocation.toString();

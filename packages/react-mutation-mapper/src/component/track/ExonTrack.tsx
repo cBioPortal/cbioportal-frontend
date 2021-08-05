@@ -2,9 +2,6 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
-
-import { OncoKbFilterValue } from '../../filter/OncoKbFilter';
-import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { default as Track, TrackProps } from './Track';
 import { TrackItemSpec } from './TrackItem';
@@ -12,7 +9,7 @@ import {
     Mutation,
     ExonDatum,
     extractExonInformation,
-    makeStringRepresentation,
+    formatExonLocation,
 } from 'cbioportal-utils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 
@@ -58,9 +55,9 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
             const endCodon = exon.start + exon.length;
             const exonLength = exon.length;
             const isSkippable = Number.isInteger(exonLength);
-            const stringStart = makeStringRepresentation(startCodon);
-            const stringEnd = makeStringRepresentation(endCodon);
-            const stringLength = makeStringRepresentation(exonLength);
+            const stringStart = formatExonLocation(startCodon);
+            const stringEnd = formatExonLocation(endCodon);
+            const stringLength = formatExonLocation(exonLength);
 
             return {
                 color: altColors[index % 2],
@@ -98,12 +95,6 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
         return (
             <Track
                 dataStore={this.props.dataStore}
-                defaultFilters={[
-                    {
-                        type: DataFilterType.ONCOKB,
-                        values: [OncoKbFilterValue.Oncogenic],
-                    },
-                ]}
                 width={this.props.width}
                 xOffset={this.props.xOffset}
                 proteinLength={this.props.proteinLength}

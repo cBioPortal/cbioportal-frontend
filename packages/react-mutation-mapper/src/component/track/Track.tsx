@@ -158,15 +158,17 @@ export default class Track extends React.Component<TrackProps, {}> {
 
         if (componentIndex !== null) {
             const shapeComponent = this.shapes[componentIndex];
-            this.setHitZone(
-                shapeComponent.hitRectangle,
-                shapeComponent.props.spec.tooltip,
-                action(() => this.onTrackItemHover(shapeComponent)),
-                action(() => this.onTrackItemClick(shapeComponent)),
-                this.onHitzoneMouseOut,
-                'pointer',
-                'bottom'
-            );
+            if (shapeComponent) {
+                this.setHitZone(
+                    shapeComponent.hitRectangle,
+                    shapeComponent.props.spec.tooltip,
+                    action(() => this.onTrackItemHover(shapeComponent)),
+                    action(() => this.onTrackItemClick(shapeComponent)),
+                    this.onHitzoneMouseOut,
+                    'pointer',
+                    'bottom'
+                );
+            }
         }
     }
 

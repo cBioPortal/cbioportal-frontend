@@ -1,4 +1,4 @@
-export function labelDisplayText(
+export function truncateDisplayText(
     label: string,
     textElt: SVGTextElement | null,
     width: number

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
-import { labelDisplayText } from '../../util/LabelUtils';
+import { truncateDisplayText } from '../../util/LabelUtils';
 
 type TrackRectProps = {
     x: number;
@@ -63,7 +63,7 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
             },
         };
         const label = this.props.spec.label || '';
-        const displayText = labelDisplayText(
+        const displayText = truncateDisplayText(
             label,
             this.textElt,
             this.props.width!
