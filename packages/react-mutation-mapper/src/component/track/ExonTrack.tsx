@@ -67,15 +67,12 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                 labelColor: '#FFFFFF',
                 tooltip: (
                     <span>
-                        <h1> Exon {exon.rank} </h1>
-                        <br></br>
+                        <h2> Exon {exon.rank} </h2>
                         Start: {stringStart}
                         <br></br>
                         End: {stringEnd}
                         <br></br>
-                        Exon length (amino acid): {stringLength}
-                        <br></br>
-                        Exon {isSkippable ? 'is' : "isn't"} a multiple of 3
+                        Length: {stringLength}
                     </span>
                 ),
             };
