@@ -1,10 +1,10 @@
 export function labelDisplayText(
     label: string,
-    textElt: SVGTextElement | null = null,
+    textElt: SVGTextElement | null,
     width: number
 ) {
     // Truncate text if necessary
-    if (textElt) {
+    if (!textElt) {
         return label;
     }
 
