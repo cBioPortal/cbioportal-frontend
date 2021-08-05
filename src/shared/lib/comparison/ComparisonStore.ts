@@ -1010,14 +1010,16 @@ export default abstract class ComparisonStore
         referenceGenesPromise: this.hugoGeneSymbolToReferenceGene,
         fetchData: () => {
             if (
-                this.alterationsEnrichmentDataRequestGroups.result &&
-                this.alterationsEnrichmentDataRequestGroups.result.length > 1 &&
-                (_(this.selectedMutationEnrichmentEventTypes)
-                    .values()
-                    .some() ||
-                    _(this.selectedCopyNumberEnrichmentEventTypes)
+                (this.alterationsEnrichmentDataRequestGroups.result &&
+                    this.alterationsEnrichmentDataRequestGroups.result.length >
+                        1 &&
+                    (_(this.selectedMutationEnrichmentEventTypes)
                         .values()
-                        .some())
+                        .some() ||
+                        _(this.selectedCopyNumberEnrichmentEventTypes)
+                            .values()
+                            .some())) ||
+                this.isStructuralVariantEnrichmentSelected
             ) {
                 const groupsAndAlterationTypes = {
                     molecularProfileCasesGroupFilter: this

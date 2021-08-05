@@ -233,9 +233,12 @@ export class StudySummaryTab extends React.Component<
                 if (
                     this.store.isUserDefinedCustomDataChart(chartMeta.uniqueKey)
                 ) {
-                    props.filters = this.store.getPreDefinedCustomChartFilters(
-                        props.chartMeta!.uniqueKey
-                    );
+                    props.filters = this.store
+                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(
+                            clinicalDataFilterValue =>
+                                clinicalDataFilterValue.value
+                        );
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
