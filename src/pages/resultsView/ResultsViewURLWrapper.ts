@@ -20,7 +20,6 @@ import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 import _ from 'lodash';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { GroupComparisonTab } from 'pages/groupComparison/GroupComparisonTabs';
-import hashString from 'shared/lib/hashString';
 
 export type PlotsSelectionParam = {
     selectedGeneOption?: string;
