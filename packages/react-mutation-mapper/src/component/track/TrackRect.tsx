@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
+import { labelDisplayText } from '../../util/LabelUtils';
 
 type TrackRectProps = {
     x: number;
@@ -29,9 +30,6 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
     constructor(props: any) {
         super(props);
         makeObservable(this);
-        this.state = {
-            displayText: props.label || '',
-        };
         this.handlers = {
             textRef: action((text: SVGTextElement | null) => {
                 this.textElt = text;
@@ -52,41 +50,6 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
         return this.props.y + this.props.height! / 2;
     }
 
-    @computed private get displayText() {
-        // Truncate text if necessary
-        const label = this.props.spec.label || '';
-        if (!this.textElt) {
-            return label;
-        }
-
-        if (!$(this.textElt).is(':visible')) {
-            return label;
-        }
-
-        let substringLength = label.length;
-        // Find the number of characters that will fit inside
-        while (
-            substringLength > 0 &&
-            this.textElt.getSubStringLength(0, substringLength) >
-                this.props.width!
-        ) {
-            substringLength -= 1;
-        }
-        let displayText = label;
-        if (substringLength < label.length) {
-            // If we have to do shortening
-            substringLength -= 2; // make room for ellipsis ".."
-            if (substringLength <= 0) {
-                // too short to show any string
-                displayText = '';
-            } else {
-                // if it's long enough to show anything at all
-                displayText = label.substr(0, substringLength) + '..';
-            }
-        }
-        return displayText;
-    }
-
     private makeTextElement(reference: boolean) {
         let props: any = {
             x: this.centerX,
@@ -99,9 +62,13 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
                 fontFamily: 'arial',
             },
         };
-        const text = reference
-            ? this.props.spec.labelColor || ''
-            : this.displayText;
+        const label = this.props.spec.label || '';
+        const displayText = labelDisplayText(
+            label,
+            this.textElt,
+            this.props.width!
+        );
+        const text = reference ? this.props.spec.labelColor || '' : displayText;
         if (reference) {
             props.ref = this.handlers.textRef;
             props.visibility = 'hidden';

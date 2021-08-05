@@ -15,7 +15,7 @@ export enum TrackName {
     OncoKB = 'ONCO_KB',
     dbPTM = 'DB_PTM',
     UniprotPTM = 'UNIPROT_PTM',
-    ExonNum = 'EXON_NUM',
+    Exon = 'EXON',
 }
 
 type TrackSelectorProps = {
@@ -44,7 +44,7 @@ export default class TrackSelector extends React.Component<
             TrackName.OncoKB,
             TrackName.dbPTM,
             TrackName.PDB,
-            TrackName.ExonNum,
+            TrackName.Exon,
         ],
     };
 
@@ -109,14 +109,14 @@ export default class TrackSelector extends React.Component<
                 value: TrackName.PDB,
                 disabled: this.isDisabled(TrackName.PDB),
             },
-            [TrackName.ExonNum]: {
+            [TrackName.Exon]: {
                 label: (
                     <span>
                         Exon
-                        {this.isPending(TrackName.ExonNum) && this.loaderIcon()}
+                        {this.isPending(TrackName.Exon) && this.loaderIcon()}
                     </span>
                 ),
-                value: TrackName.ExonNum,
+                value: TrackName.Exon,
             },
         };
     }

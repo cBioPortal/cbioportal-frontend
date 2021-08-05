@@ -3,7 +3,6 @@ import { computed, makeObservable, observable } from 'mobx';
 import { observer } from 'mobx-react';
 import TrackCircle from './TrackCircle';
 import TrackRect from './TrackRect';
-import ExonNumTrack from './ExonTrack';
 
 type TrackItemProps = {
     x: number;

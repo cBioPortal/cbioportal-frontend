@@ -18,7 +18,6 @@ import {
 import { DataFilter } from '../../model/DataFilter';
 import DataStore from '../../model/DataStore';
 import {
-    updatePositionHighlightFilters,
     updatePositionSelectionFilters,
     updatePositionRangeHighlightFilters,
 } from '../../util/FilterUtils';

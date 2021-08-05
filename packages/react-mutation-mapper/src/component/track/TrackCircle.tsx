@@ -15,7 +15,6 @@ type TrackCircleProps = {
 
 export type TrackCircleSpec = {
     startCodon: number;
-    endCodon?: number;
     label?: string;
     color?: string;
     tooltip?: JSX.Element;
