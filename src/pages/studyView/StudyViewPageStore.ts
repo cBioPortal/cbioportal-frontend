@@ -4337,12 +4337,19 @@ export class StudyViewPageStore
         onError: () => {},
         onResult: unknownIds => {
             if (unknownIds.length > 0) {
-                this.pageStatusMessages['unknownIds'] = {
-                    status: 'danger',
-                    message: `Unknown/Unauthorized ${
-                        unknownIds.length > 1 ? 'studies' : 'study'
-                    } ${unknownIds.join(', ')}`,
-                };
+                // if all studies are unknown, set flag for error page message
+                if (unknownIds.length == this.studyIds.length) {
+                    this.appStore.unknownOrUnauthorizedStudyIds = true;
+                }
+                // else only set status message for those that are unknown
+                else {
+                    this.pageStatusMessages['unknownIds'] = {
+                        status: 'danger',
+                        message: `Unknown/Unauthorized ${
+                            unknownIds.length > 1 ? 'studies' : 'study'
+                        } ${unknownIds.join(', ')}`,
+                    };
+                }
             }
         },
         default: [],

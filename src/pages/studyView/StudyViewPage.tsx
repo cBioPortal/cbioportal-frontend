@@ -525,15 +525,6 @@ export default class StudyViewPage extends React.Component<
                 )}
 
                 {this.store.comparisonConfirmationModal}
-                {this.store.unknownQueriedIds.isComplete &&
-                    this.store.unknownQueriedIds.result.length > 0 && (
-                        <Alert bsStyle="danger">
-                            <span>
-                                Unknown/Unauthorized studies{' '}
-                                {this.store.unknownQueriedIds.result.join(', ')}
-                            </span>
-                        </Alert>
-                    )}
                 <LoadingIndicator
                     size={'big'}
                     isLoading={

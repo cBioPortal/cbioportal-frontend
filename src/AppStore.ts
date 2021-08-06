@@ -39,6 +39,8 @@ export class AppStore {
 
     @observable.ref authMethod: string | undefined = undefined;
 
+    @observable unknownOrUnauthorizedStudyIds: boolean = false;
+
     @computed get isLoggedIn() {
         return _.isString(this.userName) && this.userName !== 'anonymousUser';
     }

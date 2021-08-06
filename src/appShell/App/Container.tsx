@@ -137,6 +137,27 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         </div>
                     </Else>
                 </If>
+                <If condition={this.appStore.unknownOrUnauthorizedStudyIds}>
+                    <Then>
+                        <div className="contentWrapper">
+                            <ErrorScreen
+                                title={
+                                    'The study/studies you are trying to access do not exist, or you do not have access.'
+                                }
+                                body={
+                                    <a href={buildCBioPortalPageUrl('/')}>
+                                        Return to homepage
+                                    </a>
+                                }
+                            />
+                        </div>
+                    </Then>
+                    <Else>
+                        <div className="contentWrapper">
+                            {makeRoutes(this.routingStore)}
+                        </div>
+                    </Else>
+                </If>
             </div>
         );
     }
