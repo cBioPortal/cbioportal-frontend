@@ -1,9 +1,12 @@
-span.sort-des:after {
-    content: ' \25BC';
+.lazyMobxTableSortArrowAsc {
+    padding-left: 5px;
+    position: relative;
+    top: 3px;
 }
-
-span.sort-asc:after {
-    content: ' \25B2';
+.lazyMobxTableSortArrowDesc {
+    padding-left: 5px;
+    position: relative;
+    top: -3px;
 }
 
 .cbioportal-frontend .table > thead > tr > th.multilineHeader {
