@@ -131,8 +131,15 @@ $study-view-table-icon-size: 10px;
     align-items: center;
 }
 
-.headerSortingIcon {
+.headerSortingIconAsc {
     margin-left: 5px;
+    position: relative;
+    top: 3px;
+}
+.headerSortingIconDesc {
+    margin-left: 5px;
+    position: relative;
+    top: -3px;
 }
 
 .autoMarginCheckbox {
