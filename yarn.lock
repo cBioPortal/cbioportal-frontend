@@ -17670,7 +17670,18 @@ oncokb-styles@~1.1.0:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.1.0.tgz#2817ed1ed18720e18384ebf1e99c7706bac514e4"
   integrity sha512-GSfqB2uGfJD9HefZJXlmNHXYJe0TbfKwAE1y0E5xc/ZKuL2Wle+KoesLL0iIxCyOc89uovnCXDYxSbIBxzgLGA==
 
-oncoprintjs@5.0.3, oncoprintjs@^5.0.2:
+oncoprintjs@5.0.4:
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-5.0.4.tgz#1ec0a2f8dce4e1413af90265c6fb265ea066977d"
+  integrity sha512-tjpHEdh3dr69ObX4eDuB4vkIEjIPs/yKofVQRM1zypOxL41+lKQY8o62H1EmNb6p+XCL6fkj9uqOHzBpERgmDg==
+  dependencies:
+    gl-matrix "2.3.2"
+    jquery "^3.0.0"
+    jstat "^1.7.1"
+    lodash "^4.17.15"
+    tayden-clusterfck "^0.7.0"
+
+oncoprintjs@^5.0.2:
   version "5.0.3"
   resolved "https://registry.yarnpkg.com/oncoprintjs/-/oncoprintjs-5.0.3.tgz#1cbd64dfd4f6c287c2b6e012ef118dd178e996ab"
   integrity sha512-5oWed4EH31wGW6rOqZDefZtNPQnvksNXZ9sFL63K7Ml1veNd6lzDVtM6vJbgx0yYBw0wII7YRMoLxPiMt6iN2A==
