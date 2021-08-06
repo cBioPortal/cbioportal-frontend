@@ -54,6 +54,7 @@ import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
 import { CustomChartSession } from 'shared/api/sessionServiceAPI';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
+import { Gene } from 'cbioportal-utils';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -968,4 +969,37 @@ export function getExtendsClinicalAttributesFromCustomData(
 
         return attr;
     });
+}
+
+export function getGeneAndProfileChunksForRequest(
+    maximumDataPointsPerRequest: number,
+    numSamples: number,
+    genes: Gene[],
+    profileIds: string[]
+) {
+    // Assumes that the number of data points for a request is approximately profiles * genes * samples
+    // Splits genes and profiles into chunks for requests so that no individual request is too large
+
+    const genesPerChunk = Math.max(
+        // this creates chunks which approximately will have the maximum data points per request
+        Math.floor(
+            maximumDataPointsPerRequest / (profileIds.length * numSamples)
+        ),
+
+        // but we can't have less than 1 gene per chunk
+        1
+    );
+
+    const profilesPerChunk = Math.max(
+        // this creates chunks that will make sure the responses are small enough given the
+        //  selected gene chunk size (in case genesPerChunk goes to 1 and it's still not
+        //  small enough)
+        Math.floor(maximumDataPointsPerRequest / (genesPerChunk * numSamples)),
+        1
+    );
+
+    return {
+        geneChunks: _.chunk(genes, genesPerChunk),
+        profileChunks: _.chunk(profileIds, profilesPerChunk),
+    };
 }
