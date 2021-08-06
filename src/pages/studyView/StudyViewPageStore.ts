@@ -380,22 +380,54 @@ export class StudyViewPageStore
     @action
     updateNAValue = (uniqueKey: string): void => {
         let newValue = this.isShowNAChecked(uniqueKey);
-        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        newFilter.showNA = newValue;
-        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        if (this.isGenericAssayChart(uniqueKey)) {
+            let newFilter = _.clone(
+                this._genericAssayDataBinFilterSet.get(uniqueKey)
+            )!;
+            newFilter.showNA = newValue;
+            this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
+        } else {
+            let newFilter = _.clone(
+                this._clinicalDataBinFilterSet.get(uniqueKey)
+            )!;
+            newFilter.showNA = newValue;
+            this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+        }
     };
 
     @action
     toggleNAValue = (uniqueKey: string): void => {
         this.updateNAValue(uniqueKey);
-        let newFilter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
+
+        let newFilter = this.isGenericAssayChart(uniqueKey)
+            ? _.clone(this._genericAssayDataBinFilterSet.get(uniqueKey))!
+            : _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
         let showNA = newFilter.showNA;
         newFilter.showNA = !showNA;
-        this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+
+        if (this.isGenericAssayChart(uniqueKey)) {
+            this._genericAssayDataBinFilterSet.set(
+                uniqueKey,
+                <GenericAssayDataBinFilter & { showNA?: boolean }>newFilter
+            );
+        } else {
+            this._clinicalDataBinFilterSet.set(
+                uniqueKey,
+                <ClinicalDataBinFilter & { showNA?: boolean }>newFilter
+            );
+        }
     };
 
     public isShowNAChecked = (uniqueKey: string): boolean => {
-        let filter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey));
+        let filter;
+        if (this.isGenericAssayChart(uniqueKey)) {
+            filter = _.clone(
+                this._genericAssayDataBinFilterSet.get(uniqueKey)
+            )!;
+        } else {
+            filter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey));
+        }
+
         let showNA = filter ? filter.showNA : undefined;
 
         // Show NA bars by default
@@ -1759,7 +1791,7 @@ export class StudyViewPageStore
     >();
     @observable private _genericAssayDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        GenericAssayDataBinFilter
+        GenericAssayDataBinFilter & { showNA?: boolean }
     >();
 
     @observable.ref private _geneFilterSet = observable.map<
@@ -6837,72 +6869,90 @@ export class StudyViewPageStore
 
     public getCustomChartDownloadData(chartMeta: ChartMeta): Promise<string> {
         return new Promise<string>(resolve => {
-            if (
-                chartMeta &&
-                chartMeta.uniqueKey &&
-                this._customChartsSelectedCases.has(chartMeta.uniqueKey)
-            ) {
-                let isPatientChart = true;
+            if (chartMeta && chartMeta.uniqueKey) {
+                let isPatientChart = chartMeta.patientAttribute;
                 let header = ['Study ID', 'Patient ID'];
 
-                if (!chartMeta.patientAttribute) {
-                    isPatientChart = false;
+                if (!isPatientChart) {
                     header.push('Sample ID');
                 }
                 header.push(chartMeta.displayName);
                 let data = [header.join('\t')];
-                if (isPatientChart) {
-                    data = data.concat(
-                        this.selectedPatients.map((patient: Patient) => {
-                            let record = _.find(
-                                this._customChartsSelectedCases.get(
-                                    chartMeta.uniqueKey
-                                ),
-                                (
-                                    caseIdentifier: CustomChartIdentifierWithValue
-                                ) => {
-                                    return (
-                                        caseIdentifier.studyId ===
-                                            patient.studyId &&
-                                        patient.patientId ===
-                                            caseIdentifier.patientId
-                                    );
-                                }
-                            );
-                            return [
-                                patient.studyId || Datalabel.NA,
-                                patient.patientId || Datalabel.NA,
-                                record === undefined ? 'NA' : record.value,
-                            ].join('\t');
-                        })
-                    );
-                } else {
+                if (
+                    chartMeta.uniqueKey ===
+                    SpecialChartsUniqueKeyEnum.CANCER_STUDIES
+                ) {
                     data = data.concat(
                         this.selectedSamples.result!.map((sample: Sample) => {
-                            let record = _.find(
-                                this._customChartsSelectedCases.get(
-                                    chartMeta.uniqueKey
-                                ),
-                                (
-                                    caseIdentifier: CustomChartIdentifierWithValue
-                                ) => {
-                                    return (
-                                        caseIdentifier.studyId ===
-                                            sample.studyId &&
-                                        sample.sampleId ===
-                                            caseIdentifier.sampleId
-                                    );
-                                }
-                            );
                             return [
                                 sample.studyId || Datalabel.NA,
                                 sample.patientId || Datalabel.NA,
                                 sample.sampleId || Datalabel.NA,
-                                record === undefined ? 'NA' : record.value,
+                                sample.studyId,
                             ].join('\t');
                         })
                     );
+                } else if (
+                    this._customChartsSelectedCases.has(chartMeta.uniqueKey)
+                ) {
+                    if (isPatientChart) {
+                        data = data.concat(
+                            this.selectedPatients.map((patient: Patient) => {
+                                let record = _.find(
+                                    this._customChartsSelectedCases.get(
+                                        chartMeta.uniqueKey
+                                    ),
+                                    (
+                                        caseIdentifier: CustomChartIdentifierWithValue
+                                    ) => {
+                                        return (
+                                            caseIdentifier.studyId ===
+                                                patient.studyId &&
+                                            patient.patientId ===
+                                                caseIdentifier.patientId
+                                        );
+                                    }
+                                );
+                                return [
+                                    patient.studyId || Datalabel.NA,
+                                    patient.patientId || Datalabel.NA,
+                                    record === undefined ? 'NA' : record.value,
+                                ].join('\t');
+                            })
+                        );
+                    } else {
+                        data = data.concat(
+                            this.selectedSamples.result!.map(
+                                (sample: Sample) => {
+                                    let record = _.find(
+                                        this._customChartsSelectedCases.get(
+                                            chartMeta.uniqueKey
+                                        ),
+                                        (
+                                            caseIdentifier: CustomChartIdentifierWithValue
+                                        ) => {
+                                            return (
+                                                caseIdentifier.studyId ===
+                                                    sample.studyId &&
+                                                sample.sampleId ===
+                                                    caseIdentifier.sampleId
+                                            );
+                                        }
+                                    );
+                                    return [
+                                        sample.studyId || Datalabel.NA,
+                                        sample.patientId || Datalabel.NA,
+                                        sample.sampleId || Datalabel.NA,
+                                        record === undefined
+                                            ? 'NA'
+                                            : record.value,
+                                    ].join('\t');
+                                }
+                            )
+                        );
+                    }
                 }
+
                 resolve(data.join('\n'));
             } else {
                 resolve('');

@@ -27,11 +27,12 @@ export function getHgvscColumnData(
     }
 
     let data: string | null =
-        variantAnnotation.annotation_summary.transcriptConsequenceSummary.hgvsc;
+        variantAnnotation.annotation_summary?.transcriptConsequenceSummary
+            ?.hgvsc || null;
 
     // return data from transcriptConsequenceSummaries if transcript dropdown is enabled
     if (selectedTranscriptId) {
-        const transcriptConsequenceSummary = variantAnnotation.annotation_summary.transcriptConsequenceSummaries.find(
+        const transcriptConsequenceSummary = variantAnnotation.annotation_summary?.transcriptConsequenceSummaries?.find(
             transcriptConsequenceSummary =>
                 transcriptConsequenceSummary.transcriptId ===
                 selectedTranscriptId
