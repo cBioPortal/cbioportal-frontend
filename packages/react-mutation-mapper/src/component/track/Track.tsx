@@ -110,12 +110,14 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     @action.bound
     onTrackItemClick(shapeComponent: TrackItem) {
-        updatePositionSelectionFilters(
-            this.props.dataStore,
-            shapeComponent.props.spec.startCodon,
-            this.shiftPressed,
-            this.props.defaultFilters
-        );
+        if (shapeComponent.props.spec.itemType === TrackItemType.CIRCLE) {
+            updatePositionSelectionFilters(
+                this.props.dataStore,
+                shapeComponent.props.spec.startCodon,
+                this.shiftPressed,
+                this.props.defaultFilters
+            );
+        }
     }
 
     @action.bound
@@ -208,13 +210,15 @@ export default class Track extends React.Component<TrackProps, {}> {
             let dim2;
             let hoverdim1;
             let specFeats;
+            let y;
             if (spec.endCodon !== undefined) {
                 dim1 =
                     ((spec.endCodon! - spec.startCodon) /
                         this.props.proteinLength) *
                     this.props.width;
-                dim2 = 50;
+                dim2 = 22;
                 hoverdim1 = dim1;
+                y = -this.svgHeight / 2;
                 specFeats = {
                     ...spec,
                     endCodon: spec.endCodon!,
@@ -227,6 +231,7 @@ export default class Track extends React.Component<TrackProps, {}> {
                         ? 5
                         : 2.8;
                 hoverdim1 = 5;
+                y = this.svgHeight / 2;
                 dim2 = dim1;
                 specFeats = { ...spec, itemType: TrackItemType.CIRCLE };
             }
@@ -244,7 +249,7 @@ export default class Track extends React.Component<TrackProps, {}> {
                         (spec.startCodon / this.props.proteinLength) *
                         this.props.width
                     }
-                    y={this.svgHeight / 2}
+                    y={y}
                     dim1={dim1}
                     dim2={dim2}
                     spec={specFeats}

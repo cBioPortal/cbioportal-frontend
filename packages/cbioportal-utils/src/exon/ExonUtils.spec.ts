@@ -186,6 +186,24 @@ describe('ExonUtils', () => {
                 transcriptInfo.utrs,
                 transcriptInfo.proteinLength
             );
+
+            assert.equal(
+                exonInfo[0].rank,
+                2,
+                'Entire first exon is within UTR so we should start on second'
+            );
+
+            assert.equal(
+                exonInfo[0].start,
+                0,
+                'We always start at 0 for the first exon in our array'
+            );
+
+            assert.equal(
+                exonInfo[0].length,
+                13.0 / 3,
+                'Difference between end of utr 2 and exon 2 ends'
+            );
         });
     });
 });

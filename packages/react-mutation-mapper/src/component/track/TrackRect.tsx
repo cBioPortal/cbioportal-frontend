@@ -39,7 +39,7 @@ export default class TrackRect extends React.Component<TrackRectProps, {}> {
 
     public static defaultProps = {
         width: 50,
-        height: 10,
+        height: 15,
     };
 
     private get centerX() {

@@ -62,9 +62,9 @@ export function extractExonInformation(
 }
 
 export function formatExonLocation(exonLocation: number) {
-    const numNucleotidesOver = Math.round((exonLocation * 3) % 3);
+    const numNucleotidesOver = Math.round(exonLocation * 3) % 3;
     if (numNucleotidesOver === 0) {
-        return exonLocation.toString();
+        return Math.round(exonLocation).toString();
     } else if (numNucleotidesOver === 1) {
         return Math.trunc(exonLocation).toString() + ' ⅓';
     } else {
