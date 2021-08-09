@@ -3491,6 +3491,8 @@ export class StudyViewPageStore
         await: () => [this.selectedSamples],
         invoke: () => {
             //only invoke if there are filtered samples
+
+            console.log('invoking');
             if (
                 this.hasFilteredSamples &&
                 !_.isEmpty(this.unfilteredAttrsForNonNumerical)
@@ -3502,6 +3504,7 @@ export class StudyViewPageStore
                     },
                 });
             }
+
             return Promise.resolve([]);
         },
         onError: () => {},
@@ -3510,7 +3513,7 @@ export class StudyViewPageStore
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
                     this.showAsPieChart(uniqueKey, item.counts.length);
-                    this.newlyAddedCharts.remove(uniqueKey);
+                    //this.newlyAddedCharts.remove(uniqueKey);
                 }
             });
         },
@@ -3567,6 +3570,7 @@ export class StudyViewPageStore
         default: [],
         onError: () => {},
         onResult: data => {
+            console.log('onRersult', data);
             data.forEach(item => {
                 const uniqueKey = item.attributeId;
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
