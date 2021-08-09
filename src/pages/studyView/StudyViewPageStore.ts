@@ -1818,7 +1818,7 @@ export class StudyViewPageStore
 
     @observable public chartsType = observable.map<ChartUniqueKey, ChartType>();
 
-    private newlyAddedCharts = observable.array<string>();
+    private _newlyAddedCharts = new Set();
 
     @observable public sharedGroupSet: { [id: string]: boolean } = {};
     @observable public sharedCustomChartSet: { [id: string]: boolean } = {};
@@ -1837,7 +1837,7 @@ export class StudyViewPageStore
     @observable pageStatusMessages: { [code: string]: StatusMessage } = {};
 
     public isNewlyAdded(uniqueKey: string): boolean {
-        return this.newlyAddedCharts.includes(uniqueKey);
+        return this._newlyAddedCharts.has(uniqueKey);
     }
 
     @action
@@ -3132,7 +3132,7 @@ export class StudyViewPageStore
     addCharts(visibleChartIds: string[]): void {
         visibleChartIds.forEach(chartId => {
             if (!this._chartVisibility.has(chartId)) {
-                this.newlyAddedCharts.push(chartId);
+                this._newlyAddedCharts.add(chartId);
             }
         });
         this.updateChartsVisibility(visibleChartIds);
@@ -3429,7 +3429,7 @@ export class StudyViewPageStore
             .filter((attr: ClinicalAttribute) => {
                 if (attr.datatype !== DataType.NUMBER) {
                     const key = getUniqueKey(attr);
-                    if (this.newlyAddedCharts.includes(key)) {
+                    if (this._newlyAddedCharts.has(key)) {
                         return true;
                     }
                     return false;
@@ -3451,7 +3451,7 @@ export class StudyViewPageStore
             .filter((attr: ClinicalAttribute) => {
                 if (attr.datatype === DataType.NUMBER) {
                     const key = getUniqueKey(attr);
-                    if (this.newlyAddedCharts.includes(key)) {
+                    if (this._newlyAddedCharts.has(key)) {
                         return true;
                     }
                     return false;
@@ -3510,7 +3510,7 @@ export class StudyViewPageStore
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
                     this.showAsPieChart(uniqueKey, item.counts.length);
-                    this.newlyAddedCharts.remove(uniqueKey);
+                    this._newlyAddedCharts.delete(uniqueKey);
                 }
             });
         },
@@ -3537,7 +3537,7 @@ export class StudyViewPageStore
                 const uniqueKey = item.attributeId;
                 if (this.isNewlyAdded(uniqueKey)) {
                     this.showAsPieChart(uniqueKey, item.counts.length);
-                    this.newlyAddedCharts.remove(uniqueKey);
+                    this._newlyAddedCharts.delete(uniqueKey);
                 }
             });
         },
@@ -3571,7 +3571,7 @@ export class StudyViewPageStore
                 const uniqueKey = item.attributeId;
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
                 this.showAsPieChart(uniqueKey, item.counts.length);
-                this.newlyAddedCharts.remove(uniqueKey);
+                this._newlyAddedCharts.delete(uniqueKey);
             });
         },
     });
@@ -3606,7 +3606,7 @@ export class StudyViewPageStore
                 _.groupBy(data, item => item.id),
                 (item, key) => {
                     this.unfilteredClinicalDataBinCountCache[key] = item;
-                    this.newlyAddedCharts.remove(key);
+                    this._newlyAddedCharts.delete(key);
                 }
             );
         },
@@ -4871,8 +4871,8 @@ export class StudyViewPageStore
                 .uniq()
                 .value();
             this.setCustomChartFilters(chartMeta.uniqueKey, filters);
-            this.newlyAddedCharts.clear();
-            this.newlyAddedCharts.push(uniqueKey);
+            this._newlyAddedCharts.clear();
+            this._newlyAddedCharts.add(uniqueKey);
         }
     }
 
@@ -4882,7 +4882,7 @@ export class StudyViewPageStore
         loadedfromUserSettings: boolean = false
     ): void {
         if (!loadedfromUserSettings) {
-            this.newlyAddedCharts.clear();
+            this._newlyAddedCharts.clear();
         }
         newCharts.forEach(newChart => {
             const uniqueKey = getGenomicChartUniqueKey(
@@ -4922,7 +4922,7 @@ export class StudyViewPageStore
             }
 
             if (!loadedfromUserSettings) {
-                this.newlyAddedCharts.push(uniqueKey);
+                this._newlyAddedCharts.add(uniqueKey);
             }
         });
     }
@@ -4933,7 +4933,7 @@ export class StudyViewPageStore
         loadedfromUserSettings: boolean = false
     ): void {
         if (!loadedfromUserSettings) {
-            this.newlyAddedCharts.clear();
+            this._newlyAddedCharts.clear();
         }
         newCharts.forEach(newChart => {
             const uniqueKey = getGenericAssayChartUniqueKey(
@@ -4974,7 +4974,7 @@ export class StudyViewPageStore
             }
 
             if (!loadedfromUserSettings) {
-                this.newlyAddedCharts.push(uniqueKey);
+                this._newlyAddedCharts.add(uniqueKey);
             }
         });
     }
