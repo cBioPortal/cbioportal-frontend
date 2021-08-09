@@ -1567,7 +1567,6 @@ export function transitionCategoricalTrack(
             rule_set_params,
             data: nextSpec.data,
             data_id_key: 'uid',
-            track_padding: 0,
             label: nextSpec.label,
             target_group: nextSpec.trackGroupIndex,
             removable:
