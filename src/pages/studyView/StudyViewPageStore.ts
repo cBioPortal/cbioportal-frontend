@@ -2057,6 +2057,42 @@ export class StudyViewPageStore
             toJS(this.initialFiltersQuery),
             initialFilter
         );
+
+        if (this.customDriverAnnotationReport.isComplete) {
+            const driverAnnotationSettings: DriverAnnotationSettings = buildDriverAnnotationSettings(
+                () => false
+            );
+            initializeCustomDriverAnnotationSettings(
+                this.customDriverAnnotationReport.result!,
+                driverAnnotationSettings,
+                driverAnnotationSettings.customTiersDefault
+            );
+
+            studyViewFilter.alterationFilter = ({
+                // select all CNA types
+                copyNumberAlterationEventTypes: {
+                    [CopyNumberEnrichmentEventType.AMP]: true,
+                    [CopyNumberEnrichmentEventType.HOMDEL]: true,
+                },
+                // select all mutation types
+                mutationEventTypes: {
+                    [MutationEnrichmentEventType.any]: true,
+                },
+                structuralVariants: null,
+                includeDriver: driverAnnotationSettings.includeDriver,
+                includeVUS: driverAnnotationSettings.includeVUS,
+                includeUnknownOncogenicity:
+                    driverAnnotationSettings.includeUnknownOncogenicity,
+                includeUnknownTier: driverAnnotationSettings.includeUnknownTier,
+                includeGermline: true,
+                includeSomatic: true,
+                includeUnknownStatus: true,
+                tiersBooleanMap: this.selectedDriverTiersMap.isComplete
+                    ? this.selectedDriverTiersMap.result!
+                    : {},
+            } as unknown) as AlterationFilter;
+        }
+
         //studyViewFilter can only have studyIds or sampleIdentifiers
         if (!_.isEmpty(studyViewFilter.sampleIdentifiers)) {
             delete (studyViewFilter as Partial<StudyViewFilter>).studyIds;
