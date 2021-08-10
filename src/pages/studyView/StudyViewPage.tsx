@@ -67,6 +67,7 @@ import { StudyViewComparisonGroup } from 'pages/groupComparison/GroupComparisonU
 import { CustomChart } from 'shared/api/sessionServiceAPI';
 import { parse } from 'query-string';
 import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
+import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -525,15 +526,7 @@ export default class StudyViewPage extends React.Component<
                 )}
 
                 {this.store.comparisonConfirmationModal}
-                {this.store.unknownQueriedIds.isComplete &&
-                    this.store.unknownQueriedIds.result.length > 0 && (
-                        <Alert bsStyle="danger">
-                            <span>
-                                Unknown/Unauthorized studies{' '}
-                                {this.store.unknownQueriedIds.result.join(', ')}
-                            </span>
-                        </Alert>
-                    )}
+
                 <LoadingIndicator
                     size={'big'}
                     isLoading={
@@ -949,6 +942,35 @@ export default class StudyViewPage extends React.Component<
         );
     }
 
+    private readonly body = MakeMobxView({
+        await: () => [this.store.unknownQueriedIds],
+        render: () => {
+            // we can tell if there are any valid studies
+            // by looking to see if there is anything in queriedPhysicalStudyIds
+            // we have to do this because studyIds property has the virtualStudy id (in that setting)
+            if (
+                this.store.unknownQueriedIds.result.length &&
+                this.store.queriedPhysicalStudyIds.result.length === 0
+            ) {
+                const pluralForm =
+                    this.store.unknownQueriedIds.result.length > 1
+                        ? 'Studies'
+                        : 'Study';
+                return (
+                    <ErrorScreen
+                        title={`Unknown/Unauthorized ${pluralForm}`}
+                        body={`The following studies are unknown or you lack privileges to view them:
+                            ${this.store.unknownQueriedIds.result.join(', ')}
+                            `}
+                    />
+                );
+            } else {
+                return this.content();
+            }
+        },
+        renderPending: () => <LoadingIndicator isLoading={true} />,
+    });
+
     componentWillUnmount(): void {
         this.store.destroy();
         clearInterval(this.toolbarLeftUpdater);
@@ -961,7 +983,7 @@ export default class StudyViewPage extends React.Component<
                 hideFooter={true}
                 className={'subhead-dark'}
             >
-                {this.content()}
+                {this.body.component}
             </PageLayout>
         );
     }
