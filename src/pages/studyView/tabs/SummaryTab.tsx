@@ -332,7 +332,7 @@ export class StudySummaryTab extends React.Component<
                 props.filterAlterations = this.store.isGlobalAlterationFilterActive;
                 break;
             }
-            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
+            case ChartTypeEnum.DATA_PROFILES_TABLE: {
                 props.filters = toJS(this.store.genomicProfilesFilter);
                 props.promise = this.store.molecularProfileSampleCounts;
                 props.onValueSelection = this.store.addGenomicProfilesFilter;

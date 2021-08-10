@@ -69,7 +69,7 @@ export enum ChartTypeEnum {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     STRUCTURAL_VARIANT_GENES_TABLE = 'STRUCTURAL_VARIANT_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    GENOMIC_PROFILES_TABLE = 'GENOMIC_PROFILES_TABLE',
+    DATA_PROFILES_TABLE = 'DATA_PROFILES_TABLE',
     CASE_LIST_TABLE = 'CASE_LIST_TABLE',
     SAMPLE_TREATMENTS_TABLE = 'SAMPLE_TREATMENTS_TABLE',
     PATIENT_TREATMENTS_TABLE = 'PATIENT_TREATMENTS_TABLE',
@@ -85,7 +85,7 @@ export enum ChartTypeNameEnum {
     MUTATED_GENES_TABLE = 'table',
     STRUCTURAL_VARIANT_GENES_TABLE = 'table',
     CNA_GENES_TABLE = 'table',
-    GENOMIC_PROFILES_TABLE = 'table',
+    DATA_PROFILES_TABLE = 'table',
     CASE_LIST_TABLE = 'table',
     SAMPLE_TREATMENTS_TABLE = 'table',
     PATIENT_TREATMENTS_TABLE = 'table',
@@ -106,7 +106,7 @@ const studyViewFrontEnd = {
     priority: {
         CANCER_TYPE: 3000,
         CANCER_TYPE_DETAILED: 2000,
-        GENOMIC_PROFILES_SAMPLE_COUNT: 1000,
+        DATA_PROFILES: 1000,
         CASE_LISTS_SAMPLE_COUNT: 1000,
         OS_SURVIVAL: 400,
         DFS_SURVIVAL: 300,
@@ -191,7 +191,7 @@ const studyViewFrontEnd = {
                 h: 2,
                 minW: 2,
             },
-            [ChartTypeEnum.GENOMIC_PROFILES_TABLE]: {
+            [ChartTypeEnum.DATA_PROFILES_TABLE]: {
                 w: 2,
                 h: 2,
                 minW: 2,

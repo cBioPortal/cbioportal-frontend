@@ -25,6 +25,7 @@ import {
     ChartMeta,
     ChartType,
     ClinicalDataCountSummary,
+    getGenePanelChartUniqueKey,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
@@ -681,7 +682,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     );
                 };
             }
-            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
+            case ChartTypeEnum.DATA_PROFILES_TABLE: {
                 return () => (
                     <MultiSelectionTable
                         tableType={FreqColumnTypeEnum.DATA}
@@ -710,10 +711,18 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeCancerGeneFilter={
                             this.props.onChangeCancerGeneFilter!
                         }
+                        toggleGenePanelChartVisibility={(profileId: string) => {
+                            this.props.store.resetFilterAndToggleChartVisibility(
+                                getGenePanelChartUniqueKey(profileId)
+                            );
+                        }}
+                        visibleChartIds={this.props.store.visibleAttributes.map(
+                            chartMeta => chartMeta.uniqueKey
+                        )}
                         columns={[
                             {
                                 columnKey:
-                                    MultiSelectionTableColumnKey.MOLECULAR_PROFILE,
+                                    MultiSelectionTableColumnKey.DATA_PROFILE,
                             },
                             {
                                 columnKey: MultiSelectionTableColumnKey.NUMBER,

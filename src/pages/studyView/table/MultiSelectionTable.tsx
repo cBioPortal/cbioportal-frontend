@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
 import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
+import memoize from 'memoize-weak-decorator';
 import {
     Column,
     SortDirection,
@@ -19,6 +20,7 @@ import {
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
+    getGenePanelChartUniqueKey,
 } from 'pages/studyView/StudyViewUtils';
 import { OncokbCancerGene } from 'pages/studyView/StudyViewPageStore';
 import {
@@ -34,9 +36,11 @@ import MobxPromise from 'mobxpromise';
 import {
     stringListToIndexSet,
     stringListToSet,
+    DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
 import ifNotDefined from 'shared/lib/ifNotDefined';
+import { ICON_ACTIVE } from 'shared/lib/Colors';
 import { TableHeaderCellFilterIcon } from 'pages/studyView/table/TableHeaderCellFilterIcon';
 
 export type MultiSelectionTableRow = OncokbCancerGene & {
@@ -53,7 +57,7 @@ export type MultiSelectionTableRow = OncokbCancerGene & {
 
 export enum MultiSelectionTableColumnKey {
     GENE = 'Gene',
-    MOLECULAR_PROFILE = 'Molecular Profile',
+    DATA_PROFILE = 'Data Profile',
     CASE_LIST = 'Name',
     NUMBER_STRUCTURAL_VARIANTS = '# SV',
     NUMBER_MUTATIONS = '# Mut',
@@ -87,6 +91,8 @@ export type MultiSelectionTableProps = {
     genePanelCache: MobxPromiseCache<{ genePanelId: string }, GenePanel>;
     filterByCancerGenes: boolean;
     onChangeCancerGeneFilter: (filtered: boolean) => void;
+    toggleGenePanelChartVisibility?: (profileId: string) => void;
+    visibleChartIds?: string[];
     alterationFilterEnabled?: boolean;
     filterAlterations?: boolean;
     defaultSortBy: MultiSelectionTableColumnKey;
@@ -97,7 +103,7 @@ const DEFAULT_COLUMN_WIDTH_RATIO: {
     [key in MultiSelectionTableColumnKey]: number;
 } = {
     [MultiSelectionTableColumnKey.GENE]: 0.35,
-    [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0.6,
+    [MultiSelectionTableColumnKey.DATA_PROFILE]: 0.6,
     [MultiSelectionTableColumnKey.CASE_LIST]: 0.6,
     [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: 0.25,
     [MultiSelectionTableColumnKey.NUMBER_STRUCTURAL_VARIANTS]: 0.2,
@@ -135,6 +141,11 @@ export class MultiSelectionTable extends React.Component<
         makeObservable(this);
         this.sortBy = this.props.defaultSortBy;
     }
+
+    @memoize
+    toggleGenePanelChartVisibility = (data: MultiSelectionTableRow) => () => {
+        this.props.toggleGenePanelChartVisibility!(data.uniqueKey);
+    };
 
     getDefaultColumnDefinition = (
         columnKey: MultiSelectionTableColumnKey,
@@ -190,25 +201,43 @@ export class MultiSelectionTable extends React.Component<
                 },
                 width: columnWidth,
             },
-            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: {
+            [MultiSelectionTableColumnKey.DATA_PROFILE]: {
                 name: columnKey,
-                headerRender: () => {
-                    return (
-                        <div
-                            style={{ marginLeft: cellMargin }}
-                            className={styles.displayFlex}
-                            data-test="profile-column-header"
-                        >
-                            {columnKey}
-                        </div>
-                    );
-                },
+                headerRender: () => <div />,
                 render: (data: MultiSelectionTableRow) => {
                     return (
                         <div className={styles.labelContent}>
-                            <EllipsisTextTooltip
-                                text={data.label}
-                            ></EllipsisTextTooltip>
+                            <EllipsisTextTooltip text={data.label} />
+                            {this.props.toggleGenePanelChartVisibility &&
+                                this.props.visibleChartIds && (
+                                    <DefaultTooltip
+                                        overlay={
+                                            <span>
+                                                Toggle visibility of
+                                                corresponding gene panel chart
+                                            </span>
+                                        }
+                                        trigger={['hover']}
+                                    >
+                                        <i
+                                            className="fa fa-pie-chart"
+                                            onClick={this.toggleGenePanelChartVisibility(
+                                                data
+                                            )}
+                                            style={{
+                                                cursor: 'pointer',
+                                                marginLeft: 10,
+                                                color: this.props.visibleChartIds.includes(
+                                                    getGenePanelChartUniqueKey(
+                                                        data.uniqueKey
+                                                    )
+                                                )
+                                                    ? ICON_ACTIVE
+                                                    : undefined,
+                                            }}
+                                        />
+                                    </DefaultTooltip>
+                                )}
                         </div>
                     );
                 },
@@ -471,7 +500,7 @@ export class MultiSelectionTable extends React.Component<
     ) => {
         const defaults: { [key in MultiSelectionTableColumnKey]: number } = {
             [MultiSelectionTableColumnKey.GENE]: 0,
-            [MultiSelectionTableColumnKey.MOLECULAR_PROFILE]: 0,
+            [MultiSelectionTableColumnKey.DATA_PROFILE]: 0,
             [MultiSelectionTableColumnKey.CASE_LIST]: 0,
             [MultiSelectionTableColumnKey.NUMBER_MUTATIONS]: correctMargin(
                 getFixedHeaderNumberCellMargin(
