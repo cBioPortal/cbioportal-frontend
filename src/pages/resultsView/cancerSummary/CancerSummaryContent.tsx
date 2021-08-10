@@ -95,6 +95,7 @@ export interface ICancerSummaryChartData {
         x: string;
         y: number;
         alterationType: string;
+        alterationCount: number;
     }[][];
     alterationTypeDataCounts: {
         x: string;
@@ -400,6 +401,7 @@ export class CancerSummaryContent extends React.Component<
 
                             memo.push({
                                 alterationType: alterationKey,
+                                alterationCount: alterationCount,
                                 x: label,
                                 xKey: groupKey,
                                 y: this.getYValue(
@@ -416,6 +418,7 @@ export class CancerSummaryContent extends React.Component<
                         y: number;
                         xKey: string;
                         alterationType: string;
+                        alterationCount: number;
                     }[]
                 );
             }
