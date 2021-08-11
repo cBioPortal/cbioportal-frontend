@@ -6,14 +6,15 @@ type TrackCircleProps = {
     x: number;
     y: number;
     radius?: number;
+    isHovered: boolean;
     hoverRadius?: number;
     hitZoneClassName?: string;
     hitZoneXOffset?: number;
-    spec: TrackItemSpec;
+    spec: TrackCircleSpec;
 };
 
-export type TrackItemSpec = {
-    codon: number;
+export type TrackCircleSpec = {
+    startCodon: number;
     label?: string;
     color?: string;
     tooltip?: JSX.Element;
@@ -30,22 +31,10 @@ export default class TrackCircle extends React.Component<TrackCircleProps, {}> {
         hoverRadius: 5,
     };
 
-    @observable public isHovered = false;
-
     @computed get circleRadius() {
-        return this.isHovered ? this.props.hoverRadius : this.props.radius;
-    }
-
-    @computed public get hitRectangle() {
-        const hoverRadius =
-            this.props.hoverRadius || TrackCircle.defaultProps.hoverRadius;
-
-        return {
-            x: this.props.x - hoverRadius + (this.props.hitZoneXOffset || 0),
-            y: this.props.y,
-            width: hoverRadius * 2,
-            height: hoverRadius * 2,
-        };
+        return this.props.isHovered
+            ? this.props.hoverRadius
+            : this.props.radius;
     }
 
     public render() {

@@ -12,6 +12,7 @@ import MutationMapperStore from '../../model/MutationMapperStore';
 import { TrackName, TrackVisibility } from './TrackSelector';
 import HotspotTrack from './HotspotTrack';
 import OncoKbTrack from './OncoKbTrack';
+import ExonTrack from './ExonTrack';
 import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';
@@ -31,7 +32,12 @@ type TrackPanelProps = {
 @observer
 export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     public static defaultProps: Partial<TrackPanelProps> = {
-        tracks: [TrackName.CancerHotspots, TrackName.OncoKB, TrackName.dbPTM],
+        tracks: [
+            TrackName.CancerHotspots,
+            TrackName.OncoKB,
+            TrackName.dbPTM,
+            TrackName.Exon,
+        ],
     };
 
     constructor(props: TrackPanelProps) {
@@ -80,6 +86,17 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 TrackName.UniprotPTM,
                 PtmSource.Uniprot
             ),
+            [TrackName.Exon]:
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.Exon] === 'visible' ? (
+                    <ExonTrack
+                        store={this.props.store}
+                        dataStore={this.props.store.dataStore}
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : null,
         };
     }
 
