@@ -62,16 +62,31 @@ export function updatePositionSelectionFilters(
 
 export function updatePositionHighlightFilters(
     dataStore: DataStore,
-    position: number,
+    positions: number[],
     defaultFilters: DataFilter[] = []
 ) {
     dataStore.clearHighlightFilters();
 
     const positionFilter = {
         type: DataFilterType.POSITION,
-        values: [position],
+        values: positions,
     };
     dataStore.setHighlightFilters([...defaultFilters, positionFilter]);
+}
+
+export function updatePositionRangeHighlightFilters(
+    dataStore: DataStore,
+    startPosition: number,
+    endPosition: number,
+    defaultFilters: DataFilter[] = []
+) {
+    const positions: number[] = [];
+
+    for (let i = startPosition; i <= endPosition; i++) {
+        positions.push(i);
+    }
+
+    updatePositionHighlightFilters(dataStore, positions, defaultFilters);
 }
 
 export function findAllUniquePositions(filters: DataFilter[]): number[] {
