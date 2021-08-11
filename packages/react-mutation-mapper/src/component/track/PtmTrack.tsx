@@ -19,7 +19,7 @@ import {
 import MutationMapperStore from '../../model/MutationMapperStore';
 import PtmAnnotationTable from '../ptm/PtmAnnotationTable';
 import { default as Track, TrackProps } from './Track';
-import { TrackItemSpec } from './TrackCircle';
+import { TrackItemSpec } from './TrackItem';
 
 import styles from './ptmTrackStyles.module.scss';
 
@@ -113,8 +113,6 @@ function filterPtmsBySource(
 ): PostTranslationalModification[] {
     return source ? ptms.filter(ptm => ptm.source === source) : ptms;
 }
-
-const PTM_ID_CLASS_PREFIX = 'ptm-';
 
 @observer
 export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
@@ -254,7 +252,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                       width={this.props.width}
                       proteinLength={this.props.proteinLength}
                       trackItems={item.specs}
-                      idClassPrefix={`${PTM_ID_CLASS_PREFIX}${index}-`}
+                      idClassPrefix={`ptm-${index}-`}
                   />
               ))
             : null;
@@ -279,7 +277,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                     trackTitle={this.mainTrackTitle}
                     trackItems={this.mainTrackHidden ? [] : this.ptmSpecs}
                     hideBaseline={this.mainTrackHidden}
-                    idClassPrefix={PTM_ID_CLASS_PREFIX}
+                    idClassPrefix={'ptm-'}
                 />
                 <Collapse isOpened={this.mainTrackHidden}>
                     <span>{this.subTracks}</span>
@@ -300,7 +298,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
 
         if (!_.isEmpty(ptms)) {
             acc.push({
-                codon: Number(position),
+                startCodon: Number(position),
                 color: ptmColor(ptms),
                 tooltip: (
                     <PtmTooltip

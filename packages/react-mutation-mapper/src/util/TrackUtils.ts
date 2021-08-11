@@ -7,5 +7,6 @@ export function initDefaultTrackVisibility(): TrackVisibility {
         [TrackName.dbPTM]: 'hidden',
         [TrackName.UniprotPTM]: 'hidden',
         [TrackName.PDB]: 'hidden',
+        [TrackName.Exon]: 'hidden',
     };
 }
