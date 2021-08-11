@@ -51,7 +51,7 @@ import {
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
-    customChartsFilter: { [key: string]: string[] };
+    customChartsFilter: ClinicalDataFilter[];
     numberOfSelectedSamplesInCustomSelection: number;
     comparisonGroupSelection: StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta & { chartType: ChartType } };
@@ -284,62 +284,16 @@ export default class UserSelections extends React.Component<
         }
 
         // All custom data charts
-        if (!_.isEmpty(this.props.customChartsFilter)) {
-            _.reduce(
-                this.props.customChartsFilter,
-                (acc, content: string[], key: string) => {
-                    const chartMeta = this.props.attributesMetaSet[key];
-                    if (chartMeta) {
-                        acc.push(
-                            <div className={styles.parentGroupLogic}>
-                                <GroupLogic
-                                    components={[
-                                        <span
-                                            className={
-                                                styles.filterClinicalAttrName
-                                            }
-                                        >
-                                            {chartMeta.displayName}
-                                        </span>,
-                                        <GroupLogic
-                                            components={content.map(label => {
-                                                return (
-                                                    <PillTag
-                                                        content={label}
-                                                        backgroundColor={
-                                                            STUDY_VIEW_CONFIG
-                                                                .colors.theme
-                                                                .clinicalFilterContent
-                                                        }
-                                                        onDelete={() =>
-                                                            this.props.updateCustomChartFilter(
-                                                                chartMeta.uniqueKey,
-                                                                _.remove(
-                                                                    content,
-                                                                    value =>
-                                                                        value !==
-                                                                        label
-                                                                )
-                                                            )
-                                                        }
-                                                    />
-                                                );
-                                            })}
-                                            operation={'or'}
-                                            group={false}
-                                        />,
-                                    ]}
-                                    operation={':'}
-                                    group={false}
-                                />
-                            </div>
-                        );
-                    }
-                    return acc;
-                },
-                components
-            );
-        }
+        this.renderClinicalDataFilters(
+            this.props.customChartsFilter,
+            components,
+            (uniqueKey: string, values: DataFilterValue[]) => {
+                this.props.updateCustomChartFilter(
+                    uniqueKey,
+                    values.map(datum => datum.value)
+                );
+            }
+        );
 
         _.reduce(
             this.props.filter.geneFilters || [],

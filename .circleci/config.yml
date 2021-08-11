@@ -177,6 +177,15 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
+  
+  end_to_end_tests_against_master:
+    <<: *defaults
+    environment:
+      SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
+      JUNIT_REPORT_PATH: ./remote/junit/
+      SCREENSHOT_DIRECTORY: ./remote/screenshots
+      CBIOPORTAL_URL: https://master.cbioportal.org
+    <<: *run_e2e_and_save_artifacts
 
   end_to_end_tests_localdb:
     working_directory: /tmp/repo
@@ -266,10 +275,12 @@ jobs:
           command: |
             $TEST_HOME/docker_compose/start.sh
       - run:
-          name: Change owner of MySQL database files (needed by cache)
+          name: Change owner of keycloak MySQL database files (needed by cache)
           command: |
-            sudo chmod -R 777 $KC_DB_DATA_DIR && \
-            sudo chown -R circleci:circleci $KC_DB_DATA_DIR
+              if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
+                  sudo chmod -R 777 $KC_DB_DATA_DIR && \
+                  sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
+              fi
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
@@ -293,10 +304,8 @@ jobs:
            destination: /errorShots
       - store_test_results:
           path: /tmp/repo/end-to-end-test/local/junit
-          destination: /results
-      #      - store_artifacts:
-      #          path: /tmp/repo/end-to-end-test/local/junit
-      #          destination: /results
+      - store_artifacts:
+          path: /tmp/repo/end-to-end-test/local/junit
       - store_artifacts:
           path: /tmp/repo/end-to-end-test/shared/imageCompare.html
           destination: /imageCompare.html
@@ -343,6 +352,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
+      - end_to_end_tests_against_master:
+          requires:
+            - install
       - end_to_end_tests_localdb:
           requires:
             - install
@@ -375,7 +387,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
+      - end_to_end_tests_against_master:
+          requires:
+            - install
       - end_to_end_tests_localdb:
           requires:
             - install
-

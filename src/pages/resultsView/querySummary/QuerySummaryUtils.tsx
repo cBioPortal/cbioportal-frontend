@@ -6,16 +6,20 @@ import { buildCBioPortalPageUrl } from '../../../shared/api/urls';
 
 export function getPatientSampleSummary(samples: any[], patients: any[]) {
     if (samples.length !== patients.length) {
+        const patientUnits = patients.length === 1 ? 'patient' : 'patients';
+        const sampleUnits = samples.length === 1 ? 'sample' : 'samples';
         return (
             <span>
-                <strong>{patients.length}</strong> patients /{' '}
-                <strong>{samples.length}</strong> samples
+                <strong>{patients.length}</strong> {patientUnits} /{' '}
+                <strong>{samples.length}</strong> {sampleUnits}
             </span>
         );
     } else {
+        const units =
+            samples.length === 1 ? 'patient/sample' : 'patients/samples';
         return (
             <span>
-                <strong>{samples.length}</strong> patients/samples
+                <strong>{samples.length}</strong> {units}
             </span>
         );
     }
@@ -84,8 +88,8 @@ export function getAlterationSummary(
 export function submitToStudyViewPage(
     queriedStudies: Pick<CancerStudy, 'studyId'>[],
     samples: Pick<Sample, 'sampleId' | 'studyId'>[],
-    hasVirtualStudies: boolean,
     samplesAreFiltered: boolean,
+    hasVirtualStudies?: boolean,
     sampleLists?: Pick<SampleList, 'category'>[]
 ) {
     const hasAllCaseLists = _.some(

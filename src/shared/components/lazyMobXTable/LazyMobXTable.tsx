@@ -464,10 +464,28 @@ export class LazyMobXTableStore<T> {
                     }
                 };
             }
+
+            let sortIcon = null;
             if (this.sortColumn === column.name) {
-                headerProps.className = this.sortAscending
-                    ? 'sort-asc'
-                    : 'sort-des';
+                if (this.sortAscending) {
+                    headerProps.className = 'sort-asc';
+                    sortIcon = (
+                        <i
+                            className={
+                                'fa fa-sort-asc lazyMobxTableSortArrowAsc'
+                            }
+                        />
+                    );
+                } else {
+                    headerProps.className = 'sort-des';
+                    sortIcon = (
+                        <i
+                            className={
+                                'fa fa-sort-desc lazyMobxTableSortArrowDesc'
+                            }
+                        />
+                    );
+                }
             }
 
             let label;
@@ -488,7 +506,12 @@ export class LazyMobXTableStore<T> {
                 thContents = label;
             }
 
-            thContents = <span {...headerProps}>{thContents}</span>;
+            thContents = (
+                <span {...headerProps}>
+                    {thContents}
+                    {sortIcon}
+                </span>
+            );
 
             if (
                 this._columnToHeaderFilterIconModal &&
@@ -509,7 +532,6 @@ export class LazyMobXTableStore<T> {
                         }}
                     >
                         {thContents}
-                        &nbsp;&nbsp;
                         {this._columnToHeaderFilterIconModal(column)}
                     </div>
                 );
@@ -823,6 +845,7 @@ export default class LazyMobXTable<T> extends React.Component<
     private filterInput: HTMLInputElement;
     private filterInputReaction: IReactionDisposer;
     private pageToHighlightReaction: IReactionDisposer;
+    private isChildTable: boolean;
 
     public static defaultProps = {
         showFilter: true,
@@ -1010,11 +1033,15 @@ export default class LazyMobXTable<T> extends React.Component<
                     }
                 }
             };
+        } else {
+            this.isChildTable = true;
         }
     }
 
     componentWillUnmount() {
-        window.onmousemove = null;
+        if (!this.isChildTable) {
+            document.onmousemove = null;
+        }
         this.filterInputReaction();
         this.pageToHighlightReaction();
         if (this.props.storeColumnVisibility) {

@@ -68,6 +68,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             [studyId: string]: MolecularProfile;
         },
         public studyIdToStudy: MobxPromise<{ [studyId: string]: CancerStudy }>,
+        public queriedStudies: MobxPromise<CancerStudy[]>,
         public molecularProfileIdToMolecularProfile: MobxPromise<{
             [molecularProfileId: string]: MolecularProfile;
         }>,

@@ -148,6 +148,7 @@ import {
     FilteredAndAnnotatedStructuralVariantsReport,
     filterSubQueryData,
     getExtendsClinicalAttributesFromCustomData,
+    getGeneAndProfileChunksForRequest,
     getMolecularProfiles,
     getSampleAlteredMap,
     groupDataByCase,
@@ -1290,7 +1291,13 @@ export class ResultsViewPageStore
     );
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
-        await: () => [this.sampleKeyToSample, this.molecularData_preload],
+        await: () => [
+            this.sampleKeyToSample,
+            this.molecularData_preload,
+            this.genes,
+            this.selectedMolecularProfiles,
+            this.samples,
+        ],
         invoke: () => {
             const sampleKeys = this.sampleKeyToSample.result!;
             return Promise.resolve(
@@ -1306,47 +1313,71 @@ export class ResultsViewPageStore
     // 1. we can load this data before we know samples
     // 2. backend can cache based on finite set of profiles
     // we then have to filter this using samples, which can be loaded concurrently instead of serially
-    readonly molecularData_preload = remoteData<NumericGeneMolecularData[]>(
-        {
-            await: () => [
-                this.studyToDataQueryFilter,
-                this.genes,
-                this.selectedMolecularProfiles,
-            ],
-            invoke: async () => {
-                // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
-                // filter out mutation genetic profile and structural variant profiles and generic assay profiles
-                const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
-                    this.selectedMolecularProfiles.result!
+    readonly molecularData_preload = remoteData<NumericGeneMolecularData[]>({
+        await: () => [this.genes, this.studies, this.selectedMolecularProfiles],
+        invoke: async () => {
+            // we get mutations with mutations endpoint, structural variants and fusions with structural variant endpoint, generic assay with generic assay endpoint.
+            // filter out mutation genetic profile and structural variant profiles and generic assay profiles
+            const profilesWithoutMutationProfile = excludeSpecialMolecularProfiles(
+                this.selectedMolecularProfiles.result!
+            );
+            const genes = this.genes.result;
+
+            if (
+                profilesWithoutMutationProfile.length &&
+                genes != undefined &&
+                genes.length
+            ) {
+                const molecularProfileIds = profilesWithoutMutationProfile.map(
+                    p => p.molecularProfileId
                 );
-                const genes = this.genes.result;
+                const numSamples = _.sumBy(
+                    this.studies.result!,
+                    s => s.allSampleCount
+                );
 
-                if (
-                    profilesWithoutMutationProfile.length &&
-                    genes != undefined &&
-                    genes.length
-                ) {
-                    return await client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
-                        {
-                            projection: REQUEST_ARG_ENUM.PROJECTION_DETAILED,
-                            molecularDataMultipleStudyFilter: {
-                                entrezGeneIds: _.map(
-                                    this.genes.result,
-                                    (gene: Gene) => gene.entrezGeneId
-                                ),
-                                molecularProfileIds: profilesWithoutMutationProfile.map(
-                                    p => p.molecularProfileId
-                                ),
-                            } as MolecularDataMultipleStudyFilter,
-                        }
-                    );
-                }
+                // if size of response is too big (around 1.6 million), the request seems to fail. This is a conservative limit
+                const maximumDataPointsPerRequest = 1500000;
 
-                return Promise.resolve([]);
-            },
+                const {
+                    geneChunks,
+                    profileChunks,
+                } = getGeneAndProfileChunksForRequest(
+                    maximumDataPointsPerRequest,
+                    numSamples,
+                    genes,
+                    molecularProfileIds
+                );
+
+                const dataPromises: Promise<NumericGeneMolecularData[]>[] = [];
+
+                geneChunks.forEach(geneChunk => {
+                    profileChunks.forEach(profileChunk => {
+                        const molecularDataMultipleStudyFilter = {
+                            entrezGeneIds: geneChunk.map(g => g.entrezGeneId),
+                            molecularProfileIds: profileChunk,
+                        } as MolecularDataMultipleStudyFilter;
+
+                        dataPromises.push(
+                            client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+                                {
+                                    projection:
+                                        REQUEST_ARG_ENUM.PROJECTION_DETAILED,
+                                    molecularDataMultipleStudyFilter,
+                                }
+                            )
+                        );
+                    });
+                });
+
+                const allData = await Promise.all(dataPromises);
+                return _.flatten(allData);
+            }
+
+            return [];
         },
-        []
-    );
+        default: [],
+    });
 
     // Isolate discrete CNA data from other NumericMolecularData
     // and add the custom driver annotations to data points
@@ -3521,6 +3552,7 @@ export class ResultsViewPageStore
             () => this.discreteCNACache,
             this.studyToMolecularProfileDiscreteCna.result!,
             this.studyIdToStudy,
+            this.queriedStudies,
             this.molecularProfileIdToMolecularProfile,
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
