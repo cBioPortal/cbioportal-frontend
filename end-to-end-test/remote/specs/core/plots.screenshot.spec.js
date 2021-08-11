@@ -162,17 +162,15 @@ describe('plots tab screenshot tests', function() {
     });
     it('plots tab clinical vs clinical boxplot', function() {
         browser.execute(function() {
-            resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
+            resultsViewPlotsTab.onVerticalAxisDataTypeSelect({
                 value: 'clinical_attribute',
             });
         });
         browser.execute(function() {
-            resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
+            resultsViewPlotsTab.onVerticalAxisDataSourceSelect({
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
             });
         });
-        $('[data-test="swapHorzVertButton"]').waitForExist();
-        $('[data-test="swapHorzVertButton"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'clinical_attribute',
