@@ -451,8 +451,16 @@ export class StudyViewPageStore
         private urlWrapper: StudyViewURLWrapper
     ) {
         makeObservable(this);
+
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
+
+        /*
+        Note for future refactoring:
+        We should not have to put a check here because ideally this would never be called unless we have valid studies.
+        This can be achieved by a better control mechanism: as for all our fetches, they should be invoked by reference in view layer.
+        Here, we fire this in constructor of store, which is an anti-pattern in our app.
+         */
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -4418,7 +4426,7 @@ export class StudyViewPageStore
                 this.pageStatusMessages['unknownIds'] = {
                     status: 'danger',
                     message: `Unknown/Unauthorized ${
-                        unknownIds.length > 1 ? 'studies' : 'study'
+                        unknownIds.length > 1 ? 'studies:' : 'study:'
                     } ${unknownIds.join(', ')}`,
                 };
             }
@@ -5313,6 +5321,13 @@ export class StudyViewPageStore
 
     @computed
     get loadingInitialDataForSummaryTab(): boolean {
+        if (
+            !this.queriedPhysicalStudyIds.isComplete ||
+            this.queriedPhysicalStudyIds.result.length === 0
+        ) {
+            return false;
+        }
+
         let pending =
             this.defaultVisibleAttributes.isPending ||
             this.clinicalAttributes.isPending ||
