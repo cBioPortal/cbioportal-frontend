@@ -18,7 +18,7 @@ import {
 import { DataFilter } from '../../model/DataFilter';
 import DataStore from '../../model/DataStore';
 import {
-    updatePositionSelectionFilters,
+    updatePositionRangeSelectionFilters,
     updatePositionRangeHighlightFilters,
 } from '../../util/FilterUtils';
 import TrackItem, { TrackItemSpec, TrackItemType } from './TrackItem';
@@ -110,14 +110,17 @@ export default class Track extends React.Component<TrackProps, {}> {
 
     @action.bound
     onTrackItemClick(shapeComponent: TrackItem) {
-        if (shapeComponent.props.spec.itemType === TrackItemType.CIRCLE) {
-            updatePositionSelectionFilters(
-                this.props.dataStore,
-                shapeComponent.props.spec.startCodon,
-                this.shiftPressed,
-                this.props.defaultFilters
-            );
-        }
+        const endCodon: number = shapeComponent.props.spec.endCodon
+            ? Math.trunc(shapeComponent.props.spec.endCodon)
+            : Math.trunc(shapeComponent.props.spec.startCodon);
+
+        updatePositionRangeSelectionFilters(
+            this.props.dataStore,
+            Math.trunc(shapeComponent.props.spec.startCodon),
+            endCodon,
+            this.shiftPressed,
+            this.props.defaultFilters
+        );
     }
 
     @action.bound

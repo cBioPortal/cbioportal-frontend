@@ -42,6 +42,48 @@ export function updatePositionSelectionFilters(
         selectedPositions.push(position);
     }
 
+    updateSelectionFilters(dataStore, selectedPositions, defaultFilters);
+}
+
+export function updatePositionRangeSelectionFilters(
+    dataStore: DataStore,
+    startPosition: number,
+    endPosition: number,
+    isMultiSelect: boolean = false,
+    defaultFilters: DataFilter[] = []
+) {
+    if (endPosition === startPosition) {
+        updatePositionSelectionFilters(
+            dataStore,
+            startPosition,
+            isMultiSelect,
+            defaultFilters
+        );
+    } else {
+        const positions: number[] = [];
+
+        for (let i = startPosition; i <= endPosition; i++) {
+            positions.push(i);
+        }
+
+        let selectedPositions: number[] = positions;
+        if (isMultiSelect) {
+            // we need to keep previous positions if shift pressed,
+            // but we still want to clear other filters tied with these positions
+            selectedPositions = findAllUniquePositions(
+                dataStore.selectionFilters
+            ).concat(positions);
+        }
+
+        updateSelectionFilters(dataStore, selectedPositions, defaultFilters);
+    }
+}
+
+function updateSelectionFilters(
+    dataStore: DataStore,
+    selectedPositions: number[],
+    defaultFilters: DataFilter[] = []
+) {
     const positionFilter = {
         type: DataFilterType.POSITION,
         values: selectedPositions,
