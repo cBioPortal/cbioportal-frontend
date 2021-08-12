@@ -82,6 +82,7 @@ export class StudyResultsSummary extends React.Component<
     render() {
         return (
             <div className={styles.selectedInfo} data-test="selected-info">
+                <div className={'hidden'}>fdafdsa</div>
                 <strong>Selected:&nbsp;</strong>
                 <strong data-test="selected-patients">
                     {this.props.store.selectedPatients.length.toLocaleString()}
