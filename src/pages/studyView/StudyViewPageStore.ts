@@ -31,7 +31,10 @@ import {
     DataFilterValue,
     DensityPlotBin,
     GeneFilter,
+    GeneFilterQuery,
     GenePanel,
+    GenericAssayDataFilter,
+    GenericAssayMeta,
     GenomicDataBin,
     GenomicDataBinFilter,
     GenomicDataFilter,
@@ -47,21 +50,20 @@ import {
     SampleIdentifier,
     SampleTreatmentRow,
     StudyViewFilter,
-    GenericAssayDataFilter,
-    GenericAssayMeta,
-    GeneFilterQuery,
 } from 'cbioportal-ts-api-client';
 import {
     fetchCopyNumberSegmentsForSamples,
     getAlterationTypesInOql,
     getDefaultProfilesForOql,
-    MolecularAlterationType_filenameSuffix,
     getSurvivalClinicalAttributesPrefix,
+    MolecularAlterationType_filenameSuffix,
 } from 'shared/lib/StoreUtils';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import {
     AnalysisGroup,
+    annotationFilterActive,
+    buildSelectedDriverTiersMap,
     calculateLayout,
     ChartDataCountSet,
     ChartMeta,
@@ -76,10 +78,11 @@ import {
     convertGenomicDataBinsToDataBins,
     DataBin,
     DataType,
+    driverTierFilterActive,
+    ensureBackwardCompatibilityOfFilters,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
-    GenomicDataCountWithSampleUniqueKeys,
     getChartMetaDataType,
     getChartSettingsMap,
     getClinicalDataBySamples,
@@ -90,6 +93,7 @@ import {
     getDataIntervalFilterValues,
     getDefaultPriorityByUniqueKey,
     getFilteredAndCompressedDataIntervalFilters,
+    getFilteredMolecularProfilesByAlterationType,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
@@ -100,17 +104,18 @@ import {
     getGroupsFromBins,
     getGroupsFromQuartiles,
     getMolecularProfileIdsFromUniqueKey,
-    getMolecularProfileSamplesSet,
     getNonZeroUniqueBins,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
+    getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromMolecularProfileIds,
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
+    MolecularProfileOption,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
     pickNewColorForClinicData,
@@ -119,17 +124,9 @@ import {
     showOriginStudiesInSummaryDescription,
     SPECIAL_CHARTS,
     SpecialChartsUniqueKeyEnum,
+    statusFilterActive,
     StudyWithSamples,
     submitToPage,
-    updateSavedUserPreferenceChartIds,
-    getFilteredMolecularProfilesByAlterationType,
-    getStructuralVariantSamplesCount,
-    MolecularProfileOption,
-    statusFilterActive,
-    driverTierFilterActive,
-    buildSelectedDriverTiersMap,
-    annotationFilterActive,
-    ensureBackwardCompatibilityOfFilters,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -377,58 +374,26 @@ export class StudyViewPageStore
     @observable numberOfVisibleColorChooserModals = 0;
     @observable userGroupColors: { [groupId: string]: string } = {};
 
-    @action
-    updateNAValue = (uniqueKey: string): void => {
-        let newValue = this.isShowNAChecked(uniqueKey);
+    private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
-            let newFilter = _.clone(
-                this._genericAssayDataBinFilterSet.get(uniqueKey)
-            )!;
-            newFilter.showNA = newValue;
-            this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
+            return this._genericAssayDataBinFilterSet;
+        } else if (this.isGeneSpecificChart(uniqueKey)) {
+            return this._genomicDataBinFilterSet;
         } else {
-            let newFilter = _.clone(
-                this._clinicalDataBinFilterSet.get(uniqueKey)
-            )!;
-            newFilter.showNA = newValue;
-            this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
+            return this._clinicalDataBinFilterSet;
         }
-    };
-
+    }
     @action
     toggleNAValue = (uniqueKey: string): void => {
-        this.updateNAValue(uniqueKey);
-
-        let newFilter = this.isGenericAssayChart(uniqueKey)
-            ? _.clone(this._genericAssayDataBinFilterSet.get(uniqueKey))!
-            : _.clone(this._clinicalDataBinFilterSet.get(uniqueKey))!;
-        let showNA = newFilter.showNA;
-        newFilter.showNA = !showNA;
-
-        if (this.isGenericAssayChart(uniqueKey)) {
-            this._genericAssayDataBinFilterSet.set(
-                uniqueKey,
-                <GenericAssayDataBinFilter & { showNA?: boolean }>newFilter
-            );
-        } else {
-            this._clinicalDataBinFilterSet.set(
-                uniqueKey,
-                <ClinicalDataBinFilter & { showNA?: boolean }>newFilter
-            );
-        }
+        const filterSet = this.getDataBinFilterSet(uniqueKey);
+        const newFilter = _.clone(filterSet.get(uniqueKey)!);
+        newFilter.showNA = !this.isShowNAChecked(uniqueKey);
+        filterSet.set(uniqueKey, newFilter as any);
     };
 
     public isShowNAChecked = (uniqueKey: string): boolean => {
-        let filter;
-        if (this.isGenericAssayChart(uniqueKey)) {
-            filter = _.clone(
-                this._genericAssayDataBinFilterSet.get(uniqueKey)
-            )!;
-        } else {
-            filter = _.clone(this._clinicalDataBinFilterSet.get(uniqueKey));
-        }
-
-        let showNA = filter ? filter.showNA : undefined;
+        const filter = this.getDataBinFilterSet(uniqueKey).get(uniqueKey)!;
+        const showNA = filter ? filter.showNA : undefined;
 
         // Show NA bars by default
         if (showNA === undefined) {
@@ -451,8 +416,16 @@ export class StudyViewPageStore
         private urlWrapper: StudyViewURLWrapper
     ) {
         makeObservable(this);
+
         this.chartItemToColor = new Map();
         this.chartToUsedColors = new Map();
+
+        /*
+        Note for future refactoring:
+        We should not have to put a check here because ideally this would never be called unless we have valid studies.
+        This can be achieved by a better control mechanism: as for all our fetches, they should be invoked by reference in view layer.
+        Here, we fire this in constructor of store, which is an anti-pattern in our app.
+         */
         this.reactionDisposers.push(
             reaction(
                 () => this.loadingInitialDataForSummaryTab,
@@ -1787,7 +1760,7 @@ export class StudyViewPageStore
     >();
     @observable private _genomicDataBinFilterSet = observable.map<
         ChartUniqueKey,
-        GenomicDataBinFilter
+        GenomicDataBinFilter & { showNA?: boolean }
     >();
     @observable private _genericAssayDataBinFilterSet = observable.map<
         ChartUniqueKey,
@@ -4418,7 +4391,7 @@ export class StudyViewPageStore
                 this.pageStatusMessages['unknownIds'] = {
                     status: 'danger',
                     message: `Unknown/Unauthorized ${
-                        unknownIds.length > 1 ? 'studies' : 'study'
+                        unknownIds.length > 1 ? 'studies:' : 'study:'
                     } ${unknownIds.join(', ')}`,
                 };
             }
@@ -5313,6 +5286,13 @@ export class StudyViewPageStore
 
     @computed
     get loadingInitialDataForSummaryTab(): boolean {
+        if (
+            !this.queriedPhysicalStudyIds.isComplete ||
+            this.queriedPhysicalStudyIds.result.length === 0
+        ) {
+            return false;
+        }
+
         let pending =
             this.defaultVisibleAttributes.isPending ||
             this.clinicalAttributes.isPending ||

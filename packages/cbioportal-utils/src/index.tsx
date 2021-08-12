@@ -6,12 +6,15 @@ export * from './civic/CivicUtils';
 
 export * from './data/RemoteDataUtils';
 
+export * from './exon/ExonUtils';
+
 export * from './format/FormatUtils';
 
 export * from './hotspot/CancerHotspotsUtils';
 
 export * from './model/CancerHotspot';
 export * from './model/Civic';
+export * from './model/Exon';
 export * from './model/Gene';
 export * from './model/MobxCache';
 export * from './model/Mutation';
