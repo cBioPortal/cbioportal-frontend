@@ -700,15 +700,16 @@
         ],
         "parameters": [
           {
+            "in": "body",
             "name": "molecularProfileIds",
-            "in": "query",
             "description": "molecularProfileIds",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           }
         ],
         "responses": {
