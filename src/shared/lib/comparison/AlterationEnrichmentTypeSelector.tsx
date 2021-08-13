@@ -10,6 +10,7 @@ import {
     cnaGroup,
     CopyNumberEnrichmentEventType,
     deletionGroup,
+    doEnrichmentEventTypeMapsMatch,
     EnrichmentEventType,
     frameshiftDeletionGroup,
     frameshiftGroup,
@@ -299,11 +300,11 @@ export default class AlterationEnrichmentTypeSelector extends React.Component<
 
     @computed get hasSelectionChanged() {
         return (
-            !_.isEqual(
+            !doEnrichmentEventTypeMapsMatch(
                 toJS(this.currentSelectedMutations),
                 toJS(this.props.store.selectedMutationEnrichmentEventTypes)
             ) ||
-            !_.isEqual(
+            !doEnrichmentEventTypeMapsMatch(
                 toJS(this.currentSelectedCopyNumber),
                 toJS(this.props.store.selectedCopyNumberEnrichmentEventTypes)
             ) ||

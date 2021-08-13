@@ -171,6 +171,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
     protected async saveAndGoToSession(newSession: Session) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparison_createdGroupsSessionId: id });
+        this.newSessionPending = false;
     }
     //</session>
 
