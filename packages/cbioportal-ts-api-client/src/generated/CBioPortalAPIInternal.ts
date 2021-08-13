@@ -1932,9 +1932,6 @@ export default class CBioPortalAPIInternal {
     }): string {
         let queryParameters: any = {};
         let path = '/custom-driver-annotation-report/fetch';
-        if (parameters['molecularProfileIds'] !== undefined) {
-            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1950,7 +1947,7 @@ export default class CBioPortalAPIInternal {
      * Return availability of custom driver annotations for molecular profiles
      * @method
      * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
-     * @param {array} molecularProfileIds - molecularProfileIds
+     * @param {} molecularProfileIds - molecularProfileIds
      */
     fetchAlterationDriverAnnotationReportUsingPOSTWithHttpInfo(parameters: {
         'molecularProfileIds': Array < string > ,
@@ -1970,7 +1967,7 @@ export default class CBioPortalAPIInternal {
             headers['Content-Type'] = 'application/json';
 
             if (parameters['molecularProfileIds'] !== undefined) {
-                queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+                body = parameters['molecularProfileIds'];
             }
 
             if (parameters['molecularProfileIds'] === undefined) {
@@ -1994,7 +1991,7 @@ export default class CBioPortalAPIInternal {
      * Return availability of custom driver annotations for molecular profiles
      * @method
      * @name CBioPortalAPIInternal#fetchAlterationDriverAnnotationReportUsingPOST
-     * @param {array} molecularProfileIds - molecularProfileIds
+     * @param {} molecularProfileIds - molecularProfileIds
      */
     fetchAlterationDriverAnnotationReportUsingPOST(parameters: {
         'molecularProfileIds': Array < string > ,
