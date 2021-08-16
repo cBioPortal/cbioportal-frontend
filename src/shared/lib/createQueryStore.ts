@@ -25,6 +25,11 @@ export function createQueryStore(
             query.cancer_study_list || query.cancer_study_id;
         delete (query as Partial<CancerStudyQueryUrlParams>).cancer_study_id;
 
+        // reset oncoprint user-tracking
+        (query as Partial<
+            ResultsViewURLQuery
+        >).oncoprint_user_has_deleted = undefined;
+
         // check if certain parameters should be reset
         if (currentQuery) {
             const importantQueryDetailsChanged =

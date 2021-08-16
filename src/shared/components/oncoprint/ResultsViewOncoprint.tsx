@@ -240,7 +240,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
         // when there is no user selection in ULR, we want to
         // have some default tracks based on certain conditions
-        if (this.urlWrapper.query.clinicallist === undefined) {
+        if (!this.urlWrapper.query.oncoprint_user_has_deleted) {
             if (
                 this.props.store.studyIds.result &&
                 this.props.store.studyIds.result.length > 1
@@ -1173,6 +1173,7 @@ export default class ResultsViewOncoprint extends React.Component<
             );
             this.urlWrapper.updateURL({
                 clinicallist: withoutDeleted.join(','),
+                oncoprint_user_has_deleted: 'true',
             });
         }
     }

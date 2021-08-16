@@ -77,6 +77,7 @@ export enum ResultsViewURLQueryEnum {
     oncoprint_cluster_profile = 'oncoprint_cluster_profile',
     oncoprint_sort_by_mutation_type = 'oncoprint_sort_by_mutation_type',
     oncoprint_sort_by_drivers = 'oncoprint_sort_by_drivers',
+    oncoprint_user_has_deleted = 'oncoprint_user_has_deleted',
     exclude_germline_mutations = 'exclude_germline_mutations',
     hide_unprofiled_samples = 'hide_unprofiled_samples',
     patient_enrichments = 'patient_enrichments',
@@ -117,150 +118,112 @@ export type ResultsViewURLQuery = {
     plots_coloring_selection: PlotsColoringParam;
 };
 
-const shouldForceRemount: { [prop in keyof ResultsViewURLQuery]: boolean } = {
-    clinicallist: false,
-    show_samples: false,
-    heatmap_track_groups: false,
-    oncoprint_sortby: false,
-    oncoprint_cluster_profile: false,
-    oncoprint_sort_by_mutation_type: false,
-    oncoprint_sort_by_drivers: false,
-    generic_assay_groups: false,
-    exclude_germline_mutations: false,
-    hide_unprofiled_samples: false,
-    patient_enrichments: false,
+const propertiesMap: PropertiesMap<ResultsViewURLQuery> = {
+    // oncoprint props
+    clinicallist: { isSessionProp: false, isHashedProp: false },
+    show_samples: { isSessionProp: false, isHashedProp: false },
+    heatmap_track_groups: { isSessionProp: false, isHashedProp: false },
+    oncoprint_sortby: { isSessionProp: false, isHashedProp: false },
+    oncoprint_cluster_profile: { isSessionProp: false, isHashedProp: false },
+    oncoprint_sort_by_mutation_type: {
+        isSessionProp: false,
+        isHashedProp: false,
+    },
+    oncoprint_sort_by_drivers: { isSessionProp: false, isHashedProp: false },
+    oncoprint_user_has_deleted: { isSessionProp: false, isHashedProp: false },
+    generic_assay_groups: { isSessionProp: false, isHashedProp: false },
+    exclude_germline_mutations: { isSessionProp: false, isHashedProp: false },
+    hide_unprofiled_samples: { isSessionProp: false, isHashedProp: false },
+    patient_enrichments: { isSessionProp: false, isHashedProp: false },
 
-    comparison_subtab: false,
-    comparison_overlapStrategy: false,
-    comparison_selectedGroups: false,
-    comparison_groupOrder: false,
-    comparison_selectedEnrichmentEventTypes: false,
+    comparison_subtab: { isSessionProp: false, isHashedProp: false },
+    comparison_overlapStrategy: { isSessionProp: false, isHashedProp: false },
+    comparison_selectedGroups: { isSessionProp: false, isHashedProp: false },
+    comparison_groupOrder: { isSessionProp: false, isHashedProp: false },
+    comparison_selectedEnrichmentEventTypes: {
+        isSessionProp: true,
+        isHashedProp: false,
+    },
 
     // plots
-    plots_horz_selection: false,
-    plots_vert_selection: false,
-    plots_coloring_selection: false,
+    plots_horz_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsSelectionParamProps,
+        isHashedProp: false,
+    },
+    plots_vert_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsSelectionParamProps,
+        isHashedProp: false,
+    },
+    plots_coloring_selection: {
+        isSessionProp: false,
+        nestedObjectProps: PlotsColoringParamProps,
+        isHashedProp: false,
+    },
 
     // mutations
-    mutations_gene: false,
-    mutations_transcript_id: false,
+    mutations_gene: {
+        isSessionProp: false,
+        isHashedProp: false,
+    },
+    mutations_transcript_id: {
+        isSessionProp: false,
+        isHashedProp: false,
+    },
 
-    // session props here
-    gene_list: true,
-    cancer_study_list: true,
-    case_ids: true,
-    sample_list_ids: true,
-    case_set_id: true,
-    profileFilter: true,
-    RPPA_SCORE_THRESHOLD: true,
-    Z_SCORE_THRESHOLD: true,
-    geneset_list: true,
-    genetic_profile_ids_PROFILE_MUTATION_EXTENDED: true,
-    genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: true,
-    genetic_profile_ids_PROFILE_MRNA_EXPRESSION: true,
-    genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: true,
-    genetic_profile_ids_PROFILE_GENESET_SCORE: true,
-    genetic_profile_ids_GENERIC_ASSAY: true,
-    genetic_profile_ids: true,
-    comparison_createdGroupsSessionId: false,
+    // session props
+    gene_list: {
+        isSessionProp: true,
+        doubleURIEncode: true,
+        isHashedProp: true,
+    },
+    cancer_study_list: {
+        isSessionProp: true,
+        aliases: ['cancer_study_id'],
+        isHashedProp: true,
+    },
+    case_ids: { isSessionProp: true, isHashedProp: true },
+    sample_list_ids: { isSessionProp: true, isHashedProp: true },
+    case_set_id: { isSessionProp: true, isHashedProp: true },
+    profileFilter: {
+        isSessionProp: true,
+        aliases: ['data_priority'],
+        isHashedProp: true,
+    },
+    RPPA_SCORE_THRESHOLD: { isSessionProp: true, isHashedProp: true },
+    Z_SCORE_THRESHOLD: { isSessionProp: true, isHashedProp: true },
+    geneset_list: { isSessionProp: true, isHashedProp: true },
+    genetic_profile_ids_PROFILE_MUTATION_EXTENDED: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids_PROFILE_MRNA_EXPRESSION: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids_PROFILE_GENESET_SCORE: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids_GENERIC_ASSAY: {
+        isSessionProp: true,
+        isHashedProp: true,
+    },
+    genetic_profile_ids: { isSessionProp: true, isHashedProp: true },
+    comparison_createdGroupsSessionId: {
+        isSessionProp: true,
+        isHashedProp: false,
+    },
 };
-
-const propertiesMap = _.mapValues(
-    {
-        // NON session props here
-        // oncoprint props
-        clinicallist: { isSessionProp: false },
-        show_samples: { isSessionProp: false },
-        heatmap_track_groups: { isSessionProp: false },
-        oncoprint_sortby: { isSessionProp: false },
-        oncoprint_cluster_profile: { isSessionProp: false },
-        oncoprint_sort_by_mutation_type: {
-            isSessionProp: false,
-        },
-        oncoprint_sort_by_drivers: { isSessionProp: false },
-        generic_assay_groups: { isSessionProp: false },
-        exclude_germline_mutations: { isSessionProp: false },
-        hide_unprofiled_samples: { isSessionProp: false },
-        patient_enrichments: { isSessionProp: false },
-
-        comparison_subtab: { isSessionProp: false },
-        comparison_overlapStrategy: { isSessionProp: false },
-        comparison_selectedGroups: { isSessionProp: false },
-        comparison_groupOrder: { isSessionProp: false },
-        comparison_selectedEnrichmentEventTypes: {
-            isSessionProp: true,
-        },
-
-        // plots
-        plots_horz_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_vert_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsSelectionParamProps,
-        },
-        plots_coloring_selection: {
-            isSessionProp: false,
-            nestedObjectProps: PlotsColoringParamProps,
-        },
-
-        // mutations
-        mutations_gene: {
-            isSessionProp: false,
-        },
-        mutations_transcript_id: {
-            isSessionProp: false,
-        },
-
-        // session props here
-        gene_list: {
-            isSessionProp: true,
-            doubleURIEncode: true,
-        },
-        cancer_study_list: {
-            isSessionProp: true,
-            aliases: ['cancer_study_id'],
-        },
-        case_ids: { isSessionProp: true },
-        sample_list_ids: { isSessionProp: true },
-        case_set_id: { isSessionProp: true },
-        profileFilter: {
-            isSessionProp: true,
-            aliases: ['data_priority'],
-        },
-        RPPA_SCORE_THRESHOLD: { isSessionProp: true },
-        Z_SCORE_THRESHOLD: { isSessionProp: true },
-        geneset_list: { isSessionProp: true },
-        genetic_profile_ids_PROFILE_MUTATION_EXTENDED: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids_PROFILE_MRNA_EXPRESSION: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids_PROFILE_GENESET_SCORE: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids_GENERIC_ASSAY: {
-            isSessionProp: true,
-        },
-        genetic_profile_ids: { isSessionProp: true },
-        comparison_createdGroupsSessionId: {
-            isSessionProp: true,
-        },
-    } as PropertiesMap<ResultsViewURLQuery>,
-    (propertySpec, propertyName) => {
-        propertySpec.isHashedProp =
-            shouldForceRemount[propertyName as keyof ResultsViewURLQuery];
-        return propertySpec;
-    }
-) as PropertiesMap<ResultsViewURLQuery>;
 
 function backwardsCompatibilityMapping(oldParams: any) {
     const newParams: MapValues<

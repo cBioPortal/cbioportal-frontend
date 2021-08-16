@@ -529,6 +529,8 @@ export default class URLWrapper<
     }
 
     @computed get hash(): number {
+        // can be used to decide when components should be remounted,
+        //  based on important changes to the URL query
         const stringifiedProps = this.stringifyProps(this.query);
         const stringified = this.properties.reduce((acc, nextVal) => {
             if (nextVal.isHashedProp)
