@@ -25,7 +25,7 @@ const TREATMENT_EC50_PROFILE_NAME =
 const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
 
-describe('treatment feature', function() {
+describe('treatment feature logical tests', function() {
     //this.retries(2);
 
     if (useExternalFrontend) {

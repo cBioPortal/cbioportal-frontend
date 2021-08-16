@@ -18,7 +18,7 @@ var selectTreamentsBothAxes = require('./treatment.spec')
 const GENERIC_ASSAY_ENTITY_SELECTOR =
     '[data-test="GenericAssayEntitySelection"]';
 
-describe('treatment feature', () => {
+describe('treatment feature screenshot tests', () => {
     describe('oncoprint tab', () => {
         beforeEach(() => {
             goToUrlAndSetLocalStorage(oncoprintTabUrl, true);
