@@ -139,7 +139,7 @@ export default class AlleleFreqColumnFormatter {
         let content: JSX.Element = <span />;
 
         // single sample: just show the number
-        if (sampleManager.samples.length === 1) {
+        if (sampleElements.length === 1) {
             content = (
                 <span>
                     {!isNaN(freqs[0])
