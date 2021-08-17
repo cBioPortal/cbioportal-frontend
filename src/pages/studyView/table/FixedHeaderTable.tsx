@@ -415,7 +415,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         this.props.numberOfSelectedRows > 0
                     }
                 >
-                    <div className="btn-group">
+                    <div className="btn-group" style={{ display: 'flex' }}>
                         <button
                             className="btn btn-default btn-xs"
                             onClick={this.afterSelectingRows}
