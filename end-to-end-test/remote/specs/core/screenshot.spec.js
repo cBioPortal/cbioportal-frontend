@@ -186,15 +186,15 @@ function runResultsTestSuite(prefix, options = {}) {
     });
 }
 
-describe('result page screenshot tests', function() {
-    before(function() {
-        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
-        goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(10000);
-    });
-
-    runResultsTestSuite('no session');
-});
+// describe('result page screenshot tests', function() {
+//     before(function() {
+//         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
+//         goToUrlAndSetLocalStorage(url);
+//         waitForOncoprint(10000);
+//     });
+//
+//     runResultsTestSuite('no session');
+// });
 
 describe('download tab screenshot tests', function() {
     it('download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced', function() {
