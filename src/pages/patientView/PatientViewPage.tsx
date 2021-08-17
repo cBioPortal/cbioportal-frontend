@@ -1551,9 +1551,7 @@ export default class PatientViewPage extends React.Component<
                                             }
                                             url={getDigitalSlideArchiveIFrameUrl(
                                                 this.patientViewPageStore
-                                                    .patientId,
-                                                this.patientViewPageStore
-                                                    .studyId
+                                                    .patientId
                                             )}
                                         />
                                     </div>
