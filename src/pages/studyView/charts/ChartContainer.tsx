@@ -556,6 +556,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             onChangeSelectedRows={
                                 this.handlers.onChangeSelectedRows
                             }
+                            extraButtons={
+                                this.comparisonButtonForTables && [
+                                    this.comparisonButtonForTables,
+                                ]
+                            }
                             selectedRowsKeys={this.selectedRowsKeys}
                             onGeneSelect={this.props.onGeneSelect}
                             selectedGenes={this.props.selectedGenes}
