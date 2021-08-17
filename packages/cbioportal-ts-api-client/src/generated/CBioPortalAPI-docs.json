@@ -4499,6 +4499,10 @@
           "type": "integer",
           "format": "int32"
         },
+        "massSpectrometrySampleCount": {
+          "type": "integer",
+          "format": "int32"
+        },
         "sequencedSampleCount": {
           "type": "integer",
           "format": "int32"
