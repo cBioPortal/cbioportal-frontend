@@ -314,6 +314,35 @@ export default class ResultsViewURLWrapper
         }
     }
 
+    public getOncoprintClinicalTrackParams(clinicalTracks: string[]) {
+        let clinicallist: string;
+        if (clinicalTracks.length > 0) {
+            clinicallist = clinicalTracks.join(',');
+        } else {
+            // ideally, we would like to simply give an empty string.
+            //   The problem is that, in order to know whether to show
+            //   some clinical tracks by default (such as "profiled-in",
+            //   "samples per patient", etc), we need to know whether
+            //  the clinical tracks have been updated by the user. If we
+            //  pass an empty string, the router just deletes that parameter
+            //  from the URL completely, making it indistinguishable from
+            //  the initialization state. So we have to use "null" here to
+            //  distinguish the state of user having deleted all clinical tracks,
+            //  because the alternative is to make a breaking change to the router library.
+
+            clinicallist = 'null';
+        }
+        return { clinicallist };
+    }
+
+    @computed public get oncoprintSelectedClinicalTracks(): string[] {
+        if (!this.query.clinicallist || this.query.clinicallist === 'null') {
+            return [];
+        } else {
+            return this.query.clinicallist.split(',');
+        }
+    }
+
     @computed public get comparisonSubTabId() {
         return this.query.comparison_subtab || GroupComparisonTab.OVERLAP;
     }
