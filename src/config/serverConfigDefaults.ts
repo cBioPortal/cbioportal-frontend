@@ -11,8 +11,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     g2s_url: 'https://g2s.genomenexus.org',
     mycancergenome_show: false,
 
-    digital_slide_archive_iframe_url:
-        'https://cancer.digitalslidearchive.org/index.html?patientId=',
+    digital_slide_archive_iframe_url: 'https://cancer.digitalslidearchive.org/',
     digital_slide_archive_meta_url:
         'https://api.digitalslidearchive.org/api/v1/tcga/image?caseName=',
 
