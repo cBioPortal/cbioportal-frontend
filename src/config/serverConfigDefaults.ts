@@ -182,6 +182,11 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     enable_request_body_gzip_compression: false,
 
     referenceGenomeVersion: 'hg19',
+
+    skin_show_unauthorized_studies: false,
+
+    skin_global_message_for_unauthorized_studies:
+        'The study is unauthorized. You need to request access.',
 };
 
 export default ServerConfigDefaults;
