@@ -7,7 +7,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import {
     CIVIC_NA_VALUE,
     ICivicEntry,
-    ICivicVariantData,
+    ICivicVariantSummary,
 } from 'cbioportal-utils';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
 import CivicCard from './CivicCard';
@@ -43,11 +43,11 @@ export function download(civicEntry: ICivicEntry | null | undefined): string {
         return CIVIC_NA_VALUE;
     }
 
-    const variants: ICivicVariantData[] = _.values(civicEntry.variants);
+    const variants: ICivicVariantSummary[] = _.values(civicEntry.variants);
     const values: string[] = [];
 
-    if (variants && variants.length > 0 && variants[0].evidence) {
-        _.forEach(variants[0].evidence, (value, key) => {
+    if (variants && variants.length > 0 && variants[0].evidenceCounts) {
+        _.forEach(variants[0].evidenceCounts, (value, key) => {
             values.push(`${key}: ${value}`);
         });
     }
