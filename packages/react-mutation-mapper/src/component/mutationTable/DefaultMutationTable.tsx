@@ -1,6 +1,6 @@
 import {
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IHotspotIndex,
     IMyCancerGenomeData,
     IOncoKbData,
@@ -55,8 +55,8 @@ export type DefaultMutationTableProps = {
     >;
     selectedTranscriptId?: string;
     enableCivic?: boolean;
-    civicGenes?: RemoteData<ICivicGene | undefined>;
-    civicVariants?: RemoteData<ICivicVariant | undefined>;
+    civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
+    civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     pubMedCache?: MobxCache;
     columns: Column<Partial<Mutation>>[];
     appendColumns?: boolean;
