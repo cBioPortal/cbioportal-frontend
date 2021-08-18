@@ -876,25 +876,25 @@ export class ResultsViewPageStore
     });
 
     @computed.struct get comparisonGroupsReferencedInURL() {
-        const clinicalTracksParam = this.urlWrapper.query.clinicallist;
-        if (clinicalTracksParam) {
-            const groupIds = clinicalTracksParam
-                .split(',') // split by comma
-                .filter((clinicalAttributeId: string) =>
-                    clinicalAttributeIsINCOMPARISONGROUP({
-                        clinicalAttributeId,
-                    })
-                ) // filter for comparison group tracks
-                .map((clinicalAttributeId: string) =>
-                    convertComparisonGroupClinicalAttribute(
-                        clinicalAttributeId,
-                        false
-                    )
-                ); // convert track ids to group ids
-            return groupIds;
-        } else {
-            return [];
-        }
+        // The oncoprint can have tracks which indicate comparison group membership per sample.
+        //  We want to know which comparison groups are referenced in these tracks, if any
+        //  are currently visible.
+
+        // Start by getting all the selected clinical attribute tracks
+        const groupIds = this.urlWrapper.oncoprintSelectedClinicalTracks
+            .filter((clinicalAttributeId: string) =>
+                clinicalAttributeIsINCOMPARISONGROUP({
+                    clinicalAttributeId,
+                })
+            ) // filter for comparison group tracks
+
+            .map((clinicalAttributeId: string) =>
+                convertComparisonGroupClinicalAttribute(
+                    clinicalAttributeId,
+                    false
+                )
+            ); // convert track ids to group ids
+        return groupIds;
     }
 
     readonly savedComparisonGroupsForStudies = remoteData<Group[]>({
