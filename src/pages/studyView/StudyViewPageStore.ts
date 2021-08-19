@@ -605,6 +605,10 @@ export class StudyViewPageStore
         ComparisonGroupId,
         boolean
     >({}, { deep: false });
+    private createdGroups = observable.map<ComparisonGroupId, boolean>(
+        {},
+        { deep: false }
+    );
     private _selectedComparisonGroupsWarningSigns = observable.map<
         string,
         boolean
@@ -618,6 +622,10 @@ export class StudyViewPageStore
         {},
         { deep: false }
     );
+
+    @action public trackNewlyCreatedGroup(groupId: string): void {
+        this.createdGroups.set(groupId, true);
+    }
 
     @action public setComparisonGroupSelected(
         groupId: string,
@@ -711,6 +719,7 @@ export class StudyViewPageStore
                 }
                 // delete it even from the shared group set
                 delete this.sharedGroupSet[groupId];
+                this.createdGroups.delete(groupId);
 
                 this._selectedComparisonGroups.delete(groupId);
             }
@@ -939,29 +948,21 @@ export class StudyViewPageStore
             }
 
             // group present in page session which are not saved to user account
-            const missingGroupIds = Array.from(
-                this._selectedComparisonGroups.keys()
+            const groupsIdsToFetchGroupData: string[] = Array.from(
+                this.createdGroups.keys()
             ).filter(groupId => groupIdSet[groupId] === undefined);
 
-            if (missingGroupIds.length > 0) {
-                const promises = [];
-                for (const groupId of missingGroupIds) {
-                    promises.push(comparisonClient.getGroup(groupId));
-                }
+            if (groupsIdsToFetchGroupData.length > 0) {
+                const promises = groupsIdsToFetchGroupData.map(groupId =>
+                    comparisonClient.getGroup(groupId)
+                );
                 const studyIdsSet = stringListToSet(
                     this.queriedPhysicalStudyIds.result!
                 );
                 let newGroups: Group[] = await Promise.all(promises);
 
-                newGroups
-                    .filter(
-                        group =>
-                            !_.some(
-                                group.data.studies,
-                                study => studyIdsSet[study.id] === undefined
-                            )
-                    )
-                    .forEach(group =>
+                newGroups.forEach(group => {
+                    if (_.every(group.data.studies, s => s.id in studyIdsSet)) {
                         groups.push(
                             Object.assign(
                                 group.data,
@@ -972,8 +973,9 @@ export class StudyViewPageStore
                                     this.sampleSet.result!
                                 )
                             )
-                        )
-                    );
+                        );
+                    }
+                });
             }
 
             return groups;

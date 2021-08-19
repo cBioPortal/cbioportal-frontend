@@ -355,7 +355,11 @@ export default class ComparisonGroupManager extends React.Component<
         if (reservedColor != undefined)
             this.props.store.onGroupColorChange(id, reservedColor);
         this.props.store.notifyComparisonGroupsChange();
-        this.props.store.setComparisonGroupSelected(id); // created groups start selected
+        if (!this.props.store.isLoggedIn) {
+            //save group id to page session only for non-logged in user.
+            // this is to keep track of what groups are created by the user
+            this.props.store.trackNewlyCreatedGroup(id);
+        }
         this.cancelAddGroup();
     }
 
