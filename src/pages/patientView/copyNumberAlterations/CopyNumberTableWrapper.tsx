@@ -25,8 +25,8 @@ import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu, { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
 import {
-    ICivicGene,
-    ICivicVariant,
+    ICivicGeneIndex,
+    ICivicVariantIndex,
     IOncoKbData,
     RemoteData,
 } from 'cbioportal-utils';
@@ -46,8 +46,8 @@ type ICopyNumberTableWrapperProps = {
     uniqueSampleKeyToTumorType?: { [sampleId: string]: string };
     genePanelIdToEntrezGeneIds: { [genePanelId: string]: number[] };
     cnaOncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
-    cnaCivicGenes?: RemoteData<ICivicGene | undefined>;
-    cnaCivicVariants?: RemoteData<ICivicVariant | undefined>;
+    cnaCivicGenes?: RemoteData<ICivicGeneIndex | undefined>;
+    cnaCivicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     enableOncoKb?: boolean;
