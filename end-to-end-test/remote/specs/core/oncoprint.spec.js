@@ -282,11 +282,11 @@ describe('oncoprint', function() {
             setSettingsMenuOpen(true);
             // select only mutation coloring by cbioportal count
             $(cbioportalCheckbox).click();
-            waitForOncoprint(2000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             $(oncoKbCheckbox).click();
-            waitForOncoprint(2000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             $(hotspotsCheckbox).click();
-            waitForOncoprint(2000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             // set threshold 1
             browser.execute(function() {
                 resultsViewOncoprint.setAnnotateCBioPortalInputValue('1');
@@ -311,9 +311,9 @@ describe('oncoprint', function() {
             // select only mutation coloring by cosmic count
             setSettingsMenuOpen(true);
             $(cosmicCheckbox).click();
-            waitForOncoprint(2000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             $(cbioportalCheckbox).click();
-            waitForOncoprint(2000);
+            waitForOncoprint(ONCOPRINT_TIMEOUT);
             // set threshold 1
             browser.execute(function() {
                 resultsViewOncoprint.setAnnotateCOSMICInputValue('1');

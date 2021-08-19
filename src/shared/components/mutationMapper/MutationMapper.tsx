@@ -329,6 +329,7 @@ export default class MutationMapper<
             [TrackName.dbPTM]: dbPtmDataStatus,
             [TrackName.UniprotPTM]: uniprotPtmDataStatus,
             [TrackName.PDB]: alignmentDataStatus,
+            [TrackName.Exon]: 'complete',
         };
     }
 
@@ -546,7 +547,7 @@ export default class MutationMapper<
         } else {
             tracks.push(TrackName.dbPTM);
         }
-
+        tracks.push(TrackName.Exon);
         tracks.push(TrackName.PDB);
 
         return tracks;

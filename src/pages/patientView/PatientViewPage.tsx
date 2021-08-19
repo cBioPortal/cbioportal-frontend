@@ -13,7 +13,6 @@ import {
 import { Else, If, Then } from 'react-if';
 import SampleManager from './SampleManager';
 import PatientHeader from './patientHeader/PatientHeader';
-import SignificantMutationalSignatures from './patientHeader/SignificantMutationalSignatures';
 import { PaginationControls } from '../../shared/components/paginationControls/PaginationControls';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
@@ -24,8 +23,7 @@ import {
 } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from './clinicalInformation/ClinicalInformationPatientTable';
 import ClinicalInformationSamples from './clinicalInformation/ClinicalInformationSamplesTable';
-import { inject, Observer, observer } from 'mobx-react';
-import { getSpanElementsFromCleanData } from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import { inject, observer } from 'mobx-react';
 import CopyNumberTableWrapper from './copyNumberAlterations/CopyNumberTableWrapper';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
 import Timeline from './timeline/Timeline';
@@ -37,13 +35,11 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import ValidationAlert from 'shared/components/ValidationAlert';
 import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataStore';
 import AppConfig from 'appConfig';
-import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import {
     getDigitalSlideArchiveIFrameUrl,
-    getSampleViewUrl,
     getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -557,6 +553,8 @@ export default class PatientViewPage extends React.Component<
         }
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
+
+        (window as any).sampleManager = sampleManager;
 
         if (this.patientViewPageStore.urlValidationError) {
             return (
@@ -1551,9 +1549,7 @@ export default class PatientViewPage extends React.Component<
                                             }
                                             url={getDigitalSlideArchiveIFrameUrl(
                                                 this.patientViewPageStore
-                                                    .patientId,
-                                                this.patientViewPageStore
-                                                    .studyId
+                                                    .patientId
                                             )}
                                         />
                                     </div>

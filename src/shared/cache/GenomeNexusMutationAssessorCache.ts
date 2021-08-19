@@ -44,8 +44,7 @@ export default class GenomeNexusMutationAssessorCache extends LazyMobXCache<
     constructor(customFetch?: any) {
         super(
             (m: Mutation) => queryToKey(m), // queryToKey
-            (v: VariantAnnotation) =>
-                genomicLocationString(v.annotation_summary.genomicLocation), // dataToKey
+            (v: VariantAnnotation) => v.originalVariantQuery, // dataToKey
             customFetch || defaultGNFetch
         );
     }

@@ -49,6 +49,7 @@ interface CancerSummaryChartProps {
         x: string;
         y: number;
         alterationType: string;
+        alterationCount: number;
     }[][];
     alterationTypeDataCounts: {
         x: string;
@@ -707,7 +708,12 @@ export class CancerSummaryChart extends React.Component<
         let flatdata = this.convertDataToDownloadData(this.props.data);
         return tsvFormatRows(
             [
-                [this.props.xAxisString, this.yAxisLabel, 'Alteration Type'],
+                [
+                    this.props.xAxisString,
+                    this.yAxisLabel,
+                    'Alteration Type',
+                    'Alteration Count',
+                ],
             ].concat(flatdata)
         );
     }
@@ -718,6 +724,7 @@ export class CancerSummaryChart extends React.Component<
             x: string;
             y: number;
             alterationType: string;
+            alterationCount: number;
         }[][]
     ): string[][] {
         let downloadDataArray = [];
@@ -730,6 +737,7 @@ export class CancerSummaryChart extends React.Component<
                         data[i][j].x,
                         data[i][j].y.toString(),
                         data[i][j].alterationType,
+                        data[i][j].alterationCount.toString(),
                     ]);
                 }
             }

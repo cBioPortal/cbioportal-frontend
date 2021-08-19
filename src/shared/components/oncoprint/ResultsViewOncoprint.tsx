@@ -238,11 +238,9 @@ export default class ResultsViewOncoprint extends React.Component<
     } = {};
 
     @computed get selectedClinicalAttributeIds() {
-        const list = this.urlWrapper.query.clinicallist
-            ? this.urlWrapper.query.clinicallist.split(',')
-            : [];
+        const list = this.urlWrapper.oncoprintSelectedClinicalTracks.slice();
 
-        // when there is no user selection in ULR, we want to
+        // when there is no user selection in URL, we want to
         // have some default tracks based on certain conditions
         if (this.urlWrapper.query.clinicallist === undefined) {
             if (
@@ -1200,9 +1198,11 @@ export default class ResultsViewOncoprint extends React.Component<
     @action private onChangeSelectedClinicalTracks(
         clinicalAttributeIds: (string | SpecialAttribute)[]
     ) {
-        this.urlWrapper.updateURL({
-            clinicallist: clinicalAttributeIds.join(','),
-        });
+        this.urlWrapper.updateURL(
+            this.urlWrapper.getOncoprintClinicalTrackParams(
+                clinicalAttributeIds
+            )
+        );
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey: string) {
@@ -1215,9 +1215,9 @@ export default class ResultsViewOncoprint extends React.Component<
                     item !==
                     this.clinicalTrackKeyToAttributeId(clinicalTrackKey)
             );
-            this.urlWrapper.updateURL({
-                clinicallist: withoutDeleted.join(','),
-            });
+            this.urlWrapper.updateURL(
+                this.urlWrapper.getOncoprintClinicalTrackParams(withoutDeleted)
+            );
         }
     }
 

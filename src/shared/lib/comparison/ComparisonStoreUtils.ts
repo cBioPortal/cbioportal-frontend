@@ -1,6 +1,7 @@
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import { stringListToMap } from 'cbioportal-frontend-commons';
+import _ from 'lodash';
 
 // For everything to work, the enum names must be identical to their value
 export enum CopyNumberEnrichmentEventType {
@@ -226,5 +227,28 @@ export function getCopyNumberEventTypesAPIParameter(
     return stringListToMap(
         cnaGroup,
         (e: CopyNumberEnrichmentEventType) => selectedEvents[e] || false
+    );
+}
+
+export function doEnrichmentEventTypeMapsMatch<T>(
+    mapA: { [type in keyof T]?: boolean },
+    mapB: { [type in keyof T]?: boolean }
+) {
+    // Just make sure that the `true`s are the same
+    return (
+        _.every(mapA, (val, key: keyof T) => {
+            if (val) {
+                return mapB[key];
+            } else {
+                return true;
+            }
+        }) &&
+        _.every(mapB, (val, key: keyof T) => {
+            if (val) {
+                return mapA[key];
+            } else {
+                return true;
+            }
+        })
     );
 }

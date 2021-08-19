@@ -14,6 +14,7 @@ import {
     computeCustomDriverAnnotationReport,
     fetchQueriedStudies,
     filterSubQueryData,
+    getGeneAndProfileChunksForRequest,
     getMultipleGeneResultKey,
     getSampleAlteredMap,
     getSingleGeneResultKey,
@@ -2571,6 +2572,61 @@ describe('parseGenericAssayGroups', () => {
             result,
             expectedResult,
             'return result for multiple correct formatted generic assay groups'
+        );
+    });
+});
+
+describe('getGeneAndProfileChunksForRequest', () => {
+    let genes: Gene[];
+    let profileIds: string[];
+
+    before(() => {
+        genes = [
+            {
+                hugoGeneSymbol: 'EGFR',
+            },
+            {
+                hugoGeneSymbol: 'PTEN',
+            },
+            {
+                hugoGeneSymbol: 'BRCA1',
+            },
+            {
+                hugoGeneSymbol: 'TP53',
+            },
+        ] as Gene[];
+
+        profileIds = ['profile1', 'profile2', 'profile3', 'profile4'];
+    });
+    it('gives back trivial chunks when the limit is not reached', () => {
+        assert.deepEqual(
+            getGeneAndProfileChunksForRequest(10000, 10, genes, profileIds),
+            { geneChunks: [genes], profileChunks: [profileIds] }
+        );
+    });
+
+    it('gives back gene chunks when the limit is reached', () => {
+        assert.deepEqual(
+            getGeneAndProfileChunksForRequest(10000, 1000, genes, profileIds),
+            {
+                geneChunks: [
+                    [genes[0], genes[1]],
+                    [genes[2], genes[3]],
+                ],
+                profileChunks: [profileIds],
+            }
+        );
+    });
+    it('gives back profile chunks when gene chunking isnt enough', () => {
+        assert.deepEqual(
+            getGeneAndProfileChunksForRequest(10000, 3000, genes, profileIds),
+            {
+                geneChunks: [[genes[0]], [genes[1]], [genes[2]], [genes[3]]],
+                profileChunks: [
+                    [profileIds[0], profileIds[1], profileIds[2]],
+                    [profileIds[3]],
+                ],
+            }
         );
     });
 });

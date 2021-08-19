@@ -17,7 +17,7 @@ import { DataFilterType } from '../../model/DataFilter';
 import MutationMapperStore from '../../model/MutationMapperStore';
 import { HotspotInfo } from '../hotspot/HotspotInfo';
 import Track, { TrackProps } from './Track';
-import { TrackItemSpec } from './TrackCircle';
+import { TrackItemSpec } from './TrackItem';
 
 import hotspotImg from '../../images/cancer-hotspots.svg';
 
@@ -25,8 +25,6 @@ type HotspotTrackProps = TrackProps & {
     store: MutationMapperStore<Mutation>;
     hotspotIndex: IHotspotIndex;
 };
-
-const HOTSPOT_ID_CLASS_PREFIX = 'cancer-hotspot-';
 
 export function hotspotTooltip(
     mutations: Mutation[],
@@ -85,7 +83,7 @@ export default class HotspotTrack extends React.Component<
             return _.keys(filteredHotspotsByProteinPosStart)
                 .filter(position => Number(position) >= 0)
                 .map(position => ({
-                    codon: Number(position),
+                    startCodon: Number(position),
                     color: '#FF9900',
                     tooltip: hotspotTooltip(
                         this.props.store.mutationsByPosition[Number(position)],
@@ -122,7 +120,7 @@ export default class HotspotTrack extends React.Component<
                 proteinLength={this.props.proteinLength}
                 trackTitle={this.trackTitle}
                 trackItems={this.hotspotSpecs}
-                idClassPrefix={HOTSPOT_ID_CLASS_PREFIX}
+                idClassPrefix={'cancer-hotspot-'}
             />
         );
     }

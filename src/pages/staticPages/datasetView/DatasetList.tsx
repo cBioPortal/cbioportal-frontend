@@ -23,6 +23,7 @@ interface IDataTableRow {
     miRna: number | string;
     methylation: number | string;
     rppa: number | string;
+    massSpectrometry: number | string;
     complete: number | string;
     citation: string;
 }
@@ -90,6 +91,7 @@ export default class DataSetsPageTable extends React.Component<
                     miRna: study.miRnaSampleCount || '',
                     methylation: study.methylationHm27SampleCount || '',
                     rppa: study.rppaSampleCount || '',
+                    massSpectrometry: study.massSpectrometrySampleCount || '',
                     complete: study.completeSampleCount || '',
                 })
             );
@@ -193,6 +195,11 @@ export default class DataSetsPageTable extends React.Component<
                                 visible: false,
                             },
                             { name: 'RPPA', type: 'rppa', visible: false },
+                            {
+                                name: 'Mass Spectrometry',
+                                type: 'massSpectrometry',
+                                visible: false,
+                            },
                             {
                                 name: 'Complete',
                                 type: 'complete',
