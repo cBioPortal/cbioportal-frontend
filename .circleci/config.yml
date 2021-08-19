@@ -172,12 +172,13 @@ jobs:
 
   end_to_end_tests:
     <<: *defaults
+    resource_class: medium
     environment:
       SPEC_FILE_PATTERN: ./remote/specs/**/*.spec.js
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
-  
+
   end_to_end_tests_against_master:
     <<: *defaults
     environment:
@@ -192,6 +193,8 @@ jobs:
     machine:
       enabled: true
       image: ubuntu-1604:201903-01
+
+    resource_class: large
     steps:
       - attach_workspace:
           at: /tmp/
