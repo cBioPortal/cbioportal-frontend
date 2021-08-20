@@ -7,7 +7,7 @@ import PortalHeader from './PortalHeader';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import Helmet from 'react-helmet';
 import { If, Else, Then } from 'react-if';
 import UserMessager from 'shared/components/userMessager/UserMessage';
@@ -36,7 +36,7 @@ interface IContainerProps {
 
 function isLocalDBServer() {
     try {
-        return AppConfig.serverConfig.app_name === 'localdbe2e';
+        return getServerConfig().app_name === 'localdbe2e';
     } catch (ex) {
         return false;
     }
@@ -89,10 +89,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
             <div>
                 <Helmet>
                     <meta charSet="utf-8" />
-                    <title>{AppConfig.serverConfig.skin_title}</title>
+                    <title>{getServerConfig().skin_title}</title>
                     <meta
                         name="description"
-                        content={AppConfig.serverConfig.skin_description}
+                        content={getServerConfig().skin_description}
                     />
                 </Helmet>
 

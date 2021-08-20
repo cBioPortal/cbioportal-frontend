@@ -1,5 +1,5 @@
 import * as React from 'react';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { Link } from 'react-router-dom';
 import { AppStore } from '../../../AppStore';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
@@ -57,7 +57,7 @@ export class DataAccessTokensDropdown extends React.Component<
                         href={buildCBioPortalPageUrl(
                             this.props.appStore.logoutUrl,
                             {
-                                local: AppConfig.serverConfig.saml_logout_local.toString(),
+                                local: getServerConfig().saml_logout_local.toString(),
                             }
                         )}
                     >
@@ -75,9 +75,9 @@ export class DataAccessTokensDropdown extends React.Component<
                 ),
                 hide:
                     this.props.appStore.isSocialAuthenticated ||
-                    (AppConfig.serverConfig.dat_method !== 'uuid' &&
-                        AppConfig.serverConfig.dat_method !== 'jwt' &&
-                        AppConfig.serverConfig.dat_method !== 'oauth2'),
+                    (getServerConfig().dat_method !== 'uuid' &&
+                        getServerConfig().dat_method !== 'jwt' &&
+                        getServerConfig().dat_method !== 'oauth2'),
             },
         ];
         const shownListItems = listItems.filter(l => {

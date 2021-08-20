@@ -21,7 +21,7 @@ import { QueryStore } from './QueryStore';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { Modal } from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 import autobind from 'autobind-decorator';
 import { PAN_CAN_SIGNATURE } from './StudyListLogic';
@@ -198,7 +198,7 @@ export default class CancerStudySelector extends React.Component<
         } = this.logic.mainView.getSelectionReport();
 
         const quickSetButtons = this.logic.mainView.quickSelectButtons(
-            AppConfig.serverConfig.skin_quick_select_buttons
+            getServerConfig().skin_quick_select_buttons
         );
 
         return (
@@ -226,8 +226,8 @@ export default class CancerStudySelector extends React.Component<
                     <Observer>
                         {() => {
                             let searchTextOptions = ServerConfigHelpers.skin_example_study_queries(
-                                AppConfig.serverConfig!
-                                    .skin_example_study_queries || ''
+                                getServerConfig()!.skin_example_study_queries ||
+                                    ''
                             );
                             if (
                                 this.store.searchText &&

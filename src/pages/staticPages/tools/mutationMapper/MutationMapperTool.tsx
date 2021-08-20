@@ -22,13 +22,13 @@ import { parseInput } from 'shared/lib/MutationInputParser';
 import StandaloneMutationMapper from './StandaloneMutationMapper';
 import MutationMapperToolStore from './MutationMapperToolStore';
 
-import AppConfig from 'appConfig';
 import {
     getMutationAlignerUrlTemplate,
     getOncoKbApiUrl,
 } from 'shared/api/urls';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
+import { getServerConfig } from 'config/config';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -68,12 +68,12 @@ export default class MutationMapperTool extends React.Component<
         this.userSelectionStore = new MutationMapperUserSelectionStore();
         // set genomenexus url to grch38 instance if "show_mutation_mapper_tool_grch38" is true and choose "GRCh38", otherwise use default url
         if (
-            AppConfig.serverConfig.show_mutation_mapper_tool_grch38 &&
+            getServerConfig().show_mutation_mapper_tool_grch38 &&
             getBrowserWindow().localStorage.getItem('referenceGenomeId') ===
                 REFERENCE_GENOME.grch38.NCBI
         ) {
             this.store.setGenomeNexusUrl(
-                AppConfig.serverConfig.genomenexus_url_grch38!
+                getServerConfig().genomenexus_url_grch38!
             );
             this.referenceGenomeSelection = REFERENCE_GENOME.grch38.NCBI;
         }
@@ -481,7 +481,7 @@ export default class MutationMapperTool extends React.Component<
 
     @computed get referenceGenomeSelector() {
         // show reference genome selector if "show_mutation_mapper_tool_grch38" is true
-        if (AppConfig.serverConfig.show_mutation_mapper_tool_grch38) {
+        if (getServerConfig().show_mutation_mapper_tool_grch38) {
             return (
                 <div style={{ display: 'flex', alignItems: 'center' }}>
                     <strong style={{ paddingRight: '5px' }}>
@@ -544,7 +544,7 @@ export default class MutationMapperTool extends React.Component<
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
                             {...convertToMutationMapperProps({
-                                ...AppConfig.serverConfig,
+                                ...getServerConfig(),
                                 //override ensemblLink
                                 ensembl_transcript_url: this.ensemblLink,
                             })}
@@ -698,10 +698,10 @@ export default class MutationMapperTool extends React.Component<
                 <a href={CIVIC_URL}>CIViC</a>,&nbsp;
                 <a href={CANCER_HOTSPOTS_URL}>Cancer Hotspots</a>,&nbsp;
                 <a href={MY_CANCER_GENOME_URL}>My Cancer Genome</a> and&nbsp;
-                <a href={AppConfig.serverConfig.g2s_url!}>3D structures</a>.
-                Although most of the time the canonical transcript for a gene
-                will be the same between GRCh37 and GRCh38 be sure to look at
-                the results from these annotation sources carefully.
+                <a href={getServerConfig().g2s_url!}>3D structures</a>. Although
+                most of the time the canonical transcript for a gene will be the
+                same between GRCh37 and GRCh38 be sure to look at the results
+                from these annotation sources carefully.
             </div>
         );
     }
@@ -712,8 +712,8 @@ export default class MutationMapperTool extends React.Component<
 
     @computed get ensemblLink() {
         return this.isGrch38
-            ? AppConfig.serverConfig.ensembl_transcript_grch38_url
-            : AppConfig.serverConfig.ensembl_transcript_url;
+            ? getServerConfig().ensembl_transcript_grch38_url
+            : getServerConfig().ensembl_transcript_url;
     }
 
     @computed get shouldShowGrch38Warning() {

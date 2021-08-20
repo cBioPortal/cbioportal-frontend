@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import StaticContent from '../../../shared/components/staticContent/StaticContent';
 import './styles.scss';
 import Helmet from 'react-helmet';
@@ -13,7 +13,7 @@ export default class News extends React.Component<{}, {}> {
                     <title>{'cBioPortal for Cancer Genomics::News'}</title>
                 </Helmet>
                 <StaticContent
-                    sourceUrl={AppConfig.serverConfig.skin_documentation_news!}
+                    sourceUrl={getServerConfig().skin_documentation_news!}
                     title={'News'}
                 />
                 <a

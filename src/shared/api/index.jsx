@@ -1,8 +1,8 @@
 import Swagger from 'swagger-client';
-import AppConfig from 'appConfig';
+import { getLoadConfig } from 'config/config';
 
 const clientPromise = new Swagger({
-    url: `http://${AppConfig.apiRoot}/v2/api-docs`,
+    url: `http://${getLoadConfig().apiRoot}/v2/api-docs`,
     usePromise: true,
 });
 export default clientPromise;

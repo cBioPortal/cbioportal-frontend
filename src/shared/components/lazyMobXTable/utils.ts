@@ -1,6 +1,6 @@
 import { SHOW_ALL_PAGE_SIZE } from '../paginationControls/PaginationControls';
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 export function maxPage(displayDataLength: number, itemsPerPage: number) {
     if (itemsPerPage === SHOW_ALL_PAGE_SIZE) {
         return 0;
@@ -11,8 +11,8 @@ export function maxPage(displayDataLength: number, itemsPerPage: number) {
 
 export function isQueriedStudyAuthorized(study: CancerStudy) {
     return (
-        !AppConfig.serverConfig.skin_show_unauthorized_studies ||
-        (AppConfig.serverConfig.skin_show_unauthorized_studies &&
+        !getServerConfig().skin_show_unauthorized_studies ||
+        (getServerConfig().skin_show_unauthorized_studies &&
             study.isAuthorized !== false)
     );
 }
