@@ -7,6 +7,14 @@ export interface IAppConfig {
     hide_login?: boolean;
 }
 
+export interface ILoadConfig {
+    apiRoot?: string;
+    baseUrl?: string;
+    configurationServiceUrl?: string;
+    frontendUrl?: string;
+    hide_login?: boolean;
+}
+
 export type CategorizedConfigItems = {
     [category: string]: string[];
 };

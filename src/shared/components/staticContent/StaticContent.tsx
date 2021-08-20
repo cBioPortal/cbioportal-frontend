@@ -2,7 +2,7 @@ import * as React from 'react';
 import $ from 'jquery';
 import { observer } from 'mobx-react';
 import ReactMarkdown from 'react-markdown';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { remoteData } from 'cbioportal-frontend-commons';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import { getDocsUrl } from '../../api/urls';
@@ -10,13 +10,13 @@ import './gfm.css';
 
 function isMarkDown(url: string) {
     return (
-        !AppConfig.serverConfig.skin_documentation_markdown === false &&
+        !getServerConfig().skin_documentation_markdown === false &&
         /\.md$/.test(url)
     );
 }
 
 function setImageRoot(path: string) {
-    return `${AppConfig.serverConfig.skin_documentation_baseurl}/${path}`;
+    return `${getServerConfig().skin_documentation_baseurl}/${path}`;
 }
 
 @observer
@@ -27,7 +27,7 @@ export default class StaticContent extends React.Component<
     private get url() {
         return getDocsUrl(
             this.props.sourceUrl!,
-            AppConfig.serverConfig.skin_documentation_baseurl!
+            getServerConfig().skin_documentation_baseurl!
         );
     }
 

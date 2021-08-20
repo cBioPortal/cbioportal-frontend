@@ -4,7 +4,7 @@ import {
     getBrowserWindow,
     remoteData,
 } from 'cbioportal-frontend-commons';
-import { initializeAPIClients } from './config/config';
+import { getLoadConfig, getServerConfig } from './config/config';
 import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
@@ -29,6 +29,14 @@ export class AppStore {
                 this.siteErrors.push({ errorObj: error, dismissed: false });
             }
         });
+    }
+
+    get serverConfig() {
+        return getServerConfig();
+    }
+
+    get loadConfig() {
+        return getLoadConfig();
     }
 
     @observable private _appReady = false;

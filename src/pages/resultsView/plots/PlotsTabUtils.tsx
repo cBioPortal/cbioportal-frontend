@@ -62,7 +62,7 @@ import {
 } from '../../../shared/components/plots/PlotUtils';
 import { isSampleProfiledInMultiple } from '../../../shared/lib/isSampleProfiled';
 import Pluralize from 'pluralize';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
@@ -129,7 +129,7 @@ export function deriveDisplayTextFromGenericAssayType(
     plural?: boolean
 ) {
     let derivedDisplayText = '';
-    const typewWithTextList = AppConfig.serverConfig.generic_assay_display_text.split(
+    const typewWithTextList = getServerConfig().generic_assay_display_text.split(
         ','
     );
     const typeToTextDict = _.reduce(

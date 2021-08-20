@@ -2,11 +2,11 @@ import * as React from 'react';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export default class InstallationMap extends React.Component<{}, {}> {
     public render() {
-        const installations_url = AppConfig.serverConfig.installation_map_url;
+        const installations_url = getServerConfig().installation_map_url;
         return (
             <PageLayout
                 className={'whiteBackground staticPage installationMap'}

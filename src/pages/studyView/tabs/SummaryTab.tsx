@@ -32,7 +32,7 @@ import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import DelayedRender from 'shared/components/DelayedRender';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore;
@@ -278,8 +278,7 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterMutatedGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateMutatedGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
@@ -303,8 +302,7 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterSVGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateSVGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalMutationFilterActive;
                 break;
             }
@@ -327,8 +325,7 @@ export class StudySummaryTab extends React.Component<
                 props.downloadTypes = ['Data'];
                 props.filterByCancerGenes = this.store.filterCNAGenesTableByCancerGenes;
                 props.onChangeCancerGeneFilter = this.store.updateCNAGenesTableByCancerGenesFilter;
-                props.alterationFilterEnabled =
-                    AppConfig.serverConfig.skin_show_settings_menu;
+                props.alterationFilterEnabled = getServerConfig().skin_show_settings_menu;
                 props.filterAlterations = this.store.isGlobalAlterationFilterActive;
                 break;
             }

@@ -40,9 +40,7 @@ import {
 } from '../../shared/lib/tracking';
 import ComparisonGroupManager from '../groupComparison/comparisonGroupManager/ComparisonGroupManager';
 import classNames from 'classnames';
-import AppConfig from 'appConfig';
-import SocialAuthButton from '../../shared/components/SocialAuthButton';
-import { ServerConfigHelpers } from '../../config/config';
+import { getServerConfig, ServerConfigHelpers } from '../../config/config';
 import {
     AlterationMenuHeader,
     getButtonNameWithDownPointer,
@@ -337,7 +335,7 @@ export default class StudyViewPage extends React.Component<
     async getBookmarkUrl(): Promise<ShareUrls> {
         const bitlyUrl = await getBitlyShortenedUrl(
             this.studyViewFullUrlWithFilter,
-            AppConfig.serverConfig.bitly_access_token
+            getServerConfig().bitly_access_token
         );
 
         return {
@@ -781,7 +779,7 @@ export default class StudyViewPage extends React.Component<
                                                 </DefaultTooltip>
                                             </>
                                         )}
-                                        {AppConfig.serverConfig
+                                        {getServerConfig()
                                             .skin_show_settings_menu && (
                                             <DefaultTooltip
                                                 trigger={['click']}
@@ -798,10 +796,8 @@ export default class StudyViewPage extends React.Component<
                                                             />
                                                         }
                                                         customDriverSourceName={
-                                                            getBrowserWindow()
-                                                                .frontendConfig
-                                                                .serverConfig
-                                                                .oncoprint_custom_driver_annotation_binary_menu_label
+                                                            getServerConfig()
+                                                                .oncoprint_custom_driver_annotation_binary_menu_label!
                                                         }
                                                         showDriverAnnotationSection={
                                                             this.store

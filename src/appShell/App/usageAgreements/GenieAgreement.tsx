@@ -1,7 +1,7 @@
 import React from 'react';
 import UsageAgreement from 'shared/components/UsageAgreement';
-import AppConfig from 'appConfig';
 import expiredStorage from 'expired-storage';
+import { getServerConfig } from 'config/config';
 
 export const GENIE_PERSISTENCE_KEY = 'genie-private-usage-agreement';
 
@@ -9,7 +9,7 @@ export function shouldShowGenieWarning() {
     // we want to show a warning message on private cbioportal instances
     // to prevent users from adding links in manuscripts
     const showGenieWarning = ['cbioportal-genie-private'].includes(
-        AppConfig.serverConfig.app_name!
+        getServerConfig().app_name!
     );
 
     return (

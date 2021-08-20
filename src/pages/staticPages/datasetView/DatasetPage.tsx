@@ -4,7 +4,7 @@ import DatasetList from './DatasetList';
 import { inject, observer } from 'mobx-react';
 import client from 'shared/api/cbioportalClientInstance';
 import { remoteData } from 'cbioportal-frontend-commons';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import styles from './styles.module.scss';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -21,7 +21,7 @@ export class DatasetPageStore {
     });
 
     readonly downloadList = remoteData(() => {
-        if (AppConfig.serverConfig.app_name === 'public-portal') {
+        if (getServerConfig().app_name === 'public-portal') {
             return request(getStudyDownloadListUrl()).then(resp => resp.body);
         } else {
             return Promise.resolve([]);
@@ -40,12 +40,12 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
     public render() {
         const header: JSX.Element | null = !_.isEmpty(
-            AppConfig.serverConfig.skin_data_sets_header
+            getServerConfig().skin_data_sets_header
         ) ? (
             <p
                 style={{ marginBottom: '20px' }}
                 dangerouslySetInnerHTML={{
-                    __html: AppConfig.serverConfig.skin_data_sets_header!,
+                    __html: getServerConfig().skin_data_sets_header!,
                 }}
             ></p>
         ) : null;

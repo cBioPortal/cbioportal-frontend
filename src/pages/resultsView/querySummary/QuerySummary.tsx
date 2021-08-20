@@ -13,7 +13,7 @@ import autobind from 'autobind-decorator';
 import ExtendedRouterStore from '../../../shared/lib/ExtendedRouterStore';
 import { ShareUI } from './ShareUI';
 import { ServerConfigHelpers } from '../../../config/config';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { StudyLink } from '../../../shared/components/StudyLink/StudyLink';
 import {
     getAlterationSummary,
@@ -328,7 +328,7 @@ export default class QuerySummary extends React.Component<
                             <ShareUI
                                 sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
                                 bitlyAccessToken={
-                                    AppConfig.serverConfig.bitly_access_token
+                                    getServerConfig().bitly_access_token
                                 }
                                 urlWrapper={this.props.store.urlWrapper}
                             />
