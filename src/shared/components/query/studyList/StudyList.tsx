@@ -25,6 +25,8 @@ import {
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
+import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
+import AppConfig from 'appConfig';
 
 const styles = {
     ...styles_any,
@@ -218,6 +220,10 @@ export default class StudyList extends QueryStoreComponent<
                                 study.studyId
                             ),
                             [`studyItem_${study.studyId}`]: true,
+                            [styles.UnauthorizedStudy]:
+                                AppConfig.serverConfig
+                                    .skin_show_unauthorized_studies &&
+                                study.isAuthorized === false,
                         });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
@@ -367,27 +373,31 @@ export default class StudyList extends QueryStoreComponent<
                             );
                         }
                         if (link.icon === 'info-circle') {
-                            content = (
-                                <StudyTagsTooltip
-                                    key={i}
-                                    studyDescription={
-                                        this.store.isVirtualStudy(study.studyId)
-                                            ? study.description.replace(
-                                                  /\r?\n/g,
-                                                  '<br />'
-                                              )
-                                            : study.description
-                                    }
-                                    studyId={study.studyId}
-                                    isVirtualStudy={this.store.isVirtualStudy(
-                                        study.studyId
-                                    )}
-                                    mouseEnterDelay={0}
-                                    placement="top"
-                                >
-                                    <a>{content}</a>
-                                </StudyTagsTooltip>
-                            );
+                            if (isQueriedStudyAuthorized(study)) {
+                                content = (
+                                    <StudyTagsTooltip
+                                        key={i}
+                                        studyDescription={
+                                            this.store.isVirtualStudy(
+                                                study.studyId
+                                            )
+                                                ? study.description.replace(
+                                                      /\r?\n/g,
+                                                      '<br />'
+                                                  )
+                                                : study.description
+                                        }
+                                        studyId={study.studyId}
+                                        isVirtualStudy={this.store.isVirtualStudy(
+                                            study.studyId
+                                        )}
+                                        mouseEnterDelay={0}
+                                        placement="top"
+                                    >
+                                        <a>{content}</a>
+                                    </StudyTagsTooltip>
+                                );
+                            }
                         }
 
                         return content;
@@ -413,6 +423,26 @@ export default class StudyList extends QueryStoreComponent<
                             </span>
                         </DefaultTooltip>
                     )}
+                    {AppConfig.serverConfig.skin_show_unauthorized_studies &&
+                        study.studyId &&
+                        study.isAuthorized === false && (
+                            <DefaultTooltip
+                                mouseEnterDelay={0}
+                                placement="top"
+                                overlay={
+                                    <div className={styles.tooltip}>
+                                        {
+                                            AppConfig.serverConfig
+                                                .skin_global_message_for_unauthorized_studies
+                                        }
+                                    </div>
+                                }
+                            >
+                                <span>
+                                    <i className="fa fa-lock"></i>
+                                </span>
+                            </DefaultTooltip>
+                        )}
                 </span>
             );
         }
