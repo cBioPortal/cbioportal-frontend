@@ -1,10 +1,20 @@
 import { SHOW_ALL_PAGE_SIZE } from '../paginationControls/PaginationControls';
+import { CancerStudy } from 'cbioportal-ts-api-client';
+import AppConfig from 'appConfig';
 export function maxPage(displayDataLength: number, itemsPerPage: number) {
     if (itemsPerPage === SHOW_ALL_PAGE_SIZE) {
         return 0;
     } else {
         return Math.floor(Math.max(displayDataLength - 1, 0) / itemsPerPage);
     }
+}
+
+export function isQueriedStudyAuthorized(study: CancerStudy) {
+    return (
+        !AppConfig.serverConfig.skin_show_unauthorized_studies ||
+        (AppConfig.serverConfig.skin_show_unauthorized_studies &&
+            study.isAuthorized !== false)
+    );
 }
 
 const validSymbols = ['<', '<=', '>', '>=', '='];
