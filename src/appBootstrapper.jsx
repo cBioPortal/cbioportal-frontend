@@ -8,9 +8,11 @@ import { syncHistoryWithStore } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
     fetchServerConfig,
+    getLoadConfig,
     initializeAPIClients,
     initializeAppStore,
-    initializeConfiguration,
+    initializeLoadConfiguration,
+    initializeServerConfiguration,
     setConfigDefaults,
     setServerConfig,
 } from './config/config';
@@ -20,7 +22,6 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
 import { buildCBioPortalPageUrl } from './shared/api/urls';
-import AppConfig from 'appConfig';
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import { initializeTracking } from 'shared/lib/tracking';
@@ -50,10 +51,9 @@ configure({
 handleLongUrls();
 
 // YOU MUST RUN THESE initialize and then set the public path after
-
-initializeConfiguration();
+initializeLoadConfiguration();
 // THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
-__webpack_public_path__ = AppConfig.frontendUrl;
+__webpack_public_path__ = getLoadConfig().frontendUrl;
 
 if (!window.hasOwnProperty('$')) {
     window.$ = $;
@@ -63,7 +63,7 @@ if (!window.hasOwnProperty('jQuery')) {
     window.jQuery = $;
 }
 
-// write browser name, version to brody tag
+// write browser name, version to body tag
 if (browser) {
     $(document).ready(() => {
         $('body').addClass(browser.name);
@@ -111,7 +111,7 @@ window.FRONTEND_COMMIT = COMMIT;
 // this is special function allowing MSKCC CIS to hide login UI in
 // portal header
 window.postLoadForMskCIS = function() {
-    AppConfig.hide_login = true;
+    getLoadConfig().hide_login = true;
     window.isMSKCIS = true;
 };
 
@@ -123,7 +123,9 @@ _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
 //
-const history = createBrowserHistory({ basename: AppConfig.basePath || '' });
+const history = createBrowserHistory({
+    basename: getLoadConfig().basePath || '',
+});
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
@@ -196,18 +198,20 @@ $(document).ready(async () => {
     if (window.name === 'blank') {
         return;
     }
+
     // we use rawServerConfig (written by JSP) if it is present
     // or fetch from config service if not
     // need to use jsonp, so use jquery
-    let config = window.rawServerConfig || (await fetchServerConfig());
+    let initialServerConfig =
+        window.rawServerConfig || (await fetchServerConfig());
 
-    setServerConfig(config);
+    initializeServerConfiguration(initialServerConfig);
 
-    setConfigDefaults();
+    //setConfigDefaults();
 
     initializeAPIClients();
 
-    initializeAppStore(stores.appStore, config);
+    initializeAppStore(stores.appStore);
 
     render();
 

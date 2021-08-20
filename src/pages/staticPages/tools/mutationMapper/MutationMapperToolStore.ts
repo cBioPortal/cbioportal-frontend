@@ -10,8 +10,6 @@ import {
     resolveDefaultsForMissingValues,
 } from 'cbioportal-utils';
 
-import AppConfig from 'appConfig';
-
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
     EnsemblTranscript,
@@ -51,6 +49,7 @@ import defaultGenomeNexusInternalClient from 'shared/api/genomeNexusInternalClie
 import autobind from 'autobind-decorator';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
+import { getServerConfig } from 'config/config';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -94,7 +93,7 @@ export default class MutationMapperToolStore {
     }
 
     @computed get isoformOverrideSource(): string {
-        return AppConfig.serverConfig.isoformOverrideSource;
+        return getServerConfig().isoformOverrideSource;
     }
 
     @computed get genomeNexusClient() {
@@ -120,7 +119,7 @@ export default class MutationMapperToolStore {
     readonly oncoKbCancerGenes = remoteData(
         {
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return fetchOncoKbCancerGenes();
                 } else {
                     return Promise.resolve([]);
@@ -134,7 +133,7 @@ export default class MutationMapperToolStore {
         {
             await: () => [this.oncoKbCancerGenes],
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
@@ -224,11 +223,11 @@ export default class MutationMapperToolStore {
                         GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                         GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
                         GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
-                        AppConfig.serverConfig.show_signal
+                        getServerConfig().show_signal
                             ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                             : '',
                     ].filter(f => f),
-                    AppConfig.serverConfig.isoformOverrideSource,
+                    getServerConfig().isoformOverrideSource,
                     this.genomeNexusClient
                 ),
             onError: (err: Error) => {
@@ -246,7 +245,7 @@ export default class MutationMapperToolStore {
                 const indexedVariantAnnotations = await fetchVariantAnnotationsIndexedByGenomicLocation(
                     this.rawMutations,
                     ['my_variant_info'],
-                    AppConfig.serverConfig.isoformOverrideSource,
+                    getServerConfig().isoformOverrideSource,
                     this.genomeNexusClient
                 );
 
@@ -310,7 +309,7 @@ export default class MutationMapperToolStore {
                                 map[
                                     gene.hugoGeneSymbol
                                 ] = new MutationMapperStore(
-                                    AppConfig.serverConfig,
+                                    getServerConfig(),
                                     {
                                         filterMutationsBySelectedTranscript: !this
                                             .hasInputWithProteinChanges,

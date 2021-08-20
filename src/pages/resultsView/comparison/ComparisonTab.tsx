@@ -34,7 +34,7 @@ import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEn
 import GenericAssayEnrichments from 'pages/groupComparison/GenericAssayEnrichments';
 import { deriveDisplayTextFromGenericAssayType } from '../plots/PlotsTabUtils';
 import styles from 'pages/resultsView/comparison/styles.module.scss';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
 
 export interface IComparisonTabProps {
@@ -184,8 +184,7 @@ export default class ComparisonTab extends React.Component<
                         >
                             {(this.store.activeGroups.isComplete &&
                                 this.store.activeGroups.result!.length > 1 &&
-                                AppConfig.serverConfig
-                                    .skin_show_settings_menu && (
+                                getServerConfig().skin_show_settings_menu && (
                                     <AlterationFilterMenuSection
                                         store={this.store}
                                         updateSelectedEnrichmentEventTypes={

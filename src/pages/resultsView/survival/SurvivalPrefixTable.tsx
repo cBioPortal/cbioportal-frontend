@@ -21,7 +21,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import { observable, computed, makeObservable, action } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import Slider from 'react-rangeslider';
 import styles from 'pages/resultsView/survival/styles.module.scss';
 
@@ -312,10 +312,7 @@ export default class SurvivalPrefixTable extends React.Component<
             ...this.props.groupNames.map(makeGroupColumn),
             ...this.props.groupNames.map(makeGroupMedianSurvivalColumn),
         ];
-        if (
-            AppConfig.serverConfig
-                .survival_show_p_q_values_in_survival_type_table
-        ) {
+        if (getServerConfig().survival_show_p_q_values_in_survival_type_table) {
             cols.push(...P_Q_COLUMNS);
         }
         return cols;

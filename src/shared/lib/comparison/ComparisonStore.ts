@@ -99,7 +99,7 @@ import {
     IDriverAnnotationReport,
     initializeCustomDriverAnnotationSettings,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
 
 export enum OverlapStrategy {
@@ -2110,9 +2110,9 @@ export default abstract class ComparisonStore
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.hasBinary &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }
@@ -2121,9 +2121,9 @@ export default abstract class ComparisonStore
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.tiers.length > 0 &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }

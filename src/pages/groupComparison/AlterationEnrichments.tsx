@@ -9,7 +9,7 @@ import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { ResultsViewPageStore } from '../resultsView/ResultsViewPageStore';
 import { makeObservable } from 'mobx';
 import { GENOMIC_ALTERATIONS_TAB_NAME } from 'pages/groupComparison/GroupComparisonTabs';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IAlterationEnrichmentsProps {
     store: ComparisonStore;
@@ -35,7 +35,7 @@ export default class AlterationEnrichments extends React.Component<
         true
     );
 
-    private useInlineTypeSelectorMenu = !AppConfig.serverConfig
+    private useInlineTypeSelectorMenu = !getServerConfig()
         .skin_show_settings_menu;
 
     readonly enrichmentsUI = MakeMobxView({

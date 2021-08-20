@@ -32,7 +32,6 @@ import internalClient from '../../api/cbioportalInternalClientInstance';
 import { SingleGeneQuery, SyntaxError } from '../../lib/oql/oql-parser';
 import { parseOQLQuery } from '../../lib/oql/oqlfilter';
 import memoize from 'memoize-weak-decorator';
-import AppConfig from 'appConfig';
 import { ComponentGetsStoreContext } from '../../lib/ContextUtils';
 import URL from 'url';
 import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
@@ -58,7 +57,7 @@ import {
 } from 'shared/components/query/GenesetsSelectorStore';
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from '../../lib/formSubmit';
-import { ServerConfigHelpers } from '../../../config/config';
+import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
 import { AlterationTypeConstants } from '../../../pages/resultsView/ResultsViewPageStore';
 import {
     ResultsViewURLQuery,
@@ -515,7 +514,7 @@ export class QueryStore {
     @observable showGenesetsHierarchyPopup = false;
     @observable showGenesetsVolcanoPopup = false;
     @observable priorityStudies = ServerConfigHelpers.parseConfigFormat(
-        AppConfig.serverConfig.priority_studies
+        getServerConfig().priority_studies
     );
     @observable showSelectedStudiesOnly: boolean = false;
     @observable.shallow selectedCancerTypeIds: string[] = [];
@@ -527,7 +526,7 @@ export class QueryStore {
     } = { label: '75%', value: '75' };
 
     @observable private _maxTreeDepth: number = parseInt(
-        AppConfig.serverConfig.skin_query_max_tree_depth!,
+        getServerConfig().skin_query_max_tree_depth!,
         10
     );
     @computed get maxTreeDepth() {
@@ -1860,13 +1859,13 @@ export class QueryStore {
     @computed get isQueryLimitReached(): boolean {
         return (
             this.oql.query.length * this.approxSampleCount >
-            AppConfig.serverConfig.query_product_limit
+            getServerConfig().query_product_limit
         );
     }
 
     @computed get geneLimit(): number {
         return Math.floor(
-            AppConfig.serverConfig.query_product_limit / this.approxSampleCount
+            getServerConfig().query_product_limit / this.approxSampleCount
         );
     }
 

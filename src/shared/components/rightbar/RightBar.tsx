@@ -3,11 +3,11 @@ import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
 import Testimonials from '../testimonials/Testimonials';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { QueryStore } from 'shared/components/query/QueryStore';
 import { Link } from 'react-router-dom';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
-import { buildCBioPortalPageUrl, redirectToStudyView } from '../../api/urls';
+import { buildCBioPortalPageUrl } from '../../api/urls';
 import { ResultsViewTab } from '../../../pages/resultsView/ResultsViewPageHelpers';
 
 interface IRightBarProps {
@@ -71,18 +71,14 @@ export default class RightBar extends React.Component<
     }
 
     private getWhatsNew() {
-        if (AppConfig.serverConfig.skin_right_nav_show_whats_new) {
-            if (
-                !_.isEmpty(
-                    AppConfig.serverConfig.skin_right_nav_whats_new_blurb
-                )
-            ) {
+        if (getServerConfig().skin_right_nav_show_whats_new) {
+            if (!_.isEmpty(getServerConfig().skin_right_nav_whats_new_blurb)) {
                 return (
                     <div className="rightBarSection">
                         <h3>What's New</h3>
                         <div
                             dangerouslySetInnerHTML={{
-                                __html: AppConfig.serverConfig
+                                __html: getServerConfig()
                                     .skin_right_nav_whats_new_blurb!,
                             }}
                         ></div>
@@ -157,7 +153,7 @@ export default class RightBar extends React.Component<
     }
 
     private getInstallationMap() {
-        const installations_url = AppConfig.serverConfig.installation_map_url;
+        const installations_url = getServerConfig().installation_map_url;
         return !installations_url ? null : (
             <div className="rightBarSection">
                 <h3 style={{ paddingBottom: 8 }}>
@@ -201,19 +197,15 @@ export default class RightBar extends React.Component<
     }
 
     public getExampleSection() {
-        if (AppConfig.serverConfig.skin_right_nav_show_examples) {
-            if (
-                !_.isEmpty(
-                    AppConfig.serverConfig.skin_examples_right_column_html
-                )
-            ) {
+        if (getServerConfig().skin_right_nav_show_examples) {
+            if (!_.isEmpty(getServerConfig().skin_examples_right_column_html)) {
                 return (
                     <div
                         className="rightBarSection exampleQueries"
                         dangerouslySetInnerHTML={{
                             __html:
                                 '<h3>Example Queries</h3>' +
-                                AppConfig.serverConfig
+                                getServerConfig()
                                     .skin_examples_right_column_html,
                         }}
                     ></div>
@@ -287,7 +279,7 @@ export default class RightBar extends React.Component<
     }
 
     public getTestimonialsSection() {
-        return AppConfig.serverConfig.skin_right_nav_show_testimonials ? (
+        return getServerConfig().skin_right_nav_show_testimonials ? (
             <div className="rightBarSection" style={{ minHeight: '300px' }}>
                 <h3>Testimonials</h3>
                 <Testimonials />

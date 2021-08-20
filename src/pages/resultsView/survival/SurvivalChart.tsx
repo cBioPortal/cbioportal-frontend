@@ -46,7 +46,7 @@ import {
     pluralize,
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',
@@ -133,9 +133,9 @@ export default class SurvivalChart
     };
 
     private getInitialSliderValue() {
-        if (AppConfig.serverConfig.survival_initial_x_axis_limit) {
+        if (getServerConfig().survival_initial_x_axis_limit) {
             return Math.min(
-                AppConfig.serverConfig.survival_initial_x_axis_limit,
+                getServerConfig().survival_initial_x_axis_limit,
                 this.maximumDataMonthValue
             );
         } else {

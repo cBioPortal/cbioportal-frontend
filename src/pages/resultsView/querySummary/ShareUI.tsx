@@ -7,7 +7,7 @@ import { BookmarkModal } from '../bookmark/BookmarkModal';
 import { action, makeObservable, observable } from 'mobx';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import request from 'superagent';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getBitlyShortenedUrl } from '../../../shared/lib/bitly';
 
 interface IShareUI {

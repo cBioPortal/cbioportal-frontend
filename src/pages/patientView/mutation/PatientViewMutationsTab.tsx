@@ -2,8 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import { ServerConfigHelpers } from '../../../config/config';
-import AppConfig from 'appConfig';
+import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import SampleManager from '../SampleManager';
@@ -316,15 +315,11 @@ export default class PatientViewMutationsTab extends React.Component<
                         this.props.patientViewPageStore.civicVariants
                     }
                     userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
-                    enableOncoKb={AppConfig.serverConfig.show_oncokb}
-                    enableFunctionalImpact={
-                        AppConfig.serverConfig.show_genomenexus
-                    }
-                    enableHotspot={AppConfig.serverConfig.show_hotspot}
-                    enableMyCancerGenome={
-                        AppConfig.serverConfig.mycancergenome_show
-                    }
-                    enableCivic={AppConfig.serverConfig.show_civic}
+                    enableOncoKb={getServerConfig().show_oncokb}
+                    enableFunctionalImpact={getServerConfig().show_genomenexus}
+                    enableHotspot={getServerConfig().show_hotspot}
+                    enableMyCancerGenome={getServerConfig().mycancergenome_show}
+                    enableCivic={getServerConfig().show_civic}
                     columnVisibility={this.props.mutationTableColumnVisibility}
                     columnVisibilityProps={{
                         onColumnToggled: this.props

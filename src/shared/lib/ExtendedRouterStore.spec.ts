@@ -10,7 +10,7 @@ import { createBrowserHistory, MemoryHistory } from 'history';
 import { SinonStub } from 'sinon';
 import { sleep } from './TimeUtils';
 import { computed } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { setServerConfig } from '../../config/config';
 
 describe('ExtendedRouterStore', () => {

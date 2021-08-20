@@ -92,7 +92,13 @@ describe('color chooser for groups menu in study view', function() {
         $(finalizeGroupButton).click();
 
         // select same color for both groups
+
         browser.waitUntil(() => $$(colorIcon).length === 2);
+
+        // select both groups
+        $$(groupCheckboxes)[0].click();
+        $$(groupCheckboxes)[1].click();
+
         setDropdownOpen(true, gbGroupColorIcon, colorPickerBlue);
         $(colorPickerBlue).click();
         // close color picker 0 before going to next one
@@ -101,6 +107,7 @@ describe('color chooser for groups menu in study view', function() {
         $(colorPickerBlue).click();
 
         // assert that warning sign exists
+
         $(warningSign).waitForExist();
         assert($(warningSign).isExisting());
     });
