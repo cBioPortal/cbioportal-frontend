@@ -237,6 +237,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -4122,11 +4123,7 @@ export class StudyViewPageStore
                 (acc: CancerStudy[], next) => {
                     if (
                         everyStudyIdToStudy[next] &&
-                        (!AppConfig.serverConfig
-                            .skin_show_unauthorized_studies ||
-                            (AppConfig.serverConfig
-                                .skin_show_unauthorized_studies &&
-                                everyStudyIdToStudy[next].isAuthorized == true))
+                        isQueriedStudyAuthorized(everyStudyIdToStudy[next])
                     ) {
                         acc.push(everyStudyIdToStudy[next]);
                     }

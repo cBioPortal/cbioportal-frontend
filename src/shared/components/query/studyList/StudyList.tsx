@@ -25,6 +25,7 @@ import {
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
+import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import AppConfig from 'appConfig';
 
 const styles = {
@@ -222,7 +223,7 @@ export default class StudyList extends QueryStoreComponent<
                             [styles.UnauthorizedStudy]:
                                 AppConfig.serverConfig
                                     .skin_show_unauthorized_studies &&
-                                study.isAuthorized == false,
+                                study.isAuthorized === false,
                         });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
@@ -372,13 +373,7 @@ export default class StudyList extends QueryStoreComponent<
                             );
                         }
                         if (link.icon === 'info-circle') {
-                            if (
-                                !AppConfig.serverConfig
-                                    .skin_show_unauthorized_studies ||
-                                (AppConfig.serverConfig
-                                    .skin_show_unauthorized_studies &&
-                                    study.isAuthorized != false)
-                            ) {
+                            if (isQueriedStudyAuthorized(study)) {
                                 content = (
                                     <StudyTagsTooltip
                                         key={i}
@@ -430,7 +425,7 @@ export default class StudyList extends QueryStoreComponent<
                     )}
                     {AppConfig.serverConfig.skin_show_unauthorized_studies &&
                         study.studyId &&
-                        study.isAuthorized == false && (
+                        study.isAuthorized === false && (
                             <DefaultTooltip
                                 mouseEnterDelay={0}
                                 placement="top"
