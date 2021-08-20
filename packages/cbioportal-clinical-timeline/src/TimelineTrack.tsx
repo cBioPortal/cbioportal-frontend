@@ -360,14 +360,19 @@ export const EventTooltipContent: React.FunctionComponent<{
         <div>
             <table>
                 <tbody>
-                    {_.map(event.event.attributes, (att: any) => {
-                        return (
-                            <tr>
-                                <th>{att.key.replace(/_/g, ' ')}</th>
-                                <td>{att.value}</td>
-                            </tr>
-                        );
-                    })}
+                    {_.map(
+                        event.event.attributes.sort((a: any, b: any) =>
+                            a.key > b.key ? 1 : -1
+                        ),
+                        (att: any) => {
+                            return (
+                                <tr>
+                                    <th>{att.key.replace(/_/g, ' ')}</th>
+                                    <td>{att.value}</td>
+                                </tr>
+                            );
+                        }
+                    )}
                     <tr>
                         <th>{`${
                             event.event.endNumberOfDaysSinceDiagnosis
