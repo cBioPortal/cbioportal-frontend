@@ -218,6 +218,10 @@ li.Study {
         color: rgb(198, 203, 209);
     }
 
+    .UnauthorizedStudy {
+        color: #999;
+    }
+
     @media (min-width: 1450px) {
         .StudyName {
             max-width: 500px;
@@ -254,6 +258,10 @@ li.Study {
             }
 
             span.summaryIcon {
+                cursor: pointer;
+            }
+
+            span.lockIcon {
                 cursor: pointer;
             }
 
