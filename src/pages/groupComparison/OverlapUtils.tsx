@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as d3 from 'd3';
 import _ from 'lodash';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import {
     ComparisonGroup,
     convertPatientsStudiesAttrToSamples,
@@ -14,6 +13,7 @@ import {
 } from './GroupComparisonUtils';
 import ComplexKeyGroupsMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyGroupsMap';
 import { Sample } from 'cbioportal-ts-api-client';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export function regionIsSelected<T extends string | number>(
     regionComb: T[],

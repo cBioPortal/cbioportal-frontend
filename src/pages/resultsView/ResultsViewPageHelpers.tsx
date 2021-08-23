@@ -4,9 +4,9 @@ import { SamplesSpecificationElement } from './ResultsViewPageStore';
 import ResultsViewURLWrapper, {
     ResultsViewURLQueryEnum,
 } from './ResultsViewURLWrapper';
-import { VirtualStudy } from '../../shared/model/VirtualStudy';
 import * as React from 'react';
 import { observer } from 'mobx-react';
+import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 
 export enum ResultsViewTab {
     ONCOPRINT = 'oncoprint',
