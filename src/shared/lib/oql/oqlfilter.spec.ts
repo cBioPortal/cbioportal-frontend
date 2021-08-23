@@ -240,6 +240,16 @@ const STRUCTURAL_VARIANT_DATA = ([
         putativeDriver: false,
         __id: -1,
     },
+    {
+        hugoGeneSymbol: 'PTEN',
+        site1HugoSymbol: 'PTEN',
+        site2HugoSymbol: 'IGF2',
+        molecularProfileId: 'gbm_tcga_fusion',
+        variantClass: 'Fusion',
+        eventInfo: 'PTEN-IGF2',
+        putativeDriver: true,
+        __id: -2,
+    },
 ] as any) as AnnotatedStructuralVariant[];
 
 describe('doesQueryContainOQL', () => {
@@ -414,7 +424,11 @@ describe('filterCBioPortalWebServiceData', () => {
         ]);
         let filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -425,7 +439,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MUT=DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -436,7 +454,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MISSENSE_DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -447,7 +469,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:MUT=MISSENSE_DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -458,7 +484,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1:DRIVER_MISSENSE',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -469,7 +499,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'PTEN:DRIVER_HETLOSS',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -480,7 +514,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'PTEN:CNA_DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -491,7 +529,11 @@ describe('filterCBioPortalWebServiceData', () => {
 
         filteredData = filterCBioPortalWebServiceData(
             'BRCA1: DRIVER; PTEN:HETLOSS_DRIVER; TP53: DRIVER',
-            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
             accessorsInstance,
             ''
         );
@@ -512,7 +554,7 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [-1]
+            []
         );
 
         filteredData = filterCBioPortalWebServiceData(
@@ -527,7 +569,37 @@ describe('filterCBioPortalWebServiceData', () => {
         );
         assert.deepEqual(
             (filteredData as any).map((x: any) => x.__id),
-            [-1]
+            []
+        );
+
+        filteredData = filterCBioPortalWebServiceData(
+            'PTEN:FUSION_DRIVER',
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
+            accessorsInstance,
+            ''
+        );
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-2]
+        );
+
+        filteredData = filterCBioPortalWebServiceData(
+            'PTEN:DRIVER_FUSION',
+            [
+                ...STRUCTURAL_VARIANT_DATA,
+                ...MUTATION_DATA,
+                ...THREE_GENE_TWO_SAMPLE_CNA_DATA,
+            ] as any[],
+            accessorsInstance,
+            ''
+        );
+        assert.deepEqual(
+            (filteredData as any).map((x: any) => x.__id),
+            [-2]
         );
     });
 
