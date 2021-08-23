@@ -13,11 +13,11 @@ import {
     parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
 } from '../../../shared/lib/oql/oqlfilter';
-import { SessionGroupData } from '../../../shared/api/ComparisonGroupClient';
 import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { SingleGeneQuery } from '../../../shared/lib/oql/oql-parser';
 import oql_parser from '../../../shared/lib/oql/oql-parser';
 import _ from 'lodash';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export type ResultsViewComparisonGroup = ComparisonGroup & {
     nameOfEnrichmentDirection: string;

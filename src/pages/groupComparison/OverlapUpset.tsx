@@ -5,9 +5,9 @@ import { ComparisonGroup } from './GroupComparisonUtils';
 import { action, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import CreateGroupFromOverlap from './CreateGroupFromOverlap';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import GroupComparisonStore from './GroupComparisonStore';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export interface IOverlapUpsetProps {
     store: ComparisonStore;

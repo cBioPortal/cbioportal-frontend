@@ -4,7 +4,6 @@ import {
     ClinicalAttribute,
     ClinicalData,
     MolecularProfile,
-    MutationSpectrum,
     MutationSpectrumFilter,
     Patient,
     Sample,
@@ -16,15 +15,11 @@ import _ from 'lodash';
 import client from '../api/cbioportalClientInstance';
 import internalClient from '../api/cbioportalInternalClientInstance';
 import ComplexKeySet from '../lib/complexKeyDataStructures/ComplexKeySet';
-import { makeUniqueColorGetter } from '../components/plots/PlotUtils';
-import { hexToRGBA, RESERVED_CLINICAL_VALUE_COLORS } from '../lib/Colors';
-import { interpolateReds } from 'd3-scale-chromatic';
+import { hexToRGBA } from '../lib/Colors';
 import {
     getClinicalAttributeColoring,
     OncoprintClinicalData,
 } from './ClinicalDataCacheUtils';
-import { ChartUserSetting } from 'pages/studyView/StudyViewPageStore';
-import hashString from 'shared/lib/hashString';
 
 export enum SpecialAttribute {
     MutationSpectrum = 'NO_CONTEXT_MUTATION_SIGNATURE',
