@@ -126,6 +126,11 @@ export type Datum =
 
 export default class AccessorsForOqlFilter
     implements IAccessorsForOqlFilter<Datum> {
+    private DRIVER_POSSIBLE_ALTERATION_TYPES = [
+        AlterationTypeConstants.MUTATION_EXTENDED,
+        AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+        AlterationTypeConstants.STRUCTURAL_VARIANT,
+    ];
     private molecularProfileIdToMolecularProfile: {
         [molecularProfileId: string]: MolecularProfile;
     };
@@ -257,17 +262,14 @@ export default class AccessorsForOqlFilter
 
     public is_driver(d: Datum) {
         if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            AlterationTypeConstants.MUTATION_EXTENDED
+            this.DRIVER_POSSIBLE_ALTERATION_TYPES.includes(
+                this.molecularAlterationType(d.molecularProfileId)
+            )
         ) {
-            // covers mutations and fusions
-            return !!(d as AnnotatedMutation).putativeDriver;
-        } else if (
-            this.molecularAlterationType(d.molecularProfileId) ===
-            AlterationTypeConstants.COPY_NUMBER_ALTERATION
-        ) {
-            // covers CNA
-            return !!(d as AnnotatedNumericGeneMolecularData).putativeDriver;
+            return !!(d as
+                | AnnotatedMutation
+                | AnnotatedNumericGeneMolecularData
+                | AnnotatedStructuralVariant).putativeDriver;
         } else {
             return null;
         }
