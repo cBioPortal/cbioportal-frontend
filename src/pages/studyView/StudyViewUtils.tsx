@@ -11,6 +11,7 @@ import {
     GenericAssayDataMultipleStudyFilter,
     GenericAssayData,
     GeneFilterQuery,
+    DensityPlotBin,
 } from 'cbioportal-ts-api-client';
 import {
     CancerStudy,
@@ -32,6 +33,7 @@ import {
     ChartUserSetting,
     GenomicChart,
     GenericAssayChart,
+    XVsYChart,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -114,6 +116,7 @@ export type AnalysisGroup = {
 
 export enum ChartMetaDataTypeEnum {
     CUSTOM_DATA = 'Custom_Data',
+    X_VS_Y = 'X_Vs_Y',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene_Specific',
@@ -547,33 +550,33 @@ export function formatRange(
 }
 
 function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
-    let mutRange = formatRange(d.minY, d.maxY, undefined);
-    let fgaRange = '';
+    let yRange = formatRange(d.minY, d.maxY, undefined);
+    let xRange = '';
     if (d.maxX.toFixed(2) !== d.minX.toFixed(2)) {
-        fgaRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
+        xRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
     } else {
-        fgaRange = d.minX.toFixed(2);
+        xRange = d.minX.toFixed(2);
     }
-    return { mutRange, fgaRange };
+    return { xRange, yRange };
 }
 
-export function mutationCountVsCnaTooltip(
-    d: IStudyViewDensityScatterPlotDatum
-) {
-    const binStats = getBinStatsForTooltip(d);
-    return (
-        <div>
+export function makeDensityScatterPlotTooltip(chartInfo: XVsYChart) {
+    return (d: IStudyViewDensityScatterPlotDatum) => {
+        const binStats = getBinStatsForTooltip(d);
+        return (
             <div>
-                Number of Samples: <b>{d.count.toLocaleString()}</b>
+                <div>
+                    Number of Samples: <b>{d.count.toLocaleString()}</b>
+                </div>
+                <div>
+                    {chartInfo.xAttr.displayName}: <b>{binStats.xRange}</b>
+                </div>
+                <div>
+                    {chartInfo.yAttr.displayName}: <b>{binStats.yRange}</b>
+                </div>
             </div>
-            <div>
-                Mutation Count: <b>{binStats.mutRange}</b>
-            </div>
-            <div>
-                Fraction Genome Altered: <b>{binStats.fgaRange}</b>
-            </div>
-        </div>
-    );
+        );
+    };
 }
 
 export function generateScatterPlotDownloadData(
@@ -3244,4 +3247,27 @@ export function getUserGroupColor(
     return groupColors && _.has(groupColors, groupId)
         ? groupColors[groupId]
         : undefined;
+}
+
+export function getBinBounds(bins: DensityPlotBin[]) {
+    const x = {
+        max: Number.NEGATIVE_INFINITY,
+        min: Number.POSITIVE_INFINITY,
+    };
+    const y = {
+        max: Number.NEGATIVE_INFINITY,
+        min: Number.POSITIVE_INFINITY,
+    };
+
+    bins.forEach(bin => {
+        x.max = Math.max(x.max, bin.maxX);
+        x.min = Math.min(x.min, bin.minX);
+        y.max = Math.max(y.max, bin.maxY);
+        y.min = Math.min(y.min, bin.minY);
+    });
+
+    return {
+        x,
+        y,
+    };
 }

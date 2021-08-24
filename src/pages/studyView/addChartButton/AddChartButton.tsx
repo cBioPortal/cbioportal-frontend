@@ -87,6 +87,24 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.props.defaultActiveTab || ChartMetaDataTypeEnum.CLINICAL;
     @observable infoMessage: string = '';
     @observable tabsWidth = 0;
+    @observable _xVsYSelection = {
+        x: '',
+        y: '',
+    };
+    @computed get xVsYSelection() {
+        let defaultAttr = '';
+        if (
+            this.xVsYClinicalAttributes.isComplete &&
+            this.xVsYClinicalAttributes.result.length > 0
+        ) {
+            defaultAttr = this.xVsYClinicalAttributes.result[0]
+                .clinicalAttributeId;
+        }
+        return {
+            x: this._xVsYSelection.x || defaultAttr,
+            y: this._xVsYSelection.y || defaultAttr,
+        };
+    }
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
 
     public static defaultProps = {
@@ -106,6 +124,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.setTabsWidth(this.tabsDivRef.current);
     }
 
+    readonly xVsYClinicalAttributes = remoteData({
+        await: () => [this.props.store.clinicalAttributes],
+        invoke: () => {
+            return Promise.resolve(
+                this.props.store.clinicalAttributes.result!.filter(attr => {
+                    return attr.datatype === 'NUMBER';
+                })
+            );
+        },
+        default: [],
+    });
     readonly dataCount = remoteData<ChartDataCountSet>({
         await: () => [
             this.props.store.dataWithCount,
@@ -789,6 +818,51 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 )}
                             </>
                         </div>
+                    </MSKTab>
+                    <MSKTab
+                        id={ChartMetaDataTypeEnum.X_VS_Y}
+                        linkText={'X vs Y'}
+                        key={4}
+                    >
+                        <span>X Axis Attribute:</span>
+                        <select
+                            value={this.xVsYSelection.x}
+                            onChange={e => {
+                                this._xVsYSelection.x = e.target.value;
+                            }}
+                        >
+                            {this.xVsYClinicalAttributes.result!.map(attr => (
+                                <option value={attr.clinicalAttributeId}>
+                                    {attr.displayName}
+                                </option>
+                            ))}
+                        </select>
+                        <br />
+                        <span>Y Axis Attribute:</span>
+                        <select
+                            value={this.xVsYSelection.y}
+                            onChange={e => {
+                                this._xVsYSelection.y = e.target.value;
+                            }}
+                        >
+                            {this.xVsYClinicalAttributes.result!.map(attr => (
+                                <option value={attr.clinicalAttributeId}>
+                                    {attr.displayName}
+                                </option>
+                            ))}
+                        </select>
+                        <br />
+                        <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() =>
+                                this.props.store.addXVsYChart({
+                                    xAttrId: this.xVsYSelection.x,
+                                    yAttrId: this.xVsYSelection.y,
+                                })
+                            }
+                        >
+                            Add Chart
+                        </button>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
                 </MSKTabs>
