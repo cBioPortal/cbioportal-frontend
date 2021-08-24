@@ -27,6 +27,8 @@ import {
     ChartType,
     RectangleBounds,
     DataBin,
+    SpecialChartsUniqueKeyEnum,
+    makeDensityScatterPlotTooltip,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -367,7 +369,16 @@ export class StudySummaryTab extends React.Component<
                 props.filters = this.store.getScatterPlotFiltersByUniqueKey(
                     props.chartMeta!.uniqueKey
                 );
-                props.promise = this.store.mutationCountVsCNADensityData;
+                const chartInfo = this.store.getXVsYChartInfo(
+                    props.chartMeta!.uniqueKey
+                )!;
+                props.promise = this.store.clinicalDataDensityCache.get({
+                    chartInfo,
+                });
+                props.plotDomain = chartInfo.plotDomain;
+                props.axisLabelX = chartInfo.xAttr.displayName;
+                props.axisLabelY = chartInfo.yAttr.displayName;
+                props.tooltip = makeDensityScatterPlotTooltip(chartInfo);
                 props.onValueSelection = (bounds: RectangleBounds) => {
                     this.store.updateScatterPlotFilterByValues(
                         props.chartMeta!.uniqueKey,

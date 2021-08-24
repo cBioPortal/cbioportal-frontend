@@ -5,6 +5,7 @@ import {
     VictoryChart,
     VictoryLabel,
     VictoryScatter,
+    Point,
 } from 'victory';
 import {
     CBIOPORTAL_VICTORY_THEME,
@@ -22,6 +23,19 @@ import { interpolatePlasma } from 'd3-scale-chromatic';
 import { DensityPlotBin } from 'cbioportal-ts-api-client';
 import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
 
+class ScaleCapt extends React.Component<any, any> {
+    render() {
+        (window as any).scale = this.props.scale;
+        return <text {...this.props}>YO</text>;
+    }
+}
+
+export function getActualPlotAxisLength(length: number) {
+    // Empirically determined, would probably change
+    // if anything changes
+    return length - 130;
+}
+
 export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {
     x: number;
     y: number;
@@ -32,6 +46,10 @@ export interface IStudyViewDensityScatterPlotProps {
     height: number;
     yBinsMin: number;
     data: DensityPlotBin[];
+    plotDomain?: {
+        x?: { min?: number; max?: number };
+        y?: { min?: number; max?: number };
+    };
     xBinSize: number;
     yBinSize: number;
     onSelection: (bounds: RectangleBounds) => void;
@@ -55,6 +73,7 @@ export default class StudyViewDensityScatterPlot
     constructor(props: any) {
         super(props);
         makeObservable(this);
+        (window as any).plot = this;
     }
     @observable tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
@@ -103,11 +122,33 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get plotDomain() {
-        // enforce plot constraints - because of dot size and wanting them to be
-        //  right up against each other, we cant have less than yBinsMin on the y axis
+        const x = [
+            this.props.plotDomain?.x?.min,
+            this.props.plotDomain?.x?.max,
+        ];
+        const y = [
+            this.props.plotDomain?.y?.min,
+            this.props.plotDomain?.y?.max,
+        ];
+        if (x[0] === undefined) {
+            x[0] = this.dataDomain.x[0];
+        }
+
+        if (x[1] === undefined) {
+            x[1] = this.dataDomain.x[1];
+        }
+
+        if (y[0] === undefined) {
+            y[0] = this.dataDomain.y[0];
+        }
+
+        if (y[1] === undefined) {
+            y[1] = this.dataDomain.y[1];
+        }
+
         return {
-            x: [0, 1] as [number, number],
-            y: [0, Math.max(this.props.yBinsMin, this.dataDomain.y[1])],
+            x,
+            y,
         };
     }
 
@@ -128,10 +169,10 @@ export default class StudyViewDensityScatterPlot
             min.y = Math.min(d.y, min.y);
         }
         return {
-            //x: [min.x, max.x],
-            //y: [min.y, max.y]
-            x: [0, 1] as [number, number],
-            y: [0, max.y] as [number, number],
+            x: [min.x, max.x] as [number, number],
+            y: [min.y, max.y] as [number, number],
+            //x: [0, 1] as [number, number],
+            //y: [0, max.y] as [number, number],
         };
     }
 
@@ -205,7 +246,7 @@ export default class StudyViewDensityScatterPlot
         );
     }
 
-    private isSelected(d: IStudyViewDensityScatterPlotDatum) {
+    /*private isSelected(d: IStudyViewDensityScatterPlotDatum) {
         if (!this.props.selectionBounds) {
             return true;
         } else {
@@ -231,7 +272,7 @@ export default class StudyViewDensityScatterPlot
 
             return xFiltered && yFiltered;
         }
-    }
+    }*/
 
     @computed get plotComputations() {
         let max = Number.NEGATIVE_INFINITY;
@@ -239,7 +280,7 @@ export default class StudyViewDensityScatterPlot
         // group data, and collect max and min at same time
         // grouping data by count (aka by color) to make different scatter for each color,
         //  this gives significant speed up over passing in a fill function
-        const selectedData = [];
+        /*const selectedData = [];
         const unselectedData = [];
         for (const d of this.data) {
             if (this.isSelected(d)) {
@@ -247,7 +288,8 @@ export default class StudyViewDensityScatterPlot
             } else {
                 unselectedData.push(d);
             }
-        }
+        }*/
+        const selectedData = this.data;
 
         const selectedDataByAreaCount = _.groupBy(selectedData, d => {
             const areaCount = d.count;
@@ -255,12 +297,13 @@ export default class StudyViewDensityScatterPlot
             min = Math.min(areaCount, min);
             return areaCount;
         });
-        const unselectedDataByAreaCount = _.groupBy(unselectedData, d => {
+        /*const unselectedDataByAreaCount = _.groupBy(unselectedData, d => {
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
             return areaCount;
-        });
+        });*/
+        const unselectedDataByAreaCount = {};
 
         // use log scale because its usually a very long tail distribution
         // we dont need to worry about log(0) because areas wont have data points to them if theres 0 data there,
@@ -468,6 +511,7 @@ export default class StudyViewDensityScatterPlot
     }
 
     render() {
+        //console.log(this.plotDomain);
         return (
             <div>
                 <div
