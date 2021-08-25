@@ -16,13 +16,12 @@ import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummar
 import Mutations from './mutation/Mutations';
 import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
 import ResultsViewPathwayMapper from './pathwayMapper/ResultsViewPathwayMapper';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
-import ExpressionWrapper from './expression/ExpressionWrapper';
 import PlotsTab from './plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
@@ -384,7 +383,7 @@ export default class ResultsViewPage extends React.Component<
                 id: ResultsViewTab.PATHWAY_MAPPER,
                 hide: () =>
                     browser.name === 'Internet Explorer' ||
-                    !AppConfig.serverConfig.show_pathway_mapper ||
+                    !getServerConfig().show_pathway_mapper ||
                     !this.resultsViewPageStore.studies.isComplete,
                 getTab: () => {
                     const showPM =
@@ -445,9 +444,11 @@ export default class ResultsViewPage extends React.Component<
             .map(tab => tab.getTab());
 
         // now add custom tabs
-        if (AppConfig.serverConfig.custom_tabs) {
-            const customResultsTabs = AppConfig.serverConfig.custom_tabs
-                .filter((tab: any) => tab.location === 'RESULTS_PAGE')
+        if (getServerConfig().custom_tabs) {
+            const customResultsTabs = getServerConfig()
+                .custom_tabs.filter(
+                    (tab: any) => tab.location === 'RESULTS_PAGE'
+                )
                 .map((tab: any, i: number) => {
                     return (
                         <MSKTab
@@ -472,7 +473,7 @@ export default class ResultsViewPage extends React.Component<
 
     @autobind
     public evaluateTabInclusion(tab: ITabConfiguration) {
-        const excludedTabs = AppConfig.serverConfig.disabled_tabs || '';
+        const excludedTabs = getServerConfig().disabled_tabs || '';
         const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(
             tab.id
         );
@@ -632,11 +633,9 @@ export default class ResultsViewPage extends React.Component<
                                         .length
                                 }
                                 queryProductLimit={
-                                    AppConfig.serverConfig.query_product_limit
+                                    getServerConfig().query_product_limit
                                 }
-                                email={
-                                    AppConfig.serverConfig.skin_email_contact
-                                }
+                                email={getServerConfig().skin_email_contact}
                             />
                         </div>
                     )}

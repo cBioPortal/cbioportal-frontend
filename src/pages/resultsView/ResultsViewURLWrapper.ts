@@ -8,7 +8,7 @@ import {
     ResultsViewComparisonSubTab,
     ResultsViewTab,
 } from 'pages/resultsView/ResultsViewPageHelpers';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import {
     cnaGroup,
     CopyNumberEnrichmentEventType,
@@ -294,8 +294,8 @@ export default class ResultsViewURLWrapper
             routing,
             propertiesMap,
             true,
-            AppConfig.serverConfig.session_url_length_threshold
-                ? parseInt(AppConfig.serverConfig.session_url_length_threshold)
+            getServerConfig().session_url_length_threshold
+                ? parseInt(getServerConfig().session_url_length_threshold)
                 : undefined,
             backwardsCompatibilityMapping
         );

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer, inject } from 'mobx-react';
 import { observable, makeObservable } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import 'react-select1/dist/react-select.css';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 import QueryAndDownloadTabs from '../../shared/components/query/QueryAndDownloadTabs';
@@ -56,15 +56,13 @@ export default class HomePage extends React.Component<
                 <div
                     className={'headBlock'}
                     dangerouslySetInnerHTML={{
-                        __html: AppConfig.serverConfig.skin_blurb!,
+                        __html: getServerConfig().skin_blurb!,
                     }}
                 ></div>
 
                 <QueryAndDownloadTabs
                     getQueryStore={this.getQueryStore}
-                    showQuickSearchTab={
-                        AppConfig.serverConfig.quick_search_enabled
-                    }
+                    showQuickSearchTab={getServerConfig().quick_search_enabled}
                     showDownloadTab={true}
                 />
             </PageLayout>

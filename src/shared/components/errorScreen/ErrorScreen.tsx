@@ -2,7 +2,7 @@ import * as React from 'react';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import './errorScreen.scss';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { computed, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
@@ -80,13 +80,13 @@ export default class ErrorScreen extends React.Component<
 
                 {this.props.body && <div>{this.props.body}</div>}
 
-                {this.errorLog && AppConfig.serverConfig.skin_email_contact && (
+                {this.errorLog && getServerConfig().skin_email_contact && (
                     <div style={{ marginTop: 20 }}>
                         <p style={{ marginBottom: 20 }}>
                             Please contact us at{' '}
                             <a
                                 href={`mailto:${
-                                    AppConfig.serverConfig.skin_email_contact
+                                    getServerConfig().skin_email_contact
                                 }?subject=${encodeURIComponent(
                                     subject
                                 )}&body=${encodeURIComponent(
@@ -95,7 +95,7 @@ export default class ErrorScreen extends React.Component<
                                     this.props.errorLog || ''
                                 )}`}
                             >
-                                {AppConfig.serverConfig.skin_email_contact}
+                                {getServerConfig().skin_email_contact}
                             </a>
                             .
                         </p>

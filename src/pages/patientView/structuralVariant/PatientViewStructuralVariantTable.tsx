@@ -15,7 +15,7 @@ import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
 import AnnotationColumnFormatter from './column/AnnotationColumnFormatter';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
 import { remoteData } from 'cbioportal-frontend-commons';
@@ -240,7 +240,7 @@ export default class PatientViewStructuralVariantTable extends React.Component<
                                 .oncoKbCancerGenes,
                             usingPublicOncoKbInstance: this.props.store
                                 .usingPublicOncoKbInstance,
-                            enableOncoKb: AppConfig.serverConfig
+                            enableOncoKb: getServerConfig()
                                 .show_oncokb as boolean,
                             pubMedCache: this.props.store.pubMedCache,
                             enableCivic: false,

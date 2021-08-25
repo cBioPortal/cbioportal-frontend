@@ -1,5 +1,4 @@
 import * as React from 'react';
-import AppConfig from 'appConfig';
 import { If } from 'react-if';
 // tslint:disable-next-line:no-import-side-effect
 import './footer.scss';
@@ -7,6 +6,7 @@ import _ from 'lodash';
 import { Link } from 'react-router-dom';
 import { AppStore } from '../../AppStore';
 import { observer } from 'mobx-react';
+import { getLoadConfig, getServerConfig } from 'config/config';
 
 @observer
 export default class PortalFooter extends React.Component<
@@ -25,8 +25,8 @@ export default class PortalFooter extends React.Component<
             version = '--';
         }
         if (
-            AppConfig.serverConfig.skin_footer &&
-            !_.isEmpty(AppConfig.serverConfig.skin_footer)
+            getServerConfig().skin_footer &&
+            !_.isEmpty(getServerConfig().skin_footer)
         ) {
             return (
                 <div
@@ -34,10 +34,14 @@ export default class PortalFooter extends React.Component<
                     dangerouslySetInnerHTML={{
                         __html:
                             "<a href='http://www.cbioportal.org'>cBioPortal</a> | " +
-                            `<a href='${AppConfig.apiRoot}api/info'>${version}</a> ` +
-                            AppConfig.serverConfig.skin_footer +
+                            `<a href='${
+                                getLoadConfig().apiRoot
+                            }api/info'>${version}</a> ` +
+                            getServerConfig().skin_footer +
                             '<br />' +
-                            `Questions and Feedback: <a href="mailto:${AppConfig.serverConfig.skin_email_contact}">${AppConfig.serverConfig.skin_email_contact}</a>`,
+                            `Questions and Feedback: <a href="mailto:${
+                                getServerConfig().skin_email_contact
+                            }">${getServerConfig().skin_email_contact}</a>`,
                     }}
                 ></div>
             );
@@ -55,7 +59,7 @@ export default class PortalFooter extends React.Component<
                                 alt="cBioPortal Logo"
                             />
                             {version && (
-                                <a href={`${AppConfig.apiRoot}api/info`}>
+                                <a href={`${getLoadConfig().apiRoot}api/info`}>
                                     <div
                                         style={{
                                             paddingTop: 9,
@@ -69,9 +73,9 @@ export default class PortalFooter extends React.Component<
                         </div>
                         <If
                             condition={
-                                AppConfig.serverConfig
-                                    .skin_show_tutorials_tab !== false ||
-                                AppConfig.serverConfig.skin_show_faqs_tab
+                                getServerConfig().skin_show_tutorials_tab !==
+                                    false ||
+                                getServerConfig().skin_show_faqs_tab
                             }
                         >
                             <div className="footer-elem">
@@ -79,7 +83,7 @@ export default class PortalFooter extends React.Component<
                                 <ul>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_show_tutorials_tab !==
                                             false
                                         }
@@ -92,8 +96,7 @@ export default class PortalFooter extends React.Component<
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_faqs_tab
+                                            getServerConfig().skin_show_faqs_tab
                                         }
                                     >
                                         <li>
@@ -113,8 +116,8 @@ export default class PortalFooter extends React.Component<
                         </If>
                         <If
                             condition={
-                                AppConfig.serverConfig.skin_show_news_tab ||
-                                AppConfig.serverConfig.skin_show_about_tab
+                                getServerConfig().skin_show_news_tab ||
+                                getServerConfig().skin_show_about_tab
                             }
                         >
                             <div className="footer-elem">
@@ -122,8 +125,7 @@ export default class PortalFooter extends React.Component<
                                 <ul>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
-                                                .skin_show_news_tab
+                                            getServerConfig().skin_show_news_tab
                                         }
                                     >
                                         <li>
@@ -132,7 +134,7 @@ export default class PortalFooter extends React.Component<
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_show_about_tab
                                         }
                                     >
@@ -142,21 +144,25 @@ export default class PortalFooter extends React.Component<
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_show_r_matlab_tab ||
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_show_web_api_tab
                                         }
                                     >
                                         <li>
-                                            <a href={`${AppConfig.apiRoot}api`}>
+                                            <a
+                                                href={`${
+                                                    getLoadConfig().apiRoot
+                                                }api`}
+                                            >
                                                 API Docs
                                             </a>
                                         </li>
                                     </If>
                                     <If
                                         condition={
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_right_nav_show_twitter
                                         }
                                     >
@@ -172,11 +178,7 @@ export default class PortalFooter extends React.Component<
                                 </ul>
                             </div>
                         </If>
-                        <If
-                            condition={
-                                AppConfig.serverConfig.skin_footer_show_dev
-                            }
-                        >
+                        <If condition={getServerConfig().skin_footer_show_dev}>
                             <div className="footer-elem">
                                 <h3>DEV</h3>
                                 <ul>
@@ -217,12 +219,11 @@ export default class PortalFooter extends React.Component<
                             <ul>
                                 <li>
                                     <a
-                                        href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}
+                                        href={`mailto:${
+                                            getServerConfig().skin_email_contact
+                                        }`}
                                     >
-                                        {
-                                            AppConfig.serverConfig
-                                                .skin_email_contact
-                                        }
+                                        {getServerConfig().skin_email_contact}
                                     </a>
                                 </li>
                             </ul>
