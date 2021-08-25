@@ -131,11 +131,6 @@ var config = {
             pako: join(
                 path.join(__dirname + '/node_modules/pako/dist/pako.es5.js')
             ),
-            appConfig: path.join(
-                __dirname + '/src',
-                'config',
-                (process.env.NODE_ENV === 'test' ? 'test.' : '') + 'config'
-            ),
         },
     },
 
