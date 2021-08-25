@@ -1,6 +1,6 @@
 import { DriverAnnotationSettings } from '../../../../shared/alterationFiltering/AnnotationFilteringSettings';
 import { action, computed, makeObservable, observable } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import {
     annotateGeneticTrackData,
     fetchOncoKbDataForCna,
@@ -313,7 +313,7 @@ export default class OncoprinterStore {
     readonly oncoKbCancerGenes = remoteData(
         {
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return fetchOncoKbCancerGenes();
                 } else {
                     return Promise.resolve([]);
@@ -327,7 +327,7 @@ export default class OncoprinterStore {
         {
             await: () => [this.oncoKbCancerGenes],
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
@@ -358,7 +358,7 @@ export default class OncoprinterStore {
                 this.oncoKbAnnotatedGenes,
             ],
             invoke: async () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return fetchOncoKbDataForMutations(
                         this.oncoKbAnnotatedGenes.result!,
                         this.nonAnnotatedGeneticData.result!
@@ -381,7 +381,7 @@ export default class OncoprinterStore {
                 this.oncoKbAnnotatedGenes,
             ],
             invoke: async () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     let result;
                     try {
                         result = await fetchOncoKbDataForCna(

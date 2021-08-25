@@ -1,6 +1,6 @@
 import React from 'react';
 import UsageAgreement from 'shared/components/UsageAgreement';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import expiredStorage from 'expired-storage';
 
@@ -13,7 +13,7 @@ export function shouldShowStudyViewWarning() {
     // we don't want to show this in MSK CIS setting (iframe)
     const showStudyViewWarning =
         ['triage-portal', 'mskcc-portal'].includes(
-            AppConfig.serverConfig.app_name!
+            getServerConfig().app_name!
         ) && !getBrowserWindow().isMSKCIS;
 
     return (

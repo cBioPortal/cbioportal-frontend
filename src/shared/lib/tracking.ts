@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getBrowserWindow, isWebdriver } from 'cbioportal-frontend-commons';
 import * as _ from 'lodash';
 import { log } from './consoleLog';
@@ -20,10 +20,8 @@ export type GAEvent = {
 };
 
 export function initializeTracking() {
-    if (!_.isEmpty(AppConfig.serverConfig.google_analytics_profile_id)) {
-        embedGoogleAnalytics(
-            AppConfig.serverConfig.google_analytics_profile_id!
-        );
+    if (!_.isEmpty(getServerConfig().google_analytics_profile_id)) {
+        embedGoogleAnalytics(getServerConfig().google_analytics_profile_id!);
     }
 
     $('body').on('click', '[data-event]', el => {

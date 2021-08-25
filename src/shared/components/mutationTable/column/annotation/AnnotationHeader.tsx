@@ -9,7 +9,7 @@ import {
     OncoKbHelper,
 } from 'react-mutation-mapper';
 import classnames from 'classnames';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 // oncokb
 enum OncokbTabs {
@@ -328,7 +328,7 @@ const AnnotationHeader: React.FunctionComponent<{
         <span>
             {props.name}
             <br />
-            {AppConfig.serverConfig.show_oncokb && (
+            {getServerConfig().show_oncokb && (
                 <DefaultTooltip
                     placement="top"
                     overlay={
@@ -354,7 +354,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
-            {AppConfig.serverConfig.show_civic && (
+            {getServerConfig().show_civic && (
                 <DefaultTooltip
                     placement="top"
                     overlay={
@@ -377,7 +377,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
-            {AppConfig.serverConfig.mycancergenome_show && (
+            {getServerConfig().mycancergenome_show && (
                 <DefaultTooltip
                     placement="top"
                     overlay={
@@ -402,7 +402,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     />
                 </DefaultTooltip>
             )}
-            {AppConfig.serverConfig.show_hotspot && (
+            {getServerConfig().show_hotspot && (
                 <DefaultTooltip
                     placement="top"
                     overlay={

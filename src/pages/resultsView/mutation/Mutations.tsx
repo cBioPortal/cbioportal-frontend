@@ -9,7 +9,7 @@ import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { computed, action, makeObservable } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
 import { AppStore } from '../../../AppStore';
@@ -198,17 +198,17 @@ export default class Mutations extends React.Component<
                     </div>
                     <ResultsViewMutationMapper
                         {...convertToMutationMapperProps({
-                            ...AppConfig.serverConfig,
+                            ...getServerConfig(),
                             // override ensemblLink
                             ensembl_transcript_url: this.props.store
                                 .ensemblLink,
                             // only disable oncokb and hotspots track if
                             // non-canonical transcript is selected
                             show_oncokb: mutationMapperStore.isCanonicalTranscript
-                                ? AppConfig.serverConfig.show_oncokb
+                                ? getServerConfig().show_oncokb
                                 : false,
                             show_hotspot: mutationMapperStore.isCanonicalTranscript
-                                ? AppConfig.serverConfig.show_hotspot
+                                ? getServerConfig().show_hotspot
                                 : false,
                         })}
                         oncoKbPublicApiUrl={getOncoKbApiUrl()}
@@ -249,12 +249,12 @@ export default class Mutations extends React.Component<
                         }
                         mutationAlignerUrlTemplate={getMutationAlignerUrlTemplate()}
                         showTranscriptDropDown={
-                            AppConfig.serverConfig.show_transcript_dropdown
+                            getServerConfig().show_transcript_dropdown
                         }
                         onTranscriptChange={this.onTranscriptChange}
                         onClickSettingMenu={this.onClickSettingMenu}
                         compactStyle={true}
-                        ptmSources={AppConfig.serverConfig.ptmSources}
+                        ptmSources={getServerConfig().ptmSources}
                     />
                 </div>
             );

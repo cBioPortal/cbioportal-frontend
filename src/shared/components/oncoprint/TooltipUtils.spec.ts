@@ -16,7 +16,7 @@ import {
 import $ from 'jquery';
 import { MolecularProfile, Mutation } from 'cbioportal-ts-api-client';
 import { getPatientViewUrl, getSampleViewUrl } from '../../api/urls';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 
@@ -2679,7 +2679,7 @@ describe('Oncoprint TooltipUtils', () => {
         );
 
         before(() => {
-            AppConfig.serverConfig.generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
+            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
         });
 
         it('should show data rounded to 2 decimal digits', () => {

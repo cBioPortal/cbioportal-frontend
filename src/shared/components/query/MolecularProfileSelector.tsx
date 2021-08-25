@@ -8,7 +8,7 @@ import { FlexRow } from '../flexbox/FlexBox';
 import { QueryStoreComponent } from './QueryStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SectionHeader from '../sectionHeader/SectionHeader';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 
 @observer
@@ -17,7 +17,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<
     {}
 > {
     private get showGSVA() {
-        return AppConfig.serverConfig.skin_show_gsva;
+        return getServerConfig().skin_show_gsva;
     }
 
     render() {

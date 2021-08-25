@@ -1,5 +1,5 @@
 import { observable } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { default as OncoprinterStore } from './OncoprinterStore';
 import _ from 'lodash';
 import {
@@ -176,7 +176,7 @@ export function initDriverAnnotationSettings(store: OncoprinterStore) {
         },
         get oncoKb() {
             return !!(
-                AppConfig.serverConfig.show_oncokb &&
+                getServerConfig().show_oncokb &&
                 this._oncoKb &&
                 !store.didOncoKbFail
             );

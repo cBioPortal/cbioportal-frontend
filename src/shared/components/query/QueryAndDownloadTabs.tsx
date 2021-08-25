@@ -10,7 +10,7 @@ import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { trackEvent } from 'shared/lib/tracking';
 import { If } from 'react-if';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
 
 const DOWNLOAD = 'download';
@@ -93,12 +93,11 @@ export default class QueryAndDownloadTabs extends React.Component<
     render() {
         return (
             <div className={styles.QueryAndDownloadTabs}>
-                <If condition={AppConfig.serverConfig.skin_citation_rule_text}>
+                <If condition={getServerConfig().skin_citation_rule_text}>
                     <div
                         className="citationRule"
                         dangerouslySetInnerHTML={{
-                            __html: AppConfig.serverConfig
-                                .skin_citation_rule_text!,
+                            __html: getServerConfig().skin_citation_rule_text!,
                         }}
                     ></div>
                 </If>
