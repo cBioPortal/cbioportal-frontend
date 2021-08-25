@@ -78,7 +78,7 @@ export function generateQueryVariant(
 
 export function generateQueryStructuralVariantId(
     site1EntrezGeneId: number,
-    site2EntrezGeneId: number,
+    site2EntrezGeneId: number | undefined,
     tumorType: string | null
 ): string {
     let id = `${site1EntrezGeneId}_${site2EntrezGeneId}`;
@@ -250,16 +250,19 @@ export enum StructuralVariantType {
 
 export function generateAnnotateStructuralVariantQueryFromGenes(
     site1EntrezGeneId: number,
-    site2EntrezGeneId: number,
+    site2EntrezGeneId: number | undefined,
     tumorType: string | null,
     structuralVariantType: keyof typeof StructuralVariantType,
     evidenceTypes?: EvidenceType[]
 ): AnnotateStructuralVariantQuery {
     // For most of the SV in the portal, we can assume they are fusion event. The assumption is based on that user generally will not import none fusion event in database.
-    let isIntragenic = false;
-    if (site1EntrezGeneId === site2EntrezGeneId || site2EntrezGeneId === null) {
-        isIntragenic = true;
-    }
+    // Intragenic deletion event is similar to fusion event but happens within the same gene. In this case, it's not a functional fusion but rather a deletion.
+    // Intragenic event usually is stored in the database with only one gene available, so the site2 usually is undefined or the same as site1.
+    let isIntragenic =
+        (site1EntrezGeneId === site2EntrezGeneId ||
+            site2EntrezGeneId === undefined) &&
+        structuralVariantType === StructuralVariantType.DELETION;
+
     return {
         id: generateQueryStructuralVariantId(
             site1EntrezGeneId,
@@ -270,11 +273,9 @@ export function generateAnnotateStructuralVariantQueryFromGenes(
             entrezGeneId: site1EntrezGeneId,
         },
         geneB: {
-            entrezGeneId: site2EntrezGeneId,
+            entrezGeneId: isIntragenic ? site1EntrezGeneId : site2EntrezGeneId,
         },
-        structuralVariantType: isIntragenic
-            ? 'DELETION'
-            : structuralVariantType,
+        structuralVariantType: structuralVariantType,
         functionalFusion: !isIntragenic,
         tumorType,
         evidenceTypes: evidenceTypes,
