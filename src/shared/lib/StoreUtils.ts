@@ -851,8 +851,7 @@ export async function fetchStructuralVariantOncoKbData(
         const alterationsToQuery = _.filter(
             structuralVariantData.result,
             d =>
-                d.site1EntrezGeneId &&
-                d.site2EntrezGeneId &&
+                (d.site1EntrezGeneId || d.site2EntrezGeneId) &&
                 (!!annotatedGenes[d.site1EntrezGeneId] ||
                     !!annotatedGenes[d.site2EntrezGeneId])
         );
