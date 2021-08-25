@@ -78,13 +78,10 @@ export interface IUserSelectionsProps {
     caseListNameSet: { [key: string]: string };
     removeGenomicProfileFilter: (value: string) => void;
     removeCaseListsFilter: (value: string) => void;
-    removeSampleTreatmentsFilter: (
+    removeTreatmentsFilter: (
         andedIndex: number,
-        oredIndex: number
-    ) => void;
-    removePatientTreatmentsFilter: (
-        andedIndex: number,
-        oredIndex: number
+        oredIndex: number,
+        metaKey: string
     ) => void;
 }
 
@@ -389,7 +386,8 @@ export default class UserSelections extends React.Component<
             this.props.filter.sampleTreatmentFilters.filters.length > 0
         ) {
             const f = this.renderTreatmentFilter(
-                this.props.filter.sampleTreatmentFilters
+                this.props.filter.sampleTreatmentFilters,
+                'SAMPLE_TREATMENTS'
             );
             components.push(f);
         }
@@ -399,7 +397,30 @@ export default class UserSelections extends React.Component<
             this.props.filter.patientTreatmentFilters.filters.length > 0
         ) {
             const f = this.renderTreatmentFilter(
-                this.props.filter.patientTreatmentFilters
+                this.props.filter.patientTreatmentFilters,
+                'PATIENT_TREATMENTS'
+            );
+            components.push(f);
+        }
+
+        if (
+            this.props.filter.sampleTreatmentGroupFilters &&
+            this.props.filter.sampleTreatmentGroupFilters.filters.length > 0
+        ) {
+            const f = this.renderTreatmentFilter(
+                this.props.filter.sampleTreatmentGroupFilters,
+                'SAMPLE_TREATMENT_GROUPS'
+            );
+            components.push(f);
+        }
+
+        if (
+            this.props.filter.patientTreatmentGroupFilters &&
+            this.props.filter.patientTreatmentGroupFilters.filters.length > 0
+        ) {
+            const f = this.renderTreatmentFilter(
+                this.props.filter.patientTreatmentGroupFilters,
+                'PATIENT_TREATMENT_GROUPS'
             );
             components.push(f);
         }
@@ -515,7 +536,8 @@ export default class UserSelections extends React.Component<
     }
 
     private renderTreatmentFilter(
-        f: AndedPatientTreatmentFilters | AndedSampleTreatmentFilters
+        f: AndedPatientTreatmentFilters | AndedSampleTreatmentFilters,
+        metaKey: string
     ): JSX.Element {
         type OuterFilter =
             | OredPatientTreatmentFilters
@@ -529,21 +551,22 @@ export default class UserSelections extends React.Component<
             (oFilter: OuterFilter, oIndex: number) => {
                 const pills = (oFilter.filters as any).map(
                     (iFilter: InnerFilter, iIndex: number) => {
-                        const filterInfo = this.getFilterStringAndRemoveFunc(
-                            iFilter
-                        );
-
+                        const str = iFilter.hasOwnProperty('time')
+                            ? (iFilter as SampleTreatmentFilter).time
+                            : '';
                         return (
                             <PillTag
-                                content={
-                                    iFilter.treatment + ' ' + filterInfo.str
-                                }
+                                content={iFilter.treatment + ' ' + str}
                                 backgroundColor={
                                     STUDY_VIEW_CONFIG.colors.theme
                                         .clinicalFilterContent
                                 }
                                 onDelete={() => {
-                                    filterInfo.func(oIndex, iIndex);
+                                    this.props.removeTreatmentsFilter(
+                                        oIndex,
+                                        iIndex,
+                                        metaKey
+                                    );
                                 }}
                             />
                         );
@@ -563,22 +586,6 @@ export default class UserSelections extends React.Component<
         return (
             <GroupLogic components={filters} operation={'and'} group={false} />
         );
-    }
-
-    private getFilterStringAndRemoveFunc(
-        filter: PatientTreatmentFilter | SampleTreatmentFilter
-    ): { str: string; func: (o: number, i: number) => void } {
-        if (filter.hasOwnProperty('time')) {
-            return {
-                str: (filter as SampleTreatmentFilter).time,
-                func: this.props.removeSampleTreatmentsFilter,
-            };
-        } else {
-            return {
-                str: '',
-                func: this.props.removePatientTreatmentsFilter,
-            };
-        }
     }
 
     private groupedGeneQueries(

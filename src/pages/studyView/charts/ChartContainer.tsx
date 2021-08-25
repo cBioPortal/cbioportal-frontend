@@ -88,7 +88,9 @@ const COMPARISON_CHART_TYPES: ChartType[] = [
     ChartTypeEnum.MUTATED_GENES_TABLE,
     ChartTypeEnum.CNA_GENES_TABLE,
     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE,
+    ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.PATIENT_TREATMENTS_TABLE,
+    ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE,
     ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE,
 ];
 
@@ -294,7 +296,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         // for treatments tables
         treatmentUniqueKeys?: string[];
     }) {
-        if (this.comparisonPagePossible) {
+        const foo = this.comparisonPagePossible;
+        if (foo) {
             switch (this.props.chartType) {
                 case ChartTypeEnum.PIE_CHART:
                 case ChartTypeEnum.TABLE:
@@ -842,6 +845,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
+            case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
                 return () => (
                     <SampleTreatmentsTable
@@ -879,6 +883,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
+            case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
                 return () => (
                     <PatientTreatmentsTable

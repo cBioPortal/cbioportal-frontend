@@ -4189,6 +4189,19 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4227,6 +4240,19 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4262,6 +4288,19 @@
             "schema": {
               "$ref": "#/definitions/StudyViewFilter"
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4300,6 +4339,19 @@
             "schema": {
               "$ref": "#/definitions/StudyViewFilter"
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4463,6 +4515,10 @@
           "type": "string",
           "example": "yyyy-MM-dd HH:mm:ss"
         },
+        "massSpectrometrySampleCount": {
+          "type": "integer",
+          "format": "int32"
+        },
         "methylationHm27SampleCount": {
           "type": "integer",
           "format": "int32"
@@ -4496,10 +4552,6 @@
           "type": "string"
         },
         "rppaSampleCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "massSpectrometrySampleCount": {
           "type": "integer",
           "format": "int32"
         },
@@ -6080,6 +6132,9 @@
         "patientTreatmentFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -6087,6 +6142,9 @@
           }
         },
         "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {

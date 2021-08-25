@@ -827,9 +827,13 @@ export type StudyViewFilter = {
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -1667,108 +1671,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CopyNumberCountByGene >
         > {
             return this.fetchCNAGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/copy-number-enrichments/fetch';
-        if (parameters['copyNumberEventType'] !== undefined) {
-            queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
-        }
-
-        if (parameters['enrichmentType'] !== undefined) {
-            queryParameters['enrichmentType'] = parameters['enrichmentType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch copy number enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} copyNumberEventType - Type of the copy number event
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/copy-number-enrichments/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['copyNumberEventType'] !== undefined) {
-                queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
-            }
-
-            if (parameters['enrichmentType'] !== undefined) {
-                queryParameters['enrichmentType'] = parameters['enrichmentType'];
-            }
-
-            if (parameters['groups'] !== undefined) {
-                body = parameters['groups'];
-            }
-
-            if (parameters['groups'] === undefined) {
-                reject(new Error('Missing required  parameter: groups'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch copy number enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} copyNumberEventType - Type of the copy number event
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchCopyNumberEnrichmentsUsingPOST(parameters: {
-            'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroupFilter > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationEnrichment >
-        > {
-            return this.fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4706,95 +4608,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < MutationCountByPosition >
         > {
             return this.fetchMutationCountsByPositionUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchMutationEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/mutation-enrichments/fetch';
-        if (parameters['enrichmentType'] !== undefined) {
-            queryParameters['enrichmentType'] = parameters['enrichmentType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch mutation enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/mutation-enrichments/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['enrichmentType'] !== undefined) {
-                queryParameters['enrichmentType'] = parameters['enrichmentType'];
-            }
-
-            if (parameters['groups'] !== undefined) {
-                body = parameters['groups'];
-            }
-
-            if (parameters['groups'] === undefined) {
-                reject(new Error('Missing required  parameter: groups'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch mutation enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchMutationEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroupFilter > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationEnrichment >
-        > {
-            return this.fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

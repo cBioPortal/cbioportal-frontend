@@ -40,10 +40,6 @@
       "description": " "
     },
     {
-      "name": "Copy Number Enrichments",
-      "description": " "
-    },
-    {
       "name": "Cosmic Counts",
       "description": " "
     },
@@ -81,10 +77,6 @@
     },
     {
       "name": "Info",
-      "description": " "
-    },
-    {
-      "name": "Mutation Enrichments",
       "description": " "
     },
     {
@@ -529,76 +521,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberCountByGene"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/copy-number-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Copy Number Enrichments"
-        ],
-        "summary": "Fetch copy number enrichments in a molecular profile",
-        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "copyNumberEventType",
-            "in": "query",
-            "description": "Type of the copy number event",
-            "required": false,
-            "type": "string",
-            "default": "HOMDEL",
-            "allowEmptyValue": false,
-            "enum": [
-              "AMP",
-              "GAIN",
-              "DIPLOID",
-              "HETLOSS",
-              "HOMDEL"
-            ]
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "allowEmptyValue": false,
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "groups",
-            "description": "List of groups containing sample identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -2080,60 +2002,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByPosition"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/mutation-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Mutation Enrichments"
-        ],
-        "summary": "Fetch mutation enrichments in a molecular profile",
-        "operationId": "fetchMutationEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "allowEmptyValue": false,
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "groups",
-            "description": "List of groups containing sample identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -5192,6 +5060,9 @@
         "patientTreatmentFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -5199,6 +5070,9 @@
           }
         },
         "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {

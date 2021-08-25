@@ -147,6 +147,7 @@ export interface IServerConfig {
     patient_view_use_legacy_timeline: boolean;
     installation_map_url: string;
     enable_request_body_gzip_compression: boolean;
+    enable_treatment_groups: boolean;
     referenceGenomeVersion: string;
     skin_show_unauthorized_studies: boolean;
     skin_global_message_for_unauthorized_studies: string;
