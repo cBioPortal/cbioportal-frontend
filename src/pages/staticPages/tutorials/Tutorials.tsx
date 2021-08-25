@@ -4,7 +4,7 @@ import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
 import { getNCBIlink } from 'cbioportal-frontend-commons';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 const ReturnToTop: React.FunctionComponent<{}> = function() {
     return (
@@ -35,7 +35,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 {/*    </a>{' '}*/}
                 {/*    or{' '}*/}
                 {/*    <a*/}
-                {/*        href={`${AppConfig.serverConfig*/}
+                {/*        href={`${getServerConfig()*/}
                 {/*            .skin_documentation_baseurl!.replace(*/}
                 {/*                'raw.githubusercontent.com',*/}
                 {/*                'www.github.com'*/}
@@ -189,7 +189,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 1 Introduction to cBioPortal.pdf`}
                         >
                             Download PDF
@@ -237,7 +237,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 2 Mutation Details and Patient View.pdf`}
                         >
                             Download PDF
@@ -285,7 +285,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 3 Expression Data Analysis.pdf`}
                         >
                             Download PDF
@@ -333,7 +333,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 4 Group Comparison.pdf`}
                         >
                             Download PDF
@@ -382,7 +382,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Webinar 5 API and R Client.pdf`}
                         >
                             Download PDF
@@ -421,7 +421,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 1 Single Study Exploration.pdf`}
                         >
                             Download PDF
@@ -449,7 +449,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 2 Single Study Query.pdf`}
                         >
                             Download PDF
@@ -477,7 +477,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 3 Patient View.pdf`}
                         >
                             Download PDF
@@ -505,7 +505,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 4 Virtual Studies.pdf`}
                         >
                             Download PDF
@@ -533,7 +533,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 5 Onco Query Language.pdf`}
                         >
                             Download PDF
@@ -561,7 +561,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 6 Group Comparison.pdf`}
                         >
                             Download PDF
@@ -589,7 +589,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 <div>
                     <h4 style={{ display: 'inline' }}>
                         <a
-                            href={`${AppConfig.serverConfig
+                            href={`${getServerConfig()
                                 .skin_documentation_baseurl!}tutorials/cBioPortal Tutorial 7 Pathways.pdf`}
                         >
                             Download PDF

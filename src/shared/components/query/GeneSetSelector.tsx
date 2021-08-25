@@ -12,12 +12,11 @@ import { QueryStoreComponent, Focus, GeneReplacement } from './QueryStore';
 import MutSigGeneSelector from './MutSigGeneSelector';
 import GisticGeneSelector from './GisticGeneSelector';
 import SectionHeader from '../sectionHeader/SectionHeader';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 import OQLTextArea, { GeneBoxType } from '../GeneSelectionBox/OQLTextArea';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'cbioportal-ts-api-client';
-import { bind } from 'bind-decorator';
 import GenesetsValidator from './GenesetsValidator';
 import FontAwesome from 'react-fontawesome';
 import GeneSymbolValidationError from './GeneSymbolValidationError';
@@ -38,9 +37,9 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
     @computed get geneListOptions() {
         let geneList: { id: string; genes: string[] }[] = gene_lists;
 
-        if (AppConfig.serverConfig.query_sets_of_genes) {
+        if (getServerConfig().query_sets_of_genes) {
             const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
-                AppConfig.serverConfig.query_sets_of_genes
+                getServerConfig().query_sets_of_genes!
             );
             if (parsed) {
                 geneList = parsed;
@@ -90,9 +89,9 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}> {
                         <GeneSymbolValidationError
                             sampleCount={this.store.approxSampleCount}
                             queryProductLimit={
-                                AppConfig.serverConfig.query_product_limit
+                                getServerConfig().query_product_limit
                             }
-                            email={AppConfig.serverConfig.skin_email_contact}
+                            email={getServerConfig().skin_email_contact}
                         />
                     </div>
                 </div>

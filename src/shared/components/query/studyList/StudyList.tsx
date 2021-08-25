@@ -26,7 +26,7 @@ import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 const styles = {
     ...styles_any,
@@ -221,7 +221,7 @@ export default class StudyList extends QueryStoreComponent<
                             ),
                             [`studyItem_${study.studyId}`]: true,
                             [styles.UnauthorizedStudy]:
-                                AppConfig.serverConfig
+                                getServerConfig()
                                     .skin_show_unauthorized_studies &&
                                 study.isAuthorized === false,
                         });
@@ -423,7 +423,7 @@ export default class StudyList extends QueryStoreComponent<
                             </span>
                         </DefaultTooltip>
                     )}
-                    {AppConfig.serverConfig.skin_show_unauthorized_studies &&
+                    {getServerConfig().skin_show_unauthorized_studies &&
                         study.studyId &&
                         study.isAuthorized === false && (
                             <DefaultTooltip
@@ -432,7 +432,7 @@ export default class StudyList extends QueryStoreComponent<
                                 overlay={
                                     <div className={styles.tooltip}>
                                         {
-                                            AppConfig.serverConfig
+                                            getServerConfig()
                                                 .skin_global_message_for_unauthorized_studies
                                         }
                                     </div>

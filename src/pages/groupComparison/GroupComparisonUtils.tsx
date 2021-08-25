@@ -40,7 +40,7 @@ import {
 import styles from 'pages/groupComparison/styles.module.scss';
 import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import { observer } from 'mobx-react';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { EnrichmentEventType } from 'shared/lib/comparison/ComparisonStoreUtils';
 
@@ -468,7 +468,7 @@ export function MakeEnrichmentsTabUI(
                 const content: any = [];
                 const doShowInlineTypeSelectionMenu =
                     enrichmentType == 'alterations' &&
-                    !AppConfig.serverConfig.skin_show_settings_menu;
+                    !getServerConfig().skin_show_settings_menu;
                 content.push(
                     // The alteration type selector is shown to left of the
                     // graph panels ('in-line'). This div element pushes the
@@ -993,7 +993,7 @@ export const AlterationFilterMenuSection: React.FunctionComponent<{
                             />
                         }
                         customDriverSourceName={
-                            AppConfig.serverConfig
+                            getServerConfig()
                                 .oncoprint_custom_driver_annotation_binary_menu_label ||
                             'undefined'
                         }

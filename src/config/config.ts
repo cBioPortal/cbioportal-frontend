@@ -1,6 +1,7 @@
 import {
     CategorizedConfigItems,
     IAppConfig,
+    ILoadConfig,
     IServerConfig,
 } from './IAppConfig';
 import * as _ from 'lodash';
@@ -13,7 +14,6 @@ import {
     getG2SApiUrl,
     getGenomeNexusApiUrl,
     getOncoKbApiUrl,
-    trimTrailingSlash,
 } from '../shared/api/urls';
 import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
@@ -24,7 +24,10 @@ import internalClient from '../shared/api/cbioportalInternalClientInstance';
 import $ from 'jquery';
 import { AppStore } from '../AppStore';
 import { CBioPortalAPI, CBioPortalAPIInternal } from 'cbioportal-ts-api-client';
-import { cachePostMethodsOnClient } from 'cbioportal-frontend-commons';
+import {
+    cachePostMethodsOnClient,
+    getBrowserWindow,
+} from 'cbioportal-frontend-commons';
 import {
     Genome2StructureAPI,
     GenomeNexusAPI,
@@ -32,39 +35,35 @@ import {
 } from 'genome-nexus-ts-api-client';
 import { OncoKbAPI } from 'oncokb-ts-api-client';
 import { CivicAPI } from 'cbioportal-utils';
-import AppConfig from 'appConfig';
 import { sendSentryMessage } from '../shared/lib/tracking';
 import { log } from '../shared/lib/consoleLog';
 import pako from 'pako';
 
-const config: any = (window as any).frontendConfig || { serverConfig: {} };
-
 const win = window as any;
 
-export default config;
+// these should not be exported.  they should only be accessed
+// via getServerConfig and getLoadConfig
+const config: any = { serverConfig: {} };
+const loadConfig: ILoadConfig = {};
 
-export function updateConfig(obj: Partial<IAppConfig>) {
-    // handle serverConfig
-    if (obj.serverConfig) {
-        setServerConfig(obj.serverConfig);
-        delete obj.serverConfig;
-    }
-
-    // first construct the new object, but DEFERRING TO THE OLD PROPERTIES
-    const nextConfig = Object.assign({}, obj, config);
-
-    // now we have to overwrite AppConfig props
-    // NOTE: we cannot put AppConfig as target of above assign because
-    // assignment proceeds left to right and the original AppConfig that's the last param will be overwritten
-    // so we have to copy
-
-    // WE CANNOT REPLACE REFERENCE
-    // we have to use assign here (as opposed to replacing the reference because importers
-    // already have reference and those will become detached from this
-    Object.assign(config, nextConfig);
+export function getServerConfig(): IServerConfig {
+    return config.serverConfig;
 }
 
 export function setServerConfig(serverConfig: { [key: string]: any }) {
+    Object.assign(config.serverConfig, serverConfig);
+}
+
+export function getLoadConfig(): ILoadConfig {
+    return loadConfig;
+}
+
+// expose it for use by tests
+win.setServerConfig = setServerConfig;
+win.getLoadConfig = getLoadConfig;
+win.getServerConfig = getServerConfig;
+
+function applyDefaultConfigurationValues(serverConfig: any) {
     _.each(ServerConfigDefaults, (defaultVal, key) => {
         // we only want to work on props which are actually passed to us for setting
         // WE DO NOT EVER SET DEFAULT VALUES EXCEPT WHEN A PASSED VALUE IS NULL
@@ -88,29 +87,6 @@ export function setServerConfig(serverConfig: { [key: string]: any }) {
             }
         }
     });
-
-    const frontendOverride = serverConfig.frontendConfigOverride
-        ? JSON.parse(serverConfig.frontendConfigOverride)
-        : {};
-
-    // TODO: temp WARNING remove after we are done testing with AWS. This allows
-    // one to change the backend api through the frontendConfigOverride file, so
-    // we can point to a different backend then AppConfig.baseUrl
-    // ** Don't try this at home, kids **
-    if (frontendOverride.apiRoot) {
-        console.log(`Overriding apiRoot with: ${frontendOverride.apiRoot}`);
-        config.apiRoot = `${frontendOverride.apiRoot}`;
-    }
-
-    // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign(
-        {},
-        serverConfig,
-        frontendOverride,
-        config.serverConfig || {}
-    );
-
-    config.serverConfig = mergedConfig;
 }
 
 export class ServerConfigHelpers {
@@ -145,13 +121,13 @@ export class ServerConfigHelpers {
     }
 
     static sessionServiceIsEnabled() {
-        return config.serverConfig.sessionServiceEnabled;
+        return getServerConfig().sessionServiceEnabled;
     }
 
     static getUserEmailAddress(): string | undefined {
-        return config.serverConfig.user_email_address &&
-            config.serverConfig.user_email_address !== 'anonymousUser'
-            ? config.serverConfig.user_email_address
+        return getServerConfig().user_email_address &&
+            getServerConfig().user_email_address !== 'anonymousUser'
+            ? getServerConfig().user_email_address
             : undefined;
     }
 }
@@ -165,7 +141,7 @@ function cachePostMethods(
         obj,
         excluded,
         regex,
-        AppConfig.serverConfig.api_cache_limit,
+        getServerConfig().api_cache_limit,
         sendSentryMessage,
         log
     );
@@ -192,7 +168,7 @@ export function initializeAPIClients() {
     cachePostMethods(GenomeNexusAPIInternal, [], /POST$/);
     cachePostMethods(OncoKbAPI);
 
-    if (AppConfig.serverConfig.enable_request_body_gzip_compression) {
+    if (getServerConfig().enable_request_body_gzip_compression) {
         compressRequestBodies(
             CBioPortalAPI,
             [
@@ -260,14 +236,58 @@ function compressRequestBodies(
     apiClient.prototype.request = newRequestFunc;
 }
 
-export function initializeConfiguration() {
+export function initializeLoadConfiguration() {
     // @ts-ignore: ENV_* are defined in webpack.config.js
+    const BASEURL = getBrowserWindow().frontendConfig.baseUrl;
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const APIROOT =
+        // @ts-ignore: ENV_* are defined in webpack.config.js
+        getBrowserWindow().frontendConfig.apiRoot || `${ENV_CBIOPORTAL_URL}/`;
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const GENOME_NEXUS_ROOT = `${ENV_GENOME_NEXUS_URL}/`;
+
+    // we want to respect frontUrl if it is already set (case where localdist is true)
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const frontendUrl =
+        getBrowserWindow().frontendConfig.frontendUrl ||
+        `//${win.location.host}/`;
+
+    const configServiceUrl =
+        getBrowserWindow().frontendConfig.configurationServiceUrl ||
+        `${APIROOT}config_service.jsp`;
+
+    const loadConfig: Partial<IAppConfig> = {
+        configurationServiceUrl: configServiceUrl,
+        apiRoot: APIROOT,
+        frontendUrl: frontendUrl,
+        baseUrl: BASEURL,
+    };
+
+    setLoadConfig(loadConfig);
+}
+
+export function initializeServerConfiguration(rawConfiguration: any) {
+    //were rawConfiguration values are
+
+    // this fixes/normalizes empty strings or erroneous types
+    // sent in configuration from server
+    applyDefaultConfigurationValues(rawConfiguration);
+
+    // if we have received a frontend config override value, this
+    // is unparsed json which we want to use to overwrite configuration
+    // it will SUPERSEDE normal configuration
+    const frontendOverride = rawConfiguration.frontendConfigOverride
+        ? JSON.parse(rawConfiguration.frontendConfigOverride)
+        : {};
+
+    let localStorageOverride: any = {};
 
     // handle localStorage
     // LOCAL STORAGE TRUMPS EVERYTHING EXCEPT WHAT'S ORIGINALLY SET IN JSP
     if (localStorage.frontendConfig) {
         try {
-            updateConfig(JSON.parse(localStorage.frontendConfig));
+            localStorageOverride = JSON.parse(localStorage.frontendConfig);
             console.log(
                 'Using localStorage.frontendConfig (overriding window.frontendConfig): ' +
                     localStorage.frontendConfig
@@ -278,37 +298,23 @@ export function initializeConfiguration() {
         }
     }
 
-    // @ts-ignore: ENV_* are defined in webpack.config.js
-    const APIROOT = `${ENV_CBIOPORTAL_URL}/`;
-    // @ts-ignore: ENV_* are defined in webpack.config.js
-    const GENOME_NEXUS_ROOT = `${ENV_GENOME_NEXUS_URL}/`;
+    // this establishes the order of precedence of configuration
+    // the override each other in the following order
+    // Note: server config defaults will only be applied where properties
+    // don't yet exist
+    const mergedConfig = Object.assign(
+        {},
+        ServerConfigDefaults,
+        rawConfiguration,
+        frontendOverride.serverConfig,
+        localStorageOverride.serverConfig
+    );
 
-    // we want to respect frontUrl if it is already set (case where localdist is true)
-    // @ts-ignore: ENV_* are defined in webpack.config.js
-    const frontendUrl = config.frontendUrl || `//${win.location.host}/`;
-
-    const configServiceUrl =
-        config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
-
-    // should override both when in dev mode and when serving compiled source
-    // code outside of legacy project
-    // @ts-ignore: ENV_* are defined in webpack.config.js
-    if (IS_DEV_MODE || !config.frontendUrl) {
-        // @ts-ignore: ENV_* are defined in webpack.config.js
-        const envConfig: Partial<IAppConfig> = {
-            configurationServiceUrl: configServiceUrl,
-            apiRoot: APIROOT,
-            frontendUrl: frontendUrl,
-            serverConfig: {
-                genomenexus_url: GENOME_NEXUS_ROOT,
-            } as IServerConfig,
-        };
-        updateConfig(envConfig);
-    }
+    setServerConfig(mergedConfig);
 }
 
-export function setConfigDefaults() {
-    setServerConfig(ServerConfigDefaults);
+export function setLoadConfig(obj: Partial<ILoadConfig>) {
+    Object.assign(loadConfig, obj);
 }
 
 export function fetchServerConfig() {
@@ -319,7 +325,7 @@ export function fetchServerConfig() {
     });
 }
 
-export function initializeAppStore(appStore: AppStore, config: IServerConfig) {
-    appStore.authMethod = config.authenticationMethod;
-    appStore.userName = config.user_email_address;
+export function initializeAppStore(appStore: AppStore) {
+    appStore.authMethod = getServerConfig().authenticationMethod;
+    appStore.userName = getServerConfig().user_email_address;
 }

@@ -1,5 +1,4 @@
 import { default as URL, QueryParams } from 'url';
-import AppConfig from 'appConfig';
 import { BuildUrlParams, getBrowserWindow } from 'cbioportal-frontend-commons';
 import { DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE } from 'react-mutation-mapper';
 import * as _ from 'lodash';
@@ -7,6 +6,7 @@ import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupC
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
 import { PagePath } from 'shared/enums/PagePaths';
 import { EncodedURLParam } from '../lib/bitly';
+import { getLoadConfig, getServerConfig } from 'config/config';
 
 export function trimTrailingSlash(str: string) {
     return str.replace(/\/$/g, '');
@@ -28,7 +28,7 @@ export function buildCBioPortalAPIUrl(
             ? { pathname: pathnameOrParams, query, hash }
             : pathnameOrParams;
 
-    const apiRootUrl = URL.parse(trimTrailingSlash(AppConfig.apiRoot!));
+    const apiRootUrl = URL.parse(trimTrailingSlash(getLoadConfig().apiRoot!));
 
     // prepend the root path (e.g. "beta"
     params.pathname =
@@ -63,7 +63,9 @@ export function buildCBioPortalPageUrl(
     // AppConfig.frontendUrl format is '//url/', hence the specified slice to get just 'url'
     return URL.format({
         protocol: window.location.protocol,
-        host: AppConfig.baseUrl || AppConfig.frontendUrl?.slice(2, -1),
+        host:
+            getLoadConfig().baseUrl ||
+            getLoadConfig().frontendUrl?.slice(2, -1),
         ...params,
     });
 }
@@ -79,16 +81,16 @@ export function getCurrentURLWithoutHash() {
 
 // this gives us the root of the instance (.e.g. //www.bioportal.org/beta)
 export function buildCBioLink(path: string) {
-    return '//' + AppConfig.baseUrl + '/' + path;
+    return '//' + getLoadConfig().baseUrl + '/' + path;
 }
 
 export function getCbioPortalApiUrl() {
-    const root = trimTrailingSlash(AppConfig.apiRoot!);
+    const root = trimTrailingSlash(getLoadConfig().apiRoot!);
     return `${root}/api`;
 }
 
 export function getFrontendAssetUrl(path: string) {
-    const root = trimTrailingSlash(AppConfig.frontendUrl!);
+    const root = trimTrailingSlash(getLoadConfig().frontendUrl!);
     return `${root}/${path}`;
 }
 
@@ -161,17 +163,17 @@ export function getComparisonLoadingUrl(
 }
 
 export function getPubMedUrl(pmid: string) {
-    return _.template(AppConfig.serverConfig.pubmed_url!)({ pmid });
+    return _.template(getServerConfig().pubmed_url!)({ pmid });
 }
 
 export function getMyGeneUrl(entrezGeneId: number) {
-    return _.template(AppConfig.serverConfig.mygene_info_url!)({
+    return _.template(getServerConfig().mygene_info_url!)({
         entrezGeneId,
     });
 }
 
 export function getUniprotIdUrl(swissProtAccession: string) {
-    return _.template(AppConfig.serverConfig.uniprot_id_url!)({
+    return _.template(getServerConfig().uniprot_id_url!)({
         swissProtAccession: swissProtAccession,
     });
 }
@@ -210,12 +212,12 @@ export function getOncoKbApiUrl() {
 }
 
 export function getInstituteLogoUrl() {
-    if (AppConfig.serverConfig.skin_right_logo) {
-        if (/^http/.test(AppConfig.serverConfig.skin_right_logo)) {
-            return AppConfig.serverConfig.skin_right_logo;
+    if (getServerConfig().skin_right_logo) {
+        if (/^http/.test(getServerConfig().skin_right_logo || '')) {
+            return getServerConfig().skin_right_logo!;
         } else {
             return buildCBioPortalPageUrl(
-                `images/${AppConfig.serverConfig.skin_right_logo}`
+                `images/${getServerConfig().skin_right_logo}`
             );
         }
     } else {
@@ -224,7 +226,7 @@ export function getInstituteLogoUrl() {
 }
 
 export function getGenomeNexusApiUrl() {
-    let url = AppConfig.serverConfig.genomenexus_url;
+    let url = getServerConfig().genomenexus_url;
     return getProxyUrlIfNecessary(url);
 }
 
@@ -232,16 +234,13 @@ export function getGenomeNexusHgvsgUrl(
     hgvsg: string,
     referenceGenomeUrl: string | undefined
 ) {
-    return referenceGenomeUrl === AppConfig.serverConfig.genomenexus_url_grch38
-        ? `${AppConfig.serverConfig.genomenexus_url_grch38}/variant/${hgvsg}`
-        : `${AppConfig.serverConfig.genomenexus_website_url}/variant/${hgvsg}`;
+    return referenceGenomeUrl === getServerConfig().genomenexus_url_grch38
+        ? `${getServerConfig().genomenexus_url_grch38}/variant/${hgvsg}`
+        : `${getServerConfig().genomenexus_website_url}/variant/${hgvsg}`;
 }
 
 export function getSessionUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -252,10 +251,7 @@ export function getSessionUrl() {
 }
 
 export function fetchComparisonGroupsServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -266,10 +262,7 @@ export function fetchComparisonGroupsServiceUrl() {
 }
 
 export function getComparisonGroupServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -280,10 +273,7 @@ export function getComparisonGroupServiceUrl() {
 }
 
 export function getComparisonSessionServiceUrl() {
-    if (
-        AppConfig.serverConfig &&
-        AppConfig.serverConfig.hasOwnProperty('apiRoot')
-    ) {
+    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
         // TODO: remove this after switch to AWS. This is a hack to use proxy
         // session-service from non apiRoot. We'll have to come up with a better
         // solution for auth portals
@@ -301,23 +291,23 @@ export function getEncodedRedirectUrl(targetUrl: string) {
 
 export function getConfigurationServiceApiUrl() {
     return (
-        AppConfig.configurationServiceUrl ||
+        getLoadConfig().configurationServiceUrl ||
         buildCBioPortalAPIUrl('config_service.jsp')
     );
 }
 
 export function getG2SApiUrl() {
-    return AppConfig.serverConfig.g2s_url;
+    return getServerConfig().g2s_url;
 }
 
 export function getDigitalSlideArchiveMetaUrl(patientId: string) {
-    return AppConfig.serverConfig.digital_slide_archive_meta_url + patientId;
+    return getServerConfig().digital_slide_archive_meta_url + patientId;
 }
 export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
     //format:
     //https://cancer.digitalslidearchive.org/#!/CDSA/caseName/TCGA-02-0006
     return (
-        AppConfig.serverConfig.digital_slide_archive_iframe_url +
+        getServerConfig().digital_slide_archive_iframe_url +
         `#!/CDSA/${patientId}`
     );
 }
@@ -334,23 +324,23 @@ export function getStudyDownloadListUrl() {
 }
 
 export function getMDAndersonHeatmapPatientUrl(patientId: string) {
-    return AppConfig.serverConfig.mdacc_heatmap_patient_url + patientId;
+    return getServerConfig().mdacc_heatmap_patient_url + patientId;
 }
 
 export function getMDAndersonHeatMapMetaUrl(patientId: string) {
-    return AppConfig.serverConfig.mdacc_heatmap_meta_url + patientId;
+    return getServerConfig().mdacc_heatmap_meta_url + patientId;
 }
 
 export function getMDAndersonHeatmapStudyMetaUrl(studyId: string) {
-    return AppConfig.serverConfig.mdacc_heatmap_study_meta_url + studyId;
+    return getServerConfig().mdacc_heatmap_study_meta_url + studyId;
 }
 
 export function getMDAndersonHeatmapStudyUrl(studyId: string) {
-    return AppConfig.serverConfig.mdacc_heatmap_study_url + studyId;
+    return getServerConfig().mdacc_heatmap_study_url + studyId;
 }
 
 export function getBasePath() {
-    return AppConfig.baseUrl!.replace(/[^\/]*/, '');
+    return getLoadConfig().baseUrl!.replace(/[^\/]*/, '');
 }
 
 export function getDocsUrl(sourceUrl: string, docsBaseUrl?: string): string {
@@ -368,7 +358,7 @@ export function getWholeSlideViewerUrl(
 ): string {
     try {
         const tokenInfo = JSON.parse(
-            AppConfig.serverConfig.mskWholeSlideViewerToken
+            getServerConfig().mskWholeSlideViewerToken
         );
         const token = `&token=${tokenInfo.token}`;
         const time = `&t=${tokenInfo.time}`;

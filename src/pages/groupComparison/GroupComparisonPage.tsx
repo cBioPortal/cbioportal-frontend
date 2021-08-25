@@ -42,7 +42,7 @@ import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/P
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -175,8 +175,7 @@ export default class GroupComparisonPage extends React.Component<
                                     : ''
                             }
                         >
-                            {(AppConfig.serverConfig
-                                .skin_show_settings_menu && (
+                            {(getServerConfig().skin_show_settings_menu && (
                                 <AlterationFilterMenuSection
                                     store={this.store}
                                     updateSelectedEnrichmentEventTypes={

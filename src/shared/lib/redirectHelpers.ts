@@ -2,7 +2,7 @@ import ExtendedRouterStore from './ExtendedRouterStore';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { QueryParams } from 'url';
 import { PatientViewUrlParams } from '../../pages/patientView/PatientViewPage';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import { EncodedURLParam } from './bitly';
 import { ServerConfigHelpers } from 'config/config';
@@ -114,10 +114,10 @@ export function handleCaseDO() {
 async function getCuratedNonRedundantStudyList() {
     // Parse curated non-redundant set from AppConfig
     let quickSelectButtons: CategorizedConfigItems = {};
-    if (AppConfig.serverConfig.skin_quick_select_buttons) {
+    if (getServerConfig().skin_quick_select_buttons) {
         try {
             quickSelectButtons = ServerConfigHelpers.parseConfigFormat(
-                AppConfig.serverConfig.skin_quick_select_buttons
+                getServerConfig().skin_quick_select_buttons
             );
         } catch (ex) {
             return {};
@@ -162,8 +162,8 @@ export async function handleLinkOut() {
             currentQuery.cancer_study_id ||
             // use same set of studies as quick search gene query if no
             // specific study is supplied
-            AppConfig.serverConfig.default_cross_cancer_study_session_id ||
-            AppConfig.serverConfig.default_cross_cancer_study_list,
+            getServerConfig().default_cross_cancer_study_session_id ||
+            getServerConfig().default_cross_cancer_study_list,
     };
 
     (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(

@@ -14,7 +14,7 @@ import classnames from 'classnames';
 import { serializeEvent } from '../../../../shared/lib/tracking';
 import { getOqlMessages } from '../../../../shared/lib/StoreUtils';
 import { CUSTOM_CASE_LIST_ID } from '../../../../shared/components/query/QueryStore';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { remoteData } from 'cbioportal-frontend-commons';
 
 export interface IRightPanelProps {
@@ -68,7 +68,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
             return (
                 this.props.store.geneQueries.length *
                     this.props.store.selectedSamples.result.length >
-                AppConfig.serverConfig.query_product_limit
+                getServerConfig().query_product_limit
             );
         } else {
             return false;
@@ -78,7 +78,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
     @computed get geneLimit(): number {
         if (this.props.store.selectedSamples.isComplete) {
             return Math.floor(
-                AppConfig.serverConfig.query_product_limit /
+                getServerConfig().query_product_limit /
                     this.props.store.selectedSamples.result.length
             );
         } else {

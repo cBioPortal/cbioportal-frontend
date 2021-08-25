@@ -37,7 +37,7 @@ import {
     IAxisData,
     axisHasNegativeNumbers,
 } from 'pages/resultsView/plots/PlotsTabUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
 import * as _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
@@ -902,7 +902,7 @@ describe('PlotsTabUtils', () => {
 
     describe('deriveDisplayTextFromGenericAssayType', () => {
         before(() => {
-            AppConfig.serverConfig.generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
+            getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
         });
         it('derive from the existing display text', () => {
             const displayText = 'Treatment Response';

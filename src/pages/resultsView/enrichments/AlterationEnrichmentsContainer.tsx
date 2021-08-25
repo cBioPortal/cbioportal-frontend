@@ -38,7 +38,7 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
@@ -498,7 +498,7 @@ export default class AlterationEnrichmentContainer extends React.Component<
             );
         }
 
-        const useInlineTypeSelectorMenu = !AppConfig.serverConfig
+        const useInlineTypeSelectorMenu = !getServerConfig()
             .skin_show_settings_menu;
 
         return (
