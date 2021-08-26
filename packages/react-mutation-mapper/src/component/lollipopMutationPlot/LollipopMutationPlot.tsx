@@ -89,6 +89,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     filterResetPanel?: JSX.Element;
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
+    collapsePtmTrack?: boolean;
 };
 
 @observer
@@ -811,6 +812,7 @@ export default class LollipopMutationPlot<
                         pubMedCache={this.props.pubMedCache}
                         proteinLength={this.proteinLength}
                         geneXOffset={this.geneXOffset}
+                        collapsePtmTrack={this.props.collapsePtmTrack}
                     />
                 </div>
             );

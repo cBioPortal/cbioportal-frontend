@@ -31,6 +31,7 @@ type PtmTrackProps = TrackProps & {
     dataSource?: string;
     dataSourceUrl?: string;
     ptmTooltipColumnOverrides?: { [id: string]: Partial<Column> };
+    collapsed?: boolean;
 };
 
 export const PtmTooltip: React.FunctionComponent<{
@@ -125,7 +126,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
     };
 
     @observable
-    private expanded = true;
+    private expanded = !this.props.collapsed;
 
     @computed get ptmSpecs(): TrackItemSpec[] {
         const ptmDataByProteinPosStart = this.props.store

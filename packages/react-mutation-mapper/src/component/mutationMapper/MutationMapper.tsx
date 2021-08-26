@@ -101,6 +101,7 @@ export type MutationMapperProps = {
     filterApplier?: FilterApplier;
     onTranscriptChange?: (transcript: string) => void;
     compactStyle?: boolean;
+    collapsePtmTrack?: boolean;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -357,6 +358,7 @@ export default class MutationMapper<
                 lollipopTooltipCountInfo={
                     this.props.plotLollipopTooltipCountInfo
                 }
+                collapsePtmTrack={this.props.collapsePtmTrack}
             />
         );
     }
