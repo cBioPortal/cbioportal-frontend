@@ -27,6 +27,7 @@ type TrackPanelProps = {
     maxHeight?: number;
     trackVisibility?: TrackVisibility;
     tracks?: TrackName[];
+    collapsePtmTrack?: boolean;
 };
 
 @observer
@@ -132,6 +133,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 ptmTooltipColumnOverrides={this.getPtmTooltipColumnOverrides(
                     ptmSource
                 )}
+                collapsed={this.props.collapsePtmTrack}
             />
         ) : null;
     }
