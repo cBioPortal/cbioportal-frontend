@@ -48,7 +48,7 @@ import Adapter from 'enzyme-adapter-react-16';
 Enzyme.configure({ adapter: new Adapter() });
 
 describe('ASCNCopyNumberElement', () => {
-    let nullSampleManager = new SampleManager([]);
+    let nullSampleManager = new SampleManager([], []);
 
     function initSample() {
         return {
