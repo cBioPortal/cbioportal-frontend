@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import ErrorIcon from './ErrorIcon';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IErrorMessageProps {
     message?: string;
@@ -30,10 +30,8 @@ export default class ErrorMessage extends React.Component<
                 {this.props.message!} Please let us know about this error and
                 how you got here at{' '}
                 <b style={{ whiteSpace: 'nowrap' }}>
-                    <a
-                        href={`mailto:${AppConfig.serverConfig.skin_email_contact}`}
-                    >
-                        {AppConfig.serverConfig.skin_email_contact}
+                    <a href={`mailto:${getServerConfig().skin_email_contact}`}>
+                        {getServerConfig().skin_email_contact}
                     </a>
                 </b>
             </span>

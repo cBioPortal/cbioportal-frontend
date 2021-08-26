@@ -1,7 +1,7 @@
 import { Mutation } from 'cbioportal-ts-api-client';
 import { GenomeNexusAPI, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { fetchVariantAnnotationsByMutation } from 'react-mutation-mapper';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export function normalizeMutation<T extends Pick<Mutation, 'chr'>>(
     mutation: T
@@ -24,7 +24,7 @@ export function createVariantAnnotationsByMutationFetcher(
             return fetchVariantAnnotationsByMutation(
                 queries,
                 fields,
-                AppConfig.serverConfig.isoformOverrideSource,
+                getServerConfig().isoformOverrideSource,
                 client
             );
         } else {

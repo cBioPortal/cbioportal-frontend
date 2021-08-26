@@ -10,7 +10,7 @@ import { QueryStoreComponent, Focus } from './QueryStore';
 import GenesetsHierarchySelector from './GenesetsHierarchySelector';
 import GenesetsVolcanoSelector from './GenesetsVolcanoSelector';
 import SectionHeader from '../sectionHeader/SectionHeader';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
 
 export interface GenesetsSelectorProps {}
@@ -34,9 +34,9 @@ export default class GenesetsSelector extends QueryStoreComponent<
     @computed get geneListOptions() {
         let geneList: { id: string; genes: string[] }[] = gene_lists;
 
-        if (AppConfig.serverConfig.query_sets_of_genes) {
+        if (getServerConfig().query_sets_of_genes) {
             const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(
-                AppConfig.serverConfig.query_sets_of_genes
+                getServerConfig().query_sets_of_genes!
             );
             if (parsed) {
                 geneList = parsed;
