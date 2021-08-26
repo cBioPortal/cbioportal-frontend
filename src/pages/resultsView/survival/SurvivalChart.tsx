@@ -341,24 +341,42 @@ export default class SurvivalChart
         return data;
     }
 
-    private get pValueText() {
-        if (this.props.pValue !== null && this.props.pValue !== undefined) {
-            return (
-                <VictoryLabel
-                    x={this.styleOpts.pValue.x}
-                    y={this.styleOpts.pValue.y}
-                    style={baseLabelStyles}
-                    textAnchor={this.styleOpts.pValue.textAnchor}
-                    text={`Logrank Test P-Value: ${toConditionalPrecision(
-                        this.props.pValue,
-                        3,
-                        0.01
-                    )}`}
-                />
-            );
+    private get showPValueText() {
+        // p value is not null or undefined
+        return !_.isNil(this.props.pValue);
+    }
+
+    private get pValue() {
+        // show NA if any group has least than 10 cases
+        const showNA = _.some(
+            this.props.analysisGroups,
+            group => this.props.sortedGroupedSurvivals[group.value].length < 10
+        );
+        // TODO: Temporarily use the show_p_q_values parameter to hide p value
+        // for GENIE. We can make a more general config class in the future once
+        // we have a better idea of how to handle p/q values in small groups for
+        // the public portal
+        if (
+            !getServerConfig()
+                .survival_show_p_q_values_in_survival_type_table &&
+            showNA
+        ) {
+            return 'N/A (<10 cases)';
         } else {
-            return null;
+            return toConditionalPrecision(this.props.pValue!, 3, 0.01);
         }
+    }
+
+    private get pValueText() {
+        return (
+            <VictoryLabel
+                x={this.styleOpts.pValue.x}
+                y={this.styleOpts.pValue.y}
+                style={baseLabelStyles}
+                textAnchor={this.styleOpts.pValue.textAnchor}
+                text={`Logrank Test P-Value: ${this.pValue}`}
+            />
+        );
     }
 
     @computed get legendDataForDownload() {
@@ -673,7 +691,7 @@ export default class SurvivalChart
                         />
                     )}
                     {this.legendForDownload}
-                    {this.pValueText}
+                    {this.showPValueText && this.pValueText}
                 </VictoryChart>
             </div>
         );
