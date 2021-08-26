@@ -343,7 +343,7 @@ describe('ASCNCopyNumberColumnFormatter', () => {
     const s1NoWgdClinicalDataMapError = mockErrorClinicalDataMapPromise();
 
     /* test column definitions */
-    let nullSampleManager = new SampleManager([]);
+    let nullSampleManager = new SampleManager([], []);
     let s1NoWgdColDef = getDefaultASCNCopyNumberColumnDefinition(
         sample1Ids,
         s1NoWgdClinicalDataMap,
