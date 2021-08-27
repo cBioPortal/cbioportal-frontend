@@ -3,6 +3,7 @@ import * as React from 'react';
 import ReactTable, { RowInfo } from 'react-table';
 
 import { GnomadSummary } from '../../model/GnomadSummary';
+import { GnomadTableColumnName } from '../../util/GnomadUtils';
 import ColumnHeader from '../column/ColumnHeader';
 
 import './gnomadFrequencyTable.scss';
@@ -10,6 +11,7 @@ import './gnomadFrequencyTable.scss';
 export interface IGnomadFrequencyTableProps {
     data: GnomadSummary[];
     gnomadUrl: string;
+    hideDisclaimer?: boolean;
 }
 
 export function frequencyOutput(frequency: number) {
@@ -26,14 +28,6 @@ export function frequencyOutput(frequency: number) {
             </span>
         );
     }
-}
-
-export enum GnomadTableColumnName {
-    population = 'population',
-    alleleCount = 'ac',
-    alleleNumber = 'an',
-    homozygotes = 'hom',
-    alleleFrequency = 'af',
 }
 
 const headerClassName = 'text-wrap font-weight-bold';
@@ -88,29 +82,46 @@ function renderNumericalValue(column: any) {
     return <span className="pull-right mr-1">{column.value}</span>;
 }
 
+const Disclaimer: React.FunctionComponent<{ gnomadUrl: string }> = props => {
+    const myVariantInfoLink = (
+        <a href="https://myvariant.info/" target="_blank">
+            myvariant.info
+        </a>
+    );
+
+    const genomeNexusLink = (
+        <a href="https://www.genomenexus.org/" target="_blank">
+            genomenexus.org
+        </a>
+    );
+
+    const gnomadLink = (
+        <a href={props.gnomadUrl} target="_blank">
+            gnomAD
+        </a>
+    );
+
+    return (
+        <div
+            style={{
+                fontSize: 'x-small',
+                textAlign: 'center',
+                paddingTop: 5,
+            }}
+        >
+            Source: {genomeNexusLink}, which serves {myVariantInfoLink}'s gnomAD
+            data.
+            <br />
+            Latest {gnomadLink} data may differ.
+        </div>
+    );
+};
+
 export default class GnomadFrequencyTable extends React.Component<
     IGnomadFrequencyTableProps,
     {}
 > {
     public render() {
-        const myvariantLink = (
-            <a href="https://myvariant.info/" target="_blank">
-                myvariant.info
-            </a>
-        );
-
-        const genomeNexusLink = (
-            <a href="https://www.genomenexus.org/" target="_blank">
-                genomenexus.org
-            </a>
-        );
-
-        const gnomadLink = (
-            <a href={this.props.gnomadUrl} target="_blank">
-                gnomAD
-            </a>
-        );
-
         return (
             <div className="gnomad-frequency-table" data-test="gnomad-table">
                 <ReactTable
@@ -166,18 +177,9 @@ export default class GnomadFrequencyTable extends React.Component<
                         },
                     ]}
                 />
-                <div
-                    style={{
-                        fontSize: 'x-small',
-                        textAlign: 'center',
-                        paddingTop: 5,
-                    }}
-                >
-                    Source: {genomeNexusLink}, which serves {myvariantLink}'s
-                    gnomAD data.
-                    <br />
-                    Latest {gnomadLink} data may differ.
-                </div>
+                {!this.props.hideDisclaimer && (
+                    <Disclaimer gnomadUrl={this.props.gnomadUrl} />
+                )}
             </div>
         );
     }
