@@ -361,7 +361,7 @@ export default class SurvivalChart
                 .survival_show_p_q_values_in_survival_type_table &&
             showNA
         ) {
-            return 'N/A (<10 cases)';
+            return 'N/A (<10 cases in a group)';
         } else {
             return toConditionalPrecision(this.props.pValue!, 3, 0.01);
         }
