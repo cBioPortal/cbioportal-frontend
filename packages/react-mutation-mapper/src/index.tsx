@@ -86,7 +86,8 @@ export {
 } from './component/filter/MutationStatusBadgeSelector';
 export {
     default as GnomadFrequency,
-    calculateAlleleFrequency as calculateGnomadAlleleFrequency,
+    GnomadFrequencyBreakdown,
+    GnomadFrequencyValue,
 } from './component/gnomad/GnomadFrequency';
 export { default as GnomadFrequencyTable } from './component/gnomad/GnomadFrequencyTable';
 export {
@@ -161,6 +162,10 @@ export { SequenceSpec } from './model/SequenceSpec';
 
 export * from './util/DataFetcherUtils';
 export * from './util/FilterUtils';
+export {
+    calculateGnomadAlleleFrequency,
+    getGnomadData,
+} from './util/GnomadUtils';
 export {
     MUTATION_TYPE_PRIORITY,
     mutationTypeSort,
