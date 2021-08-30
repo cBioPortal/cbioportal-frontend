@@ -162,7 +162,7 @@ var config = {
         WebpackFailPlugin,
         new ProgressBarPlugin(),
         new webpack.DllReferencePlugin({
-            context: '.',
+            context: join(root, '.'),
             manifest: require('./common-dist/common-manifest.json'),
         }),
         new CopyWebpackPlugin([
