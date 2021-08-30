@@ -25911,11 +25911,6 @@ webpack-dev-server@^3.3.1:
     webpack-log "^2.0.0"
     yargs "12.0.5"
 
-webpack-fail-plugin@^1.0.5:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/webpack-fail-plugin/-/webpack-fail-plugin-1.0.6.tgz#a135ee070a258548837f921d452004c695889ee7"
-  integrity sha1-oTXuBwolhUiDf5IdRSAExpWInuc=
-
 webpack-log@^1.0.1:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/webpack-log/-/webpack-log-1.2.0.tgz#a4b34cda6b22b518dbb0ab32e567962d5c72a43d"
