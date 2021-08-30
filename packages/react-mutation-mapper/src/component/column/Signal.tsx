@@ -26,6 +26,10 @@ type SignalProps = {
     >;
 };
 
+type SignalValueProps = SignalProps & {
+    significantDigits?: number;
+};
+
 export function getSignalData(
     mutation: Mutation,
     indexedVariantAnnotations?: RemoteData<
@@ -72,6 +76,86 @@ export function download(signalData: IExtendedSignalMutation): string {
         : '';
 }
 
+export function getSignalValue(
+    mutation: Mutation,
+    indexedVariantAnnotations?: RemoteData<
+        { [genomicLocation: string]: VariantAnnotation } | undefined
+    >,
+    significantDigits?: number
+) {
+    const signalData = getSignalData(mutation, indexedVariantAnnotations);
+    if (signalData.tumorTypeDecomposition) {
+        return formatNumberValueInSignificantDigits(
+            signalData.germlineFrequency,
+            significantDigits || 2
+        );
+    } else {
+        return null;
+    }
+}
+
+export const SignalTable: React.FunctionComponent<SignalValueProps> = props => {
+    const signalData = getSignalData(
+        props.mutation,
+        props.indexedVariantAnnotations
+    );
+    if (
+        getSignalValue(props.mutation, props.indexedVariantAnnotations) !== null
+    ) {
+        return (
+            <MutationTumorTypeFrequencyTable
+                data={generateTumorTypeDecomposition(
+                    signalData,
+                    signalData.countsByTumorType,
+                    signalData.biallelicCountsByTumorType,
+                    signalData.qcPassCountsByTumorType,
+                    signalData.statsByTumorType
+                )}
+                columns={[
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.TUMOR_TYPE
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MUTATION_STATUS
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.SAMPLE_COUNT
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.VARIANT_COUNT
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.PREVALENCE_FREQUENCY
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.BIALLELIC_RATIO
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MEDIAN_AGE_AT_DX
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MEDIAN_TMB
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MSI_SCORE
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MEDIAN_HRD_LST
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MEDIAN_HRD_NTELOMERIC_AI
+                    ],
+                    FREQUENCY_COLUMNS_DEFINITION[
+                        FrequencyTableColumnEnum.MEDIAN_HRD_FRACTION_LOH
+                    ],
+                ]}
+            />
+        );
+    } else {
+        return null;
+    }
+};
+
 @observer
 export default class Signal extends React.Component<SignalProps, {}> {
     public render() {
@@ -84,89 +168,29 @@ export default class Signal extends React.Component<SignalProps, {}> {
                 content = errorIcon('Error fetching Genome Nexus annotation');
             } else {
                 content = <div />;
-                const signalData = getSignalData(
+                const signalValue = getSignalValue(
                     this.props.mutation,
                     this.props.indexedVariantAnnotations
                 );
-                if (signalData.tumorTypeDecomposition) {
-                    // prevalenceFrequency will be 0 if frequency is 0, otherwise show frequency as number with 2 significant digits
-                    const prevalenceFrequency = formatNumberValueInSignificantDigits(
-                        signalData.germlineFrequency,
-                        2
+                if (signalValue !== null) {
+                    content = (
+                        <DefaultTooltip
+                            placement="top"
+                            overlayStyle={{
+                                width: 800,
+                            }}
+                            overlay={
+                                <SignalTable
+                                    mutation={this.props.mutation}
+                                    indexedVariantAnnotations={
+                                        this.props.indexedVariantAnnotations
+                                    }
+                                />
+                            }
+                        >
+                            <span>{signalValue}</span>
+                        </DefaultTooltip>
                     );
-                    if (prevalenceFrequency !== null) {
-                        content = (
-                            <DefaultTooltip
-                                placement="top"
-                                overlayStyle={{
-                                    width: 800,
-                                }}
-                                overlay={
-                                    <MutationTumorTypeFrequencyTable
-                                        data={generateTumorTypeDecomposition(
-                                            signalData,
-                                            signalData.countsByTumorType,
-                                            signalData.biallelicCountsByTumorType,
-                                            signalData.qcPassCountsByTumorType,
-                                            signalData.statsByTumorType
-                                        )}
-                                        columns={[
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .TUMOR_TYPE
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MUTATION_STATUS
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .SAMPLE_COUNT
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .VARIANT_COUNT
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .PREVALENCE_FREQUENCY
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .BIALLELIC_RATIO
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MEDIAN_AGE_AT_DX
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MEDIAN_TMB
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MSI_SCORE
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MEDIAN_HRD_LST
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MEDIAN_HRD_NTELOMERIC_AI
-                                            ],
-                                            FREQUENCY_COLUMNS_DEFINITION[
-                                                FrequencyTableColumnEnum
-                                                    .MEDIAN_HRD_FRACTION_LOH
-                                            ],
-                                        ]}
-                                    />
-                                }
-                            >
-                                <span>{prevalenceFrequency}</span>
-                            </DefaultTooltip>
-                        );
-                    }
                 }
             }
 
