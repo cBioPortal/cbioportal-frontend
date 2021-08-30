@@ -318,8 +318,8 @@
     "v8": "^0.1.0",
     "venn.js": "^0.2.20",
     "victory": "30.0.0",
-    "webpack": "^4.30.0",
-    "webpack-cli": "^3.3.1",
+    "webpack": "^5.51.1",
+    "webpack-cli": "^4.8.0",
     "webpack-fail-plugin": "^1.0.5",
     "webpack-raphael": "^2.1.4",
     "word-wrap": "^1.2.3"
