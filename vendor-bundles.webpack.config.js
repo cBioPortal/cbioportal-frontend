@@ -34,7 +34,12 @@ const config = {
     },
 
     module: {
-        rules: [{ test: /lodash/, use: ['imports-loader?define=>false'] }],
+        rules: [
+            {
+                test: /lodash/,
+                use: [{ loader: 'imports-loader?define=>false' }],
+            },
+        ],
     },
 
     output: {
