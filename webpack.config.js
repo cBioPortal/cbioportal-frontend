@@ -1,6 +1,5 @@
 var MiniCssExtractPlugin = require('mini-css-extract-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
-var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
@@ -159,7 +158,6 @@ var config = {
                 : '"replace_me_env_genome_nexus_url"',
         }),
         new HtmlWebpackPlugin({ cache: false, template: 'my-index.ejs' }),
-        WebpackFailPlugin,
         new ProgressBarPlugin(),
         new webpack.DllReferencePlugin({
             context: join(root, '.'),
