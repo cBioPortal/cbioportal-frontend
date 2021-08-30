@@ -13,7 +13,7 @@ import {
     MutationEnrichmentEventType,
     mutationGroup,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 
 export type GroupComparisonURLQuery = {
@@ -40,8 +40,8 @@ export default class GroupComparisonURLWrapper
                 selectedEnrichmentEventTypes: { isSessionProp: true },
             },
             true,
-            AppConfig.serverConfig.session_url_length_threshold
-                ? parseInt(AppConfig.serverConfig.session_url_length_threshold)
+            getServerConfig().session_url_length_threshold
+                ? parseInt(getServerConfig().session_url_length_threshold)
                 : undefined
         );
         makeObservable(this);

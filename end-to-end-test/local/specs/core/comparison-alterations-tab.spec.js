@@ -43,7 +43,6 @@ if (useExternalFrontend) {
             $('[data-test=LazyMobXTable]').waitForDisplayed();
             var rows = $$('[data-test=LazyMobXTable] tbody tr');
             assert.strictEqual(rows.length, 8, 'table has 8 rows');
-            openAlterationTypeSelectionMenu();
             clickAlterationTypeCheckBox('Mutations');
             clickAlterationTypeCheckBox('Frameshift Deletion');
             submitEnrichmentRequest();
@@ -57,7 +56,6 @@ if (useExternalFrontend) {
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForDisplayed();
             assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
-            openAlterationTypeSelectionMenu();
             clickAlterationTypeCheckBox('Deletion');
             submitEnrichmentRequest();
             $('[data-test=LazyMobXTable]').waitForDisplayed();

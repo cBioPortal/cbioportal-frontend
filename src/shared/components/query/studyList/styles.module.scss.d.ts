@@ -14,12 +14,14 @@ declare const styles: {
   readonly "StudyMeta": string;
   readonly "StudyName": string;
   readonly "StudySamples": string;
+  readonly "UnauthorizedStudy": string;
   readonly "deselectAll": string;
   readonly "fadein": string;
   readonly "icon": string;
   readonly "iconWithTooltip": string;
   readonly "indentArrow": string;
   readonly "infoCircleIcon": string;
+  readonly "lockIcon": string;
   readonly "selectAllStudies": string;
   readonly "summaryIcon": string;
   readonly "tooltip": string;

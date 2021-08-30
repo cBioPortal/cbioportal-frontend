@@ -4,7 +4,7 @@ import { observable, makeObservable } from 'mobx';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
 import Helmet from 'react-helmet';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { buildCBioPortalAPIUrl } from 'shared/api/urls';
 
@@ -40,10 +40,10 @@ export default class WebAPIPage extends React.Component<{}, {}> {
 
     renderDataAccessTokensDiv() {
         if (
-            AppConfig.serverConfig.authenticationMethod === 'social_auth' ||
-            (AppConfig.serverConfig.dat_method !== 'uuid' &&
-                AppConfig.serverConfig.dat_method !== 'jwt' &&
-                AppConfig.serverConfig.dat_method !== 'oauth2')
+            getServerConfig().authenticationMethod === 'social_auth' ||
+            (getServerConfig().dat_method !== 'uuid' &&
+                getServerConfig().dat_method !== 'jwt' &&
+                getServerConfig().dat_method !== 'oauth2')
         ) {
             return <div></div>;
         } else {

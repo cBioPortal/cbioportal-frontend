@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import AppConfig from 'appConfig';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
@@ -237,6 +236,8 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
+import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
+import { getServerConfig } from 'config/config';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -863,7 +864,7 @@ export class StudyViewPageStore
             if (
                 this.studyIds.length > 0 &&
                 (this.isLoggedIn ||
-                    AppConfig.serverConfig.authenticationMethod ===
+                    getServerConfig().authenticationMethod ===
                         'noauthsessionservice') &&
                 !this.pendingDecision.result
             ) {
@@ -4122,7 +4123,10 @@ export class StudyViewPageStore
             return _.reduce(
                 this.studyIds,
                 (acc: CancerStudy[], next) => {
-                    if (everyStudyIdToStudy[next]) {
+                    if (
+                        everyStudyIdToStudy[next] &&
+                        isQueriedStudyAuthorized(everyStudyIdToStudy[next])
+                    ) {
                         acc.push(everyStudyIdToStudy[next]);
                     }
                     return acc;
@@ -4599,7 +4603,7 @@ export class StudyViewPageStore
             await: () => [this.queriedPhysicalStudyIds],
             onError: () => {},
             invoke: async () => {
-                if (AppConfig.serverConfig.show_mdacc_heatmap) {
+                if (getServerConfig().show_mdacc_heatmap) {
                     let isSinglePhysicalStudy =
                         this.queriedPhysicalStudyIds.result.length === 1;
                     if (isSinglePhysicalStudy) {
@@ -4758,7 +4762,7 @@ export class StudyViewPageStore
     });
 
     @computed get oncokbCancerGeneFilterEnabled(): boolean {
-        if (!AppConfig.serverConfig.show_oncokb) {
+        if (!getServerConfig().show_oncokb) {
             return false;
         }
         return !this.oncokbCancerGenes.isError && !this.oncokbGenes.isError;
@@ -8475,9 +8479,9 @@ export class StudyViewPageStore
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.hasBinary &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }
@@ -8486,9 +8490,9 @@ export class StudyViewPageStore
         return !!(
             this.customDriverAnnotationReport.isComplete &&
             this.customDriverAnnotationReport.result!.tiers.length > 0 &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_binary_menu_label &&
-            AppConfig.serverConfig
+            getServerConfig()
                 .oncoprint_custom_driver_annotation_tiers_menu_label
         );
     }

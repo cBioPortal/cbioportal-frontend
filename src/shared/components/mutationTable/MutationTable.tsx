@@ -139,7 +139,7 @@ export interface IMutationTableProps {
     deactivateColumnFilter?: (columnId: string) => void;
 }
 import MobxPromise from 'mobxpromise';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import Timeout = NodeJS.Timeout;
 
 export enum MutationTableColumnType {
@@ -1199,7 +1199,7 @@ export default class MutationTable<
                 </span>
             ),
             visible: false,
-            shouldExclude: () => !AppConfig.serverConfig.show_signal,
+            shouldExclude: () => !getServerConfig().show_signal,
         };
     }
 

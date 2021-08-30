@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PageLayout } from '../../../shared/components/PageLayout/PageLayout';
 import './styles.scss';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import StaticContent from '../../../shared/components/staticContent/StaticContent';
 import Helmet from 'react-helmet';
 
@@ -13,9 +13,7 @@ export default class Software extends React.Component<{}, {}> {
                     <title>{'cBioPortal for Cancer Genomics::Software'}</title>
                 </Helmet>
                 <StaticContent
-                    sourceUrl={
-                        AppConfig.serverConfig.skin_documentation_software!
-                    }
+                    sourceUrl={getServerConfig().skin_documentation_software!}
                     title={'Software'}
                 />
             </PageLayout>

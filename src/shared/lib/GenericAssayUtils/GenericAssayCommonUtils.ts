@@ -40,8 +40,14 @@ export enum GenericAssayDataType {
 }
 
 export async function fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType(
-    genericAssayProfiles: MolecularProfile[]
+    molecularProfiles: MolecularProfile[]
 ) {
+    const genericAssayProfiles = molecularProfiles.filter(
+        profile =>
+            profile.molecularAlterationType ===
+            AlterationTypeConstants.GENERIC_ASSAY
+    );
+
     const genericAssayProfilesGroupedByGenericAssayType = _.groupBy(
         genericAssayProfiles,
         'genericAssayType'

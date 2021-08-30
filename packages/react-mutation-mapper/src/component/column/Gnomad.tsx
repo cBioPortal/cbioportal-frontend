@@ -4,9 +4,9 @@ import { observer } from 'mobx-react';
 import * as React from 'react';
 
 import { defaultSortMethod } from 'cbioportal-utils';
-import GnomadFrequency, {
-    calculateAlleleFrequency,
-} from '../gnomad/GnomadFrequency';
+
+import { calculateGnomadAlleleFrequency } from '../../util/GnomadUtils';
+import GnomadFrequency from '../gnomad/GnomadFrequency';
 import {
     MyVariantInfoProps,
     renderMyVariantInfoContent,
@@ -25,7 +25,7 @@ export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
         myVariantInfo.gnomadExome &&
         myVariantInfo.gnomadGenome
     ) {
-        return calculateAlleleFrequency(
+        return calculateGnomadAlleleFrequency(
             myVariantInfo.gnomadExome.alleleCount.ac +
                 myVariantInfo.gnomadGenome.alleleCount.ac,
             myVariantInfo.gnomadExome.alleleNumber.an +
@@ -36,7 +36,7 @@ export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
 
     // If only has gnomadExome, sort by gnomadExome frequency
     if (myVariantInfo && myVariantInfo.gnomadExome) {
-        return calculateAlleleFrequency(
+        return calculateGnomadAlleleFrequency(
             myVariantInfo.gnomadExome.alleleCount.ac,
             myVariantInfo.gnomadExome.alleleNumber.an,
             myVariantInfo.gnomadExome.alleleFrequency.af
@@ -45,7 +45,7 @@ export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
 
     // If only has gnomadGenome, sort by gnomadGenome frequency
     if (myVariantInfo && myVariantInfo.gnomadGenome) {
-        return calculateAlleleFrequency(
+        return calculateGnomadAlleleFrequency(
             myVariantInfo.gnomadGenome.alleleCount.ac,
             myVariantInfo.gnomadGenome.alleleNumber.an,
             myVariantInfo.gnomadGenome.alleleFrequency.af

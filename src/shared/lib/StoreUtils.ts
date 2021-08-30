@@ -78,7 +78,7 @@ import {
     CustomDriverNumericGeneMolecularData,
 } from '../../pages/resultsView/ResultsViewPageStore';
 import { normalizeMutations } from '../components/mutationMapper/MutationMapperUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { getFrontendAssetUrl } from 'shared/api/urls';
 import {
     AnnotateCopyNumberAlterationQuery,
@@ -236,7 +236,9 @@ export async function fetchAllReferenceGenomeGenes(
     const doCaching = window.location.hostname.includes('.cbioportal.org');
 
     // allows us to clear cache when data changes
-    const referenceGenomeKey = `referenceGenome-${AppConfig.serverConfig.referenceGenomeVersion}`;
+    const referenceGenomeKey = `referenceGenome-${
+        getServerConfig().referenceGenomeVersion
+    }`;
 
     const hg19cached = doCaching
         ? await localForage.getItem(referenceGenomeKey)
@@ -849,8 +851,7 @@ export async function fetchStructuralVariantOncoKbData(
         const alterationsToQuery = _.filter(
             structuralVariantData.result,
             d =>
-                d.site1EntrezGeneId &&
-                d.site2EntrezGeneId &&
+                (d.site1EntrezGeneId || d.site2EntrezGeneId) &&
                 (!!annotatedGenes[d.site1EntrezGeneId] ||
                     !!annotatedGenes[d.site2EntrezGeneId])
         );
@@ -1456,10 +1457,10 @@ export function getGenomeNexusUrl(studies: CancerStudy[]) {
                     )
             )
         ) {
-            return AppConfig.serverConfig.genomenexus_url_grch38!;
+            return getServerConfig().genomenexus_url_grch38!;
         }
     }
-    return AppConfig.serverConfig.genomenexus_url!;
+    return getServerConfig().genomenexus_url!;
 }
 
 export function getSurvivalClinicalAttributesPrefix(
@@ -1639,7 +1640,7 @@ export async function fetchOncoKbDataForOncoprint(
     >,
     mutations: MobxPromise<Mutation[]>
 ) {
-    if (AppConfig.serverConfig.show_oncokb) {
+    if (getServerConfig().show_oncokb) {
         let result;
         try {
             result = await fetchOncoKbData(
@@ -1661,7 +1662,7 @@ export async function fetchCnaOncoKbDataForOncoprint(
     oncoKbAnnotatedGenes: MobxPromise<{ [entrezGeneId: number]: boolean }>,
     cnaMolecularData: MobxPromise<NumericGeneMolecularData[]>
 ) {
-    if (AppConfig.serverConfig.show_oncokb) {
+    if (getServerConfig().show_oncokb) {
         let result;
         try {
             result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(

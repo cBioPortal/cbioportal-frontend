@@ -7,7 +7,7 @@ import OncoprintControls, {
     IOncoprintControlsState,
 } from 'shared/components/oncoprint/controls/OncoprintControls';
 import { percentAltered } from '../../../../shared/components/oncoprint/OncoprintUtils';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import OncoprintJS from 'oncoprintjs';
 import fileDownload from 'react-file-download';
 import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
@@ -94,7 +94,7 @@ export default class Oncoprinter extends React.Component<
                 return self.props.store.driverAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
-                return !AppConfig.serverConfig.show_oncokb;
+                return !getServerConfig().show_oncokb;
             },
             get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFail;
@@ -129,7 +129,7 @@ export default class Oncoprinter extends React.Component<
                 return self.props.store.driverAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return !AppConfig.serverConfig.show_hotspot;
+                return !getServerConfig().show_hotspot;
             },
             get annotateCustomDriverBinary() {
                 return self.props.store.driverAnnotationSettings.customBinary;

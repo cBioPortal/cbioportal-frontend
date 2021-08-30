@@ -1,5 +1,5 @@
 import { action, observable, ObservableMap } from 'mobx';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { MobxPromiseUnionType } from 'mobxpromise';
 import _ from 'lodash';
 
@@ -81,7 +81,7 @@ export interface IDriverAnnotationReport {
 
 export function buildDriverAnnotationSettings(
     didOncoKbFailInOncoprint: () => boolean,
-    config = AppConfig.serverConfig
+    config = getServerConfig()
 ): DriverAnnotationSettings {
     return observable({
         cbioportalCount: false,
@@ -257,7 +257,7 @@ export function buildDriverAnnotationControlsState(
     customDriverAnnotationReport: IDriverAnnotationReport | undefined,
     didOncoKbFailInOncoprint?: boolean,
     didHotspotFailInOncoprint?: boolean,
-    config = AppConfig.serverConfig
+    config = getServerConfig()
 ): IDriverAnnotationControlsState {
     return observable({
         get distinguishDrivers() {
@@ -304,8 +304,8 @@ export function buildDriverAnnotationControlsState(
         },
         get customDriverAnnotationBinaryMenuLabel() {
             if (customDriverAnnotationReport) {
-                const label =
-                    config.oncoprint_custom_driver_annotation_binary_menu_label;
+                const label = getServerConfig()
+                    .oncoprint_custom_driver_annotation_binary_menu_label;
                 if (
                     label &&
                     customDriverAnnotationReport &&
@@ -317,8 +317,8 @@ export function buildDriverAnnotationControlsState(
         },
         get customDriverAnnotationTiersMenuLabel() {
             if (customDriverAnnotationReport) {
-                const label =
-                    config.oncoprint_custom_driver_annotation_tiers_menu_label;
+                const label = getServerConfig()
+                    .oncoprint_custom_driver_annotation_tiers_menu_label;
                 if (
                     label &&
                     customDriverAnnotationReport &&

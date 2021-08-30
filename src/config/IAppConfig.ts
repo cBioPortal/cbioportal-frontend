@@ -7,6 +7,14 @@ export interface IAppConfig {
     hide_login?: boolean;
 }
 
+export interface ILoadConfig {
+    apiRoot?: string;
+    baseUrl?: string;
+    configurationServiceUrl?: string;
+    frontendUrl?: string;
+    hide_login?: boolean;
+}
+
 export type CategorizedConfigItems = {
     [category: string]: string[];
 };
@@ -140,4 +148,6 @@ export interface IServerConfig {
     installation_map_url: string;
     enable_request_body_gzip_compression: boolean;
     referenceGenomeVersion: string;
+    skin_show_unauthorized_studies: boolean;
+    skin_global_message_for_unauthorized_studies: string;
 }

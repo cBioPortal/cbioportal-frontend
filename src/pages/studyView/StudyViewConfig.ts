@@ -1,4 +1,4 @@
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { StudyView } from '../../config/IAppConfig';
 import { Layout } from 'react-grid-layout';
 import * as _ from 'lodash';
@@ -235,5 +235,5 @@ const studyViewFrontEnd = {
 
 export const STUDY_VIEW_CONFIG: StudyViewConfig = _.assign(
     studyViewFrontEnd,
-    (AppConfig.serverConfig || {}).study_view
+    (getServerConfig() || {}).study_view
 );

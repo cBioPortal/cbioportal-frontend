@@ -102,7 +102,7 @@ import {
 } from 'shared/lib/GenePanelUtils';
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import * as _ from 'lodash';
 import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
@@ -256,7 +256,6 @@ import {
     createCategoricalFilter,
 } from 'shared/lib/MutationUtils';
 import ComplexKeyCounter from 'shared/lib/complexKeyDataStructures/ComplexKeyCounter';
-import { chunkCalls } from 'cbioportal-utils';
 import SampleSet from 'shared/lib/sampleDataStructures/SampleSet';
 import {
     MutationTableColumnType,
@@ -3538,7 +3537,7 @@ export class ResultsViewPageStore
 
     public createMutationMapperStoreForSelectedGene(gene: Gene) {
         const store = new ResultsViewMutationMapperStore(
-            AppConfig.serverConfig,
+            getServerConfig(),
             {
                 filterMutationsBySelectedTranscript: true,
                 filterAppliersOverride: this.customDataFilterAppliers,
@@ -3606,7 +3605,7 @@ export class ResultsViewPageStore
     readonly oncoKbCancerGenes = remoteData(
         {
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return fetchOncoKbCancerGenes();
                 } else {
                     return Promise.resolve([]);
@@ -3620,7 +3619,7 @@ export class ResultsViewPageStore
         {
             await: () => [this.oncoKbCancerGenes],
             invoke: () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     return Promise.resolve(
                         _.reduce(
                             this.oncoKbCancerGenes.result,
@@ -3752,7 +3751,7 @@ export class ResultsViewPageStore
             invoke: async () => {
                 const germlineConsentedSamples: SampleIdentifier[] = await fetchGermlineConsentedSamples(
                     this.studyIds,
-                    AppConfig.serverConfig.studiesWithGermlineConsentedSamples
+                    getServerConfig().studiesWithGermlineConsentedSamples
                 );
 
                 // do not simply return all germline consented samples,
@@ -4013,9 +4012,9 @@ export class ResultsViewPageStore
 
     @computed get ensemblLink() {
         return this.referenceGenomeBuild ===
-            AppConfig.serverConfig.genomenexus_url_grch38
-            ? AppConfig.serverConfig.ensembl_transcript_grch38_url
-            : AppConfig.serverConfig.ensembl_transcript_url;
+            getServerConfig().genomenexus_url_grch38
+            ? getServerConfig().ensembl_transcript_grch38_url
+            : getServerConfig().ensembl_transcript_url;
     }
 
     @computed get genomeNexusClient() {
@@ -4388,14 +4387,13 @@ export class ResultsViewPageStore
     @computed get isQueryInvalid() {
         return (
             this.hugoGeneSymbols.length * this.samples.result.length >
-            AppConfig.serverConfig.query_product_limit
+            getServerConfig().query_product_limit
         );
     }
 
     @computed get geneLimit(): number {
         return Math.floor(
-            AppConfig.serverConfig.query_product_limit /
-                this.samples.result.length
+            getServerConfig().query_product_limit / this.samples.result.length
         );
     }
 
@@ -5070,7 +5068,7 @@ export class ResultsViewPageStore
         {
             await: () => [this.mutations],
             invoke: async () =>
-                AppConfig.serverConfig.show_transcript_dropdown &&
+                getServerConfig().show_transcript_dropdown &&
                 this.mutations.result
                     ? await fetchVariantAnnotationsIndexedByGenomicLocation(
                           this.mutations.result,
@@ -5078,11 +5076,11 @@ export class ResultsViewPageStore
                               GENOME_NEXUS_ARG_FIELD_ENUM.ANNOTATION_SUMMARY,
                               GENOME_NEXUS_ARG_FIELD_ENUM.HOTSPOTS,
                               GENOME_NEXUS_ARG_FIELD_ENUM.CLINVAR,
-                              AppConfig.serverConfig.show_signal
+                              getServerConfig().show_signal
                                   ? GENOME_NEXUS_ARG_FIELD_ENUM.SIGNAL
                                   : '',
                           ].filter(f => f),
-                          AppConfig.serverConfig.isoformOverrideSource,
+                          getServerConfig().isoformOverrideSource,
                           this.genomeNexusClient
                       )
                     : undefined,
@@ -5158,7 +5156,7 @@ export class ResultsViewPageStore
         {
             await: () => [this.structuralVariants, this.oncoKbAnnotatedGenes],
             invoke: async () => {
-                if (AppConfig.serverConfig.show_oncokb) {
+                if (getServerConfig().show_oncokb) {
                     let result;
                     try {
                         result = await fetchStructuralVariantOncoKbData(

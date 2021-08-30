@@ -20,7 +20,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { getAgeRangeDisplay } from './TrialMatchTableUtils';
 import TrialMatchFeedback from './TrialMatchFeedback';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { Button } from 'react-bootstrap';
 
 export type ITrialMatchProps = {
@@ -636,9 +636,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         show={this.showGeneralFeedback}
                         onHide={() => (this.showGeneralFeedback = false)}
                         title="OncoKB Matched Trials General Feedback"
-                        userEmailAddress={
-                            AppConfig.serverConfig.user_email_address
-                        }
+                        userEmailAddress={getServerConfig().user_email_address}
                     />
                 )}
                 {this.selectedTrialFeedbackFormData && (
@@ -648,9 +646,7 @@ export default class TrialMatchTable extends React.Component<ITrialMatchProps> {
                         onHide={() => this.openCloseFeedbackForm()}
                         isTrialFeedback={true}
                         title="OncoKB Matched Trial Feedback"
-                        userEmailAddress={
-                            AppConfig.serverConfig.user_email_address
-                        }
+                        userEmailAddress={getServerConfig().user_email_address}
                     />
                 )}
                 <TrialMatchTableComponent

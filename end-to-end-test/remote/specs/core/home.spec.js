@@ -28,7 +28,7 @@ describe('homepage', function() {
             // The banner is hidden in e2etests.scss
             assert.equal(
                 browser.execute(function() {
-                    return window.frontendConfig.frontendUrl;
+                    return window.getLoadConfig().frontendUrl;
                 }),
                 '//localhost:3000/'
             );

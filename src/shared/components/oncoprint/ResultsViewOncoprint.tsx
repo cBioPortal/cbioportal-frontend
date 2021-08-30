@@ -49,7 +49,7 @@ import {
 } from './OncoprintUtils';
 import _ from 'lodash';
 import onMobxPromise, { toPromise } from 'shared/lib/onMobxPromise';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import OncoprintJS, { TrackGroupIndex, TrackId } from 'oncoprintjs';
 import fileDownload from 'react-file-download';
@@ -456,7 +456,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.props.store.driverAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
-                return !AppConfig.serverConfig.show_oncokb;
+                return !getServerConfig().show_oncokb;
             },
             get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFailInOncoprint;
@@ -465,7 +465,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.props.store.driverAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return !AppConfig.serverConfig.show_hotspot;
+                return !getServerConfig().show_hotspot;
             },
             get annotateDriversHotspotsError() {
                 return self.props.store.didHotspotFailInOncoprint;
@@ -515,7 +515,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.heatmapIsDynamicallyQueried;
             },
             get ngchmButtonActive() {
-                return AppConfig.serverConfig.show_mdacc_heatmap &&
+                return getServerConfig().show_mdacc_heatmap &&
                     self.props.store.remoteNgchmUrl.result &&
                     self.props.store.remoteNgchmUrl.result != ''
                     ? true
@@ -525,9 +525,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label =
-                    AppConfig.serverConfig
-                        .oncoprint_custom_driver_annotation_binary_menu_label;
+                const label = getServerConfig()
+                    .oncoprint_custom_driver_annotation_binary_menu_label;
                 const customDriverReport =
                     self.props.store.customDriverAnnotationReport.result;
                 if (
@@ -541,9 +540,8 @@ export default class ResultsViewOncoprint extends React.Component<
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label =
-                    AppConfig.serverConfig
-                        .oncoprint_custom_driver_annotation_tiers_menu_label;
+                const label = getServerConfig()
+                    .oncoprint_custom_driver_annotation_tiers_menu_label;
                 const customDriverReport =
                     self.props.store.customDriverAnnotationReport.result;
                 if (

@@ -11,7 +11,7 @@ import * as moduleStyles from './styles.module.scss';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import Pluralize from 'pluralize';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from 'config/config';
 import sessionServiceClient from 'shared/api/sessionServiceInstance';
 import { trackEvent } from 'shared/lib/tracking';
@@ -131,8 +131,8 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
 
     // tslint:disable-next-line:member-ordering
     readonly geneStudyQueryVirtualStudy = remoteData(async () => {
-        const virtualStudyId =
-            AppConfig.serverConfig.default_cross_cancer_study_session_id;
+        const virtualStudyId = getServerConfig()
+            .default_cross_cancer_study_session_id;
 
         if (ServerConfigHelpers.sessionServiceIsEnabled() && virtualStudyId) {
             try {
@@ -161,11 +161,9 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
             } else {
                 return Promise.resolve({
                     type: GeneStudyQueryType.STUDY_LIST,
-                    query:
-                        AppConfig.serverConfig.default_cross_cancer_study_list,
-                    name:
-                        AppConfig.serverConfig
-                            .default_cross_cancer_study_list_name,
+                    query: getServerConfig().default_cross_cancer_study_list,
+                    name: getServerConfig()
+                        .default_cross_cancer_study_list_name,
                 });
             }
         },

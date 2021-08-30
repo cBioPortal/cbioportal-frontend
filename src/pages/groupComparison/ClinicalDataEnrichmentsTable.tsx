@@ -10,7 +10,7 @@ import { toConditionalPrecisionWithMinimum } from '../../shared/lib/FormatUtils'
 import { makeObservable, observable } from 'mobx';
 import { toggleColumnVisibility } from 'cbioportal-frontend-commons';
 import { IColumnVisibilityDef } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
-import AppConfig from 'appConfig';
+import { getServerConfig } from 'config/config';
 
 export interface IClinicalDataEnrichmentsTableProps {
     dataStore: ClinicalDataEnrichmentStore;
@@ -166,7 +166,7 @@ export default class ClinicalDataEnrichmentsTable extends React.Component<
         return _.mapValues(
             _.keyBy(COLUMNS, c => c.name),
             c =>
-                AppConfig.serverConfig
+                getServerConfig()
                     .survival_show_p_q_values_in_survival_type_table
                     ? c.visible!
                     : !(c.name in P_Q_VALUES_AND_STATISTICAL_TEST_NAME_DICT)
