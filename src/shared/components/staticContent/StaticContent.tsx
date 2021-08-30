@@ -39,10 +39,9 @@ export default class StaticContent extends React.Component<
         if (isMarkDown(url)) {
             return (
                 <ReactMarkdown
-                    renderers={this.props.renderers || {}}
+                    components={this.props.renderers || {}}
                     className={'markdown-body'}
-                    escapeHtml={false}
-                    source={this.source.result!}
+                    children={this.source.result!}
                 />
             );
         } else {
