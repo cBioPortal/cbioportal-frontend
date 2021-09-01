@@ -213,6 +213,7 @@
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "numeral": "^2.0.6",
     "object-sizeof": "^1.2.0",
+    "oncokb-styles": "~1.2.0",
     "oncokb-ts-api-client": "^1.1.7",
     "oncoprintjs": "5.0.4",
     "pako": "2.0.2",
