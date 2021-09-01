@@ -29,7 +29,7 @@ import ListIndexedMap, {
 } from '../../lib/ListIndexedMap';
 
 const hotspotsImg = require('../../../rootImages/cancer-hotspots.svg');
-const oncokbImg = require('../../../rootImages/oncokb-oncogenic-1.svg');
+const oncokbImg = require('oncokb-styles/images/oncogenic.svg');
 const customDriverImg = require('../../../rootImages/driver.png');
 const customDriverTiersImg = require('../../../rootImages/driver_tiers.png');
 
