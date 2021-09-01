@@ -74,7 +74,7 @@ class MutationTumorTypeFrequencyTable extends React.Component<
 
     public render() {
         return (
-            <div>
+            <div className={`cbioportal-frontend default-data-table`}>
                 <ReactTable
                     data={this.props.data}
                     columns={this.props.columns}
