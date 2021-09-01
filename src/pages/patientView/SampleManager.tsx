@@ -171,8 +171,11 @@ class SampleManager {
 
     constructor(
         public samples: Array<ClinicalDataBySampleId>,
-        events?: ClinicalEvent[],
-        private sampleIdsInHeader?: string[]
+        // sampleIdsInHeader is differ from the samples when in sample view of a multi-samples patient.
+        // The sampleIdsInHeader only includes the samples are presented in the page.
+        // The size of sampleIdsInHeader is always less than or equal to the size of param samples
+        public sampleIdsInHeader: string[],
+        events?: ClinicalEvent[]
     ) {
         makeObservable(this);
         this.sampleIndex = {};
