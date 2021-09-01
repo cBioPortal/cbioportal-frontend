@@ -5,7 +5,11 @@ var useExternalFrontend = require('../../../shared/specUtils')
     .useExternalFrontend;
 var waitForPatientView = require('../../../shared/specUtils')
     .waitForPatientView;
-var { jsApiHover, setDropdownOpen } = require('../../../shared/specUtils');
+var {
+    jsApiHover,
+    setDropdownOpen,
+    strIsNumeric,
+} = require('../../../shared/specUtils');
 
 var _ = require('lodash');
 
@@ -14,6 +18,10 @@ const genePanelPatientViewUrl =
     CBIOPORTAL_URL + '/patient?studyId=teststudy_genepanels&caseId=patientA';
 const ascnPatientViewUrl =
     CBIOPORTAL_URL + '/patient?studyId=ascn_test_study&caseId=FAKE_P001';
+
+const ALLELE_FREQ_CELL_DATA_TEST = 'allele-freq-cell';
+const ALLELE_FREQ_PATIENT_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&caseId=FAKE_P001`;
+const ALLELE_FREQ_SAMPLE_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&sampleId=FAKE_P001_S2`;
 
 describe('patient view page', function() {
     if (useExternalFrontend) {
@@ -440,6 +448,33 @@ describe('patient view page', function() {
                 $(
                     'div[role=tooltip] span[data-test=ccf-tooltip]'
                 ).waitForExist();
+            });
+        });
+
+        describe('allele frequency', () => {
+            it('should show number under allele frequency column for multiple samples patient in one sample view', function() {
+                goToUrlAndSetLocalStorage(ALLELE_FREQ_SAMPLE_VIEW_URL, true);
+                waitForPatientView();
+
+                assert.strictEqual(
+                    true,
+                    strIsNumeric(
+                        $$(`div[data-test="${ALLELE_FREQ_CELL_DATA_TEST}"]`)[0]
+                            .$('span')
+                            .getText()
+                    )
+                );
+            });
+
+            it('should show bars(svg) under allele frequency column for multiple samples patient in patient view', function() {
+                goToUrlAndSetLocalStorage(ALLELE_FREQ_PATIENT_VIEW_URL, true);
+                waitForPatientView();
+                assert.strictEqual(
+                    true,
+                    $$(`div[data-test="${ALLELE_FREQ_CELL_DATA_TEST}"]`)[0]
+                        .$('svg')
+                        .isExisting()
+                );
             });
         });
     }

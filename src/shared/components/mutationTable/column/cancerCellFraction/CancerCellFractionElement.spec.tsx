@@ -44,11 +44,14 @@ describe('CancerCellFractionElement', () => {
         S003: 'CLONAL',
     };
 
-    const multiSampleSampleManager = new SampleManager([
-        { id: 'S001', clinicalData: [] },
-        { id: 'S002', clinicalData: [] },
-        { id: 'S003', clinicalData: [] },
-    ]);
+    const multiSampleSampleManager = new SampleManager(
+        [
+            { id: 'S001', clinicalData: [] },
+            { id: 'S002', clinicalData: [] },
+            { id: 'S003', clinicalData: [] },
+        ],
+        ['S001', 'S002', 'S003']
+    );
 
     function getCancerCellFractionProps(multi: boolean, valid: boolean) {
         return {
