@@ -342,7 +342,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     }
                 >
                     <img
-                        src={require('../../../../../../src/rootImages/oncokb-oncogenic-1.svg')}
+                        src={require('oncokb-styles/images/oncogenic.svg')}
                         style={{
                             height: 16,
                             width: 16,

@@ -16699,7 +16699,7 @@ mobx-utils@6.0.1:
   resolved "https://registry.yarnpkg.com/mobx-utils/-/mobx-utils-6.0.1.tgz#bc16c2c62794a48498685f3663e6162d42fb6106"
   integrity sha512-0p5xqHDt/arz3cswVcEHYKY/BwL+fifsNroT3Gjkz9lNC7ZDsJm3IuGsmYlvFcVRJRr1rwlFZGuZXrt/MhHEJQ==
 
-mobx@6.0.0, mobx@^6.0.0:
+mobx@^6.0.0:
   version "6.0.4"
   resolved "https://registry.yarnpkg.com/mobx/-/mobx-6.0.4.tgz#8fc3e3629a3346f8afddf5bd954411974744dad1"
   integrity sha512-wT2QJT9tW19VSHo9x7RPKU3z/I2Ps6wUS8Kb1OO+kzmg7UY3n4AkcaYG6jq95Lp1R9ohjC/NGYuT2PtuvBjhFg==
@@ -16708,7 +16708,7 @@ mobx@6.0.0, mobx@^6.0.0:
   version "2.0.1"
   resolved "https://codeload.github.com/cbioportal/mobxpromise/tar.gz/303db72588860bff0a6862a4f07a4e8a3578c94f"
   dependencies:
-    mobx "6.0.0"
+    mobx "^6.0.0"
 
 mocha@^5.2.0:
   version "5.2.0"
@@ -17665,10 +17665,10 @@ oncokb-styles@~0.1.2:
   resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-0.1.2.tgz#8b26c0a0829787cdc1b595d3a021b3266607102b"
   integrity sha512-tuy5s3qFxgf1ogMATQSRPNgLlAMrvOOTCAN1dm/wJ+VZoStbJ7g36/qHwc99UPfh3vrB05broLodF+k58p5tUw==
 
-oncokb-styles@~1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.1.0.tgz#2817ed1ed18720e18384ebf1e99c7706bac514e4"
-  integrity sha512-GSfqB2uGfJD9HefZJXlmNHXYJe0TbfKwAE1y0E5xc/ZKuL2Wle+KoesLL0iIxCyOc89uovnCXDYxSbIBxzgLGA==
+oncokb-styles@~1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/oncokb-styles/-/oncokb-styles-1.2.0.tgz#c5327bae459f29505570673f6b70961abf7852df"
+  integrity sha512-WKyvjk15fwGntg5/aF53dqHVRI1nCVc62uIE8ttwkRXKmSqkFlUg7/PxxKuJlfqXAVue5UvhQouu9i1KPnsZgw==
 
 oncoprintjs@5.0.4:
   version "5.0.4"
