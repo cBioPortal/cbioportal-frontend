@@ -21,7 +21,7 @@ const ascnPatientViewUrl =
 
 const ALLELE_FREQ_CELL_DATA_TEST = 'allele-freq-cell';
 const ALLELE_FREQ_PATIENT_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&caseId=FAKE_P001`;
-const ALLELE_FREQ_SAMPLE_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&sampleId=FAKE_P001_S2`;
+const ALLELE_FREQ_SAMPLE_VIEW_URL = `${CBIOPORTAL_URL}/patient?studyId=ascn_test_study&sampleId=FAKE_P001_S3`;
 
 describe('patient view page', function() {
     if (useExternalFrontend) {
