@@ -622,6 +622,39 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @observable private savingCustomData = false;
 
+    @computed private get addChartButton() {
+        if (this.xVsYSelection.x === this.xVsYSelection.y) {
+            return (
+                <DefaultTooltip
+                    overlay={
+                        <span>
+                            Please choose two different clinical attributes to
+                            plot.
+                        </span>
+                    }
+                >
+                    <button className="btn btn-primary btn-sm" disabled={true}>
+                        Add Chart
+                    </button>
+                </DefaultTooltip>
+            );
+        } else {
+            return (
+                <button
+                    className="btn btn-primary btn-sm"
+                    onClick={() =>
+                        this.props.store.addXVsYChart({
+                            xAttrId: this.xVsYSelection.x,
+                            yAttrId: this.xVsYSelection.y,
+                        })
+                    }
+                >
+                    Add Chart
+                </button>
+            );
+        }
+    }
+
     render() {
         return (
             <div
@@ -918,17 +951,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     <i className="fa fa-arrow-up"></i> Swap Axes{' '}
                                     <i className="fa fa-arrow-down"></i>
                                 </button>
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() =>
-                                        this.props.store.addXVsYChart({
-                                            xAttrId: this.xVsYSelection.x,
-                                            yAttrId: this.xVsYSelection.y,
-                                        })
-                                    }
-                                >
-                                    Add Chart
-                                </button>
+                                {this.addChartButton}
                             </div>
                         </div>
                     </MSKTab>
