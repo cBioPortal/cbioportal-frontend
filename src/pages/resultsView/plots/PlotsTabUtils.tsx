@@ -234,6 +234,7 @@ const MUTATION_TYPE_NOT_PROFILED = 'not_profiled_mutation';
 const MUTATION_TYPE_NOT_MUTATED = 'not_mutated';
 const CNA_TYPE_NOT_PROFILED = 'not_profiled_cna';
 const CNA_TYPE_NO_DATA = 'not_profiled_cna';
+const ONCOKB_ONCOGENIC_ICON = require('oncokb-styles/images/oncogenic.svg');
 
 // this interface contains all attributes needed to provide correct styling of
 // graph elements (points, bars, ...)
@@ -2182,7 +2183,7 @@ export function tooltipMutationsSection<D extends IPlotSampleData>(datum: D) {
     const mutations = datum.mutations;
     const oncoKbIcon = (mutation: AnnotatedMutation) => (
         <img
-            src={require('../../../rootImages/oncokb-oncogenic-1.svg')}
+            src={ONCOKB_ONCOGENIC_ICON}
             title={mutation.oncoKbOncogenic}
             style={{ height: 11, width: 11, marginLeft: 2, marginBottom: 2 }}
         />
@@ -2240,7 +2241,7 @@ export function tooltipCnaSection<D extends IPlotSampleData>(datum: D) {
     const data = datum.copyNumberAlterations;
     const oncoKbIcon = (alt: AnnotatedNumericGeneMolecularData) => (
         <img
-            src={require('../../../rootImages/oncokb-oncogenic-1.svg')}
+            src={ONCOKB_ONCOGENIC_ICON}
             title={alt.oncoKbOncogenic}
             style={{ height: 11, width: 11, marginLeft: 2, marginBottom: 2 }}
         />

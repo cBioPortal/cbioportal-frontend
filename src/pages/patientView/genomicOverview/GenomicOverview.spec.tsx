@@ -54,7 +54,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{}}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -75,7 +75,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{}}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -106,7 +106,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{}}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -137,7 +137,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{ sample1: 1, sample2: 2 }}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -170,7 +170,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{ sample1: 1, sample2: 2 }}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -218,7 +218,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{ sample1: 1, sample2: 2 }}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );
@@ -302,7 +302,7 @@ describe('GenomicOverview', () => {
                     sampleOrder={{ sample1: 1, sample2: 2 }}
                     sampleLabels={{}}
                     sampleColors={{}}
-                    sampleManager={new SampleManager([])}
+                    sampleManager={new SampleManager([], [])}
                     containerWidth={20}
                 />
             );

@@ -139,7 +139,7 @@ export default class AlleleFreqColumnFormatter {
         let content: JSX.Element = <span />;
 
         // single sample: just show the number
-        if (sampleElements.length === 1) {
+        if (sampleManager.sampleIdsInHeader.length === 1) {
             content = (
                 <span>
                     {!isNaN(freqs[0])
@@ -176,7 +176,7 @@ export default class AlleleFreqColumnFormatter {
                     arrowContent={<div className="rc-tooltip-arrow-inner" />}
                     destroyTooltipOnHide={true}
                 >
-                    {content}
+                    <div data-test="allele-freq-cell">{content}</div>
                 </DefaultTooltip>
             );
         }
