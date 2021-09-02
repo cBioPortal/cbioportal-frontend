@@ -30,6 +30,17 @@ class ScaleCapt extends React.Component<any, any> {
     }
 }
 
+class DensityPoint extends React.Component<any, any> {
+    render() {
+        const { x, y, size, ...rest } = this.props;
+        // since our points actually represent histogram bins/ranges,
+        //  we want their placement to align properly with their ranges,
+        //  but the default is to place them centered. This component
+        //  adjusts for that
+        return <Point x={x + size} y={y - size} size={size} {...rest} />;
+    }
+}
+
 export function getActualPlotAxisLength(length: number) {
     // Empirically determined, would probably change
     // if anything changes
@@ -392,6 +403,7 @@ export default class StudyViewDensityScatterPlot
                         symbol="circle"
                         data={data}
                         events={this.mouseEvents}
+                        dataComponent={<DensityPoint />}
                     />
                 );
             });
@@ -597,7 +609,7 @@ export default class StudyViewDensityScatterPlot
                         targetHovered={this.pointHovered}
                         targetCoords={{
                             x: this.tooltipModel.x,
-                            y: this.tooltipModel.y,
+                            y: this.tooltipModel.y - 3, // counter to the offset in DensityPoint
                         }}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
