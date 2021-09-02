@@ -38,6 +38,7 @@ import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChart } from 'shared/api/sessionServiceAPI';
+import ReactSelect from 'react-select';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -131,6 +132,20 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 this.props.store.clinicalAttributes.result!.filter(attr => {
                     return attr.datatype === 'NUMBER';
                 })
+            );
+        },
+        default: [],
+    });
+
+    readonly xVsYOptions = remoteData({
+        await: () => [this.xVsYClinicalAttributes],
+        invoke: () => {
+            return Promise.resolve(
+                this.xVsYClinicalAttributes.result!.map(attr => ({
+                    //id: 'select_all_filtered_options',
+                    value: attr.clinicalAttributeId,
+                    label: attr.displayName,
+                }))
             );
         },
         default: [],
@@ -824,45 +839,98 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         linkText={'X vs Y'}
                         key={4}
                     >
-                        <span>X Axis Attribute:</span>
-                        <select
-                            value={this.xVsYSelection.x}
-                            onChange={e => {
-                                this._xVsYSelection.x = e.target.value;
+                        <div
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
                             }}
                         >
-                            {this.xVsYClinicalAttributes.result!.map(attr => (
-                                <option value={attr.clinicalAttributeId}>
-                                    {attr.displayName}
-                                </option>
-                            ))}
-                        </select>
-                        <br />
-                        <span>Y Axis Attribute:</span>
-                        <select
-                            value={this.xVsYSelection.y}
-                            onChange={e => {
-                                this._xVsYSelection.y = e.target.value;
-                            }}
-                        >
-                            {this.xVsYClinicalAttributes.result!.map(attr => (
-                                <option value={attr.clinicalAttributeId}>
-                                    {attr.displayName}
-                                </option>
-                            ))}
-                        </select>
-                        <br />
-                        <button
-                            className="btn btn-primary btn-sm"
-                            onClick={() =>
-                                this.props.store.addXVsYChart({
-                                    xAttrId: this.xVsYSelection.x,
-                                    yAttrId: this.xVsYSelection.y,
-                                })
-                            }
-                        >
-                            Add Chart
-                        </button>
+                            <div style={{ paddingBottom: 5 }}>
+                                <h5
+                                    style={{
+                                        float: 'left',
+                                        paddingTop: 10,
+                                        paddingRight: 7,
+                                    }}
+                                >
+                                    X-Axis:
+                                </h5>
+                                <ReactSelect
+                                    name="x-vs-y-select-x"
+                                    placeholder={`Select x-axis clinical attribute`}
+                                    closeMenuOnSelect={true}
+                                    value={this.xVsYOptions.result.find(
+                                        opt =>
+                                            opt.value === this.xVsYSelection.x
+                                    )}
+                                    isMulti={false}
+                                    isClearable={false}
+                                    options={this.xVsYOptions.result}
+                                    onChange={action((opt: any) => {
+                                        this._xVsYSelection.x = opt.value;
+                                    })}
+                                />
+                            </div>
+                            <h5 style={{ margin: 'auto', paddingBottom: 9 }}>
+                                vs.
+                            </h5>
+                            <div style={{ paddingBottom: 15 }}>
+                                <h5
+                                    style={{
+                                        float: 'left',
+                                        paddingTop: 10,
+                                        paddingRight: 7,
+                                    }}
+                                >
+                                    Y-Axis:
+                                </h5>
+                                <ReactSelect
+                                    name="x-vs-y-select-y"
+                                    placeholder={`Select y-axis clinical attribute`}
+                                    closeMenuOnSelect={true}
+                                    value={this.xVsYOptions.result.find(
+                                        opt =>
+                                            opt.value === this.xVsYSelection.y
+                                    )}
+                                    isMulti={false}
+                                    isClearable={false}
+                                    options={this.xVsYOptions.result}
+                                    onChange={action((opt: any) => {
+                                        console.log(opt);
+                                        this._xVsYSelection.y = opt.value;
+                                    })}
+                                />
+                            </div>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                }}
+                            >
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() => {
+                                        const x = this.xVsYSelection.x;
+                                        this._xVsYSelection.x = this.xVsYSelection.y;
+                                        this._xVsYSelection.y = x;
+                                    }}
+                                >
+                                    <i className="fa fa-arrow-up"></i> Swap Axes{' '}
+                                    <i className="fa fa-arrow-down"></i>
+                                </button>
+                                <button
+                                    className="btn btn-primary btn-sm"
+                                    onClick={() =>
+                                        this.props.store.addXVsYChart({
+                                            xAttrId: this.xVsYSelection.x,
+                                            yAttrId: this.xVsYSelection.y,
+                                        })
+                                    }
+                                >
+                                    Add Chart
+                                </button>
+                            </div>
+                        </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
                 </MSKTabs>
