@@ -49,6 +49,7 @@ yarn run start
 Example pages:
  - http://localhost:3000/
  - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
+> **Tip:** If you see dependency errors, especially the error that the script cannot identify the packages managed by lerna(monorepo), you could do a `yarn buildModules` first before starting the project.
 
 To run unit/integration tests
 ```
