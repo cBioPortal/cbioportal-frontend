@@ -360,18 +360,23 @@ var config = {
         noParse: [/3Dmol-nojquery.js/, /jspdf/],
     },
     devServer: {
-        contentBase: './dist',
+        static: {
+            directory: path.resolve(__dirname, 'dist'),
+        },
         hot: true,
         historyApiFallback: true,
-        noInfo: false,
-        quiet: false,
-        lazy: false,
-        publicPath: '/',
+        // TODO removed in favor of https://webpack.js.org/configuration/other-options/#infrastructurelogging
+        // noInfo: false,
+        // quiet: false,
+        // lazy: false,
         https: false,
         host: 'localhost',
         headers: { 'Access-Control-Allow-Origin': '*' },
-        stats: 'errors-only',
-        disableHostCheck: true,
+        allowedHosts: 'all',
+        devMiddleware: {
+            publicPath: '/',
+            stats: 'errors-only',
+        },
     },
 };
 
@@ -430,8 +435,8 @@ if (isDev) {
     //     }
     // );
     // config.entry.push(`${path.join(src, 'testWriter.js')}`);
-
-    config.plugins.push(new webpack.HotModuleReplacementPlugin());
+    // see https://github.com/webpack/webpack-dev-server/blob/master/migration-v4.md
+    // config.plugins.push(new webpack.HotModuleReplacementPlugin());
 }
 
 if (isDev || isTest) {
