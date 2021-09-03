@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 
 // we don't need sourcemaps on circleci
-const sourceMap = process.env.DISABLE_SOURCEMAP ? '' : 'source-map';
+const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
 const config = {
     entry: {
