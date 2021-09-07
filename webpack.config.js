@@ -397,6 +397,7 @@ const defines = Object.keys(envVariables).reduce(
     {
         __NODE_ENV__: JSON.stringify(NODE_ENV),
         __DEBUG__: isDev,
+        'process.env.REACT_SPINKIT_NO_STYLES': false,
     }
 );
 
