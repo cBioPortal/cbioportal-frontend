@@ -85,10 +85,10 @@ jobs:
       - run:
           name: "Concatenate all source files to use as hash key for caching dist folder"
           command: "cat yarn.lock $(find src/ -type f | sort) $(find packages/ -type f | sort) webpack.config.js vendor-bundles.webpack.config.js > has_source_changed"
-      - restore_cache:
-          keys:
-            - v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
-            - v6-dependencies-{{ checksum "yarn.lock" }}
+      #- restore_cache:
+      #    keys:
+      #      - v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
+      #      - v6-dependencies-{{ checksum "yarn.lock" }}
       # Download and cache dependencies
       - run: yarn
       - run: yarn buildModules
