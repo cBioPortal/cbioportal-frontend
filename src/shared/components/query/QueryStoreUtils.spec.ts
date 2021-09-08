@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { categorizedSamplesCount } from './QueryStoreUtils';
 import { SampleList } from 'cbioportal-ts-api-client';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 
 describe('QueryStoreUtils', () => {
     describe('categorizedSamples', () => {

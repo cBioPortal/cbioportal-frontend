@@ -11,7 +11,6 @@ import {
 } from './GroupComparisonUtils';
 import { MakeMobxView } from '../../shared/components/MobxView';
 import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIndicator';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import {
     getStudiesAttrForPatientOverlapGroup,
     getStudiesAttrForSampleOverlapGroup,
@@ -21,6 +20,7 @@ import InfoIcon from '../../shared/components/InfoIcon';
 import FlexAlignedCheckbox from '../../shared/components/FlexAlignedCheckbox';
 import { serializeEvent } from 'shared/lib/tracking';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export interface ICreateGroupFromOverlapProps {
     store: ComparisonStore;

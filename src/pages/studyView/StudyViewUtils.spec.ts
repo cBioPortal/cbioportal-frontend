@@ -74,7 +74,6 @@ import { SpecialChartsUniqueKeyEnum } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import { ChartDimension, ChartTypeEnum } from './StudyViewConfig';
 import { MobxPromise } from 'mobxpromise';
 import {
@@ -83,7 +82,10 @@ import {
     DEFAULT_NA_COLOR,
     RESERVED_CLINICAL_VALUE_COLORS,
 } from 'shared/lib/Colors';
-import { ChartUserSetting } from './StudyViewPageStore';
+import {
+    ChartUserSetting,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {

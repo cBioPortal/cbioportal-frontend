@@ -63,7 +63,6 @@ import {
     getPatientIdentifiers,
     buildSelectedDriverTiersMap,
 } from 'pages/studyView/StudyViewUtils';
-import { Session, SessionGroupData } from '../../api/ComparisonGroupClient';
 import { calculateQValues } from 'shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import ComplexKeyMap from '../complexKeyDataStructures/ComplexKeyMap';
 import ComplexKeyGroupsMap from '../complexKeyDataStructures/ComplexKeyGroupsMap';
@@ -101,6 +100,10 @@ import {
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { getServerConfig } from 'config/config';
 import IComparisonURLWrapper from 'pages/groupComparison/IComparisonURLWrapper';
+import {
+    ComparisonSession,
+    SessionGroupData,
+} from 'shared/api/session-service/sessionServiceModels';
 
 export enum OverlapStrategy {
     INCLUDE = 'Include',
@@ -255,10 +258,10 @@ export default abstract class ComparisonStore
     public deselectAllGroups() {
         throw new Error(`deselectAllGroups must be implemented in subclass`);
     }
-    protected async saveAndGoToSession(newSession: Session) {
+    protected async saveAndGoToSession(newSession: ComparisonSession) {
         throw new Error(`saveAndGoToSession must be implemented in subclass`);
     }
-    abstract get _session(): MobxPromise<Session>;
+    abstract get _session(): MobxPromise<ComparisonSession>;
     abstract _originalGroups: MobxPromise<ComparisonGroup[]>;
     abstract get overlapStrategy(): OverlapStrategy;
     abstract get usePatientLevelEnrichments(): boolean;
