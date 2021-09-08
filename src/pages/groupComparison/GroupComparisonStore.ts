@@ -13,10 +13,6 @@ import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { pickClinicalDataColors } from 'pages/studyView/StudyViewUtils';
-import {
-    Session,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
 import { GACustomFieldsEnum, trackEvent } from 'shared/lib/tracking';
 import ifNotDefined from '../../shared/lib/ifNotDefined';
@@ -24,9 +20,13 @@ import GroupComparisonURLWrapper from './GroupComparisonURLWrapper';
 import ComparisonStore, {
     OverlapStrategy,
 } from '../../shared/lib/comparison/ComparisonStore';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import { COLORS } from '../studyView/StudyViewUtils';
+import {
+    ComparisonSession,
+    SessionGroupData,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable.ref private sessionId: string;
@@ -123,7 +123,7 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
 
     @action
-    protected async saveAndGoToSession(newSession: Session) {
+    protected async saveAndGoToSession(newSession: ComparisonSession) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparisonId: id });
     }
@@ -132,11 +132,11 @@ export default class GroupComparisonStore extends ComparisonStore {
         return this.__session;
     }
 
-    private readonly __session = remoteData<Session>({
+    private readonly __session = remoteData<ComparisonSession>({
         invoke: () => {
             return comparisonClient.getComparisonSession(this.sessionId);
         },
-        onResult(data: Session) {
+        onResult(data: ComparisonSession) {
             try {
                 const studies = _.chain(data.groups)
                     .flatMap(group => group.studies)
