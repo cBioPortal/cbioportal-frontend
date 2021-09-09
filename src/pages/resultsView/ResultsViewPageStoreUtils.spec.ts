@@ -40,7 +40,6 @@ import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
-import { VirtualStudy, VirtualStudyData } from 'shared/model/VirtualStudy';
 import client from 'shared/api/cbioportalClientInstance';
 import AccessorsForOqlFilter, {
     getSimplifiedMutationType,
@@ -51,6 +50,10 @@ import {
     getOncoKbOncogenic,
 } from 'shared/lib/StoreUtils';
 import oql_parser, { SingleGeneQuery } from '../../shared/lib/oql/oql-parser';
+import {
+    VirtualStudy,
+    VirtualStudyData,
+} from 'shared/api/session-service/sessionServiceModels';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {

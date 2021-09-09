@@ -33,11 +33,10 @@ import GenericAssaySelection from './genericAssaySelection/GenericAssaySelection
 import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { DataTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import { getInfoMessageForGenericAssayChart } from './AddChartButtonHelper';
-import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
-import { CustomChart } from 'shared/api/sessionServiceAPI';
+import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -720,7 +719,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                             .getDefaultCustomChartName
                                     }
                                     disableSubmitButton={this.savingCustomData}
-                                    onSubmit={(chart: CustomChart) => {
+                                    onSubmit={(chart: CustomChartData) => {
                                         this.showAddNewChart = false;
                                         this.savingCustomData = true;
                                         this.updateInfoMessage(

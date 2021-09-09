@@ -250,39 +250,6 @@ export function getSessionUrl() {
     }
 }
 
-export function fetchComparisonGroupsServiceUrl() {
-    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
-        // TODO: remove this after switch to AWS. This is a hack to use proxy
-        // session-service from non apiRoot. We'll have to come up with a better
-        // solution for auth portals
-        return buildCBioPortalPageUrl('api/session/groups/fetch');
-    } else {
-        return buildCBioPortalAPIUrl('api/session/groups/fetch');
-    }
-}
-
-export function getComparisonGroupServiceUrl() {
-    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
-        // TODO: remove this after switch to AWS. This is a hack to use proxy
-        // session-service from non apiRoot. We'll have to come up with a better
-        // solution for auth portals
-        return buildCBioPortalPageUrl('api/session/group');
-    } else {
-        return buildCBioPortalAPIUrl('api/session/group');
-    }
-}
-
-export function getComparisonSessionServiceUrl() {
-    if (getServerConfig() && getServerConfig().hasOwnProperty('apiRoot')) {
-        // TODO: remove this after switch to AWS. This is a hack to use proxy
-        // session-service from non apiRoot. We'll have to come up with a better
-        // solution for auth portals
-        return buildCBioPortalPageUrl('api/session/comparison_session');
-    } else {
-        return buildCBioPortalAPIUrl('api/session/comparison_session');
-    }
-}
-
 export function getEncodedRedirectUrl(targetUrl: string) {
     return buildCBioPortalPageUrl('/encodedRedirect', {
         [EncodedURLParam]: btoa(targetUrl),

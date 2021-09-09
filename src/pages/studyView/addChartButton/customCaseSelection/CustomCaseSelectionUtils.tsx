@@ -1,8 +1,8 @@
-import { CustomChartIdentifierWithValue } from '../../StudyViewPageStore';
 import * as _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import Pluralize from 'pluralize';
+import { CustomChartIdentifierWithValue } from 'shared/api/session-service/sessionServiceModels';
 
 type Code =
     | 'MULTI_NAME'

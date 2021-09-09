@@ -4,7 +4,7 @@ import {
 } from 'cbioportal-ts-api-client';
 import * as _ from 'lodash';
 import { CategorizedConfigItems } from 'config/IAppConfig';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 
 export const CANCER_TYPE_ROOT = 'tissue';
 export const VIRTUAL_STUDY_NAME = 'My Virtual Studies';

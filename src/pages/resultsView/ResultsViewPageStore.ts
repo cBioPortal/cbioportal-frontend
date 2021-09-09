@@ -184,13 +184,7 @@ import {
 import { annotateAlterationTypes } from '../../shared/lib/oql/annotateAlterationTypes';
 import { ErrorMessages } from '../../shared/enums/ErrorEnums';
 import sessionServiceClient from '../../shared/api/sessionServiceInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
-import {
-    Group,
-    Session,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
 import { AppStore } from '../../AppStore';
 import { getNumSamples } from '../groupComparison/GroupComparisonUtils';
 import autobind from 'autobind-decorator';
@@ -276,6 +270,12 @@ import VariantTypeColumnFormatter from 'shared/components/mutationTable/column/V
 import HgvsgColumnFormatter from 'shared/components/mutationTable/column/HgvsgColumnFormatter';
 import ClinvarColumnFormatter from 'shared/components/mutationTable/column/ClinvarColumnFormatter';
 import SignalColumnFormatter from 'shared/components/mutationTable/column/SignalColumnFormatter';
+import {
+    Group,
+    ComparisonSession,
+    SessionGroupData,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -963,7 +963,7 @@ export class ResultsViewPageStore
         },
     });
 
-    readonly comparisonTabComparisonSession = remoteData<Session>({
+    readonly comparisonTabComparisonSession = remoteData<ComparisonSession>({
         await: () => [this.studyIds],
         invoke: () => {
             const sessionId = this.urlWrapper.query
