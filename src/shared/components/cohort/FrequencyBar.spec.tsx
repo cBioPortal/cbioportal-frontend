@@ -1,11 +1,8 @@
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import FrequencyBar from './FrequencyBar';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('FrequencyBar', () => {
     const props = {
@@ -26,7 +23,7 @@ describe('FrequencyBar', () => {
     let mainFreqRect: ReactWrapper<any, any>;
     let secondaryFreqRect: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         component = mount(<FrequencyBar {...props} />);
         rootSvg = component.find('svg');
         barRect = rootSvg.find('rect').find('[width=50]');

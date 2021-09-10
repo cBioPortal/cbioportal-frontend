@@ -4,7 +4,7 @@ import { alphabeticalDefault, stringClinicalComparator } from './SortUtils';
 describe('SortUtils', () => {
     describe('alphabeticalDefault', () => {
         let cmp: (d1: any, d2: any) => number;
-        before(() => {
+        beforeAll(() => {
             cmp = alphabeticalDefault((d1: any, d2: any) => {
                 const res = d1.val - d2.val;
                 if (res < 0) {
