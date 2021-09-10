@@ -254,6 +254,7 @@ export default class PtmTrack extends React.Component<PtmTrackProps, {}> {
                       proteinLength={this.props.proteinLength}
                       trackItems={item.specs}
                       idClassPrefix={`ptm-${index}-`}
+                      isSubTrack={true}
                   />
               ))
             : null;
