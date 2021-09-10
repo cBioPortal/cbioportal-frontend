@@ -1,11 +1,8 @@
 import * as React from 'react';
-import Enzyme, { shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import ExpressionWrapper, { ExpressionWrapperProps } from './ExpressionWrapper';
-import Adapter from 'enzyme-adapter-react-16';
 
 const expressionTestData: ExpressionWrapperProps = require('./expressionTestData.json');
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('Expression Wrapper', () => {
     let wrapper: any;

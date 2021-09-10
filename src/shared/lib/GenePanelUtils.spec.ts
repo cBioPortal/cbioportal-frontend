@@ -13,7 +13,7 @@ describe('GenePanelUtils', () => {
             nsDatum1: any,
             nsDatum2: any;
         let genePanels: any[] = [];
-        before(() => {
+        beforeAll(() => {
             genes.push({
                 entrezGeneId: 0,
                 hugoGeneSymbol: 'GENE1',

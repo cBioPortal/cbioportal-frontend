@@ -1,10 +1,7 @@
 import { MSKTab, MSKTabs } from './MSKTabs';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('MSKTabs', () => {
     let tabs: any;

@@ -66,7 +66,7 @@ describe('QueryStore', () => {
         let deleteVirtualStudyStub: sinon.SinonStub;
         let addVirtualStudyStub: sinon.SinonStub;
 
-        before(() => {
+        beforeAll(() => {
             getUserVirtualStudiesStub = Sinon.stub(
                 sessionServiceClient,
                 'getUserVirtualStudies'
@@ -95,7 +95,7 @@ describe('QueryStore', () => {
             store_vs = new QueryStore();
         });
 
-        after(() => {
+        afterAll(() => {
             getUserVirtualStudiesStub.restore();
             deleteVirtualStudyStub.restore();
             addVirtualStudyStub.restore();

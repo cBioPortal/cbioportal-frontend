@@ -2,10 +2,7 @@ import SampleInline from './SampleInline';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('SampleInline', () => {
     const defaultProps = {
@@ -23,7 +20,7 @@ describe('SampleInline', () => {
     let componentWithExtraTooltipText: ReactWrapper<any, any>;
     let componentWithAdditionalContent: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         defaultComponent = mount(<SampleInline {...defaultProps} />);
 
         const minimalProps = { ...defaultProps, tooltipEnabled: false };

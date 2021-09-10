@@ -1,12 +1,9 @@
 import React from 'react';
-import Enzyme, { ReactWrapper, mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { ReactWrapper, mount } from 'enzyme';
 import { assert } from 'chai';
 import { default as CopyNumberTableWrapper } from './CopyNumberTableWrapper';
 import { GeneFilterOption } from '../mutation/GeneFilterMenu';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 function hasColumn(
     tableWrapper: ReactWrapper<any, any>,

@@ -1,18 +1,15 @@
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import sinon from 'sinon';
 import ScrollBar from './ScrollBar';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('Scrollbar', () => {
     var wrapper;
     var instance: ScrollBar;
     var fakeInstance: any;
 
-    before(() => {
+    beforeAll(() => {
         fakeInstance = {
             overflow: false,
             visible: false,

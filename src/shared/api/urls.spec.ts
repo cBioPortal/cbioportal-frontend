@@ -1,23 +1,21 @@
 import { getGenomeNexusApiUrl } from './urls';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { shallow, mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
-Enzyme.configure({ adapter: new Adapter() });
 import { getServerConfig } from 'config/config';
 import { IServerConfig } from 'config/IAppConfig';
 import { getLoadConfig } from 'config/config';
 
 describe('url library', () => {
-    before(() => {
+    beforeAll(() => {
         //global.window = { location: { protocol: 'https://' } };
         getServerConfig().genomenexus_url = 'http://www.test.com/hello/';
         getLoadConfig().apiRoot = 'http://www.cbioportal.org';
     });
 
-    after(() => {
+    afterAll(() => {
         delete (getServerConfig() as Partial<IServerConfig>).genomenexus_url;
         delete getLoadConfig().apiRoot;
     });
