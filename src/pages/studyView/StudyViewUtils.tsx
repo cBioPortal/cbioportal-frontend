@@ -28,15 +28,10 @@ import {
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
-import {
-    ChartUserSetting,
-    GenomicChart,
-    GenericAssayChart,
-} from './StudyViewPageStore';
+import { GenomicChart, GenericAssayChart } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import {
     ChartDimension,
@@ -54,7 +49,6 @@ import { DEFAULT_NA_COLOR, getClinicalValueColor } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
 import styles from './styles.module.scss';
 import { getGroupParameters } from 'pages/groupComparison/comparisonGroupManager/ComparisonGroupManagerUtils';
-import { SessionGroupData } from 'shared/api/ComparisonGroupClient';
 import { IStudyViewScatterPlotData } from './charts/scatterPlot/StudyViewScatterPlotUtils';
 import { CNA_TO_ALTERATION } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
@@ -70,6 +64,11 @@ import {
 import { ChartOption } from './addChartButton/AddChartButton';
 import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
+import {
+    ChartUserSetting,
+    SessionGroupData,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {

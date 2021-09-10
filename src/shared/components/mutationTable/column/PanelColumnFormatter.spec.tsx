@@ -28,7 +28,10 @@ const mockSamples = [{ id: 'sampleId', clinicalData: [] }];
 
 const mockSampleToGenePanelId = { sampleId: 'genePanelId' };
 const mockGenePanelIdToGene = { genePanelId: [1] };
-const mockSampleManager = new SampleManager(mockSamples);
+const mockSampleManager = new SampleManager(
+    mockSamples,
+    mockSamples.map(sample => sample.id)
+);
 
 const mock = {
     data: mockData,

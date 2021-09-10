@@ -4,11 +4,14 @@ import {
     CUSTOM_CASE_LIST_ID,
     CancerStudyQueryUrlParams,
 } from './QueryStore';
-import { VirtualStudy, VirtualStudyData } from 'shared/model/VirtualStudy';
 import Sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from '../../api/cbioportalClientInstance';
 import * as _ from 'lodash';
+import {
+    VirtualStudy,
+    VirtualStudyData,
+} from 'shared/api/session-service/sessionServiceModels';
 
 describe('QueryStore', () => {
     describe('#setParamsFromLocalStorage', () => {

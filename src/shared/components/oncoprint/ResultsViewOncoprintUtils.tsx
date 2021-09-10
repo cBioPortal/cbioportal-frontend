@@ -8,7 +8,6 @@ import {
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import _ from 'lodash';
 import naturalSort from 'javascript-natural-sort';
-import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import {
@@ -22,6 +21,7 @@ import ResultsViewOncoprint, {
     AdditionalTrackGroupRecord,
 } from 'shared/components/oncoprint/ResultsViewOncoprint';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
+import { Group } from 'shared/api/session-service/sessionServiceModels';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;

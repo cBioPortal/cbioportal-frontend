@@ -41,20 +41,22 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import _ from 'lodash';
 import client from 'shared/api/cbioportalClientInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import MobxPromise, { MobxPromise_await } from 'mobxpromise';
 import { calculateQValues } from '../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import { SpecialAttribute } from '../../shared/cache/ClinicalDataCache';
 import { isSampleProfiled } from 'shared/lib/isSampleProfiled';
 import { AlteredStatus } from './mutualExclusivity/MutualExclusivityUtil';
-import { Group } from '../../shared/api/ComparisonGroupClient';
 import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { CoverageInformation } from '../../shared/lib/GenePanelUtils';
 import { GenericAssayEnrichment } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { GenericAssayEnrichmentWithQ } from './enrichments/EnrichmentsUtil';
-import { CustomChartSession } from 'shared/api/sessionServiceAPI';
 import { IDriverAnnotationReport } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import { Gene } from 'cbioportal-utils';
+import {
+    CustomChart,
+    Group,
+    VirtualStudy,
+} from 'shared/api/session-service/sessionServiceModels';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
@@ -934,7 +936,7 @@ export function evaluateMutationPutativeDriverInfo(
 }
 
 export function getExtendsClinicalAttributesFromCustomData(
-    customChartSessions: CustomChartSession[],
+    customChartSessions: CustomChart[],
     sampleMap: ComplexKeyMap<Sample>
 ): ExtendedClinicalAttribute[] {
     return customChartSessions.map(customChartSession => {

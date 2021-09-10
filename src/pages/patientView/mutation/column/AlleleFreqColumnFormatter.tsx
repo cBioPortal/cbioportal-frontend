@@ -139,11 +139,18 @@ export default class AlleleFreqColumnFormatter {
         let content: JSX.Element = <span />;
 
         // single sample: just show the number
-        if (sampleElements.length === 1) {
+        if (sampleManager.sampleIdsInHeader.length === 1) {
+            // The frequency is populated by the sampleOrder.
+            // In the sample view of multi-sample patient, it still populates frequency for all samples.
+            const visualizedSampleIndex = sampleOrder.indexOf(
+                sampleManager.sampleIdsInHeader[0]
+            );
             content = (
                 <span>
-                    {!isNaN(freqs[0])
-                        ? getFormattedFrequencyValue(freqs[0])
+                    {!isNaN(freqs[visualizedSampleIndex])
+                        ? getFormattedFrequencyValue(
+                              freqs[visualizedSampleIndex]
+                          )
                         : ''}
                 </span>
             );
@@ -176,7 +183,7 @@ export default class AlleleFreqColumnFormatter {
                     arrowContent={<div className="rc-tooltip-arrow-inner" />}
                     destroyTooltipOnHide={true}
                 >
-                    {content}
+                    <div data-test="allele-freq-cell">{content}</div>
                 </DefaultTooltip>
             );
         }
