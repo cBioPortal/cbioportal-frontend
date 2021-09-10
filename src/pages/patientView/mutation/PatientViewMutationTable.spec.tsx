@@ -1,13 +1,10 @@
 import React from 'react';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { assert } from 'chai';
 import { default as PatientViewMutationTable } from './PatientViewMutationTable';
 import { MutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
 import { GeneFilterOption } from './GeneFilterMenu';
 import { USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB } from 'react-mutation-mapper';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 function hasColumn(
     tableWrapper: ReactWrapper<any, any>,

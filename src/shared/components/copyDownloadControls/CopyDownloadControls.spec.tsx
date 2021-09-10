@@ -4,11 +4,8 @@ import {
 } from './CopyDownloadControls';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CopyDownloadControls', () => {
     const completeData: ICopyDownloadData = {

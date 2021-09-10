@@ -1,14 +1,11 @@
 import * as React from 'react';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import { expect } from 'chai';
 import {
     default as ExpectedAltCopiesElement,
     ExpectedAltCopiesColor,
     ExpectedAltCopiesElementTooltip,
 } from './ExpectedAltCopiesElement';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('ExpectedAltCopiesElement', () => {
     function getExpectedAltCopiesProps(

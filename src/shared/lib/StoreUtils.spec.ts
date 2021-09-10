@@ -48,7 +48,7 @@ describe('StoreUtils', () => {
     let mutationDataWithMutationsOnly: MobxPromise<Mutation[]>;
     let mutationDataWithBothMutationsAndFusions: MobxPromise<Mutation[]>;
 
-    before(() => {
+    beforeAll(() => {
         emptyMutationData = {
             result: [],
             status: 'complete' as 'complete',
@@ -263,7 +263,7 @@ describe('StoreUtils', () => {
 
     describe('makeStudyToCancerTypeMap', () => {
         let studies: CancerStudy[];
-        before(() => {
+        beforeAll(() => {
             studies = [];
             studies.push({
                 studyId: '0',

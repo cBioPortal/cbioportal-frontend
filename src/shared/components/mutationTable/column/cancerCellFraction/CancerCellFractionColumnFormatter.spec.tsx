@@ -1,14 +1,11 @@
 import * as React from 'react';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import { expect } from 'chai';
 import { getDefaultCancerCellFractionColumnDefinition } from './CancerCellFractionColumnFormatter';
 import CancerCellFractionElement from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
 import SampleManager from 'pages/patientView/SampleManager';
 import { initMutation } from 'test/MutationMockUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerCellFractionColumnFormatter', () => {
     function createMutationWithoutASCN() {

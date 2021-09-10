@@ -7,11 +7,11 @@ import * as $ from 'jquery';
 describe('test', () => {
     let targetEl: HTMLDivElement | null;
 
-    before(() => {
+    beforeAll(() => {
         targetEl = document.createElement('div');
     });
 
-    after(() => {
+    afterAll(() => {
         targetEl = null;
     });
 
