@@ -1,11 +1,8 @@
 import GeneColumnFormatter from './GeneColumnFormatter';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { initMutation } from 'test/MutationMockUtils';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('GeneColumnFormatter', () => {
     const mutation = initMutation({
@@ -17,7 +14,7 @@ describe('GeneColumnFormatter', () => {
     const tableData = [[mutation]];
     let component: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         const data = [mutation];
 
         // mount a single cell component (Td)

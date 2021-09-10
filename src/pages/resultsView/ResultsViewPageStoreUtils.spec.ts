@@ -62,7 +62,7 @@ describe('ResultsViewPageStoreUtils', () => {
         let bothMutation: Mutation;
         let neitherMutation: Mutation;
 
-        before(() => {
+        beforeAll(() => {
             driverFilterMutation = {
                 driverFilter: 'B',
             } as Mutation;
@@ -1177,7 +1177,7 @@ describe('ResultsViewPageStoreUtils', () => {
             }) as VirtualStudy,
         ];
 
-        before(() => {
+        beforeAll(() => {
             sinon
                 .stub(sessionServiceClient, 'getUserVirtualStudies')
                 .callsFake(function fakeFn(id: string) {
@@ -1209,7 +1209,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     });
                 });
         });
-        after(() => {
+        afterAll(() => {
             //(sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
             //(client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
         });
@@ -2583,7 +2583,7 @@ describe('getGeneAndProfileChunksForRequest', () => {
     let genes: Gene[];
     let profileIds: string[];
 
-    before(() => {
+    beforeAll(() => {
         genes = [
             {
                 hugoGeneSymbol: 'EGFR',

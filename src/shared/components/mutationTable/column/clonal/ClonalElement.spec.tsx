@@ -1,4 +1,4 @@
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import * as React from 'react';
 import { assert } from 'chai';
 import { ClonalValue } from './ClonalColumnFormatter';
@@ -7,9 +7,6 @@ import {
     ClonalElementTooltip,
     default as ClonalElement,
 } from './ClonalElement';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('ClonalElement', () => {
     const clonal = {

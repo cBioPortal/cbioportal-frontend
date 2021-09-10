@@ -1,13 +1,10 @@
 import GenomicOverview from './GenomicOverview';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { shallow, ShallowWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { shallow, ShallowWrapper } from 'enzyme';
 import SampleManager from '../SampleManager';
 import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
 import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('GenomicOverview', () => {
     let genomicOverview: ShallowWrapper<any, any>;

@@ -4,10 +4,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import styles from './proteinChange.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 /**
  * @author Selcuk Onur Sumer
@@ -32,7 +29,7 @@ describe('ProteinChangeColumnFormatter', () => {
     let somaticComponent: ReactWrapper<any, any>;
     let longProteinChangeComponent: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         let data = [germlineMutation];
 
         // mount a single cell component (Td) for a germline mutation

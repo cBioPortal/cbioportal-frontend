@@ -4,10 +4,7 @@ import styles from './validationStatus.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('MutationStatusColumnFormatter', () => {
     const validMutation = initMutation({
@@ -36,7 +33,7 @@ describe('MutationStatusColumnFormatter', () => {
     let unknownComponent: ReactWrapper<any, any>;
     let otherComponent: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         validComponent = mount(
             ValidationStatusColumnFormatter.renderFunction(validData)
         );

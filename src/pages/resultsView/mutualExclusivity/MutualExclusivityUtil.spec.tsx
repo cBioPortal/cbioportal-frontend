@@ -16,13 +16,10 @@ import {
 } from './MutualExclusivityUtil';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import MutualExclusivityTable from './MutualExclusivityTable';
-import Adapter from 'enzyme-adapter-react-16';
 
 expect.extend(expectJSX);
-
-Enzyme.configure({ adapter: new Adapter() });
 
 const exampleData = [
     {

@@ -5,13 +5,10 @@ import {
     OrderedAlterationLabelMap,
 } from './CancerSummaryContent';
 import { assert } from 'chai';
-import Enzyme, { shallow } from 'enzyme';
+import { shallow } from 'enzyme';
 import * as React from 'react';
 import * as _ from 'lodash';
 import sinon from 'sinon';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerSummaryContent', () => {
     let groupedAlterationData: {

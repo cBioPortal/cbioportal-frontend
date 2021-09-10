@@ -4,7 +4,7 @@ import { SimpleLazyMobXTableApplicationDataStore } from './ILazyMobXTableApplica
 describe('SimpleLazyMobXTableApplicationDataStore', () => {
     let data: number[];
     let metric: { [x: number]: number };
-    before(() => {
+    beforeAll(() => {
         data = [1, 2, 3, 4, 5, 6, 7, 8];
         metric = {
             5: 0,
