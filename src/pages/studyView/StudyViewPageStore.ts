@@ -5084,7 +5084,7 @@ export class StudyViewPageStore
             _.fromPairs(this._xVsYCharts.toJSON())
         );
 
-        // filter out survival attributes (only keep 'OS_STATUS' attribute)
+        /*// filter out survival attributes (only keep 'OS_STATUS' attribute)
         // create a dict which contains all survival attribute Ids that will be excluded from study view
         // get all survival attribute Ids into a dict
         let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
@@ -5098,11 +5098,11 @@ export class StudyViewPageStore
             this.clinicalAttributes.result,
             attribute =>
                 !(attribute.clinicalAttributeId in survivalAttributeIdsDict)
-        );
+        );*/
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            filteredClinicalAttributes,
+            this.clinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
