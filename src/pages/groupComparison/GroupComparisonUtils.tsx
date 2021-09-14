@@ -10,10 +10,6 @@ import {
     StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import { AlterationEnrichmentWithQ } from '../resultsView/enrichments/EnrichmentsUtil';
-import {
-    GroupData,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
 import * as React from 'react';
 import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import ComplexKeySet from '../../shared/lib/complexKeyDataStructures/ComplexKeySet';
@@ -43,6 +39,10 @@ import { observer } from 'mobx-react';
 import { getServerConfig } from 'config/config';
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { EnrichmentEventType } from 'shared/lib/comparison/ComparisonStoreUtils';
+import {
+    GroupData,
+    SessionGroupData,
+} from 'shared/api/session-service/sessionServiceModels';
 
 type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
 

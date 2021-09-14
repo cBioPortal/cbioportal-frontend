@@ -15,9 +15,9 @@ import {
 } from './ResultsViewComparisonUtils';
 import _ from 'lodash';
 import ifNotDefined from '../../../shared/lib/ifNotDefined';
-import { Session } from '../../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../../shared/api/comparisonGroupClientInstance';
 import { ComparisonGroup } from '../../groupComparison/GroupComparisonUtils';
+import { ComparisonSession } from 'shared/api/session-service/sessionServiceModels';
 
 export default class ResultsViewComparisonStore extends ComparisonStore {
     constructor(
@@ -168,7 +168,7 @@ export default class ResultsViewComparisonStore extends ComparisonStore {
 
     // <session>
     @action
-    protected async saveAndGoToSession(newSession: Session) {
+    protected async saveAndGoToSession(newSession: ComparisonSession) {
         const { id } = await comparisonClient.addComparisonSession(newSession);
         this.urlWrapper.updateURL({ comparison_createdGroupsSessionId: id });
         this.newSessionPending = false;

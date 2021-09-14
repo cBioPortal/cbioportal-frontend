@@ -135,7 +135,6 @@ import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import { getHeatmapMeta } from '../../shared/lib/MDACCUtils';
 import {
@@ -153,10 +152,6 @@ import {
 import onMobxPromise from '../../shared/lib/onMobxPromise';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
-import {
-    Group,
-    SessionGroupData,
-} from '../../shared/api/ComparisonGroupClient';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
 import {
     finalizeStudiesAttr,
@@ -225,7 +220,6 @@ import {
     GenericAssayDataBinFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
-import { CustomChart, CustomChartSession } from 'shared/api/sessionServiceAPI';
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
@@ -240,42 +234,21 @@ import {
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import { getServerConfig } from 'config/config';
+import {
+    CustomChartData,
+    CustomChartIdentifierWithValue,
+    CustomChart,
+    Group,
+    SessionGroupData,
+    VirtualStudy,
+    ChartUserSetting,
+    StudyPageSettings,
+} from 'shared/api/session-service/sessionServiceModels';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
 type ComparisonGroupId = string;
 type AttributeId = string;
-
-export type ChartUserSetting = {
-    id: string;
-    name?: string;
-    chartType?: ChartType;
-    groups?: any; // for backward compatibility
-    layout?: {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-    };
-    patientAttribute: boolean;
-    filterByCancerGenes?: boolean;
-    customBins?: number[];
-    disableLogScale?: boolean;
-    description?: string;
-    profileType?: string;
-    hugoGeneSymbol?: string;
-    genericAssayType?: string;
-    genericAssayEntityId?: string;
-    dataType?: string;
-    showNA?: boolean;
-    patientLevelProfile?: boolean;
-};
-
-export type StudyPageSettings = {
-    chartSettings: ChartUserSetting[];
-    origin: string[];
-    groupColors: { [groupId: string]: string };
-};
 
 export type StudyViewPageTabKey =
     | StudyViewPageTabKeyEnum.CLINICAL_DATA
@@ -346,11 +319,6 @@ export const DataBinMethodConstants: { [key: string]: 'DYNAMIC' | 'STATIC' } = {
     STATIC: 'STATIC',
     DYNAMIC: 'DYNAMIC',
 };
-
-export type CustomChartIdentifierWithValue = Pick<
-    ClinicalData,
-    'studyId' | 'sampleId' | 'patientId' | 'value'
->;
 
 export type StatusMessage = {
     status: 'success' | 'warning' | 'danger' | 'info';
@@ -1067,7 +1035,7 @@ export class StudyViewPageStore
     >({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
-            const promises: Promise<CustomChartSession>[] = [];
+            const promises: Promise<CustomChart>[] = [];
             Object.keys(this.sharedCustomChartSet).forEach(chartId => {
                 promises.push(sessionServiceClient.getCustomData(chartId));
             });
@@ -4836,7 +4804,7 @@ export class StudyViewPageStore
 
     @action.bound
     async addCustomChart(
-        newChart: CustomChart,
+        newChart: CustomChartData,
         loadedfromUserSettings: boolean = false
     ): Promise<void> {
         const newChartName = newChart.displayName
@@ -5086,7 +5054,7 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    updateCustomSelect(newChart: CustomChart): void {
+    updateCustomSelect(newChart: CustomChartData): void {
         this.clearAllFilters();
         const sampleIdentifiers = newChart.data.map(datum => ({
             studyId: datum.studyId,

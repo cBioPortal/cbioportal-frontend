@@ -7,10 +7,10 @@ import { ComparisonGroup } from './GroupComparisonUtils';
 import RectangleVennDiagram from './rectangleVennDiagram/RectangleVennDiagram';
 import CreateGroupFromOverlap from './CreateGroupFromOverlap';
 import autobind from 'autobind-decorator';
-import { SessionGroupData } from '../../shared/api/ComparisonGroupClient';
 import { GroupLegendLabelComponent } from './labelComponents/GroupLegendLabelComponent';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import GroupComparisonStore from './GroupComparisonStore';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export interface IVennProps {
     svgId?: string;
