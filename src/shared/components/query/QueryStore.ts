@@ -49,7 +49,6 @@ import {
     getOqlMessages,
 } from 'shared/lib/StoreUtils';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
 import {
     getGenesetsFromHierarchy,
     getVolcanoPlotMinYValue,
@@ -65,6 +64,7 @@ import {
 } from 'pages/resultsView/ResultsViewURLWrapper';
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
+import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {

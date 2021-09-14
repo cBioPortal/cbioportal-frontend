@@ -1,15 +1,8 @@
-import {
-    Group,
-    GroupData,
-    SessionGroupData,
-} from '../../../shared/api/ComparisonGroupClient';
 import { StudyViewPageStore } from '../../studyView/StudyViewPageStore';
 import { PatientIdentifier, SampleIdentifier } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
-import {
-    getSampleIdentifiers,
-    StudyViewComparisonGroup,
-} from '../GroupComparisonUtils';
+import { StudyViewComparisonGroup } from '../GroupComparisonUtils';
+import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export function getSelectedGroups(
     allGroups: StudyViewComparisonGroup[],

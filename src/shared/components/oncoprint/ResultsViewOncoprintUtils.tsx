@@ -8,12 +8,12 @@ import {
 import { SpecialAttribute } from '../../cache/ClinicalDataCache';
 import _ from 'lodash';
 import naturalSort from 'javascript-natural-sort';
-import { Group } from '../../api/ComparisonGroupClient';
 import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import { makeGenericAssayOption } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { TrackGroupHeader, TrackGroupIndex } from 'oncoprintjs';
 import { HeatmapTrackGroupRecord } from 'shared/components/oncoprint/ResultsViewOncoprint';
+import { Group } from 'shared/api/session-service/sessionServiceModels';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;
