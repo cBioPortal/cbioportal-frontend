@@ -1,25 +1,12 @@
 import * as request from 'superagent';
-import { getSessionUrl } from './urls';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import { getSessionUrl } from '../urls';
 import {
+    CustomChart,
+    CustomChartData,
+    Session,
     StudyPageSettings,
-    CustomChartIdentifierWithValue,
-} from 'pages/studyView/StudyViewPageStore';
-
-export type CustomChart = {
-    origin: string[];
-    displayName: string;
-    description: string;
-    datatype: string;
-    patientAttribute: boolean;
-    priority: number;
-    data: CustomChartIdentifierWithValue[];
-};
-
-export type CustomChartSession = {
-    id: string;
-    data: CustomChart;
-};
+    VirtualStudy,
+} from './sessionServiceModels';
 
 export default class sessionServiceAPI {
     getVirtualStudyServiceUrl() {
@@ -37,7 +24,7 @@ export default class sessionServiceAPI {
     getCustomDataUrl() {
         return `${getSessionUrl()}/custom_data`;
     }
-
+    //Virtual Study API's - START
     /**
      * Retrieve Virtual Studies
      */
@@ -94,7 +81,8 @@ export default class sessionServiceAPI {
                 };
             });
     }
-
+    //Virtual Study API's - END
+    //main session API's - START
     saveSession(data: any) {
         return request
             .post(this.getSessionServiceUrl())
@@ -115,7 +103,8 @@ export default class sessionServiceAPI {
                 })
         );
     }
-
+    //main session API's - END
+    //StudyPage Settings API's - START
     fetchUserSettings(
         studyIds: string[]
     ): Promise<StudyPageSettings | undefined> {
@@ -144,8 +133,9 @@ export default class sessionServiceAPI {
                 })
         );
     }
-
-    saveCustomData(data: any) {
+    //StudyPage Settings API's - END
+    //Custom Chart API's - START
+    saveCustomData(data: CustomChartData) {
         return request
             .post(this.getCustomDataUrl())
             .send(data)
@@ -157,13 +147,13 @@ export default class sessionServiceAPI {
             });
     }
 
-    getCustomData(id: string): Promise<CustomChartSession> {
+    getCustomData(id: string): Promise<CustomChart> {
         return request
             .get(`${this.getCustomDataUrl()}/${id}`)
             .then((res: any) => res.body);
     }
 
-    getCustomDataForStudies(studyIds: string[]): Promise<CustomChartSession[]> {
+    getCustomDataForStudies(studyIds: string[]): Promise<CustomChart[]> {
         return request
             .post(`${this.getCustomDataUrl()}/fetch`)
             .send(studyIds)
@@ -183,4 +173,5 @@ export default class sessionServiceAPI {
             .get(`${this.getCustomDataUrl()}/add/${id}`)
             .then(() => {});
     }
+    //Custom Chart API's - END
 }
