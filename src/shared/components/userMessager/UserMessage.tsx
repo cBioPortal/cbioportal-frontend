@@ -36,7 +36,7 @@ if (
         // BASED ON USERS LOCALSTORAGE
         {
             dateEnd: 100000000000000,
-            content: `Please fill out our user survey so we can continue to build a better site for you &nbsp;<a target="_blank" class="btn btn-xs btn-default" href="https://forms.gle/Y7TLW8WkQoZQY6L76">Take Survey</a>`,
+            content: `Please fill out our user survey so we can continue to build a better site for you &nbsp;<a target="_blank" class="btn btn-xs btn-default" href="https://bit.ly/cbioportal-survey-2021">Take Survey</a>`,
             id: '2021_fall_user_survey',
         },
     ];
