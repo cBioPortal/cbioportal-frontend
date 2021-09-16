@@ -910,6 +910,7 @@ export default class StudyViewPage extends React.Component<
                                                         this.store.resetToDefaultChartSettings();
                                                         this.showReturnToDefaultChartListModal = false;
                                                     }}
+                                                    data-test="confirm-reset-charts-button"
                                                 >
                                                     Confirm
                                                 </button>

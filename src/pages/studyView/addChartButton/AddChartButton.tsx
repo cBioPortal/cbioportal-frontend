@@ -815,6 +815,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         }}
                         className="btn btn-primary btn-xs"
                         onClick={this.props.showResetPopup}
+                        data-test="reset-charts-button"
                     >
                         Reset charts
                     </button>
