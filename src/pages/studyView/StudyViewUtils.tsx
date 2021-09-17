@@ -135,6 +135,7 @@ export type ChartMeta = {
     dataType: ChartMetaDataTypeEnum;
     patientAttribute: boolean;
     renderWhenDataChange: boolean;
+    logScaleX?: boolean;
 };
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
     dimension: ChartDimension;
@@ -3272,4 +3273,8 @@ export function getBinBounds(bins: DensityPlotBin[]) {
         x,
         y,
     };
+}
+
+export function logScalePossible(clinicalAttributeId: string) {
+    return clinicalAttributeId === SpecialChartsUniqueKeyEnum.MUTATION_COUNT;
 }

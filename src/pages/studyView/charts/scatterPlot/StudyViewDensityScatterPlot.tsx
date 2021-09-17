@@ -22,6 +22,7 @@ import { AbstractChart } from '../ChartContainer';
 import { interpolatePlasma } from 'd3-scale-chromatic';
 import { DensityPlotBin } from 'cbioportal-ts-api-client';
 import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
+import { computeCorrelationPValue } from 'shared/components/plots/PlotUtils';
 
 class ScaleCapt extends React.Component<any, any> {
     render() {
@@ -57,6 +58,7 @@ export interface IStudyViewDensityScatterPlotProps {
     height: number;
     yBinsMin: number;
     data: DensityPlotBin[];
+    pearsonCorr: number;
     plotDomain?: {
         x?: { min?: number; max?: number };
         y?: { min?: number; max?: number };
@@ -364,6 +366,13 @@ export default class StudyViewDensityScatterPlot
         };
     }
 
+    @computed get pearsonPValue() {
+        return computeCorrelationPValue(
+            this.props.pearsonCorr,
+            _.sumBy(this.data, d => d.count)
+        );
+    }
+
     @computed get scatters() {
         if (this.data.length === 0) {
             return [];
@@ -479,6 +488,35 @@ export default class StudyViewDensityScatterPlot
                     {this.plotComputations.countMin.toLocaleString()}
                 </text>,
             ];
+            let correlationLabels;
+            if (this.pearsonPValue !== null) {
+                correlationLabels = [
+                    <text
+                        fontSize={10}
+                        x={rectX}
+                        y={rectY + rectHeight + 40}
+                        dy={'-0.3em'}
+                    >
+                        Pearson:
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX}
+                        y={rectY + rectHeight + 55}
+                        dy={'-0.3em'}
+                    >
+                        {this.props.pearsonCorr.toFixed(4)}
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX}
+                        y={rectY + rectHeight + 70}
+                        dy={'-0.3em'}
+                    >
+                        p={this.pearsonPValue!.toFixed(2)}
+                    </text>,
+                ];
+            }
             if (largeRange) {
                 // only add a middle label if theres room for another whole number in between
                 labels.push(
@@ -506,6 +544,7 @@ export default class StudyViewDensityScatterPlot
                         {title}
                         {rect}
                         {labels}
+                        {correlationLabels}
                     </g>
                 ),
             };
