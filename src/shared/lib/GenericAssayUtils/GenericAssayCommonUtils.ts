@@ -26,9 +26,9 @@ export const GenericAssayTypeConstants: { [s: string]: string } = {
 export const RESERVED_CATEGORY_ORDER_DICT: Dictionary<string[]> = {
     // Add more generic assay types here to change category order in plots tab
     [GenericAssayTypeConstants.ARMLEVEL_CNA]: [
-        'lost',
-        'diploid',
-        'gained',
+        'Loss',
+        'Unchanged',
+        'Gain',
         'NA',
     ],
 };
