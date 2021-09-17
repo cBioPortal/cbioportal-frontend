@@ -372,8 +372,14 @@ export class StudySummaryTab extends React.Component<
                 const chartInfo = this.store.getXVsYChartInfo(
                     props.chartMeta!.uniqueKey
                 )!;
+                const settings = this.store.getXVsYChartSettings(
+                    props.chartMeta!.uniqueKey
+                )!;
                 props.promise = this.store.clinicalDataDensityCache.get({
                     chartInfo,
+                    chartMeta: props.chartMeta!,
+                    xAxisLogScale: settings.xLogScale,
+                    yAxisLogScale: settings.yLogScale,
                 });
                 props.plotDomain = chartInfo.plotDomain;
                 props.axisLabelX = chartInfo.xAttr.displayName;
