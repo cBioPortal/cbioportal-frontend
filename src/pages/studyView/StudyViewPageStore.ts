@@ -298,6 +298,11 @@ export type XVsYChart = {
     };
 };
 
+export type XVsYChartSettings = {
+    xLogScale: boolean;
+    yLogScale: boolean;
+};
+
 export type GenomicChart = {
     name?: string;
     description?: string;
@@ -2240,6 +2245,10 @@ export class StudyViewPageStore
         {},
         { deep: false }
     );
+    private _xVsYChartSettings = observable.map<
+        ChartUniqueKey,
+        XVsYChartSettings
+    >({}, { deep: true });
 
     @observable private _customChartsSelectedCases = observable.map<
         ChartUniqueKey,
@@ -2264,6 +2273,9 @@ export class StudyViewPageStore
 
     getXVsYChartInfo(uniqueKey: string): XVsYChart | undefined {
         return this._xVsYChartMap.get(uniqueKey);
+    }
+    getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
+        return this._xVsYChartSettings.get(uniqueKey);
     }
 
     @action.bound
@@ -2591,10 +2603,15 @@ export class StudyViewPageStore
                 chartInfo.yAttr.clinicalAttributeId
             );
         } else {
+            const chartSettings = this.getXVsYChartSettings(chartUniqueKey)!;
             const yFilter: DataFilterValue = {
                 start: bounds.yStart,
                 end: bounds.yEnd,
             } as any;
+            if (chartSettings.yLogScale) {
+                yFilter.start = Math.exp(yFilter.start) - 1;
+                yFilter.end = Math.exp(yFilter.end) - 1;
+            }
             const yIntervalFilter = {
                 attributeId: chartInfo.yAttr.clinicalAttributeId,
                 values: [yFilter],
@@ -2612,6 +2629,10 @@ export class StudyViewPageStore
                 start: bounds.xStart,
                 end: bounds.xEnd,
             } as any;
+            if (chartSettings.xLogScale) {
+                xFilter.start = Math.exp(xFilter.start) - 1;
+                xFilter.end = Math.exp(xFilter.end) - 1;
+            }
             const xIntervalFilter = {
                 attributeId: chartInfo.xAttr.clinicalAttributeId,
                 values: [xFilter],
@@ -4933,6 +4954,10 @@ export class StudyViewPageStore
             this._xVsYCharts.set(uniqueKey, chartMeta);
 
             this._xVsYChartMap.set(uniqueKey, newChart);
+            this._xVsYChartSettings.set(uniqueKey, {
+                xLogScale: false,
+                yLogScale: false,
+            });
             this.changeChartVisibility(uniqueKey, true);
             this.chartsType.set(uniqueKey, ChartTypeEnum.SCATTER);
             this.chartsDimension.set(uniqueKey, { w: 2, h: 2 });
@@ -5956,6 +5981,10 @@ export class StudyViewPageStore
                     },
                 }
             );
+            this._xVsYChartSettings.set(
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+                { xLogScale: false, yLogScale: false }
+            );
 
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
@@ -6491,9 +6520,15 @@ export class StudyViewPageStore
     });
 
     public clinicalDataDensityCache = new MobxPromiseCache<
-        { chartInfo: XVsYChart },
+        {
+            xAxisLogScale: boolean;
+            yAxisLogScale: boolean;
+            chartMeta: ChartMeta;
+            chartInfo: XVsYChart;
+        },
         {
             bins: DensityPlotBin[];
+            pearsonCorr: number;
             xBinSize: number;
             yBinSize: number;
         }
@@ -6511,6 +6546,8 @@ export class StudyViewPageStore
                 const parameters: any = {
                     xAxisAttributeId: q.chartInfo.xAttr.clinicalAttributeId,
                     yAxisAttributeId: q.chartInfo.yAttr.clinicalAttributeId,
+                    xAxisLogScale: q.xAxisLogScale,
+                    yAxisLogScale: q.yAxisLogScale,
                     xAxisBinCount,
                     yAxisBinCount,
                     studyViewFilter: this.filters,
@@ -6541,11 +6578,12 @@ export class StudyViewPageStore
                 ) {
                     parameters.yAxisStart = 0; // mutation count always starts at 0
                 }
-                const bins = (
-                    await internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                        parameters
-                    )
-                ).filter(bin => bin.count > 0);
+                const result: any = await internalClient.fetchClinicalDataDensityPlotUsingPOST(
+                    parameters
+                );
+                const bins = result.bins.filter(
+                    (bin: DensityPlotBin) => bin.count > 0
+                );
                 const binBounds = getBinBounds(bins);
                 const xBinSize =
                     (binBounds.x.max - binBounds.x.min) / xAxisBinCount;
@@ -6553,12 +6591,14 @@ export class StudyViewPageStore
                     (binBounds.y.max - binBounds.y.min) / yAxisBinCount;
                 return {
                     bins,
+                    pearsonCorr: result.pearsonCorr,
                     xBinSize,
                     yBinSize,
                 };
             },
             default: {
                 bins: [],
+                pearsonCorr: 0,
                 xBinSize: -1,
                 yBinSize: -1,
             },
@@ -6567,7 +6607,9 @@ export class StudyViewPageStore
             return (
                 `Attr1:${q.chartInfo.xAttr.clinicalAttributeId}/` +
                 `Attr2:${q.chartInfo.yAttr.clinicalAttributeId}/` +
-                `plotDomain:${JSON.stringify(q.chartInfo.plotDomain)}`
+                `plotDomain:${JSON.stringify(q.chartInfo.plotDomain)}/` +
+                `xLog:${q.xAxisLogScale}/` +
+                `yLog:${q.yAxisLogScale}`
             );
         }
     );
