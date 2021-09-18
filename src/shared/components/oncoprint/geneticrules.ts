@@ -359,17 +359,7 @@ export const germline_rule_params = {
     disp_germ: {
         // white stripe in the middle
         true: {
-            shapes: [
-                {
-                    type: 'rectangle',
-                    fill: MUT_COLOR_GERMLINE,
-                    x: 0,
-                    y: 46,
-                    width: 100,
-                    height: 8,
-                    z: 7,
-                },
-            ],
+            shapes: [shapeBank[ShapeId.germlineRectangle]],
             legend_label: 'Germline Mutation',
             legend_order: GERMLINE_LEGEND_ORDER,
         },
