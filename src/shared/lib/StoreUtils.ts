@@ -233,7 +233,9 @@ export async function fetchAllReferenceGenomeGenes(
     genomeName: string,
     client: CBioPortalAPI = defaultClient
 ) {
-    const doCaching = window.location.hostname.includes('.cbioportal.org');
+    const doCaching = /\.cbioportal\.org|netlify\.app/.test(
+        window.location.hostname
+    );
 
     // allows us to clear cache when data changes
     const referenceGenomeKey = `referenceGenome-${
