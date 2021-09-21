@@ -974,6 +974,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 height={this.getScatterPlotHeight(
                                     this.props.dimension.h
                                 )}
+                                spearmanCorr={
+                                    this.props.promise.result.spearmanCorr
+                                }
                                 pearsonCorr={
                                     this.props.promise.result.pearsonCorr
                                 }
