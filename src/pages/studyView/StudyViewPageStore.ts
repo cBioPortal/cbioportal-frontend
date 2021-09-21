@@ -6544,6 +6544,7 @@ export class StudyViewPageStore
         {
             bins: DensityPlotBin[];
             pearsonCorr: number;
+            spearmanCorr: number;
             xBinSize: number;
             yBinSize: number;
         }
@@ -6607,6 +6608,7 @@ export class StudyViewPageStore
                 return {
                     bins,
                     pearsonCorr: result.pearsonCorr,
+                    spearmanCorr: result.spearmanCorr,
                     xBinSize,
                     yBinSize,
                 };
@@ -6614,6 +6616,7 @@ export class StudyViewPageStore
             default: {
                 bins: [],
                 pearsonCorr: 0,
+                spearmanCorr: 0,
                 xBinSize: -1,
                 yBinSize: -1,
             },

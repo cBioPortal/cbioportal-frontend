@@ -59,6 +59,7 @@ export interface IStudyViewDensityScatterPlotProps {
     yBinsMin: number;
     data: DensityPlotBin[];
     pearsonCorr: number;
+    spearmanCorr: number;
     plotDomain?: {
         x?: { min?: number; max?: number };
         y?: { min?: number; max?: number };
@@ -366,10 +367,20 @@ export default class StudyViewDensityScatterPlot
         };
     }
 
+    @computed get numSamples() {
+        return _.sumBy(this.data, d => d.count);
+    }
+
     @computed get pearsonPValue() {
         return computeCorrelationPValue(
             this.props.pearsonCorr,
-            _.sumBy(this.data, d => d.count)
+            this.numSamples
+        );
+    }
+    @computed get spearmanPValue() {
+        return computeCorrelationPValue(
+            this.props.spearmanCorr,
+            this.numSamples
         );
     }
 
@@ -489,11 +500,14 @@ export default class StudyViewDensityScatterPlot
                 </text>,
             ];
             let correlationLabels;
-            if (this.pearsonPValue !== null) {
+            if (this.numSamples > 2) {
+                // otherwise p-values are null
+
                 correlationLabels = [
+                    // pearson
                     <text
                         fontSize={10}
-                        x={rectX}
+                        x={rectX - 5}
                         y={rectY + rectHeight + 40}
                         dy={'-0.3em'}
                     >
@@ -501,7 +515,7 @@ export default class StudyViewDensityScatterPlot
                     </text>,
                     <text
                         fontSize={10.5}
-                        x={rectX}
+                        x={rectX - 5}
                         y={rectY + rectHeight + 55}
                         dy={'-0.3em'}
                     >
@@ -509,11 +523,37 @@ export default class StudyViewDensityScatterPlot
                     </text>,
                     <text
                         fontSize={10.5}
-                        x={rectX}
+                        x={rectX - 5}
                         y={rectY + rectHeight + 70}
                         dy={'-0.3em'}
                     >
                         p={this.pearsonPValue!.toFixed(2)}
+                    </text>,
+
+                    // spearman
+                    <text
+                        fontSize={10}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 100}
+                        dy={'-0.3em'}
+                    >
+                        Spearman:
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 115}
+                        dy={'-0.3em'}
+                    >
+                        {this.props.spearmanCorr.toFixed(4)}
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 130}
+                        dy={'-0.3em'}
+                    >
+                        p={this.spearmanPValue!.toFixed(2)}
                     </text>,
                 ];
             }
