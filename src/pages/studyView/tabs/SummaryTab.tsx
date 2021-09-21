@@ -403,9 +403,16 @@ export class StudySummaryTab extends React.Component<
                     settings.yLogScale = !settings.yLogScale;
                 };
                 props.plotDomain = chartInfo.plotDomain;
-                props.axisLabelX = chartInfo.xAttr.displayName;
-                props.axisLabelY = chartInfo.yAttr.displayName;
-                props.tooltip = makeDensityScatterPlotTooltip(chartInfo);
+                props.axisLabelX = `${chartInfo.xAttr.displayName}${
+                    settings.xLogScale ? ' (log)' : ''
+                }`;
+                props.axisLabelY = `${chartInfo.yAttr.displayName}${
+                    settings.yLogScale ? ' (log)' : ''
+                }`;
+                props.tooltip = makeDensityScatterPlotTooltip(
+                    chartInfo,
+                    settings
+                );
                 props.onValueSelection = (bounds: RectangleBounds) => {
                     this.store.updateScatterPlotFilterByValues(
                         props.chartMeta!.uniqueKey,
