@@ -565,83 +565,97 @@ export default class StudyViewDensityScatterPlot
         //console.log(this.plotDomain);
         return (
             <div>
-                <div
-                    style={{
-                        width: this.props.width,
-                        height: this.props.height,
-                        position: 'relative',
-                    }}
-                    ref={this.containerRef}
-                    onMouseDown={this.onMouseDown}
-                    onMouseUp={this.onMouseUp}
-                >
-                    <VictoryChart
-                        theme={CBIOPORTAL_VICTORY_THEME}
-                        containerComponent={
-                            <VictorySelectionContainerWithLegend
-                                onSelection={this.onSelection}
-                                containerRef={(ref: any) => {
-                                    if (ref) {
-                                        this.svgRef(ref.firstChild);
-                                    }
-                                }}
-                                legend={this.legend && this.legend.legend}
-                                gradient={this.legend && this.legend.gradient}
-                            />
-                        }
-                        width={this.props.width}
-                        height={this.props.height}
-                        standalone={true}
-                        domainPadding={DOMAIN_PADDING}
-                        singleQuadrantDomainPadding={false}
+                {this.data.length > 0 && (
+                    <div
+                        style={{
+                            width: this.props.width,
+                            height: this.props.height,
+                            position: 'relative',
+                        }}
+                        ref={this.containerRef}
+                        onMouseDown={this.onMouseDown}
+                        onMouseUp={this.onMouseUp}
                     >
-                        {this.title}
-                        <VictoryAxis
-                            ref={this.xAxisRef}
-                            domain={this.plotDomain.x}
-                            orientation="bottom"
-                            offsetY={50}
-                            crossAxis={false}
-                            tickCount={NUM_AXIS_TICKS}
-                            tickFormat={this.tickFormat}
-                            axisLabelComponent={<VictoryLabel dy={20} />}
-                            label={this.props.axisLabelX}
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            containerComponent={
+                                <VictorySelectionContainerWithLegend
+                                    onSelection={this.onSelection}
+                                    containerRef={(ref: any) => {
+                                        if (ref) {
+                                            this.svgRef(ref.firstChild);
+                                        }
+                                    }}
+                                    legend={this.legend && this.legend.legend}
+                                    gradient={
+                                        this.legend && this.legend.gradient
+                                    }
+                                />
+                            }
+                            width={this.props.width}
+                            height={this.props.height}
+                            standalone={true}
+                            domainPadding={DOMAIN_PADDING}
+                            singleQuadrantDomainPadding={false}
+                        >
+                            {this.title}
+                            <VictoryAxis
+                                ref={this.xAxisRef}
+                                domain={this.plotDomain.x}
+                                orientation="bottom"
+                                offsetY={50}
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormat}
+                                axisLabelComponent={<VictoryLabel dy={20} />}
+                                label={this.props.axisLabelX}
+                            />
+                            <VictoryAxis
+                                ref={this.yAxisRef}
+                                domain={this.plotDomain.y}
+                                orientation="left"
+                                offsetX={50}
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormat}
+                                dependentAxis={true}
+                                axisLabelComponent={<VictoryLabel dy={-27} />}
+                                label={this.props.axisLabelY}
+                            />
+                            {this.scatters}
+                        </VictoryChart>
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: 'rgba(255,255,255,0.8)',
+                                display: this.props.isLoading
+                                    ? 'block'
+                                    : 'none',
+                            }}
                         />
-                        <VictoryAxis
-                            ref={this.yAxisRef}
-                            domain={this.plotDomain.y}
-                            orientation="left"
-                            offsetX={50}
-                            crossAxis={false}
-                            tickCount={NUM_AXIS_TICKS}
-                            tickFormat={this.tickFormat}
-                            dependentAxis={true}
-                            axisLabelComponent={<VictoryLabel dy={-27} />}
-                            label={this.props.axisLabelY}
-                        />
-                        {this.scatters}
-                    </VictoryChart>
-                    <span
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            display: this.props.isLoading ? 'block' : 'none',
-                        }}
-                    />
-                    <LoadingIndicator
-                        isLoading={!!this.props.isLoading}
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            marginLeft: -10,
-                        }}
-                    />
-                </div>
+                    </div>
+                )}
+                {!this.props.isLoading && this.data.length === 0 && (
+                    <div
+                        className={'alert alert-info'}
+                        style={{ marginTop: 175 }}
+                    >
+                        No data to plot.
+                    </div>
+                )}
+                <LoadingIndicator
+                    isLoading={!!this.props.isLoading}
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        marginLeft: -10,
+                    }}
+                />
                 {this.tooltipModel && this.props.tooltip && !this.mouseIsDown && (
                     <ScatterPlotTooltip
                         container={this.container}
