@@ -42,11 +42,7 @@ import {
     STUDY_VIEW_CONFIG,
 } from '../StudyViewConfig';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import {
-    DataType,
-    DefaultTooltip,
-    DownloadControlsButton,
-} from 'cbioportal-frontend-commons';
+import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
@@ -124,9 +120,15 @@ export interface IChartContainerProps {
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
     onToggleLogScale: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleX: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleY: (chartMeta: ChartMeta) => void;
     onToggleNAValue: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
+    logScaleXChecked?: boolean;
+    showLogScaleXToggle?: boolean;
+    logScaleYChecked?: boolean;
+    showLogScaleYToggle?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     selectedGenes?: any;
@@ -147,37 +149,6 @@ export interface IChartContainerProps {
     mutationFilterActive?: boolean;
     alterationFilterActive?: boolean;
 }
-
-const XVsYChartSettingsMenu: React.FunctionComponent<IChartContainerProps> = (
-    props: IChartContainerProps
-) => {
-    const chartInfo = props.store.getXVsYChartInfo(props.chartMeta.uniqueKey!)!;
-    const settings = props.store.getXVsYChartSettings(
-        props.chartMeta.uniqueKey!
-    )!;
-    return (
-        <div>
-            {logScalePossible(chartInfo.xAttr.clinicalAttributeId) && (
-                <button
-                    onClick={() => {
-                        settings.xLogScale = !settings.xLogScale;
-                    }}
-                >
-                    Toggle x log scale
-                </button>
-            )}
-            {logScalePossible(chartInfo.yAttr.clinicalAttributeId) && (
-                <button
-                    onClick={() => {
-                        settings.yLogScale = !settings.yLogScale;
-                    }}
-                >
-                    Toggle y log scale
-                </button>
-            )}
-        </div>
-    );
-};
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
@@ -221,6 +192,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onToggleLogScale: action(() => {
                 if (this.props.onToggleLogScale) {
                     this.props.onToggleLogScale(this.props.chartMeta);
+                }
+            }),
+            onToggleLogScaleX: action(() => {
+                if (this.props.onToggleLogScaleX) {
+                    this.props.onToggleLogScaleX(this.props.chartMeta);
+                }
+            }),
+            onToggleLogScaleY: action(() => {
+                if (this.props.onToggleLogScaleY) {
+                    this.props.onToggleLogScaleY(this.props.chartMeta);
                 }
             }),
             onToggleNAValue: action(() => {
@@ -291,6 +272,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     logScaleChecked: this.props.logScaleChecked,
                     isShowNAChecked: this.props.isShowNAChecked,
                     showNAToggle: this.props.showNAToggle,
+                };
+                break;
+            }
+            case ChartTypeEnum.SCATTER: {
+                controls = {
+                    showLogScaleXToggle: this.props.showLogScaleXToggle,
+                    logScaleXChecked: this.props.logScaleXChecked,
+                    showLogScaleYToggle: this.props.showLogScaleYToggle,
+                    logScaleYChecked: this.props.logScaleYChecked,
                 };
                 break;
             }
@@ -962,58 +952,50 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SCATTER: {
                 return () => (
-                    <DefaultTooltip
-                        overlay={<XVsYChartSettingsMenu {...this.props} />}
+                    <div
+                        style={{
+                            overflow: 'hidden',
+                            height: getHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            ),
+                        }}
                     >
-                        <div
-                            style={{
-                                overflow: 'hidden',
-                                height: getHeightByDimension(
+                        {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
+                        {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
+                            decrease the gap) will cover the header controls and make them unclickable */}
+                        <div style={{ marginTop: -33 }}>
+                            <StudyViewDensityScatterPlot
+                                ref={this.handlers.ref}
+                                width={getWidthByDimension(
                                     this.props.dimension,
-                                    this.chartHeaderHeight
-                                ),
-                            }}
-                        >
-                            {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
-                            {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
-                                decrease the gap) will cover the header controls and make them unclickable */}
-                            <div style={{ marginTop: -33 }}>
-                                <StudyViewDensityScatterPlot
-                                    ref={this.handlers.ref}
-                                    width={getWidthByDimension(
-                                        this.props.dimension,
-                                        this.borderWidth
-                                    )}
-                                    height={this.getScatterPlotHeight(
-                                        this.props.dimension.h
-                                    )}
-                                    pearsonCorr={
-                                        this.props.promise.result.pearsonCorr
-                                    }
-                                    plotDomain={this.props.plotDomain}
-                                    yBinsMin={MutationCountVsCnaYBinsMin}
-                                    onSelection={this.props.onValueSelection}
-                                    selectionBounds={
-                                        this.props.filters &&
-                                        this.props.filters.length > 0
-                                            ? this.props.filters[0]
-                                            : undefined
-                                    }
-                                    data={this.props.promise.result.bins}
-                                    xBinSize={
-                                        this.props.promise.result.xBinSize
-                                    }
-                                    yBinSize={
-                                        this.props.promise.result.yBinSize
-                                    }
-                                    isLoading={this.props.promise.isPending}
-                                    axisLabelX={this.props.axisLabelX!}
-                                    axisLabelY={this.props.axisLabelY!}
-                                    tooltip={this.props.tooltip}
-                                />
-                            </div>
+                                    this.borderWidth
+                                )}
+                                height={this.getScatterPlotHeight(
+                                    this.props.dimension.h
+                                )}
+                                pearsonCorr={
+                                    this.props.promise.result.pearsonCorr
+                                }
+                                plotDomain={this.props.plotDomain}
+                                yBinsMin={MutationCountVsCnaYBinsMin}
+                                onSelection={this.props.onValueSelection}
+                                selectionBounds={
+                                    this.props.filters &&
+                                    this.props.filters.length > 0
+                                        ? this.props.filters[0]
+                                        : undefined
+                                }
+                                data={this.props.promise.result.bins}
+                                xBinSize={this.props.promise.result.xBinSize}
+                                yBinSize={this.props.promise.result.yBinSize}
+                                isLoading={this.props.promise.isPending}
+                                axisLabelX={this.props.axisLabelX!}
+                                axisLabelY={this.props.axisLabelY!}
+                                tooltip={this.props.tooltip}
+                            />
                         </div>
-                    </DefaultTooltip>
+                    </div>
                 );
             }
             default:
@@ -1066,6 +1048,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     deleteChart={this.handlers.onDeleteChart}
                     selectedRowsKeys={this.selectedRowsKeys}
                     toggleLogScale={this.handlers.onToggleLogScale}
+                    toggleLogScaleX={this.handlers.onToggleLogScaleX}
+                    toggleLogScaleY={this.handlers.onToggleLogScaleY}
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}

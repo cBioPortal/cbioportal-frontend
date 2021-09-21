@@ -35,6 +35,8 @@ export interface IChartHeaderProps {
     deleteChart: () => void;
     selectedRowsKeys?: string[];
     toggleLogScale?: () => void;
+    toggleLogScaleX?: () => void;
+    toggleLogScaleY?: () => void;
     toggleNAValue?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
@@ -59,6 +61,10 @@ export interface ChartControls {
     showComparisonPageIcon?: boolean;
     showLogScaleToggle?: boolean;
     logScaleChecked?: boolean;
+    showLogScaleXToggle?: boolean;
+    logScaleXChecked?: boolean;
+    showLogScaleYToggle?: boolean;
+    logScaleYChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
 }
@@ -267,6 +273,64 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             }
                             label={
                                 <span style={{ marginTop: -3 }}>Log Scale</span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
+                </li>
+            );
+        }
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showLogScaleXToggle &&
+            this.props.toggleLogScaleX
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item logScaleCheckbox"
+                        onClick={this.props.toggleLogScaleX}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls.logScaleXChecked
+                                )
+                            }
+                            label={
+                                <span style={{ marginTop: -3 }}>
+                                    Log Scale X
+                                </span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
+                </li>
+            );
+        }
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showLogScaleYToggle &&
+            this.props.toggleLogScaleY
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item logScaleCheckbox"
+                        onClick={this.props.toggleLogScaleY}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls.logScaleYChecked
+                                )
+                            }
+                            label={
+                                <span style={{ marginTop: -3 }}>
+                                    Log Scale Y
+                                </span>
                             }
                             style={{ marginTop: 1, marginBottom: -3 }}
                         />
