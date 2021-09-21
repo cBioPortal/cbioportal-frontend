@@ -33,6 +33,7 @@ import {
     GenomicChart,
     GenericAssayChart,
     XVsYChart,
+    XVsYChartSettings,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -563,7 +564,10 @@ function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
     return { xRange, yRange };
 }
 
-export function makeDensityScatterPlotTooltip(chartInfo: XVsYChart) {
+export function makeDensityScatterPlotTooltip(
+    chartInfo: XVsYChart,
+    chartSettings: XVsYChartSettings
+) {
     return (d: IStudyViewDensityScatterPlotDatum) => {
         const binStats = getBinStatsForTooltip(d);
         return (
@@ -572,10 +576,14 @@ export function makeDensityScatterPlotTooltip(chartInfo: XVsYChart) {
                     Number of Samples: <b>{d.count.toLocaleString()}</b>
                 </div>
                 <div>
-                    {chartInfo.xAttr.displayName}: <b>{binStats.xRange}</b>
+                    {chartInfo.xAttr.displayName}
+                    {chartSettings.xLogScale ? ' (log)' : ''}:{' '}
+                    <b>{binStats.xRange}</b>
                 </div>
                 <div>
-                    {chartInfo.yAttr.displayName}: <b>{binStats.yRange}</b>
+                    {chartInfo.yAttr.displayName}
+                    {chartSettings.yLogScale ? ' (log)' : ''}:{' '}
+                    <b>{binStats.yRange}</b>
                 </div>
             </div>
         );
