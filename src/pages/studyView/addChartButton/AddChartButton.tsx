@@ -125,12 +125,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     readonly xVsYClinicalAttributes = remoteData({
-        await: () => [this.props.store.clinicalAttributes],
+        await: () => [this.props.store.chartClinicalAttributes],
         invoke: () => {
             return Promise.resolve(
-                this.props.store.clinicalAttributes.result!.filter(attr => {
-                    return attr.datatype === 'NUMBER';
-                })
+                this.props.store.chartClinicalAttributes.result!.filter(
+                    attr => {
+                        return attr.datatype === 'NUMBER';
+                    }
+                )
             );
         },
         default: [],
