@@ -29,6 +29,7 @@ import {
     DataBin,
     SpecialChartsUniqueKeyEnum,
     makeDensityScatterPlotTooltip,
+    logScalePossible,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -381,6 +382,26 @@ export class StudySummaryTab extends React.Component<
                     xAxisLogScale: settings.xLogScale,
                     yAxisLogScale: settings.yLogScale,
                 });
+                props.showLogScaleXToggle = logScalePossible(
+                    chartInfo.xAttr.clinicalAttributeId
+                );
+                props.showLogScaleYToggle = logScalePossible(
+                    chartInfo.yAttr.clinicalAttributeId
+                );
+                props.logScaleXChecked = settings.xLogScale;
+                props.logScaleYChecked = settings.yLogScale;
+                props.onToggleLogScaleX = () => {
+                    const settings = this.store.getXVsYChartSettings(
+                        props.chartMeta!.uniqueKey
+                    )!;
+                    settings.xLogScale = !settings.xLogScale;
+                };
+                props.onToggleLogScaleY = () => {
+                    const settings = this.store.getXVsYChartSettings(
+                        props.chartMeta!.uniqueKey
+                    )!;
+                    settings.yLogScale = !settings.yLogScale;
+                };
                 props.plotDomain = chartInfo.plotDomain;
                 props.axisLabelX = chartInfo.xAttr.displayName;
                 props.axisLabelY = chartInfo.yAttr.displayName;
