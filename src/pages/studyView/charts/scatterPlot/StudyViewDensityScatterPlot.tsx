@@ -607,7 +607,17 @@ export default class StudyViewDensityScatterPlot
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormat}
-                                axisLabelComponent={<VictoryLabel dy={20} />}
+                                axisLabelComponent={
+                                    <VictoryLabel
+                                        dy={20}
+                                        style={[
+                                            {
+                                                fontSize: 12,
+                                                fontFamily: 'Arial',
+                                            },
+                                        ]}
+                                    />
+                                }
                                 label={this.props.axisLabelX}
                             />
                             <VictoryAxis
@@ -619,7 +629,17 @@ export default class StudyViewDensityScatterPlot
                                 tickCount={NUM_AXIS_TICKS}
                                 tickFormat={this.tickFormat}
                                 dependentAxis={true}
-                                axisLabelComponent={<VictoryLabel dy={-27} />}
+                                axisLabelComponent={
+                                    <VictoryLabel
+                                        dy={-27}
+                                        style={[
+                                            {
+                                                fontSize: 12,
+                                                fontFamily: 'Arial',
+                                            },
+                                        ]}
+                                    />
+                                }
                                 label={this.props.axisLabelY}
                             />
                             {this.scatters}
