@@ -4540,6 +4540,36 @@ export class StudyViewPageStore
         },
     });
 
+    readonly chartClinicalAttributes = remoteData({
+        await: () => [
+            this.clinicalAttributes,
+            this.survivalClinicalAttributesPrefix,
+        ],
+        invoke: () => {
+            // filter out survival attributes (only keep 'OS_STATUS' attribute)
+            // create a dict which contains all survival attribute Ids that will be excluded from study view
+            // get all survival attribute Ids into a dict
+            let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
+                this.survivalClinicalAttributesPrefix.result
+            );
+            // omit 'OS_STATUS' from dict
+            survivalAttributeIdsDict = _.omit(survivalAttributeIdsDict, [
+                'OS_STATUS',
+            ]);
+            return Promise.resolve(
+                _.filter(
+                    this.clinicalAttributes.result,
+                    attribute =>
+                        !(
+                            attribute.clinicalAttributeId in
+                            survivalAttributeIdsDict
+                        )
+                )
+            );
+        },
+        default: [],
+    });
+
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
@@ -5109,25 +5139,10 @@ export class StudyViewPageStore
             _.fromPairs(this._xVsYCharts.toJSON())
         );
 
-        /*// filter out survival attributes (only keep 'OS_STATUS' attribute)
-        // create a dict which contains all survival attribute Ids that will be excluded from study view
-        // get all survival attribute Ids into a dict
-        let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
-            this.survivalClinicalAttributesPrefix.result
-        );
-        // omit 'OS_STATUS' from dict
-        survivalAttributeIdsDict = _.omit(survivalAttributeIdsDict, [
-            'OS_STATUS',
-        ]);
-        const filteredClinicalAttributes = _.filter(
-            this.clinicalAttributes.result,
-            attribute =>
-                !(attribute.clinicalAttributeId in survivalAttributeIdsDict)
-        );*/
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            this.clinicalAttributes.result,
+            this.chartClinicalAttributes.result,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
