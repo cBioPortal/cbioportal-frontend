@@ -7,7 +7,7 @@ import {
 import Sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from '../../api/cbioportalClientInstance';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     VirtualStudy,
     VirtualStudyData,

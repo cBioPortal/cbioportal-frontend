@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     CNA_COLOR_AMP,
     CNA_COLOR_GAIN,

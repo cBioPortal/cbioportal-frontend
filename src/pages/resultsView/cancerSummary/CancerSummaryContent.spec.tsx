@@ -7,7 +7,7 @@ import {
 import { assert } from 'chai';
 import { shallow } from 'enzyme';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import sinon from 'sinon';
 
 describe('CancerSummaryContent', () => {

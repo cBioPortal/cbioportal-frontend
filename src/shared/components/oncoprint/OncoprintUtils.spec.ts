@@ -10,7 +10,7 @@ import {
     legendColorDarkRed,
 } from './OncoprintUtils';
 import { IKeyValueMap, observable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { assert } from 'chai';
 import { IQueriedMergedTrackCaseData } from '../../../pages/resultsView/ResultsViewPageStore';
 import { splitHeatmapTextField } from 'shared/components/oncoprint/OncoprintUtils';

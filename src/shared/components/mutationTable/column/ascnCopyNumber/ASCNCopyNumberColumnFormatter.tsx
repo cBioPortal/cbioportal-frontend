@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { hasASCNProperty } from 'shared/lib/MutationUtils';
 import SampleManager from 'pages/patientView/SampleManager';

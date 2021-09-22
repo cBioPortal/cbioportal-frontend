@@ -76,7 +76,6 @@ import {
     ClinicalData,
     CancerStudy,
 } from 'cbioportal-ts-api-client';
-import Timer = NodeJS.Timer;
 import ScatterPlot from 'shared/components/plots/ScatterPlot';
 import WaterfallPlot from 'shared/components/plots/WaterfallPlot';
 import TablePlot from 'shared/components/plots/TablePlot';
@@ -690,8 +689,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         );
     }
 
-    private searchCaseTimeout: Timer;
-    private searchMutationTimeout: Timer;
+    private searchCaseTimeout: any;
+    private searchMutationTimeout: any;
 
     constructor(props: IPlotsTabProps) {
         super(props);

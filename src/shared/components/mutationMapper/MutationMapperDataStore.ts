@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {

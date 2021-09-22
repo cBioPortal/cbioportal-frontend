@@ -37,7 +37,7 @@ import {
 } from '../../shared/lib/oql/oqlfilter';
 import { observable } from 'mobx';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -54,6 +54,7 @@ import {
     VirtualStudy,
     VirtualStudyData,
 } from 'shared/api/session-service/sessionServiceModels';
+import $ from 'jquery';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {

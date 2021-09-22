@@ -14,7 +14,7 @@ import {
     Mutation,
 } from 'cbioportal-ts-api-client';
 import AccessorsForOqlFilter from './AccessorsForOqlFilter';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import {

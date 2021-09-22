@@ -4,7 +4,7 @@ import {
     ILoadConfig,
     IServerConfig,
 } from './IAppConfig';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import ServerConfigDefaults from './serverConfigDefaults';
 import memoize from 'memoize-weak-decorator';
 

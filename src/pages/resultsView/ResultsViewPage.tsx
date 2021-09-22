@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import { inject, observer } from 'mobx-react';
