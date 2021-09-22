@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { observable, computed, makeObservable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     default as LazyMobXTable,
     Column,
@@ -140,7 +140,6 @@ export interface IMutationTableProps {
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
-import Timeout = NodeJS.Timeout;
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -250,7 +249,7 @@ export default class MutationTable<
     >;
     @observable.ref public table: LazyMobXTable<Mutation[]> | null = null;
     @observable oncokbWidth = 22;
-    private oncokbInterval: Timeout;
+    private oncokbInterval: any;
 
     public static defaultProps = {
         initialItemsPerPage: 25,

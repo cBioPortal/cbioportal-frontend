@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ClinicalData, ClinicalAttribute } from 'cbioportal-ts-api-client';
 
 /**

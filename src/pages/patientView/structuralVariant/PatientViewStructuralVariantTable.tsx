@@ -10,7 +10,7 @@ import TumorColumnFormatter from '../mutation/column/TumorColumnFormatter';
 import HeaderIconMenu from '../mutation/HeaderIconMenu';
 import GeneFilterMenu from '../mutation/GeneFilterMenu';
 import PanelColumnFormatter from 'shared/components/mutationTable/column/PanelColumnFormatter';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MakeMobxView } from 'shared/components/MobxView';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from 'shared/components/ErrorMessage';
@@ -19,7 +19,6 @@ import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
 import { remoteData } from 'cbioportal-frontend-commons';
-import Timeout = NodeJS.Timeout;
 
 export interface IPatientViewStructuralVariantTableProps {
     store: PatientViewPageStore;
@@ -38,7 +37,7 @@ export default class PatientViewStructuralVariantTable extends React.Component<
     {}
 > {
     @observable oncokbWidth = 22;
-    private oncokbInterval: Timeout;
+    private oncokbInterval: any;
 
     constructor(props: IPatientViewStructuralVariantTableProps) {
         super(props);

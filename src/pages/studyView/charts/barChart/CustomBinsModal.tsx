@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ChartMeta, customBinsAreValid } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 import { observable, computed, makeObservable } from 'mobx';

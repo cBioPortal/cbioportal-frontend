@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ClinicalData, Gene, Mutation } from 'cbioportal-ts-api-client';
 
 const LITERAL_TO_HEADER: { [attrName: string]: string } = {

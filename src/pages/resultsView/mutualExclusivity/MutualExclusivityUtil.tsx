@@ -4,7 +4,7 @@ import { MutualExclusivity } from '../../../shared/model/MutualExclusivity';
 import { calculateQValues } from '../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator';
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { SampleAlteredMap } from '../ResultsViewPageStoreUtils';
 
 export enum AlteredStatus {
