@@ -1,6 +1,6 @@
 /* eslint camelcase: "off" */
 // Heavily dependent on OQL PEGjs specification
-import * as _ from 'lodash';
+import _ from 'lodash';
 import oql_parser, {
     AminoAcid,
     AnyTypeWithModifiersCommand,

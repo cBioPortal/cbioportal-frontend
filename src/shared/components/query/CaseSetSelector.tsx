@@ -1,6 +1,6 @@
 import * as React from 'react';
 import styles from './styles/styles.module.scss';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import ReactSelect from 'react-select1';
 import { observer } from 'mobx-react';
 import { computed, action, makeObservable } from 'mobx';

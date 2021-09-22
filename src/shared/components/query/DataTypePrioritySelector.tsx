@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as React from 'react';
 import styles from './styles/styles.module.scss';
 import { QueryStore, QueryStoreComponent } from './QueryStore';

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import classnames from 'classnames';
 import { ThreeBounce } from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';

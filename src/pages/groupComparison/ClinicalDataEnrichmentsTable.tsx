@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { observer } from 'mobx-react';
 import autobind from 'autobind-decorator';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';

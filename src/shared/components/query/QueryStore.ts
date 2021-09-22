@@ -1,5 +1,5 @@
 /* tslint:disable: indent linebreak-style */
-import * as _ from 'lodash';
+import _ from 'lodash';
 import client from '../../api/cbioportalClientInstance';
 import {
     ObservableMap,

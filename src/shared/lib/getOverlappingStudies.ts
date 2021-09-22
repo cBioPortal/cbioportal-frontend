@@ -1,5 +1,5 @@
 import { CancerStudy } from 'cbioportal-ts-api-client';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export default function getOverlappingStudies(
     studies: CancerStudy[]
