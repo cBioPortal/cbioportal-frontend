@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { PostTranslationalModification as DbPtm } from 'genome-nexus-ts-api-client';
 import {
