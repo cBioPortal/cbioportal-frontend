@@ -19,7 +19,8 @@ export function getExpectedCivicEntry() {
                     'PIK3CA E545K/E542K are the second most recurrent PIK3CA mutations in breast cancer, and are highly recurrent mutations in many other cancer types. E545K, and possibly the other mutations in the E545 region, may present patients with a poorer prognosis than patients with either patients with other PIK3CA variant or wild-type PIK3CA. There is also data to suggest that E545/542 mutations may confer resistance to EGFR inhibitors like cetuximab. While very prevalent, targeted therapies for variants in PIK3CA are still in early clinical trial phases.',
                 url:
                     'https://civicdb.org/events/genes/37/summary/variants/104/summary#variant',
-                evidence: { Prognostic: 1, Predictive: 14 },
+                evidenceCounts: { Prognostic: 1, Predictive: 14 },
+                evidences: [],
             },
         },
     };
@@ -38,7 +39,8 @@ export function getExpectedCnaCivicEntry() {
                 description: '',
                 url:
                     'https://civicdb.org/events/genes/4767/summary/variants/591/summary#variant',
-                evidence: { Predictive: 1 },
+                evidenceCounts: { Predictive: 1 },
+                evidences: [],
             },
         },
     };
@@ -61,11 +63,11 @@ describe('Civic with no data', () => {
 
 describe('Civic with data with variants', () => {
     it('displays the correct Civic icon', () => {
-        const props = {
+        const props: ICivicProps = {
             civicEntry: getExpectedCivicEntry(),
             civicStatus: 'complete',
             hasCivicVariants: true,
-        } as ICivicProps;
+        } as any;
 
         const component = render(<Civic {...props} />);
         const civicIcon = component.container.getElementsByTagName('img');
@@ -95,11 +97,11 @@ describe('Civic with data with variants', () => {
 
 describe('Civic with data with no variants', () => {
     it('displays the correct Civic icon', () => {
-        const props = {
+        const props: ICivicProps = {
             civicEntry: getExpectedCnaCivicEntry(),
             civicStatus: 'complete',
             hasCivicVariants: false,
-        } as ICivicProps;
+        } as any;
 
         const component = render(<Civic {...props} />);
         const civicIcon = component.container.getElementsByTagName('img');
@@ -129,7 +131,7 @@ describe('Civic with data with no variants', () => {
 
 describe('Counts correctly', () => {
     it('Gives 1 point per entry', () => {
-        const value = sortValue(getExpectedCnaCivicEntry());
+        const value = sortValue(getExpectedCnaCivicEntry() as any);
 
         assert.equal(value, 1, 'Correctly gives 1 point for an entry');
     });

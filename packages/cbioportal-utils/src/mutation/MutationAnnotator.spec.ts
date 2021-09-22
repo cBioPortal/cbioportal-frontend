@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 

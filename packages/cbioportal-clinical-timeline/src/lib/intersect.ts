@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 function normalizeInterval(start: number, end: number) {
     return { start: Math.min(start, end), end: Math.max(start, end) };
 }

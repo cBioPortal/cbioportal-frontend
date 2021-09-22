@@ -11,7 +11,8 @@ export function getCivicVariantData() {
         geneId: 124,
         description: 'descr',
         url: 'http://',
-        evidence: { type1: 1 },
+        evidenceCounts: { type1: 1 },
+        evidences: [],
     };
 }
 
