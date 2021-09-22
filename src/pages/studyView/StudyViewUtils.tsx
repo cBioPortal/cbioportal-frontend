@@ -535,12 +535,14 @@ export function formatRange(
             return `${special}${max.toLocaleString()}`;
         }
     } else {
-        if (max === undefined) {
+        if (max === undefined || min === max) {
             return `${special}${min.toLocaleString()}`;
-        } else if (min !== max) {
-            return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
+        } else if (!special) {
+            // assuming that min is exclusive and max is inclusive
+            // use (min, max] notation instead of min-max
+            return `(${min.toLocaleString()}, ${max.toLocaleString()}]`;
         } else {
-            return `${special}${min.toLocaleString()}`;
+            return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
         }
     }
 }
