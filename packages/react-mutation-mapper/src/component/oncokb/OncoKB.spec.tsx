@@ -53,7 +53,7 @@ function emptyQueryIndicator(): IndicatorQueryResp {
         // variantExist: false,
         variantSummary: '',
         vus: false,
-    };
+    } as any;
 }
 
 function initQueryIndicator(props: { [key: string]: any }): IndicatorQueryResp {
@@ -78,6 +78,7 @@ describe('OncoKB', () => {
                 isCancerGene={false}
                 geneNotExist={false}
                 hugoGeneSymbol=""
+                usingPublicOncoKbInstance={true}
             />
         );
 
