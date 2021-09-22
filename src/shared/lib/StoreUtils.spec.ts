@@ -17,7 +17,7 @@ import {
     PUTATIVE_DRIVER,
     PUTATIVE_PASSENGER,
 } from './StoreUtils';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import { MobxPromise } from 'mobxpromise';

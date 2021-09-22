@@ -9,7 +9,7 @@ import {
     EnrichmentType,
     GenericAssayEnrichmentWithQ,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import {
     IBoxScatterPlotPoint,

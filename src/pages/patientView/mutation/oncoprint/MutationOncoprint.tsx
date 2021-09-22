@@ -41,7 +41,6 @@ import styles from './styles.module.scss';
 import PatientViewMutationsDataStore from '../PatientViewMutationsDataStore';
 import { Mutation } from 'cbioportal-ts-api-client';
 import ReactDOM from 'react-dom';
-import Timeout = NodeJS.Timeout;
 import PatientViewUrlWrapper from '../../PatientViewUrlWrapper';
 import { getVariantAlleleFrequency } from 'shared/lib/MutationUtils';
 
@@ -116,7 +115,7 @@ export default class MutationOncoprint extends React.Component<
     @observable private horzZoomSliderState = 100;
     @observable minZoom = 0;
 
-    private minZoomUpdater: Timeout;
+    private minZoomUpdater: any;
 
     constructor(props: IMutationOncoprintProps) {
         super(props);

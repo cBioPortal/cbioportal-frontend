@@ -19,7 +19,7 @@ import ExtendedRouterStore, {
     saveRemoteSession,
 } from './ExtendedRouterStore';
 import { hashString } from 'cbioportal-frontend-commons';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
 import { MapValues, Omit } from './TypeScriptUtils';
 import { QueryParams } from 'url';

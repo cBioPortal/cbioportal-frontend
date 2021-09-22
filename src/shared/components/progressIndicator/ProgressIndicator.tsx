@@ -9,7 +9,6 @@ import Spinner from 'react-spinkit';
 import { MobxPromise } from 'mobxpromise';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import autobind from 'autobind-decorator';
-import Timer = NodeJS.Timer;
 
 export interface IProgressIndicatorItem {
     label: any;
@@ -48,7 +47,7 @@ export default class ProgressIndicator extends React.Component<
         makeObservable(this);
     }
     @observable timeShown = 0;
-    private timeShownInterval: Timer;
+    private timeShownInterval: any;
 
     componentWillMount() {
         this.timeShownInterval = setInterval(() => {

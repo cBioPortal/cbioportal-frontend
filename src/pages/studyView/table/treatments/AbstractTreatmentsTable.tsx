@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { action, computed, makeObservable, observable } from 'mobx';
 import autobind from 'autobind-decorator';
 import {

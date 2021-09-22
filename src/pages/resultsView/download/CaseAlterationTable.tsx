@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     default as LazyMobXTable,
     Column,

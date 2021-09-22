@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MolecularProfile, Sample } from 'cbioportal-ts-api-client';
 import {
     AlterationTypeConstants,

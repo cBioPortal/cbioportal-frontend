@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Checkbox, ButtonGroup, Radio } from 'react-bootstrap';
 import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';

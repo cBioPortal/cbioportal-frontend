@@ -8,7 +8,7 @@ import LoadingIndicator from '../../shared/components/loadingIndicator/LoadingIn
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import ExpressionEnrichmentContainer from '../resultsView/enrichments/ExpressionEnrichmentsContainer';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { EnrichmentType } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 

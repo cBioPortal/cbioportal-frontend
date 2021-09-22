@@ -103,7 +103,7 @@
     "@types/jstree": "^3.3.35",
     "@types/lodash": "4.14.104",
     "@types/lolex": "1.5.31",
-    "@types/mocha": "2.2.41",
+    "@types/mocha": "9.0.0",
     "@types/numeral": "0.0.22",
     "@types/pako": "1.0.1",
     "@types/pdfobject": "2.0.5",
@@ -341,6 +341,7 @@
     "identity-obj-proxy": "^3.0.0",
     "jasmine-core": "^3.9.0",
     "jest": "^27.2.1",
+    "jest-canvas-mock": "^2.3.1",
     "jest-environment-jsdom": "^27.2.0",
     "json": "^9.0.6",
     "mocha": "^9.1.1",
@@ -356,9 +357,9 @@
     "yargs": "^6.6.0"
   },
   "jest": {
-    "preset": "ts-jest",
+    "preset": "ts-jest/presets/js-with-ts",
     "moduleNameMapper": {
-      "\\.(css|sass|scss)$": "identity-obj-proxy",
+      "\\.(css|sass|scss|png|svg)$": "identity-obj-proxy",
       "^containers(.*)$": "<rootDir>/src/containers$1",
       "^components(.*)$": "<rootDir>/src/components$1",
       "^config(.*)$": "<rootDir>/src/config$1",
@@ -374,7 +375,8 @@
       }
     },
     "setupFiles": [
-      "<rootDir>/src/setupTests.ts"
+      "<rootDir>/src/setupTests.ts",
+      "jest-canvas-mock"
     ],
     "testMatch": [
       "<rootDir>/src/**/*.spec.ts",

@@ -40,7 +40,7 @@ import {
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('PlotsTabUtils', () => {
