@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { assert } from 'chai';
 
-import { PfamDomainRange } from '../model/Pfam';
+import { PfamDomainRange } from 'genome-nexus-ts-api-client';
 import { generatePfamDomainColorMap } from './PfamUtils';
 
 let domains: PfamDomainRange[];
