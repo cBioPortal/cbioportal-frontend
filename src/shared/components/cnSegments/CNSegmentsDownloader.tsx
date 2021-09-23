@@ -7,7 +7,7 @@ import classnames from 'classnames';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import { generateSegmentFileContent } from 'shared/lib/IGVUtils';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import fileDownload from 'react-file-download';
 import autobind from 'autobind-decorator';
 

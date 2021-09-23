@@ -132,3 +132,15 @@ $regular: 5px;
     flex-direction: column;
     justify-content: center;
 }
+
+.editableSpanStyles {
+    padding: 0px 3px;
+    border: none;
+    line-height: 1;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    &:focus {
+        outline: none;
+    }
+}

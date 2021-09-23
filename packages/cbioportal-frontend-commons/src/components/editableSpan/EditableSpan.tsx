@@ -1,4 +1,6 @@
 import * as React from 'react';
+import styles from './styles.module.scss';
+import classNames from 'classnames';
 
 export interface IEditableSpanProps
     extends React.DetailedHTMLProps<
@@ -10,7 +12,8 @@ export interface IEditableSpanProps
     maxChars?: number;
     numericOnly?: boolean;
     isPercentage?: boolean;
-    textFieldAppearance?: boolean;
+    textFieldAppearance?: boolean | 'editing';
+    allowEmptyValue?: boolean;
 }
 
 export default class EditableSpan extends React.Component<
@@ -46,12 +49,12 @@ export default class EditableSpan extends React.Component<
         }
 
         if (this.props.numericOnly) {
-            const regex = /^\d$/;
+            const regex = /^[\d.-]$/;
             if (!regex.test(newKey)) {
                 evt.preventDefault();
             }
         } else if (this.props.isPercentage) {
-            const regex = /^[%\d]$/;
+            const regex = /^[%\d.]$/;
             if (!regex.test(newKey)) {
                 evt.preventDefault();
             }
@@ -94,14 +97,17 @@ export default class EditableSpan extends React.Component<
         this.props.onBlur && this.props.onBlur(evt);
 
         const inputText = evt.currentTarget.innerText;
-        this.setText(this.props.value);
 
         if (
-            inputText.length > 0 &&
+            !(inputText.length === 0 && !this.props.allowEmptyValue) &&
             (inputText !== this.props.value || this.enterPressedSinceLastBlur)
         ) {
+            // if proposed value is valid, submit it
             this.dirty = true;
             this.props.setValue(inputText);
+        } else {
+            // otherwise, revert input box to props.value
+            this.setText(this.props.value);
         }
         this.enterPressedSinceLastBlur = false;
     }
@@ -121,6 +127,21 @@ export default class EditableSpan extends React.Component<
         }
     }
 
+    get className() {
+        let textfield = '';
+        switch (this.props.textFieldAppearance) {
+            case true:
+                textfield = styles.textfieldAppearance;
+                break;
+            case 'editing':
+                textfield = styles.textfieldAppearanceWhenEditing;
+                break;
+            default:
+                break;
+        }
+        return textfield;
+    }
+
     render() {
         const {
             contentEditable,
@@ -133,25 +154,8 @@ export default class EditableSpan extends React.Component<
             numericOnly,
             isPercentage,
             textFieldAppearance,
-            style,
             ...spanProps
         } = this.props;
-        let spanStyle = {};
-        if (this.props.textFieldAppearance) {
-            spanStyle = {
-                MozAppearance: 'textfield',
-                WebkitAppearance: 'textfield',
-                backgroundColor: 'white',
-                border: '1px solid darkgray',
-                boxShadow: '1px 1px 1px 0 lightgray inset',
-                marginTop: '5px',
-                padding: '2px 3px',
-            };
-        }
-        spanStyle = {
-            ...spanStyle,
-            ...style,
-        };
         return (
             <span
                 ref={this.spanRef}
@@ -159,8 +163,8 @@ export default class EditableSpan extends React.Component<
                 onKeyPress={this.onKeyPress}
                 onKeyUp={this.onKeyUp}
                 onBlur={this.onBlur}
-                style={spanStyle}
                 {...spanProps}
+                className={classNames(spanProps.className, this.className)}
             />
         );
     }

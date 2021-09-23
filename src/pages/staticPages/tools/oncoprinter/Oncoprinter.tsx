@@ -14,7 +14,7 @@ import { FadeInteraction, svgToPdfDownload } from 'cbioportal-frontend-commons';
 import classNames from 'classnames';
 import OncoprinterStore from './OncoprinterStore';
 import autobind from 'autobind-decorator';
-import onMobxPromise from '../../../../shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import WindowStore from '../../../../shared/components/window/WindowStore';
 import { getGeneticTrackKey } from './OncoprinterGeneticUtils';
 import InfoBanner from '../../../../shared/components/banners/InfoBanner';
