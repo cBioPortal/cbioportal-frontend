@@ -350,6 +350,7 @@ export default class StudyViewPage extends React.Component<
             return [
                 ..._.values(this.store.clinicalDataBinPromises),
                 ..._.values(this.store.clinicalDataCountPromises),
+                ..._.values(this.store.genericAssayDataCountPromises),
                 this.store.mutationProfiles,
                 this.store.cnaProfiles,
                 this.store.selectedSamples,
