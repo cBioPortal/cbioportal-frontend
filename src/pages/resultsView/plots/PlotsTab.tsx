@@ -102,7 +102,7 @@ import {
 import { getTablePlotDownloadData } from '../../../shared/components/plots/TablePlotUtils';
 import MultipleCategoryBarPlot from '../../../shared/components/plots/MultipleCategoryBarPlot';
 import { RESERVED_CLINICAL_VALUE_COLORS } from 'shared/lib/Colors';
-import onMobxPromise from '../../../shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import { showWaterfallPlot } from 'pages/resultsView/plots/PlotsTabUtils';
 import Pluralize from 'pluralize';
 import AlterationFilterWarning from '../../../shared/components/banners/AlterationFilterWarning';

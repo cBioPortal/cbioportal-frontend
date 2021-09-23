@@ -160,7 +160,7 @@ import {
     getStudyDownloadListUrl,
     redirectToComparisonPage,
 } from '../../shared/api/urls';
-import onMobxPromise, { toPromise } from '../../shared/lib/onMobxPromise';
+import { onMobxPromise, toPromise } from 'cbioportal-frontend-commons';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -2596,7 +2596,7 @@ export class StudyViewPageStore
         default: false,
     });
 
-    @action
+    @action.bound
     updateClinicalDataIntervalFilters(
         chartUniqueKey: string,
         dataBins: DataBin[]
@@ -2695,7 +2695,7 @@ export class StudyViewPageStore
     @action.bound
     updateGenomicDataIntervalFilters(
         uniqueKey: string,
-        dataBins: GenomicDataBin[]
+        dataBins: Pick<GenomicDataBin, 'start' | 'end' | 'specialValue'>[]
     ): void {
         trackStudyViewFilterEvent('genomicDataInterval', this);
 
@@ -2706,7 +2706,7 @@ export class StudyViewPageStore
     @action.bound
     updateGenericAssayDataFilters(
         uniqueKey: string,
-        dataBins: GenericAssayDataBin[]
+        dataBins: Pick<GenericAssayDataBin, 'start' | 'end' | 'specialValue'>[]
     ): void {
         trackStudyViewFilterEvent('genericAssayDataInterval', this);
 
@@ -3483,6 +3483,7 @@ export class StudyViewPageStore
         return toJS(filters);
     }
 
+    @autobind
     public getClinicalDataFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
@@ -3537,6 +3538,7 @@ export class StudyViewPageStore
         return [];
     }
 
+    @autobind
     public getGenomicDataIntervalFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
@@ -3545,6 +3547,7 @@ export class StudyViewPageStore
             : [];
     }
 
+    @autobind
     public getGenericAssayDataFiltersByUniqueKey(
         uniqueKey: string
     ): DataFilterValue[] {
@@ -4092,6 +4095,7 @@ export class StudyViewPageStore
         return `${id}.${value}`;
     }
 
+    @autobind
     public getClinicalDataBin(chartMeta: ChartMeta): MobxPromise<DataBin[]> {
         const uniqueKey: string = getUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
@@ -4204,6 +4208,7 @@ export class StudyViewPageStore
         return this.clinicalDataBinPromises[uniqueKey];
     }
 
+    @autobind
     public getGenomicChartDataBin(
         chartMeta: ChartMeta
     ): MobxPromise<DataBin[]> {
@@ -4252,6 +4257,7 @@ export class StudyViewPageStore
         return this.genomicChartPromises[chartMeta.uniqueKey];
     }
 
+    @autobind
     public getGenericAssayChartDataBin(
         chartMeta: ChartMeta
     ): MobxPromise<DataBin[]> {

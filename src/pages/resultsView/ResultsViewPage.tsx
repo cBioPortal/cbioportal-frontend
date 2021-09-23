@@ -47,7 +47,7 @@ import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidat
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import {
     handleLegacySubmission,

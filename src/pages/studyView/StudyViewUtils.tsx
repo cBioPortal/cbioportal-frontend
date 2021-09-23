@@ -48,8 +48,10 @@ import {
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
 import MobxPromise from 'mobxpromise';
 import {
+    EditableSpan,
     getTextWidth,
     stringListToIndexSet,
+    toPromise,
 } from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR, getClinicalValueColor } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
@@ -77,6 +79,7 @@ import {
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
 import client from 'shared/api/cbioportalClientInstance';
+import joinJsx from 'shared/lib/joinJsx';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -872,7 +875,9 @@ export function getVirtualStudyDescription(
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            clinicalDataFilter.values
+                            clinicalDataFilter.values,
+                            () => {},
+                            true
                         )}`
                     );
                 }
@@ -887,7 +892,9 @@ export function getVirtualStudyDescription(
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            genomicDataFilter.values
+                            genomicDataFilter.values,
+                            () => {},
+                            true
                         )}`
                     );
                 }
@@ -904,7 +911,9 @@ export function getVirtualStudyDescription(
                     if (name) {
                         filterLines.push(
                             `- ${name}: ${intervalFiltersDisplayValue(
-                                genericAssayDataFilters.values
+                                genericAssayDataFilters.values,
+                                () => {},
+                                true
                             )}`
                         );
                     }
@@ -1050,7 +1059,7 @@ export function toSvgDomNodeWithLegend(
 }
 
 export function getDataIntervalFilterValues(
-    data: Array<DataBin | GenomicDataBin | GenericAssayDataBin>
+    data: Array<{ start?: number; end?: number; specialValue?: string }>
 ): DataFilterValue[] {
     return data.map(
         dataBin =>
@@ -1376,7 +1385,21 @@ export function closestIntegerPowerOfTen(
     }
 }
 
-export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput?: false
+): JSX.Element;
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput: true
+): string;
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput?: boolean
+) {
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -1392,27 +1415,110 @@ export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
             ? numericals[numericals.length - 1].end
             : undefined;
 
-    let displayValues: string[] = [];
+    let displayValues: any[] = [];
 
     if (numericals.length > 0) {
+        const startValue = formatValue(start!);
+        const endValue = formatValue(end!);
+        const startText = stringOutput ? (
+            startValue
+        ) : (
+            <EditableSpan
+                value={startValue}
+                className={styles.editableSpanStyles}
+                setValue={val => {
+                    if (!val) {
+                        // empty start
+                        onUpdate({ end });
+                    } else {
+                        const valNum = parseFloat(val);
+                        if (valNum > end!) {
+                            // invert range
+                            onUpdate({ start: end, end: valNum });
+                        } else {
+                            onUpdate({ start: valNum, end });
+                        }
+                    }
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+        const endText = stringOutput ? (
+            endValue
+        ) : (
+            <EditableSpan
+                value={endValue}
+                className={styles.editableSpanStyles}
+                setValue={val => {
+                    if (!val) {
+                        // empty end
+                        onUpdate({ start });
+                    } else {
+                        const valNum = parseFloat(val);
+                        if (valNum < start!) {
+                            // invert range
+                            onUpdate({ start: valNum, end: start });
+                        } else {
+                            onUpdate({ start, end: valNum });
+                        }
+                    }
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+        const startEqualsEndText = stringOutput ? (
+            startValue
+        ) : (
+            <EditableSpan
+                value={startValue}
+                setValue={val => {
+                    if (!val) {
+                        // empty
+                        onUpdate({ start: undefined, end: undefined });
+                    } else {
+                        onUpdate({
+                            start: parseFloat(val),
+                            end: parseFloat(val),
+                        });
+                    }
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+
+        const intervalDisplayValues = [];
         // both ends open
         if (start === undefined && end === undefined) {
-            displayValues.push('All Numbers');
+            intervalDisplayValues.push('All Numbers');
         } else if (start === undefined) {
-            displayValues.push(`≤ ${formatValue(end)}`);
+            intervalDisplayValues.push(`≤ `);
+            intervalDisplayValues.push(endText);
         } else if (end === undefined) {
-            displayValues.push(`> ${formatValue(start)}`);
+            intervalDisplayValues.push(`> `);
+            intervalDisplayValues.push(startText);
         } else if (start === end) {
-            displayValues.push(`${formatValue(start)}`);
+            intervalDisplayValues.push(startEqualsEndText);
         } else if (numericals[0].start === numericals[0].end) {
-            displayValues.push(
-                `${formatValue(start)} ≤ x ≤ ${formatValue(end)}`
-            );
+            intervalDisplayValues.push(startText);
+            intervalDisplayValues.push(` ≤ x ≤ `);
+            intervalDisplayValues.push(endText);
         } else {
-            displayValues.push(
-                `${formatValue(start)} < x ≤ ${formatValue(end)}`
-            );
+            intervalDisplayValues.push(startText);
+            intervalDisplayValues.push(` < x ≤ `);
+            intervalDisplayValues.push(endText);
         }
+
+        displayValues.push(
+            stringOutput
+                ? intervalDisplayValues.join('')
+                : intervalDisplayValues
+        );
     }
 
     // copy categories as is
@@ -1420,9 +1526,19 @@ export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
         displayValues = displayValues.concat(categories);
     }
 
-    return displayValues.length > 0 ? displayValues.join(', ') : '';
+    if (stringOutput) {
+        return displayValues.length > 0 ? displayValues.join(', ') : '';
+    } else {
+        return displayValues.length > 0 ? (
+            joinJsx(displayValues, <span>{`, `}</span>)
+        ) : (
+            <>''</>
+        );
+    }
 }
 
+export function formatValue(value: number): string;
+export function formatValue(value: undefined): undefined;
 export function formatValue(value: number | undefined) {
     let formatted;
 
@@ -3352,6 +3468,83 @@ export function getUserGroupColor(
     return groupColors && _.has(groupColors, groupId)
         ? groupColors[groupId]
         : undefined;
+}
+
+export async function updateCustomIntervalFilter(
+    newRange: { start?: number; end?: number },
+    chartMeta: ChartMeta,
+    getDataBinsPromise: (chartMeta: ChartMeta) => MobxPromise<DataBin[]>,
+    getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
+    updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
+    updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
+) {
+    /* This function does what is necessary in order to set a custom range to filter a numerical attribute.
+     What makes this necessary is that filters are specified in terms of data bins. Thus,
+     to set up a custom range, we must first set up custom data bins, then use those custom
+     bins to define the filter. At the same time, we need to retain the existing
+     categorical filters (e.g. NA).
+     */
+
+    const currentCategoricals = getCurrentFilters(chartMeta.uniqueKey).filter(
+        bin => bin.start === undefined && bin.end === undefined
+    );
+    const allBins: DataBin[] = getDataBinsPromise(chartMeta).result!;
+
+    // Determine the new custom bin bounds (e.g. 0, 3, 5, 10) by taking the
+    // current ones, adding the new custom range bounds, and then sorting
+    // and getting unique elements.
+    const allNumericals = allBins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+    const newBinBounds = _.chain(allNumericals)
+        .flatMap(bin => [bin.start, bin.end]) // put starts and ends into a list
+        .concat(newRange.start, newRange.end) // add update
+        .filter(x => x !== undefined && x !== null) // get rid of any non-numbers
+        .uniq() // get uniques
+        .sortBy() // sort in ascending order
+        .value() as number[];
+
+    // Invoke the given callback to update the custom bins
+    updateCustomBins(chartMeta.uniqueKey, newBinBounds);
+
+    // Now, we will use the custom bins to define the new filter.
+    // First, wait for the new bins to come back from the server.
+    const newBins: DataBin[] = await toPromise(getDataBinsPromise(chartMeta)!);
+    // Get the numerical ones only
+    const newNumericals = newBins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+    // Find the desired bins in the API response
+    const startBinIndex =
+        newRange.start === undefined
+            ? 0
+            : newNumericals.findIndex(
+                  bin => bin.start !== undefined && bin.start >= newRange.start!
+              );
+    const endBinIndex =
+        newRange.end === undefined
+            ? newNumericals.length - 1
+            : _.findLastIndex(
+                  newNumericals,
+                  bin => bin.end !== undefined && bin.end <= newRange.end!
+              );
+
+    const targetNumericalBins = newNumericals.slice(
+        startBinIndex,
+        endBinIndex + 1
+    );
+
+    const categoricalsAsBins = currentCategoricals.map(v => ({
+        start: v.start,
+        end: v.end,
+        specialValue: v.value,
+    })) as DataBin[];
+
+    // Update the filter, making sure to retain the existing categorical filters
+    updateIntervalFilters(
+        chartMeta.uniqueKey,
+        targetNumericalBins.concat(categoricalsAsBins)
+    );
 }
 
 export function getBinBounds(bins: DensityPlotBin[]) {

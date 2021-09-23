@@ -4,6 +4,7 @@ declare const styles: {
   readonly "bookmarkButton": string;
   readonly "content": string;
   readonly "description": string;
+  readonly "editableSpanStyles": string;
   readonly "filterClinicalAttrName": string;
   readonly "mainTabs": string;
   readonly "parentGroupLogic": string;
