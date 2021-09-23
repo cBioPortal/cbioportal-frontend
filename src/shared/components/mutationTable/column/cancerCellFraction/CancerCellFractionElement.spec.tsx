@@ -69,8 +69,8 @@ describe('CancerCellFractionElement', () => {
         CCFWrapper: any,
         expectedText: string
     ) {
-        expect(CCFWrapper.find('DefaultTooltip')).to.not.exist;
-        expect(CCFWrapper.find('CancerCellFractionBar')).to.not.exist;
+        expect(CCFWrapper.find('DefaultTooltip')).to.have.lengthOf(0);
+        expect(CCFWrapper.find('CancerCellFractionBar')).to.have.lengthOf(0);
         expect(CCFWrapper.find('span').text()).to.equal(expectedText);
     }
 

@@ -38,7 +38,7 @@ describe('ExpectedAltCopiesElement', () => {
                         node.text() ==
                         ' 2 out of 4 copies of this gene are mutated.'
                 )
-        ).to.exist;
+        ).to.have.lengthOf(2);
     }
 
     function testExpectedIndeterminateAltCopiesElementTooltip(
@@ -54,7 +54,7 @@ describe('ExpectedAltCopiesElement', () => {
             expectedAltCopiesElementTooltip
                 .find('span span')
                 .findWhere(node => node.text() == 'Indeterminate sample')
-        ).to.exist;
+        ).to.have.lengthOf(2);
     }
 
     it('generates ExpectedAltCopiesElement with Tooltip', () => {
