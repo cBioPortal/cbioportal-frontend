@@ -122,6 +122,8 @@ export let RESERVED_CLINICAL_VALUE_COLORS: { [value: string]: string } = {
     amplification: CNA_COLOR_AMP,
     gain: CNA_COLOR_GAIN,
     diploid: DEFAULT_GREY,
+    unchanged: DEFAULT_GREY,
+    loss: CNA_COLOR_HETLOSS,
     'shallow deletion': CNA_COLOR_HETLOSS,
     'deep deletion': CNA_COLOR_HOMDEL,
 };

@@ -974,6 +974,17 @@ export function getDataIntervalFilterValues(
     );
 }
 
+export function getCategoricalFilterValues(
+    values: string[]
+): DataFilterValue[] {
+    return values.map(
+        value =>
+            ({
+                value: value,
+            } as DataFilterValue)
+    );
+}
+
 export function filterNumericalBins(data: DataBin[]) {
     return data.filter(
         dataBin => dataBin.start !== undefined || dataBin.end !== undefined
