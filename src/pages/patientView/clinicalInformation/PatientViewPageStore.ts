@@ -1365,13 +1365,15 @@ export class PatientViewPageStore {
         {
             await: () => [this.patientViewData],
             invoke: async () => {
-                return await internalClient.getAllClinicalEventsOfPatientInStudyUsingGET(
+                const events = await internalClient.getAllClinicalEventsOfPatientInStudyUsingGET(
                     {
                         studyId: this.studyId,
                         patientId: this.patientId,
                         projection: 'DETAILED',
                     }
                 );
+
+                return _.sortBy(events, e => e.startNumberOfDaysSinceDiagnosis);
             },
         },
         []
