@@ -62,7 +62,9 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001'],
             { S001: '0.75' }
         );
-        expect(validSingleSampleCCFColumn.find('DefaultTooltip')).to.not.exist;
+        expect(
+            validSingleSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(0);
     });
 
     // SampleManager, multiple samples
@@ -78,7 +80,9 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001', 'S002'],
             { S001: '0.75', S002: '1.00' }
         );
-        expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
+        expect(
+            validMultiSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(1);
     });
 
     // make sure NA generated for samples missing CCF or ASCN values
@@ -98,6 +102,8 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001', 'S002', 'S003'],
             { S001: '0.75', S002: 'NA', S003: 'NA' }
         );
-        expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
+        expect(
+            validMultiSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(1);
     });
 });

@@ -74,7 +74,7 @@ describe('PaginationControls', () => {
             expect(
                 paginationControls.find(Button),
                 'buttons should exist if theres more than one page'
-            ).to.exist;
+            ).to.have.lengthOf(1);
         });
 
         it('shows functional reset button if its showing more than minimum per page', () => {
