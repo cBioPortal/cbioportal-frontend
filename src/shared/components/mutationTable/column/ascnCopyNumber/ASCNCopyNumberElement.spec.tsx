@@ -193,7 +193,7 @@ describe('ASCNCopyNumberElement', () => {
         );
 
         const bElement = ascnCopyNumberElementTooltip.find('b');
-        expect(bElement).to.have.text(ascnCopyNumberCall.toLowerCase());
+        expect(bElement.text()).to.be.equal(ascnCopyNumberCall.toLowerCase());
 
         const spanCount = countSpansWithCopyNumberText(
             ascnCopyNumberElementTooltip,
