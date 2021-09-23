@@ -7,6 +7,7 @@ import {
     TimelineEvent,
     TimelineTrackSpecification,
     TimelineTrackType,
+    ITimelineConfig,
 } from 'cbioportal-clinical-timeline';
 import {
     getEventColor,
@@ -20,10 +21,36 @@ import SampleMarker, {
 import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
+import { POINT_COLOR } from 'cbioportal-clinical-timeline';
 
 const OTHER = 'Other';
 
-export function configureGenieTimeline(baseConfig: any) {
+export function configureTriageTimeline(baseConfig: ITimelineConfig) {
+    baseConfig.trackStructures.push([
+        'TOXICITY',
+        'TOXICITY_TYPE',
+        'SUBTYPE',
+        'TOX_OTHER_SPECIFY',
+    ]);
+
+    baseConfig.eventColorGetter = function(e: TimelineEvent) {
+        const grade = e.event.attributes.find(
+            (att: any) => att.key === 'GRADE'
+        );
+        if (grade) {
+            const colorMap: any = {
+                '1': 'green',
+                '2': 'yellow',
+                '3': 'orange',
+                '4': 'red',
+            };
+            return colorMap[grade.value] || POINT_COLOR;
+        }
+        return POINT_COLOR;
+    };
+}
+
+export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     baseConfig.sortOrder = [
         'Sample acquisition',
         'Sequencing',
@@ -154,7 +181,7 @@ export function buildBaseConfig(
     sampleManager: SampleManager,
     caseMetaData: ISampleMetaDeta
 ) {
-    let baseConfig: any = {
+    let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
             'Sequencing',
@@ -176,6 +203,10 @@ export function buildBaseConfig(
             ['DIAGNOSIS', 'SUBTYPE'],
         ],
         trackEventRenderers: [
+            {
+                trackTypeMatch: /TOXICITY/,
+                configureTrack: (cat: TimelineTrackSpecification) => {},
+            },
             {
                 trackTypeMatch: /LAB_TEST/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
