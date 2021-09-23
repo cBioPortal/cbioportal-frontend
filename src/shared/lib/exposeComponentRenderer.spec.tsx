@@ -2,7 +2,6 @@ import exposeComponentRenderer from './exposeComponentRenderer';
 import { assert } from 'chai';
 import * as React from 'react';
 import _ from 'lodash';
-import * as $ from 'jquery';
 
 describe('test', () => {
     let targetEl: HTMLDivElement | null;
@@ -28,6 +27,6 @@ describe('test', () => {
 
         (window as any).renderTestComponent(targetEl);
 
-        assert.equal(targetEl!.innerText, 'foo');
+        assert.equal(targetEl!.textContent, 'foo');
     });
 });
