@@ -2,15 +2,12 @@ import React from 'react';
 import AlterationEnrichmentTypeSelector from 'shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import ComparisonStore from 'shared/lib/comparison/ComparisonStore';
 import { mountWithCustomWrappers } from 'enzyme-custom-wrappers';
-import { assert } from 'chai';
+import { assert, expect } from 'chai';
 import _ from 'lodash';
 import sinon from 'sinon';
 import {
     cnaEventTypeSelectInit,
-    CopyNumberEnrichmentEventType,
-    MutationEnrichmentEventType,
     mutationEventTypeSelectInit,
-    mutationGroup,
 } from './ComparisonStoreUtils';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 
@@ -417,7 +414,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
             menu.mutationSection.pressChildButton();
             menu.pressSubmitButton();
 
-            updateSelectedEnrichmentEventTypes.args[0][0].should.have.members([
+            expect(
+                updateSelectedEnrichmentEventTypes.args[0][0]
+            ).to.have.members([
                 'missense',
                 'missense_mutation',
                 'missense_variant',
@@ -432,9 +431,9 @@ describe('AlterationEnrichmentTypeSelector', () => {
             menu.cnaSection.pressChildButton();
             menu.pressSubmitButton();
 
-            updateSelectedEnrichmentEventTypes.args[0][0].should.have.members([
-                'HOMDEL',
-            ]);
+            expect(
+                updateSelectedEnrichmentEventTypes.args[0][0]
+            ).to.have.members(['HOMDEL']);
         });
     });
 });
