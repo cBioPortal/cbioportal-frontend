@@ -6,6 +6,7 @@ import {
     transition,
     transitionTrackGroupSortPriority,
     transitionHeatmapTrack,
+    transitionCategoricalTrack,
 } from './DeltaUtils';
 
 import { spy, SinonStub, match, createStubInstance } from 'sinon';
@@ -15,9 +16,11 @@ import { MolecularProfile, CancerStudy } from 'cbioportal-ts-api-client';
 import {
     CLINICAL_TRACK_GROUP_INDEX,
     GENETIC_TRACK_GROUP_INDEX,
+    ICategoricalTrackSpec,
     IHeatmapTrackSpec,
     IOncoprintProps,
 } from './Oncoprint';
+import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('Oncoprint DeltaUtils', () => {
     describe('numTracksWhoseDataChanged', () => {
@@ -100,6 +103,7 @@ describe('Oncoprint DeltaUtils', () => {
             clinicalTracks: [],
             geneticTracks: [],
             genesetHeatmapTracks: [],
+            categoricalTracks: [],
             heatmapTracks: [],
             divId: 'myDomId',
             width: 1000,
@@ -873,6 +877,7 @@ describe('Oncoprint DeltaUtils', () => {
             geneticTracks: [],
             genesetHeatmapTracks: [],
             heatmapTracks: [],
+            categoricalTracks: [],
             divId: 'myDomId',
             width: 1000,
         });
@@ -994,6 +999,7 @@ describe('Oncoprint DeltaUtils', () => {
             geneticTracks: [],
             genesetHeatmapTracks: [],
             heatmapTracks: [],
+            categoricalTracks: [],
             divId: 'myDomId',
             width: 1000,
         });
@@ -1048,7 +1054,7 @@ describe('Oncoprint DeltaUtils', () => {
 
         it('when is new track and ruleSetId is undefined, the new trackId is set as ruleSetId', () => {
             const trackIdForRuleSetSharing = {
-                genericAssay: {} as { [m: string]: number },
+                genericAssayHeatmap: {} as { [m: string]: number },
             };
 
             (oncoprint.addTracks as SinonStub).returns([1]);
@@ -1065,11 +1071,16 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 1);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayHeatmap['profile_1'],
+                1
+            );
         });
 
         it('when is new track and ruleSetId is defined, the new trackId is set as ruleSetId', () => {
-            const trackIdForRuleSetSharing = { genericAssay: { profile_1: 1 } };
+            const trackIdForRuleSetSharing = {
+                genericAssayHeatmap: { profile_1: 1 },
+            };
 
             (oncoprint.addTracks as SinonStub).returns([2]);
 
@@ -1085,11 +1096,16 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 2);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayHeatmap['profile_1'],
+                2
+            );
         });
 
         it('when is existing track and ruleSetId is defined, the ruleset of existing track is updated to ruleSetId', () => {
-            const trackIdForRuleSetSharing = { genericAssay: { profile_1: 2 } };
+            const trackIdForRuleSetSharing = {
+                genericAssayHeatmap: { profile_1: 2 },
+            };
             const prevSpec = nextSpec;
 
             transitionHeatmapTrack(
@@ -1104,7 +1120,149 @@ describe('Oncoprint DeltaUtils', () => {
             );
 
             assert.isTrue((oncoprint.shareRuleSet as SinonStub).called);
-            assert.equal(trackIdForRuleSetSharing.genericAssay['profile_1'], 2);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayHeatmap['profile_1'],
+                2
+            );
+        });
+    });
+    describe('transitionCategoricalTrack() for generic assay response profile', () => {
+        const molecularAlterationType = 'GENERIC_ASSAY';
+
+        const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            caseLinkOutInTooltips: false,
+            clinicalTracks: [],
+            geneticTracks: [],
+            genesetHeatmapTracks: [],
+            heatmapTracks: [],
+            categoricalTracks: [],
+            divId: 'myDomId',
+            width: 1000,
+        });
+
+        const nextSpec: ICategoricalTrackSpec = {
+            key: '',
+            label: '',
+            molecularProfileId: 'profile_1',
+            molecularAlterationType: molecularAlterationType,
+            molecularProfileName: 'Profile',
+            genericAssayType: GenericAssayTypeConstants.ARMLEVEL_CNA,
+            trackLinkUrl: '',
+            datatype: '',
+            trackGroupIndex: 1,
+            onRemove: () => {},
+            data: [
+                {
+                    entity: 'entity_1',
+                    profile_name: 'Profile',
+                    attr_val_counts: { '1': 1 },
+                    study_id: 'study1',
+                    uid: 'uid',
+                    patient: 'patient1',
+                },
+                {
+                    entity: 'entity_1',
+                    profile_name: 'Profile',
+                    attr_val_counts: { '2': 1 },
+                    study_id: 'study1',
+                    uid: 'uid',
+                    patient: 'patient1',
+                },
+                {
+                    entity: 'entity_1',
+                    profile_name: 'Profile',
+                    attr_val_counts: { '3': 1 },
+                    study_id: 'study1',
+                    uid: 'uid',
+                    patient: 'patient1',
+                },
+            ],
+        };
+
+        const prevSpec = undefined;
+
+        const trackspec2trackId = () => {
+            return {
+                GENERIC_ASSAY_TRACK_1: 1,
+                GENERIC_ASSAY_TRACK_2: 2,
+            };
+        };
+
+        const nextProps: IOncoprintProps = makeMinimalOncoprintProps();
+        const prevProps: IOncoprintProps = makeMinimalOncoprintProps();
+
+        const oncoprint: OncoprintJS = createStubInstance(OncoprintJS);
+
+        beforeEach(function() {
+            (oncoprint.shareRuleSet as SinonStub).resetHistory();
+        });
+
+        it('when is new track and ruleSetId is undefined, the new trackId is set as ruleSetId', () => {
+            const trackIdForRuleSetSharing = {
+                genericAssayCategorical: {} as { [m: string]: number },
+            };
+
+            (oncoprint.addTracks as SinonStub).returns([1]);
+
+            transitionCategoricalTrack(
+                nextSpec,
+                prevSpec,
+                trackspec2trackId,
+                oncoprint,
+                nextProps,
+                trackIdForRuleSetSharing
+            );
+
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayCategorical['profile_1'],
+                1
+            );
+        });
+
+        it('when is new track and ruleSetId is defined, the new trackId is set as ruleSetId', () => {
+            const trackIdForRuleSetSharing = {
+                genericAssayCategorical: { profile_1: 1 },
+            };
+
+            (oncoprint.addTracks as SinonStub).returns([2]);
+
+            transitionCategoricalTrack(
+                nextSpec,
+                prevSpec,
+                trackspec2trackId,
+                oncoprint,
+                nextProps,
+                trackIdForRuleSetSharing
+            );
+
+            assert.isFalse((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayCategorical['profile_1'],
+                2
+            );
+        });
+
+        it('when is existing track and ruleSetId is defined, the ruleset of existing track is updated to ruleSetId', () => {
+            const trackIdForRuleSetSharing = {
+                genericAssayCategorical: { profile_1: 2 },
+            };
+            const prevSpec = nextSpec;
+
+            transitionCategoricalTrack(
+                nextSpec,
+                prevSpec,
+                trackspec2trackId,
+                oncoprint,
+                nextProps,
+                trackIdForRuleSetSharing
+            );
+
+            assert.isTrue((oncoprint.shareRuleSet as SinonStub).called);
+            assert.equal(
+                trackIdForRuleSetSharing.genericAssayCategorical['profile_1'],
+                2
+            );
         });
     });
 });
