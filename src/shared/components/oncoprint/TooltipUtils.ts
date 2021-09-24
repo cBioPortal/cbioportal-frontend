@@ -13,6 +13,7 @@ import {
     ClinicalTrackSpec,
     GeneticTrackDatum,
     IBaseHeatmapTrackSpec,
+    ICategoricalTrackSpec,
     IHeatmapTrackSpec,
 } from './Oncoprint';
 import {
@@ -102,6 +103,66 @@ export function linebreakGenesetId(genesetId: string): string {
             .replace(/_/g, '_&#8203;')
             .replace(/\./g, '.&#8203;')
     );
+}
+
+export function makeCategoricalTrackTooltip(
+    track: ICategoricalTrackSpec,
+    link_id?: boolean
+) {
+    return function(dataUnderMouse: any[]) {
+        let ret = '';
+        let attr_val_counts: { [attr_val: string]: number } = {};
+        for (const d of dataUnderMouse) {
+            if (d.attr_val_counts) {
+                for (const key of Object.keys(d.attr_val_counts)) {
+                    attr_val_counts[key] = attr_val_counts[key] || 0;
+                    attr_val_counts[key] += d.attr_val_counts[key];
+                }
+            }
+        }
+        const attr_vals = Object.keys(attr_val_counts);
+        if (attr_vals.length > 1) {
+            ret += track.label + ':<br>';
+            for (let i = 0; i < attr_vals.length; i++) {
+                const val = attr_vals[i];
+                ret +=
+                    '<span class="nobreak"><b>' +
+                    val +
+                    '</b>: ' +
+                    attr_val_counts[val] +
+                    ` sample${
+                        attr_val_counts[val] === 1 ? '' : 's'
+                    }</span><br>`;
+            }
+        } else if (attr_vals.length === 1) {
+            let displayVal = attr_vals[0];
+            ret +=
+                track.label +
+                ': <span class="nobreak"><b>' +
+                displayVal +
+                `</b>${
+                    dataUnderMouse.length > 1
+                        ? ` (${attr_val_counts[attr_vals[0]]} samples)`
+                        : ''
+                }</span><br>`;
+        }
+        let naCount = 0;
+        for (const d of dataUnderMouse) {
+            if (d.na) {
+                naCount += 1;
+            }
+        }
+        if (naCount > 0) {
+            ret += `${track.label}: <b>N/A</b>${
+                dataUnderMouse.length > 1 ? ` (${naCount} samples)` : ''
+            }<br/>`;
+        }
+        return $('<div>')
+            .addClass(TOOLTIP_DIV_CLASS)
+            .append(getCaseViewElt(dataUnderMouse, !!link_id))
+            .append('<br/>')
+            .append(ret);
+    };
 }
 
 export function makeClinicalTrackTooltip(
@@ -200,7 +261,10 @@ export function makeClinicalTrackTooltip(
     };
 }
 export function makeHeatmapTrackTooltip(
-    trackSpec: IBaseHeatmapTrackSpec,
+    trackSpec: Pick<
+        IBaseHeatmapTrackSpec,
+        'tooltipValueLabel' | 'molecularAlterationType'
+    >,
     link_id?: boolean
 ) {
     return function(dataUnderMouse: any[]) {
@@ -396,10 +460,11 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
 }
 
 export function getCaseViewElt(
-    dataUnderMouse: Pick<
-        GeneticTrackDatum,
-        'sample' | 'patient' | 'study_id'
-    >[],
+    dataUnderMouse: {
+        sample?: string;
+        patient: string;
+        study_id: string;
+    }[],
     caseViewLinkout: boolean
 ) {
     if (!dataUnderMouse.length) {
