@@ -24,6 +24,8 @@ import {
     getTicksForLineChartAxis,
     getTrackValueRange,
 } from './lib/lineChartAxisUtils';
+import { getColor } from 'cbioportal-frontend-commons';
+import { getTrackLabel } from './TrackHeader';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -131,6 +133,10 @@ function getPointY(
     }
 
     return y;
+}
+
+export function randomColorGetter(e: TimelineEvent) {
+    return getColor(getTrackLabel(e.containingTrack));
 }
 
 const defaultColorGetter = function(e: TimelineEvent) {
