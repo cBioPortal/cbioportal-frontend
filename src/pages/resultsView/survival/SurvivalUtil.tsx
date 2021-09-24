@@ -522,8 +522,22 @@ export function getSurvivalChartDataByAlteredStatus(
     };
 }
 
-export function generateSurvivalPlotTitleFromDisplayName(title: string) {
-    return title.replace(/status|survival/gi, '');
+export function generateSurvivalPlotTitleFromDisplayName(displayName: string) {
+    return displayName.replace(/status|survival/gi, '');
+}
+
+export function generateSurvivalPlotYAxisLabelFromDisplayName(
+    displayName: string
+) {
+    if (displayName.includes('OS ') || displayName.includes('Overall')) {
+        return 'Probability of Overall Survival';
+    } else if (displayName.includes('PFS')) {
+        return 'Probability of Progression-Free Survival';
+    } else if (displayName.includes('DFS')) {
+        return 'Probability of Disease-Free Survival';
+    } else {
+        return generateSurvivalPlotTitleFromDisplayName(displayName);
+    }
 }
 
 export function generateStudyViewSurvivalPlotTitle(title: string) {
