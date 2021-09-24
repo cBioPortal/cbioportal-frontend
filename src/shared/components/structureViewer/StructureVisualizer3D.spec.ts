@@ -1,3 +1,8 @@
+// set missing globals to make 'import $3Dmol' work
+import $ from 'jquery';
+(global as any).$ = $;
+(global as any).URL.createObjectURL = jest.fn();
+
 import { assert } from 'chai';
 import sinon from 'sinon';
 import _ from 'lodash';
