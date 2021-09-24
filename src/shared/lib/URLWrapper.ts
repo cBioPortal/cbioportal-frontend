@@ -18,7 +18,7 @@ import ExtendedRouterStore, {
     PortalSession,
     saveRemoteSession,
 } from './ExtendedRouterStore';
-import hashString from 'shared/lib/hashString';
+import hashString from 'cbioportal-frontend-commons/src/lib/hashString';
 import * as _ from 'lodash';
 import { log } from 'shared/lib/consoleLog';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
