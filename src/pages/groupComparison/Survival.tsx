@@ -30,6 +30,7 @@ import {
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
     SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
+    generateSurvivalPlotYAxisLabelFromDisplayName,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { observable, action, makeObservable } from 'mobx';
 import survivalPlotStyle from './styles.module.scss';
@@ -484,6 +485,31 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             ),
     });
 
+    readonly survivalYLabel = remoteData({
+        await: () => [
+            this.props.store.survivalClinicalAttributesPrefix,
+            this.props.store.survivalDescriptions,
+        ],
+        invoke: () =>
+            Promise.resolve(
+                this.props.store.survivalClinicalAttributesPrefix.result!.reduce(
+                    (map, prefix) => {
+                        // get survival plot titles
+                        // use first display name as title
+                        map[
+                            prefix
+                        ] = generateSurvivalPlotYAxisLabelFromDisplayName(
+                            this.props.store.survivalDescriptions.result![
+                                prefix
+                            ][0].displayName
+                        );
+                        return map;
+                    },
+                    {} as { [prefix: string]: string }
+                )
+            ),
+    });
+
     readonly survivalUI = MakeMobxView({
         await: () => [
             this.props.store.survivalDescriptions,
@@ -495,6 +521,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
             this.props.store.overlapComputations,
             this.props.store.uidToGroup,
             this.survivalTitleText,
+            this.survivalYLabel,
             this.sortedGroupedSurvivals,
             this.pValuesByPrefix,
         ],
@@ -507,6 +534,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                 .result!.patientToAnalysisGroups;
             const attributeDescriptions: { [prefix: string]: string } = {};
             const survivalTitleText = this.survivalTitleText.result!;
+            const survivalYLabel = this.survivalYLabel.result!;
             this.props.store.survivalClinicalAttributesPrefix.result!.forEach(
                 prefix => {
                     // get attribute description
@@ -613,7 +641,7 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                                             .survivalXAxisLabelGroupByPrefix
                                             .result![key]
                                     }
-                                    yAxisLabel={survivalTitleText[key]}
+                                    yAxisLabel={survivalYLabel[key]}
                                     totalCasesHeader="Number of Cases, Total"
                                     statusCasesHeader="Number of Events"
                                     medianMonthsHeader={`Median Months ${survivalTitleText[key]} (95% CI)`}
