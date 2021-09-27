@@ -135,8 +135,12 @@ function getPointY(
     return y;
 }
 
-const defaultColorGetter = function(e: TimelineEvent) {
+export function randomColorGetter(e: TimelineEvent) {
     return getColor(getTrackLabel(e.containingTrack));
+}
+
+const defaultColorGetter = function(e: TimelineEvent) {
+    return POINT_COLOR;
 };
 
 export function renderPoint(
