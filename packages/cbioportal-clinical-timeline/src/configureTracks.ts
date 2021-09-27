@@ -13,9 +13,11 @@ export const configureTracks = function(
     parentConf?: ITrackEventConfig
 ) {
     tracks.forEach(track => {
-        const conf = timelineConfig.trackEventRenderers.find(conf =>
-            conf.trackTypeMatch.test(track.type)
-        );
+        const conf = timelineConfig.trackEventRenderers
+            ? timelineConfig.trackEventRenderers.find(conf =>
+                  conf.trackTypeMatch.test(track.type)
+              )
+            : undefined;
 
         // add top level config to each track for later reference
         track.timelineConfig = timelineConfig;
