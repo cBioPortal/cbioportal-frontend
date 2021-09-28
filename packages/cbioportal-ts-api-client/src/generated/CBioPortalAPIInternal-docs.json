@@ -40,10 +40,6 @@
       "description": " "
     },
     {
-      "name": "Copy Number Enrichments",
-      "description": " "
-    },
-    {
       "name": "Cosmic Counts",
       "description": " "
     },
@@ -81,10 +77,6 @@
     },
     {
       "name": "Info",
-      "description": " "
-    },
-    {
-      "name": "Mutation Enrichments",
       "description": " "
     },
     {
@@ -214,6 +206,52 @@
             "type": "boolean",
             "default": true,
             "allowEmptyValue": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/cache/{studyId}": {
+      "delete": {
+        "tags": [
+          "Cache"
+        ],
+        "summary": "Clear and reinitialize caches after import/removal/update of a study",
+        "operationId": "clearCachesForStudyUsingDELETE",
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "springManagedCache",
+            "in": "query",
+            "description": "Clear Spring-managed caches",
+            "required": false,
+            "type": "boolean",
+            "default": true,
+            "allowEmptyValue": false
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "studyId",
+            "required": true,
+            "type": "string"
           }
         ],
         "responses": {
@@ -404,6 +442,16 @@
             "allowEmptyValue": false
           },
           {
+            "name": "xAxisLogScale",
+            "in": "query",
+            "description": "Use log scale for X axis",
+            "required": false,
+            "type": "boolean",
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
+          },
+          {
             "name": "xAxisStart",
             "in": "query",
             "description": "Starting point of the X axis, if different than smallest value",
@@ -438,6 +486,16 @@
             "allowEmptyValue": false
           },
           {
+            "name": "yAxisLogScale",
+            "in": "query",
+            "description": "Use log scale for Y axis",
+            "required": false,
+            "type": "boolean",
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
+          },
+          {
             "name": "yAxisStart",
             "in": "query",
             "description": "Starting point of the Y axis, if different than smallest value",
@@ -450,10 +508,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/DensityPlotBin"
-              }
+              "$ref": "#/definitions/DensityPlotData"
             }
           }
         },
@@ -529,76 +584,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberCountByGene"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/copy-number-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Copy Number Enrichments"
-        ],
-        "summary": "Fetch copy number enrichments in a molecular profile",
-        "operationId": "fetchCopyNumberEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "copyNumberEventType",
-            "in": "query",
-            "description": "Type of the copy number event",
-            "required": false,
-            "type": "string",
-            "default": "HOMDEL",
-            "allowEmptyValue": false,
-            "enum": [
-              "AMP",
-              "GAIN",
-              "DIPLOID",
-              "HETLOSS",
-              "HOMDEL"
-            ]
-          },
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "allowEmptyValue": false,
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "groups",
-            "description": "List of groups containing sample identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -2080,60 +2065,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByPosition"
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
-    "/mutation-enrichments/fetch": {
-      "post": {
-        "tags": [
-          "Mutation Enrichments"
-        ],
-        "summary": "Fetch mutation enrichments in a molecular profile",
-        "operationId": "fetchMutationEnrichmentsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "enrichmentType",
-            "in": "query",
-            "description": "Type of the enrichment e.g. SAMPLE or PATIENT",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "allowEmptyValue": false,
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
-            "in": "body",
-            "name": "groups",
-            "description": "List of groups containing sample identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MolecularProfileCasesGroupFilter"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/AlterationEnrichment"
               }
             }
           }
@@ -3981,6 +3912,29 @@
         }
       },
       "title": "DensityPlotBin"
+    },
+    "DensityPlotData": {
+      "type": "object",
+      "required": [
+        "bins"
+      ],
+      "properties": {
+        "bins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DensityPlotBin"
+          }
+        },
+        "pearsonCorr": {
+          "type": "number",
+          "format": "double"
+        },
+        "spearmanCorr": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "DensityPlotData"
     },
     "GeneFilter": {
       "type": "object",
