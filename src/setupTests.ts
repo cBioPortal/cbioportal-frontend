@@ -10,3 +10,8 @@ jest.mock('cbioportal-ts-api-client');
 // mocking CopyDownloadQueryLinks at this level practically makes CopyDownloadQueryLinks untestable
 // if we ever need to test that class, we need to refactor it to get rid of the circular references
 jest.mock('shared/components/copyDownloadControls/CopyDownloadQueryLinks.tsx');
+
+// explicitly set mock for legacy packages
+jest.setMock('webpack-raphael', {});
+jest.setMock('qtip2', {});
+jest.setMock('jquery-migrate', {});
