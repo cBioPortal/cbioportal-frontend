@@ -5,11 +5,24 @@ import GeneSymbolValidator, {
     IGeneSymbolValidatorProps,
 } from './GeneSymbolValidator';
 import sinon from 'sinon';
+import client from 'shared/api/cbioportalClientInstance';
+import SpyInstance = jest.SpyInstance;
 
 describe('GeneSymbolValidator', () => {
     let props: IGeneSymbolValidatorProps;
     let wrapper: any;
     let instance: GeneSymbolValidator;
+    let fetchGenesStub: SpyInstance;
+
+    beforeAll(() => {
+        fetchGenesStub = jest
+            .spyOn(client, 'fetchGenesUsingPOST')
+            .mockImplementation(() => Promise.resolve([]));
+    });
+
+    afterAll(() => {
+        fetchGenesStub.mockRestore();
+    });
 
     beforeEach(() => {
         props = {
