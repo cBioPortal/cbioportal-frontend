@@ -673,9 +673,9 @@ var clickCheckBoxStudyView = name => {
 };
 
 var clickCheckBoxResultsView = name => {
-    $('label=' + name)
-        .$('input')
-        .click();
+    const $el = $('label=' + name).$('input');
+    $el.waitForDisplayed();
+    $el.click();
     waitForUpdateResultsView();
 };
 
