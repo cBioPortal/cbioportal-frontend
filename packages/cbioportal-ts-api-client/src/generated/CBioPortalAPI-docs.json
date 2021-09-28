@@ -2650,6 +2650,30 @@
         ],
         "parameters": [
           {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
             "name": "direction",
             "in": "query",
             "description": "Direction of the sort",
@@ -2695,6 +2719,12 @@
             "exclusiveMinimum": false,
             "format": "int32",
             "allowEmptyValue": false
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
           },
           {
             "name": "projection",
@@ -4546,6 +4576,9 @@
           "type": "string"
         },
         "publicStudy": {
+          "type": "boolean"
+        },
+        "readPermission": {
           "type": "boolean"
         },
         "referenceGenome": {
