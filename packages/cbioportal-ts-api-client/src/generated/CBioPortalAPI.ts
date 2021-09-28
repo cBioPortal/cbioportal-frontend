@@ -793,9 +793,13 @@ export type StudyViewFilter = {
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -7236,10 +7240,15 @@ export default class CBioPortalAPI {
     };
     getContainsTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/display-patient';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7256,9 +7265,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7283,6 +7294,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7300,9 +7315,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7312,10 +7329,15 @@ export default class CBioPortalAPI {
     };
     getContainsSampleTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/display-sample';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7332,9 +7354,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsSampleTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7359,6 +7383,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7376,9 +7404,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsSampleTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7388,10 +7418,15 @@ export default class CBioPortalAPI {
     };
     getAllPatientTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/patient';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7408,9 +7443,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllPatientTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7435,6 +7472,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7452,9 +7493,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllPatientTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
+            'tier' ? : "Agent" | "AgentClass",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < PatientTreatmentRow >
@@ -7465,10 +7508,15 @@ export default class CBioPortalAPI {
         };
     getAllSampleTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/sample';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7485,9 +7533,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7512,6 +7562,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7529,9 +7583,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllSampleTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
+            'tier' ? : "Agent" | "AgentClass",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < SampleTreatmentRow >
