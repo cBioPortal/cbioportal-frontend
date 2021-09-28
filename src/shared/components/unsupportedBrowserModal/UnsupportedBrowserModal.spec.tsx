@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { expect } from 'chai';
 import { shallow } from 'enzyme';
+import browser from 'bowser';
 import UnsupportedBrowserModal from './UnsupportedBrowserModal';
 
 describe('UnsupportedBrowserModal', () => {
     let wrapper: any;
 
     beforeAll(() => {
+        browser.version = '';
         wrapper = shallow(<UnsupportedBrowserModal />);
     });
 
