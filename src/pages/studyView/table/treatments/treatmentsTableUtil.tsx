@@ -4,6 +4,7 @@ import {
     PatientTreatmentFilter,
     PatientTreatmentRow,
 } from 'cbioportal-ts-api-client';
+import { ChartMeta } from 'pages/studyView/StudyViewUtils';
 import styles from 'pages/studyView/table/tables.module.scss';
 import React from 'react';
 
@@ -41,9 +42,18 @@ export function treatmentUniqueKey(cell: Treatment, ignoreTime?: boolean) {
     }
 }
 
-export function toSampleTreatmentFilter(
-    uniqueKey: string
-): SampleTreatmentFilter {
+export function toTreatmentFilter(
+    uniqueKey: string,
+    meta: ChartMeta
+): SampleTreatmentFilter | PatientTreatmentFilter {
+    if (meta.uniqueKey.startsWith('SAMPLE')) {
+        return toSampleTreatmentFilter(uniqueKey);
+    } else {
+        return toPatientTreatmentFilter(uniqueKey);
+    }
+}
+
+function toSampleTreatmentFilter(uniqueKey: string): SampleTreatmentFilter {
     const split = uniqueKey.split('::');
     return {
         treatment: split[0],
@@ -51,9 +61,7 @@ export function toSampleTreatmentFilter(
     };
 }
 
-export function toPatientTreatmentFilter(
-    uniqueKey: string
-): PatientTreatmentFilter {
+function toPatientTreatmentFilter(uniqueKey: string): PatientTreatmentFilter {
     const split = uniqueKey.split('::');
     return {
         treatment: split[0],
@@ -105,7 +113,6 @@ export function filterTreatmentCell(
 export function toNumericValue(words: string) {
     return words
         .toLocaleLowerCase()
-        .substring(0, Math.min(5, words.length))
         .split('')
         .map(c => Math.min(c.charCodeAt(0), 127))
         .filter(num => num !== NaN)

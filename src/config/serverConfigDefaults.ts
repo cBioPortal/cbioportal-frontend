@@ -137,7 +137,9 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             STRUCTURAL_VARIANT_GENES_TABLE: 85,
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
+            PATIENT_TREATMENT_GROUPS_TABLE: 75,
             SAMPLE_TREATMENTS_TABLE: 75,
+            SAMPLE_TREATMENT_GROUPS_TABLE: 75,
             CANCER_STUDIES: 70,
             SEQUENCED: 60,
             HAS_CNA_DATA: 50,
@@ -180,6 +182,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
     enable_request_body_gzip_compression: false,
+    enable_treatment_groups: false,
 
     referenceGenomeVersion: 'hg19',
 
