@@ -4463,6 +4463,10 @@
           "type": "string",
           "example": "yyyy-MM-dd HH:mm:ss"
         },
+        "massSpectrometrySampleCount": {
+          "type": "integer",
+          "format": "int32"
+        },
         "methylationHm27SampleCount": {
           "type": "integer",
           "format": "int32"
@@ -4496,10 +4500,6 @@
           "type": "string"
         },
         "rppaSampleCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "massSpectrometrySampleCount": {
           "type": "integer",
           "format": "int32"
         },
