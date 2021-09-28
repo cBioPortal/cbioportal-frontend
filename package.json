@@ -47,7 +47,7 @@
     "serveDistLocalDb": "./end-to-end-test/local/runtime-config/serve_dist.sh",
     "testTime": "start_time=`date +%s` && karma start karma.conf.js && echo run time is $(expr `date +%s` - $start_time) s",
     "test": "yarn run testModules && yarn run testMain",
-    "testMain": "cross-env CI=1 jest --env=jsdom",
+    "testMain": "cross-env CI=1 jest --env=jsdom --runInBand",
     "testModules": "lerna run test --ignore=cbioportal-frontend --stream",
     "test:watch": "yarn run test -- --watch",
     "testMain:watch": "yarn run testMain -- --watch",
