@@ -223,6 +223,7 @@ export default class StudyList extends QueryStoreComponent<
                             [styles.UnauthorizedStudy]:
                                 getServerConfig()
                                     .skin_show_unauthorized_studies &&
+                                //@ts-ignore
                                 study.isAuthorized === false,
                         });
                         return (
@@ -425,6 +426,7 @@ export default class StudyList extends QueryStoreComponent<
                     )}
                     {getServerConfig().skin_show_unauthorized_studies &&
                         study.studyId &&
+                        //@ts-ignore
                         study.isAuthorized === false && (
                             <DefaultTooltip
                                 mouseEnterDelay={0}
