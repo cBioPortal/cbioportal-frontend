@@ -219,6 +219,52 @@
         "deprecated": false
       }
     },
+    "/cache/{studyId}": {
+      "delete": {
+        "tags": [
+          "Cache"
+        ],
+        "summary": "Clear and reinitialize caches after import/removal/update of a study",
+        "operationId": "clearCachesForStudyUsingDELETE",
+        "produces": [
+          "text/plain"
+        ],
+        "parameters": [
+          {
+            "name": "X-API-KEY",
+            "in": "header",
+            "description": "Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "springManagedCache",
+            "in": "query",
+            "description": "Clear Spring-managed caches",
+            "required": false,
+            "type": "boolean",
+            "default": true,
+            "allowEmptyValue": false
+          },
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "studyId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/clinical-attributes/counts/fetch": {
       "post": {
         "tags": [
@@ -396,6 +442,16 @@
             "allowEmptyValue": false
           },
           {
+            "name": "xAxisLogScale",
+            "in": "query",
+            "description": "Use log scale for X axis",
+            "required": false,
+            "type": "boolean",
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
+          },
+          {
             "name": "xAxisStart",
             "in": "query",
             "description": "Starting point of the X axis, if different than smallest value",
@@ -430,6 +486,16 @@
             "allowEmptyValue": false
           },
           {
+            "name": "yAxisLogScale",
+            "in": "query",
+            "description": "Use log scale for Y axis",
+            "required": false,
+            "type": "boolean",
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
+          },
+          {
             "name": "yAxisStart",
             "in": "query",
             "description": "Starting point of the Y axis, if different than smallest value",
@@ -442,10 +508,7 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/DensityPlotBin"
-              }
+              "$ref": "#/definitions/DensityPlotData"
             }
           }
         },
@@ -3849,6 +3912,29 @@
         }
       },
       "title": "DensityPlotBin"
+    },
+    "DensityPlotData": {
+      "type": "object",
+      "required": [
+        "bins"
+      ],
+      "properties": {
+        "bins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DensityPlotBin"
+          }
+        },
+        "pearsonCorr": {
+          "type": "number",
+          "format": "double"
+        },
+        "spearmanCorr": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "DensityPlotData"
     },
     "GeneFilter": {
       "type": "object",

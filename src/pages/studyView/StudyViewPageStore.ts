@@ -7590,7 +7590,7 @@ export class StudyViewPageStore
                         yAxisBinCount,
                         studyViewFilter: this.filters,
                     })
-                ).filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                ).bins.filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
                 const yBinSize =
                     Math.max(...bins.map(bin => bin.binY)) /

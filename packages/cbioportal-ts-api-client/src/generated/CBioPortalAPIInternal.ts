@@ -301,6 +301,14 @@ export type DensityPlotBin = {
         'minY': number
 
 };
+export type DensityPlotData = {
+    'bins': Array < DensityPlotBin >
+
+        'pearsonCorr': number
+
+        'spearmanCorr': number
+
+};
 export type GeneFilter = {
     'geneQueries': Array < Array < GeneFilterQuery >
         >
@@ -1085,6 +1093,103 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+    clearCachesForStudyUsingDELETEURL(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/cache/{studyId}';
+
+        if (parameters['springManagedCache'] !== undefined) {
+            queryParameters['springManagedCache'] = parameters['springManagedCache'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} studyId - studyId
+     */
+    clearCachesForStudyUsingDELETEWithHttpInfo(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/cache/{studyId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'text/plain';
+
+            if (parameters['xApiKey'] !== undefined) {
+                headers['X-API-KEY'] = parameters['xApiKey'];
+            }
+
+            if (parameters['springManagedCache'] !== undefined) {
+                queryParameters['springManagedCache'] = parameters['springManagedCache'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} studyId - studyId
+     */
+    clearCachesForStudyUsingDELETE(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.clearCachesForStudyUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     getClinicalAttributeCountsUsingPOSTURL(parameters: {
         'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
         $queryParameters ? : any
@@ -1334,10 +1439,12 @@ export default class CBioPortalAPIInternal {
         'xAxisAttributeId': string,
         'xAxisBinCount' ? : number,
         'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
         'xAxisStart' ? : number,
         'yAxisAttributeId': string,
         'yAxisBinCount' ? : number,
         'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
         'yAxisStart' ? : number,
         $queryParameters ? : any
     }): string {
@@ -1356,6 +1463,10 @@ export default class CBioPortalAPIInternal {
             queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
         }
 
+        if (parameters['xAxisLogScale'] !== undefined) {
+            queryParameters['xAxisLogScale'] = parameters['xAxisLogScale'];
+        }
+
         if (parameters['xAxisStart'] !== undefined) {
             queryParameters['xAxisStart'] = parameters['xAxisStart'];
         }
@@ -1370,6 +1481,10 @@ export default class CBioPortalAPIInternal {
 
         if (parameters['yAxisEnd'] !== undefined) {
             queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+        }
+
+        if (parameters['yAxisLogScale'] !== undefined) {
+            queryParameters['yAxisLogScale'] = parameters['yAxisLogScale'];
         }
 
         if (parameters['yAxisStart'] !== undefined) {
@@ -1394,10 +1509,12 @@ export default class CBioPortalAPIInternal {
      * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
      * @param {integer} xAxisBinCount - Number of the bins in X axis
      * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {boolean} xAxisLogScale - Use log scale for X axis
      * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
      * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {boolean} yAxisLogScale - Use log scale for Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      */
     fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters: {
@@ -1405,10 +1522,12 @@ export default class CBioPortalAPIInternal {
         'xAxisAttributeId': string,
         'xAxisBinCount' ? : number,
         'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
         'xAxisStart' ? : number,
         'yAxisAttributeId': string,
         'yAxisBinCount' ? : number,
         'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
         'yAxisStart' ? : number,
         $queryParameters ? : any,
         $domain ? : string
@@ -1451,6 +1570,10 @@ export default class CBioPortalAPIInternal {
                 queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
             }
 
+            if (parameters['xAxisLogScale'] !== undefined) {
+                queryParameters['xAxisLogScale'] = parameters['xAxisLogScale'];
+            }
+
             if (parameters['xAxisStart'] !== undefined) {
                 queryParameters['xAxisStart'] = parameters['xAxisStart'];
             }
@@ -1470,6 +1593,10 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['yAxisEnd'] !== undefined) {
                 queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+            }
+
+            if (parameters['yAxisLogScale'] !== undefined) {
+                queryParameters['yAxisLogScale'] = parameters['yAxisLogScale'];
             }
 
             if (parameters['yAxisStart'] !== undefined) {
@@ -1496,30 +1623,33 @@ export default class CBioPortalAPIInternal {
      * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
      * @param {integer} xAxisBinCount - Number of the bins in X axis
      * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {boolean} xAxisLogScale - Use log scale for X axis
      * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
      * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {boolean} yAxisLogScale - Use log scale for Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      */
     fetchClinicalDataDensityPlotUsingPOST(parameters: {
-            'studyViewFilter': StudyViewFilter,
-            'xAxisAttributeId': string,
-            'xAxisBinCount' ? : number,
-            'xAxisEnd' ? : number,
-            'xAxisStart' ? : number,
-            'yAxisAttributeId': string,
-            'yAxisBinCount' ? : number,
-            'yAxisEnd' ? : number,
-            'yAxisStart' ? : number,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < DensityPlotBin >
-        > {
-            return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'studyViewFilter': StudyViewFilter,
+        'xAxisAttributeId': string,
+        'xAxisBinCount' ? : number,
+        'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
+        'xAxisStart' ? : number,
+        'yAxisAttributeId': string,
+        'yAxisBinCount' ? : number,
+        'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
+        'yAxisStart' ? : number,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < DensityPlotData > {
+        return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchClinicalEnrichmentsUsingPOSTURL(parameters: {
         'groupFilter': GroupFilter,
         $queryParameters ? : any
