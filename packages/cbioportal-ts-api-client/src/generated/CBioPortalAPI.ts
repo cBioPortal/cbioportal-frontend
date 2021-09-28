@@ -70,6 +70,8 @@ export type CancerStudy = {
 
         'importDate': string
 
+        'massSpectrometrySampleCount': number
+
         'methylationHm27SampleCount': number
 
         'miRnaSampleCount': number
@@ -90,15 +92,11 @@ export type CancerStudy = {
 
         'rppaSampleCount': number
 
-        'massSpectrometrySampleCount': number
-
         'sequencedSampleCount': number
 
         'status': number
 
         'studyId': string
-
-        'isAuthorized': boolean
 
 };
 export type CancerStudyTags = {
@@ -3994,7 +3992,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
     */
     getAllPatientsUsingGETWithHttpInfo(parameters: {
         'direction' ? : "ASC" | "DESC",
@@ -4059,7 +4057,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
     */
     getAllPatientsUsingGET(parameters: {
             'direction' ? : "ASC" | "DESC",
@@ -5967,7 +5965,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
          * @param {string} studyId - Study ID e.g. acc_tcga
     */
     getAllPatientsInStudyUsingGETWithHttpInfo(parameters: {
@@ -6035,7 +6033,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
          * @param {string} studyId - Study ID e.g. acc_tcga
     */
     getAllPatientsInStudyUsingGET(parameters: {
