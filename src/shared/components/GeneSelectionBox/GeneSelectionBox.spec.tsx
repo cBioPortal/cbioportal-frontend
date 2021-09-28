@@ -6,16 +6,24 @@ import OQLTextArea, {
     GeneBoxType,
 } from './OQLTextArea';
 import client from 'shared/api/cbioportalClientInstance';
-import sinon from 'sinon';
+import SpyInstance = jest.SpyInstance;
 
 describe('GeneSelectionBox', () => {
-    beforeEach(() => {
-        sinon.stub(client, 'getAllGenesUsingGET');
-        sinon.stub(client, 'fetchGenesUsingPOST');
+    let fetchGenesStub: SpyInstance;
+    let getAllGenesStub: SpyInstance;
+
+    beforeAll(() => {
+        fetchGenesStub = jest
+            .spyOn(client, 'fetchGenesUsingPOST')
+            .mockImplementation(() => Promise.resolve([]));
+        getAllGenesStub = jest
+            .spyOn(client, 'getAllGenesUsingGET')
+            .mockImplementation(() => Promise.resolve([]));
     });
-    afterEach(() => {
-        (client.getAllGenesUsingGET as sinon.SinonStub).restore();
-        (client.fetchGenesUsingPOST as sinon.SinonStub).restore();
+
+    afterAll(() => {
+        fetchGenesStub.mockRestore();
+        getAllGenesStub.mockRestore();
     });
 
     it('textarea value - default view', () => {
