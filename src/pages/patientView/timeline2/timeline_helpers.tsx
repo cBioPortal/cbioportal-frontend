@@ -8,7 +8,6 @@ import {
     TimelineTrackSpecification,
     TimelineTrackType,
     ITimelineConfig,
-    randomColorGetter,
     POINT_COLOR,
 } from 'cbioportal-clinical-timeline';
 import {
@@ -23,6 +22,7 @@ import SampleMarker, {
 import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
+import { getColor } from 'cbioportal-frontend-commons';
 
 const OTHER = 'Other';
 
@@ -46,8 +46,14 @@ export function configureTriageTimeline(baseConfig: ITimelineConfig) {
                 '4': 'red',
             };
             return colorMap[grade.value] || POINT_COLOR;
+        } else {
+            const path = e.containingTrack.uid.split('.');
+            if (path[0] === 'TREATMENT' && path.length > 2) {
+                return getColor(path[2]);
+            } else {
+                return POINT_COLOR;
+            }
         }
-        return randomColorGetter(e);
     };
 }
 
