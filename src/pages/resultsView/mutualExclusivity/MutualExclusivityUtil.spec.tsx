@@ -561,7 +561,7 @@ describe('MutualExclusivityUtil', () => {
                     .at(9)
                     .html()
                     .replace(/<!--[^>]*-->/g, ''),
-                '<td><div class="styles-module__Tendency__2Y46X styles-module__Significant__34YnP">' +
+                '<td><div class="Tendency Significant">' +
                     'Co-occurrence</div></td>'
             );
             assert.equal(
@@ -569,7 +569,7 @@ describe('MutualExclusivityUtil', () => {
                     .at(19)
                     .html()
                     .replace(/<!--[^>]*-->/g, ''),
-                '<td><div class="styles-module__Tendency__2Y46X">Co-occurrence</div></td>'
+                '<td><div class="Tendency">Co-occurrence</div></td>'
             );
         });
     });
