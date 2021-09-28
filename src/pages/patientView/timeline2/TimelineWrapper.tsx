@@ -10,6 +10,7 @@ import {
     configureTracks,
     ITimelineConfig,
     Timeline,
+    TimelineEvent,
     TimelineStore,
     TimelineTrackSpecification,
 } from 'cbioportal-clinical-timeline';
@@ -70,6 +71,31 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
             }
 
             if (isTriagePortal) {
+                const extraData = {
+                    uniquePatientKey: 'SFRBOV8xOmh0YW5fdGVzdF8yMDIx',
+                    studyId: 'htan_test_2021',
+                    patientId: 'HTA9_1',
+                    eventType: 'IMAGING',
+                    attributes: [
+                        {
+                            key: 'linkout',
+                            value:
+                                'https://minerva-story-htan-ohsu-demo.surge.sh/#s=1#w=1#g=6#m=-1#a=-100_-100#v=0.6178_0.57_0.6129#o=-100_-100_1_1#p=Q',
+                        },
+                        { key: 'ASSAY_TYPE', value: 'mIHC' },
+                        {
+                            key: 'FILE_FORMAT',
+                            value: 'OME-TIFF',
+                        },
+                    ],
+                    startNumberOfDaysSinceDiagnosis: 25726,
+                };
+
+                //e assay type to the tooltip (mIHC) and file format (OME-TIFF)
+
+                // @ts-ignore
+                data.push(extraData);
+
                 configureTriageTimeline(baseConfig);
             }
 
