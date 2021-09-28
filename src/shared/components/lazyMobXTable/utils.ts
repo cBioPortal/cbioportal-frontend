@@ -13,6 +13,7 @@ export function isQueriedStudyAuthorized(study: CancerStudy) {
     return (
         !getServerConfig().skin_show_unauthorized_studies ||
         (getServerConfig().skin_show_unauthorized_studies &&
+            //@ts-ignore
             study.isAuthorized !== false)
     );
 }
