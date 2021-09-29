@@ -369,6 +369,12 @@ var config = {
         // noInfo: false,
         // quiet: false,
         // lazy: false,
+        client: {
+            overlay: {
+                errors: true,
+                warnings: false,
+            },
+        },
         https: false,
         host: 'localhost',
         headers: { 'Access-Control-Allow-Origin': '*' },
