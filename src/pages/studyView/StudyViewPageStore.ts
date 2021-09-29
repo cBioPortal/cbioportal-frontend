@@ -195,8 +195,7 @@ import {
 } from 'pages/resultsView/survival/SurvivalUtil';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    toPatientTreatmentFilter,
-    toSampleTreatmentFilter,
+    toTreatmentFilter,
     treatmentComparisonGroupName,
     treatmentUniqueKey,
 } from './table/treatments/treatmentsTableUtil';
@@ -1219,7 +1218,8 @@ export class StudyViewPageStore
 
         // For patient treatments comparison, use all samples for that treatment, pre- and post-
         const isPatientType =
-            chartType === ChartTypeEnum.PATIENT_TREATMENTS_TABLE;
+            chartType === ChartTypeEnum.PATIENT_TREATMENTS_TABLE ||
+            chartType === ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE;
         const promises = [this.selectedSampleSet, this.sampleTreatments];
 
         return new Promise<string>(resolve => {
@@ -1725,6 +1725,8 @@ export class StudyViewPageStore
                     statusCallback
                 );
                 break;
+            case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
+            case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                 comparisonId = await this.createTreatmentsComparisonSession(
@@ -2420,7 +2422,9 @@ export class StudyViewPageStore
         this.setGenomicProfilesFilter([]);
         this.setCaseListsFilter([]);
         this.clearPatientTreatmentFilters();
+        this.clearPatientTreatmentGroupFilters();
         this.clearSampleTreatmentFilters();
+        this.clearSampleTreatmentGroupFilters();
     }
 
     @computed
@@ -2982,6 +2986,12 @@ export class StudyViewPageStore
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
+                case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
+                    this.setSampleTreatmentGroupFilters({ filters: [] });
+                    break;
+                case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
+                    this.setPatientTreatmentGroupFilters({ filters: [] });
+                    break;
                 case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
                     this.setSampleTreatmentFilters({ filters: [] });
                     break;
@@ -3047,10 +3057,14 @@ export class StudyViewPageStore
                 return !_.isEmpty(this._caseListsFilter);
             case ChartTypeEnum.SURVIVAL:
                 return false;
+            case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE:
+                return !_.isEmpty(this._sampleTreatmentGroupsFilters.filters);
+            case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE:
+                return !_.isEmpty(this._patientTreatmentGroupsFilter.filters);
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE:
-                return !_.isEmpty(this._patientTreatmentsFilter.filters);
-            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
                 return !_.isEmpty(this._sampleTreatmentsFilters.filters);
+            case ChartTypeEnum.PATIENT_TREATMENTS_TABLE:
+                return !_.isEmpty(this._patientTreatmentsFilter.filters);
             default:
                 return false;
         }
@@ -3298,6 +3312,20 @@ export class StudyViewPageStore
             this.patientTreatmentFilters.filters.length > 0
         ) {
             filters.patientTreatmentFilters = this.patientTreatmentFilters;
+        }
+
+        if (
+            this.sampleTreatmentGroupFilters &&
+            this.sampleTreatmentGroupFilters.filters.length > 0
+        ) {
+            filters.sampleTreatmentGroupFilters = this.sampleTreatmentGroupFilters;
+        }
+
+        if (
+            this.patientTreatmentGroupFilters &&
+            this.patientTreatmentGroupFilters.filters.length > 0
+        ) {
+            filters.patientTreatmentGroupFilters = this.patientTreatmentGroupFilters;
         }
 
         let sampleIdentifiersFilterSets = Array.from(
@@ -5254,7 +5282,7 @@ export class StudyViewPageStore
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Sample Treatments',
+                displayName: 'Treatment by Sample (pre/post)',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
                 ),
@@ -5269,13 +5297,43 @@ export class StudyViewPageStore
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: true,
-                displayName: 'Patient Treatments',
+                displayName: 'Treatment by Patient',
                 priority: getDefaultPriorityByUniqueKey(
                     ChartTypeEnum.PATIENT_TREATMENTS_TABLE
                 ),
                 renderWhenDataChange: true,
                 description:
                     'List of treatments and the corresponding number of patients treated',
+            };
+        }
+
+        if (this.displaySampleTreatmentGroups.result) {
+            _chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
+                uniqueKey: 'SAMPLE_TREATMENT_GROUPS',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: true,
+                displayName: 'Treatment Category by Sample (pre/post)',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
+                ),
+                renderWhenDataChange: true,
+                description:
+                    'List of treatments groups and the corresponding number of samples acquired before treatment or after/on treatment',
+            };
+        }
+
+        if (this.displayPatientTreatmentGroups.result) {
+            _chartMetaSet['PATIENT_TREATMENT_GROUPS'] = {
+                uniqueKey: 'PATIENT_TREATMENT_GROUPS',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: true,
+                displayName: 'Treatment Category by Patient',
+                priority: getDefaultPriorityByUniqueKey(
+                    ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
+                ),
+                renderWhenDataChange: true,
+                description:
+                    'List of treatment groups and the corresponding number of patients treated',
             };
         }
 
@@ -5908,6 +5966,27 @@ export class StudyViewPageStore
             );
         }
 
+        if (this.displaySampleTreatmentGroups.result) {
+            this.changeChartVisibility(
+                SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_GROUPS,
+                true
+            );
+            this.changeChartVisibility(
+                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENT_GROUPS,
+                true
+            );
+
+            this.chartsType.set(
+                SpecialChartsUniqueKeyEnum.PATIENT_TREATMENT_GROUPS,
+                ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
+            );
+
+            this.chartsType.set(
+                SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_GROUPS,
+                ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
+            );
+        }
+
         if (!_.isEmpty(this.mutationProfiles.result)) {
             const uniqueKey = getUniqueKeyFromMolecularProfileIds(
                 this.mutationProfiles.result.map(
@@ -6073,7 +6152,19 @@ export class StudyViewPageStore
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.PATIENT_TREATMENTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
-                ChartTypeEnum.SAMPLE_TREATMENTS_TABLE
+                ChartTypeEnum.PATIENT_TREATMENTS_TABLE
+            ]
+        );
+        this.chartsDimension.set(
+            SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_GROUPS,
+            STUDY_VIEW_CONFIG.layout.dimensions[
+                ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE
+            ]
+        );
+        this.chartsDimension.set(
+            SpecialChartsUniqueKeyEnum.PATIENT_TREATMENT_GROUPS,
+            STUDY_VIEW_CONFIG.layout.dimensions[
+                ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
             ]
         );
         if (
@@ -7499,7 +7590,7 @@ export class StudyViewPageStore
                         yAxisBinCount,
                         studyViewFilter: this.filters,
                     })
-                ).filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                ).bins.filter(bin => bin.count > 0); // only show points for bins with stuff in them
                 const xBinSize = 1 / xAxisBinCount;
                 const yBinSize =
                     Math.max(...bins.map(bin => bin.binY)) /
@@ -7836,6 +7927,8 @@ export class StudyViewPageStore
             this.mutationCountVsFractionGenomeAlteredDataSet,
             this.sampleTreatments,
             this.patientTreatments,
+            this.sampleTreatmentGroups,
+            this.patientTreatmentGroups,
         ],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
@@ -7919,6 +8012,16 @@ export class StudyViewPageStore
                 if (!_.isEmpty(this.patientTreatments.result)) {
                     ret['PATIENT_TREATMENTS'] = calculateSampleCount(
                         this.patientTreatments.result
+                    );
+                }
+                if (!_.isEmpty(this.sampleTreatmentGroups.result)) {
+                    ret['SAMPLE_TREATMENT_GROUPS'] = calculateSampleCount(
+                        this.sampleTreatmentGroups.result
+                    );
+                }
+                if (!_.isEmpty(this.patientTreatmentGroups.result)) {
+                    ret['PATIENT_TREATMENT_GROUPS'] = calculateSampleCount(
+                        this.patientTreatmentGroups.result
                     );
                 }
 
@@ -8439,6 +8542,26 @@ export class StudyViewPageStore
         filters: [],
     };
 
+    @observable
+    private _patientTreatmentGroupsFilter: AndedPatientTreatmentFilters = {
+        filters: [],
+    };
+
+    @observable
+    private _sampleTreatmentGroupsFilters: AndedSampleTreatmentFilters = {
+        filters: [],
+    };
+
+    @computed
+    public get patientTreatmentGroupFilters(): AndedPatientTreatmentFilters {
+        return this._patientTreatmentGroupsFilter;
+    }
+
+    @computed
+    public get sampleTreatmentGroupFilters(): AndedSampleTreatmentFilters {
+        return this._sampleTreatmentGroupsFilters;
+    }
+
     @computed
     public get patientTreatmentFilters(): AndedPatientTreatmentFilters {
         return this._patientTreatmentsFilter;
@@ -8459,6 +8582,20 @@ export class StudyViewPageStore
     @computed
     get patientTreatmentFiltersAsStrings(): string[][] {
         return this.patientTreatmentFilters.filters.map(outer => {
+            return outer.filters.map(t => treatmentUniqueKey(t));
+        });
+    }
+
+    @computed
+    get sampleTreatmentGroupFiltersAsStrings(): string[][] {
+        return this.sampleTreatmentGroupFilters.filters.map(outer => {
+            return outer.filters.map(t => treatmentUniqueKey(t));
+        });
+    }
+
+    @computed
+    get patientTreatmentGroupFiltersAsStrings(): string[][] {
+        return this.patientTreatmentGroupFilters.filters.map(outer => {
             return outer.filters.map(t => treatmentUniqueKey(t));
         });
     }
@@ -8519,6 +8656,62 @@ export class StudyViewPageStore
         ) {
             this.setSampleTreatmentFilters(filters.sampleTreatmentFilters);
         }
+        if (
+            filters.patientTreatmentGroupFilters &&
+            _.isArray(filters.patientTreatmentGroupFilters.filters)
+        ) {
+            this.setPatientTreatmentFilters(
+                filters.patientTreatmentGroupFilters
+            );
+        }
+        if (
+            filters.sampleTreatmentGroupFilters &&
+            _.isArray(filters.sampleTreatmentGroupFilters.filters)
+        ) {
+            this.setSampleTreatmentFilters(filters.sampleTreatmentGroupFilters);
+        }
+    }
+
+    @action
+    public clearPatientTreatmentGroupFilters(): void {
+        this._patientTreatmentGroupsFilter = { filters: [] };
+    }
+
+    @action
+    public setPatientTreatmentGroupFilters(
+        filters: AndedPatientTreatmentFilters
+    ): void {
+        this._patientTreatmentGroupsFilter = filters;
+    }
+
+    @action
+    public addPatientTreatmentGroupFilters(
+        filters: OredPatientTreatmentFilters[]
+    ): void {
+        this._patientTreatmentGroupsFilter.filters = this._patientTreatmentGroupsFilter.filters.concat(
+            filters
+        );
+    }
+
+    @action
+    public clearSampleTreatmentGroupFilters(): void {
+        this._sampleTreatmentGroupsFilters = { filters: [] };
+    }
+
+    @action
+    public setSampleTreatmentGroupFilters(
+        filters: AndedSampleTreatmentFilters
+    ): void {
+        this._sampleTreatmentGroupsFilters = filters;
+    }
+
+    @action
+    public addSampleTreatmentGroupFilters(
+        filters: OredSampleTreatmentFilters[]
+    ): void {
+        this._sampleTreatmentGroupsFilters.filters = this._sampleTreatmentGroupsFilters.filters.concat(
+            filters
+        );
     }
 
     // a row represents a list of patients that either have or have not recieved
@@ -8573,42 +8766,93 @@ export class StudyViewPageStore
         },
     });
 
+    public readonly sampleTreatmentGroups = remoteData({
+        await: () => [this.selectedSamples, this.displaySampleTreatmentGroups],
+        invoke: () => {
+            if (
+                this.hasFilteredSamples &&
+                this.displaySampleTreatments.result
+            ) {
+                return defaultClient.getAllSampleTreatmentsUsingPOST({
+                    studyViewFilter: this.filters,
+                    tier: 'AgentClass',
+                });
+            }
+            return Promise.resolve([]);
+        },
+    });
+
+    public readonly displayPatientTreatmentGroups = remoteData({
+        await: () => [this.queriedPhysicalStudyIds],
+        invoke: () => {
+            if (!getServerConfig().enable_treatment_groups) {
+                return Promise.resolve(false);
+            }
+            return defaultClient.getContainsTreatmentDataUsingPOST({
+                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                tier: 'AgentClass',
+            });
+        },
+    });
+
+    public readonly displaySampleTreatmentGroups = remoteData({
+        await: () => [this.queriedPhysicalStudyIds],
+        invoke: () => {
+            if (!getServerConfig().enable_treatment_groups) {
+                return Promise.resolve(false);
+            }
+            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+                tier: 'AgentClass',
+            });
+        },
+    });
+
+    // a row represents a list of samples that ether have or have not recieved
+    // a specific treatment
+    public readonly patientTreatmentGroups = remoteData({
+        await: () => [this.selectedSamples, this.displayPatientTreatments],
+        invoke: () => {
+            if (
+                this.hasFilteredSamples &&
+                this.displayPatientTreatmentGroups.result
+            ) {
+                return defaultClient.getAllPatientTreatmentsUsingPOST({
+                    studyViewFilter: this.filters,
+                    tier: 'AgentClass',
+                });
+            }
+            return Promise.resolve([]);
+        },
+    });
+
     @action.bound
-    public onSampleTreatmentSelection(
-        ignored: ChartMeta,
-        values: string[][]
-    ): void {
+    public onTreatmentSelection(meta: ChartMeta, values: string[][]): void {
         const filters = values.map(outerFilter => {
             return {
                 filters: outerFilter.map(innerFilter => {
-                    return toSampleTreatmentFilter(innerFilter);
+                    return toTreatmentFilter(innerFilter, meta);
                 }),
             };
-        });
+        }) as any[];
 
-        this.addSampleTreatmentFilters(filters);
+        switch (meta.uniqueKey) {
+            case 'SAMPLE_TREATMENT_GROUPS':
+                return this.addSampleTreatmentGroupFilters(filters);
+            case 'PATIENT_TREATMENT_GROUPS':
+                return this.addPatientTreatmentGroupFilters(filters);
+            case 'SAMPLE_TREATMENTS':
+                return this.addSampleTreatmentFilters(filters);
+            case 'PATIENT_TREATMENTS':
+                return this.addPatientTreatmentFilters(filters);
+        }
     }
 
     @action.bound
-    public onPatientTreatmentSelection(
-        ignored: ChartMeta,
-        values: string[][]
-    ): void {
-        const filters = values.map(outerFilter => {
-            return {
-                filters: outerFilter.map(innerFilter => {
-                    return toPatientTreatmentFilter(innerFilter);
-                }),
-            };
-        });
-
-        this.addPatientTreatmentFilters(filters);
-    }
-
-    @action.bound
-    public removeSampleTreatmentsFilter(
+    public removeTreatmentsFilter(
         andedIndex: number,
-        oredIndex: number
+        oredIndex: number,
+        metaKey: string
     ): void {
         const updatedFilters = this.sampleTreatmentFilters.filters
             .map((oFil, oInd) => {
@@ -8620,25 +8864,24 @@ export class StudyViewPageStore
             })
             .filter(outerFilter => outerFilter.filters.length > 0);
 
-        this.setSampleTreatmentFilters({ filters: updatedFilters });
-    }
-
-    @action.bound
-    public removePatientTreatmentsFilter(
-        andedIndex: number,
-        oredIndex: number
-    ): void {
-        const updatedFilters = this.patientTreatmentFilters.filters
-            .map((oFil, oInd) => {
-                return {
-                    filters: oFil.filters.filter((unused, iInd) => {
-                        return !(andedIndex === oInd && oredIndex === iInd);
-                    }),
-                };
-            })
-            .filter(outerFilter => outerFilter.filters.length > 0);
-
-        this.setPatientTreatmentFilters({ filters: updatedFilters });
+        switch (metaKey) {
+            case 'SAMPLE_TREATMENT_GROUPS':
+                return this.setSampleTreatmentGroupFilters({
+                    filters: updatedFilters,
+                });
+            case 'PATIENT_TREATMENT_GROUPS':
+                return this.setPatientTreatmentGroupFilters({
+                    filters: updatedFilters,
+                });
+            case 'SAMPLE_TREATMENTS':
+                return this.setSampleTreatmentFilters({
+                    filters: updatedFilters,
+                });
+            case 'PATIENT_TREATMENTS':
+                return this.setPatientTreatmentFilters({
+                    filters: updatedFilters,
+                });
+        }
     }
 
     @computed get isGlobalMutationFilterActive(): boolean {

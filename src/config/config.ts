@@ -253,6 +253,8 @@ export function initializeLoadConfiguration() {
         getBrowserWindow().frontendConfig.frontendUrl ||
         `//${win.location.host}/`;
 
+    const basePath = getBrowserWindow().frontendConfig.basePath;
+
     const configServiceUrl =
         getBrowserWindow().frontendConfig.configurationServiceUrl ||
         `${APIROOT}config_service.jsp`;
@@ -260,6 +262,7 @@ export function initializeLoadConfiguration() {
     const loadConfig: Partial<IAppConfig> = {
         configurationServiceUrl: configServiceUrl,
         apiRoot: APIROOT,
+        basePath: basePath,
         frontendUrl: frontendUrl,
         baseUrl: BASEURL,
     };

@@ -428,18 +428,36 @@ export class StudySummaryTab extends React.Component<
             case ChartTypeEnum.SAMPLE_TREATMENTS_TABLE: {
                 props.filters = this.store.sampleTreatmentFiltersAsStrings;
                 props.promise = this.store.sampleTreatments;
-                props.onValueSelection = this.store.onSampleTreatmentSelection;
+                props.onValueSelection = this.store.onTreatmentSelection;
                 props.onResetSelection = () => {
                     this.store.clearSampleTreatmentFilters();
+                };
+                break;
+            }
+            case ChartTypeEnum.SAMPLE_TREATMENT_GROUPS_TABLE: {
+                props.filters = this.store.sampleTreatmentGroupFiltersAsStrings;
+                props.promise = this.store.sampleTreatmentGroups;
+                props.onValueSelection = this.store.onTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearSampleTreatmentGroupFilters();
                 };
                 break;
             }
             case ChartTypeEnum.PATIENT_TREATMENTS_TABLE: {
                 props.filters = this.store.patientTreatmentFiltersAsStrings;
                 props.promise = this.store.patientTreatments;
-                props.onValueSelection = this.store.onPatientTreatmentSelection;
+                props.onValueSelection = this.store.onTreatmentSelection;
                 props.onResetSelection = () => {
                     this.store.clearPatientTreatmentFilters();
+                };
+                break;
+            }
+            case ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE: {
+                props.filters = this.store.patientTreatmentGroupFiltersAsStrings;
+                props.promise = this.store.patientTreatmentGroups;
+                props.onValueSelection = this.store.onTreatmentSelection;
+                props.onResetSelection = () => {
+                    this.store.clearPatientTreatmentGroupFilters();
                 };
                 break;
             }
