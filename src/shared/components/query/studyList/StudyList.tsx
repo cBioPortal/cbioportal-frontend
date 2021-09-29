@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {
-    TypeOfCancer as CancerType,
-    CancerStudy,
-} from 'cbioportal-ts-api-client';
+import { CancerStudy } from 'cbioportal-ts-api-client';
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 import FontAwesome from 'react-fontawesome';
@@ -10,11 +7,7 @@ import LabeledCheckbox from '../../labeledCheckbox/LabeledCheckbox';
 import { observer, Observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import _ from 'lodash';
-import {
-    getPubMedUrl,
-    getStudySummaryUrl,
-    redirectToStudyView,
-} from '../../../api/urls';
+import { getPubMedUrl } from '../../../api/urls';
 import { QueryStoreComponent } from '../QueryStore';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { FilteredCancerTreeView } from '../StudyListLogic';
@@ -24,8 +17,8 @@ import {
 } from '../CancerStudyTreeData';
 import { StudyLink } from '../../StudyLink/StudyLink';
 import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
+import { IconType } from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
-import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import { getServerConfig } from 'config/config';
 
 const styles = {
@@ -222,9 +215,8 @@ export default class StudyList extends QueryStoreComponent<
                             [`studyItem_${study.studyId}`]: true,
                             [styles.UnauthorizedStudy]:
                                 getServerConfig()
-                                    .skin_show_unauthorized_studies &&
-                                //@ts-ignore
-                                study.isAuthorized === false,
+                                    .skin_home_page_show_unauthorized_studies &&
+                                study.readPermission === false,
                         });
                         return (
                             <CancerTreeCheckbox view={this.view} node={study}>
@@ -374,31 +366,28 @@ export default class StudyList extends QueryStoreComponent<
                             );
                         }
                         if (link.icon === 'info-circle') {
-                            if (isQueriedStudyAuthorized(study)) {
-                                content = (
-                                    <StudyTagsTooltip
-                                        key={i}
-                                        studyDescription={
-                                            this.store.isVirtualStudy(
-                                                study.studyId
-                                            )
-                                                ? study.description.replace(
-                                                      /\r?\n/g,
-                                                      '<br />'
-                                                  )
-                                                : study.description
-                                        }
-                                        studyId={study.studyId}
-                                        isVirtualStudy={this.store.isVirtualStudy(
-                                            study.studyId
-                                        )}
-                                        mouseEnterDelay={0}
-                                        placement="top"
-                                    >
-                                        <a>{content}</a>
-                                    </StudyTagsTooltip>
-                                );
-                            }
+                            content = (
+                                <StudyTagsTooltip
+                                    key={i}
+                                    studyDescription={
+                                        this.store.isVirtualStudy(study.studyId)
+                                            ? study.description.replace(
+                                                  /\r?\n/g,
+                                                  '<br />'
+                                              )
+                                            : study.description
+                                    }
+                                    studyId={study.studyId}
+                                    isVirtualStudy={this.store.isVirtualStudy(
+                                        study.studyId
+                                    )}
+                                    mouseEnterDelay={0}
+                                    placement="top"
+                                    iconType={IconType.INFO_ICON}
+                                >
+                                    <a>{content}</a>
+                                </StudyTagsTooltip>
+                            );
                         }
 
                         return content;
@@ -424,26 +413,32 @@ export default class StudyList extends QueryStoreComponent<
                             </span>
                         </DefaultTooltip>
                     )}
-                    {getServerConfig().skin_show_unauthorized_studies &&
+                    {getServerConfig()
+                        .skin_home_page_show_unauthorized_studies &&
                         study.studyId &&
-                        //@ts-ignore
-                        study.isAuthorized === false && (
-                            <DefaultTooltip
+                        study.readPermission === false && (
+                            <StudyTagsTooltip
+                                key={0}
+                                studyDescription={
+                                    this.store.isVirtualStudy(study.studyId)
+                                        ? study.description.replace(
+                                              /\r?\n/g,
+                                              '<br />'
+                                          )
+                                        : study.description
+                                }
+                                studyId={study.studyId}
+                                isVirtualStudy={this.store.isVirtualStudy(
+                                    study.studyId
+                                )}
                                 mouseEnterDelay={0}
                                 placement="top"
-                                overlay={
-                                    <div className={styles.tooltip}>
-                                        {
-                                            getServerConfig()
-                                                .skin_global_message_for_unauthorized_studies
-                                        }
-                                    </div>
-                                }
+                                iconType={IconType.LOCK_ICON}
                             >
                                 <span>
                                     <i className="fa fa-lock"></i>
                                 </span>
-                            </DefaultTooltip>
+                            </StudyTagsTooltip>
                         )}
                 </span>
             );
