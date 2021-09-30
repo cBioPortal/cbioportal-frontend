@@ -35,5 +35,5 @@ const colors = [
 ]; // Source: D3
 
 export function getColor(str: string) {
-    return colors[hashString(str) % colors.length];
+    return colors[Math.abs(hashString(str)) % colors.length];
 }
