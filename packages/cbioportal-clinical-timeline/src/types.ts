@@ -6,6 +6,21 @@ export interface TimelineEvent {
     containingTrack: TimelineTrackSpecification;
 }
 
+export const POINT_RADIUS = 4;
+export const POINT_COLOR = 'rgb(31, 119, 180)';
+
+export interface ITimelineConfig {
+    sortOrder: string[];
+    trackStructures: string[][];
+    trackEventRenderers: ITrackEventConfig[];
+    eventColorGetter?: (e: TimelineEvent) => string;
+}
+
+export type ITrackEventConfig = {
+    trackTypeMatch: RegExp;
+    configureTrack: (track: TimelineTrackSpecification) => any;
+};
+
 export enum TimelineTrackType {
     DEFAULT,
     LINE_CHART,
@@ -22,7 +37,9 @@ export interface TimelineTrackSpecification {
     sortSimultaneousEvents?: (e: TimelineEvent[]) => TimelineEvent[];
     trackType?: TimelineTrackType;
     getLineChartValue?: (e: TimelineEvent) => number | null;
+    trackConf?: ITrackEventConfig;
     disableHover?: boolean;
+    timelineConfig?: ITimelineConfig;
 }
 
 export interface TimelineTick {

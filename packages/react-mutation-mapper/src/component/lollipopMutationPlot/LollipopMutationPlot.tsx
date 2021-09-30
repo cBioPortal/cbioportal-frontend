@@ -50,6 +50,33 @@ import DomainTooltip from '../lollipopPlot/DomainTooltip';
 
 const DEFAULT_PROTEIN_LENGTH = 10;
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function createTextTag(
+    textNode?: Text,
+    style: string = '',
+    x: number = 0,
+    y: number = 0
+) {
+    const text = (document.createElementNS(
+        SVG_NS,
+        'text'
+    ) as unknown) as SVGTextElement;
+    $(text).attr({ style, x, y });
+    if (textNode) {
+        text.append(textNode);
+    }
+    return text;
+}
+
+function createGroupTag(transform?: string) {
+    const group = (document.createElementNS(
+        SVG_NS,
+        'g'
+    ) as unknown) as SVGGElement;
+    group.setAttribute('transform', transform || '');
+    return group;
+}
+
 export type LollipopMutationPlotProps<T extends Mutation> = {
     store: MutationMapperStore<T>;
     controlsConfig?: LollipopPlotControlsConfig;
@@ -556,10 +583,71 @@ export default class LollipopMutationPlot<
 
     @autobind
     private getSVG(): SVGElement {
-        let svg: SVGElement = $(this.divContainer).find(
+        let lollipopSvg: SVGElement = $(this.divContainer).find(
             '.lollipop-svgnode'
         )[0] as any;
-        return svg;
+
+        const TEXT_STYLE = 'font-size: 12px; font-family:Arial;';
+        const TRACK_INDENT = 16;
+        const SUBTRACK_INDENT = TRACK_INDENT + 12;
+        const INVISIBLE_SVG_CLASS_NAMES = ['invisible', 'hide-svg'];
+
+        var outerSvg = document.createElementNS(SVG_NS, 'svg') as SVGElement;
+
+        // Make copy of chart to be used in download
+        var chartClone = lollipopSvg.cloneNode(true);
+        outerSvg.append(chartClone);
+
+        // Make svg invisible so it does not affect UI
+        outerSvg.classList.add(...INVISIBLE_SVG_CLASS_NAMES);
+
+        //Add svg to the dom so getBBox can calculate dimensions
+        document.body.appendChild(outerSvg);
+
+        // Group the tracks and translate below the lollipop chart
+        const allTracksG = createGroupTag(
+            `translate(0, ${LollipopPlot.defaultProps.vizHeight})`
+        );
+        outerSvg.append(allTracksG);
+
+        let trackSvgList = $(this.divContainer).find('.track-svgnode');
+        let trackTitles = $(this.divContainer).find('span[class*=trackTitle]');
+        var trackYShift = 0;
+
+        trackSvgList.each((idx: number, track: HTMLElement) => {
+            var trackSvgGroup = createGroupTag(
+                `translate(${this.geneXOffset},${trackYShift})`
+            );
+            trackSvgGroup.appendChild(track.cloneNode(true));
+
+            var trackNameGroup = createGroupTag(
+                `translate(0,${trackYShift + 8})`
+            );
+            var isSubTrack = trackTitles[idx].className.includes('subtrack-');
+            var trackName = createTextTag(
+                document.createTextNode(trackTitles[idx].innerText),
+                TEXT_STYLE,
+                isSubTrack ? SUBTRACK_INDENT : TRACK_INDENT,
+                0
+            );
+            trackNameGroup.append(trackName);
+
+            allTracksG.append(trackNameGroup, trackSvgGroup);
+            trackYShift += 20;
+        });
+
+        // Get the dimensions of the outer SVG before removing from DOM
+        const outerSvgDimensions = (outerSvg as SVGGraphicsElement).getBBox();
+        $(outerSvg).attr({
+            width: outerSvgDimensions.width,
+            height: outerSvgDimensions.height,
+        });
+
+        // Remove unused classes
+        outerSvg.classList.remove(...INVISIBLE_SVG_CLASS_NAMES);
+        document.body.removeChild(outerSvg);
+
+        return outerSvg;
     }
 
     @computed get hugoGeneSymbol() {

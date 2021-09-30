@@ -621,7 +621,7 @@ export default abstract class ComparisonStore
         [studyId: string]: MolecularProfile;
     } = {};
     @observable.ref
-    private _genericAssayEnrichmentProfileMapGroupedByGenericAssayType: {
+    private _selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType: {
         [geneircAssayType: string]: {
             [studyId: string]: MolecularProfile;
         };
@@ -798,7 +798,7 @@ export default abstract class ComparisonStore
                 if (
                     _.isEmpty(
                         this
-                            ._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                            ._selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                     )
                 ) {
                     return Promise.resolve(
@@ -822,7 +822,7 @@ export default abstract class ComparisonStore
                 } else {
                     return Promise.resolve(
                         this
-                            ._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                            ._selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
                     );
                 }
             },
@@ -878,14 +878,14 @@ export default abstract class ComparisonStore
         },
         genericAssayType: string
     ) {
-        this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType[
-            genericAssayType
-        ] = profileMap;
-        // trigger the function to recompute
         const clonedMap = _.clone(
-            this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType
+            this
+                .selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType
+                .result!
         );
-        this._genericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
+        clonedMap[genericAssayType] = profileMap;
+        // trigger the function to recompute
+        this._selectedGenericAssayEnrichmentProfileMapGroupedByGenericAssayType = clonedMap;
     }
 
     readonly alterationsEnrichmentAnalysisGroups = remoteData({

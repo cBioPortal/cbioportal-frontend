@@ -301,6 +301,14 @@ export type DensityPlotBin = {
         'minY': number
 
 };
+export type DensityPlotData = {
+    'bins': Array < DensityPlotBin >
+
+        'pearsonCorr': number
+
+        'spearmanCorr': number
+
+};
 export type GeneFilter = {
     'geneQueries': Array < Array < GeneFilterQuery >
         >
@@ -827,9 +835,13 @@ export type StudyViewFilter = {
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -1078,6 +1090,103 @@ export default class CBioPortalAPIInternal {
             $domain ? : string
     }): Promise < string > {
         return this.clearAllCachesUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    clearCachesForStudyUsingDELETEURL(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/cache/{studyId}';
+
+        if (parameters['springManagedCache'] !== undefined) {
+            queryParameters['springManagedCache'] = parameters['springManagedCache'];
+        }
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} studyId - studyId
+     */
+    clearCachesForStudyUsingDELETEWithHttpInfo(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/cache/{studyId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'text/plain';
+
+            if (parameters['xApiKey'] !== undefined) {
+                headers['X-API-KEY'] = parameters['xApiKey'];
+            }
+
+            if (parameters['springManagedCache'] !== undefined) {
+                queryParameters['springManagedCache'] = parameters['springManagedCache'];
+            }
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Clear and reinitialize caches after import/removal/update of a study
+     * @method
+     * @name CBioPortalAPIInternal#clearCachesForStudyUsingDELETE
+     * @param {string} xApiKey - Secret API key passed in HTTP header. The key is configured in portal.properties of the portal instance.
+     * @param {boolean} springManagedCache - Clear Spring-managed caches
+     * @param {string} studyId - studyId
+     */
+    clearCachesForStudyUsingDELETE(parameters: {
+        'xApiKey' ? : string,
+        'springManagedCache' ? : boolean,
+        'studyId': string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.clearCachesForStudyUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
@@ -1330,10 +1439,12 @@ export default class CBioPortalAPIInternal {
         'xAxisAttributeId': string,
         'xAxisBinCount' ? : number,
         'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
         'xAxisStart' ? : number,
         'yAxisAttributeId': string,
         'yAxisBinCount' ? : number,
         'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
         'yAxisStart' ? : number,
         $queryParameters ? : any
     }): string {
@@ -1352,6 +1463,10 @@ export default class CBioPortalAPIInternal {
             queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
         }
 
+        if (parameters['xAxisLogScale'] !== undefined) {
+            queryParameters['xAxisLogScale'] = parameters['xAxisLogScale'];
+        }
+
         if (parameters['xAxisStart'] !== undefined) {
             queryParameters['xAxisStart'] = parameters['xAxisStart'];
         }
@@ -1366,6 +1481,10 @@ export default class CBioPortalAPIInternal {
 
         if (parameters['yAxisEnd'] !== undefined) {
             queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+        }
+
+        if (parameters['yAxisLogScale'] !== undefined) {
+            queryParameters['yAxisLogScale'] = parameters['yAxisLogScale'];
         }
 
         if (parameters['yAxisStart'] !== undefined) {
@@ -1390,10 +1509,12 @@ export default class CBioPortalAPIInternal {
      * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
      * @param {integer} xAxisBinCount - Number of the bins in X axis
      * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {boolean} xAxisLogScale - Use log scale for X axis
      * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
      * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {boolean} yAxisLogScale - Use log scale for Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      */
     fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters: {
@@ -1401,10 +1522,12 @@ export default class CBioPortalAPIInternal {
         'xAxisAttributeId': string,
         'xAxisBinCount' ? : number,
         'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
         'xAxisStart' ? : number,
         'yAxisAttributeId': string,
         'yAxisBinCount' ? : number,
         'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
         'yAxisStart' ? : number,
         $queryParameters ? : any,
         $domain ? : string
@@ -1447,6 +1570,10 @@ export default class CBioPortalAPIInternal {
                 queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
             }
 
+            if (parameters['xAxisLogScale'] !== undefined) {
+                queryParameters['xAxisLogScale'] = parameters['xAxisLogScale'];
+            }
+
             if (parameters['xAxisStart'] !== undefined) {
                 queryParameters['xAxisStart'] = parameters['xAxisStart'];
             }
@@ -1466,6 +1593,10 @@ export default class CBioPortalAPIInternal {
 
             if (parameters['yAxisEnd'] !== undefined) {
                 queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+            }
+
+            if (parameters['yAxisLogScale'] !== undefined) {
+                queryParameters['yAxisLogScale'] = parameters['yAxisLogScale'];
             }
 
             if (parameters['yAxisStart'] !== undefined) {
@@ -1492,30 +1623,33 @@ export default class CBioPortalAPIInternal {
      * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
      * @param {integer} xAxisBinCount - Number of the bins in X axis
      * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {boolean} xAxisLogScale - Use log scale for X axis
      * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
      * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
      * @param {integer} yAxisBinCount - Number of the bins in Y axis
      * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {boolean} yAxisLogScale - Use log scale for Y axis
      * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
      */
     fetchClinicalDataDensityPlotUsingPOST(parameters: {
-            'studyViewFilter': StudyViewFilter,
-            'xAxisAttributeId': string,
-            'xAxisBinCount' ? : number,
-            'xAxisEnd' ? : number,
-            'xAxisStart' ? : number,
-            'yAxisAttributeId': string,
-            'yAxisBinCount' ? : number,
-            'yAxisEnd' ? : number,
-            'yAxisStart' ? : number,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < DensityPlotBin >
-        > {
-            return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        'studyViewFilter': StudyViewFilter,
+        'xAxisAttributeId': string,
+        'xAxisBinCount' ? : number,
+        'xAxisEnd' ? : number,
+        'xAxisLogScale' ? : boolean,
+        'xAxisStart' ? : number,
+        'yAxisAttributeId': string,
+        'yAxisBinCount' ? : number,
+        'yAxisEnd' ? : number,
+        'yAxisLogScale' ? : boolean,
+        'yAxisStart' ? : number,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < DensityPlotData > {
+        return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchClinicalEnrichmentsUsingPOSTURL(parameters: {
         'groupFilter': GroupFilter,
         $queryParameters ? : any
@@ -1667,108 +1801,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < CopyNumberCountByGene >
         > {
             return this.fetchCNAGenesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchCopyNumberEnrichmentsUsingPOSTURL(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/copy-number-enrichments/fetch';
-        if (parameters['copyNumberEventType'] !== undefined) {
-            queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
-        }
-
-        if (parameters['enrichmentType'] !== undefined) {
-            queryParameters['enrichmentType'] = parameters['enrichmentType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch copy number enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} copyNumberEventType - Type of the copy number event
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/copy-number-enrichments/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['copyNumberEventType'] !== undefined) {
-                queryParameters['copyNumberEventType'] = parameters['copyNumberEventType'];
-            }
-
-            if (parameters['enrichmentType'] !== undefined) {
-                queryParameters['enrichmentType'] = parameters['enrichmentType'];
-            }
-
-            if (parameters['groups'] !== undefined) {
-                body = parameters['groups'];
-            }
-
-            if (parameters['groups'] === undefined) {
-                reject(new Error('Missing required  parameter: groups'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch copy number enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchCopyNumberEnrichmentsUsingPOST
-     * @param {string} copyNumberEventType - Type of the copy number event
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchCopyNumberEnrichmentsUsingPOST(parameters: {
-            'copyNumberEventType' ? : "AMP" | "GAIN" | "DIPLOID" | "HETLOSS" | "HOMDEL",
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroupFilter > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationEnrichment >
-        > {
-            return this.fetchCopyNumberEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4706,95 +4738,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < MutationCountByPosition >
         > {
             return this.fetchMutationCountsByPositionUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchMutationEnrichmentsUsingPOSTURL(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/mutation-enrichments/fetch';
-        if (parameters['enrichmentType'] !== undefined) {
-            queryParameters['enrichmentType'] = parameters['enrichmentType'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch mutation enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters: {
-        'enrichmentType' ? : "SAMPLE" | "PATIENT",
-        'groups': Array < MolecularProfileCasesGroupFilter > ,
-            $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/mutation-enrichments/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['enrichmentType'] !== undefined) {
-                queryParameters['enrichmentType'] = parameters['enrichmentType'];
-            }
-
-            if (parameters['groups'] !== undefined) {
-                body = parameters['groups'];
-            }
-
-            if (parameters['groups'] === undefined) {
-                reject(new Error('Missing required  parameter: groups'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch mutation enrichments in a molecular profile
-     * @method
-     * @name CBioPortalAPIInternal#fetchMutationEnrichmentsUsingPOST
-     * @param {string} enrichmentType - Type of the enrichment e.g. SAMPLE or PATIENT
-     * @param {} groups - List of groups containing sample identifiers
-     */
-    fetchMutationEnrichmentsUsingPOST(parameters: {
-            'enrichmentType' ? : "SAMPLE" | "PATIENT",
-            'groups': Array < MolecularProfileCasesGroupFilter > ,
-                $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < AlterationEnrichment >
-        > {
-            return this.fetchMutationEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
