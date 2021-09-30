@@ -107,7 +107,9 @@ export enum SpecialChartsUniqueKeyEnum {
     GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
     CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
     PATIENT_TREATMENTS = 'PATIENT_TREATMENTS',
+    PATIENT_TREATMENT_GROUPS = 'PATIENT_TREATMENT_GROUPS',
     SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
+    SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
 }
 
 export type AnalysisGroup = {
@@ -543,12 +545,14 @@ export function formatRange(
             return `${special}${max.toLocaleString()}`;
         }
     } else {
-        if (max === undefined) {
+        if (max === undefined || min === max) {
             return `${special}${min.toLocaleString()}`;
-        } else if (min !== max) {
-            return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
+        } else if (!special) {
+            // assuming that min is exclusive and max is inclusive
+            // use (min, max] notation instead of min-max
+            return `(${min.toLocaleString()}, ${max.toLocaleString()}]`;
         } else {
-            return `${special}${min.toLocaleString()}`;
+            return `${special}${min.toLocaleString()}-${max.toLocaleString()}`;
         }
     }
 }
@@ -876,7 +880,11 @@ export function isFiltered(
             (!filter.patientTreatmentFilters ||
                 _.isEmpty(filter.patientTreatmentFilters.filters)) &&
             (!filter.sampleTreatmentFilters ||
-                _.isEmpty(filter.sampleTreatmentFilters.filters)))
+                _.isEmpty(filter.sampleTreatmentFilters.filters)) &&
+            (!filter.patientTreatmentGroupFilters ||
+                _.isEmpty(filter.patientTreatmentGroupFilters.filters)) &&
+            (!filter.sampleTreatmentGroupFilters ||
+                _.isEmpty(filter.sampleTreatmentGroupFilters.filters)))
     );
 
     if (filter.sampleIdentifiersSet) {
@@ -983,6 +991,17 @@ export function getDataIntervalFilterValues(
                     dataBin.start === undefined && dataBin.end === undefined
                         ? dataBin.specialValue
                         : undefined,
+            } as DataFilterValue)
+    );
+}
+
+export function getCategoricalFilterValues(
+    values: string[]
+): DataFilterValue[] {
+    return values.map(
+        value =>
+            ({
+                value: value,
             } as DataFilterValue)
     );
 }

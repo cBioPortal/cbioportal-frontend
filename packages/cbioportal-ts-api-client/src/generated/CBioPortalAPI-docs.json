@@ -2650,6 +2650,30 @@
         ],
         "parameters": [
           {
+            "name": "authenticated",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "authorities[0].authority",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "details",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
             "name": "direction",
             "in": "query",
             "description": "Direction of the sort",
@@ -2695,6 +2719,12 @@
             "exclusiveMinimum": false,
             "format": "int32",
             "allowEmptyValue": false
+          },
+          {
+            "name": "principal",
+            "in": "query",
+            "required": false,
+            "type": "object"
           },
           {
             "name": "projection",
@@ -4189,6 +4219,19 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4227,6 +4270,19 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4262,6 +4318,19 @@
             "schema": {
               "$ref": "#/definitions/StudyViewFilter"
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4300,6 +4369,19 @@
             "schema": {
               "$ref": "#/definitions/StudyViewFilter"
             }
+          },
+          {
+            "name": "tier",
+            "in": "query",
+            "description": "tier",
+            "required": false,
+            "type": "string",
+            "default": "Treatment",
+            "allowEmptyValue": false,
+            "enum": [
+              "Agent",
+              "AgentClass"
+            ]
           }
         ],
         "responses": {
@@ -4463,6 +4545,10 @@
           "type": "string",
           "example": "yyyy-MM-dd HH:mm:ss"
         },
+        "massSpectrometrySampleCount": {
+          "type": "integer",
+          "format": "int32"
+        },
         "methylationHm27SampleCount": {
           "type": "integer",
           "format": "int32"
@@ -4492,14 +4578,13 @@
         "publicStudy": {
           "type": "boolean"
         },
+        "readPermission": {
+          "type": "boolean"
+        },
         "referenceGenome": {
           "type": "string"
         },
         "rppaSampleCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "massSpectrometrySampleCount": {
           "type": "integer",
           "format": "int32"
         },
@@ -6080,6 +6165,9 @@
         "patientTreatmentFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -6087,6 +6175,9 @@
           }
         },
         "sampleTreatmentFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {

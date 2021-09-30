@@ -1,5 +1,7 @@
 import {
     EventPosition,
+    POINT_COLOR,
+    POINT_RADIUS,
     TimelineEvent,
     TimelineTrackSpecification,
     TimelineTrackType,
@@ -12,6 +14,7 @@ import {
     TIMELINE_LINE_CHART_TRACK_HEIGHT,
     TIMELINE_TRACK_HEIGHT,
     getTrackHeight,
+    getAttributeValue,
 } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
@@ -21,6 +24,8 @@ import {
     getTicksForLineChartAxis,
     getTrackValueRange,
 } from './lib/lineChartAxisUtils';
+import { getColor } from 'cbioportal-frontend-commons';
+import { getTrackLabel } from './TrackHeader';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -130,10 +135,19 @@ function getPointY(
     return y;
 }
 
-const POINT_RADIUS = 4;
-const POINT_COLOR = 'rgb(31, 119, 180)';
+export function randomColorGetter(e: TimelineEvent) {
+    return getColor(getTrackLabel(e.containingTrack));
+}
 
-export function renderPoint(events: TimelineEvent[], y: number) {
+const defaultColorGetter = function(e: TimelineEvent) {
+    return POINT_COLOR;
+};
+
+export function renderPoint(
+    events: TimelineEvent[],
+    y: number,
+    eventColorGetter: (e: TimelineEvent) => string = defaultColorGetter
+) {
     if (events.length === 1 && events[0].render) {
         // If only one event, and theres an event-specific render function, show that.
         return events[0].render(events[0]);
@@ -153,28 +167,37 @@ export function renderPoint(events: TimelineEvent[], y: number) {
         } else {
             // Otherwise, show a generic stack. (We'll show the point-specific
             //  renders in the tooltip.)
-            return (
-                <g>
-                    {events.length > 1 ? (
-                        <>
-                            {renderSuperscript(events.length)}
-                            {renderStack(events.map(e => POINT_COLOR))}
-                        </>
-                    ) : (
-                        <circle
-                            cx="0"
-                            cy={y}
-                            r={POINT_RADIUS}
-                            fill={POINT_COLOR}
-                        />
-                    )}
-                </g>
-            );
+
+            let contents: JSX.Element;
+
+            if (events.length > 1) {
+                contents = (
+                    <>
+                        {renderSuperscript(events.length)}
+                        {renderStack(events.map(eventColorGetter))}
+                    </>
+                );
+            } else {
+                contents = (
+                    <circle
+                        cx="0"
+                        cy={y}
+                        r={POINT_RADIUS}
+                        fill={eventColorGetter(events[0])}
+                    />
+                );
+            }
+
+            return <g>{contents}</g>;
         }
     }
 }
 
-function renderRange(pixelWidth: number) {
+function renderRange(
+    pixelWidth: number,
+    events: TimelineEvent[],
+    eventColorGetter: (e: TimelineEvent) => string = defaultColorGetter
+) {
     const height = 5;
     return (
         <rect
@@ -183,7 +206,7 @@ function renderRange(pixelWidth: number) {
             y={(TIMELINE_TRACK_HEIGHT - height) / 2}
             rx="2"
             ry="2"
-            fill="rgb(31, 119, 180)"
+            fill={eventColorGetter(events[0])}
         />
     );
 }
@@ -235,14 +258,24 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                         trackValueRange
                     );
                     if (y !== null) {
-                        content = renderPoint(itemGroup, y);
+                        content = renderPoint(
+                            itemGroup,
+                            y,
+                            trackData.timelineConfig &&
+                                trackData.timelineConfig.eventColorGetter
+                        );
                         linePoints.push({
                             x: position ? position.pixelLeft : 0,
                             y,
                         });
                     }
                 } else if (position && position.pixelWidth) {
-                    content = renderRange(position.pixelWidth);
+                    content = renderRange(
+                        position.pixelWidth,
+                        itemGroup,
+                        trackData.timelineConfig &&
+                            trackData.timelineConfig.eventColorGetter
+                    );
                 }
 
                 return (

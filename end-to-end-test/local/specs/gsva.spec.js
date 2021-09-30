@@ -407,6 +407,12 @@ describe('gsva feature', function() {
                     .$(
                         '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
                     )
+                    .waitForDisplayed();
+
+                vertProfileSelect
+                    .$(
+                        '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
+                    )
                     .click();
 
                 var vertEntitySelect = $('[name=v-geneset-selector]').$('..');

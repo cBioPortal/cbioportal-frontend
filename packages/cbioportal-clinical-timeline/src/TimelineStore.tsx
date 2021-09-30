@@ -247,6 +247,12 @@ export class TimelineStore {
         const multipleItems = tooltipModel.events.length > 1;
         let point = null;
         if (multipleItems) {
+            const colorGetter =
+                tooltipModel.track.timelineConfig &&
+                tooltipModel.track.timelineConfig.eventColorGetter
+                    ? tooltipModel.track.timelineConfig.eventColorGetter
+                    : undefined;
+
             point = (
                 <svg
                     width={TIMELINE_TRACK_HEIGHT}
@@ -254,7 +260,11 @@ export class TimelineStore {
                     style={{ marginRight: 5 }}
                 >
                     <g transform={`translate(${TIMELINE_TRACK_HEIGHT / 2} 0)`}>
-                        {renderPoint([activeItem], TIMELINE_TRACK_HEIGHT / 2)}
+                        {renderPoint(
+                            [activeItem],
+                            TIMELINE_TRACK_HEIGHT / 2,
+                            colorGetter
+                        )}
                     </g>
                 </svg>
             );
