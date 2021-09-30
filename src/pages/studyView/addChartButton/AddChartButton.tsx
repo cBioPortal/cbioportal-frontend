@@ -637,7 +637,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @observable private savingCustomData = false;
 
-    @computed private get addChartButton() {
+    @computed private get addXVsYChartButton() {
         if (this.xVsYSelection.x === this.xVsYSelection.y) {
             return (
                 <DefaultTooltip
@@ -894,7 +894,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             }}
                         >
                             <div style={{ paddingBottom: 5 }}>
-                                <h5
+                                <span
                                     style={{
                                         float: 'left',
                                         paddingTop: 10,
@@ -902,7 +902,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     }}
                                 >
                                     X-Axis:
-                                </h5>
+                                </span>
                                 <ReactSelect
                                     name="x-vs-y-select-x"
                                     placeholder={`Select x-axis clinical attribute`}
@@ -919,11 +919,24 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     })}
                                 />
                             </div>
-                            <h5 style={{ margin: 'auto', paddingBottom: 9 }}>
-                                vs.
-                            </h5>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                style={{
+                                    width: 120,
+                                    margin: 'auto',
+                                    marginBottom: 5,
+                                }}
+                                onClick={() => {
+                                    const x = this.xVsYSelection.x;
+                                    this._xVsYSelection.x = this.xVsYSelection.y;
+                                    this._xVsYSelection.y = x;
+                                }}
+                            >
+                                <i className="fa fa-arrow-up"></i> Swap Axes{' '}
+                                <i className="fa fa-arrow-down"></i>
+                            </button>
                             <div style={{ paddingBottom: 15 }}>
-                                <h5
+                                <span
                                     style={{
                                         float: 'left',
                                         paddingTop: 10,
@@ -931,7 +944,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     }}
                                 >
                                     Y-Axis:
-                                </h5>
+                                </span>
                                 <ReactSelect
                                     name="x-vs-y-select-y"
                                     placeholder={`Select y-axis clinical attribute`}
@@ -949,25 +962,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     })}
                                 />
                             </div>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                }}
-                            >
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={() => {
-                                        const x = this.xVsYSelection.x;
-                                        this._xVsYSelection.x = this.xVsYSelection.y;
-                                        this._xVsYSelection.y = x;
-                                    }}
-                                >
-                                    <i className="fa fa-arrow-up"></i> Swap Axes{' '}
-                                    <i className="fa fa-arrow-down"></i>
-                                </button>
-                                {this.addChartButton}
-                            </div>
+                            {this.addXVsYChartButton}
                         </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
