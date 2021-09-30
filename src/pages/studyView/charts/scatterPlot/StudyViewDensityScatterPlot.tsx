@@ -24,13 +24,6 @@ import { DensityPlotBin } from 'cbioportal-ts-api-client';
 import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
 import { computeCorrelationPValue } from 'shared/components/plots/PlotUtils';
 
-class ScaleCapt extends React.Component<any, any> {
-    render() {
-        (window as any).scale = this.props.scale;
-        return <text {...this.props}>YO</text>;
-    }
-}
-
 class DensityPoint extends React.Component<any, any> {
     render() {
         const { x, y, size, ...rest } = this.props;
@@ -87,7 +80,6 @@ export default class StudyViewDensityScatterPlot
     constructor(props: any) {
         super(props);
         makeObservable(this);
-        (window as any).plot = this;
     }
     @observable tooltipModel: any | null = null;
     @observable pointHovered: boolean = false;
@@ -136,6 +128,9 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get plotDomain() {
+        // plotDomain is the axis limits of the plot. It can be
+        //  specified by the user (e.g. fraction genome altered always
+        //  is 0 to 1) or just pegged to the maximum and minimum of the data
         const x = [
             this.props.plotDomain?.x?.min,
             this.props.plotDomain?.x?.max,
@@ -185,8 +180,6 @@ export default class StudyViewDensityScatterPlot
         return {
             x: [min.x, max.x] as [number, number],
             y: [min.y, max.y] as [number, number],
-            //x: [0, 1] as [number, number],
-            //y: [0, max.y] as [number, number],
         };
     }
 
