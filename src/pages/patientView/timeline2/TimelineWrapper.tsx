@@ -8,6 +8,7 @@ import 'cbioportal-clinical-timeline/dist/styles.css';
 
 import {
     configureTracks,
+    ITimelineConfig,
     Timeline,
     TimelineStore,
     TimelineTrackSpecification,
@@ -18,6 +19,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import {
     buildBaseConfig,
     configureGenieTimeline,
+    configureTriageTimeline,
     sortTracks,
 } from 'pages/patientView/timeline2/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
@@ -54,9 +56,11 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
         const [store, setStore] = useState<TimelineStore | null>(null);
 
         useEffect(() => {
-            var isGenieBpcStudy = window.location.href.includes('genie_bpc');
+            const isGenieBpcStudy = window.location.href.includes('genie_bpc');
+            const isTriagePortal =
+                window.location.hostname === 'triage.cbioportal.mskcc.org';
 
-            const baseConfig: any = buildBaseConfig(
+            const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
                 caseMetaData
             );
@@ -65,12 +69,13 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 configureGenieTimeline(baseConfig);
             }
 
+            if (isTriagePortal) {
+                configureTriageTimeline(baseConfig);
+            }
+
             const trackSpecifications = sortTracks(baseConfig, data);
 
-            configureTracks(
-                trackSpecifications,
-                baseConfig.trackEventRenderers
-            );
+            configureTracks(trackSpecifications, baseConfig);
 
             const store = new TimelineStore(trackSpecifications);
 

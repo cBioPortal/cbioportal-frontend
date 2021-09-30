@@ -36,6 +36,7 @@ export type TrackProps = {
     xOffset?: number;
     defaultFilters?: DataFilter[];
     idClassPrefix?: string;
+    isSubTrack?: boolean;
 };
 
 @observer
@@ -308,7 +309,13 @@ export default class Track extends React.Component<TrackProps, {}> {
                     display: 'flex',
                 }}
             >
-                <span className={classnames(styles.trackTitle, 'small')}>
+                <span
+                    className={classnames(
+                        styles.trackTitle,
+                        'small',
+                        `${this.props.isSubTrack ? 'subtrack-' : ''}trackTitle`
+                    )}
+                >
                     {this.props.trackTitle}
                 </span>
                 <span>

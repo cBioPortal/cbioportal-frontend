@@ -7,6 +7,9 @@ import {
     TimelineEvent,
     TimelineTrackSpecification,
     TimelineTrackType,
+    ITimelineConfig,
+    randomColorGetter,
+    POINT_COLOR,
 } from 'cbioportal-clinical-timeline';
 import {
     getEventColor,
@@ -23,7 +26,32 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 
 const OTHER = 'Other';
 
-export function configureGenieTimeline(baseConfig: any) {
+export function configureTriageTimeline(baseConfig: ITimelineConfig) {
+    baseConfig.trackStructures.push([
+        'TOXICITY',
+        'TOXICITY_TYPE',
+        'SUBTYPE',
+        'TOX_OTHER_SPECIFY',
+    ]);
+
+    baseConfig.eventColorGetter = function(e: TimelineEvent) {
+        const grade = e.event.attributes.find(
+            (att: any) => att.key === 'GRADE'
+        );
+        if (grade) {
+            const colorMap: any = {
+                '1': 'green',
+                '2': 'yellow',
+                '3': 'orange',
+                '4': 'red',
+            };
+            return colorMap[grade.value] || POINT_COLOR;
+        }
+        return randomColorGetter(e);
+    };
+}
+
+export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     baseConfig.sortOrder = [
         'Sample acquisition',
         'Sequencing',
@@ -154,7 +182,7 @@ export function buildBaseConfig(
     sampleManager: SampleManager,
     caseMetaData: ISampleMetaDeta
 ) {
-    let baseConfig: any = {
+    let baseConfig: ITimelineConfig = {
         sortOrder: [
             'Specimen',
             'Sequencing',
@@ -176,6 +204,10 @@ export function buildBaseConfig(
             ['DIAGNOSIS', 'SUBTYPE'],
         ],
         trackEventRenderers: [
+            {
+                trackTypeMatch: /TOXICITY/,
+                configureTrack: (cat: TimelineTrackSpecification) => {},
+            },
             {
                 trackTypeMatch: /LAB_TEST/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {

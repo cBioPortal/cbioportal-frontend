@@ -137,7 +137,9 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             STRUCTURAL_VARIANT_GENES_TABLE: 85,
             CNA_GENES_TABLE: 80,
             PATIENT_TREATMENTS_TABLE: 75,
+            PATIENT_TREATMENT_GROUPS_TABLE: 75,
             SAMPLE_TREATMENTS_TABLE: 75,
+            SAMPLE_TREATMENT_GROUPS_TABLE: 75,
             CANCER_STUDIES: 70,
             SEQUENCED: 60,
             HAS_CNA_DATA: 50,
@@ -175,11 +177,12 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_geneset_hierarchy_default_p_value: 0.05,
 
     generic_assay_display_text:
-        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature',
+        'TREATMENT_RESPONSE:Treatment Response,MUTATIONAL_SIGNATURE:Mutational Signature,ARMLEVEL_CNA:Arm-level CNA',
 
     saml_logout_local: false,
     patient_view_use_legacy_timeline: false,
     enable_request_body_gzip_compression: false,
+    enable_treatment_groups: false,
 
     referenceGenomeVersion: 'hg19',
 

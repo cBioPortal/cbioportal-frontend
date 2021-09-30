@@ -70,6 +70,8 @@ export type CancerStudy = {
 
         'importDate': string
 
+        'massSpectrometrySampleCount': number
+
         'methylationHm27SampleCount': number
 
         'miRnaSampleCount': number
@@ -86,19 +88,17 @@ export type CancerStudy = {
 
         'publicStudy': boolean
 
+        'readPermission': boolean
+
         'referenceGenome': string
 
         'rppaSampleCount': number
-
-        'massSpectrometrySampleCount': number
 
         'sequencedSampleCount': number
 
         'status': number
 
         'studyId': string
-
-        'isAuthorized': boolean
 
 };
 export type CancerStudyTags = {
@@ -795,9 +795,13 @@ export type StudyViewFilter = {
 
         'patientTreatmentFilters': AndedPatientTreatmentFilters
 
+        'patientTreatmentGroupFilters': AndedPatientTreatmentFilters
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleTreatmentFilters': AndedSampleTreatmentFilters
+
+        'sampleTreatmentGroupFilters': AndedSampleTreatmentFilters
 
         'studyIds': Array < string >
 
@@ -3994,7 +3998,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
     */
     getAllPatientsUsingGETWithHttpInfo(parameters: {
         'direction' ? : "ASC" | "DESC",
@@ -4059,7 +4063,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
     */
     getAllPatientsUsingGET(parameters: {
             'direction' ? : "ASC" | "DESC",
@@ -4888,16 +4892,37 @@ export default class CBioPortalAPI {
             });
         };
     getAllStudiesUsingGETURL(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
         'direction' ? : "ASC" | "DESC",
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
+        'principal' ? : {},
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/studies';
+        if (parameters['authenticated'] !== undefined) {
+            queryParameters['authenticated'] = parameters['authenticated'];
+        }
+
+        if (parameters['authorities0Authority'] !== undefined) {
+            queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+        }
+
+        if (parameters['credentials'] !== undefined) {
+            queryParameters['credentials'] = parameters['credentials'];
+        }
+
+        if (parameters['details'] !== undefined) {
+            queryParameters['details'] = parameters['details'];
+        }
+
         if (parameters['direction'] !== undefined) {
             queryParameters['direction'] = parameters['direction'];
         }
@@ -4912,6 +4937,10 @@ export default class CBioPortalAPI {
 
         if (parameters['pageSize'] !== undefined) {
             queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['principal'] !== undefined) {
+            queryParameters['principal'] = parameters['principal'];
         }
 
         if (parameters['projection'] !== undefined) {
@@ -4936,18 +4965,28 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} direction - Direction of the sort
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {string} sortBy - Name of the property that the result list is sorted by
      */
     getAllStudiesUsingGETWithHttpInfo(parameters: {
+        'authenticated' ? : boolean,
+        'authorities0Authority' ? : string,
+        'credentials' ? : {},
+        'details' ? : {},
         'direction' ? : "ASC" | "DESC",
         'keyword' ? : string,
         'pageNumber' ? : number,
         'pageSize' ? : number,
+        'principal' ? : {},
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         $queryParameters ? : any,
@@ -4964,6 +5003,22 @@ export default class CBioPortalAPI {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
 
+            if (parameters['authenticated'] !== undefined) {
+                queryParameters['authenticated'] = parameters['authenticated'];
+            }
+
+            if (parameters['authorities0Authority'] !== undefined) {
+                queryParameters['authorities[0].authority'] = parameters['authorities0Authority'];
+            }
+
+            if (parameters['credentials'] !== undefined) {
+                queryParameters['credentials'] = parameters['credentials'];
+            }
+
+            if (parameters['details'] !== undefined) {
+                queryParameters['details'] = parameters['details'];
+            }
+
             if (parameters['direction'] !== undefined) {
                 queryParameters['direction'] = parameters['direction'];
             }
@@ -4978,6 +5033,10 @@ export default class CBioPortalAPI {
 
             if (parameters['pageSize'] !== undefined) {
                 queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['principal'] !== undefined) {
+                queryParameters['principal'] = parameters['principal'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -5004,18 +5063,28 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
+     * @param {boolean} authenticated - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {string} authorities0Authority - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} credentials - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
+     * @param {object} details - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} direction - Direction of the sort
      * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {integer} pageNumber - Page number of the result list
      * @param {integer} pageSize - Page size of the result list
+     * @param {object} principal - A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
      * @param {string} projection - Level of detail of the response
      * @param {string} sortBy - Name of the property that the result list is sorted by
      */
     getAllStudiesUsingGET(parameters: {
+            'authenticated' ? : boolean,
+            'authorities0Authority' ? : string,
+            'credentials' ? : {},
+            'details' ? : {},
             'direction' ? : "ASC" | "DESC",
             'keyword' ? : string,
             'pageNumber' ? : number,
             'pageSize' ? : number,
+            'principal' ? : {},
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             $queryParameters ? : any,
@@ -5967,7 +6036,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
          * @param {string} studyId - Study ID e.g. acc_tcga
     */
     getAllPatientsInStudyUsingGETWithHttpInfo(parameters: {
@@ -6035,7 +6104,7 @@ export default class CBioPortalAPI {
          * @param {integer} pageNumber - Page number of the result list
          * @param {integer} pageSize - Page size of the result list
          * @param {string} projection - Level of detail of the response
-
+        
          * @param {string} studyId - Study ID e.g. acc_tcga
     */
     getAllPatientsInStudyUsingGET(parameters: {
@@ -7238,10 +7307,15 @@ export default class CBioPortalAPI {
     };
     getContainsTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/display-patient';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7258,9 +7332,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7285,6 +7361,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7302,9 +7382,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7314,10 +7396,15 @@ export default class CBioPortalAPI {
     };
     getContainsSampleTreatmentDataUsingPOSTURL(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/display-sample';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7334,9 +7421,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsSampleTreatmentDataUsingPOSTWithHttpInfo(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7361,6 +7450,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7378,9 +7471,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getContainsSampleTreatmentDataUsingPOST
      * @param {} studyIds - List of Study IDs
+     * @param {string} tier - tier
      */
     getContainsSampleTreatmentDataUsingPOST(parameters: {
         'studyIds': Array < string > ,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < boolean > {
@@ -7390,10 +7485,15 @@ export default class CBioPortalAPI {
     };
     getAllPatientTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/patient';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7410,9 +7510,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllPatientTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7437,6 +7539,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7454,9 +7560,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllPatientTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllPatientTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
+            'tier' ? : "Agent" | "AgentClass",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < PatientTreatmentRow >
@@ -7467,10 +7575,15 @@ export default class CBioPortalAPI {
         };
     getAllSampleTreatmentsUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/treatments/sample';
+
+        if (parameters['tier'] !== undefined) {
+            queryParameters['tier'] = parameters['tier'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -7487,9 +7600,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllSampleTreatmentsUsingPOSTWithHttpInfo(parameters: {
         'studyViewFilter': StudyViewFilter,
+        'tier' ? : "Agent" | "AgentClass",
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -7514,6 +7629,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['tier'] !== undefined) {
+                queryParameters['tier'] = parameters['tier'];
+            }
+
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                     var parameter = parameters.$queryParameters[parameterName];
@@ -7531,9 +7650,11 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getAllSampleTreatmentsUsingPOST
      * @param {} studyViewFilter - Study view filter
+     * @param {string} tier - tier
      */
     getAllSampleTreatmentsUsingPOST(parameters: {
             'studyViewFilter': StudyViewFilter,
+            'tier' ? : "Agent" | "AgentClass",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < SampleTreatmentRow >

@@ -337,14 +337,28 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             charts,
             this.selectedAttrs
         );
-        // TODO: (GA) Add other datatype by using another function
+        const chartsGroupedByDataType = _.groupBy(
+            charts,
+            chart => chart.dataType
+        );
+        // Add LIMITVALUE data as continuous chart
+        if (!_.isEmpty(chartsGroupedByDataType[DataTypeConstants.LIMITVALUE])) {
+            this.props.store.addGenericAssayContinuousCharts(
+                chartsGroupedByDataType[DataTypeConstants.LIMITVALUE]
+            );
+        }
+        // Add BINARY or CATEGORICAL data as categorical chart
+        if (!_.isEmpty(chartsGroupedByDataType[DataTypeConstants.BINARY])) {
+            this.props.store.addGenericAssayBinaryOrCategoricalCharts(
+                chartsGroupedByDataType[DataTypeConstants.BINARY]
+            );
+        }
         if (
-            _.every(
-                charts,
-                chart => chart.dataType === DataTypeConstants.LIMITVALUE
-            )
+            !_.isEmpty(chartsGroupedByDataType[DataTypeConstants.CATEGORICAL])
         ) {
-            this.props.store.addGenericAssayContinuousCharts(charts);
+            this.props.store.addGenericAssayBinaryOrCategoricalCharts(
+                chartsGroupedByDataType[DataTypeConstants.CATEGORICAL]
+            );
         }
     }
 

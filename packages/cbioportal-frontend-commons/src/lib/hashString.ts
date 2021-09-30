@@ -1,6 +1,6 @@
 // source: https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
 
-export default function hashString(str: string) {
+export function hashString(str: string) {
     let hash = 0;
     if (str.length == 0) return hash;
     for (let i = 0; i < str.length; i++) {

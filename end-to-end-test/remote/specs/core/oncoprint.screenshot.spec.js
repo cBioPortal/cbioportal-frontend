@@ -33,6 +33,13 @@ function getNthTrackOptionsElements(n) {
 }
 
 describe('oncoprint screenshot tests', function() {
+    it('ov_tcga_pub with germline mutations', function() {
+        var url = `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&gene_list=BRCA1%20BRCA2&gene_set_choice=user-defined-list`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(ONCOPRINT_TIMEOUT);
+        var res = checkOncoprintElement('.oncoprintContainer');
+        assertScreenShotMatch(res);
+    });
     it('coadread_tcga_pub with clinical and heatmap tracks', function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=coadread_tcga_pub_rna_seq_mrna_median_Zscores&show_samples=false&clinicallist=0%2C2%2CMETHYLATION_SUBTYPE&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF&`;
         goToUrlAndSetLocalStorage(url);

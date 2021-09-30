@@ -167,7 +167,8 @@ export class SampleTreatmentsTable extends TreatmentsTable<
                 render: (data: SampleTreatmentRow) =>
                     this.createNubmerColumnCell(data, 28),
                 sortBy: (data: SampleTreatmentRow) =>
-                    data.count + toNumericValue(data.time + data.treatment),
+                    this.calculateMaxValueForTreatment(data) +
+                    toNumericValue(data.time + data.treatment),
                 defaultSortDirection: 'desc' as 'desc',
                 filter: filterTreatmentCell,
                 width: columnWidth,
@@ -175,6 +176,14 @@ export class SampleTreatmentsTable extends TreatmentsTable<
         };
         return defaults[columnKey];
     };
+
+    calculateMaxValueForTreatment(treatment: SampleTreatmentRow): number {
+        const matchingSortedRows = this.tableData
+            .filter(row => row.treatment == treatment.treatment)
+            .sort((a, b) => b.count - a.count);
+
+        return matchingSortedRows.length == 0 ? 0 : matchingSortedRows[0].count;
+    }
 
     @computed
     get columnsWidth() {

@@ -9,12 +9,14 @@ import classNames from 'classnames';
 import { MobxPromise } from 'mobxpromise';
 import { Portal } from 'react-portal';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
 
 export interface IUserMessage {
     dateStart?: number;
     dateEnd: number;
     content: string | JSX.Element;
     id: string;
+    showCondition?: (routingStore: ExtendedRouterStore) => void;
 }
 
 function makeMessageKey(id: string) {
@@ -36,7 +38,15 @@ if (
         // BASED ON USERS LOCALSTORAGE
         {
             dateEnd: 100000000000000,
-            content: `Please fill out our user survey so we can continue to build a better site for you &nbsp;<a target="_blank" class="btn btn-xs btn-default" href="https://forms.gle/Y7TLW8WkQoZQY6L76">Takey Survey</a>`,
+            content: `<div style="margin:20px;font-size:20px;" class="text-center">
+                Help us improve cBioPortal. We rely on your feedback to help prioritize features in the next phase of development. Your 5-10 minutes can influence the future direction of cBioPortal.&nbsp;
+                <br/><br/>
+                <a target="_blank" class="btn btn-default" data-action="dismiss" href="https://bit.ly/cbioportal-survey-2021">Take Survey</a> 
+                <a class="btn btn-link text-white" data-action="remind">Remind me later</a>
+                <a class="btn btn-link text-white" data-action="dismiss">No thanks</a>
+                </div>`,
+            showCondition: routingStore =>
+                routingStore.location.pathname.length < 2,
             id: '2021_fall_user_survey',
         },
     ];
@@ -65,11 +75,18 @@ export default class UserMessager extends React.Component<
 
     get shownMessage() {
         const messageToShow = _.find(this.messageData.result, message => {
-            const notYetShown = !localStorage.getItem(
-                makeMessageKey(message.id)
-            );
+            // not shown in either session or local storage
+            // (session is used for remind
+            const notYetShown =
+                !localStorage.getItem(makeMessageKey(message.id)) &&
+                !sessionStorage.getItem(makeMessageKey(message.id));
             const expired = Date.now() > message.dateEnd;
-            return notYetShown && !expired;
+
+            const showCondition = message.showCondition
+                ? message.showCondition(getBrowserWindow().routingStore)
+                : true;
+
+            return notYetShown && !expired && showCondition;
         });
 
         return messageToShow;
@@ -86,6 +103,27 @@ export default class UserMessager extends React.Component<
         this.dismissed = true;
     }
 
+    @action
+    markMessageRemind(message: IUserMessage) {
+        sessionStorage.setItem(makeMessageKey(message.id), 'shown');
+        this.dismissed = true;
+    }
+
+    @autobind
+    handleClick(e: any) {
+        console.log(e.target.getAttribute('data-action'));
+        switch (e.target.getAttribute('data-action')) {
+            case 'remind':
+                this.shownMessage && this.markMessageRemind(this.shownMessage);
+                break;
+            case 'dismiss':
+                this.shownMessage &&
+                    this.markMessageDismissed(this.shownMessage);
+                break;
+        }
+        //;
+    }
+
     render() {
         if (
             !isWebdriver() &&
@@ -98,7 +136,7 @@ export default class UserMessager extends React.Component<
                     isOpened={true}
                     node={document.getElementById('pageTopContainer')}
                 >
-                    <div className={styles.messager}>
+                    <div className={styles.messager} onClick={this.handleClick}>
                         <i
                             className={classNames(
                                 styles.close,
