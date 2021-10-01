@@ -17,10 +17,12 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - attach_workspace:
         at: /tmp/
     - run:
-        name: "Spin up frontend over ssl if necessary and run end to end tests"
+        name: "Set cBioPortal URL to the netlify preview"
+        command: echo 'export CBIOPORTAL_URL="https://deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend.netlify.app/"' >> $BASH_ENV
+    - run:
+        name: "Run end to end tests using an external frontend deploy"
         command: |
           sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
-          yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
           ../scripts/env_vars.sh && \
@@ -31,13 +33,14 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 5s && \
           curl $CBIOPORTAL_URL > /dev/null && \
           sleep 20s && \
-          (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
+          curl "https://deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend.netlify.app/" > /dev/null && \
           sleep 1s && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
           yarn run test-webdriver-manager-remote
         when: always
         environment:
-          FRONTEND_TEST_USE_LOCAL_DIST: true
+          FRONTEND_TEST_USE_LOCAL_DIST: false,
+          FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND: false,
           WEBPACK_PARALLEL: false
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
@@ -99,18 +102,10 @@ jobs:
           paths:
             - node_modules
           key: v6-dependencies-{{ checksum "yarn.lock" }}
-      - run:
-          name: "Run build if no dist folder"
-          command: 'ls dist || yarn run build'
-          environment:
-            DISABLE_SOURCEMAP: true
-            NO_PARALLEL: true
-          no_output_timeout: 25m
       - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile)
       - save_cache:
           paths:
             - node_modules
-            - dist
             - common-dist
           key: v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
