@@ -82,6 +82,8 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
             setStore(store);
         }, []);
 
+        const moo = 'foo';
+
         if (store) {
             return (
                 <>
