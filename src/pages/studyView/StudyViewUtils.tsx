@@ -100,7 +100,6 @@ export type ChartType = keyof typeof ChartTypeEnum;
 export enum SpecialChartsUniqueKeyEnum {
     CUSTOM_SELECT = 'CUSTOM_SELECT',
     SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
-    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = 'MUTATION_COUNT',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
@@ -138,7 +137,6 @@ export type ChartMeta = {
     dataType: ChartMetaDataTypeEnum;
     patientAttribute: boolean;
     renderWhenDataChange: boolean;
-    logScaleX?: boolean;
 };
 export type ChartMetaWithDimensionAndChartType = ChartMeta & {
     dimension: ChartDimension;
@@ -1396,7 +1394,6 @@ export function toFixedDigit(value: number, fractionDigits: number = 2) {
 
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataTypeEnum {
     const GENOMIC_DATA_TYPES = [
-        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
         SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
         SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
         SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
@@ -2357,6 +2354,7 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
+    xVsYChartSet: { [id: string]: XVsYChart },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
@@ -2411,6 +2409,11 @@ export function getChartSettingsMap(
             chartSetting.profileType = genericAssayChart.profileType;
             chartSetting.dataType = genericAssayChart.dataType;
             chartSetting.patientLevelProfile = genericAssayChart.patientLevel;
+        }
+        const xVsYChart = xVsYChartSet[id];
+        if (xVsYChart) {
+            chartSetting.xAttrId = xVsYChart.xAttr.clinicalAttributeId;
+            chartSetting.yAttrId = xVsYChart.yAttr.clinicalAttributeId;
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
@@ -3305,3 +3308,12 @@ export function getBinBounds(bins: DensityPlotBin[]) {
 export function logScalePossible(clinicalAttributeId: string) {
     return clinicalAttributeId === SpecialChartsUniqueKeyEnum.MUTATION_COUNT;
 }
+
+export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
+    return `X-VS-Y-${xAttrId}-${yAttrId}`;
+}
+
+export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
+    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+    SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+);

@@ -82,10 +82,12 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
+    FGA_VS_MUTATION_COUNT_KEY,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
     getBinBounds,
+    getCategoricalFilterValues,
     getChartMetaDataType,
     getChartSettingsMap,
     getClinicalDataBySamples,
@@ -118,8 +120,8 @@ import {
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
+    makeXVsYUniqueKey,
     MolecularProfileOption,
-    MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
     pickNewColorForClinicData,
     RectangleBounds,
@@ -130,7 +132,6 @@ import {
     statusFilterActive,
     StudyWithSamples,
     submitToPage,
-    getCategoricalFilterValues,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -170,7 +171,6 @@ import ComplexKeyMap from '../../shared/lib/complexKeyDataStructures/ComplexKeyM
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import {
     DataType as DownloadDataType,
-    mobxPromiseResolve,
     pluralize,
     remoteData,
     stringListToSet,
@@ -221,8 +221,8 @@ import {
 import {
     GenericAssayDataBin,
     GenericAssayDataBinFilter,
-    GenericAssayDataCountItem,
     GenericAssayDataCountFilter,
+    GenericAssayDataCountItem,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
@@ -240,14 +240,14 @@ import {
 import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import { getServerConfig } from 'config/config';
 import {
+    ChartUserSetting,
+    CustomChart,
     CustomChartData,
     CustomChartIdentifierWithValue,
-    CustomChart,
     Group,
     SessionGroupData,
-    VirtualStudy,
-    ChartUserSetting,
     StudyPageSettings,
+    VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 
 type ChartUniqueKey = string;
@@ -3072,20 +3072,15 @@ export class StudyViewPageStore
                 }
                 return this._clinicalDataFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.SCATTER:
-                if (
-                    chartUniqueKey ===
-                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
-                ) {
-                    return (
-                        this._customBinsFromScatterPlotSelectionSet.has(
-                            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-                        ) &&
-                        this._customBinsFromScatterPlotSelectionSet.has(
-                            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-                        )
-                    );
-                }
-                return false;
+                const chart = this._xVsYChartMap.get(chartUniqueKey)!;
+                return (
+                    this._customBinsFromScatterPlotSelectionSet.has(
+                        chart.xAttr.clinicalAttributeId
+                    ) &&
+                    this._customBinsFromScatterPlotSelectionSet.has(
+                        chart.yAttr.clinicalAttributeId
+                    )
+                );
             case ChartTypeEnum.MUTATED_GENES_TABLE:
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
@@ -5109,7 +5104,8 @@ export class StudyViewPageStore
     @action.bound
     addXVsYChart(
         attrIds: { xAttrId: string; yAttrId: string },
-        loadedfromUserSettings: boolean = false
+        loadedfromUserSettings: boolean = false,
+        dontAddToNewlyAddedCharts: boolean = false
     ): void {
         if (!loadedfromUserSettings) {
             this.newlyAddedCharts.clear();
@@ -5143,7 +5139,10 @@ export class StudyViewPageStore
         ) {
             newChart.plotDomain!.y = { min: 0, max: 1 };
         }
-        const uniqueKey = `${newChart.xAttr.clinicalAttributeId}-vs-${newChart.yAttr.clinicalAttributeId}`; // TODO
+        const uniqueKey = makeXVsYUniqueKey(
+            newChart.xAttr.clinicalAttributeId,
+            newChart.yAttr.clinicalAttributeId
+        );
 
         if (this._xVsYChartMap.has(uniqueKey)) {
             this.changeChartVisibility(uniqueKey, true);
@@ -5159,6 +5158,11 @@ export class StudyViewPageStore
                 renderWhenDataChange: false,
                 priority: 0,
             };
+            if (uniqueKey === FGA_VS_MUTATION_COUNT_KEY) {
+                chartMeta.priority = getDefaultPriorityByUniqueKey(
+                    FGA_VS_MUTATION_COUNT_KEY
+                );
+            }
 
             this._xVsYCharts.set(uniqueKey, chartMeta);
 
@@ -5179,7 +5183,7 @@ export class StudyViewPageStore
             } as any);*/
         }
 
-        if (!loadedfromUserSettings) {
+        if (!loadedfromUserSettings && !dontAddToNewlyAddedCharts) {
             this.newlyAddedCharts.push(uniqueKey);
         }
     }
@@ -5693,6 +5697,7 @@ export class StudyViewPageStore
                 _.fromPairs(this.chartsType.toJSON()),
                 _.fromPairs(this._geneSpecificChartMap.toJSON()),
                 _.fromPairs(this._genericAssayChartMap.toJSON()),
+                _.fromPairs(this._xVsYChartMap.toJSON()),
                 _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
@@ -5856,6 +5861,7 @@ export class StudyViewPageStore
             _.fromPairs(this._defaultChartsType.toJSON()),
             {},
             {},
+            _.fromPairs(this._xVsYChartMap.toJSON()),
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
@@ -5935,6 +5941,15 @@ export class StudyViewPageStore
                             patientLevel: chartUserSettings.patientLevelProfile,
                         },
                     ],
+                    true
+                );
+            }
+            if (chartUserSettings.chartType === ChartTypeEnum.SCATTER) {
+                this.addXVsYChart(
+                    {
+                        xAttrId: chartUserSettings.xAttrId!,
+                        yAttrId: chartUserSettings.yAttrId!,
+                    },
                     true
                 );
             }
@@ -6221,14 +6236,21 @@ export class StudyViewPageStore
             }
         });
 
-        this.chartsType.set(
-            SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-            ChartTypeEnum.SCATTER
-        );
-        this.chartsDimension.set(
-            SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-            STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER]
-        );
+        if (
+            mutationCountAttr &&
+            fractionGenomeAlteredAttr &&
+            getDefaultPriorityByUniqueKey(FGA_VS_MUTATION_COUNT_KEY) !== 0
+        ) {
+            this.addXVsYChart(
+                {
+                    xAttrId: SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+                    yAttrId: SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+                },
+                false,
+                true
+            );
+        }
+
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
@@ -6253,49 +6275,6 @@ export class StudyViewPageStore
                 ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
             ]
         );
-        if (
-            mutationCountAttr &&
-            fractionGenomeAlteredAttr &&
-            getDefaultPriorityByUniqueKey(
-                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
-            ) !== 0
-        ) {
-            this._xVsYCharts.set(
-                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-                {
-                    dataType: ChartMetaDataTypeEnum.GENOMIC,
-                    patientAttribute: false,
-                    uniqueKey:
-                        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-                    displayName: 'Mutation Count vs Fraction of Genome Altered',
-                    priority: getDefaultPriorityByUniqueKey(
-                        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
-                    ),
-                    renderWhenDataChange: false,
-                    description: '',
-                }
-            );
-            this._xVsYChartMap.set(
-                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-                {
-                    xAttr: fractionGenomeAlteredAttr,
-                    yAttr: mutationCountAttr,
-                    plotDomain: {
-                        x: { min: 0, max: 1 },
-                        y: { min: 0 },
-                    },
-                }
-            );
-            this._xVsYChartSettings.set(
-                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-                { xLogScale: false, yLogScale: false }
-            );
-
-            this.changeChartVisibility(
-                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
-                true
-            );
-        }
 
         if (this.queriedPhysicalStudyIds.result.length > 1) {
             this.showAsPieChart(
@@ -8221,10 +8200,7 @@ export class StudyViewPageStore
                     );
                 }
 
-                if (
-                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION in
-                    this.chartMetaSet
-                ) {
+                if (FGA_VS_MUTATION_COUNT_KEY in this.chartMetaSet) {
                     // number of samples containing mutationCountVsFractionGenomeAlteredData should be
                     // calculated from the selected samples
                     const mutationCountVsFractionGenomeAlteredDataSet = this
@@ -8251,9 +8227,7 @@ export class StudyViewPageStore
                         },
                         [] as IStudyViewScatterPlotData[]
                     );
-                    ret[
-                        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
-                    ] = filteredData.length;
+                    ret[FGA_VS_MUTATION_COUNT_KEY] = filteredData.length;
                 }
 
                 if (
