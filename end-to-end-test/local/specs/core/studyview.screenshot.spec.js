@@ -38,6 +38,7 @@ describe('study view generic assay categorical/binary features', function() {
         $('div[data-test="GenericAssaySelection"] input').setValue(
             'mutational_signature_category_10'
         );
+        $('div=Select all filtered options (1)').waitForExist();
         $('div=Select all filtered options (1)').click();
         // close the dropdown
         var indicators = $$('div[class$="indicatorContainer"]');

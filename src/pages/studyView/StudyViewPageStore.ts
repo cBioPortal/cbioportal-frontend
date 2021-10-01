@@ -222,7 +222,10 @@ import {
     GenericAssayDataCountItem,
     GenericAssayDataCountFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
-import { fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
+import {
+    fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
+    fetchGenericAssayMetaByMolecularProfileIdsGroupedByGenericAssayType,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import {
     buildDriverAnnotationSettings,
     DriverAnnotationSettings,
@@ -4836,6 +4839,17 @@ export class StudyViewPageStore
         },
     });
 
+    readonly genericAssayEntitiesGroupedByProfileId = remoteData<{
+        [profileId: string]: GenericAssayMeta[];
+    }>({
+        await: () => [this.genericAssayProfiles],
+        invoke: async () => {
+            return await fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId(
+                this.genericAssayProfiles.result
+            );
+        },
+    });
+
     readonly genericAssayStableIdToMeta = remoteData<{
         [genericAssayStableId: string]: GenericAssayMeta;
     }>({
@@ -4897,6 +4911,9 @@ export class StudyViewPageStore
                                     description: profiles[0].description,
                                     dataType: profiles[0].datatype,
                                     patientLevel: profiles[0].patientLevel,
+                                    profileIds: profiles.map(
+                                        profile => profile.molecularProfileId
+                                    ),
                                 };
                             })
                             .filter(record => record.count > 0)
