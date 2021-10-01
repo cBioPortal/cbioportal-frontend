@@ -11,7 +11,7 @@ var version = '"unknown"';
 // Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
 if (process.env.PATH.indexOf('heroku') === -1) {
     // show full git version
-    var GitRevisionPlugin = require('git-revision-webpack-plugin');
+    var { GitRevisionPlugin } = require('git-revision-webpack-plugin');
     var gitRevisionPlugin = new GitRevisionPlugin({
         versionCommand: 'describe --always --tags --dirty',
     });
@@ -163,28 +163,30 @@ var config = {
             context: join(root, '.'),
             manifest: require('./common-dist/common-manifest.json'),
         }),
-        new CopyWebpackPlugin([
-            { from: './common-dist', to: 'reactapp' },
-            { from: './src/rootImages', to: 'images' },
-            { from: './src/common', to: 'common' },
-            {
-                from: './src/globalStyles/prefixed-bootstrap.min.css',
-                to: 'reactapp/prefixed-bootstrap.min.css',
-            },
-            {
-                from: './src/shared/lib/data/reference_genome_hg19.json',
-                to: 'reactapp/reference_genome_hg19.json',
-            },
-            {
-                from: './src/shared/legacy/igv.min.js',
-                to: 'reactapp/igv.min.js',
-            },
-            { from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css' },
-            {
-                from: './src/globalStyles/prefixed-bootstrap.min.css.map',
-                to: 'reactapp/prefixed-bootstrap.min.css.map',
-            },
-        ]), // destination is relative to dist directory
+        new CopyWebpackPlugin({
+            patterns: [
+                { from: './common-dist', to: 'reactapp' },
+                { from: './src/rootImages', to: 'images' },
+                { from: './src/common', to: 'common' },
+                {
+                    from: './src/globalStyles/prefixed-bootstrap.min.css',
+                    to: 'reactapp/prefixed-bootstrap.min.css',
+                },
+                {
+                    from: './src/shared/lib/data/reference_genome_hg19.json',
+                    to: 'reactapp/reference_genome_hg19.json',
+                },
+                {
+                    from: './src/shared/legacy/igv.min.js',
+                    to: 'reactapp/igv.min.js',
+                },
+                { from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css' },
+                {
+                    from: './src/globalStyles/prefixed-bootstrap.min.css.map',
+                    to: 'reactapp/prefixed-bootstrap.min.css.map',
+                },
+            ],
+        }), // destination is relative to dist directory
         new TypedCssModulesPlugin({
             globPattern: 'src/**/*.module.scss',
         }),
