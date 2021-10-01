@@ -1505,7 +1505,7 @@ export default class PatientViewPage extends React.Component<
                                     className={'patient-clinical-data-tab'}
                                 >
                                     <div className="clearfix">
-                                        <img style={{width:'800px'}} src='/images/figure2ohsu.png' />
+                                        <img style={{width:'800px'}} src={`${getBrowserWindow().frontendConfig.frontendUrl}/images/figure2ohsu.png`} />
                                     </div>
                                 </MSKTab>
 
