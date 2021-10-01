@@ -92,8 +92,6 @@ export default class GenericAssaySelection extends React.Component<
             if (this.props.onTrackSubmit) {
                 const option = this.selectedProfileOption as ISelectOption;
                 // select profile if onSelectGenericAssayProfile exists
-                this.props.onSelectGenericAssayProfile &&
-                    this.props.onSelectGenericAssayProfile(option.value);
                 const info = this._selectedGenericAssayEntityIds.map(
                     entityId => {
                         return {
@@ -118,6 +116,8 @@ export default class GenericAssaySelection extends React.Component<
     private handleProfileSelect(option: any) {
         if (option && option.value) {
             this._selectedProfileOption = option;
+            this.props.onSelectGenericAssayProfile &&
+                this.props.onSelectGenericAssayProfile(option.value);
         }
     }
 

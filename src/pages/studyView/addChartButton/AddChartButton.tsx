@@ -1,5 +1,12 @@
 import * as React from 'react';
-import { action, computed, makeObservable, observable } from 'mobx';
+import {
+    action,
+    computed,
+    IReactionDisposer,
+    makeObservable,
+    observable,
+    when,
+} from 'mobx';
 import { observer } from 'mobx-react';
 import 'react-mfb/mfb.css';
 import {
@@ -37,6 +44,7 @@ import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
+import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore;
@@ -86,7 +94,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.props.defaultActiveTab || ChartMetaDataTypeEnum.CLINICAL;
     @observable infoMessage: string = '';
     @observable tabsWidth = 0;
+    // Record user selected profile in each Generic Assay type
+    private selectedGenericAssayProfileIdByType = observable.map<
+        string,
+        string
+    >({}, { deep: true });
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
+    private genericAssayEntityOptionsReaction: IReactionDisposer;
 
     public static defaultProps = {
         disableGenomicTab: false,
@@ -99,10 +113,32 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         super(props, context);
         makeObservable(this);
         this.tabsDivRef = React.createRef<HTMLDivElement>();
+
+        // Using the first profile as default profile option to initialze genericAssayProfileOptionsByType
+        this.genericAssayEntityOptionsReaction = when(
+            () =>
+                !_.isEmpty(
+                    this.props.store.genericAssayProfileOptionsByType.result
+                ),
+            () =>
+                _.forEach(
+                    this.props.store.genericAssayProfileOptionsByType.result,
+                    (options, type) => {
+                        this.selectedGenericAssayProfileIdByType.set(
+                            type,
+                            options[0].value
+                        );
+                    }
+                )
+        );
     }
 
     componentDidMount(): void {
         this.setTabsWidth(this.tabsDivRef.current);
+    }
+
+    componentWillUnmount(): void {
+        this.genericAssayEntityOptionsReaction();
     }
 
     readonly dataCount = remoteData<ChartDataCountSet>({
@@ -277,7 +313,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             this.props.disableGenericAssayTabs ||
             !this.props.store.genericAssayProfiles.isComplete ||
-            !this.props.store.genericAssayEntitiesGroupedByGenericAssayType
+            !this.props.store.genericAssayEntitiesGroupedByProfileId
                 .isComplete ||
             (this.props.store.genericAssayProfiles.isComplete &&
                 _.isEmpty(this.props.store.genericAssayProfiles.result))
@@ -314,6 +350,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 chartsGroupedByDataType[DataTypeConstants.CATEGORICAL]
             );
         }
+    }
+
+    @action.bound
+    private onSelectGenericAssayProfileByType(
+        genericAssayType: string,
+        profileId: string
+    ) {
+        this.selectedGenericAssayProfileIdByType.set(
+            genericAssayType,
+            profileId
+        );
     }
 
     @action.bound
@@ -433,13 +480,31 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         tabs = _.map(
             this.props.store.genericAssayProfileOptionsByType.result,
             (options, type) => {
+                // Generic Assay tabs will assign one Generic Assay type to one tab
+                // And one tab can only has one selected profile at a time
+                // selectedGenericAssayProfileIdByType been initialzed at the begining
+                // so we know we can always find a selected profile for each Generic Assay type
+                const molecularProfileIdsInType = options.find(
+                    option =>
+                        option.value ===
+                        this.selectedGenericAssayProfileIdByType.get(type)
+                )!.profileIds;
+                const entities = _.reduce(
+                    molecularProfileIdsInType,
+                    (set, profileId) => {
+                        this.props.store.genericAssayEntitiesGroupedByProfileId.result![
+                            profileId
+                        ].forEach(set.add, set);
+                        return set;
+                    },
+                    new Set<GenericAssayMeta>()
+                );
+
                 const genericAssayEntityOptions = _.map(
-                    this.props.store
-                        .genericAssayEntitiesGroupedByGenericAssayType.result![
-                        type
-                    ],
+                    Array.from(entities),
                     entity => makeGenericAssayOption(entity, false)
                 );
+
                 const shouldShowChartOptionTable =
                     this.genericAssayChartOptionsByGenericAssayType[type] &&
                     this.genericAssayChartOptionsByGenericAssayType[type]
@@ -469,6 +534,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 genericAssayEntityOptions
                             }
                             onChartSubmit={this.onGenericAssaySubmit}
+                            onSelectGenericAssayProfile={profileId =>
+                                this.onSelectGenericAssayProfileByType(
+                                    type,
+                                    profileId
+                                )
+                            }
                         />
                         {shouldShowChartOptionTable && (
                             <div style={{ marginTop: 10 }}>
@@ -854,8 +925,7 @@ export default class AddChartButton extends React.Component<
         return (
             this.props.store.genericAssayProfileOptionsByType.isPending ||
             this.props.store.molecularProfileOptions.isPending ||
-            this.props.store.genericAssayEntitiesGroupedByGenericAssayType
-                .isPending
+            this.props.store.genericAssayEntitiesGroupedByProfileId.isPending
         );
     }
 
