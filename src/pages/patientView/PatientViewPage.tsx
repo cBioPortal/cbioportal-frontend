@@ -1499,6 +1499,17 @@ export default class PatientViewPage extends React.Component<
                                 </MSKTab>
 
                                 <MSKTab
+                                    key={11}
+                                    id={PatientViewPageTabs.Figures}
+                                    linkText="Figures"
+                                    className={'patient-clinical-data-tab'}
+                                >
+                                    <div className="clearfix">
+                                        <img style={{width:'800px'}} src='/images/figure2ohsu.png' />
+                                    </div>
+                                </MSKTab>
+
+                                <MSKTab
                                     key={4}
                                     id={PatientViewPageTabs.FilesAndLinks}
                                     linkText={RESOURCES_TAB_NAME}

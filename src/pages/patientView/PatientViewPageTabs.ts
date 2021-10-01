@@ -9,6 +9,7 @@ export enum PatientViewPageTabs {
     TrialMatchTab = 'trialMatchTab',
     MutationalSignatures = 'mutationalSignatures',
     PathwayMapper = 'pathways',
+    Figures = 'figures',
 }
 
 export const PatientViewResourceTabPrefix = 'openResource_';
