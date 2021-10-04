@@ -47,9 +47,8 @@ async function main() {
     console.log(`Deploy ${search} ${state}`);
 
     if (state !== 'ready') {
-        return 1;
-    } else {
-        return 0;
+        // exit with a non-zero value to indicate error
+        process.exit(1);
     }
 }
 
