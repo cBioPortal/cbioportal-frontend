@@ -17,6 +17,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - attach_workspace:
         at: /tmp/
     - run:
+        name: "Wait for netlify deploy preview to be ready"
+        command: yarn run waitForNetlifyPreview ${CIRCLE_SHA1}
+    - run:
         name: "Set cBioPortal URL to the netlify preview"
         command: echo 'export CBIOPORTAL_URL="https://deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend.netlify.app/"' >> $BASH_ENV
     - run:
