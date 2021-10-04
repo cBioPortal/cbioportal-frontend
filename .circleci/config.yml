@@ -20,8 +20,8 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         name: "Wait for netlify deploy preview to be ready"
         command: yarn run waitForNetlifyPreview ${CIRCLE_SHA1}
     - run:
-        name: "Set cBioPortal URL to the netlify preview"
-        command: echo 'export CBIOPORTAL_URL="https://deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend.netlify.app/"' >> $BASH_ENV
+        name: "Set netlify deploy preview"
+        command: echo 'export NETLIFY_DEPLOY_PREVIEW="deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend"' >> $BASH_ENV
     - run:
         name: "Run end to end tests using an external frontend deploy"
         command: |
@@ -43,7 +43,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
         when: always
         environment:
           FRONTEND_TEST_USE_LOCAL_DIST: false,
-          FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND: false,
           WEBPACK_PARALLEL: false
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
@@ -283,6 +282,9 @@ jobs:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
           key: v6-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
+      - run:
+          name: "Set netlify deploy preview"
+          command: echo 'export NETLIFY_DEPLOY_PREVIEW="deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend"' >> $BASH_ENV
       - run:
           name: Run end-2-end tests with studies in local database
           command: |
