@@ -4479,7 +4479,7 @@ export class ResultsViewPageStore
     );
 
     readonly genericAssayEntitiesGroupByMolecularProfileId = remoteData<{
-        [genericAssayType: string]: GenericAssayMeta[];
+        [profileId: string]: GenericAssayMeta[];
     }>({
         await: () => [this.molecularProfilesInStudies],
         invoke: async () => {
