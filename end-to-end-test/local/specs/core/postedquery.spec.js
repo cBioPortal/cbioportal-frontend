@@ -15,7 +15,8 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 describe('posting query parameters (instead of GET) to query page', function() {
     if (useExternalFrontend) {
         it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', function() {
-            var url = `${CBIOPORTAL_URL}/results?localdist=true`;
+            const url = `${CBIOPORTAL_URL}/results`;
+            goToUrlAndSetLocalStorage(url);
 
             let query = {
                 gene_list: 'CDKN2A MDM2 MDM4 TP53',
