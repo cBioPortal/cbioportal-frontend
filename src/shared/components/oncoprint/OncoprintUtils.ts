@@ -1113,9 +1113,10 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
             oncoprint.props.store.filteredPatients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.genericAssayMolecularDataCache,
-            oncoprint.props.store
+            oncoprint.genericAssayPromises
                 .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap,
-            oncoprint.props.store.genericAssayEntitiesGroupedByGenericAssayType,
+            oncoprint.genericAssayPromises
+                .genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
@@ -1157,7 +1158,7 @@ export function makeGenericAssayProfileCategoricalTracksMobxPromise(
 
                 const entityId = query.stableId;
                 const genericAssayType = profile.genericAssayType;
-                const entityLinkMap = oncoprint.props.store
+                const entityLinkMap = oncoprint.genericAssayPromises
                     .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                     .result![profile.genericAssayType];
 
@@ -1219,9 +1220,10 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
             oncoprint.props.store.filteredPatients,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.genericAssayMolecularDataCache,
-            oncoprint.props.store
+            oncoprint.genericAssayPromises
                 .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap,
-            oncoprint.props.store.genericAssayEntitiesGroupedByGenericAssayType,
+            oncoprint.genericAssayPromises
+                .genericAssayEntitiesGroupedByGenericAssayType,
         ],
         invoke: async () => {
             const molecularProfileIdToMolecularProfile = oncoprint.props.store
@@ -1265,7 +1267,7 @@ export function makeGenericAssayProfileHeatmapTracksMobxPromise(
                 const genericAssayType = profile.genericAssayType;
                 const pivotThreshold = profile.pivotThreshold;
                 const sortOrder = profile.sortOrder;
-                const entityLinkMap = oncoprint.props.store
+                const entityLinkMap = oncoprint.genericAssayPromises
                     .genericAssayEntitiesGroupedByGenericAssayTypeLinkMap
                     .result![profile.genericAssayType];
 
