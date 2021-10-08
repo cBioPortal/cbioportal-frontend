@@ -193,10 +193,11 @@ function ResultsViewQueryParamsAdjuster(oldParams) {
     }
 }
 
-function ScrollToTop(Component) {
+function ScrollToTop(Component, onLoad = () => {}) {
     return props => {
         useEffect(() => {
             $(document).scrollTop(0);
+            onLoad();
         }, []);
         return <Component {...props} />;
     };
@@ -315,8 +316,10 @@ function handleEnter() {
 // note: because we bundle, and bundles are loaded async, this does NOT affect time to render of default route
 // results will load in background while user plays with query interface
 function preloadImportantComponents() {
-    lazyLoadComponent(ResultsViewPage).call();
-    lazyLoadComponent(StudyViewPage).call();
+    setTimeout(() => {
+        import('./pages/resultsView/ResultsViewPage');
+        import('./pages/studyView/StudyViewPage');
+    }, 2000);
 }
 
 export const makeRoutes = routing => {
@@ -324,7 +327,14 @@ export const makeRoutes = routing => {
     return (
         <React.Suspense fallback={null}>
             <Switch>
-                <Route exact path={'/'} component={ScrollToTop(Homepage)} />
+                <Route
+                    exact
+                    path={'/'}
+                    component={ScrollToTop(
+                        Homepage,
+                        preloadImportantComponents
+                    )}
+                />
                 <Route path="/restore" component={ScrollToTop(restoreRoute)} />
                 <Route
                     path="/loading/comparison"
