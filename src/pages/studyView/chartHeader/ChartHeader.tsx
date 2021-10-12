@@ -38,6 +38,7 @@ export interface IChartHeaderProps {
     toggleLogScaleX?: () => void;
     toggleLogScaleY?: () => void;
     toggleNAValue?: () => void;
+    swapAxes?: () => void;
     hideLabel?: boolean;
     chartControls?: ChartControls;
     changeChartType: (chartType: ChartType) => void;
@@ -67,6 +68,7 @@ export interface ChartControls {
     logScaleYChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
+    showSwapAxes?: boolean;
 }
 
 @observer
@@ -278,6 +280,24 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             }
                             style={{ marginTop: 1, marginBottom: -3 }}
                         />
+                    </a>
+                </li>
+            );
+        }
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showSwapAxes &&
+            this.props.swapAxes
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item logScaleCheckbox"
+                        onClick={this.props.swapAxes}
+                    >
+                        <i className={'fa fa-arrow-up'} />
+                        {` Swap Axes `}
+                        <i className={'fa fa-arrow-down'} />
                     </a>
                 </li>
             );
