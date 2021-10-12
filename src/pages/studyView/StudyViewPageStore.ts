@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
 import oncoKBClient from 'shared/api/oncokbClientInstance';
+import JSON_DATA from './cancerGeneListData.json';
+
 import {
     action,
     computed,
@@ -4773,7 +4775,8 @@ export class StudyViewPageStore
     readonly oncokbCancerGenes = remoteData<CancerGene[]>({
         await: () => [],
         invoke: async () => {
-            return oncoKBClient.utilsCancerGeneListGetUsingGET_1({});
+            return JSON_DATA as CancerGene[];
+            //return oncoKBClient.utilsCancerGeneListGetUsingGET_1({});
         },
         onError: () => {},
         default: [],
