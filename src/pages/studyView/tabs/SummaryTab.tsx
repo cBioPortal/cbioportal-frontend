@@ -443,6 +443,9 @@ export class StudySummaryTab extends React.Component<
                     )!;
                     settings.yLogScale = !settings.yLogScale;
                 };
+                props.onSwapAxes = () => {
+                    this.store.swapXVsYChartAxes(props.chartMeta!.uniqueKey);
+                };
                 props.plotDomain = chartInfo.plotDomain;
                 props.axisLabelX = `${chartInfo.xAttr.displayName}${
                     settings.xLogScale ? ' (log)' : ''

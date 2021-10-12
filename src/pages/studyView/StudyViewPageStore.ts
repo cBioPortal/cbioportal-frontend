@@ -2357,6 +2357,41 @@ export class StudyViewPageStore
     getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
         return this._xVsYChartSettings.get(uniqueKey);
     }
+    @action.bound
+    swapXVsYChartAxes(uniqueKey: string): void {
+        const chart = this.getXVsYChartInfo(uniqueKey)!;
+        const settings = this.getXVsYChartSettings(uniqueKey)!;
+
+        const xAttr = chart.xAttr;
+        chart.xAttr = chart.yAttr;
+        chart.yAttr = xAttr;
+
+        const xLog = settings.xLogScale;
+        settings.xLogScale = settings.yLogScale;
+        settings.yLogScale = xLog;
+
+        // trigger rerender
+        this.changeChartVisibility(uniqueKey, false);
+        this.changeChartVisibility(uniqueKey, true);
+    }
+    doesXVsYChartExist(attrIdA: string, attrIdB: string) {
+        const allCharts = this._xVsYChartMap.values();
+        let chartExists = false;
+        for (const chart of allCharts) {
+            const chartAttrIds = [
+                chart.xAttr.clinicalAttributeId,
+                chart.yAttr.clinicalAttributeId,
+            ];
+            if (
+                chartAttrIds.includes(attrIdA) &&
+                chartAttrIds.includes(attrIdB)
+            ) {
+                chartExists = true;
+                break;
+            }
+        }
+        return chartExists;
+    }
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
