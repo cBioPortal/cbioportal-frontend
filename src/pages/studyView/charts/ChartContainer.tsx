@@ -125,6 +125,7 @@ export interface IChartContainerProps {
     onToggleLogScaleX: (chartMeta: ChartMeta) => void;
     onToggleLogScaleY: (chartMeta: ChartMeta) => void;
     onToggleNAValue: (chartMeta: ChartMeta) => void;
+    onSwapAxes: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
     logScaleXChecked?: boolean;
@@ -211,6 +212,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     this.props.onToggleNAValue(this.props.chartMeta);
                 }
             }),
+            onSwapAxes: action(() => {
+                if (this.props.onSwapAxes) {
+                    this.props.onSwapAxes(this.props.chartMeta);
+                }
+            }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 if (this.mouseLeaveTimeout) {
                     clearTimeout(this.mouseLeaveTimeout);
@@ -283,6 +289,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     logScaleXChecked: this.props.logScaleXChecked,
                     showLogScaleYToggle: this.props.showLogScaleYToggle,
                     logScaleYChecked: this.props.logScaleYChecked,
+                    showSwapAxes: !!this.props.onSwapAxes,
                 };
                 break;
             }
@@ -1058,6 +1065,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     toggleLogScale={this.handlers.onToggleLogScale}
                     toggleLogScaleX={this.handlers.onToggleLogScaleX}
                     toggleLogScaleY={this.handlers.onToggleLogScaleY}
+                    swapAxes={this.handlers.onSwapAxes}
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}

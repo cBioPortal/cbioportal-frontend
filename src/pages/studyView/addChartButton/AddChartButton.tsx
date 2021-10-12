@@ -709,36 +709,38 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @observable private savingCustomData = false;
 
     @computed private get addXVsYChartButton() {
+        let disabled = false;
+        let text = 'Add Chart';
         if (this.xVsYSelection.x === this.xVsYSelection.y) {
-            return (
-                <DefaultTooltip
-                    overlay={
-                        <span>
-                            Please choose two different clinical attributes to
-                            plot.
-                        </span>
-                    }
-                >
-                    <button className="btn btn-primary btn-sm" disabled={true}>
-                        Add Chart
-                    </button>
-                </DefaultTooltip>
-            );
-        } else {
-            return (
-                <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() =>
-                        this.props.store.addXVsYChart({
-                            xAttrId: this.xVsYSelection.x,
-                            yAttrId: this.xVsYSelection.y,
-                        })
-                    }
-                >
-                    Add Chart
-                </button>
-            );
+            disabled = true;
+            text = 'Please choose two different attributes.';
+        } else if (
+            this.props.store.doesXVsYChartExist(
+                this.xVsYSelection.x,
+                this.xVsYSelection.y
+            )
+        ) {
+            disabled = true;
+            text = 'A chart with these attributes already exists';
         }
+
+        return (
+            <button
+                className="btn btn-primary btn-sm"
+                disabled={disabled}
+                onClick={
+                    disabled
+                        ? undefined
+                        : () =>
+                              this.props.store.addXVsYChart({
+                                  xAttrId: this.xVsYSelection.x,
+                                  yAttrId: this.xVsYSelection.y,
+                              })
+                }
+            >
+                {text}
+            </button>
+        );
     }
 
     render() {

@@ -3310,7 +3310,10 @@ export function logScalePossible(clinicalAttributeId: string) {
 }
 
 export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
-    return `X-VS-Y-${xAttrId}-${yAttrId}`;
+    // make key the same regardless of axis order - only one chart allowed
+    //  for a given pair
+    const sorted = _.sortBy([xAttrId, yAttrId]);
+    return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
 }
 
 export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
