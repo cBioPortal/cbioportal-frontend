@@ -2106,6 +2106,10 @@ export default abstract class ComparisonStore
                     this.driverAnnotationSettings.customTiersDefault
                 );
             },
+            default: {
+                hasBinary: false,
+                tiers: [],
+            },
         }
     );
 
