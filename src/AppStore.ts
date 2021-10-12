@@ -59,7 +59,10 @@ export class AppStore {
     }
 
     @computed get logoutUrl() {
-        if (this.authMethod === 'saml') {
+        if (
+            this.authMethod === 'saml' ||
+            this.authMethod === 'saml_plus_basic'
+        ) {
             return 'saml/logout';
         } else {
             return 'j_spring_security_logout';
