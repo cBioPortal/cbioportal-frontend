@@ -957,7 +957,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     </MSKTab>
                     <MSKTab
                         id={ChartMetaDataTypeEnum.X_VS_Y}
-                        linkText={'X vs Y'}
+                        linkText={
+                            <span>
+                                X vs Y
+                                <strong
+                                    style={{ marginLeft: 5 }}
+                                    className={'beta-text'}
+                                >
+                                    Beta!
+                                </strong>
+                            </span>
+                        }
                         key={4}
                     >
                         <div
