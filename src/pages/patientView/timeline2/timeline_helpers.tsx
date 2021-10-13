@@ -98,7 +98,7 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
             };
             for (const event of cat.items) {
                 const color = _getEventColor(event);
-                event.render = event => {
+                event.render = () => {
                     return (
                         <circle
                             cx="0"
@@ -241,6 +241,41 @@ export function buildBaseConfig(
                 },
             },
             {
+                trackTypeMatch: /^STATUS$/i,
+                configureTrack: (cat: TimelineTrackSpecification) => {
+                    for (const event of cat.items) {
+                        // if an event has a "status" attribute with value "deceased",
+                        if (
+                            event.event.attributes.find((attr: any) => {
+                                return (
+                                    !!attr.key.match(/^STATUS$/i) &&
+                                    !!attr.value.match(/^DECEASED$/i)
+                                );
+                            })
+                        ) {
+                            // then render it as a black diamond
+                            event.render = (y: number) => {
+                                const size = 7;
+                                return (
+                                    <rect
+                                        x={0}
+                                        y={y - size / 2}
+                                        fill={'black'}
+                                        width={size}
+                                        height={size}
+                                        style={{
+                                            transformBox: 'fill-box',
+                                            transformOrigin: 'center',
+                                            transform: 'rotate(45deg)',
+                                        }}
+                                    />
+                                );
+                            };
+                        }
+                    }
+                },
+            },
+            {
                 trackTypeMatch: /SPECIMEN|SAMPLE ACQUISITION|SEQUENCING/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     // we want a custom tooltip for samples, which includes clinical data
@@ -302,7 +337,7 @@ export function buildBaseConfig(
                     cat.items.forEach((event, i) => {
                         const sampleInfo = getSampleInfo(event, caseMetaData);
                         if (sampleInfo) {
-                            event.render = event => {
+                            event.render = () => {
                                 return (
                                     <SampleMarker
                                         color={sampleInfo.color}

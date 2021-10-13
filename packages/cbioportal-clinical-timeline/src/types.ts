@@ -2,7 +2,7 @@ export interface TimelineEvent {
     start: number;
     end: number;
     event: any;
-    render?(item: TimelineEvent): JSX.Element | string;
+    render?(y: number): JSX.Element | string;
     containingTrack: TimelineTrackSpecification;
 }
 
