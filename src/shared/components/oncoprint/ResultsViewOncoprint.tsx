@@ -10,6 +10,7 @@ import {
 import {
     capitalize,
     FadeInteraction,
+    mobxPromiseResolve,
     remoteData,
     svgToPdfDownload,
 } from 'cbioportal-frontend-commons';
@@ -28,6 +29,7 @@ import OncoprintControls, {
 import {
     ClinicalAttribute,
     Gene,
+    GenericAssayMeta,
     MolecularProfile,
     Patient,
     Sample,
@@ -177,6 +179,24 @@ export default class ResultsViewOncoprint extends React.Component<
             !this.urlWrapper.query.oncoprint_sort_by_drivers || // on by default
             this.urlWrapper.query.oncoprint_sort_by_drivers === 'true'
         );
+    }
+
+    @computed get genericAssayPromises() {
+        if (this.props.store.studyIds.result.length === 1) {
+            // we only support generic assay in oncoprint for single study,
+            // and don't want to make unnecessary references->unnecessary
+            // API calls for multiple studies (or for pending when studyIds.length == 0)
+            return this.props.store;
+        } else {
+            return {
+                genericAssayEntitiesGroupedByGenericAssayType: mobxPromiseResolve<{
+                    [genericAssayType: string]: GenericAssayMeta[];
+                }>({}),
+                genericAssayEntitiesGroupedByGenericAssayTypeLinkMap: mobxPromiseResolve<{
+                    [genericAssayType: string]: { [stableId: string]: string };
+                }>({}),
+            };
+        }
     }
 
     @computed
@@ -505,7 +525,7 @@ export default class ResultsViewOncoprint extends React.Component<
                 return self.props.store.heatmapMolecularProfiles;
             },
             get genericAssayEntitiesGroupedByGenericAssayTypePromise() {
-                return self.props.store
+                return this.genericAssayPromises
                     .genericAssayEntitiesGroupedByGenericAssayType;
             },
             get selectedHeatmapProfileId() {
