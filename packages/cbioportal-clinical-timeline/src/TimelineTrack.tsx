@@ -150,7 +150,7 @@ export function renderPoint(
 ) {
     if (events.length === 1 && events[0].render) {
         // If only one event, and theres an event-specific render function, show that.
-        return events[0].render(events[0]);
+        return events[0].render(y);
     } else {
         // events.length > 1, multiple simultaneous events.
 
