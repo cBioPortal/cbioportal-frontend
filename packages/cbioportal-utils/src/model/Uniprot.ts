@@ -29,3 +29,11 @@ export interface UniprotFeature {
     molecule: string;
     evidences: UniprotFeatureEvidence[];
 }
+
+export interface UniprotTopology {
+    type: string; // TOPO_DOM
+    startPosition: number; // 25
+    endPosition: number; // 645
+    description: string; // Extracellular
+    evidence: UniprotFeatureEvidence[]; // ECO:0000255
+}

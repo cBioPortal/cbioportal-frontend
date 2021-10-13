@@ -17,6 +17,7 @@ import PtmTrack from './PtmTrack';
 
 import './defaultTrackTooltipTable.scss';
 import { PtmAnnotationTableColumnId } from '../ptm/PtmAnnotationTable';
+import UniprotTopologyTrack from './UniprotTopologyTrack';
 
 type TrackPanelProps = {
     store: MutationMapperStore<Mutation>;
@@ -38,6 +39,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
             TrackName.OncoKB,
             TrackName.dbPTM,
             TrackName.Exon,
+            TrackName.UniprotTopology,
         ],
     };
 
@@ -91,6 +93,18 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                 !this.props.trackVisibility ||
                 this.props.trackVisibility[TrackName.Exon] === 'visible' ? (
                     <ExonTrack
+                        store={this.props.store}
+                        dataStore={this.props.store.dataStore}
+                        width={this.props.geneWidth}
+                        xOffset={this.props.geneXOffset}
+                        proteinLength={this.proteinLength}
+                    />
+                ) : null,
+            [TrackName.UniprotTopology]:
+                !this.props.trackVisibility ||
+                this.props.trackVisibility[TrackName.UniprotTopology] ===
+                    'visible' ? (
+                    <UniprotTopologyTrack
                         store={this.props.store}
                         dataStore={this.props.store.dataStore}
                         width={this.props.geneWidth}

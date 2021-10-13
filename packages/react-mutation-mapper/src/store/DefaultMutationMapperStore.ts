@@ -25,6 +25,9 @@ import {
     PtmSource,
     UniprotFeature,
     uniqueGenomicLocations,
+    UniprotCategory,
+    convertUniprotFeatureToUniprotTopology,
+    UniprotTopology,
 } from 'cbioportal-utils';
 import { Gene, Mutation, IMyVariantInfoIndex } from 'cbioportal-utils';
 import memoize from 'memoize-weak-decorator';
@@ -759,7 +762,53 @@ class DefaultMutationMapperStore<T extends Mutation>
                     // return this.dataFetcher.fetchPtmData(
                     //     this.activeTranscript.result
                     // );
-                    return this.dataFetcher.fetchUniprotFeatures(uniprotId);
+                    return this.dataFetcher.fetchUniprotFeatures(uniprotId, [
+                        UniprotCategory.PTM,
+                    ]);
+                } else {
+                    return [];
+                }
+            },
+            onError: () => {
+                // fail silently
+            },
+        },
+        []
+    );
+
+    readonly uniprotTopologyData: MobxPromise<UniprotTopology[]> = remoteData(
+        {
+            await: () => [
+                this.mutationData,
+                this.activeTranscript,
+                this.allTranscripts,
+            ],
+            invoke: async () => {
+                let uniprotId: string | undefined;
+                const data: UniprotTopology[] = [];
+
+                if (this.activeTranscript.result) {
+                    const transcript = this.transcriptsByTranscriptId[
+                        this.activeTranscript.result
+                    ];
+                    uniprotId = transcript?.uniprotId;
+                }
+
+                if (uniprotId) {
+                    // TODO we need to update genome nexus for this one to work,
+                    //  for now we are getting the data directly from uniprot API
+                    const uniprotFeatures = await this.dataFetcher.fetchUniprotFeatures(
+                        uniprotId,
+                        [UniprotCategory.TOPOLOGY]
+                    );
+                    uniprotFeatures.forEach(uniprotFeature => {
+                        data.push(
+                            convertUniprotFeatureToUniprotTopology(
+                                uniprotFeature
+                            )
+                        );
+                    });
+                    return data;
                 } else {
                     return [];
                 }
