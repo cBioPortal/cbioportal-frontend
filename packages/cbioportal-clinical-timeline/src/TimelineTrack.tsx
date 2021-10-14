@@ -26,6 +26,7 @@ import {
 } from './lib/lineChartAxisUtils';
 import { getColor } from 'cbioportal-frontend-commons';
 import { getTrackLabel } from './TrackHeader';
+import { renderShape } from './renderHelpers';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -182,14 +183,7 @@ export function renderPoint(
                     </>
                 );
             } else {
-                contents = (
-                    <circle
-                        cx="0"
-                        cy={y}
-                        r={POINT_RADIUS}
-                        fill={eventColorGetter(events[0])}
-                    />
-                );
+                contents = renderShape(events[0], y, eventColorGetter);
             }
 
             return <g>{contents}</g>;
