@@ -139,8 +139,12 @@ export function randomColorGetter(e: TimelineEvent) {
     return getColor(getTrackLabel(e.containingTrack));
 }
 
+function getSpecifiedColorIfExists(e: TimelineEvent) {
+    return getAttributeValue('STYLE_COLOR', e);
+}
+
 const defaultColorGetter = function(e: TimelineEvent) {
-    return POINT_COLOR;
+    return getSpecifiedColorIfExists(e) || POINT_COLOR;
 };
 
 export function renderPoint(
