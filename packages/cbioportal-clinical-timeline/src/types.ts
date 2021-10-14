@@ -1,7 +1,19 @@
+export interface TimelineEventAttribute {
+    key: string;
+    value: string;
+}
 export interface TimelineEvent {
     start: number;
     end: number;
-    event: any;
+    event: {
+        attributes: TimelineEventAttribute[];
+        eventType: string;
+        patientId: string;
+        startNumberOfDaysSinceDiagnosis: number;
+        endNumberOfDaysSinceDiagnosis?: number;
+        studyId: string;
+        uniquePatientKey: string;
+    };
     render?(y: number): JSX.Element | string;
     containingTrack: TimelineTrackSpecification;
 }
