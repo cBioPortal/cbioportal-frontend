@@ -527,15 +527,6 @@ export default class StudyViewPage extends React.Component<
                 )}
 
                 {this.store.comparisonConfirmationModal}
-
-                <LoadingIndicator
-                    size={'big'}
-                    isLoading={
-                        this.store.queriedSampleIdentifiers.isPending ||
-                        this.store.invalidSampleIds.isPending
-                    }
-                    center={true}
-                />
                 {this.store.queriedSampleIdentifiers.isComplete &&
                     this.store.invalidSampleIds.isComplete &&
                     this.store.unknownQueriedIds.isComplete &&
@@ -942,7 +933,10 @@ export default class StudyViewPage extends React.Component<
     }
 
     private readonly body = MakeMobxView({
-        await: () => [this.store.unknownQueriedIds],
+        await: () => [
+            this.store.unknownQueriedIds,
+            this.store.queriedPhysicalStudyIds,
+        ],
         render: () => {
             // we can tell if there are any valid studies
             // by looking to see if there is anything in queriedPhysicalStudyIds
@@ -967,7 +961,6 @@ export default class StudyViewPage extends React.Component<
                 return this.content();
             }
         },
-        renderPending: () => <LoadingIndicator isLoading={true} />,
     });
 
     componentWillUnmount(): void {
@@ -982,6 +975,15 @@ export default class StudyViewPage extends React.Component<
                 hideFooter={true}
                 className={'subhead-dark'}
             >
+                <LoadingIndicator
+                    size={'big'}
+                    isLoading={
+                        this.store.queriedSampleIdentifiers.isPending ||
+                        this.store.invalidSampleIds.isPending ||
+                        this.body.isPending
+                    }
+                    center={true}
+                />
                 {this.body.component}
             </PageLayout>
         );
