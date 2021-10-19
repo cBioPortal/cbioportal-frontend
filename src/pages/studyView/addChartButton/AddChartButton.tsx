@@ -100,24 +100,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         string,
         string
     >({}, { deep: true });
-    @observable _xVsYSelection = {
-        x: '',
-        y: '',
+    @observable xVsYSelection: {
+        x?: { value: string; label: string };
+        y?: { value: string; label: string };
+    } = {
+        x: undefined,
+        y: undefined,
     };
-    @computed get xVsYSelection() {
-        let defaultAttr = '';
-        if (
-            this.xVsYClinicalAttributes.isComplete &&
-            this.xVsYClinicalAttributes.result.length > 0
-        ) {
-            defaultAttr = this.xVsYClinicalAttributes.result[0]
-                .clinicalAttributeId;
-        }
-        return {
-            x: this._xVsYSelection.x || defaultAttr,
-            y: this._xVsYSelection.y || defaultAttr,
-        };
-    }
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
     private genericAssayEntityOptionsReaction: IReactionDisposer;
 
@@ -179,7 +168,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         invoke: () => {
             return Promise.resolve(
                 this.xVsYClinicalAttributes.result!.map(attr => ({
-                    //id: 'select_all_filtered_options',
                     value: attr.clinicalAttributeId,
                     label: attr.displayName,
                 }))
@@ -711,13 +699,15 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @computed private get addXVsYChartButton() {
         let disabled = false;
         let text = 'Add Chart';
-        if (this.xVsYSelection.x === this.xVsYSelection.y) {
+        if (!this.xVsYSelection.x || !this.xVsYSelection.y) {
+            disabled = true;
+        } else if (this.xVsYSelection.x === this.xVsYSelection.y) {
             disabled = true;
             text = 'Please choose two different attributes.';
         } else if (
             this.props.store.doesXVsYChartExist(
-                this.xVsYSelection.x,
-                this.xVsYSelection.y
+                this.xVsYSelection.x.value,
+                this.xVsYSelection.y.value
             )
         ) {
             disabled = true;
@@ -731,11 +721,19 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 onClick={
                     disabled
                         ? undefined
-                        : () =>
+                        : action(() => {
                               this.props.store.addXVsYChart({
-                                  xAttrId: this.xVsYSelection.x,
-                                  yAttrId: this.xVsYSelection.y,
-                              })
+                                  xAttrId: this.xVsYSelection.x!.value,
+                                  yAttrId: this.xVsYSelection.y!.value,
+                              });
+                              this.updateInfoMessage(
+                                  `${this.xVsYSelection.y!.label} vs ${
+                                      this.xVsYSelection.x!.label
+                                  } added.`
+                              );
+                              this.xVsYSelection.x = undefined;
+                              this.xVsYSelection.y = undefined;
+                          })
                 }
             >
                 {text}
@@ -990,34 +988,15 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     name="x-vs-y-select-x"
                                     placeholder={`Select x-axis clinical attribute`}
                                     closeMenuOnSelect={true}
-                                    value={this.xVsYOptions.result.find(
-                                        opt =>
-                                            opt.value === this.xVsYSelection.x
-                                    )}
+                                    value={this.xVsYSelection.x}
                                     isMulti={false}
                                     isClearable={false}
                                     options={this.xVsYOptions.result}
                                     onChange={action((opt: any) => {
-                                        this._xVsYSelection.x = opt.value;
+                                        this.xVsYSelection.x = opt;
                                     })}
                                 />
                             </div>
-                            <button
-                                className="btn btn-primary btn-sm"
-                                style={{
-                                    width: 120,
-                                    margin: 'auto',
-                                    marginBottom: 5,
-                                }}
-                                onClick={() => {
-                                    const x = this.xVsYSelection.x;
-                                    this._xVsYSelection.x = this.xVsYSelection.y;
-                                    this._xVsYSelection.y = x;
-                                }}
-                            >
-                                <i className="fa fa-arrow-up"></i> Swap Axes{' '}
-                                <i className="fa fa-arrow-down"></i>
-                            </button>
                             <div style={{ paddingBottom: 15 }}>
                                 <span
                                     style={{
@@ -1032,16 +1011,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     name="x-vs-y-select-y"
                                     placeholder={`Select y-axis clinical attribute`}
                                     closeMenuOnSelect={true}
-                                    value={this.xVsYOptions.result.find(
-                                        opt =>
-                                            opt.value === this.xVsYSelection.y
-                                    )}
+                                    value={this.xVsYSelection.y}
                                     isMulti={false}
                                     isClearable={false}
                                     options={this.xVsYOptions.result}
                                     onChange={action((opt: any) => {
-                                        console.log(opt);
-                                        this._xVsYSelection.y = opt.value;
+                                        this.xVsYSelection.y = opt;
                                     })}
                                 />
                             </div>
