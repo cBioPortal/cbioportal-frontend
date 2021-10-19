@@ -2319,7 +2319,7 @@ export class StudyViewPageStore
     >({}, { deep: false });
     private _xVsYChartMap = observable.map<ChartUniqueKey, XVsYChart>(
         {},
-        { deep: false }
+        { deep: true }
     );
     private _xVsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
         {},
