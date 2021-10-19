@@ -5199,11 +5199,9 @@ export class StudyViewPageStore
         if (this._xVsYChartMap.has(uniqueKey)) {
             this.changeChartVisibility(uniqueKey, true);
         } else {
-            const newChartName = `${newChart.xAttr.displayName} vs ${newChart.yAttr.displayName}`;
-
-            let chartMeta: ChartMeta = {
+            const chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
-                displayName: newChartName,
+                displayName: '',
                 description: '',
                 dataType: ChartMetaDataTypeEnum.X_VS_Y,
                 patientAttribute: false,
