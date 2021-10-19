@@ -130,8 +130,12 @@ function setOncoprintMutationsMenuOpen(open) {
 function setCheckboxChecked(checked, selector, failure_message) {
     browser.waitUntil(
         () => {
-            $(selector).click();
-            return checked === $(selector).isSelected();
+            if ($(selector).isDisplayed()) {
+                $(selector).click();
+                return checked === $(selector).isSelected();
+            } else {
+                return false;
+            }
         },
         {
             timeout: 10000,
