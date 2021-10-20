@@ -45,6 +45,21 @@ export function calculateGnomadAlleleFrequency(
     }
 }
 
+export function calculateGnomadTableNumber(
+    gnomadExome?: number | null,
+    gnomadGenome?: number | null
+) {
+    let result = 0;
+    if (gnomadGenome && gnomadExome) {
+        result = gnomadGenome + gnomadExome;
+    } else if (gnomadGenome) {
+        result = gnomadGenome;
+    } else if (gnomadExome) {
+        result = gnomadExome;
+    }
+    return result;
+}
+
 export function getGnomadUrl(
     annotation?: VariantAnnotation,
     myVariantInfo?: MyVariantInfo
@@ -125,10 +140,9 @@ export function setGnomadTableData(
         alleleNumber: data.alleleNumber[alleleNumberName]
             ? data.alleleNumber[alleleNumberName]
             : 0,
-        homozygotes:
-            data.homozygotes === undefined
-                ? 'N/A'
-                : data.homozygotes[homozygotesName],
+        homozygotes: data.homozygotes[homozygotesName]
+            ? data.homozygotes[homozygotesName]
+            : 0,
         alleleFrequency: calculateGnomadAlleleFrequency(
             data.alleleCount[alleleCountName],
             data.alleleNumber[alleleNumberName],
@@ -147,9 +161,8 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
     ) {
         const gnomadExome: { [key: string]: GnomadSummary } = {};
         const gnomadGenome: { [key: string]: GnomadSummary } = {};
-        const gnomadResult: { [key: string]: GnomadSummary } = {};
-
-        // If only gnomadExome data exist, show gnomadExome result in the table
+        const combinedGnomad: { [key: string]: GnomadSummary } = {};
+        // If gnomadExome data exists, set gnomadExome
         if (myVariantInfo.gnomadExome) {
             Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
                 setGnomadTableData(key, myVariantInfo.gnomadExome, gnomadExome)
@@ -157,7 +170,7 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
             gnomadData = gnomadExome;
         }
 
-        // If only gnomadGenome data exist, show gnomadGenome result in the table
+        // If gnomadGenome data exists, set gnomadGenome
         if (myVariantInfo.gnomadGenome) {
             Object.keys(GNOMAD_POPULATION_NAME).forEach(key =>
                 setGnomadTableData(
@@ -169,38 +182,40 @@ export function getGnomadData(myVariantInfo?: MyVariantInfo) {
             gnomadData = gnomadGenome;
         }
 
-        // If both gnomadExome and gnomadGenome exist, combine gnomadExome and gnomadGenome together
+        // If both gnomadExome and gnomadGenome exist, combine gnomadExome and gnomadGenome together, set to combinedGnomad
         if (myVariantInfo.gnomadExome && myVariantInfo.gnomadGenome) {
             Object.keys(GNOMAD_POPULATION_NAME).forEach(key => {
-                gnomadResult[key] = {
+                combinedGnomad[key] = {
                     population: key,
-                    alleleCount:
-                        gnomadExome[key].alleleCount +
-                        gnomadGenome[key].alleleCount,
-                    alleleNumber:
-                        gnomadExome[key].alleleNumber +
-                        gnomadGenome[key].alleleNumber,
-                    homozygotes:
-                        gnomadExome[key].homozygotes === undefined ||
-                        gnomadGenome[key].homozygotes === undefined
-                            ? 'N/A'
-                            : (
-                                  parseInt(gnomadExome[key].homozygotes!) +
-                                  parseInt(gnomadGenome[key].homozygotes!)
-                              ).toString(),
+                    alleleCount: calculateGnomadTableNumber(
+                        gnomadExome[key]?.alleleCount,
+                        gnomadGenome[key]?.alleleCount
+                    ),
+                    alleleNumber: calculateGnomadTableNumber(
+                        gnomadExome[key]?.alleleNumber,
+                        gnomadGenome[key]?.alleleNumber
+                    ),
+                    homozygotes: calculateGnomadTableNumber(
+                        gnomadExome[key]?.homozygotes,
+                        gnomadGenome[key]?.homozygotes
+                    ),
                     alleleFrequency: calculateGnomadAlleleFrequency(
-                        gnomadExome[key].alleleCount +
-                            gnomadGenome[key].alleleCount,
-                        gnomadExome[key].alleleNumber +
-                            gnomadGenome[key].alleleNumber,
+                        calculateGnomadTableNumber(
+                            gnomadExome[key]?.alleleCount,
+                            gnomadGenome[key]?.alleleCount
+                        ),
+                        calculateGnomadTableNumber(
+                            gnomadExome[key]?.alleleNumber,
+                            gnomadGenome[key]?.alleleNumber
+                        ),
                         null
                     ),
                 } as GnomadSummary;
             });
-            gnomadData = gnomadResult;
+            gnomadData = combinedGnomad;
         }
     }
-
+    // If only one type of gnomad(Exome or Genome) exists, show result from this type. If both types exist, show combined result.
     return gnomadData;
 }
 

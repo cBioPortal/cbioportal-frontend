@@ -29,13 +29,13 @@ export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
             myVariantInfo.gnomadExome.alleleCount.ac +
                 myVariantInfo.gnomadGenome.alleleCount.ac,
             myVariantInfo.gnomadExome.alleleNumber.an +
-                myVariantInfo.gnomadGenome.alleleFrequency.af,
+                myVariantInfo.gnomadGenome.alleleNumber.an,
             null
         );
     }
 
     // If only has gnomadExome, sort by gnomadExome frequency
-    if (myVariantInfo && myVariantInfo.gnomadExome) {
+    else if (myVariantInfo && myVariantInfo.gnomadExome) {
         return calculateGnomadAlleleFrequency(
             myVariantInfo.gnomadExome.alleleCount.ac,
             myVariantInfo.gnomadExome.alleleNumber.an,
@@ -44,7 +44,7 @@ export function sortValue(myVariantInfo?: MyVariantInfo): number | null {
     }
 
     // If only has gnomadGenome, sort by gnomadGenome frequency
-    if (myVariantInfo && myVariantInfo.gnomadGenome) {
+    else if (myVariantInfo && myVariantInfo.gnomadGenome) {
         return calculateGnomadAlleleFrequency(
             myVariantInfo.gnomadGenome.alleleCount.ac,
             myVariantInfo.gnomadGenome.alleleNumber.an,
