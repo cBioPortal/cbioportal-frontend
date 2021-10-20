@@ -272,3 +272,7 @@ export function isTrackVisible(
 ) {
     return visibleTracks.includes(track.type);
 }
+
+export function getTrackEventColorGetter(track: TimelineTrackSpecification) {
+    return track.eventColorGetter || track.timelineConfig?.eventColorGetter;
+}
