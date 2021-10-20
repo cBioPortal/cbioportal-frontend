@@ -26,7 +26,7 @@
     "rollup:watch": "rollup -c rollup.config.ts -w",
     "prepare": "yarn run build",
     "test": "cross-env CI=1 jest --env=jsdom --runInBand --passWithNoTests",
-    "test:watch": "yarn run test -- --watch"
+    "test:watch": "yarn run test --watch"
   },
   "dependencies": {
     "superagent": "^3.8.3",
