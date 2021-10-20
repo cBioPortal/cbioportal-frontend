@@ -17,12 +17,6 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - attach_workspace:
         at: /tmp/
     - run:
-        name: "Wait for netlify deploy preview to be ready"
-        command: yarn run waitForNetlifyPreview ${CIRCLE_SHA1}
-    - run:
-        name: "Set netlify deploy preview"
-        command: echo 'export NETLIFY_DEPLOY_PREVIEW="deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend"' >> $BASH_ENV
-    - run:
         name: "Run end to end tests using an external frontend deploy"
         command: |
           sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
@@ -114,6 +108,18 @@ jobs:
           root: /tmp
           paths:
             - repo
+
+  netlify:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: /tmp/
+      - run:
+          name: "Wait for netlify deploy preview to be ready"
+          command: yarn run waitForNetlifyPreview ${CIRCLE_SHA1}
+      - run:
+          name: "Set netlify deploy preview"
+          command: echo 'export NETLIFY_DEPLOY_PREVIEW="deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend"' >> $BASH_ENV
 
   api_sync:
     <<: *defaults
@@ -283,9 +289,6 @@ jobs:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
           key: v6-keycloak-database-files-{{ checksum "e2e-localdb-workspace/keycloak/keycloak-config-generated.json" }}
       - run:
-          name: "Set netlify deploy preview"
-          command: echo 'export NETLIFY_DEPLOY_PREVIEW="deploy-preview-${CIRCLE_PR_NUMBER}--cbioportalfrontend"' >> $BASH_ENV
-      - run:
           name: Run end-2-end tests with studies in local database
           command: |
             cd $PORTAL_SOURCE_DIR && \
@@ -349,12 +352,17 @@ workflows:
       - unit_tests:
           requires:
             - install
+      - netlify:
+          requires:
+            - install
       - end_to_end_tests:
           requires:
             - install
+            - netlify
       - end_to_end_tests_localdb:
           requires:
             - install
+            - netlify
       - api_sync:
           requires:
             - install
