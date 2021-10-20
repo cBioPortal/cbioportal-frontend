@@ -43,6 +43,7 @@ export default class HomePage extends React.Component<
 
     @autobind
     private getQueryStore() {
+        const moo: String = 1;
         return this.queryStore;
     }
 
