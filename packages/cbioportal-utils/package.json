@@ -26,7 +26,7 @@
     "rollup:watch": "rollup -c rollup.config.ts -w",
     "prepare": "yarn run build",
     "test": "cross-env CI=1 jest --env=jsdom --runInBand",
-    "test:watch": "yarn run test -- --watch"
+    "test:watch": "yarn run test --watch"
   },
   "dependencies": {
     "genome-nexus-ts-api-client": "^1.1.16",
