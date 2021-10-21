@@ -1,7 +1,7 @@
 import ExtendedRouterStore, { PortalSession } from './ExtendedRouterStore';
 import { assert } from 'chai';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as $ from 'jquery';
 import * as sinon from 'sinon';
 import * as mobx from 'mobx';

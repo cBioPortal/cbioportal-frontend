@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { PdbHeader } from 'genome-nexus-ts-api-client';
 import PdbHeaderCache from 'shared/cache/PdbHeaderCache';
 import { IPdbChain } from 'shared/model/Pdb';

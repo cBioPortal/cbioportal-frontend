@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ICivicVariantSummary } from 'cbioportal-utils';
 
 import civicTextLogo from '../../images/civic_text_logo.png';

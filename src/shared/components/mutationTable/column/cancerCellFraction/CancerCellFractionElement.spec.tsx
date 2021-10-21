@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import { expect } from 'chai';
 import {
     CancerCellFractionElementTooltip,
@@ -9,9 +9,6 @@ import {
 import { getClonalCircleColor } from 'shared/components/mutationTable/column/clonal/ClonalElement';
 import { ClonalValue } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
 import SampleManager from 'pages/patientView/SampleManager';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerCellFractionElement', () => {
     // For single sample test (only text displayed)
@@ -72,8 +69,8 @@ describe('CancerCellFractionElement', () => {
         CCFWrapper: any,
         expectedText: string
     ) {
-        expect(CCFWrapper.find('DefaultTooltip')).to.not.exist;
-        expect(CCFWrapper.find('CancerCellFractionBar')).to.not.exist;
+        expect(CCFWrapper.find('DefaultTooltip')).to.have.lengthOf(0);
+        expect(CCFWrapper.find('CancerCellFractionBar')).to.have.lengthOf(0);
         expect(CCFWrapper.find('span').text()).to.equal(expectedText);
     }
 

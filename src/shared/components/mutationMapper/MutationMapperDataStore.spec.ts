@@ -10,7 +10,7 @@ describe('MutationMapperDataStore', () => {
     let pos5Mutation: Mutation;
     let pos10Mutation: Mutation;
     let pos20Mutation: Mutation;
-    before(() => {
+    beforeAll(() => {
         pos10Mutation = { proteinPosStart: 10 } as Mutation;
         pos5Mutation = { proteinPosStart: 5 } as Mutation;
         pos20Mutation = { proteinPosStart: 20 } as Mutation;

@@ -23,7 +23,7 @@ describe('MutationUtils', () => {
     };
     let mutationsToCount: Mutation[];
 
-    before(() => {
+    beforeAll(() => {
         molecularProfileIdToMolecularProfile = {
             GP1: {
                 studyId: 'STUDY1',

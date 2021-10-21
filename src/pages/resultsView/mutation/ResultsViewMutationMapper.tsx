@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import classnames from 'classnames';
 import {
     DataFilter,

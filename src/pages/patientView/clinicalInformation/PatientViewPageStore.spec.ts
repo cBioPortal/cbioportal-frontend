@@ -6,12 +6,12 @@ import {
     PatientViewPageStore,
 } from './PatientViewPageStore';
 import { assert } from 'chai';
-import { AppStore } from 'AppStore';
+import { AppStore } from '../../../AppStore';
 
 describe('PatientViewPageStore', () => {
     let store: PatientViewPageStore;
 
-    before(() => {
+    beforeAll(() => {
         store = new PatientViewPageStore(new AppStore());
     });
 

@@ -1,5 +1,5 @@
 import { action, computed, observable, makeObservable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { cached } from 'mobxpromise';
 import {
     annotateMutations,

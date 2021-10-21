@@ -8,7 +8,7 @@ import {
 } from 'cbioportal-utils';
 import { Hotspot } from 'genome-nexus-ts-api-client';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 

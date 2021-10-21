@@ -1,6 +1,6 @@
 import { PatientSurvival } from '../../../shared/model/PatientSurvival';
 import { tsvFormat } from 'd3-dsv';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { Dictionary } from 'lodash';
 import { calculateLogConfidenceIntervals } from './SurvivalHelper';

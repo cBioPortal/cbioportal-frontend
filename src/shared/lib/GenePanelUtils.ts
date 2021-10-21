@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MobxPromise } from 'mobxpromise';
 import client from 'shared/api/cbioportalClientInstance';
 import {

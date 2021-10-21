@@ -3,7 +3,7 @@ import { CancerStudy } from 'cbioportal-ts-api-client';
 import { computed, observable, action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import classnames from 'classnames';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import styles from '../styles.module.scss';
 import { StudySummaryRecord } from '../../virtualStudy/VirtualStudy';
 import LoadingIndicator from '../../../../shared/components/loadingIndicator/LoadingIndicator';

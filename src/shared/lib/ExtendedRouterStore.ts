@@ -1,6 +1,6 @@
 import { RouterStore } from 'mobx-react-router';
 import { action, computed, makeObservable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import URL, { QueryParams } from 'url';
 import sessionClient from '../api/sessionServiceInstance';
 import { parse } from 'qs';

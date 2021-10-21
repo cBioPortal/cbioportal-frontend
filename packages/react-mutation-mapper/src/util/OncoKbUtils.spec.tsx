@@ -107,7 +107,7 @@ describe('OncoKbUtils', () => {
             ],
         };
 
-        const uniqueSampleKeyToTumorType = {
+        const uniqueSampleKeyToTumorType: { [key: string]: string } = {
             uniqueSampleKey_0: 'Lung Adenocarcinoma',
             uniqueSampleKey_1: 'Lung Adenocarcinoma',
             uniqueSampleKey_2: 'Lung Adenocarcinoma',

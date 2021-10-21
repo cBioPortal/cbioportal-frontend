@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, observable, action, makeObservable } from 'mobx';
 import HotspotSet from '../../lib/HotspotSet';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { SyntheticEvent } from 'react';
 import ProteinChain from './ProteinChain';
 

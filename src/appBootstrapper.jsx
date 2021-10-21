@@ -18,7 +18,7 @@ import {
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import $ from 'jquery';
 import * as superagent from 'superagent';
 import { buildCBioPortalPageUrl } from './shared/api/urls';

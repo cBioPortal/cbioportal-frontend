@@ -1,8 +1,7 @@
 import React from 'react';
 import { assert, default as chai } from 'chai';
 import chaiEnzyme from 'chai-enzyme';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
 import {
     Column,
@@ -25,8 +24,6 @@ import { SimpleLazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTabl
 import cloneJSXWithoutKeyAndRef from 'shared/lib/cloneJSXWithoutKeyAndRef';
 import { filterNumericalColumn, maxPage, parseNumericalFilter } from './utils';
 import _ from 'lodash';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());
@@ -382,7 +379,7 @@ describe('LazyMobXTable', () => {
     ];
 
     let clock: Clock;
-    before(() => {
+    beforeAll(() => {
         clock = lolex.install();
         simpleColumns = [
             {
@@ -397,7 +394,7 @@ describe('LazyMobXTable', () => {
         }
     });
 
-    after(() => {
+    afterAll(() => {
         clock.uninstall();
     });
 
@@ -1967,7 +1964,7 @@ describe('LazyMobXTable', () => {
     describe('column visibility', () => {
         // test visibility of headers and correponding data cells in the rows
         let table: ReactWrapper<any, any>;
-        before(() => {
+        beforeAll(() => {
             table = mount(<Table columns={columns} data={data} />);
         });
         it('shows initially visible columns at first, and does not show invisible ones', () => {

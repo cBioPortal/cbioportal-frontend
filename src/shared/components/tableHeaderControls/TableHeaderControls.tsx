@@ -11,7 +11,7 @@ import {
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
 import fileDownload from 'react-file-download';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     PaginationControls,
     IPaginationControlsProps,
