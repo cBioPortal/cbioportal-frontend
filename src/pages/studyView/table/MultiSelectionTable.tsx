@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import FixedHeaderTable, { IFixedHeaderTableProps } from './FixedHeaderTable';
 import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';

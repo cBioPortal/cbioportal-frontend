@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import classnames from 'classnames';
 import { ThreeBounce } from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
@@ -197,9 +197,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                 IMSKTabProps
             >[];
 
-            const toArrayedChildren: ReactChild[] = React.Children.toArray(
-                children
-            );
+            const toArrayedChildren: (
+                | ReactChild
+                | {}
+            )[] = React.Children.toArray(children);
 
             const targetTabId = (() => {
                 if (

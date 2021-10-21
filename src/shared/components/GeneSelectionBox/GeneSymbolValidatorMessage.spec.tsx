@@ -1,12 +1,9 @@
 import { assert } from 'chai';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import * as React from 'react';
 import GeneSymbolValidatorMessage, {
     GeneSymbolValidatorMessageProps,
 } from 'shared/components/GeneSelectionBox/GeneSymbolValidatorMessage';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('GeneSymbolValidatorMessage', () => {
     let props: GeneSymbolValidatorMessageProps;

@@ -1,10 +1,7 @@
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import SimpleTable from './SimpleTable';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('SimpleTable', () => {
     let table: any;
@@ -21,7 +18,7 @@ describe('SimpleTable', () => {
     const classNameTrue: string = 'test-class';
     const classNameFalse: undefined = undefined;
 
-    before(() => {
+    beforeAll(() => {
         table = mount(<SimpleTable headers={headers} rows={rows} />);
     });
 

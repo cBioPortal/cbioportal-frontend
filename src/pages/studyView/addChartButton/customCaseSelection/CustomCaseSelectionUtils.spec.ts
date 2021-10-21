@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     DEFAULT_GROUP_NAME_WITH_USER_INPUT,
     DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,

@@ -1,4 +1,4 @@
-import Enzyme, { ReactWrapper, mount } from 'enzyme';
+import { ReactWrapper, mount } from 'enzyme';
 import * as React from 'react';
 import { expect } from 'chai';
 import SampleManager from 'pages/patientView/SampleManager';
@@ -15,7 +15,6 @@ import {
     ASCN_BLACK,
     ASCN_WHITE,
 } from 'shared/lib/Colors';
-import Adapter from 'enzyme-adapter-react-16';
 
 /* Test Design:
 
@@ -44,8 +43,6 @@ import Adapter from 'enzyme-adapter-react-16';
     - icon for sample (if multiple samples present) from samplemanager not tested
 
 */
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('ASCNCopyNumberElement', () => {
     let nullSampleManager = new SampleManager([], []);
@@ -196,7 +193,7 @@ describe('ASCNCopyNumberElement', () => {
         );
 
         const bElement = ascnCopyNumberElementTooltip.find('b');
-        expect(bElement).to.have.text(ascnCopyNumberCall.toLowerCase());
+        expect(bElement.text()).to.be.equal(ascnCopyNumberCall.toLowerCase());
 
         const spanCount = countSpansWithCopyNumberText(
             ascnCopyNumberElementTooltip,

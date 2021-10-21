@@ -8,11 +8,11 @@ import { AccumulatingDebouncedFunction } from './accumulatingDebounce';
 describe('accumulatingDebounce', () => {
     let clock: Clock;
 
-    before(() => {
+    beforeAll(() => {
         clock = lolex.install();
     });
 
-    after(() => {
+    afterAll(() => {
         clock.uninstall();
     });
 

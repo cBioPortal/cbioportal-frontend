@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Link, NavLink } from 'react-router-dom';
 import { If, Then, Else } from 'react-if';
 import { AppStore } from '../../AppStore';

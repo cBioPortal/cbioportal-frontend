@@ -1,3 +1,5 @@
+jest.setMock('./timeline/timeline-lib', {});
+
 import PatientViewPage from './PatientViewPage';
 import React from 'react';
 import { assert } from 'chai';

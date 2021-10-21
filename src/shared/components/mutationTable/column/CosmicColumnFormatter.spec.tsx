@@ -4,11 +4,8 @@ import { keywordToCosmic } from 'shared/lib/AnnotationUtils';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CosmicColumnFormatter', () => {
     const cosmicMutations = [
@@ -81,7 +78,7 @@ describe('CosmicColumnFormatter', () => {
     let component666: ReactWrapper<any, any>;
     let cosmicData: ICosmicData;
 
-    before(() => {
+    beforeAll(() => {
         cosmicData = keywordToCosmic(cosmicMutations);
 
         let data = [mutation273];
