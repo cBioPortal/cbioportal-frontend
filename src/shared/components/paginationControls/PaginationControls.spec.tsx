@@ -1,14 +1,12 @@
 import PaginationControls from './PaginationControls';
 import React from 'react';
 import { assert, default as chai, expect } from 'chai';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import chaiEnzyme from 'chai-enzyme';
 import styles from './paginationControls.module.scss';
 import { Button } from 'react-bootstrap';
-import Adapter from 'enzyme-adapter-react-16';
 
 chai.use(chaiEnzyme());
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('PaginationControls', () => {
     describe.skip("'Show more' button", () => {
@@ -76,7 +74,7 @@ describe('PaginationControls', () => {
             expect(
                 paginationControls.find(Button),
                 'buttons should exist if theres more than one page'
-            ).to.exist;
+            ).to.have.lengthOf(1);
         });
 
         it('shows functional reset button if its showing more than minimum per page', () => {

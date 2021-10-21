@@ -2,19 +2,16 @@ import * as React from 'react';
 import { assert } from 'chai';
 import TableHeaderControls from './TableHeaderControls';
 import sinon from 'sinon';
-import Enzyme, { mount, shallow, ReactWrapper } from 'enzyme';
+import { mount, shallow, ReactWrapper } from 'enzyme';
 import { ColumnVisibilityControls } from '../columnVisibilityControls/ColumnVisibilityControls';
 import { PaginationControls } from '../paginationControls/PaginationControls';
 import { ITableHeaderControlsProps } from './TableHeaderControls';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('TableHeaderControls', () => {
     let wrapper: ReactWrapper<ITableHeaderControlsProps, {}>;
     let inputStub: sinon.SinonStub;
 
-    before(() => {
+    beforeAll(() => {
         inputStub = sinon.stub(TableHeaderControls.prototype, 'handleInput');
 
         wrapper = mount(
@@ -25,7 +22,7 @@ describe('TableHeaderControls', () => {
         );
     });
 
-    after(() => {
+    afterAll(() => {
         inputStub.restore();
     });
 

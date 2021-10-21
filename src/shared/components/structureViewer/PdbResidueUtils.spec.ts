@@ -63,7 +63,7 @@ describe('PdbResidueUtils', () => {
     const residueSpec1961: IResidueSpec = residueSpec(1961, '#ACDC99');
     const residueSpec765: IResidueSpec = residueSpec(765, '#244281');
 
-    before(() => {
+    beforeAll(() => {
         pointPositionRange = {
             start: {
                 position: 666,

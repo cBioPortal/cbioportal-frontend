@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { action, computed, observable, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import { MSKTabs, MSKTab } from 'shared/components/MSKTabs/MSKTabs';

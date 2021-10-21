@@ -23,7 +23,7 @@ import GenomeNexusMutationAssessorCache from 'shared/cache/GenomeNexusMutationAs
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 type FunctionalImpactColumnTooltipProps = {

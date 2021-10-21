@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as React from 'react';
 import ReactDOM from 'react-dom';
 import { TypeOfCancer as CancerType } from 'cbioportal-ts-api-client';
@@ -23,13 +23,10 @@ import { Modal } from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest';
 import { getServerConfig } from 'config/config';
 import { ServerConfigHelpers } from '../../../config/config';
-import autobind from 'autobind-decorator';
 import { PAN_CAN_SIGNATURE } from './StudyListLogic';
 import QuickSelectButtons from './QuickSelectButtons';
 import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import WindowStore from 'shared/components/window/WindowStore';
-import Timeout = NodeJS.Timeout;
-import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 
 const MIN_LIST_HEIGHT = 200;
 
@@ -165,7 +162,7 @@ export default class CancerStudySelector extends React.Component<
     private windowSizeDisposer: IReactionDisposer;
 
     componentDidMount(): void {
-        let resizeTimeout: Timeout;
+        let resizeTimeout: any;
         this.windowSizeDisposer = reaction(
             () => {
                 return WindowStore.size;

@@ -103,7 +103,7 @@ import {
 import { fetchHotspotsData } from 'shared/lib/CancerHotspotsUtils';
 import ResultsViewMutationMapperStore from './mutation/ResultsViewMutationMapperStore';
 import { getServerConfig } from 'config/config';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { toSampleUuid } from '../../shared/lib/UuidUtils';
 import MutationDataCache from '../../shared/cache/MutationDataCache';
 import AccessorsForOqlFilter, {

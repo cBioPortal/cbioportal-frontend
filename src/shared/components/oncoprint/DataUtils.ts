@@ -424,9 +424,10 @@ export function fillHeatmapTrackDatum<
             // sortOrder=ASC: the smallest value is shown for data
             // sortOrder=DESC: the largest value is shown for data
             let representingDatum;
+            let bestValue;
             switch (sortOrder) {
                 case 'ASC':
-                    let bestValue = _(dataWithValue)
+                    bestValue = _(dataWithValue)
                         .map((d: HeatmapCaseDatum) => d.value)
                         .min();
                     representingDatum = selectRepresentingDataPoint(

@@ -168,7 +168,7 @@ describe('Oncoprint TooltipUtils', () => {
     });
     describe('makeGeneticTrackTooltip', () => {
         let tooltip: (d: any) => JQuery;
-        before(() => {
+        beforeAll(() => {
             tooltip = makeGeneticTrackTooltip(false, () => ({
                 profile: ({
                     molecularProfileId: 'profile',
@@ -2401,7 +2401,7 @@ describe('Oncoprint TooltipUtils', () => {
             let trackLabel: string;
             let trackSpec: any;
             let tooltip: (dataUnderMouse: any[]) => JQuery;
-            before(() => {
+            beforeAll(() => {
                 trackLabel = 'label1234';
                 trackSpec = {
                     key: '',
@@ -2530,7 +2530,7 @@ describe('Oncoprint TooltipUtils', () => {
         describe('number track tooltip', () => {
             let trackSpec: any;
             let tooltip: (dataUnderMouse: any[]) => JQuery;
-            before(() => {
+            beforeAll(() => {
                 trackSpec = {
                     key: '',
                     label: '',
@@ -2678,7 +2678,7 @@ describe('Oncoprint TooltipUtils', () => {
             false
         );
 
-        before(() => {
+        beforeAll(() => {
             getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
         });
 

@@ -15,7 +15,7 @@ describe('PatientViewPageUtils', () => {
             'getProfiledSamplesForGene'
         );
 
-        after(() => {
+        afterAll(() => {
             stub.restore();
         });
 

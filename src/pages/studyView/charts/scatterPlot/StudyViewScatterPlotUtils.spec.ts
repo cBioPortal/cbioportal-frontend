@@ -5,7 +5,7 @@ import { getBinnedData } from './StudyViewScatterPlotUtils';
 describe('StudyViewScatterPlotUtils', () => {
     describe('getBinnedData', () => {
         let plotDomain: any;
-        before(() => {
+        beforeAll(() => {
             plotDomain = { x: [0, 10], y: [0, 10] };
         });
         it('returns the correct result for empty data', () => {

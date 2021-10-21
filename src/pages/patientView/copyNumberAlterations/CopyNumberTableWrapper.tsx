@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
 import { computed, makeObservable, observable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import {
     CancerStudy,
@@ -31,8 +31,6 @@ import {
     RemoteData,
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
-import { getPercentage } from 'shared/lib/FormatUtils';
-import Timeout = NodeJS.Timeout;
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {}
 
@@ -76,7 +74,7 @@ export default class CopyNumberTableWrapper extends React.Component<
     {}
 > {
     @observable oncokbWidth = 22;
-    private oncokbInterval: Timeout;
+    private oncokbInterval: any;
 
     constructor(props: ICopyNumberTableWrapperProps) {
         super(props);

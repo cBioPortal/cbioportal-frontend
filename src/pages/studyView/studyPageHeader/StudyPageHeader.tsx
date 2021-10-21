@@ -4,7 +4,7 @@ import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
 import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { makeObservable } from 'mobx';
 
 export interface IStudyPageHeaderProps {

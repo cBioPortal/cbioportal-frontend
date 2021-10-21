@@ -10,7 +10,7 @@ import {
     IDrug,
     IGenomicMatchType,
 } from '../../../shared/model/MatchMiner';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export function groupTrialMatchesById(
     trials: ITrial[],

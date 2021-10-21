@@ -1,16 +1,13 @@
 import * as DatasetList from './DatasetList';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { shallow, mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
+import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
-Enzyme.configure({ adapter: new Adapter() });
-
 describe('DatasetList', () => {
-    before(() => {});
+    beforeAll(() => {});
 
-    after(() => {});
+    afterAll(() => {});
 
     it('what does it do?', () => {});
 });

@@ -3,10 +3,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('SampleColumnFormatter', () => {
     const mutationShort = initMutation({
@@ -20,7 +17,7 @@ describe('SampleColumnFormatter', () => {
     let componentShort: ReactWrapper<any, any>;
     let componentLong: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         let data = [mutationShort];
 
         // mount a single cell component (Td) for the mutation with short sample id
