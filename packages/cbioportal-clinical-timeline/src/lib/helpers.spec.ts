@@ -1,5 +1,4 @@
 import { assert } from 'chai';
-import * as _ from 'lodash';
 import {
     formatDate,
     getAttributeValue,
@@ -9,7 +8,7 @@ import intersect from './intersect';
 import { TimelineEvent } from '../types';
 
 describe('getPointInTrimmedSpace', () => {
-    let ticks;
+    let ticks: any;
 
     beforeEach(() => {
         ticks = [
@@ -195,7 +194,7 @@ describe('getAttributeValue', () => {
                 ],
                 startNumberOfDaysSinceDiagnosis: 13524,
             },
-        };
+        } as any;
 
         assert.equal(
             getAttributeValue('CANCER_TYPE_DETAILED', event),

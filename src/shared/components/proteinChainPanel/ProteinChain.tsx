@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ProteinChainSpec } from './ProteinChainView';
 import { observer } from 'mobx-react';
 import { observable, computed, makeObservable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 type ProteinChainProps = ProteinChainSpec & {
     positionToX: (pos: number) => number;

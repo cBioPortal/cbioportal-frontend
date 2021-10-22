@@ -4,7 +4,7 @@ import { getHierarchyData } from 'shared/lib/StoreUtils';
 //Import jstree.min and style for jstree to work
 import 'jstree/dist/jstree.min'; // tslint:disable-line
 import 'shared/components/query/styles/jstree/style.css'; // tslint:disable-line
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { remoteData } from 'cbioportal-frontend-commons';
 import CBioPortalAPIInternal, {
     GenesetHierarchyInfo,

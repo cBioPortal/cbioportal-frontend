@@ -1,4 +1,3 @@
-var assert = require('assert');
 const {
     goToUrlAndSetLocalStorage,
     COEXPRESSION_TIMEOUT,
@@ -23,7 +22,7 @@ describe('results view mutation table', function() {
     });
 
     it('shows ASCN columns for study where some samples have ASCN data and some do not', () => {
-        var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ascn_test_study%2Cstudy_es_0&case_set_id=all&data_priority=0&gene_list=TP53&geneset_list=%20&localdev=true&profileFilter=0&tab_index=tab_visualize`;
+        var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=ascn_test_study%2Cstudy_es_0&case_set_id=all&data_priority=0&gene_list=TP53&geneset_list=%20&profileFilter=0&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url, true);
         $(
             'table[class="simple-table table table-striped table-border-top"]'

@@ -1,7 +1,7 @@
 import validateParameters from './validateParameters';
 import { assert } from 'chai';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as $ from 'jquery';
 
 describe('validateParameters function', () => {

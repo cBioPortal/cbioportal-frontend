@@ -1,10 +1,7 @@
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { assert } from 'chai';
 import { initMutation } from 'test/MutationMockUtils';
 import { getDefaultASCNMethodColumnDefinition } from './ASCNMethodColumnFormatter';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('ASCNMethodColumnFormatter', () => {
     const mutationWithAscnData = initMutation({
@@ -20,7 +17,7 @@ describe('ASCNMethodColumnFormatter', () => {
     let componentWithAscnMethodColumn: ReactWrapper<any, any>;
     let componentWithoutAscnMethodColumn: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         componentWithAscnMethodColumn = mount(
             getDefaultASCNMethodColumnDefinition().render([
                 mutationWithAscnData,

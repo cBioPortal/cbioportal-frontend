@@ -1,16 +1,15 @@
 import { assert } from 'chai';
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
-import { autorun, observable, reaction, toJS } from 'mobx';
+import { autorun, reaction, toJS } from 'mobx';
 import ExtendedRouterStore, {
     PortalSession,
 } from 'shared/lib/ExtendedRouterStore';
 import sinon from 'sinon';
 import { createMemoryHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';
-import memoize from 'memoize-weak-decorator';
 import URLWrapper, { needToLoadSession } from 'shared/lib/URLWrapper';
-import URL from 'url';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
+import sessionClient from '../api/sessionServiceInstance';
+import SpyInstance = jest.SpyInstance;
 
 function getPlotsSelectionParam<T extends string | undefined>(val: T): any {
     return {
@@ -61,8 +60,18 @@ class TestURLWrapper2 extends URLWrapper<{ data: { d1: string; d2: string } }> {
 
 describe('URLWrapper', () => {
     let routingStore: ExtendedRouterStore;
-
     let wrapper: ResultsViewURLWrapper;
+    let getSessionStub: SpyInstance;
+
+    beforeAll(() => {
+        getSessionStub = jest
+            .spyOn(sessionClient, 'getSession')
+            .mockImplementation(() => Promise.resolve({}));
+    });
+
+    afterAll(() => {
+        getSessionStub.mockRestore();
+    });
 
     beforeEach(() => {
         routingStore = new ExtendedRouterStore();

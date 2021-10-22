@@ -10,7 +10,7 @@ import {
     getGenericAssayScatterData,
     getFilteredData,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { CheckedSelect, Option } from 'cbioportal-frontend-commons';
 import GenericAssayEnrichmentsTable, {

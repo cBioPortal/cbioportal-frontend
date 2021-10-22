@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { If } from 'react-if';
 import Tracks from './Tracks';
 import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';

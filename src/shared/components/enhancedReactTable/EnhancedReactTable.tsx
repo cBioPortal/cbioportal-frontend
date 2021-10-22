@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createSelector } from 'reselect';
 import { Table, Th, Tr, Td, Thead } from 'reactable';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import TableHeaderControls from 'shared/components/tableHeaderControls/TableHeaderControls';
 import {
     IEnhancedReactTableProps,

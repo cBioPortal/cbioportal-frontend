@@ -3,7 +3,7 @@ import { action, computed, makeObservable } from 'mobx';
 import { Observer, observer } from 'mobx-react';
 import styles from './styles.module.scss';
 import { ChartOption } from '../AddChartButton';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import LabeledCheckbox from '../../../../shared/components/labeledCheckbox/LabeledCheckbox';
 import { Column } from '../../../../shared/components/lazyMobXTable/LazyMobXTable';
 import { getFrequencyStr } from '../../StudyViewUtils';

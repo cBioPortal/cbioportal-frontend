@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import { Mutation } from 'cbioportal-ts-api-client';

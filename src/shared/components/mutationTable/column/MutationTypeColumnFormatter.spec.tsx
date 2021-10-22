@@ -3,10 +3,7 @@ import styles from './mutationType.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('MutationTypeColumnFormatter', () => {
     const missenseVariant = initMutation({
@@ -61,7 +58,7 @@ describe('MutationTypeColumnFormatter', () => {
     let otherMutComponent: ReactWrapper<any, any>;
     let spliceComponent: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         let data = [missenseVariant];
         msVarComponent = mount(
             MutationTypeColumnFormatter.renderFunction(data)

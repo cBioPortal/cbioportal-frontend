@@ -4,7 +4,7 @@ import {
     default as LazyMobXTable,
 } from 'shared/components/lazyMobXTable/LazyMobXTable';
 import { observer } from 'mobx-react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { getPatientViewUrl, getSampleViewUrl } from 'shared/api/urls';
 import {
     chartMetaComparator,

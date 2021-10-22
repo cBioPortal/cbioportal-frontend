@@ -4,7 +4,7 @@ import {
     MolecularProfileFilter,
 } from 'cbioportal-ts-api-client';
 import client from '../api/cbioportalClientInstance';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     DataTypeConstants,
     AlterationTypeConstants,

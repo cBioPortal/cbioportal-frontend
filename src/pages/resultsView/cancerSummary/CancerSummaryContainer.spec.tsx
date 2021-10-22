@@ -2,9 +2,6 @@ import { assert } from 'chai';
 import Enzyme from 'enzyme';
 import * as React from 'react';
 import CancerSummaryContainer from './CancerSummaryContainer';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerSummaryContainer', () => {
     let mockInstance: any;
