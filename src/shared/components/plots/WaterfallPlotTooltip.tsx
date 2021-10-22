@@ -4,7 +4,7 @@ import { makeObservable, observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import bind from 'bind-decorator';
 import classnames from 'classnames';
-import * as Portal from 'react-overlays/lib/Portal';
+import Portal from 'react-overlays/lib/Portal';
 import $ from 'jquery';
 
 export interface IWaterfallPlotTooltipProps {

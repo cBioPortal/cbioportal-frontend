@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { Button, Dropdown, ButtonProps } from 'react-bootstrap';
-import { RootCloseWrapper } from 'react-overlays';
+import RootCloseWrapper from 'react-overlays/lib/RootCloseWrapper';
 import classNames from 'classnames';
 import { observer } from 'mobx-react';
 import { observable, makeObservable } from 'mobx';
-import _ from 'lodash';
 
 export interface ICustomDropdownProps extends ButtonProps {
     titleElement?: JSX.Element;

@@ -1,5 +1,5 @@
 import { validate, ParameterValidationError } from 'parameter-validator';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export interface URLValidationResult {
     isValid: Boolean;

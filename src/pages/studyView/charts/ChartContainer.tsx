@@ -45,7 +45,6 @@ import LoadingIndicator from '../../../shared/components/loadingIndicator/Loadin
 import { DataType, DownloadControlsButton } from 'cbioportal-frontend-commons';
 import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
-import Timer = NodeJS.Timer;
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
     MultiSelectionTableColumnKey,
@@ -146,7 +145,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private handlers: any;
     private plot: AbstractChart;
 
-    private mouseLeaveTimeout: Timer;
+    private mouseLeaveTimeout: any;
 
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';

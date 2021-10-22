@@ -1,7 +1,7 @@
 import { default as URL, QueryParams } from 'url';
 import { BuildUrlParams, getBrowserWindow } from 'cbioportal-frontend-commons';
 import { DEFAULT_MUTATION_ALIGNER_URL_TEMPLATE } from 'react-mutation-mapper';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { GroupComparisonLoadingParams } from '../../pages/groupComparison/GroupComparisonLoading';
 import { GroupComparisonURLQuery } from '../../pages/groupComparison/GroupComparisonURLWrapper';
 import { PagePath } from 'shared/enums/PagePaths';

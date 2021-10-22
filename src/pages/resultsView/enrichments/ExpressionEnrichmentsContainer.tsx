@@ -17,7 +17,7 @@ import {
 import { ExpressionEnrichmentRow } from 'shared/model/EnrichmentRow';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 import {

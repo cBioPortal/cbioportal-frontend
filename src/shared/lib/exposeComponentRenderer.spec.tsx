@@ -1,17 +1,16 @@
 import exposeComponentRenderer from './exposeComponentRenderer';
 import { assert } from 'chai';
 import * as React from 'react';
-import * as _ from 'lodash';
-import * as $ from 'jquery';
+import _ from 'lodash';
 
 describe('test', () => {
     let targetEl: HTMLDivElement | null;
 
-    before(() => {
+    beforeAll(() => {
         targetEl = document.createElement('div');
     });
 
-    after(() => {
+    afterAll(() => {
         targetEl = null;
     });
 
@@ -28,6 +27,6 @@ describe('test', () => {
 
         (window as any).renderTestComponent(targetEl);
 
-        assert.equal(targetEl!.innerText, 'foo');
+        assert.equal(targetEl!.textContent, 'foo');
     });
 });

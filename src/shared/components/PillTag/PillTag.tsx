@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import styles from './styles.module.scss';
 import { If } from 'react-if';
 import contrast from 'contrast';

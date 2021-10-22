@@ -3,7 +3,6 @@ import * as React from 'react';
 import { observer, Observer } from 'mobx-react';
 import bind from 'bind-decorator';
 import { computed, makeObservable, observable } from 'mobx';
-import Timer = NodeJS.Timer;
 import {
     VictoryChart,
     VictoryAxis,
@@ -128,7 +127,7 @@ export default class WaterfallPlot<
     }
 
     private makeMouseEvents() {
-        let disappearTimeout: Timer | null = null;
+        let disappearTimeout: any = null;
         const disappearDelayMs = 250;
 
         return [

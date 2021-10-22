@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { CancerStudy } from 'cbioportal-ts-api-client';
 import { ThreeBounce } from 'better-react-spinkit';
 import request from 'superagent';

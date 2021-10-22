@@ -5,7 +5,7 @@ import {
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { getLoadConfig, getServerConfig } from './config/config';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
 

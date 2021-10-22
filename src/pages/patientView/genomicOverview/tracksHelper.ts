@@ -1,6 +1,6 @@
 import Raphael from 'webpack-raphael';
 import $ from 'jquery';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
 import { Mutation } from 'cbioportal-ts-api-client';

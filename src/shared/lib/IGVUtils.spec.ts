@@ -11,7 +11,7 @@ import {
 describe('IGVUtils', () => {
     let segments: CopyNumberSeg[];
 
-    before(() => {
+    beforeAll(() => {
         segments = [
             {
                 uniqueSampleKey: 'VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi',

@@ -1047,7 +1047,7 @@ describe('GroupComparisonUtils', () => {
             { sampleId: 'sample3', studyId: 'study2' },
         ];
         let sampleSet: ComplexKeyMap<any>;
-        before(() => {
+        beforeAll(() => {
             sampleSet = new ComplexKeyMap<any>();
             sampleSet.set(sampleIds[0], {
                 patientId: 'patient1',
@@ -2491,7 +2491,7 @@ describe('GroupComparisonUtils', () => {
             },
         ];
         let patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>;
-        before(() => {
+        beforeAll(() => {
             patientToSamplesSet = new ComplexKeyGroupsMap<
                 Pick<Sample, 'sampleId'>
             >();
