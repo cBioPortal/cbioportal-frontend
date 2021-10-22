@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as tracksHelper from './tracksHelper';
 import {
     ClinicalDataBySampleId,

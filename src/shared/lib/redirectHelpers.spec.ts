@@ -1,11 +1,10 @@
+import SpyInstance = jest.SpyInstance;
+
 import { restoreRouteAfterRedirect } from './redirectHelpers';
-import sinon from 'sinon';
-import ExtendedRouterStore from './ExtendedRouterStore';
-import { assert } from 'chai';
 
 describe('restoreRouteAfterRedirect', () => {
-    let getItemStub: sinon.SinonStub;
-    let removeItemStub: sinon.SinonStub;
+    let getItemStub: SpyInstance;
+    let removeItemStub: SpyInstance;
     let stores: any;
 
     beforeEach(() => {
@@ -14,38 +13,40 @@ describe('restoreRouteAfterRedirect', () => {
                 query: {
                     key: 'mooo',
                 },
-                push: sinon.stub(),
+                push: jest.fn(),
                 updateRoute: () => {},
             },
         };
 
-        removeItemStub = sinon.stub(window.localStorage, 'removeItem');
-        getItemStub = sinon.stub(window.localStorage, 'getItem');
+        // mocking window.localStorage doesn't work, we need to mock the global Storage.prototype instead
+        // see https://github.com/facebook/jest/issues/6858
+        getItemStub = jest.spyOn(Storage.prototype, 'getItem');
+        removeItemStub = jest.spyOn(Storage.prototype, 'removeItem');
     });
 
     afterEach(() => {
-        getItemStub.restore();
-        removeItemStub.restore();
+        getItemStub.mockRestore();
+        removeItemStub.mockRestore();
     });
 
     it('calls getItem with appropriate key', () => {
         restoreRouteAfterRedirect(stores as any);
-        assert.isTrue(getItemStub.calledOnce);
-        assert.equal(getItemStub.args[0][0], 'mooo');
+        expect(getItemStub).toBeCalledTimes(1);
+        expect(getItemStub).toBeCalledWith('mooo');
     });
 
     it('if no key is available, we redirect to root route', () => {
-        getItemStub.returns(undefined);
+        getItemStub.mockImplementation(() => undefined);
         restoreRouteAfterRedirect(stores as any);
-        assert.isTrue((stores.routing.push as sinon.SinonStub).calledWith('/'));
-        assert.isFalse(removeItemStub.called);
+        expect(stores.routing.push).toBeCalledWith('/');
+        expect(removeItemStub).not.toBeCalled();
     });
 
     it('if key is available, we redirect to it, sans #, delete key', () => {
-        getItemStub.returns('#one/two');
+        getItemStub.mockImplementation(() => '#one/two');
         restoreRouteAfterRedirect(stores as any);
-        assert.isTrue(removeItemStub.calledOnce);
-        assert.isTrue(stores.routing.push.calledWith('one/two'));
+        expect(removeItemStub).toBeCalledTimes(1);
+        expect(stores.routing.push).toBeCalledWith('one/two');
     });
 });
 

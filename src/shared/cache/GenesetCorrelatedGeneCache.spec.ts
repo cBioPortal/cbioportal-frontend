@@ -1,6 +1,6 @@
 import GenesetCorrelatedGeneCache from './GenesetCorrelatedGeneCache';
 import client from 'shared/api/cbioportalInternalClientInstance';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 

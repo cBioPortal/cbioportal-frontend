@@ -37,7 +37,7 @@ import {
 } from '../../shared/lib/oql/oqlfilter';
 import { observable } from 'mobx';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
 import client from 'shared/api/cbioportalClientInstance';
@@ -54,6 +54,7 @@ import {
     VirtualStudy,
     VirtualStudyData,
 } from 'shared/api/session-service/sessionServiceModels';
+import $ from 'jquery';
 
 describe('ResultsViewPageStoreUtils', () => {
     describe('computeCustomDriverAnnotationReport', () => {
@@ -62,7 +63,7 @@ describe('ResultsViewPageStoreUtils', () => {
         let bothMutation: Mutation;
         let neitherMutation: Mutation;
 
-        before(() => {
+        beforeAll(() => {
             driverFilterMutation = {
                 driverFilter: 'B',
             } as Mutation;
@@ -1177,7 +1178,7 @@ describe('ResultsViewPageStoreUtils', () => {
             }) as VirtualStudy,
         ];
 
-        before(() => {
+        beforeAll(() => {
             sinon
                 .stub(sessionServiceClient, 'getUserVirtualStudies')
                 .callsFake(function fakeFn(id: string) {
@@ -1209,7 +1210,7 @@ describe('ResultsViewPageStoreUtils', () => {
                     });
                 });
         });
-        after(() => {
+        afterAll(() => {
             //(sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
             //(client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
         });
@@ -2583,7 +2584,7 @@ describe('getGeneAndProfileChunksForRequest', () => {
     let genes: Gene[];
     let profileIds: string[];
 
-    before(() => {
+    beforeAll(() => {
         genes = [
             {
                 hugoGeneSymbol: 'EGFR',

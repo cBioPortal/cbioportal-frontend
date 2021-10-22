@@ -6,7 +6,7 @@ import { MakeMobxView } from '../../shared/components/MobxView';
 import Loader from '../../shared/components/loadingIndicator/LoadingIndicator';
 import ErrorMessage from '../../shared/components/ErrorMessage';
 import { MakeEnrichmentsTabUI } from './GroupComparisonUtils';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import GenericAssayEnrichmentsContainer from 'pages/resultsView/enrichments/GenericAssayEnrichmentsContainer';
 import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/EnrichmentsDataSetDropdown';

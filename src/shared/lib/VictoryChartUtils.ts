@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export function adjustedLongestLabelLength(labels: string[]): number {
     const adjustedForCaps = labels.map(label => {

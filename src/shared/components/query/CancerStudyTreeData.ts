@@ -2,7 +2,7 @@ import {
     CancerStudy,
     TypeOfCancer as CancerType,
 } from 'cbioportal-ts-api-client';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { CategorizedConfigItems } from 'config/IAppConfig';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
 

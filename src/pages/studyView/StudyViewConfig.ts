@@ -1,7 +1,7 @@
 import { getServerConfig } from 'config/config';
 import { StudyView } from '../../config/IAppConfig';
 import { Layout } from 'react-grid-layout';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { ChartType } from './StudyViewUtils';
 
 export type StudyViewColor = {

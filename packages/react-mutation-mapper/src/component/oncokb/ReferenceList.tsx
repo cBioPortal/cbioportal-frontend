@@ -1,7 +1,7 @@
 import { ICache } from 'cbioportal-frontend-commons';
 import { ArticleAbstract } from 'oncokb-ts-api-client';
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed } from 'mobx';
 

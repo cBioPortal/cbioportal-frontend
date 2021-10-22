@@ -160,7 +160,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private handlers: any;
     private plot: AbstractChart;
 
-    private mouseLeaveTimeout: Timer;
+    private mouseLeaveTimeout: any;
 
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';

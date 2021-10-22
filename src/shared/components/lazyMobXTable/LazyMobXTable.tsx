@@ -1,4 +1,5 @@
 import SimpleTable from '../simpleTable/SimpleTable';
+import $ from 'jquery';
 import * as React from 'react';
 import {
     action,

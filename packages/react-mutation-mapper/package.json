@@ -1,6 +1,6 @@
 {
   "name": "react-mutation-mapper",
-  "version": "0.8.16",
+  "version": "0.8.17",
   "description": "Generic Mutation Mapper",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test": "cross-env CI=1 jest --env=jsdom --runInBand",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
@@ -39,16 +39,16 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-frontend-commons": "^0.5.8",
-    "cbioportal-utils": "^0.3.4",
+    "cbioportal-frontend-commons": "^0.5.9",
+    "cbioportal-utils": "^0.3.5",
     "classnames": "^2.2.5",
-    "genome-nexus-ts-api-client": "^1.1.16",
+    "genome-nexus-ts-api-client": "^1.1.17",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "memoize-weak-decorator": "^1.0.3",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "oncokb-styles": "~1.2.0",
-    "oncokb-ts-api-client": "^1.1.7",
+    "oncokb-ts-api-client": "^1.1.8",
     "react-collapse": "^4.0.3",
     "react-if": "^2.1.0",
     "react-motion": "^0.5.2",
@@ -58,9 +58,5 @@
     "seamless-immutable": "^7.1.4",
     "superagent": "^3.8.3",
     "typescript": "4.0.3"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^9.3.2",
-    "react-scripts-ts": "^3.1.0"
   }
 }

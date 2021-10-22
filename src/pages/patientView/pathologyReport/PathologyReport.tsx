@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PathologyReportPDF } from '../clinicalInformation/PatientViewPageStore';
 import { If, Then, Else } from 'react-if';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import IFrameLoader from '../../../shared/components/iframeLoader/IFrameLoader';
 import { observer } from 'mobx-react';
 

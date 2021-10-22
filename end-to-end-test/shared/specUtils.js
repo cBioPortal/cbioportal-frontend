@@ -188,6 +188,16 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     if (!useExternalFrontend) {
         browser.url(url);
         console.log('Connecting to: ' + url);
+    } else if (useNetlifyDeployPreview) {
+        browser.url(url);
+        browser.execute(
+            function(config) {
+                this.localStorage.setItem('netlify', config.netlify);
+            },
+            { netlify: netlifyDeployPreview }
+        );
+        browser.url(url);
+        console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
@@ -269,6 +279,9 @@ function getNthOncoprintTrackOptionsElements(n) {
         dropdown_selector,
     };
 }
+
+const netlifyDeployPreview = process.env.NETLIFY_DEPLOY_PREVIEW;
+const useNetlifyDeployPreview = !!netlifyDeployPreview;
 
 const useExternalFrontend = !process.env
     .FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
@@ -641,6 +654,7 @@ module.exports = {
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
     useExternalFrontend: useExternalFrontend,
+    useNetlifyDeployPreview: useNetlifyDeployPreview,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
     waitForNetworkQuiet: waitForNetworkQuiet,
