@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import styles from './styles.module.scss';

@@ -6,7 +6,7 @@ import { OQL } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import { GeneReplacement } from 'shared/components/query/QueryStore';
 import ReactSelect from 'react-select1';
 import classNames from 'classnames';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 
 export type GeneSymbolValidatorMessageProps = {

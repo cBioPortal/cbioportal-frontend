@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     AlteredStatus,
     calculateAssociation,
@@ -16,13 +16,10 @@ import {
 } from './MutualExclusivityUtil';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import MutualExclusivityTable from './MutualExclusivityTable';
-import Adapter from 'enzyme-adapter-react-16';
 
 expect.extend(expectJSX);
-
-Enzyme.configure({ adapter: new Adapter() });
 
 const exampleData = [
     {
@@ -564,7 +561,7 @@ describe('MutualExclusivityUtil', () => {
                     .at(9)
                     .html()
                     .replace(/<!--[^>]*-->/g, ''),
-                '<td><div class="styles-module__Tendency__2Y46X styles-module__Significant__34YnP">' +
+                '<td><div class="Tendency Significant">' +
                     'Co-occurrence</div></td>'
             );
             assert.equal(
@@ -572,7 +569,7 @@ describe('MutualExclusivityUtil', () => {
                     .at(19)
                     .html()
                     .replace(/<!--[^>]*-->/g, ''),
-                '<td><div class="styles-module__Tendency__2Y46X">Co-occurrence</div></td>'
+                '<td><div class="Tendency">Co-occurrence</div></td>'
             );
         });
     });

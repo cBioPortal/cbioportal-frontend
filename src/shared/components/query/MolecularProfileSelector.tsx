@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as React from 'react';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 import FontAwesome from 'react-fontawesome';

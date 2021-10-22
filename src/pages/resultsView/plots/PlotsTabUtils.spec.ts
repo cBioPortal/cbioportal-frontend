@@ -40,7 +40,7 @@ import {
 } from 'pages/resultsView/plots/PlotsTabUtils';
 import { getServerConfig } from 'config/config';
 import ServerConfigDefaults from 'config/serverConfigDefaults';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { GenericAssayTypeConstants } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 describe('PlotsTabUtils', () => {
@@ -377,7 +377,7 @@ describe('PlotsTabUtils', () => {
         let horzAxisData: any;
         let vertAxisData: any;
 
-        before(() => {
+        beforeAll(() => {
             horzAxisData = {
                 data: [
                     { uniqueSampleKey: 'sample1', value: [0] },
@@ -495,7 +495,7 @@ describe('PlotsTabUtils', () => {
         let samples: Pick<Sample, 'uniqueSampleKey'>[];
         let molecularProfileId: string;
 
-        before(() => {
+        beforeAll(() => {
             molecularProfileId = 'mutations';
             mutations = [
                 {
@@ -902,7 +902,7 @@ describe('PlotsTabUtils', () => {
     });
 
     describe('deriveDisplayTextFromGenericAssayType', () => {
-        before(() => {
+        beforeAll(() => {
             getServerConfig().generic_assay_display_text = ServerConfigDefaults.generic_assay_display_text!;
         });
         it('derive from the existing display text', () => {

@@ -18,7 +18,7 @@ describe('getMolecularDataBuckets', () => {
 
     let sampleMolecularData: NumericGeneMolecularData[];
 
-    before(() => {
+    beforeAll(() => {
         sampleMolecularData = sampleStudyData as NumericGeneMolecularData[];
         expectedResult = {
             mutationBuckets: {

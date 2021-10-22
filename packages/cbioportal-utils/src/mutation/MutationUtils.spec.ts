@@ -105,24 +105,24 @@ describe('MutationUtils', () => {
             );
 
             assert.equal(
-                mutationCountByProteinChange['66'].length,
+                mutationCountByProteinChange[66].length,
                 5,
                 'there should be 5 mutations at posititon 66'
             );
 
             assert.equal(
-                mutationCountByProteinChange['666'].length,
+                mutationCountByProteinChange[666].length,
                 2,
                 'there should be 2 mutations at posititon 666'
             );
 
             assert.deepEqual(
-                mutationCountByProteinChange['666'][0],
+                mutationCountByProteinChange[666][0],
                 { proteinPosStart: 666, proteinChange: 'D666C' },
                 'first mutation at pos 666 should be D666C'
             );
             assert.deepEqual(
-                mutationCountByProteinChange['666'][1],
+                mutationCountByProteinChange[666][1],
                 { proteinPosStart: 666, proteinChange: 'D666F' },
                 'second mutation at pos 666 should be D666F'
             );

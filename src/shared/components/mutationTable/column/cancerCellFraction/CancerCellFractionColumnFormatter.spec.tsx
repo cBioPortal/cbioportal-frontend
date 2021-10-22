@@ -1,14 +1,11 @@
 import * as React from 'react';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import { expect } from 'chai';
 import { getDefaultCancerCellFractionColumnDefinition } from './CancerCellFractionColumnFormatter';
 import CancerCellFractionElement from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionElement';
 import SampleManager from 'pages/patientView/SampleManager';
 import { initMutation } from 'test/MutationMockUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
 
 describe('CancerCellFractionColumnFormatter', () => {
     function createMutationWithoutASCN() {
@@ -65,7 +62,9 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001'],
             { S001: '0.75' }
         );
-        expect(validSingleSampleCCFColumn.find('DefaultTooltip')).to.not.exist;
+        expect(
+            validSingleSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(0);
     });
 
     // SampleManager, multiple samples
@@ -81,7 +80,9 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001', 'S002'],
             { S001: '0.75', S002: '1.00' }
         );
-        expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
+        expect(
+            validMultiSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(1);
     });
 
     // make sure NA generated for samples missing CCF or ASCN values
@@ -101,6 +102,8 @@ describe('CancerCellFractionColumnFormatter', () => {
             ['S001', 'S002', 'S003'],
             { S001: '0.75', S002: 'NA', S003: 'NA' }
         );
-        expect(validMultiSampleCCFColumn.find('DefaultTooltip')).to.exist;
+        expect(
+            validMultiSampleCCFColumn.find('DefaultTooltip')
+        ).to.have.lengthOf(1);
     });
 });

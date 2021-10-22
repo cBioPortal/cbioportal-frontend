@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { FormControl, Checkbox, Button, ButtonGroup } from 'react-bootstrap';
 import { If, Else, Then } from 'react-if';
 import { ThreeBounce } from 'better-react-spinkit';

@@ -1,4 +1,4 @@
-import Enzyme, { ReactWrapper, mount } from 'enzyme';
+import { ReactWrapper, mount } from 'enzyme';
 import { expect } from 'chai';
 import { Mutation, ClinicalData } from 'cbioportal-ts-api-client';
 import { initMutation } from 'test/MutationMockUtils';
@@ -6,7 +6,6 @@ import { initClinicalData } from 'test/ClinicalDataMockUtils';
 import { CLINICAL_ATTRIBUTE_ID_ENUM } from 'shared/constants';
 import SampleManager from 'pages/patientView/SampleManager';
 import { MobxPromise } from 'mobxpromise';
-import Adapter from 'enzyme-adapter-react-16';
 import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumnFormatter';
 
 /* Test design
@@ -54,8 +53,6 @@ import { getDefaultASCNCopyNumberColumnDefinition } from './ASCNCopyNumberColumn
     samplemanager and still expect a populated tooltip to be output. Sub elementes in the tool tip
     are not tested for correctness.
 */
-
-Enzyme.configure({ adapter: new Adapter() });
 
 function createMockMutation(
     sampleId: string,

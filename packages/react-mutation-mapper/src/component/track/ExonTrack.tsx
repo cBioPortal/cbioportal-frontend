@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as _ from 'lodash';
 import { observer } from 'mobx-react';
 import { computed, makeObservable } from 'mobx';
 import MutationMapperStore from '../../model/MutationMapperStore';

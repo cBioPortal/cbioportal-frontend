@@ -475,7 +475,7 @@ describe('OverlapUtils', () => {
             },
         ];
         let patientToSamplesSet: ComplexKeyGroupsMap<Pick<Sample, 'sampleId'>>;
-        before(() => {
+        beforeAll(() => {
             patientToSamplesSet = new ComplexKeyGroupsMap<
                 Pick<Sample, 'sampleId'>
             >();

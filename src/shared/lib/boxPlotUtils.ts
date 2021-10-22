@@ -1,5 +1,5 @@
 import jStat from 'jStat';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 const SUSPECTED_OUTLIER_MULTIPLE = 1.5;
 const OUTLIER_MULTIPLE = 3;

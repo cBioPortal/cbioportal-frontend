@@ -4,10 +4,7 @@ import styles from './mutationStatus.module.scss';
 import { initMutation } from 'test/MutationMockUtils';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount, ReactWrapper } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount, ReactWrapper } from 'enzyme';
 
 describe('MutationStatusColumnFormatter', () => {
     const germlineMutation = initMutation({
@@ -30,7 +27,7 @@ describe('MutationStatusColumnFormatter', () => {
     let somaticComponent: ReactWrapper<any, any>;
     let naComponent: ReactWrapper<any, any>;
 
-    before(() => {
+    beforeAll(() => {
         germlineComponent = mount(
             MutationStatusColumnFormatter.renderFunction(germlineData)
         );

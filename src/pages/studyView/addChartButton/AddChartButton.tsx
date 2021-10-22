@@ -17,7 +17,7 @@ import {
 } from '../StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import autobind from 'autobind-decorator';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import AddChartByType from './addChartByType/AddChartByType';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import CustomCaseSelection from './customCaseSelection/CustomCaseSelection';
