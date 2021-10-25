@@ -2,6 +2,6 @@ export type GnomadSummary = {
     population: string;
     alleleCount: number;
     alleleNumber: number;
-    homozygotes: string | undefined;
+    homozygotes: number;
     alleleFrequency: number;
 };
