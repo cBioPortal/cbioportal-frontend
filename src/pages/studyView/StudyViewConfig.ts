@@ -116,7 +116,6 @@ const studyViewFrontEnd = {
         DFS_SURVIVAL: 300,
         DSS_SURVIVAL: 250,
         PFS_SURVIVAL: 250,
-        MUTATION_COUNT_CNA_FRACTION: 200,
         MUTATED_GENES_TABLE: 90,
         STRUCTURAL_VARIANT_GENES_TABLE: 85,
         CNA_GENES_TABLE: 80,
@@ -140,6 +139,7 @@ const studyViewFrontEnd = {
         TUMOR_TYPE: 8,
         SUBTYPE: 8,
         TUMOR_SITE: 8,
+        'X-VS-Y-FRACTION_GENOME_ALTERED-MUTATION_COUNT': 200,
     },
     thresholds: {
         pieToTable: 20,
