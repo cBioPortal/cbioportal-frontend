@@ -177,7 +177,7 @@ function makeProfiledData(
 async function fetch(
     attribute: ExtendedClinicalAttribute,
     samples: Sample[],
-    patients: Patient[],
+    patients: Pick<Patient, 'uniquePatientKey' | 'patientId' | 'studyId'>[],
     studyToMutationMolecularProfile: { [studyId: string]: MolecularProfile },
     studyIdToStudy: { [studyId: string]: CancerStudy },
     coverageInformation: CoverageInformation,
@@ -293,7 +293,9 @@ export class UnfilteredClinicalDataCache extends MobxPromiseCache<
 > {
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
-        patientsPromise: MobxPromise<Patient[]>,
+        patientsPromise: MobxPromise<
+            Pick<Patient, 'uniquePatientKey' | 'patientId' | 'studyId'>[]
+        >,
         studyToMutationMolecularProfilePromise: MobxPromise<{
             [studyId: string]: MolecularProfile;
         }>,
@@ -340,7 +342,9 @@ export default class ClinicalDataCache extends MobxPromiseCache<
 
     constructor(
         samplesPromise: MobxPromise<Sample[]>,
-        patientsPromise: MobxPromise<Patient[]>,
+        patientsPromise: MobxPromise<
+            Pick<Patient, 'uniquePatientKey' | 'patientId' | 'studyId'>[]
+        >,
         studyToMutationMolecularProfilePromise: MobxPromise<{
             [studyId: string]: MolecularProfile;
         }>,
