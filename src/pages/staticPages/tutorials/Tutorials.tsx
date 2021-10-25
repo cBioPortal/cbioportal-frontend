@@ -197,7 +197,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -245,7 +245,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -293,7 +293,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -341,7 +341,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -390,7 +390,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -429,7 +429,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -457,7 +457,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -485,7 +485,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -513,7 +513,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -541,7 +541,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -569,7 +569,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
@@ -597,7 +597,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                     </h4>
                     <span style={{ color: '#eee' }}> | </span>
                     <h4 style={{ display: 'inline' }}>
-                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA">
+                        <a href="https://drive.google.com/drive/folders/0B9KTQJAGhFhhRi1qaTdUWmpLQTA?resourcekey=0-9Mbxt9c_wEbaGRLnAaASlg&usp=sharing">
                             View slides
                         </a>
                     </h4>
