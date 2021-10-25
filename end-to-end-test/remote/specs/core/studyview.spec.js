@@ -20,7 +20,11 @@ const getTextFromElement = require('../../../shared/specUtils')
 const waitForStudyViewSelectedInfo = require('../../../shared/specUtils')
     .waitForStudyViewSelectedInfo;
 var waitForStudyView = require('../../../shared/specUtils').waitForStudyView;
-const { setDropdownOpen, jsApiHover } = require('../../../shared/specUtils');
+const {
+    setDropdownOpen,
+    jsApiHover,
+    setCheckboxChecked,
+} = require('../../../shared/specUtils');
 
 var {
     checkElementWithMouseDisabled,
@@ -510,11 +514,8 @@ describe('study view lgg_tcga study tests', () => {
             it('table should be sorted by Freq in the default setting', () => {
                 // we need to move to the top of the page, otherwise the offset of add chart button is calculated wrong
                 $('body').moveTo({ xOffset: 0, yOffset: 0 });
-                // Remove and add the table back to reset the table to prevent any side effects created in other tests
-                $(ADD_CHART_BUTTON).click();
-                $(ADD_CHART_CLINICAL_TAB).waitForDisplayed({
-                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-                });
+                // Open the 'Add clinical chart' menu
+                setDropdownOpen(true, ADD_CHART_BUTTON, ADD_CHART_CLINICAL_TAB);
                 $(ADD_CHART_CLINICAL_TAB).click();
 
                 const option =
@@ -526,14 +527,19 @@ describe('study view lgg_tcga study tests', () => {
                 $(option).waitForDisplayed({
                     timeout: WAIT_FOR_VISIBLE_TIMEOUT,
                 });
-                if ($(option).isSelected()) {
-                    $(option).click();
-                }
-
+                // Remove and add the table back to reset the table to prevent any side effects created in other tests
+                setCheckboxChecked(false, option);
                 browser.pause();
-                $(option).click();
-                // Close the tooltip
-                $(ADD_CHART_BUTTON).click();
+                // Make sure the studies dropdown is still open
+                setDropdownOpen(true, ADD_CHART_BUTTON, ADD_CHART_CLINICAL_TAB);
+                setCheckboxChecked(true, option);
+
+                // Close the 'Add chart' menu
+                setDropdownOpen(
+                    false,
+                    ADD_CHART_BUTTON,
+                    ADD_CHART_CLINICAL_TAB
+                );
 
                 const res = checkElementWithMouseDisabled(table);
                 assertScreenShotMatch(res);
