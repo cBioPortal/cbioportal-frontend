@@ -275,7 +275,7 @@ export function getDigitalSlideArchiveIFrameUrl(patientId: string) {
     //https://cancer.digitalslidearchive.org/#!/CDSA/caseName/TCGA-02-0006
     return (
         getServerConfig().digital_slide_archive_iframe_url +
-        `#!/CDSA/${patientId}`
+        `#!/CDSA/byPatientID/${patientId}`
     );
 }
 
