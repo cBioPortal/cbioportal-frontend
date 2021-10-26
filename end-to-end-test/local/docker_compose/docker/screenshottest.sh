@@ -16,10 +16,6 @@ export HEADLESS_CHROME=true
 #yarn serveDistLocalDb &
 
 cd /cbioportal-frontend/
-
-echo WAIT FOR NETLIFY PREVIEW
-yarn run waitForNetlifyPreview ${COMMIT_HASH}
-
 cd /cbioportal-frontend/end-to-end-test
 
 echo PROBE CBIOPORTAL
