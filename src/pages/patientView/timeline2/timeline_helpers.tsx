@@ -27,7 +27,8 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 const OTHER = 'Other';
 
 export function configureTriageTimeline(baseConfig: ITimelineConfig) {
-    baseConfig.trackStructures.push([
+    baseConfig.trackStructures = baseConfig.trackStructures || [];
+    baseConfig.trackStructures!.push([
         'TOXICITY',
         'TOXICITY_TYPE',
         'SUBTYPE',
@@ -73,11 +74,16 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
     ];
 
     // status track
+    baseConfig.trackEventRenderers = baseConfig.trackEventRenderers || [];
     baseConfig.trackEventRenderers.push({
         trackTypeMatch: /Med Onc Assessment|MedOnc/i,
         configureTrack: (cat: TimelineTrackSpecification) => {
             cat.label = 'Med Onc Assessment';
             const _getEventColor = (event: TimelineEvent) => {
+                if (event.end > event.start) {
+                    // range
+                    return POINT_COLOR;
+                }
                 return getEventColor(
                     event,
                     ['CURATED_CANCER_STATUS'],
@@ -96,27 +102,22 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
                     ]
                 );
             };
-            for (const event of cat.items) {
-                const color = _getEventColor(event);
-                event.render = event => {
+            cat.eventColorGetter = _getEventColor;
+            cat.renderEvents = (events, y) => {
+                if (events.length === 1) {
+                    const color = _getEventColor(events[0]);
                     return (
                         <circle
                             cx="0"
-                            cy={TIMELINE_TRACK_HEIGHT / 2}
+                            cy={y}
                             r="4"
                             stroke="#999999"
                             fill={color}
                         />
                     );
-                };
-            }
-            cat.renderEvents = events => {
-                return (
-                    <>
-                        {renderSuperscript(events.length)}
-                        {renderStack(events.map(_getEventColor))}
-                    </>
-                );
+                } else {
+                    return null; // render default
+                }
             };
         },
     });
@@ -128,6 +129,10 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
             cat.label = 'Imaging Assessment';
             if (cat.items && cat.items.length) {
                 const _getEventColor = (event: TimelineEvent) => {
+                    if (event.end > event.start) {
+                        // range
+                        return POINT_COLOR;
+                    }
                     return getEventColor(
                         event,
                         ['IMAGE_OVERALL', 'CURATED_CANCER_STATUS'],
@@ -149,28 +154,23 @@ export function configureGenieTimeline(baseConfig: ITimelineConfig) {
                         ]
                     );
                 };
-                for (const event of cat.items) {
-                    const color = _getEventColor(event);
-                    event.render = () => {
+
+                cat.eventColorGetter = _getEventColor;
+                cat.renderEvents = (events, y) => {
+                    if (events.length === 1) {
+                        const color = _getEventColor(events[0]);
                         return (
                             <circle
                                 cx="0"
-                                cy={TIMELINE_TRACK_HEIGHT / 2}
+                                cy={y}
                                 r="4"
                                 stroke="#999999"
                                 fill={color}
                             />
                         );
-                    };
-                }
-
-                cat.renderEvents = events => {
-                    return (
-                        <>
-                            {renderSuperscript(events.length)}
-                            {renderStack(events.map(_getEventColor))}
-                        </>
-                    );
+                    } else {
+                        return null; // use default rendering
+                    }
                 };
             }
         },
@@ -241,6 +241,46 @@ export function buildBaseConfig(
                 },
             },
             {
+                trackTypeMatch: /^STATUS$/i,
+                configureTrack: (cat: TimelineTrackSpecification) => {
+                    cat.renderEvents = (
+                        events: TimelineEvent[],
+                        yCoordinate: number
+                    ) => {
+                        if (
+                            events.length === 1 &&
+                            events[0].event.attributes.find((attr: any) => {
+                                return (
+                                    !!attr.key.match(/^STATUS$/i) &&
+                                    !!attr.value.match(/^DECEASED$/i)
+                                );
+                            })
+                        ) {
+                            // if an event has a "status" attribute with value "deceased",
+                            // then render it as a black diamond
+                            const size = 7;
+                            return (
+                                <rect
+                                    x={0}
+                                    y={yCoordinate - size / 2}
+                                    fill={'black'}
+                                    width={size}
+                                    height={size}
+                                    style={{
+                                        transformBox: 'fill-box',
+                                        transformOrigin: 'center',
+                                        transform: 'rotate(45deg)',
+                                    }}
+                                />
+                            );
+                        } else {
+                            // render default
+                            return null;
+                        }
+                    };
+                },
+            },
+            {
                 trackTypeMatch: /SPECIMEN|SAMPLE ACQUISITION|SEQUENCING/i,
                 configureTrack: (cat: TimelineTrackSpecification) => {
                     // we want a custom tooltip for samples, which includes clinical data
@@ -299,21 +339,6 @@ export function buildBaseConfig(
                         }
                     };
 
-                    cat.items.forEach((event, i) => {
-                        const sampleInfo = getSampleInfo(event, caseMetaData);
-                        if (sampleInfo) {
-                            event.render = event => {
-                                return (
-                                    <SampleMarker
-                                        color={sampleInfo.color}
-                                        label={sampleInfo.label}
-                                        y={TIMELINE_TRACK_HEIGHT / 2}
-                                    />
-                                );
-                            };
-                        }
-                    });
-
                     cat.sortSimultaneousEvents = (events: TimelineEvent[]) => {
                         return _.sortBy(events, event => {
                             let ret = Number.POSITIVE_INFINITY;
@@ -331,26 +356,44 @@ export function buildBaseConfig(
                         });
                     };
 
-                    cat.renderEvents = (events: TimelineEvent[]) => {
-                        const colors: string[] = [];
-                        const labels: string[] = [];
-                        for (const event of events) {
+                    cat.renderEvents = (events: TimelineEvent[], y: number) => {
+                        if (events.length === 1) {
                             const sampleInfo = getSampleInfo(
-                                event,
+                                events[0],
                                 caseMetaData
                             );
                             if (sampleInfo) {
-                                colors.push(sampleInfo.color);
-                                labels.push(sampleInfo.label);
+                                return (
+                                    <SampleMarker
+                                        color={sampleInfo.color}
+                                        label={sampleInfo.label}
+                                        y={y}
+                                    />
+                                );
+                            } else {
+                                return null;
                             }
+                        } else {
+                            const colors: string[] = [];
+                            const labels: string[] = [];
+                            for (const event of events) {
+                                const sampleInfo = getSampleInfo(
+                                    event,
+                                    caseMetaData
+                                );
+                                if (sampleInfo) {
+                                    colors.push(sampleInfo.color);
+                                    labels.push(sampleInfo.label);
+                                }
+                            }
+                            return (
+                                <MultipleSampleMarker
+                                    colors={colors}
+                                    labels={labels}
+                                    y={y}
+                                />
+                            );
                         }
-                        return (
-                            <MultipleSampleMarker
-                                colors={colors}
-                                labels={labels}
-                                y={TIMELINE_TRACK_HEIGHT / 2}
-                            />
-                        );
                     };
                 },
             },
