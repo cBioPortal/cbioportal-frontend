@@ -74,6 +74,7 @@ export interface IServerConfig {
     show_signal: boolean;
     survival_initial_x_axis_limit: number;
     survival_show_p_q_values_in_survival_type_table: boolean;
+    survival_min_group_threshold: number;
     skin_documentation_about: string | null;
     skin_documentation_software: string | null;
     skin_documentation_baseurl: string | null;
