@@ -1,8 +1,19 @@
+export interface TimelineEventAttribute {
+    key: string;
+    value: string;
+}
 export interface TimelineEvent {
     start: number;
     end: number;
-    event: any;
-    render?(item: TimelineEvent): JSX.Element | string;
+    event: {
+        attributes: TimelineEventAttribute[];
+        eventType: string;
+        patientId: string;
+        startNumberOfDaysSinceDiagnosis: number;
+        endNumberOfDaysSinceDiagnosis?: number;
+        studyId: string;
+        uniquePatientKey: string;
+    };
     containingTrack: TimelineTrackSpecification;
 }
 
@@ -10,9 +21,9 @@ export const POINT_RADIUS = 4;
 export const POINT_COLOR = 'rgb(31, 119, 180)';
 
 export interface ITimelineConfig {
-    sortOrder: string[];
-    trackStructures: string[][];
-    trackEventRenderers: ITrackEventConfig[];
+    sortOrder?: string[];
+    trackStructures?: string[][];
+    trackEventRenderers?: ITrackEventConfig[];
     eventColorGetter?: (e: TimelineEvent) => string;
 }
 
@@ -32,7 +43,10 @@ export interface TimelineTrackSpecification {
     uid: string;
     label?: string;
     tracks?: TimelineTrackSpecification[];
-    renderEvents?: (e: TimelineEvent[]) => JSX.Element | string;
+    renderEvents?: (
+        e: TimelineEvent[],
+        yCoordinate: number
+    ) => JSX.Element | string | null;
     renderTooltip?: (e: TimelineEvent) => JSX.Element | string | null; // null means use default tooltip
     sortSimultaneousEvents?: (e: TimelineEvent[]) => TimelineEvent[];
     trackType?: TimelineTrackType;
@@ -40,6 +54,7 @@ export interface TimelineTrackSpecification {
     trackConf?: ITrackEventConfig;
     disableHover?: boolean;
     timelineConfig?: ITimelineConfig;
+    eventColorGetter?: (e: TimelineEvent) => string; // overrides the one in timelineConfig
 }
 
 export interface TimelineTick {
