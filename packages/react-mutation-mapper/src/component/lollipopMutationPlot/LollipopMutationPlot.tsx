@@ -134,6 +134,8 @@ export default class LollipopMutationPlot<
     @observable
     private _trackVisibility: TrackVisibility = initDefaultTrackVisibility();
 
+    private _controlsConfig: LollipopPlotControlsConfig = new DefaultLollipopPlotControlsConfig();
+
     private handlers: any;
     private divContainer: HTMLDivElement;
 
@@ -148,9 +150,7 @@ export default class LollipopMutationPlot<
     }
 
     @computed private get controlsConfig(): LollipopPlotControlsConfig {
-        return (
-            this.props.controlsConfig || new DefaultLollipopPlotControlsConfig()
-        );
+        return this.props.controlsConfig || this._controlsConfig;
     }
 
     private lollipopTooltip(
