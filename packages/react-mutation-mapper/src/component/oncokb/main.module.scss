@@ -22,40 +22,24 @@
     font-style: italic;
 }
 
-.orange-icon {
-    color: $oncokb-orange;
+.blue-icon {
+    color: $oncokb-blue;
 }
 
 .footer {
-    width: 100%;
-    line-height: 32px;
-    height: 32px;
-}
-
-.feedback {
-    margin-right: 10px;
-    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
 }
 
 .oncokb-logo {
-    height: 19px;
-    margin-left: 10px;
-    margin-top: -4px;
-}
-
-.enable-hover-a:hover {
-    opacity: 0.7;
-    cursor: pointer;
-}
-
-.enable-hover-active {
-    border-bottom: 3px solid $oncokb-orange;
+    height: 16px;
 }
 
 .title {
     line-height: 22px;
     font-size: 22px;
-    background-color: $oncokb-dark-blue;
+    background-color: $oncokb-blue;
     color: #fff;
     text-align: center;
     padding: 5px 10px;
@@ -67,17 +51,19 @@
     border-bottom: 1px solid lightgrey;
 }
 
+.biological-info {
+    display: flex;
+    flex-direction: row;
+    background-color: $oncokb-dark-blue;
+    color: white;
+    padding: 10px 0;
+    font-weight: bold;
+    text-align: center;
+}
+
 .ellipsis-text-wrapper {
     overflow: hidden;
     white-space: nowrap;
     display: flex;
     align-items: center;
-}
-
-.indicator {
-    position: absolute;
-    bottom: 0;
-    height: 2px;
-    background-color: $oncokb-orange;
-    will-change: left, right;
 }

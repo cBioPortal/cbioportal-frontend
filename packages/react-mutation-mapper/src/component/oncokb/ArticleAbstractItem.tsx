@@ -7,7 +7,7 @@ export default class ArticleAbstractItem extends React.Component<
     ArticleAbstract
 > {
     render() {
-        let content = <b>{this.props.abstract}</b>;
+        let content = <span>{this.props.abstract}</span>;
         if (this.props.link) {
             content = (
                 <a href={this.props.link} target="_blank">
