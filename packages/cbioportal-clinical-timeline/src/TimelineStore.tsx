@@ -249,9 +249,7 @@ export class TimelineStore {
         if (multipleItems) {
             const colorGetter =
                 tooltipModel.track.timelineConfig &&
-                tooltipModel.track.timelineConfig.eventColorGetter
-                    ? tooltipModel.track.timelineConfig.eventColorGetter
-                    : undefined;
+                tooltipModel.track.timelineConfig.eventColorGetter;
 
             point = (
                 <svg
