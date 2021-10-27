@@ -73,10 +73,12 @@ class NumPatientsSlider extends React.Component<INumPatientsSliderProps, any> {
                     float: 'left',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    marginTop: 5,
+                    alignContent: 'center',
                 }}
             >
-                <span>Min. # Patients:</span>
+                <span style={{ textAlign: 'center', maxWidth: 95 }}>
+                    Min. # Patients per Group:
+                </span>
                 <div
                     className={'RangeSliderContainer'}
                     style={{
@@ -127,8 +129,11 @@ class SurvivalPrefixTableStore extends SimpleGetterLazyMobXTableApplicationDataS
             sL: string
         ) => {
             return (
-                d.numPatients >= this.getPatientMinThreshold() &&
-                this.dataFilter(d, s, sU, sL)
+                // every group needs at least patientMinThreshold patients
+                _.every(
+                    Object.values(d.numPatientsPerGroup),
+                    x => x >= this.getPatientMinThreshold()
+                ) && this.dataFilter(d, s, sU, sL)
             );
         };
         return getSortedFilteredData(
@@ -264,7 +269,7 @@ export default class SurvivalPrefixTable extends React.Component<
 > {
     private dataStore: SurvivalPrefixTableStore;
     @observable private columnVisibility: { [group: string]: boolean };
-    @observable private patientMinThreshold = 10;
+    @observable private patientMinThreshold = getServerConfig().survival_min_group_threshold;
 
     constructor(props: ISurvivalPrefixTableProps) {
         super(props);
@@ -319,11 +324,20 @@ export default class SurvivalPrefixTable extends React.Component<
     }
 
     @computed get minNumPatients() {
-        return Math.min(...this.dataStore.allData.map(v => v.numPatients));
+        return Math.min(
+            ...this.dataStore.allData.map(v =>
+                Math.min(...Object.values(v.numPatientsPerGroup))
+            )
+        );
     }
 
     @computed get maxNumPatients() {
-        return Math.max(...this.dataStore.allData.map(v => v.numPatients));
+        // get the max of minimum of all groups to always show at least one row
+        return Math.max(
+            ...this.dataStore.allData.map(v =>
+                Math.min(...Object.values(v.numPatientsPerGroup))
+            )
+        );
     }
 
     @action.bound

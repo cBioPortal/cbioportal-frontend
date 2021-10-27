@@ -47,6 +47,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_transcript_dropdown: false,
     show_signal: false,
     survival_show_p_q_values_in_survival_type_table: true,
+    survival_min_group_threshold: 3,
     skin_description:
         'The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets',
     show_genomenexus: true,
