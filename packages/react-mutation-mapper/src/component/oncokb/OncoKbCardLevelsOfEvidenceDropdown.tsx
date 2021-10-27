@@ -62,14 +62,14 @@ export default class OncoKbCardLevelsOfEvidenceDropdown extends React.Component<
                             <i
                                 className={classnames(
                                     'fa fa-chevron-down',
-                                    mainStyles['orange-icon']
+                                    mainStyles['blue-icon']
                                 )}
                             />
                         ) : (
                             <i
                                 className={classnames(
                                     'fa fa-chevron-up',
-                                    mainStyles['orange-icon']
+                                    mainStyles['blue-icon']
                                 )}
                             />
                         )}

@@ -280,17 +280,7 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                 <div>
                     {props.indicator && (
                         <>
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    backgroundColor: '#064785',
-                                    color: '#ffa500',
-                                    padding: '10px 0',
-                                    fontWeight: 'bold',
-                                    textAlign: 'center',
-                                }}
-                            >
+                            <div className={mainStyles['biological-info']}>
                                 <div style={{ flexGrow: 1 }}>
                                     {getOncogenicity()}
                                 </div>
