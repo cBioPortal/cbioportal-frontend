@@ -26,7 +26,7 @@ type UniprotTopologyTrackProps = TrackProps & {
     collapsed?: boolean;
 };
 
-function topologyTooltip(
+function topologyRectangleBlockSpec(
     color: string,
     title: string,
     uniprotData: UniprotTopology
@@ -247,7 +247,9 @@ export default class UniprotTopologyTrack extends React.Component<
         const trackTitle = UniprotTopologyTypeToTitle[uniprotData.type];
 
         if (trackTitle && trackColor) {
-            acc.push(topologyTooltip(trackColor, trackTitle, uniprotData));
+            acc.push(
+                topologyRectangleBlockSpec(trackColor, trackTitle, uniprotData)
+            );
         }
         return acc;
     };

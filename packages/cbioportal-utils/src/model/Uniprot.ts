@@ -12,7 +12,7 @@ export interface UniprotFeatureList {
 
 export interface UniprotFeatureEvidence {
     code: string; // "ECO:0000269"
-    source: {
+    source?: {
         name: string; // "PubMed",
         id: string; // "18022393"
         url: string; // "http://www.ncbi.nlm.nih.gov/pubmed/18022393",
