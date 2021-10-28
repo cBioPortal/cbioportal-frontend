@@ -191,7 +191,6 @@ import autobind from 'autobind-decorator';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
-    FGA_VS_MUTATION_COUNT_KEY,
     getChartMetaDataType,
     getDefaultPriorityByUniqueKey,
     getFilteredStudiesWithSamples,
@@ -2687,13 +2686,16 @@ export class ResultsViewPageStore
                 SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
             ]
         ) {
-            _chartMetaSet[FGA_VS_MUTATION_COUNT_KEY] = {
+            _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+            ] = {
                 dataType: ChartMetaDataTypeEnum.GENOMIC,
                 patientAttribute: false,
-                uniqueKey: FGA_VS_MUTATION_COUNT_KEY,
+                uniqueKey:
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(
-                    FGA_VS_MUTATION_COUNT_KEY
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
                 ),
                 renderWhenDataChange: false,
                 description: '',
