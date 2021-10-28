@@ -82,6 +82,7 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
+    FGA_PLOT_DOMAIN,
     FGA_VS_MUTATION_COUNT_KEY,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
@@ -122,6 +123,7 @@ import {
     isLogScaleByDataBins,
     makeXVsYUniqueKey,
     MolecularProfileOption,
+    MUTATION_COUNT_PLOT_DOMAIN,
     NumericalGroupComparisonType,
     pickNewColorForClinicData,
     RectangleBounds,
@@ -5173,23 +5175,23 @@ export class StudyViewPageStore
             xAttr.clinicalAttributeId ===
             SpecialChartsUniqueKeyEnum.MUTATION_COUNT
         ) {
-            newChart.plotDomain!.x = { min: 0 };
+            newChart.plotDomain!.x = MUTATION_COUNT_PLOT_DOMAIN;
         } else if (
             xAttr.clinicalAttributeId ===
             SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
         ) {
-            newChart.plotDomain!.x = { min: 0, max: 1 };
+            newChart.plotDomain!.x = FGA_PLOT_DOMAIN;
         }
         if (
             yAttr.clinicalAttributeId ===
             SpecialChartsUniqueKeyEnum.MUTATION_COUNT
         ) {
-            newChart.plotDomain!.y = { min: 0 };
+            newChart.plotDomain!.y = MUTATION_COUNT_PLOT_DOMAIN;
         } else if (
             yAttr.clinicalAttributeId ===
             SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
         ) {
-            newChart.plotDomain!.y = { min: 0, max: 1 };
+            newChart.plotDomain!.y = FGA_PLOT_DOMAIN;
         }
         const uniqueKey = makeXVsYUniqueKey(
             newChart.xAttr.clinicalAttributeId,
@@ -5788,7 +5790,7 @@ export class StudyViewPageStore
 
     @action.bound
     private clearPageChartSettings() {
-        // Only remove visibility of unfiltered chart. This is to fix https://github.com/cBioPortal/cbioportal/issues/8057#issuecomment-747062244
+        // Only remove visibility of unfiltered chart. This is to fix https://github.com/cBioPortal/cbioportal/issues/8057#issuecomment-747062244'
         _.forEach(
             _.fromPairs(this._chartVisibility.toJSON()),
             (isVisible, chartUniqueKey) => {
@@ -5877,6 +5879,43 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ClinicalDataBinFilter & { showNA?: boolean }
     >();
+    @computed get _defaultXVsYChartMap() {
+        const map: { [uniqueKey: string]: XVsYChart } = {};
+
+        let mutationCountAttr: ClinicalAttribute | undefined;
+        let fractionGenomeAlteredAttr: ClinicalAttribute | undefined;
+        this.clinicalAttributes.result.forEach((obj: ClinicalAttribute) => {
+            if (obj.priority !== '0') {
+                if (
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT ===
+                    obj.clinicalAttributeId
+                ) {
+                    mutationCountAttr = obj;
+                } else if (
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED ===
+                    obj.clinicalAttributeId
+                ) {
+                    fractionGenomeAlteredAttr = obj;
+                }
+            }
+        });
+        if (
+            mutationCountAttr &&
+            fractionGenomeAlteredAttr &&
+            getDefaultPriorityByUniqueKey(FGA_VS_MUTATION_COUNT_KEY) !== 0
+        ) {
+            map[FGA_VS_MUTATION_COUNT_KEY] = {
+                xAttr: fractionGenomeAlteredAttr,
+                yAttr: mutationCountAttr,
+                plotDomain: {
+                    x: FGA_PLOT_DOMAIN,
+                    y: MUTATION_COUNT_PLOT_DOMAIN,
+                },
+            };
+        }
+
+        return map;
+    }
 
     @action.bound
     public resetToDefaultChartSettings(): void {
@@ -5911,7 +5950,7 @@ export class StudyViewPageStore
             _.fromPairs(this._defaultChartsType.toJSON()),
             {},
             {},
-            _.fromPairs(this._xVsYChartMap.toJSON()),
+            this._defaultXVsYChartMap,
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
