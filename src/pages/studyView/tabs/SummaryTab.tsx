@@ -27,9 +27,6 @@ import {
     ChartType,
     RectangleBounds,
     DataBin,
-    SpecialChartsUniqueKeyEnum,
-    makeDensityScatterPlotTooltip,
-    logScalePossible,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -411,53 +408,7 @@ export class StudySummaryTab extends React.Component<
                 props.filters = this.store.getScatterPlotFiltersByUniqueKey(
                     props.chartMeta!.uniqueKey
                 );
-                const chartInfo = this.store.getXVsYChartInfo(
-                    props.chartMeta!.uniqueKey
-                )!;
-                const settings = this.store.getXVsYChartSettings(
-                    props.chartMeta!.uniqueKey
-                )!;
-                props.title = `${chartInfo.yAttr.displayName} vs ${chartInfo.xAttr.displayName}`;
-                props.promise = this.store.clinicalDataDensityCache.get({
-                    chartInfo,
-                    chartMeta: props.chartMeta!,
-                    xAxisLogScale: settings.xLogScale,
-                    yAxisLogScale: settings.yLogScale,
-                });
-                props.showLogScaleXToggle = logScalePossible(
-                    chartInfo.xAttr.clinicalAttributeId
-                );
-                props.showLogScaleYToggle = logScalePossible(
-                    chartInfo.yAttr.clinicalAttributeId
-                );
-                props.logScaleXChecked = settings.xLogScale;
-                props.logScaleYChecked = settings.yLogScale;
-                props.onToggleLogScaleX = () => {
-                    const settings = this.store.getXVsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.xLogScale = !settings.xLogScale;
-                };
-                props.onToggleLogScaleY = () => {
-                    const settings = this.store.getXVsYChartSettings(
-                        props.chartMeta!.uniqueKey
-                    )!;
-                    settings.yLogScale = !settings.yLogScale;
-                };
-                props.onSwapAxes = () => {
-                    this.store.swapXVsYChartAxes(props.chartMeta!.uniqueKey);
-                };
-                props.plotDomain = chartInfo.plotDomain;
-                props.axisLabelX = `${chartInfo.xAttr.displayName}${
-                    settings.xLogScale ? ' (log)' : ''
-                }`;
-                props.axisLabelY = `${chartInfo.yAttr.displayName}${
-                    settings.yLogScale ? ' (log)' : ''
-                }`;
-                props.tooltip = makeDensityScatterPlotTooltip(
-                    chartInfo,
-                    settings
-                );
+                props.promise = this.store.mutationCountVsCNADensityData;
                 props.onValueSelection = (bounds: RectangleBounds) => {
                     this.store.updateScatterPlotFilterByValues(
                         props.chartMeta!.uniqueKey,
