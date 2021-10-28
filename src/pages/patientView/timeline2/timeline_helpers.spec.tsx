@@ -43,11 +43,11 @@ describe('#allResultValuesAreNumerical', () => {
     });
 
     it('catches missing RESULT attribute', () => {
-        events.push({
+        events.push(({
             event: {
                 attributes: [],
             },
-        } as TimelineEvent);
+        } as any) as TimelineEvent);
         assert.isFalse(allResultValuesAreNumerical(events));
     });
 });
