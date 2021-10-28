@@ -5668,6 +5668,7 @@ export class StudyViewPageStore
 
         let pending =
             this.defaultVisibleAttributes.isPending ||
+            this.chartClinicalAttributes.isPending ||
             this.clinicalAttributes.isPending ||
             this.mutationProfiles.isPending ||
             this.cnaProfiles.isPending ||
