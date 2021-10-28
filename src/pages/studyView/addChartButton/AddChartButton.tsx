@@ -44,7 +44,6 @@ import classnames from 'classnames';
 import styles from './styles.module.scss';
 import { openSocialAuthWindow } from 'shared/lib/openSocialAuthWindow';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
-import ReactSelect from 'react-select';
 import { GenericAssayMeta } from 'cbioportal-ts-api-client';
 
 export interface IAddChartTabsProps {
@@ -100,13 +99,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         string,
         string
     >({}, { deep: true });
-    @observable xVsYSelection: {
-        x?: { value: string; label: string };
-        y?: { value: string; label: string };
-    } = {
-        x: undefined,
-        y: undefined,
-    };
     private readonly tabsDivRef: React.RefObject<HTMLDivElement>;
     private genericAssayEntityOptionsReaction: IReactionDisposer;
 
@@ -149,32 +141,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.genericAssayEntityOptionsReaction();
     }
 
-    readonly xVsYClinicalAttributes = remoteData({
-        await: () => [this.props.store.chartClinicalAttributes],
-        invoke: () => {
-            return Promise.resolve(
-                this.props.store.chartClinicalAttributes.result!.filter(
-                    attr => {
-                        return attr.datatype === 'NUMBER';
-                    }
-                )
-            );
-        },
-        default: [],
-    });
-
-    readonly xVsYOptions = remoteData({
-        await: () => [this.xVsYClinicalAttributes],
-        invoke: () => {
-            return Promise.resolve(
-                this.xVsYClinicalAttributes.result!.map(attr => ({
-                    value: attr.clinicalAttributeId,
-                    label: attr.displayName,
-                }))
-            );
-        },
-        default: [],
-    });
     readonly dataCount = remoteData<ChartDataCountSet>({
         await: () => [
             this.props.store.dataWithCount,
@@ -696,51 +662,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @observable private savingCustomData = false;
 
-    @computed private get addXVsYChartButton() {
-        let disabled = false;
-        let text = 'Add Chart';
-        if (!this.xVsYSelection.x || !this.xVsYSelection.y) {
-            disabled = true;
-        } else if (this.xVsYSelection.x === this.xVsYSelection.y) {
-            disabled = true;
-            text = 'Please choose two different attributes.';
-        } else if (
-            this.props.store.doesXVsYChartExist(
-                this.xVsYSelection.x.value,
-                this.xVsYSelection.y.value
-            )
-        ) {
-            disabled = true;
-            text = 'A chart with these attributes already exists';
-        }
-
-        return (
-            <button
-                className="btn btn-primary btn-sm"
-                disabled={disabled}
-                onClick={
-                    disabled
-                        ? undefined
-                        : action(() => {
-                              this.props.store.addXVsYChart({
-                                  xAttrId: this.xVsYSelection.x!.value,
-                                  yAttrId: this.xVsYSelection.y!.value,
-                              });
-                              this.updateInfoMessage(
-                                  `${this.xVsYSelection.y!.label} vs ${
-                                      this.xVsYSelection.x!.label
-                                  } added.`
-                              );
-                              this.xVsYSelection.x = undefined;
-                              this.xVsYSelection.y = undefined;
-                          })
-                }
-            >
-                {text}
-            </button>
-        );
-    }
-
     render() {
         return (
             <div
@@ -951,76 +872,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     </>
                                 )}
                             </>
-                        </div>
-                    </MSKTab>
-                    <MSKTab
-                        id={ChartMetaDataTypeEnum.X_VS_Y}
-                        linkText={
-                            <span>
-                                X vs Y
-                                <strong
-                                    style={{ marginLeft: 5 }}
-                                    className={'beta-text'}
-                                >
-                                    Beta!
-                                </strong>
-                            </span>
-                        }
-                        key={4}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <div style={{ paddingBottom: 5 }}>
-                                <span
-                                    style={{
-                                        float: 'left',
-                                        paddingTop: 10,
-                                        paddingRight: 7,
-                                    }}
-                                >
-                                    X-Axis:
-                                </span>
-                                <ReactSelect
-                                    name="x-vs-y-select-x"
-                                    placeholder={`Select x-axis clinical attribute`}
-                                    closeMenuOnSelect={true}
-                                    value={this.xVsYSelection.x}
-                                    isMulti={false}
-                                    isClearable={false}
-                                    options={this.xVsYOptions.result}
-                                    onChange={action((opt: any) => {
-                                        this.xVsYSelection.x = opt;
-                                    })}
-                                />
-                            </div>
-                            <div style={{ paddingBottom: 15 }}>
-                                <span
-                                    style={{
-                                        float: 'left',
-                                        paddingTop: 10,
-                                        paddingRight: 7,
-                                    }}
-                                >
-                                    Y-Axis:
-                                </span>
-                                <ReactSelect
-                                    name="x-vs-y-select-y"
-                                    placeholder={`Select y-axis clinical attribute`}
-                                    closeMenuOnSelect={true}
-                                    value={this.xVsYSelection.y}
-                                    isMulti={false}
-                                    isClearable={false}
-                                    options={this.xVsYOptions.result}
-                                    onChange={action((opt: any) => {
-                                        this.xVsYSelection.y = opt;
-                                    })}
-                                />
-                            </div>
-                            {this.addXVsYChartButton}
                         </div>
                     </MSKTab>
                     {!this.hideGenericAssayTabs && this.genericAssayTabs}
