@@ -82,6 +82,34 @@ function proxyComparisonMethod(target) {
     };
 }
 
+function saveErrorImage(
+    test,
+    context,
+    { error, result, duration, passed, retries },
+    networkLog
+) {
+    if (error) {
+        if (!fs.existsSync(errorDir)) {
+            fs.mkdirSync(errorDir, 0744);
+        }
+        const title = test.title.trim().replace(/\s/g, '_');
+        const img = `${errorDir}/${title}.png`;
+        console.log('ERROR SHOT PATH' + img);
+        browser.saveScreenshot(img);
+
+        networkLog[title.trim()] = browser.execute(function() {
+            Object.keys(window.ajaxRequests).forEach(key => {
+                window.ajaxRequests[key].end = Date.now();
+                window.ajaxRequests[key].duration =
+                    window.ajaxRequests[key].end -
+                    window.ajaxRequests[key].started;
+            });
+
+            return JSON.stringify(window.ajaxRequests);
+        });
+    }
+}
+
 proxyComparisonMethod(LocalCompare);
 
 const grep = process.argv.find(l => /--grep=/.test(l));
@@ -392,46 +420,38 @@ exports.config = {
      */
     // beforeHook: function (test, context) {
     // },
+    networkLog: {},
     /**
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
      */
-    // afterHook: function (test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterHook: function(
+        test,
+        context,
+        { error, result, duration, passed, retries }
+    ) {
+        saveErrorImage(
+            test,
+            context,
+            { error, result, duration, passed, retries },
+            this.networkLog
+        );
+    },
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    networkLog: {},
-
     afterTest: function(
         test,
         context,
         { error, result, duration, passed, retries }
     ) {
-        if (error) {
-            if (!fs.existsSync(errorDir)) {
-                fs.mkdirSync(errorDir, 0744);
-            }
-            const title = test.title.trim().replace(/\s/g, '_');
-            const img = `${errorDir}/${title}.png`;
-            console.log('ERROR SHOT PATH' + img);
-            browser.saveScreenshot(img);
-
-            var networkLog = browser.execute(function() {
-                Object.keys(window.ajaxRequests).forEach(key => {
-                    window.ajaxRequests[key].end = Date.now();
-                    window.ajaxRequests[key].duration =
-                        window.ajaxRequests[key].end -
-                        window.ajaxRequests[key].started;
-                });
-
-                return JSON.stringify(window.ajaxRequests);
-            });
-
-            this.networkLog[title.trim()] = networkLog;
-        }
+        saveErrorImage(
+            test,
+            context,
+            { error, result, duration, passed, retries },
+            this.networkLog
+        );
     },
-
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
