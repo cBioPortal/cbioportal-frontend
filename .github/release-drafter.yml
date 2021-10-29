@@ -59,7 +59,10 @@ categories:
   - title: '📦 Package Improvements'
     labels:
       - 'cl-package'
-  - title: '📐 Prototype'
+  - title: '✂️ Reverted due to critical bugs'
+    labels:
+      - 'revert'
+  - title: '📐 Prototype (Internal Use)'
     labels:
       - 'cl-prototype'
 exclude-labels:
@@ -67,8 +70,6 @@ exclude-labels:
   - 'cl-skip-changelog'
 change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
 template: |
-  ## Changes
-
   $CHANGES
   
   ## 🕵️‍♀️ Full commit logs
@@ -76,5 +77,5 @@ template: |
   - Backend: https://github.com/cBioPortal/cbioportal/compare/$PREVIOUS_TAG...v$NEXT_PATCH_VERSION
   - Frontend: https://github.com/cBioPortal/cbioportal-frontend/compare/$PREVIOUS_TAG...v$NEXT_PATCH_VERSION
   
-  ## 🏷 Notes on versioning and release procedure
+  ## 🏷Notes on versioning and release procedure
   https://docs.cbioportal.org/4.-development/release-procedure#a-note-on-versioning

@@ -82,12 +82,9 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
-    FGA_VS_MUTATION_COUNT_KEY,
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
-    getBinBounds,
-    getCategoricalFilterValues,
     getChartMetaDataType,
     getChartSettingsMap,
     getClinicalDataBySamples,
@@ -120,8 +117,8 @@ import {
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
-    makeXVsYUniqueKey,
     MolecularProfileOption,
+    MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
     pickNewColorForClinicData,
     RectangleBounds,
@@ -132,6 +129,7 @@ import {
     statusFilterActive,
     StudyWithSamples,
     submitToPage,
+    getCategoricalFilterValues,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -221,8 +219,8 @@ import {
 import {
     GenericAssayDataBin,
     GenericAssayDataBinFilter,
-    GenericAssayDataCountFilter,
     GenericAssayDataCountItem,
+    GenericAssayDataCountFilter,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     fetchGenericAssayMetaByMolecularProfileIdsGroupByMolecularProfileId,
@@ -243,14 +241,14 @@ import {
 import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import { getServerConfig } from 'config/config';
 import {
-    ChartUserSetting,
-    CustomChart,
     CustomChartData,
     CustomChartIdentifierWithValue,
+    CustomChart,
     Group,
     SessionGroupData,
-    StudyPageSettings,
     VirtualStudy,
+    ChartUserSetting,
+    StudyPageSettings,
 } from 'shared/api/session-service/sessionServiceModels';
 
 type ChartUniqueKey = string;
@@ -295,20 +293,6 @@ export type StudyViewURLQuery = {
     filterValues?: string;
     sharedGroups?: string;
     sharedCustomData?: string;
-};
-
-export type XVsYChart = {
-    xAttr: ClinicalAttribute;
-    yAttr: ClinicalAttribute;
-    plotDomain?: {
-        x?: { min?: number; max?: number };
-        y?: { min?: number; max?: number };
-    };
-};
-
-export type XVsYChartSettings = {
-    xLogScale: boolean;
-    yLogScale: boolean;
 };
 
 export type GenomicChart = {
@@ -2317,18 +2301,6 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
-    private _xVsYChartMap = observable.map<ChartUniqueKey, XVsYChart>(
-        {},
-        { deep: true }
-    );
-    private _xVsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
-        {},
-        { deep: false }
-    );
-    private _xVsYChartSettings = observable.map<
-        ChartUniqueKey,
-        XVsYChartSettings
-    >({}, { deep: true });
 
     @observable private _customChartsSelectedCases = observable.map<
         ChartUniqueKey,
@@ -2350,48 +2322,6 @@ export class StudyViewPageStore
             isSharedChart?: boolean;
         }
     >({}, { deep: false });
-
-    getXVsYChartInfo(uniqueKey: string): XVsYChart | undefined {
-        return this._xVsYChartMap.get(uniqueKey);
-    }
-    getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
-        return this._xVsYChartSettings.get(uniqueKey);
-    }
-    @action.bound
-    swapXVsYChartAxes(uniqueKey: string): void {
-        const chart = this.getXVsYChartInfo(uniqueKey)!;
-        const settings = this.getXVsYChartSettings(uniqueKey)!;
-
-        const xAttr = chart.xAttr;
-        chart.xAttr = chart.yAttr;
-        chart.yAttr = xAttr;
-
-        const xLog = settings.xLogScale;
-        settings.xLogScale = settings.yLogScale;
-        settings.yLogScale = xLog;
-
-        // trigger rerender
-        this.changeChartVisibility(uniqueKey, false);
-        this.changeChartVisibility(uniqueKey, true);
-    }
-    doesXVsYChartExist(attrIdA: string, attrIdB: string) {
-        const allCharts = this._xVsYChartMap.values();
-        let chartExists = false;
-        for (const chart of allCharts) {
-            const chartAttrIds = [
-                chart.xAttr.clinicalAttributeId,
-                chart.yAttr.clinicalAttributeId,
-            ];
-            if (
-                chartAttrIds.includes(attrIdA) &&
-                chartAttrIds.includes(attrIdB)
-            ) {
-                chartExists = true;
-                break;
-            }
-        }
-        return chartExists;
-    }
 
     @action.bound
     onCheckGene(hugoGeneSymbol: string): void {
@@ -2718,63 +2648,59 @@ export class StudyViewPageStore
         chartUniqueKey: string,
         bounds?: RectangleBounds
     ): void {
-        const chartInfo = this.getXVsYChartInfo(chartUniqueKey)!;
-        if (bounds === undefined) {
-            this._clinicalDataFilterSet.delete(
-                chartInfo.xAttr.clinicalAttributeId
-            );
-            this._clinicalDataFilterSet.delete(
-                chartInfo.yAttr.clinicalAttributeId
-            );
-            this._customBinsFromScatterPlotSelectionSet.delete(
-                chartInfo.xAttr.clinicalAttributeId
-            );
-            this._customBinsFromScatterPlotSelectionSet.delete(
-                chartInfo.yAttr.clinicalAttributeId
-            );
-        } else {
-            const chartSettings = this.getXVsYChartSettings(chartUniqueKey)!;
-            const yFilter: DataFilterValue = {
-                start: bounds.yStart,
-                end: bounds.yEnd,
-            } as any;
-            if (chartSettings.yLogScale) {
-                yFilter.start = Math.exp(yFilter.start) - 1;
-                yFilter.end = Math.exp(yFilter.end) - 1;
-            }
-            const yIntervalFilter = {
-                attributeId: chartInfo.yAttr.clinicalAttributeId,
-                values: [yFilter],
-            };
-            this._customBinsFromScatterPlotSelectionSet.set(
-                chartInfo.yAttr.clinicalAttributeId,
-                [yFilter.start, yFilter.end]
-            );
-            this._clinicalDataFilterSet.set(
-                chartInfo.yAttr.clinicalAttributeId,
-                yIntervalFilter
-            );
+        if (
+            chartUniqueKey ===
+            SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+        ) {
+            if (bounds === undefined) {
+                this._clinicalDataFilterSet.delete(
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                );
+                this._clinicalDataFilterSet.delete(
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+                );
+                this._customBinsFromScatterPlotSelectionSet.delete(
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                );
+                this._customBinsFromScatterPlotSelectionSet.delete(
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+                );
+            } else {
+                const mutationCountFilter: DataFilterValue = {
+                    start: bounds.yStart,
+                    end: bounds.yEnd,
+                } as any;
+                const mutationCountIntervalFilter = {
+                    attributeId: SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+                    values: [mutationCountFilter],
+                };
+                this._customBinsFromScatterPlotSelectionSet.set(
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+                    [mutationCountFilter.start, mutationCountFilter.end]
+                );
+                this._clinicalDataFilterSet.set(
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+                    mutationCountIntervalFilter
+                );
 
-            const xFilter: DataFilterValue = {
-                start: bounds.xStart,
-                end: bounds.xEnd,
-            } as any;
-            if (chartSettings.xLogScale) {
-                xFilter.start = Math.exp(xFilter.start) - 1;
-                xFilter.end = Math.exp(xFilter.end) - 1;
+                const fgaFilter: DataFilterValue = {
+                    start: bounds.xStart,
+                    end: bounds.xEnd,
+                } as any;
+                const fgaIntervalFilter = {
+                    attributeId:
+                        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+                    values: [fgaFilter],
+                };
+                this._customBinsFromScatterPlotSelectionSet.set(
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+                    [fgaFilter.start, fgaFilter.end]
+                );
+                this._clinicalDataFilterSet.set(
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+                    fgaIntervalFilter
+                );
             }
-            const xIntervalFilter = {
-                attributeId: chartInfo.xAttr.clinicalAttributeId,
-                values: [xFilter],
-            };
-            this._customBinsFromScatterPlotSelectionSet.set(
-                chartInfo.xAttr.clinicalAttributeId,
-                [xFilter.start, xFilter.end]
-            );
-            this._clinicalDataFilterSet.set(
-                chartInfo.xAttr.clinicalAttributeId,
-                xIntervalFilter
-            );
         }
     }
 
@@ -3110,15 +3036,20 @@ export class StudyViewPageStore
                 }
                 return this._clinicalDataFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.SCATTER:
-                const chart = this._xVsYChartMap.get(chartUniqueKey)!;
-                return (
-                    this._customBinsFromScatterPlotSelectionSet.has(
-                        chart.xAttr.clinicalAttributeId
-                    ) &&
-                    this._customBinsFromScatterPlotSelectionSet.has(
-                        chart.yAttr.clinicalAttributeId
-                    )
-                );
+                if (
+                    chartUniqueKey ===
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+                ) {
+                    return (
+                        this._customBinsFromScatterPlotSelectionSet.has(
+                            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+                        ) &&
+                        this._customBinsFromScatterPlotSelectionSet.has(
+                            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                        )
+                    );
+                }
+                return false;
             case ChartTypeEnum.MUTATED_GENES_TABLE:
             case ChartTypeEnum.STRUCTURAL_VARIANT_GENES_TABLE:
             case ChartTypeEnum.CNA_GENES_TABLE:
@@ -3492,34 +3423,35 @@ export class StudyViewPageStore
     public getScatterPlotFiltersByUniqueKey(
         uniqueKey: string
     ): RectangleBounds[] {
-        const chartInfo = this.getXVsYChartInfo(uniqueKey)!;
-
-        const xAxisFilter = this._clinicalDataFilterSet.get(
-            chartInfo.xAttr.clinicalAttributeId
-        );
-        const yAxisFilter = this._clinicalDataFilterSet.get(
-            chartInfo.yAttr.clinicalAttributeId
-        );
-        const scatterPlotFilter: RectangleBounds = {};
-
-        if (xAxisFilter) {
-            let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
-                xAxisFilter.values
+        if (
+            uniqueKey === SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+        ) {
+            const xAxisFilter = this._clinicalDataFilterSet.get(
+                SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
             );
-            scatterPlotFilter.xStart = clinicalDataFilterValue.start;
-            scatterPlotFilter.xEnd = clinicalDataFilterValue.end;
-        }
-        if (yAxisFilter) {
-            let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
-                yAxisFilter.values
+            const yAxisFilter = this._clinicalDataFilterSet.get(
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT
             );
-            scatterPlotFilter.yStart = clinicalDataFilterValue.start;
-            scatterPlotFilter.yEnd = clinicalDataFilterValue.end;
-        }
-        if (xAxisFilter || yAxisFilter) {
-            return [scatterPlotFilter];
-        }
+            const scatterPlotFilter: RectangleBounds = {};
 
+            if (xAxisFilter) {
+                let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
+                    xAxisFilter.values
+                );
+                scatterPlotFilter.xStart = clinicalDataFilterValue.start;
+                scatterPlotFilter.xEnd = clinicalDataFilterValue.end;
+            }
+            if (yAxisFilter) {
+                let clinicalDataFilterValue = getFilteredAndCompressedDataIntervalFilters(
+                    yAxisFilter.values
+                );
+                scatterPlotFilter.yStart = clinicalDataFilterValue.start;
+                scatterPlotFilter.yEnd = clinicalDataFilterValue.end;
+            }
+            if (xAxisFilter || yAxisFilter) {
+                return [scatterPlotFilter];
+            }
+        }
         return [];
     }
 
@@ -4752,36 +4684,6 @@ export class StudyViewPageStore
         },
     });
 
-    readonly chartClinicalAttributes = remoteData({
-        await: () => [
-            this.clinicalAttributes,
-            this.survivalClinicalAttributesPrefix,
-        ],
-        invoke: () => {
-            // filter out survival attributes (only keep 'OS_STATUS' attribute)
-            // create a dict which contains all survival attribute Ids that will be excluded from study view
-            // get all survival attribute Ids into a dict
-            let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
-                this.survivalClinicalAttributesPrefix.result
-            );
-            // omit 'OS_STATUS' from dict
-            survivalAttributeIdsDict = _.omit(survivalAttributeIdsDict, [
-                'OS_STATUS',
-            ]);
-            return Promise.resolve(
-                _.filter(
-                    this.clinicalAttributes.result,
-                    attribute =>
-                        !(
-                            attribute.clinicalAttributeId in
-                            survivalAttributeIdsDict
-                        )
-                )
-            );
-        },
-        default: [],
-    });
-
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
@@ -5154,91 +5056,6 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    addXVsYChart(
-        attrIds: { xAttrId: string; yAttrId: string },
-        loadedfromUserSettings: boolean = false,
-        dontAddToNewlyAddedCharts: boolean = false
-    ): void {
-        if (!loadedfromUserSettings) {
-            this.newlyAddedCharts.clear();
-        }
-        const xAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.xAttrId
-        )!;
-        const yAttr = this.clinicalAttributes.result!.find(
-            a => a.clinicalAttributeId === attrIds.yAttrId
-        )!;
-        const newChart: XVsYChart = { xAttr, yAttr, plotDomain: {} };
-        if (
-            xAttr.clinicalAttributeId ===
-            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-        ) {
-            newChart.plotDomain!.x = { min: 0 };
-        } else if (
-            xAttr.clinicalAttributeId ===
-            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-        ) {
-            newChart.plotDomain!.x = { min: 0, max: 1 };
-        }
-        if (
-            yAttr.clinicalAttributeId ===
-            SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-        ) {
-            newChart.plotDomain!.y = { min: 0 };
-        } else if (
-            yAttr.clinicalAttributeId ===
-            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-        ) {
-            newChart.plotDomain!.y = { min: 0, max: 1 };
-        }
-        const uniqueKey = makeXVsYUniqueKey(
-            newChart.xAttr.clinicalAttributeId,
-            newChart.yAttr.clinicalAttributeId
-        );
-
-        if (this._xVsYChartMap.has(uniqueKey)) {
-            this.changeChartVisibility(uniqueKey, true);
-        } else {
-            const chartMeta: ChartMeta = {
-                uniqueKey: uniqueKey,
-                displayName: '',
-                description: '',
-                dataType: ChartMetaDataTypeEnum.X_VS_Y,
-                patientAttribute: false,
-                renderWhenDataChange: false,
-                priority: 0,
-            };
-            if (uniqueKey === FGA_VS_MUTATION_COUNT_KEY) {
-                chartMeta.priority = getDefaultPriorityByUniqueKey(
-                    FGA_VS_MUTATION_COUNT_KEY
-                );
-            }
-
-            this._xVsYCharts.set(uniqueKey, chartMeta);
-
-            this._xVsYChartMap.set(uniqueKey, newChart);
-            this._xVsYChartSettings.set(uniqueKey, {
-                xLogScale: false,
-                yLogScale: false,
-            });
-            this.changeChartVisibility(uniqueKey, true);
-            this.chartsType.set(uniqueKey, ChartTypeEnum.SCATTER);
-            this.chartsDimension.set(uniqueKey, { w: 2, h: 2 });
-
-            /*this._customBinsFromScatterPlotSelectionSet.set(uniqueKey, {
-                clinicalDataType: 'SAMPLE',
-                disableLogScale: false,
-                hugoGeneSymbol: newChart.hugoGeneSymbol,
-                profileType: newChart.profileType,
-            } as any);*/
-        }
-
-        if (!loadedfromUserSettings && !dontAddToNewlyAddedCharts) {
-            this.newlyAddedCharts.push(uniqueKey);
-        }
-    }
-
-    @action.bound
     addGeneSpecificCharts(
         newCharts: GenomicChart[],
         loadedfromUserSettings: boolean = false
@@ -5416,14 +5233,28 @@ export class StudyViewPageStore
         _chartMetaSet = _.merge(
             _chartMetaSet,
             _.fromPairs(this._geneSpecificCharts.toJSON()),
-            _.fromPairs(this._genericAssayCharts.toJSON()),
-            _.fromPairs(this._xVsYCharts.toJSON())
+            _.fromPairs(this._genericAssayCharts.toJSON())
         );
 
+        // filter out survival attributes (only keep 'OS_STATUS' attribute)
+        // create a dict which contains all survival attribute Ids that will be excluded from study view
+        // get all survival attribute Ids into a dict
+        let survivalAttributeIdsDict = createSurvivalAttributeIdsDict(
+            this.survivalClinicalAttributesPrefix.result
+        );
+        // omit 'OS_STATUS' from dict
+        survivalAttributeIdsDict = _.omit(survivalAttributeIdsDict, [
+            'OS_STATUS',
+        ]);
+        const filteredClinicalAttributes = _.filter(
+            this.clinicalAttributes.result,
+            attribute =>
+                !(attribute.clinicalAttributeId in survivalAttributeIdsDict)
+        );
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(
-            this.chartClinicalAttributes.result,
+            filteredClinicalAttributes,
             (acc: { [id: string]: ChartMeta }, attribute) => {
                 const uniqueKey = getUniqueKey(attribute);
                 acc[uniqueKey] = {
@@ -5580,6 +5411,52 @@ export class StudyViewPageStore
             };
         }
 
+        const scatterRequiredParams = _.reduce(
+            this.clinicalAttributes.result,
+            (acc, next) => {
+                if (
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] = true;
+                }
+                if (
+                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED ===
+                    next.clinicalAttributeId
+                ) {
+                    acc[
+                        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                    ] = true;
+                }
+                return acc;
+            },
+            {
+                [SpecialChartsUniqueKeyEnum.MUTATION_COUNT]: false,
+                [SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED]: false,
+            }
+        );
+
+        if (
+            scatterRequiredParams[SpecialChartsUniqueKeyEnum.MUTATION_COUNT] &&
+            scatterRequiredParams[
+                SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+            ]
+        ) {
+            _chartMetaSet[
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+            ] = {
+                dataType: ChartMetaDataTypeEnum.GENOMIC,
+                patientAttribute: false,
+                uniqueKey:
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+                displayName: 'Mutation Count vs Fraction of Genome Altered',
+                priority: getDefaultPriorityByUniqueKey(
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+                ),
+                renderWhenDataChange: false,
+                description: '',
+            };
+        }
         return _chartMetaSet;
     }
 
@@ -5747,7 +5624,6 @@ export class StudyViewPageStore
                 _.fromPairs(this.chartsType.toJSON()),
                 _.fromPairs(this._geneSpecificChartMap.toJSON()),
                 _.fromPairs(this._genericAssayChartMap.toJSON()),
-                _.fromPairs(this._xVsYChartMap.toJSON()),
                 _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
@@ -5911,7 +5787,6 @@ export class StudyViewPageStore
             _.fromPairs(this._defaultChartsType.toJSON()),
             {},
             {},
-            _.fromPairs(this._xVsYChartMap.toJSON()),
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
@@ -5991,15 +5866,6 @@ export class StudyViewPageStore
                             patientLevel: chartUserSettings.patientLevelProfile,
                         },
                     ],
-                    true
-                );
-            }
-            if (chartUserSettings.chartType === ChartTypeEnum.SCATTER) {
-                this.addXVsYChart(
-                    {
-                        xAttrId: chartUserSettings.xAttrId!,
-                        yAttrId: chartUserSettings.yAttrId!,
-                    },
                     true
                 );
             }
@@ -6237,8 +6103,8 @@ export class StudyViewPageStore
 
     @action
     initializeChartStatsByClinicalAttributes(): void {
-        let mutationCountAttr = null;
-        let fractionGenomeAlteredAttr = null;
+        let mutationCountFlag = false;
+        let fractionGenomeAlteredFlag = false;
 
         this.clinicalAttributes.result.forEach((obj: ClinicalAttribute) => {
             const uniqueKey = getUniqueKey(obj);
@@ -6247,12 +6113,12 @@ export class StudyViewPageStore
                     SpecialChartsUniqueKeyEnum.MUTATION_COUNT ===
                     obj.clinicalAttributeId
                 ) {
-                    mutationCountAttr = obj;
+                    mutationCountFlag = true;
                 } else if (
                     SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED ===
                     obj.clinicalAttributeId
                 ) {
-                    fractionGenomeAlteredAttr = obj;
+                    fractionGenomeAlteredFlag = true;
                 }
             }
 
@@ -6286,21 +6152,14 @@ export class StudyViewPageStore
             }
         });
 
-        if (
-            mutationCountAttr &&
-            fractionGenomeAlteredAttr &&
-            getDefaultPriorityByUniqueKey(FGA_VS_MUTATION_COUNT_KEY) !== 0
-        ) {
-            this.addXVsYChart(
-                {
-                    xAttrId: SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
-                    yAttrId: SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
-                },
-                false,
-                true
-            );
-        }
-
+        this.chartsType.set(
+            SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+            ChartTypeEnum.SCATTER
+        );
+        this.chartsDimension.set(
+            SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+            STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER]
+        );
         this.chartsDimension.set(
             SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
             STUDY_VIEW_CONFIG.layout.dimensions[
@@ -6325,6 +6184,18 @@ export class StudyViewPageStore
                 ChartTypeEnum.PATIENT_TREATMENT_GROUPS_TABLE
             ]
         );
+        if (
+            mutationCountFlag &&
+            fractionGenomeAlteredFlag &&
+            getDefaultPriorityByUniqueKey(
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+            ) !== 0
+        ) {
+            this.changeChartVisibility(
+                SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION,
+                true
+            );
+        }
 
         if (this.queriedPhysicalStudyIds.result.length > 1) {
             this.showAsPieChart(
@@ -6877,104 +6748,6 @@ export class StudyViewPageStore
         onError: () => {},
         default: [],
     });
-
-    public clinicalDataDensityCache = new MobxPromiseCache<
-        {
-            xAxisLogScale: boolean;
-            yAxisLogScale: boolean;
-            chartMeta: ChartMeta;
-            chartInfo: XVsYChart;
-        },
-        {
-            bins: DensityPlotBin[];
-            pearsonCorr: number;
-            spearmanCorr: number;
-            xBinSize: number;
-            yBinSize: number;
-        }
-    >(
-        q => ({
-            invoke: async () => {
-                //TODO:
-                // dynamically compute 263.282 and 223.372 using StudyViewDensityScatterPlot::getActualPlotAxisLength
-                // What they are is the actual available plot length in pixels. This lets us compute how many
-                //  bins to use in order to get circles that just touch but dont overlap.
-                const X_AXIS_PIXEL_LENGTH = 263.282;
-                const Y_AXIS_PIXEL_LENGTH = 223.372;
-                const xAxisBinCount = Math.ceil(X_AXIS_PIXEL_LENGTH / 6);
-                const yAxisBinCount = Math.ceil(Y_AXIS_PIXEL_LENGTH / 6);
-                const parameters: any = {
-                    xAxisAttributeId: q.chartInfo.xAttr.clinicalAttributeId,
-                    yAxisAttributeId: q.chartInfo.yAttr.clinicalAttributeId,
-                    xAxisLogScale: q.xAxisLogScale,
-                    yAxisLogScale: q.yAxisLogScale,
-                    xAxisBinCount,
-                    yAxisBinCount,
-                    studyViewFilter: this.filters,
-                };
-                if (
-                    q.chartInfo.xAttr.clinicalAttributeId ===
-                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-                ) {
-                    // FGA always goes 0 to 1
-                    parameters.xAxisStart = 0;
-                    parameters.xAxisEnd = 1;
-                } else if (
-                    q.chartInfo.xAttr.clinicalAttributeId ===
-                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-                ) {
-                    parameters.xAxisStart = 0; // mutation count always starts at 0
-                }
-                if (
-                    q.chartInfo.yAttr.clinicalAttributeId ===
-                    SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
-                ) {
-                    // FGA always goes 0 to 1
-                    parameters.yAxisStart = 0;
-                    parameters.yAxisEnd = 1;
-                } else if (
-                    q.chartInfo.yAttr.clinicalAttributeId ===
-                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT
-                ) {
-                    parameters.yAxisStart = 0; // mutation count always starts at 0
-                }
-                const result: any = await internalClient.fetchClinicalDataDensityPlotUsingPOST(
-                    parameters
-                );
-                const bins = result.bins.filter(
-                    (bin: DensityPlotBin) => bin.count > 0
-                );
-                const binBounds = getBinBounds(bins);
-                const xBinSize =
-                    (binBounds.x.max - binBounds.x.min) / xAxisBinCount;
-                const yBinSize =
-                    (binBounds.y.max - binBounds.y.min) / yAxisBinCount;
-                return {
-                    bins,
-                    pearsonCorr: result.pearsonCorr,
-                    spearmanCorr: result.spearmanCorr,
-                    xBinSize,
-                    yBinSize,
-                };
-            },
-            default: {
-                bins: [],
-                pearsonCorr: 0,
-                spearmanCorr: 0,
-                xBinSize: -1,
-                yBinSize: -1,
-            },
-        }),
-        q => {
-            return (
-                `Attr1:${q.chartInfo.xAttr.clinicalAttributeId}/` +
-                `Attr2:${q.chartInfo.yAttr.clinicalAttributeId}/` +
-                `plotDomain:${JSON.stringify(q.chartInfo.plotDomain)}/` +
-                `xLog:${q.xAxisLogScale}/` +
-                `yLog:${q.yAxisLogScale}`
-            );
-        }
-    );
 
     public genePanelCache = new MobxPromiseCache<
         { genePanelId: string },
@@ -7799,6 +7572,67 @@ export class StudyViewPageStore
         default: {},
     });
 
+    readonly mutationCountVsCNADensityData = remoteData<{
+        bins: DensityPlotBin[];
+        xBinSize: number;
+        yBinSize: number;
+    }>({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            if (
+                !!this.clinicalAttributes.result!.find(
+                    a =>
+                        a.clinicalAttributeId ===
+                        SpecialChartsUniqueKeyEnum.MUTATION_COUNT
+                ) &&
+                !!this.clinicalAttributes.result!.find(
+                    a =>
+                        a.clinicalAttributeId ===
+                        SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED
+                ) &&
+                this.selectedSamples.result.length > 0
+            ) {
+                const yAxisBinCount = MutationCountVsCnaYBinsMin;
+                const xAxisBinCount = 50;
+                const bins: DensityPlotBin[] = (
+                    await internalClient.fetchClinicalDataDensityPlotUsingPOST({
+                        xAxisAttributeId:
+                            SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
+                        yAxisAttributeId:
+                            SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
+                        xAxisStart: 0,
+                        xAxisEnd: 1, // FGA always goes 0 to 1
+                        yAxisStart: 0, // mutation always starts at 0
+                        xAxisBinCount,
+                        yAxisBinCount,
+                        studyViewFilter: this.filters,
+                    })
+                ).bins.filter(bin => bin.count > 0); // only show points for bins with stuff in them
+                const xBinSize = 1 / xAxisBinCount;
+                const yBinSize =
+                    Math.max(...bins.map(bin => bin.binY)) /
+                    (yAxisBinCount - 1);
+                return {
+                    bins,
+                    xBinSize,
+                    yBinSize,
+                };
+            } else {
+                return {
+                    bins: [],
+                    xBinSize: -1,
+                    yBinSize: -1,
+                };
+            }
+        },
+        onError: () => {},
+        default: {
+            bins: [],
+            xBinSize: -1,
+            yBinSize: -1,
+        },
+    });
+
     readonly sampleMutationCountAndFractionGenomeAlteredData = remoteData({
         await: () => [this.clinicalAttributes, this.selectedSamples],
         invoke: () => {
@@ -8250,7 +8084,10 @@ export class StudyViewPageStore
                     );
                 }
 
-                if (FGA_VS_MUTATION_COUNT_KEY in this.chartMetaSet) {
+                if (
+                    SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION in
+                    this.chartMetaSet
+                ) {
                     // number of samples containing mutationCountVsFractionGenomeAlteredData should be
                     // calculated from the selected samples
                     const mutationCountVsFractionGenomeAlteredDataSet = this
@@ -8277,7 +8114,9 @@ export class StudyViewPageStore
                         },
                         [] as IStudyViewScatterPlotData[]
                     );
-                    ret[FGA_VS_MUTATION_COUNT_KEY] = filteredData.length;
+                    ret[
+                        SpecialChartsUniqueKeyEnum.MUTATION_COUNT_CNA_FRACTION
+                    ] = filteredData.length;
                 }
 
                 if (
