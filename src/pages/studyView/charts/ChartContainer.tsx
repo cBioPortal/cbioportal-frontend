@@ -1,7 +1,7 @@
 import * as React from 'react';
 import styles from './styles.module.scss';
 import { observer } from 'mobx-react';
-import { action, computed, observable, makeObservable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import _ from 'lodash';
 import {
     ChartControls,
@@ -11,7 +11,7 @@ import {
     StudyViewPageStore,
     SurvivalType,
 } from 'pages/studyView/StudyViewPageStore';
-import { StudyViewFilter } from 'cbioportal-ts-api-client';
+import { GenePanel, StudyViewFilter } from 'cbioportal-ts-api-client';
 import PieChart from 'pages/studyView/charts/pieChart/PieChart';
 import classnames from 'classnames';
 import ClinicalTable from 'pages/studyView/table/ClinicalTable';
@@ -23,17 +23,17 @@ import SurvivalChart, {
 import BarChart from './barChart/BarChart';
 import {
     ChartMeta,
+    ChartMetaDataTypeEnum,
     ChartType,
     ClinicalDataCountSummary,
+    DataBin,
     getHeightByDimension,
     getTableHeightByDimension,
     getWidthByDimension,
-    mutationCountVsCnaTooltip,
+    logScalePossible,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
-    DataBin,
 } from '../StudyViewUtils';
-import { GenePanel } from 'cbioportal-ts-api-client';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
 import {
@@ -47,9 +47,9 @@ import MobxPromiseCache from 'shared/lib/MobxPromiseCache';
 import WindowStore from 'shared/components/window/WindowStore';
 import { ISurvivalDescription } from 'pages/resultsView/survival/SurvivalDescriptionTable';
 import {
-    MultiSelectionTableColumnKey,
     MultiSelectionTable,
     MultiSelectionTableColumn,
+    MultiSelectionTableColumnKey,
 } from 'pages/studyView/table/MultiSelectionTable';
 import { FreqColumnTypeEnum } from '../TableUtils';
 import {
@@ -58,16 +58,17 @@ import {
 } from '../table/treatments/SampleTreatmentsTable';
 import { TreatmentTableType } from '../table/treatments/treatmentsTableUtil';
 import {
-    PatientTreatmentsTableColumnKey,
     PatientTreatmentsTable,
+    PatientTreatmentsTableColumnKey,
 } from '../table/treatments/PatientTreatmentsTable';
 import { getComparisonParamsForTable } from 'pages/studyView/StudyViewComparisonUtils';
 import ComparisonVsIcon from 'shared/components/ComparisonVsIcon';
 import {
-    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_X_LABEL_WITH_EVENT_TOOLTIP,
+    SURVIVAL_PLOT_X_LABEL_WITHOUT_EVENT_TOOLTIP,
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
+import Timer = NodeJS.Timer;
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -101,6 +102,13 @@ export interface IChartContainerProps {
     title: string;
     description?: ISurvivalDescription;
     promise: MobxPromise<any>;
+    tooltip?: (d: any) => JSX.Element;
+    axisLabelX?: string;
+    axisLabelY?: string;
+    plotDomain?: {
+        x?: { min?: number; max?: number };
+        y?: { min?: number; max?: number };
+    };
     filters: any;
     studyViewFilters: StudyViewFilter;
     setComparisonConfirmationModal: StudyViewPageStore['setComparisonConfirmationModal'];
@@ -114,9 +122,16 @@ export interface IChartContainerProps {
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
     onToggleLogScale: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleX: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleY: (chartMeta: ChartMeta) => void;
     onToggleNAValue: (chartMeta: ChartMeta) => void;
+    onSwapAxes: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
+    logScaleXChecked?: boolean;
+    showLogScaleXToggle?: boolean;
+    logScaleYChecked?: boolean;
+    showLogScaleYToggle?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     selectedGenes?: any;
@@ -182,9 +197,24 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     this.props.onToggleLogScale(this.props.chartMeta);
                 }
             }),
+            onToggleLogScaleX: action(() => {
+                if (this.props.onToggleLogScaleX) {
+                    this.props.onToggleLogScaleX(this.props.chartMeta);
+                }
+            }),
+            onToggleLogScaleY: action(() => {
+                if (this.props.onToggleLogScaleY) {
+                    this.props.onToggleLogScaleY(this.props.chartMeta);
+                }
+            }),
             onToggleNAValue: action(() => {
                 if (this.props.onToggleNAValue) {
                     this.props.onToggleNAValue(this.props.chartMeta);
+                }
+            }),
+            onSwapAxes: action(() => {
+                if (this.props.onSwapAxes) {
+                    this.props.onSwapAxes(this.props.chartMeta);
                 }
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
@@ -250,6 +280,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     logScaleChecked: this.props.logScaleChecked,
                     isShowNAChecked: this.props.isShowNAChecked,
                     showNAToggle: this.props.showNAToggle,
+                };
+                break;
+            }
+            case ChartTypeEnum.SCATTER: {
+                controls = {
+                    showLogScaleXToggle: this.props.showLogScaleXToggle,
+                    logScaleXChecked: this.props.logScaleXChecked,
+                    showLogScaleYToggle: this.props.showLogScaleYToggle,
+                    logScaleYChecked: this.props.logScaleYChecked,
+                    showSwapAxes: !!this.props.onSwapAxes,
                 };
                 break;
             }
@@ -946,6 +986,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 height={this.getScatterPlotHeight(
                                     this.props.dimension.h
                                 )}
+                                spearmanCorr={
+                                    this.props.promise.result.spearmanCorr
+                                }
+                                pearsonCorr={
+                                    this.props.promise.result.pearsonCorr
+                                }
+                                plotDomain={this.props.plotDomain}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
                                 selectionBounds={
@@ -958,9 +1005,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 xBinSize={this.props.promise.result.xBinSize}
                                 yBinSize={this.props.promise.result.yBinSize}
                                 isLoading={this.props.promise.isPending}
-                                axisLabelX="Fraction of copy number altered genome"
-                                axisLabelY="# of mutations"
-                                tooltip={mutationCountVsCnaTooltip}
+                                axisLabelX={this.props.axisLabelX!}
+                                axisLabelY={this.props.axisLabelY!}
+                                tooltip={this.props.tooltip}
                             />
                         </div>
                     </div>
@@ -1016,6 +1063,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     deleteChart={this.handlers.onDeleteChart}
                     selectedRowsKeys={this.selectedRowsKeys}
                     toggleLogScale={this.handlers.onToggleLogScale}
+                    toggleLogScaleX={this.handlers.onToggleLogScaleX}
+                    toggleLogScaleY={this.handlers.onToggleLogScaleY}
+                    swapAxes={this.handlers.onSwapAxes}
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}

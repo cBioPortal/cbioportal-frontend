@@ -5,6 +5,7 @@ import {
     VictoryChart,
     VictoryLabel,
     VictoryScatter,
+    Point,
 } from 'victory';
 import {
     CBIOPORTAL_VICTORY_THEME,
@@ -21,6 +22,24 @@ import { AbstractChart } from '../ChartContainer';
 import { interpolatePlasma } from 'd3-scale-chromatic';
 import { DensityPlotBin } from 'cbioportal-ts-api-client';
 import { RectangleBounds } from 'pages/studyView/StudyViewUtils';
+import { computeCorrelationPValue } from 'shared/components/plots/PlotUtils';
+
+class DensityPoint extends React.Component<any, any> {
+    render() {
+        const { x, y, size, ...rest } = this.props;
+        // since our points actually represent histogram bins/ranges,
+        //  we want their placement to align properly with their ranges,
+        //  but the default is to place them centered. This component
+        //  adjusts for that
+        return <Point x={x + size} y={y - size} size={size} {...rest} />;
+    }
+}
+
+export function getActualPlotAxisLength(length: number) {
+    // Empirically determined, would probably change
+    // if anything changes
+    return length - 130;
+}
 
 export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {
     x: number;
@@ -32,6 +51,12 @@ export interface IStudyViewDensityScatterPlotProps {
     height: number;
     yBinsMin: number;
     data: DensityPlotBin[];
+    pearsonCorr: number;
+    spearmanCorr: number;
+    plotDomain?: {
+        x?: { min?: number; max?: number };
+        y?: { min?: number; max?: number };
+    };
     xBinSize: number;
     yBinSize: number;
     onSelection: (bounds: RectangleBounds) => void;
@@ -103,11 +128,36 @@ export default class StudyViewDensityScatterPlot
     }
 
     @computed get plotDomain() {
-        // enforce plot constraints - because of dot size and wanting them to be
-        //  right up against each other, we cant have less than yBinsMin on the y axis
+        // plotDomain is the axis limits of the plot. It can be
+        //  specified by the user (e.g. fraction genome altered always
+        //  is 0 to 1) or just pegged to the maximum and minimum of the data
+        const x = [
+            this.props.plotDomain?.x?.min,
+            this.props.plotDomain?.x?.max,
+        ];
+        const y = [
+            this.props.plotDomain?.y?.min,
+            this.props.plotDomain?.y?.max,
+        ];
+        if (x[0] === undefined) {
+            x[0] = this.dataDomain.x[0];
+        }
+
+        if (x[1] === undefined) {
+            x[1] = this.dataDomain.x[1];
+        }
+
+        if (y[0] === undefined) {
+            y[0] = this.dataDomain.y[0];
+        }
+
+        if (y[1] === undefined) {
+            y[1] = this.dataDomain.y[1];
+        }
+
         return {
-            x: [0, 1] as [number, number],
-            y: [0, Math.max(this.props.yBinsMin, this.dataDomain.y[1])],
+            x,
+            y,
         };
     }
 
@@ -128,10 +178,8 @@ export default class StudyViewDensityScatterPlot
             min.y = Math.min(d.y, min.y);
         }
         return {
-            //x: [min.x, max.x],
-            //y: [min.y, max.y]
-            x: [0, 1] as [number, number],
-            y: [0, max.y] as [number, number],
+            x: [min.x, max.x] as [number, number],
+            y: [min.y, max.y] as [number, number],
         };
     }
 
@@ -205,7 +253,7 @@ export default class StudyViewDensityScatterPlot
         );
     }
 
-    private isSelected(d: IStudyViewDensityScatterPlotDatum) {
+    /*private isSelected(d: IStudyViewDensityScatterPlotDatum) {
         if (!this.props.selectionBounds) {
             return true;
         } else {
@@ -231,7 +279,7 @@ export default class StudyViewDensityScatterPlot
 
             return xFiltered && yFiltered;
         }
-    }
+    }*/
 
     @computed get plotComputations() {
         let max = Number.NEGATIVE_INFINITY;
@@ -239,7 +287,7 @@ export default class StudyViewDensityScatterPlot
         // group data, and collect max and min at same time
         // grouping data by count (aka by color) to make different scatter for each color,
         //  this gives significant speed up over passing in a fill function
-        const selectedData = [];
+        /*const selectedData = [];
         const unselectedData = [];
         for (const d of this.data) {
             if (this.isSelected(d)) {
@@ -247,7 +295,8 @@ export default class StudyViewDensityScatterPlot
             } else {
                 unselectedData.push(d);
             }
-        }
+        }*/
+        const selectedData = this.data;
 
         const selectedDataByAreaCount = _.groupBy(selectedData, d => {
             const areaCount = d.count;
@@ -255,12 +304,13 @@ export default class StudyViewDensityScatterPlot
             min = Math.min(areaCount, min);
             return areaCount;
         });
-        const unselectedDataByAreaCount = _.groupBy(unselectedData, d => {
+        /*const unselectedDataByAreaCount = _.groupBy(unselectedData, d => {
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
             return areaCount;
-        });
+        });*/
+        const unselectedDataByAreaCount = {};
 
         // use log scale because its usually a very long tail distribution
         // we dont need to worry about log(0) because areas wont have data points to them if theres 0 data there,
@@ -310,6 +360,23 @@ export default class StudyViewDensityScatterPlot
         };
     }
 
+    @computed get numSamples() {
+        return _.sumBy(this.data, d => d.count);
+    }
+
+    @computed get pearsonPValue() {
+        return computeCorrelationPValue(
+            this.props.pearsonCorr,
+            this.numSamples
+        );
+    }
+    @computed get spearmanPValue() {
+        return computeCorrelationPValue(
+            this.props.spearmanCorr,
+            this.numSamples
+        );
+    }
+
     @computed get scatters() {
         if (this.data.length === 0) {
             return [];
@@ -349,6 +416,7 @@ export default class StudyViewDensityScatterPlot
                         symbol="circle"
                         data={data}
                         events={this.mouseEvents}
+                        dataComponent={<DensityPoint />}
                     />
                 );
             });
@@ -424,6 +492,64 @@ export default class StudyViewDensityScatterPlot
                     {this.plotComputations.countMin.toLocaleString()}
                 </text>,
             ];
+            let correlationLabels;
+            if (this.numSamples > 2) {
+                // otherwise p-values are null
+
+                correlationLabels = [
+                    // pearson
+                    <text
+                        fontSize={10}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 40}
+                        dy={'-0.3em'}
+                    >
+                        Pearson:
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 55}
+                        dy={'-0.3em'}
+                    >
+                        {this.props.pearsonCorr.toFixed(4)}
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 70}
+                        dy={'-0.3em'}
+                    >
+                        p={this.pearsonPValue!.toFixed(2)}
+                    </text>,
+
+                    // spearman
+                    <text
+                        fontSize={10}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 100}
+                        dy={'-0.3em'}
+                    >
+                        Spearman:
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 115}
+                        dy={'-0.3em'}
+                    >
+                        {this.props.spearmanCorr.toFixed(4)}
+                    </text>,
+                    <text
+                        fontSize={10.5}
+                        x={rectX - 5}
+                        y={rectY + rectHeight + 130}
+                        dy={'-0.3em'}
+                    >
+                        p={this.spearmanPValue!.toFixed(2)}
+                    </text>,
+                ];
+            }
             if (largeRange) {
                 // only add a middle label if theres room for another whole number in between
                 labels.push(
@@ -451,6 +577,7 @@ export default class StudyViewDensityScatterPlot
                         {title}
                         {rect}
                         {labels}
+                        {correlationLabels}
                     </g>
                 ),
             };
@@ -468,92 +595,127 @@ export default class StudyViewDensityScatterPlot
     }
 
     render() {
+        //console.log(this.plotDomain);
         return (
             <div>
-                <div
-                    style={{
-                        width: this.props.width,
-                        height: this.props.height,
-                        position: 'relative',
-                    }}
-                    ref={this.containerRef}
-                    onMouseDown={this.onMouseDown}
-                    onMouseUp={this.onMouseUp}
-                >
-                    <VictoryChart
-                        theme={CBIOPORTAL_VICTORY_THEME}
-                        containerComponent={
-                            <VictorySelectionContainerWithLegend
-                                onSelection={this.onSelection}
-                                containerRef={(ref: any) => {
-                                    if (ref) {
-                                        this.svgRef(ref.firstChild);
-                                    }
-                                }}
-                                legend={this.legend && this.legend.legend}
-                                gradient={this.legend && this.legend.gradient}
-                            />
-                        }
-                        width={this.props.width}
-                        height={this.props.height}
-                        standalone={true}
-                        domainPadding={DOMAIN_PADDING}
-                        singleQuadrantDomainPadding={false}
+                {this.data.length > 0 && (
+                    <div
+                        style={{
+                            width: this.props.width,
+                            height: this.props.height,
+                            position: 'relative',
+                        }}
+                        ref={this.containerRef}
+                        onMouseDown={this.onMouseDown}
+                        onMouseUp={this.onMouseUp}
                     >
-                        {this.title}
-                        <VictoryAxis
-                            ref={this.xAxisRef}
-                            domain={this.plotDomain.x}
-                            orientation="bottom"
-                            offsetY={50}
-                            crossAxis={false}
-                            tickCount={NUM_AXIS_TICKS}
-                            tickFormat={this.tickFormat}
-                            axisLabelComponent={<VictoryLabel dy={20} />}
-                            label={this.props.axisLabelX}
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            containerComponent={
+                                <VictorySelectionContainerWithLegend
+                                    onSelection={this.onSelection}
+                                    containerRef={(ref: any) => {
+                                        if (ref) {
+                                            this.svgRef(ref.firstChild);
+                                        }
+                                    }}
+                                    legend={this.legend && this.legend.legend}
+                                    gradient={
+                                        this.legend && this.legend.gradient
+                                    }
+                                />
+                            }
+                            width={this.props.width}
+                            height={this.props.height}
+                            standalone={true}
+                            domainPadding={DOMAIN_PADDING}
+                            singleQuadrantDomainPadding={false}
+                        >
+                            {this.title}
+                            <VictoryAxis
+                                ref={this.xAxisRef}
+                                domain={this.plotDomain.x}
+                                orientation="bottom"
+                                offsetY={50}
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormat}
+                                axisLabelComponent={
+                                    <VictoryLabel
+                                        dy={20}
+                                        style={[
+                                            {
+                                                fontSize: 12,
+                                                fontFamily: 'Arial',
+                                            },
+                                        ]}
+                                    />
+                                }
+                                label={this.props.axisLabelX}
+                            />
+                            <VictoryAxis
+                                ref={this.yAxisRef}
+                                domain={this.plotDomain.y}
+                                orientation="left"
+                                offsetX={50}
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormat}
+                                dependentAxis={true}
+                                axisLabelComponent={
+                                    <VictoryLabel
+                                        dy={-27}
+                                        style={[
+                                            {
+                                                fontSize: 12,
+                                                fontFamily: 'Arial',
+                                            },
+                                        ]}
+                                    />
+                                }
+                                label={this.props.axisLabelY}
+                            />
+                            {this.scatters}
+                        </VictoryChart>
+                        <span
+                            style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                backgroundColor: 'rgba(255,255,255,0.8)',
+                                display: this.props.isLoading
+                                    ? 'block'
+                                    : 'none',
+                            }}
                         />
-                        <VictoryAxis
-                            ref={this.yAxisRef}
-                            domain={this.plotDomain.y}
-                            orientation="left"
-                            offsetX={50}
-                            crossAxis={false}
-                            tickCount={NUM_AXIS_TICKS}
-                            tickFormat={this.tickFormat}
-                            dependentAxis={true}
-                            axisLabelComponent={<VictoryLabel dy={-27} />}
-                            label={this.props.axisLabelY}
-                        />
-                        {this.scatters}
-                    </VictoryChart>
-                    <span
-                        style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            backgroundColor: 'rgba(255,255,255,0.8)',
-                            display: this.props.isLoading ? 'block' : 'none',
-                        }}
-                    />
-                    <LoadingIndicator
-                        isLoading={!!this.props.isLoading}
-                        style={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            marginLeft: -10,
-                        }}
-                    />
-                </div>
+                    </div>
+                )}
+                {!this.props.isLoading && this.data.length === 0 && (
+                    <div
+                        className={'alert alert-info'}
+                        style={{ marginTop: 175 }}
+                    >
+                        No data to plot.
+                    </div>
+                )}
+                <LoadingIndicator
+                    isLoading={!!this.props.isLoading}
+                    style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        marginLeft: -10,
+                    }}
+                />
                 {this.tooltipModel && this.props.tooltip && !this.mouseIsDown && (
                     <ScatterPlotTooltip
                         container={this.container}
                         targetHovered={this.pointHovered}
                         targetCoords={{
                             x: this.tooltipModel.x,
-                            y: this.tooltipModel.y,
+                            y: this.tooltipModel.y - 3, // counter to the offset in DensityPoint
                         }}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
