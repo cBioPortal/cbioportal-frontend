@@ -701,11 +701,11 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         let text = 'Add Chart';
         if (!this.xVsYSelection.x || !this.xVsYSelection.y) {
             disabled = true;
-        } else if (this.xVsYSelection.x === this.xVsYSelection.y) {
+        } else if (this.xVsYSelection.x.value === this.xVsYSelection.y.value) {
             disabled = true;
             text = 'Please choose two different attributes.';
         } else if (
-            this.props.store.doesXVsYChartExist(
+            this.props.store.isXVsYChartVisible(
                 this.xVsYSelection.x.value,
                 this.xVsYSelection.y.value
             )
@@ -717,6 +717,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return (
             <button
                 className="btn btn-primary btn-sm"
+                data-test={'x-vs-y-submit-btn'}
                 disabled={disabled}
                 onClick={
                     disabled
@@ -986,9 +987,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 </span>
                                 <ReactSelect
                                     name="x-vs-y-select-x"
+                                    className={'xvsy-x-axis-selector'}
                                     placeholder={`Select x-axis clinical attribute`}
                                     closeMenuOnSelect={true}
-                                    value={this.xVsYSelection.x}
+                                    value={[this.xVsYSelection.x]}
                                     isMulti={false}
                                     isClearable={false}
                                     options={this.xVsYOptions.result}
@@ -1009,9 +1011,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                 </span>
                                 <ReactSelect
                                     name="x-vs-y-select-y"
+                                    className={'xvsy-y-axis-selector'}
                                     placeholder={`Select y-axis clinical attribute`}
                                     closeMenuOnSelect={true}
-                                    value={this.xVsYSelection.y}
+                                    value={[this.xVsYSelection.y]}
                                     isMulti={false}
                                     isClearable={false}
                                     options={this.xVsYOptions.result}
