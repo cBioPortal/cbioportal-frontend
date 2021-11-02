@@ -29,6 +29,7 @@ type TrackPanelProps = {
     trackVisibility?: TrackVisibility;
     tracks?: TrackName[];
     collapsePtmTrack?: boolean;
+    collapseUniprotTopologyTrack?: boolean;
 };
 
 @observer
@@ -110,6 +111,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                         width={this.props.geneWidth}
                         xOffset={this.props.geneXOffset}
                         proteinLength={this.proteinLength}
+                        collapsed={this.props.collapseUniprotTopologyTrack}
                     />
                 ) : null,
         };

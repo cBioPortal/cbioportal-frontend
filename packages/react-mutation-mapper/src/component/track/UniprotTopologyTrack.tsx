@@ -18,7 +18,6 @@ import {
     DefaultTooltip,
     EllipsisTextTooltip,
 } from 'cbioportal-frontend-commons';
-import { Button } from 'react-bootstrap';
 
 type UniprotTopologyTrackProps = TrackProps & {
     store: MutationMapperStore<Mutation>;
@@ -50,6 +49,56 @@ function topologyRectangleBlockSpec(
     };
 }
 
+export const UniprotTopologyTrackDescriptionTooltip: React.FunctionComponent<{
+    displayList: string[];
+    uniprotId?: string;
+}> = props => {
+    const dataSourceDiv = props.uniprotId ? (
+        <div>
+            Data Source:{' '}
+            <a
+                href={`https://www.uniprot.org/uniprot/${props.uniprotId}`}
+                target="_blank"
+            >
+                UniProt
+            </a>
+        </div>
+    ) : (
+        <div>
+            Data Source:{' '}
+            <a href={'https://www.uniprot.org/'} target="_blank">
+                UniProt
+            </a>
+        </div>
+    );
+    return (
+        <div style={{ maxWidth: 400 }}>
+            <p>
+                Information of the subcellular location of the mature protein.
+            </p>
+            {props.displayList.length > 0 && (
+                <p>
+                    Domains and corresponding color codes are as follows:
+                    <ul>
+                        {_.map(props.displayList, type => (
+                            <li
+                                style={{
+                                    color: UniprotTopologyTrackToColor[type],
+                                }}
+                            >
+                                <strong>
+                                    {UniprotTopologyTypeToTitle[type]}
+                                </strong>
+                            </li>
+                        ))}
+                    </ul>
+                </p>
+            )}
+            {dataSourceDiv}
+        </div>
+    );
+};
+
 @observer
 export default class UniprotTopologyTrack extends React.Component<
     UniprotTopologyTrackProps,
@@ -65,7 +114,6 @@ export default class UniprotTopologyTrack extends React.Component<
 
     @observable
     private expanded = !this.props.collapsed;
-    @observable topologyDescriptionTooltipCollapsed = false;
 
     @computed get subTrackMargin() {
         return (
@@ -114,7 +162,12 @@ export default class UniprotTopologyTrack extends React.Component<
                 <span onClick={this.handleToggleExpand}>{this.expander}</span>
                 <DefaultTooltip
                     placement="right"
-                    overlay={this.topologyDescriptionTooltip}
+                    overlay={
+                        <UniprotTopologyTrackDescriptionTooltip
+                            displayList={this.uniprotTopologyTypes}
+                            uniprotId={this.props.store.uniprotId.result}
+                        />
+                    }
                     destroyTooltipOnHide={true}
                 >
                     <span
@@ -126,93 +179,6 @@ export default class UniprotTopologyTrack extends React.Component<
                 </DefaultTooltip>
             </span>
         );
-    }
-
-    @computed get topologyDescriptionTooltip() {
-        const dataSourceDiv = this.props.store.uniprotId.result ? (
-            <div>
-                Data Source:{' '}
-                <a
-                    href={`https://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
-                    target="_blank"
-                >
-                    UniProt
-                </a>
-            </div>
-        ) : (
-            <div>
-                Data Source:{' '}
-                <a href={'https://www.uniprot.org/'} target="_blank">
-                    UniProt
-                </a>
-            </div>
-        );
-
-        const defaultDisplayList = this.uniprotTopologyTypes;
-        const expandedDisplayList = _.difference(
-            _.keys(UniprotTopologyTypeToTitle),
-            defaultDisplayList
-        );
-
-        return (
-            <div style={{ maxWidth: 400 }}>
-                <p>
-                    Information of the subcellular location of the mature
-                    protein.
-                </p>
-                <p>
-                    Domains and corresponding color codes are as follows:
-                    <ul>
-                        {_.map(defaultDisplayList, type => (
-                            <li
-                                style={{
-                                    color: UniprotTopologyTrackToColor[type],
-                                }}
-                            >
-                                <strong>
-                                    {UniprotTopologyTypeToTitle[type]}
-                                </strong>
-                            </li>
-                        ))}
-                        <Collapse
-                            isOpened={this.topologyDescriptionTooltipCollapsed}
-                        >
-                            {_.map(expandedDisplayList, type => (
-                                <li
-                                    style={{
-                                        color:
-                                            UniprotTopologyTrackToColor[type],
-                                    }}
-                                >
-                                    <strong>
-                                        {UniprotTopologyTypeToTitle[type]}
-                                    </strong>
-                                </li>
-                            ))}
-                        </Collapse>
-                    </ul>
-                    <Button
-                        onClick={this.handleToggleTopologyDescriptionTooltip}
-                        aria-controls="table-content"
-                        bsStyle="link"
-                        className="btn-sm"
-                    >
-                        <strong>
-                            {this.topologyDescriptionTooltipCollapsed
-                                ? 'Less'
-                                : 'More'}
-                        </strong>
-                    </Button>
-                </p>
-                {dataSourceDiv}
-            </div>
-        );
-    }
-
-    @action.bound
-    private handleToggleTopologyDescriptionTooltip() {
-        this.topologyDescriptionTooltipCollapsed = !this
-            .topologyDescriptionTooltipCollapsed;
     }
 
     @computed get uniprotTopologyTypes(): string[] {

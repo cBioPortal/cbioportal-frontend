@@ -102,6 +102,7 @@ export type MutationMapperProps = {
     onTranscriptChange?: (transcript: string) => void;
     compactStyle?: boolean;
     collapsePtmTrack?: boolean;
+    collapseUniprotTopologyTrack?: boolean;
 };
 
 export function initDefaultMutationMapperStore(props: MutationMapperProps) {
@@ -359,6 +360,9 @@ export default class MutationMapper<
                     this.props.plotLollipopTooltipCountInfo
                 }
                 collapsePtmTrack={this.props.collapsePtmTrack}
+                collapseUniprotTopologyTrack={
+                    this.props.collapseUniprotTopologyTrack
+                }
             />
         );
     }
