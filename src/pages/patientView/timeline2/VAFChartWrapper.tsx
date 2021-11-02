@@ -281,7 +281,7 @@ export default class VAFChartWrapper extends React.Component<
             samplePosition = this.store.sampleEvents.reduce((map, sample) => {
                 const sampleIdAttr = sample.event.attributes.find(
                     (a: ClinicalEventData) => a.key === 'SAMPLE_ID'
-                );
+                )!;
                 map[sampleIdAttr.value] = this.store.getPosition(
                     sample
                 )!.pixelLeft;

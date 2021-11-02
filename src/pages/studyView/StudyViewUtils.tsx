@@ -3320,3 +3320,6 @@ export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
     SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
     SpecialChartsUniqueKeyEnum.MUTATION_COUNT
 );
+
+export const FGA_PLOT_DOMAIN = { min: 0, max: 1 };
+export const MUTATION_COUNT_PLOT_DOMAIN = { min: 0 };
