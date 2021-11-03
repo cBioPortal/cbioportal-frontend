@@ -29,6 +29,8 @@ export const DEFAULT_GENOME_BUILD = 'GRCh37';
 const noGenePanelMessage =
     'Gene panel information not found. Sample is presumed to be whole exome/genome sequenced.';
 
+const someChange = 'balk';
+
 @observer
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
     @observable genePanelInTooltip: string = '';
