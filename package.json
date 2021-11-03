@@ -324,7 +324,7 @@
     "victory": "30.0.0",
     "webpack": "^5.55.1",
     "webpack-cli": "^4.8.0",
-    "webpack-raphael": "^2.1.4",
+    "webpack-raphael": "github:DmitryBaranovskiy/raphael#v2.3.0",
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
