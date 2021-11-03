@@ -59,7 +59,7 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
         useEffect(() => {
             const isGenieBpcStudy = window.location.href.includes('genie_bpc');
             const isTriagePortal =
-                window.location.hostname === 'triage.cbioportal.mskcc.org';
+                window.location.hostname === 'private.cbioportal.mskcc.org';
 
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,
