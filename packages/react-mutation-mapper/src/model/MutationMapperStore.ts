@@ -8,6 +8,7 @@ import {
     Mutation,
     PostTranslationalModification,
     RemoteData,
+    UniprotTopology,
 } from 'cbioportal-utils';
 import {
     EnsemblTranscript,
@@ -56,6 +57,7 @@ export interface MutationMapperStore<T extends Mutation> {
           }
         | undefined
     >;
+    uniprotTopologyData: RemoteData<UniprotTopology[] | undefined>;
     indexedHotspotData: RemoteData<IHotspotIndex | undefined>;
     hotspotsByPosition: { [pos: number]: Hotspot[] };
     oncoKbCancerGenes: RemoteData<CancerGene[] | Error | undefined>;

@@ -220,13 +220,16 @@ export class DefaultMutationMapperDataFetcher
 
     public async fetchUniprotFeatures(
         swissProtId: string,
+        category: string[],
         client: GenomeNexusAPI = this.genomeNexusClient
     ): Promise<UniprotFeature[]> {
         if (swissProtId) {
-            // TODO for now fetching only PTM features
+            // TODO for now fetching only PTM and TOPOLOGY features
             const uniprotData: Response = await request.get(
                 getUrl(
-                    `https://www.ebi.ac.uk/proteins/api/features/<%= uniprotAccession %>?categories=PTM`,
+                    `https://www.ebi.ac.uk/proteins/api/features/<%= uniprotAccession %>?categories=${category.join(
+                        ','
+                    )}`,
                     { uniprotAccession: swissProtId }
                 )
             );

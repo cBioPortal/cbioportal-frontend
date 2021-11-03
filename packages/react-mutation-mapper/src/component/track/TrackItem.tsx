@@ -27,13 +27,11 @@ export type TrackItemSpec = {
     label?: string;
     color?: string;
     tooltip?: JSX.Element;
+    height?: number;
 };
 
 @observer
-export default class TrackItem extends React.Component<
-    TrackItemProps,
-    TrackItemSpec
-> {
+export default class TrackItem extends React.Component<TrackItemProps> {
     constructor(props: any) {
         super(props);
         makeObservable(this);
@@ -85,6 +83,7 @@ export default class TrackItem extends React.Component<
                 <TrackRect
                     isHovered={this.isHovered}
                     width={this.props.dim1}
+                    height={this.props.dim2}
                     {...this.props}
                 />
             );
