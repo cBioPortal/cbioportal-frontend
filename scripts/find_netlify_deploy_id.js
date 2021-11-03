@@ -16,15 +16,25 @@ async function findDeployId(search) {
 async function main() {
     const args = process.argv;
     const search = args.length > 2 ? args[2] : undefined;
-    const deployId = search ? await findDeployId(search) : undefined;
+    const branch = args.length > 3 ? args[3] : undefined;
+    let deployId = search ? await findDeployId(search) : undefined;
 
     if (!deployId) {
-        // exit with a non-zero value to indicate error
-        process.exit(1);
+        if (isMasterBranch(branch)) {
+            // we are on master branch, we can use the master build if no other build is available
+            deployId = 'master';
+        } else {
+            // exit with a non-zero value to indicate error
+            process.exit(1);
+        }
     }
 
     // output the result to stdout
     console.log(deployId);
+}
+
+function isMasterBranch(branch) {
+    return branch && branch.toLowerCase() === 'master';
 }
 
 main();
