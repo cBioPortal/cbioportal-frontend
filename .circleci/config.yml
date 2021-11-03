@@ -123,7 +123,7 @@ jobs:
       - run: mkdir -p /tmp/data
       - run:
           name: "Save netlify deploy id"
-          command: yarn --silent run findNetlifyDeployId ${CIRCLE_SHA1} > /tmp/data/netlify_deploy_id.txt
+          command: yarn --silent run findNetlifyDeployId ${CIRCLE_SHA1} ${CIRCLE_BRANCH} > /tmp/data/netlify_deploy_id.txt
       - persist_to_workspace:
           root: /tmp
           paths:
@@ -394,6 +394,9 @@ workflows:
                 - rc
     jobs:
       - install
+      - netlify:
+          requires:
+            - install
       - api_sync:
           requires:
             - install
@@ -403,9 +406,12 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
+            - netlify
       - end_to_end_tests_against_master:
           requires:
             - install
+            - netlify
       - end_to_end_tests_localdb:
           requires:
             - install
+            - netlify
