@@ -58,6 +58,7 @@ export interface MutationMapperDataFetcher {
     ): Promise<PostTranslationalModification[]>;
     fetchUniprotFeatures(
         swissProtId: string,
+        category: string[],
         client?: GenomeNexusAPI
     ): Promise<UniprotFeature[]>;
     fetchCancerHotspotData(

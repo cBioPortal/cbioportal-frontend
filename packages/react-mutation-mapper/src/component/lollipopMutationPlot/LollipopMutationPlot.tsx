@@ -117,6 +117,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
     collapsePtmTrack?: boolean;
+    collapseUniprotTopologyTrack?: boolean;
 };
 
 @observer
@@ -901,6 +902,9 @@ export default class LollipopMutationPlot<
                         proteinLength={this.proteinLength}
                         geneXOffset={this.geneXOffset}
                         collapsePtmTrack={this.props.collapsePtmTrack}
+                        collapseUniprotTopologyTrack={
+                            this.props.collapseUniprotTopologyTrack
+                        }
                     />
                 </div>
             );
