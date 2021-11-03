@@ -8,5 +8,6 @@ export function initDefaultTrackVisibility(): TrackVisibility {
         [TrackName.UniprotPTM]: 'hidden',
         [TrackName.PDB]: 'hidden',
         [TrackName.Exon]: 'hidden',
+        [TrackName.UniprotTopology]: 'hidden',
     };
 }

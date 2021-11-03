@@ -323,6 +323,17 @@ export default class MutationMapper<
             }
         }
 
+        let uniprotTopologyDataStatus:
+            | 'pending'
+            | 'error'
+            | 'complete'
+            | 'empty' = this.props.store.uniprotTopologyData.status;
+        if (uniprotTopologyDataStatus === 'complete') {
+            if (this.props.store.uniprotTopologyData.result?.length === 0) {
+                uniprotTopologyDataStatus = 'empty';
+            }
+        }
+
         return {
             [TrackName.OncoKB]: oncoKbDataStatus,
             [TrackName.CancerHotspots]: hotspotDataStatus,
@@ -330,6 +341,7 @@ export default class MutationMapper<
             [TrackName.UniprotPTM]: uniprotPtmDataStatus,
             [TrackName.PDB]: alignmentDataStatus,
             [TrackName.Exon]: 'complete',
+            [TrackName.UniprotTopology]: uniprotTopologyDataStatus,
         };
     }
 
@@ -548,6 +560,7 @@ export default class MutationMapper<
             tracks.push(TrackName.dbPTM);
         }
         tracks.push(TrackName.Exon);
+        tracks.push(TrackName.UniprotTopology);
         tracks.push(TrackName.PDB);
 
         return tracks;
