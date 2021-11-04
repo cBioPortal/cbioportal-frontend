@@ -5,7 +5,6 @@ import RightPanel from './rightPanel/RightPanel';
 import StudySummary from './studySummary/StudySummary';
 import UserSelections from '../UserSelections';
 import _ from 'lodash';
-import { makeObservable } from 'mobx';
 
 export interface IStudyPageHeaderProps {
     store: StudyViewPageStore;
@@ -19,7 +18,6 @@ export default class StudyPageHeader extends React.Component<
 > {
     constructor(props: IStudyPageHeaderProps) {
         super(props);
-        makeObservable(this);
     }
 
     render() {
