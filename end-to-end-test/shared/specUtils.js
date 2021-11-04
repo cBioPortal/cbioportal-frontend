@@ -138,7 +138,7 @@ function setCheckboxChecked(checked, selector, failure_message) {
             }
         },
         {
-            timeout: 10000,
+            timeout: 30000,
             timeoutMsg: failure_message,
             interval: 2000,
         }
