@@ -25,6 +25,7 @@ import TrackItem, { TrackItemSpec, TrackItemType } from './TrackItem';
 import styles from './trackStyles.module.scss';
 
 const DEFAULT_ID_CLASS_PREFIX = 'track-circle-';
+const DEFAULT_HEIGHT = 15; // height of rectangle element
 
 export type TrackProps = {
     dataStore: DataStore;
@@ -200,7 +201,7 @@ export default class Track extends React.Component<TrackProps, {}> {
     }
 
     get svgHeight() {
-        return 10;
+        return 10; // height of baseline element
     }
 
     get items() {
@@ -217,9 +218,9 @@ export default class Track extends React.Component<TrackProps, {}> {
                     ((spec.endCodon! - spec.startCodon) /
                         this.props.proteinLength) *
                     this.props.width;
-                dim2 = 22;
+                dim2 = spec.height || DEFAULT_HEIGHT;
                 hoverdim1 = dim1;
-                y = -this.svgHeight / 2;
+                y = (this.svgHeight - dim2) / 2; // y is the vertical start position of rectangle, half of baseline element height = half of element height + y
                 specFeats = {
                     ...spec,
                     endCodon: spec.endCodon!,

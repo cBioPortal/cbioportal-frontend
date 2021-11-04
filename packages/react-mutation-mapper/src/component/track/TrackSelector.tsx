@@ -16,6 +16,7 @@ export enum TrackName {
     dbPTM = 'DB_PTM',
     UniprotPTM = 'UNIPROT_PTM',
     Exon = 'EXON',
+    UniprotTopology = 'UNIPROT_TOPOLOGY',
 }
 
 type TrackSelectorProps = {
@@ -45,6 +46,7 @@ export default class TrackSelector extends React.Component<
             TrackName.dbPTM,
             TrackName.PDB,
             TrackName.Exon,
+            TrackName.UniprotTopology,
         ],
     };
 
@@ -117,6 +119,16 @@ export default class TrackSelector extends React.Component<
                     </span>
                 ),
                 value: TrackName.Exon,
+            },
+            [TrackName.UniprotTopology]: {
+                label: (
+                    <span>
+                        Uniprot Topology
+                        {this.isPending(TrackName.UniprotTopology) &&
+                            this.loaderIcon()}
+                    </span>
+                ),
+                value: TrackName.UniprotTopology,
             },
         };
     }

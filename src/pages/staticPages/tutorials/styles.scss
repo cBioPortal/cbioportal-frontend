@@ -14,3 +14,12 @@
     font-size: 12px;
     margin-left: 50px;
 }
+
+.tutorialsIndex {
+    > li {
+        margin: 15px 0;
+        > ol {
+            margin-top: 10px;
+        }
+    }
+}
