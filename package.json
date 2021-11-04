@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.148",
+  "version": "3.3.149",
   "workspaces": {
     "packages": [
       ".",
@@ -149,10 +149,10 @@
     "bootstrap-sass": "3.3.7",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-clinical-timeline": "^0.3.14",
-    "cbioportal-frontend-commons": "^0.5.9",
+    "cbioportal-clinical-timeline": "^0.3.15",
+    "cbioportal-frontend-commons": "^0.5.10",
     "cbioportal-ts-api-client": "^0.9.36",
-    "cbioportal-utils": "^0.3.5",
+    "cbioportal-utils": "^0.3.6",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
     "clinical-timeline": "0.0.30",
@@ -259,7 +259,7 @@
     "react-markdown": "^7.0.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.8.20",
+    "react-mutation-mapper": "^0.8.21",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",
@@ -324,7 +324,7 @@
     "victory": "30.0.0",
     "webpack": "^5.55.1",
     "webpack-cli": "^4.8.0",
-    "webpack-raphael": "^2.1.4",
+    "webpack-raphael": "github:DmitryBaranovskiy/raphael#v2.3.0",
     "word-wrap": "^1.2.3"
   },
   "devDependencies": {
