@@ -532,6 +532,9 @@ describe('study view lgg_tcga study tests', () => {
                 browser.pause();
                 // Make sure the studies dropdown is still open
                 setDropdownOpen(true, ADD_CHART_BUTTON, ADD_CHART_CLINICAL_TAB);
+                $(option).waitForDisplayed({
+                    timeout: WAIT_FOR_VISIBLE_TIMEOUT,
+                });
                 setCheckboxChecked(true, option);
 
                 // Close the 'Add chart' menu
