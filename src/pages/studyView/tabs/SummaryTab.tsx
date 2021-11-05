@@ -407,11 +407,57 @@ export class StudySummaryTab extends React.Component<
                     : undefined;
                 break;
             }
+            case ChartTypeEnum.VIOLIN_PLOT_TABLE:
+                const chartInfo = this.store.getXVsYViolinChartInfo(
+                    props.chartMeta!.uniqueKey
+                )!;
+                const settings = this.store.getXVsYChartSettings(
+                    props.chartMeta!.uniqueKey
+                )!;
+                props.title = `${chartInfo.numericalAttr.displayName}${
+                    settings.violinLogScale ? ' (log)' : ''
+                } vs ${chartInfo.categoricalAttr.displayName}`;
+                props.promise = this.store.clinicalViolinDataCache.get({
+                    chartInfo,
+                    violinLogScale: !!settings.violinLogScale,
+                    //chartMeta: props.chartMeta!,
+                    //xAxisLogScale: !!settings.xLogScale,
+                    //yAxisLogScale: !!settings.yLogScale,
+                });
+                props.axisLabelX = chartInfo.categoricalAttr.displayName;
+                props.axisLabelY = chartInfo.numericalAttr.displayName;
+                props.showLogScaleToggle = logScalePossible(
+                    chartInfo.numericalAttr.clinicalAttributeId
+                );
+                props.logScaleChecked = settings.violinLogScale;
+                props.onToggleLogScale = () => {
+                    const settings = this.store.getXVsYChartSettings(
+                        props.chartMeta!.uniqueKey
+                    )!;
+                    settings.violinLogScale = !settings.violinLogScale;
+                };
+                props.showViolinPlotToggle = true;
+                props.violinPlotChecked = settings.showViolin;
+                props.onToggleViolinPlot = () => {
+                    const settings = this.store.getXVsYChartSettings(
+                        props.chartMeta!.uniqueKey
+                    )!;
+                    settings.showViolin = !settings.showViolin;
+                };
+                props.showBoxPlotToggle = true;
+                props.boxPlotChecked = settings.showBox;
+                props.onToggleBoxPlot = () => {
+                    const settings = this.store.getXVsYChartSettings(
+                        props.chartMeta!.uniqueKey
+                    )!;
+                    settings.showBox = !settings.showBox;
+                };
+                break;
             case ChartTypeEnum.SCATTER: {
                 props.filters = this.store.getScatterPlotFiltersByUniqueKey(
                     props.chartMeta!.uniqueKey
                 );
-                const chartInfo = this.store.getXVsYChartInfo(
+                const chartInfo = this.store.getXVsYScatterChartInfo(
                     props.chartMeta!.uniqueKey
                 )!;
                 const settings = this.store.getXVsYChartSettings(
@@ -420,9 +466,8 @@ export class StudySummaryTab extends React.Component<
                 props.title = props.chartMeta!.displayName;
                 props.promise = this.store.clinicalDataDensityCache.get({
                     chartInfo,
-                    chartMeta: props.chartMeta!,
-                    xAxisLogScale: settings.xLogScale,
-                    yAxisLogScale: settings.yLogScale,
+                    xAxisLogScale: !!settings.xLogScale,
+                    yAxisLogScale: !!settings.yLogScale,
                 });
                 props.showLogScaleXToggle = logScalePossible(
                     chartInfo.xAttr.clinicalAttributeId

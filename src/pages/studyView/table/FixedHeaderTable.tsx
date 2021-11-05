@@ -25,6 +25,7 @@ import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { SimpleGetterLazyMobXTableApplicationDataStore } from 'shared/lib/ILazyMobXTableApplicationDataStore';
 import { SelectionOperatorEnum } from '../TableUtils';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
+import classNames from 'classnames';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[];
@@ -49,11 +50,13 @@ export type IFixedHeaderTableProps<T> = {
         onClick: () => void;
         isDisabled: () => boolean;
     }[];
+    extraFooterElements?: any[];
     showAddRemoveAllButton?: boolean;
     addAll?: (data: T[]) => void;
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    headerClassName?: string;
     highlightedRowClassName?: (data: T) => string;
     autoFocusSearchAfterRendering?: boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
@@ -469,6 +472,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         )}
                     />
                 )}
+                {this.props.extraFooterElements}
             </div>
         );
     }
@@ -491,7 +495,10 @@ export default class FixedHeaderTable<T> extends React.Component<
                             }
                             rowGetter={this.rowGetter}
                             rowClassName={this.rowClassName}
-                            headerClassName={styles.headerColumn}
+                            headerClassName={classNames(
+                                styles.headerColumn,
+                                this.props.headerClassName
+                            )}
                             sort={this.sort}
                             sortDirection={RVSDTtoStrType[this._sortDirection]}
                             sortBy={this._sortBy}
@@ -509,7 +516,10 @@ export default class FixedHeaderTable<T> extends React.Component<
                                         cellRenderer={(
                                             props: TableCellProps
                                         ) => {
-                                            return column.render(props.rowData);
+                                            return column.render(
+                                                props.rowData,
+                                                props.rowIndex
+                                            );
                                         }}
                                     />
                                 );

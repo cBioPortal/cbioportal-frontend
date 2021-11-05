@@ -153,11 +153,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         await: () => [this.props.store.chartClinicalAttributes],
         invoke: () => {
             return Promise.resolve(
-                this.props.store.chartClinicalAttributes.result!.filter(
+                this.props.store.chartClinicalAttributes
+                    .result! /*.filter(
                     attr => {
                         return attr.datatype === 'NUMBER';
                     }
-                )
+                )*/
             );
         },
         default: [],
@@ -699,9 +700,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed private get addXVsYChartButton() {
         let disabled = false;
-        let text = 'Add Chart';
+        let text: string;
+        let type: 'scatter' | 'violin';
+        let categoricalAttrId: string;
+        let numericalAttrId: string;
         if (!this.xVsYSelection.x || !this.xVsYSelection.y) {
             disabled = true;
+            text = 'Add Chart';
         } else if (this.xVsYSelection.x.value === this.xVsYSelection.y.value) {
             disabled = true;
             text = 'Please choose two different attributes.';
@@ -713,6 +718,34 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         ) {
             disabled = true;
             text = 'A chart with these attributes already exists';
+        } else {
+            const clinicalAttributes = this.props.store
+                .clinicalAttributeIdToClinicalAttribute.result!;
+            const attr1 = clinicalAttributes[this.xVsYSelection.x.value];
+            const attr2 = clinicalAttributes[this.xVsYSelection.y.value];
+
+            if (attr1.datatype === 'STRING' && attr2.datatype === 'STRING') {
+                disabled = true;
+                text =
+                    "Can't add a chart with two categorical attributes (yet).";
+            } else if (
+                (attr1.datatype === 'NUMBER' && attr2.datatype === 'STRING') ||
+                (attr1.datatype === 'STRING' && attr2.datatype === 'NUMBER')
+            ) {
+                text = 'Add violin plot table';
+                type = 'violin';
+
+                if (attr1.datatype === 'STRING') {
+                    categoricalAttrId = attr1.clinicalAttributeId;
+                    numericalAttrId = attr2.clinicalAttributeId;
+                } else {
+                    categoricalAttrId = attr2.clinicalAttributeId;
+                    numericalAttrId = attr1.clinicalAttributeId;
+                }
+            } else {
+                text = 'Add density plot';
+                type = 'scatter';
+            }
         }
 
         return (
@@ -724,10 +757,17 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     disabled
                         ? undefined
                         : action(() => {
-                              this.props.store.addXVsYChart({
-                                  xAttrId: this.xVsYSelection.x!.value,
-                                  yAttrId: this.xVsYSelection.y!.value,
-                              });
+                              if (type === 'scatter') {
+                                  this.props.store.addXVsYScatterChart({
+                                      xAttrId: this.xVsYSelection.x!.value,
+                                      yAttrId: this.xVsYSelection.y!.value,
+                                  });
+                              } else {
+                                  this.props.store.addXVsYViolinChart({
+                                      categoricalAttrId,
+                                      numericalAttrId,
+                                  });
+                              }
                               this.updateInfoMessage(
                                   `${this.xVsYSelection.y!.label} vs ${
                                       this.xVsYSelection.x!.label
@@ -956,7 +996,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         </div>
                     </MSKTab>
                     <MSKTab
-                        id={ChartMetaDataTypeEnum.X_VS_Y}
+                        id={ChartMetaDataTypeEnum.X_VS_Y_SCATTER}
                         linkText={
                             <span>
                                 X vs Y
@@ -977,19 +1017,10 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             }}
                         >
                             <div style={{ paddingBottom: 5 }}>
-                                <span
-                                    style={{
-                                        float: 'left',
-                                        paddingTop: 10,
-                                        paddingRight: 7,
-                                    }}
-                                >
-                                    X-Axis:
-                                </span>
                                 <ReactSelect
                                     name="x-vs-y-select-x"
                                     className={'xvsy-x-axis-selector'}
-                                    placeholder={`Select x-axis clinical attribute`}
+                                    placeholder={`Select first clinical attribute`}
                                     closeMenuOnSelect={true}
                                     value={[this.xVsYSelection.x]}
                                     isMulti={false}
@@ -1000,20 +1031,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     })}
                                 />
                             </div>
+                            <span style={{ margin: 'auto', marginBottom: 6 }}>
+                                vs.
+                            </span>
                             <div style={{ paddingBottom: 15 }}>
-                                <span
-                                    style={{
-                                        float: 'left',
-                                        paddingTop: 10,
-                                        paddingRight: 7,
-                                    }}
-                                >
-                                    Y-Axis:
-                                </span>
                                 <ReactSelect
                                     name="x-vs-y-select-y"
                                     className={'xvsy-y-axis-selector'}
-                                    placeholder={`Select y-axis clinical attribute`}
+                                    placeholder={`Select second clinical attribute`}
                                     closeMenuOnSelect={true}
                                     value={[this.xVsYSelection.y]}
                                     isMulti={false}

@@ -30,7 +30,7 @@ import { BarDatum } from './charts/barChart/BarChart';
 import {
     GenericAssayChart,
     GenomicChart,
-    XVsYChart,
+    XVsYScatterChart,
     XVsYChartSettings,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
@@ -125,7 +125,8 @@ export type AnalysisGroup = {
 
 export enum ChartMetaDataTypeEnum {
     CUSTOM_DATA = 'Custom_Data',
-    X_VS_Y = 'X_Vs_Y',
+    X_VS_Y_SCATTER = 'X_Vs_Y_Scatter',
+    X_VS_Y_VIOLIN = 'X_Vs_Y_Violin',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene_Specific',
@@ -572,7 +573,7 @@ function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
 }
 
 export function makeDensityScatterPlotTooltip(
-    chartInfo: XVsYChart,
+    chartInfo: XVsYScatterChart,
     chartSettings: XVsYChartSettings
 ) {
     return (d: IStudyViewDensityScatterPlotDatum) => {
@@ -2621,7 +2622,7 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
-    xVsYChartSet: { [id: string]: XVsYChart },
+    xVsYChartSet: { [id: string]: XVsYScatterChart },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
