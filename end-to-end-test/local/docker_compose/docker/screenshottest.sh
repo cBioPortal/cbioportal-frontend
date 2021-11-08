@@ -9,7 +9,7 @@ set -o pipefail # pipes fail when partial command fails
 #yarn install --frozen-lockfile
 
 export FRONTEND_TEST_USE_LOCAL_DIST=false
-export HEADLESS_CHROME=true
+export HEADLESS_CHROME=false
 
 #echo START SERVE_DIST
 #cd /cbioportal-frontend
