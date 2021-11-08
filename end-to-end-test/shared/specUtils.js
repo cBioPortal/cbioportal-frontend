@@ -204,7 +204,7 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
         browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
-    if (needToLogin) keycloakLogin();
+    if (needToLogin) keycloakLogin(10000);
 
     //browser.setViewportSize({ height: 1000, width: 1600 });
 
@@ -569,7 +569,7 @@ function postDataToUrl(url, data, authenticated = true) {
         url,
         data
     );
-    if (needToLogin) keycloakLogin();
+    if (needToLogin) keycloakLogin(10000);
 }
 
 function keycloakLogin(timeout) {
@@ -577,7 +577,7 @@ function keycloakLogin(timeout) {
         timeout,
         timeoutMsg: 'No redirect to Keycloak could be detected.',
     });
-    $('body').waitForDisplayed(timeout);
+    $('#username').waitForDisplayed(timeout);
 
     $('#username').setValue('testuser');
     $('#password').setValue('P@ssword1');
