@@ -67,7 +67,9 @@ const imgPath = 'reactapp/images/[hash].[ext]';
 const babelCacheFolder = process.env.BABEL_CACHE_FOLDER || false;
 
 // we don't need sourcemaps on circleci
-const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
+let sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
+
+sourceMap = false;
 
 var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 
