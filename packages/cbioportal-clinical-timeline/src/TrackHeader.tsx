@@ -12,6 +12,8 @@ import LineChartAxis, {
 } from './LineChartAxis';
 import ReactDOM from 'react-dom';
 
+const woo = 'hello';
+
 interface ITrackHeaderProps {
     store: TimelineStore;
     track: TimelineTrackSpecification;
