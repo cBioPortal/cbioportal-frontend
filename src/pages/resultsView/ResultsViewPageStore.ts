@@ -84,6 +84,7 @@ import {
     filterAndAnnotateMutations,
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
+    getAllGenes,
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
@@ -4434,6 +4435,12 @@ export class ResultsViewPageStore
         },
     });
 
+    readonly allGenes = remoteData<Gene[]>({
+        invoke: () => {
+            return getAllGenes();
+        },
+    });
+
     readonly hugoGeneSymbolToReferenceGene = remoteData<{
         [hugoSymbol: string]: ReferenceGenomeGene;
     }>({
@@ -4447,13 +4454,25 @@ export class ResultsViewPageStore
     });
 
     readonly entrezGeneIdToReferenceGene = remoteData<{
-        [hugoSymbol: string]: ReferenceGenomeGene;
+        [entrezGeneId: string]: ReferenceGenomeGene;
     }>({
         await: () => [this.referenceGenes],
         invoke: () => {
             // build reference gene map
             return Promise.resolve(
                 _.keyBy(this.referenceGenes.result!, g => g.entrezGeneId)
+            );
+        },
+    });
+
+    readonly entrezGeneIdToGeneAll = remoteData<{
+        [entrezGeneId: string]: Gene;
+    }>({
+        await: () => [this.allGenes],
+        invoke: () => {
+            // build reference gene map
+            return Promise.resolve(
+                _.keyBy(this.allGenes.result!, g => g.entrezGeneId)
             );
         },
     });
