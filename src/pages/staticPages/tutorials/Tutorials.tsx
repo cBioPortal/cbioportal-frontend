@@ -108,6 +108,18 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         level of a gene
                                     </a>
                                 </li>
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=62qbjQOH9qc'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        Proteomic profiles in cBioPortal - An
+                                        example based on cancer cell lines from
+                                        the Cancer Cell Line Encyclopedia (CCLE)
+                                    </a>
+                                </li>
                             </ol>
                         </li>
                         <li>
