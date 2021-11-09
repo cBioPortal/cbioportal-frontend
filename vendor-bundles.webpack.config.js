@@ -51,7 +51,7 @@ const config = {
         library: '[name]_lib',
     },
 
-    devtool: sourceMap,
+    devtool: false,
 
     plugins: [],
 };
