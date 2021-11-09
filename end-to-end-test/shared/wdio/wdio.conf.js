@@ -297,6 +297,7 @@ exports.config = {
     // Make sure you have the wdio adapter package for the specific framework installed
     // before running any tests.
     framework: 'mocha',
+
     //
     // The number of times to retry the entire specfile when it fails as a whole
     specFileRetries: 2,
@@ -352,6 +353,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
+        retries: 3,
     },
     //
     // =====
