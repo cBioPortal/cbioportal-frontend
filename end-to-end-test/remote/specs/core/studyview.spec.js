@@ -732,18 +732,21 @@ describe('submit genes to results view query', () => {
             goToUrlAndSetLocalStorage(url);
             waitForNetworkQuiet();
         });
-        it('generic assay chart should be added in the summary tab', () => {
+        it.only('generic assay chart should be added in the summary tab', () => {
             $(ADD_CHART_BUTTON).waitForDisplayed({
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });
-            $(ADD_CHART_BUTTON).click();
 
+            // wait for it to be enabled
             waitForNetworkQuiet();
+
+            $(ADD_CHART_BUTTON).click();
 
             // Change to GENERIC ASSAY tab
             $(ADD_CHART_GENERIC_ASSAY_TAB).waitForDisplayed({
                 timeout: WAIT_FOR_VISIBLE_TIMEOUT,
             });
+
             $(ADD_CHART_GENERIC_ASSAY_TAB).click();
 
             // wait for generic assay data loading complete
