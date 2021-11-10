@@ -197,20 +197,20 @@ var config = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.tsx?$|\.jsx?$/,
                 use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                            plugins: ['syntax-dynamic-import'],
-
-                            cacheDirectory: babelCacheFolder,
-                        },
-                    },
+                    // {
+                    //     loader: 'babel-loader',
+                    //     options: {
+                    //         presets: [
+                    //             '@babel/preset-env',
+                    //             '@babel/preset-react',
+                    //         ],
+                    //         plugins: ['syntax-dynamic-import'],
+                    //
+                    //         cacheDirectory: babelCacheFolder,
+                    //     },
+                    // },
                     {
                         loader: 'ts-loader',
                         options: {
@@ -218,29 +218,29 @@ var config = {
                         },
                     },
                 ],
-                exclude: /node_modules/,
+                exclude: /node_modules|dist/,
             },
-            {
-                test: /\.(js|jsx|babel)$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                        },
-                    },
-                ],
-                exclude: function(modulePath) {
-                    return (
-                        /dist/.test(modulePath) &&
-                        /node_modules/.test(modulePath) &&
-                        !/igv\.min/.test(modulePath)
-                    );
-                },
-            },
+            // {
+            //     test: /\.(js|jsx|babel)$/,
+            //     use: [
+            //         {
+            //             loader: 'babel-loader',
+            //             options: {
+            //                 presets: [
+            //                     '@babel/preset-env',
+            //                     '@babel/preset-react',
+            //                 ],
+            //             },
+            //         },
+            //     ],
+            //     exclude: function(modulePath) {
+            //         return (
+            //             /dist/.test(modulePath) &&
+            //             /node_modules/.test(modulePath) &&
+            //             !/igv\.min/.test(modulePath)
+            //         );
+            //     },
+            // },
             {
                 test: /\.otf(\?\S*)?$/,
                 use: [

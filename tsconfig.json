@@ -1,13 +1,14 @@
 {
     "compilerOptions": {
         "outDir": "./tsDist/",
+        "checkJs": false,
         "sourceMap": true,
         "noImplicitAny": true,
         "strictNullChecks": true,
         "useDefineForClassFields": true,
-        "module": "es6",
+        "module": "esnext",
         "target": "es6",
-        "jsx": "preserve",
+        "jsx": "react",
         "allowJs": true,
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
