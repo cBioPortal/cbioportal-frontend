@@ -26,7 +26,7 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 
 const OTHER = 'Other';
 
-export function configureTriageTimeline(baseConfig: ITimelineConfig) {
+export function configureTimelineToxicityColors(baseConfig: ITimelineConfig) {
     baseConfig.trackStructures = baseConfig.trackStructures || [];
     baseConfig.trackStructures!.push([
         'TOXICITY',
