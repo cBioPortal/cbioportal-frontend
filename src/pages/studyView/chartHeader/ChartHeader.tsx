@@ -292,7 +292,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             items.push(
                 <li>
                     <a
-                        className="dropdown-item logScaleCheckbox"
+                        className="dropdown-item"
+                        data-test={'swapAxes'}
                         onClick={this.props.swapAxes}
                     >
                         <i className={'fa fa-arrow-up'} />
@@ -692,6 +693,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         'btn btn-xs btn-default',
                                         styles.item
                                     )}
+                                    data-test={'deleteChart'}
                                     onClick={this.props.deleteChart}
                                 >
                                     <i
