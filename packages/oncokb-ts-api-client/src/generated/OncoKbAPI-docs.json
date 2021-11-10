@@ -1150,6 +1150,12 @@
         "foundationHeme": {
           "type": "boolean"
         },
+        "geneAliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "grch37Isoform": {
           "type": "string"
         },
