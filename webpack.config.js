@@ -235,6 +235,7 @@ var config = {
                 ],
                 exclude: function(modulePath) {
                     return (
+                        /dist/.test(modulePath) &&
                         /node_modules/.test(modulePath) &&
                         !/igv\.min/.test(modulePath)
                     );
