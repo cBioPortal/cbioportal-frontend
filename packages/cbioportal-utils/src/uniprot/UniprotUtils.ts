@@ -6,23 +6,33 @@ export const UniprotCategory = {
     TOPOLOGY: 'TOPOLOGY',
 };
 
+function getTopologyTypeName(type: string, description: string | undefined) {
+    // need to conver TOPO_DOM to detailed type name(e.g. TOPO_DOM_EXTRACELLULAR), keep the same name for TRANSMEM and INTRAMEM
+    if (type === 'TOPO_DOM') {
+        return description
+            ? _.toUpper(`${type}_${description.replace(/\s+/g, '_')}`)
+            : undefined;
+    } else {
+        return type;
+    }
+}
+
 export function convertUniprotFeatureToUniprotTopology(
     uniprotFeature: UniprotFeature
-): UniprotTopology {
-    return {
-        type:
-            uniprotFeature.type === 'TOPO_DOM'
-                ? _.toUpper(
-                      `${
-                          uniprotFeature.type
-                      }_${uniprotFeature.description.replace(/\s+/g, '_')}`
-                  )
-                : uniprotFeature.type,
-        startPosition: Number(uniprotFeature.begin),
-        endPosition: Number(uniprotFeature.end),
-        description: uniprotFeature.description,
-        evidence: uniprotFeature.evidences,
-    };
+): UniprotTopology | undefined {
+    const typeName = getTopologyTypeName(
+        uniprotFeature.type,
+        uniprotFeature.description
+    );
+    return typeName
+        ? {
+              type: typeName,
+              startPosition: Number(uniprotFeature.begin),
+              endPosition: Number(uniprotFeature.end),
+              description: uniprotFeature.description,
+              evidence: uniprotFeature.evidences,
+          }
+        : undefined;
 }
 
 export const UniprotTopologyTypeToTitle: { [type: string]: string } = {

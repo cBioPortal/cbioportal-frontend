@@ -5,6 +5,8 @@ import {
     compareByPtmTypePriority,
     convertDbPtmToPtm,
     convertUniprotFeatureToPtm,
+    getPtmTypeFromUniprotFeature,
+    getPubmedIdsFromUniprotFeature,
     groupPtmDataByPosition,
     groupPtmDataByTypeAndPosition,
     ptmColor,
@@ -197,6 +199,15 @@ describe('PtmUtils', () => {
         },
     ];
 
+    const partialUniprotPtm = [
+        {
+            type: 'MOD_RES',
+            category: 'PTM',
+            begin: '2',
+            end: '2',
+        },
+    ];
+
     describe('convertToPtmData', () => {
         it('identically converts residues for both dbPTM and uniprotPTM data', () => {
             assert.deepEqual(
@@ -338,6 +349,22 @@ describe('PtmUtils', () => {
                 ptmColor([ptmData[8]]),
                 '#BA21E0',
                 'Sumoylation (default): #BA21E0'
+            );
+        });
+    });
+    describe('partial Uniprot data', () => {
+        it('uses default ptm type when description is empty', () => {
+            assert.equal(
+                getPtmTypeFromUniprotFeature(partialUniprotPtm[0]),
+                'Other',
+                'Type should be "Other" if no "description" in data'
+            );
+        });
+        it('returns no pubmed ids when evidence is empty', () => {
+            assert.equal(
+                getPubmedIdsFromUniprotFeature(partialUniprotPtm[0]).length,
+                0,
+                'No pubmed ids could be found if no "evidence" in data'
             );
         });
     });
