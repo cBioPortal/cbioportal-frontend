@@ -6,16 +6,14 @@ import {
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import _ from 'lodash';
 import {
     formatDate,
-    REMOVE_FOR_DOWNLOAD_CLASSNAME,
-    TIMELINE_LINE_CHART_TRACK_HEIGHT,
-    TIMELINE_TRACK_HEIGHT,
-    getTrackHeight,
     getAttributeValue,
     getTrackEventColorGetter,
+    REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
@@ -27,7 +25,11 @@ import {
 } from './lib/lineChartAxisUtils';
 import { getColor } from 'cbioportal-frontend-commons';
 import { getTrackLabel } from './TrackHeader';
-import { renderShape } from './renderHelpers';
+import {
+    COLOR_ATTRIBUTE_KEY,
+    renderShape,
+    SHAPE_ATTRIBUTE_KEY,
+} from './renderHelpers';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -142,7 +144,7 @@ export function randomColorGetter(e: TimelineEvent) {
 }
 
 function getSpecifiedColorIfExists(e: TimelineEvent) {
-    return getAttributeValue('STYLE_COLOR', e);
+    return getAttributeValue(COLOR_ATTRIBUTE_KEY, e);
 }
 
 const defaultColorGetter = function(e: TimelineEvent) {
@@ -379,12 +381,17 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
 }> = function({ event }) {
+    const attributes = event.event.attributes.filter(attr => {
+        return (
+            attr.key !== COLOR_ATTRIBUTE_KEY && attr.key !== SHAPE_ATTRIBUTE_KEY
+        );
+    });
     return (
         <div>
             <table>
                 <tbody>
                     {_.map(
-                        event.event.attributes.sort((a: any, b: any) =>
+                        attributes.sort((a: any, b: any) =>
                             a.key > b.key ? 1 : -1
                         ),
                         (att: any) => {
