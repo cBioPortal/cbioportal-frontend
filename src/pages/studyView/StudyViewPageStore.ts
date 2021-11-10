@@ -2376,10 +2376,10 @@ export class StudyViewPageStore
         this.changeChartVisibility(uniqueKey, false);
         this.changeChartVisibility(uniqueKey, true);
     }
-    doesXVsYChartExist(attrIdA: string, attrIdB: string) {
-        const allCharts = this._xVsYChartMap.values();
-        let chartExists = false;
-        for (const chart of allCharts) {
+    isXVsYChartVisible(attrIdA: string, attrIdB: string) {
+        const allCharts = this._xVsYChartMap.entries();
+        let matchingChartKey: ChartUniqueKey | null = null;
+        for (const [chartKey, chart] of allCharts) {
             const chartAttrIds = [
                 chart.xAttr.clinicalAttributeId,
                 chart.yAttr.clinicalAttributeId,
@@ -2388,11 +2388,14 @@ export class StudyViewPageStore
                 chartAttrIds.includes(attrIdA) &&
                 chartAttrIds.includes(attrIdB)
             ) {
-                chartExists = true;
+                matchingChartKey = chartKey;
                 break;
             }
         }
-        return chartExists;
+        return (
+            matchingChartKey !== null &&
+            !!this._chartVisibility.get(matchingChartKey)
+        );
     }
 
     @action.bound
