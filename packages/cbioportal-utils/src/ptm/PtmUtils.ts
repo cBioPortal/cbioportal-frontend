@@ -268,9 +268,12 @@ export function groupPtmDataByTypeAndPosition(
 export function ptmColor(ptms: PostTranslationalModification[]) {
     let color = PTM_COLORS.default;
     const uniqueTypes = _.uniq((ptms || []).map(ptm => ptm.type));
-
     if (uniqueTypes.length === 1) {
-        color = PTM_COLORS[uniqueTypes[0]] || PTM_COLORS.default;
+        if (uniqueTypes[0]) {
+            return PTM_COLORS[uniqueTypes[0]] || PTM_COLORS.default;
+        } else {
+            return PTM_COLORS.default;
+        }
     } else if (uniqueTypes.length > 1) {
         color = PTM_COLORS.multiType;
     }
@@ -304,25 +307,29 @@ function getResiduesFromUniprotFeature(ptm: UniprotFeature) {
 
 export function getPubmedIdsFromUniprotFeature(ptm: UniprotFeature) {
     return ptm.evidences
-        .filter(
-            e =>
-                e.source &&
-                e.source.name &&
-                e.source.name.toLowerCase().includes('pubmed')
-        )
-        .map(e => e.source!.id);
+        ? ptm.evidences
+              .filter(
+                  e =>
+                      e.source &&
+                      e.source.name &&
+                      e.source.name.toLowerCase().includes('pubmed')
+              )
+              .map(e => e.source!.id)
+        : [];
 }
 
 export function getPtmTypeFromUniprotFeature(ptm: UniprotFeature) {
     // actual `type` field provided by the feature itself (MOD_RES, CROSS_LINK, etc.) is not what we want to display
     // we need specific PTM types (Ubiquitination, Phosphorylation, etc.)
-    const keyword = ptm.description.split(';')[0].trim();
-    let ptmType: PtmType | undefined = KEYWORD_TO_PTM_TYPE[keyword];
+    const keyword = ptm.description?.split(';')[0].trim();
+    let ptmType: PtmType | undefined = keyword
+        ? KEYWORD_TO_PTM_TYPE[keyword]
+        : undefined;
 
     if (!ptmType) {
-        if (ptm.description.toLowerCase().includes('ubiquitin')) {
+        if (ptm.description?.toLowerCase().includes('ubiquitin')) {
             ptmType = PtmType.Ubiquitination;
-        } else if (ptm.description.toLowerCase().includes('sumo')) {
+        } else if (ptm.description?.toLowerCase().includes('sumo')) {
             ptmType = PtmType.Sumoylation;
         } else {
             ptmType = PtmType.Other;

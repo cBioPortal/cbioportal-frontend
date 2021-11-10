@@ -802,11 +802,12 @@ class DefaultMutationMapperStore<T extends Mutation>
                         [UniprotCategory.TOPOLOGY]
                     );
                     uniprotFeatures.forEach(uniprotFeature => {
-                        data.push(
-                            convertUniprotFeatureToUniprotTopology(
-                                uniprotFeature
-                            )
+                        let uniprotTopology = convertUniprotFeatureToUniprotTopology(
+                            uniprotFeature
                         );
+                        if (uniprotTopology) {
+                            data.push(uniprotTopology);
+                        }
                     });
                     return data;
                 } else {
