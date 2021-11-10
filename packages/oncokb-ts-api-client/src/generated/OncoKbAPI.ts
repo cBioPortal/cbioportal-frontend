@@ -92,6 +92,8 @@ export type CancerGene = {
 
         'foundationHeme': boolean
 
+        'geneAliases': Array < string >
+
         'grch37Isoform': string
 
         'grch37RefSeq': string
