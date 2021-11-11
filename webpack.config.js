@@ -110,13 +110,13 @@ var config = {
         publicPath: '/',
     },
 
-    // optimization: {
-    //     minimizer: [
-    //         new TerserPlugin({
-    //             parallel,
-    //         }),
-    //     ],
-    // },
+    optimization: {
+        minimizer: [
+            new TerserPlugin({
+                parallel: 2,
+            }),
+        ],
+    },
 
     resolve: {
         extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
