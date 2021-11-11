@@ -105,7 +105,10 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         target={'_blank'}
                                     >
                                         Comparing samples based on expression
-                                        level of a gene
+                                        level of a gene{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
                                     </a>
                                 </li>
                                 <li>
@@ -117,7 +120,24 @@ export default class Tutorials extends React.Component<{}, {}> {
                                     >
                                         Proteomic profiles in cBioPortal - An
                                         example based on cancer cell lines from
-                                        the Cancer Cell Line Encyclopedia (CCLE)
+                                        the Cancer Cell Line Encyclopedia (CCLE){' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=q9No2073c5o'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        Filtering and adding clinical data to
+                                        Mutations tab{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
                                     </a>
                                 </li>
                             </ol>
