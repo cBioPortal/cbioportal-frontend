@@ -17,12 +17,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - attach_workspace:
         at: /tmp/
     - run:
-        name: "Set netlify deploy preview"
-        command: echo 'export NETLIFY_DEPLOY_PREVIEW="$(cat /tmp/data/netlify_deploy_id.txt)--cbioportalfrontend"' >> $BASH_ENV
-    - run:
-        name: "Run end to end tests using an external frontend deploy"
+        name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
           sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
+          yarn serveDist & \
           cd end-to-end-test && \
           yarn install --frozen-lockfile && \
           ../scripts/env_vars.sh && \
@@ -33,13 +31,13 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           sleep 5s && \
           curl $CBIOPORTAL_URL > /dev/null && \
           sleep 20s && \
-          curl "https://${NETLIFY_DEPLOY_PREVIEW}.netlify.app/" > /dev/null && \
+          (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
           sleep 1s && \
           echo "CBIOPORTAL_URL=$CBIOPORTAL_URL"
           yarn run test-webdriver-manager-remote
         when: always
         environment:
-          FRONTEND_TEST_USE_LOCAL_DIST: false,
+          FRONTEND_TEST_USE_LOCAL_DIST: true
           WEBPACK_PARALLEL: false
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
@@ -101,33 +99,24 @@ jobs:
           paths:
             - node_modules
           key: v6-dependencies-{{ checksum "yarn.lock" }}
+      - run:
+          name: "Run build if no dist folder"
+          command: 'ls dist || yarn run build'
+          environment:
+            DISABLE_SOURCEMAP: true
+            NO_PARALLEL: true
+          no_output_timeout: 25m
       - run: cd /tmp/repo/end-to-end-test && (ls node_modules || yarn install --frozen-lockfile)
       - save_cache:
           paths:
             - node_modules
+            - dist
             - common-dist
           key: v6-dependencies-plus-dist-{{ checksum "has_source_changed" }}
       - persist_to_workspace:
           root: /tmp
           paths:
             - repo
-
-  netlify:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: /tmp/
-      - run:
-          name: "Wait for netlify deploy preview to be ready"
-          command: yarn run waitForNetlifyPreview ${CIRCLE_SHA1}
-      - run: mkdir -p /tmp/data
-      - run:
-          name: "Save netlify deploy id"
-          command: yarn --silent run findNetlifyDeployId ${CIRCLE_SHA1} ${CIRCLE_BRANCH} > /tmp/data/netlify_deploy_id.txt
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-           - data
 
   api_sync:
     <<: *defaults
@@ -188,7 +177,7 @@ jobs:
       JUNIT_REPORT_PATH: ./remote/junit/
       SCREENSHOT_DIRECTORY: ./remote/screenshots
     <<: *run_e2e_and_save_artifacts
-  
+
   end_to_end_tests_against_master:
     <<: *defaults
     environment:
@@ -223,9 +212,6 @@ jobs:
           command: |
             sudo apt-get update && \
             sudo apt-get install jq unzip
-      - run:
-          name: "Set netlify deploy preview"
-          command: echo 'export NETLIFY_DEPLOY_PREVIEW="$(cat /tmp/data/netlify_deploy_id.txt)--cbioportalfrontend"' >> $BASH_ENV
       - run:
           name: Setup e2e-environment
           command: |
@@ -291,10 +277,10 @@ jobs:
       - run:
           name: Change owner of keycloak MySQL database files (needed by cache)
           command: |
-              if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
-                  sudo chmod -R 777 $KC_DB_DATA_DIR && \
-                  sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
-              fi
+            if (ls "$KC_DB_DATA_DIR"/* 2> /dev/null > /dev/null); then \
+                sudo chmod -R 777 $KC_DB_DATA_DIR && \
+                sudo chown -R circleci:circleci $KC_DB_DATA_DIR; \
+            fi
       - save_cache:
           paths:
             - /tmp/repo/e2e-localdb-workspace/kc_db_data
@@ -351,9 +337,6 @@ workflows:
   install_and_test:
     jobs:
       - install
-      - netlify:
-          requires:
-            - install
       - prettier:
           requires:
             - install
@@ -369,11 +352,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
-            - netlify
       - end_to_end_tests_localdb:
           requires:
             - install
-            - netlify
       - api_sync:
           requires:
             - install
@@ -394,9 +375,6 @@ workflows:
                 - rc
     jobs:
       - install
-      - netlify:
-          requires:
-            - install
       - api_sync:
           requires:
             - install
@@ -406,12 +384,9 @@ workflows:
       - end_to_end_tests:
           requires:
             - install
-            - netlify
       - end_to_end_tests_against_master:
           requires:
             - install
-            - netlify
       - end_to_end_tests_localdb:
           requires:
             - install
-            - netlify
