@@ -27,6 +27,7 @@ import {
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import ComplexKeySet from 'shared/lib/complexKeyDataStructures/ComplexKeySet';
 
 export default class GroupComparisonStore extends ComparisonStore {
     @observable.ref private sessionId: string;
@@ -276,24 +277,38 @@ export default class GroupComparisonStore extends ComparisonStore {
     }
     private readonly _samples = remoteData({
         await: () => [this._session],
-        invoke: () => {
-            const sampleIdentifiers = [];
+        invoke: async () => {
+            const allStudies = _.flatMapDeep(
+                this._session.result!.groups,
+                groupData => groupData.studies.map(s => s.id)
+            );
+
+            // fetch all samples - faster backend processing time
+            const allSamples = await client.fetchSamplesUsingPOST({
+                sampleFilter: {
+                    sampleListIds: allStudies.map(studyId => `${studyId}_all`),
+                } as SampleFilter,
+                projection: 'DETAILED',
+            });
+
+            // filter to get samples in our groups
+            const sampleSet = new ComplexKeySet();
             for (const groupData of this._session.result!.groups) {
                 for (const studySpec of groupData.studies) {
                     const studyId = studySpec.id;
                     for (const sampleId of studySpec.samples) {
-                        sampleIdentifiers.push({
+                        sampleSet.add({
                             studyId,
                             sampleId,
                         });
                     }
                 }
             }
-            return client.fetchSamplesUsingPOST({
-                sampleFilter: {
-                    sampleIdentifiers,
-                } as SampleFilter,
-                projection: 'DETAILED',
+            return allSamples.filter(sample => {
+                return sampleSet.has({
+                    studyId: sample.studyId,
+                    sampleId: sample.sampleId,
+                });
             });
         },
     });
