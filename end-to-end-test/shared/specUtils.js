@@ -188,16 +188,6 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     if (!useExternalFrontend) {
         browser.url(url);
         console.log('Connecting to: ' + url);
-    } else if (useNetlifyDeployPreview) {
-        browser.url(url);
-        browser.execute(
-            function(config) {
-                this.localStorage.setItem('netlify', config.netlify);
-            },
-            { netlify: netlifyDeployPreview }
-        );
-        browser.url(url);
-        console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
