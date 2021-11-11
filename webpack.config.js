@@ -100,6 +100,8 @@ var config = {
         colors: true,
     },
 
+    bail: true,
+
     entry: [`${path.join(src, 'appBootstrapper.jsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -111,6 +113,8 @@ var config = {
     },
 
     optimization: {
+        emitOnErrors: true,
+        minimize: true,
         minimizer: [
             new TerserPlugin({
                 parallel: 2,
