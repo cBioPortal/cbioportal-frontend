@@ -100,7 +100,7 @@ var config = {
         colors: true,
     },
 
-    entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.jsx')}`],
+    entry: [`${path.join(src, 'appBootstrapper.jsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
@@ -110,13 +110,13 @@ var config = {
         publicPath: '/',
     },
 
-    optimization: {
-        minimizer: [
-            new TerserPlugin({
-                parallel,
-            }),
-        ],
-    },
+    // optimization: {
+    //     minimizer: [
+    //         new TerserPlugin({
+    //             parallel,
+    //         }),
+    //     ],
+    // },
 
     resolve: {
         extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
@@ -449,6 +449,8 @@ if (isDev) {
     // see https://github.com/webpack/webpack-dev-server/blob/master/migration-v4.md
     // config.plugins.push(new webpack.HotModuleReplacementPlugin());
 }
+
+config.devtool = false;
 
 if (isDev || isTest) {
     config.devtool = sourceMap;

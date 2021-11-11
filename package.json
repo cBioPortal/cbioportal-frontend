@@ -22,6 +22,8 @@
     "build": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && yarn run buildAll",
     "buildAll": "yarn run buildModules && yarn run buildMain",
     "buildMain": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=1500 webpack",
+    "buildMain1": "yarn run clean && yarn run compileOqlParser && yarn run buildDLL:prod",
+    "buildMain2": "cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=1500 webpack",
     "buildModules": "lerna run build --ignore=cbioportal-frontend --stream",
     "publishModules": "lerna publish from-git --yes",
     "buildDLL:prod": "yarn run clean && cross-env NODE_ENV=production NODE_OPTIONS=--max-old-space-size=1500 webpack --config vendor-bundles.webpack.config.js",
