@@ -11,7 +11,7 @@ enum Shape {
     CAMERA = 'camera',
 }
 function getSpecifiedShapeIfExists(e: TimelineEvent) {
-    const shape = getAttributeValue('STYLE_SHAPE', e);
+    const shape = getAttributeValue(SHAPE_ATTRIBUTE_KEY, e);
     if (!shape) {
         return undefined;
     }
@@ -122,3 +122,6 @@ export function renderShape(
             );
     }
 }
+
+export const COLOR_ATTRIBUTE_KEY = 'STYLE_COLOR';
+export const SHAPE_ATTRIBUTE_KEY = 'STYLE_SHAPE';
