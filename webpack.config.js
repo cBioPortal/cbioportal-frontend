@@ -98,7 +98,7 @@ var config = {
         colors: true,
     },
 
-    entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.jsx')}`],
+    entry: [`${path.join(src, 'appBootstrapper.jsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
@@ -197,20 +197,20 @@ var config = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.tsx?$|\.jsx?$/,
                 use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                            plugins: ['syntax-dynamic-import'],
-
-                            cacheDirectory: babelCacheFolder,
-                        },
-                    },
+                    // {
+                    //     loader: 'babel-loader',
+                    //     options: {
+                    //         presets: [
+                    //             '@babel/preset-env',
+                    //             '@babel/preset-react',
+                    //         ],
+                    //         plugins: ['syntax-dynamic-import'],
+                    //
+                    //         cacheDirectory: babelCacheFolder,
+                    //     },
+                    // },
                     {
                         loader: 'ts-loader',
                         options: {
@@ -220,26 +220,26 @@ var config = {
                 ],
                 exclude: /node_modules/,
             },
-            {
-                test: /\.(js|jsx|babel)$/,
-                use: [
-                    {
-                        loader: 'babel-loader',
-                        options: {
-                            presets: [
-                                '@babel/preset-env',
-                                '@babel/preset-react',
-                            ],
-                        },
-                    },
-                ],
-                exclude: function(modulePath) {
-                    return (
-                        /node_modules/.test(modulePath) &&
-                        !/igv\.min/.test(modulePath)
-                    );
-                },
-            },
+            // {
+            //     test: /\.(js|jsx|babel)$/,
+            //     use: [
+            //         {
+            //             loader: 'babel-loader',
+            //             options: {
+            //                 presets: [
+            //                     '@babel/preset-env',
+            //                     '@babel/preset-react',
+            //                 ],
+            //             },
+            //         },
+            //     ],
+            //     exclude: function(modulePath) {
+            //         return (
+            //             /node_modules/.test(modulePath) &&
+            //             !/igv\.min/.test(modulePath)
+            //         );
+            //     },
+            // },
             {
                 test: /\.otf(\?\S*)?$/,
                 use: [
