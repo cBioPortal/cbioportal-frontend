@@ -94,9 +94,7 @@ var sassResourcesLoader = {
 };
 
 var config = {
-    stats: {
-        colors: true,
-    },
+    stats: 'detailed',
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.jsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -551,7 +549,7 @@ if (isDev || isTest) {
     });
 }
 
-// reduce logging to optize netlify build
+// reduce logging to optimize netlify build
 if (process.env.BUILD_REPORT_ERRORS_ONLY === 'true') {
     config.stats = 'errors-only';
 }
