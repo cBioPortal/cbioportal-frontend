@@ -52,7 +52,7 @@ const config = {
     },
 
     devtool: sourceMap,
-
+    stats: 'detailed',
     plugins: [],
 };
 
