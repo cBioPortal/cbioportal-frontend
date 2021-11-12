@@ -354,35 +354,35 @@ workflows:
       - netlify:
           requires:
             - install
-      - prettier:
-          requires:
-            - install
-          filters:
-            branches:
-              ignore:
-                - master
-                - release-*
-                - rc
-      - unit_tests:
-          requires:
-            - install
-      - end_to_end_tests:
-          requires:
-            - install
-            - netlify
-      - end_to_end_tests_localdb:
-          requires:
-            - install
-            - netlify
-      - api_sync:
-          requires:
-            - install
-      - check_forgotten_spec_only_statements:
-          requires:
-            - install
-      - check_incorrect_import_statements:
-          requires:
-            - install
+#      - prettier:
+#          requires:
+#            - install
+#          filters:
+#            branches:
+#              ignore:
+#                - master
+#                - release-*
+#                - rc
+#      - unit_tests:
+#          requires:
+#            - install
+#      - end_to_end_tests:
+#          requires:
+#            - install
+#            - netlify
+#      - end_to_end_tests_localdb:
+#          requires:
+#            - install
+#            - netlify
+#      - api_sync:
+#          requires:
+#            - install
+#      - check_forgotten_spec_only_statements:
+#          requires:
+#            - install
+#      - check_incorrect_import_statements:
+#          requires:
+#            - install
   nightly:
     triggers:
       - schedule:

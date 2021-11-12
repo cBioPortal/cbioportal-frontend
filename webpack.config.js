@@ -108,10 +108,12 @@ var config = {
         publicPath: '/',
     },
 
+    bail: false,
+
     optimization: {
         minimizer: [
             new TerserPlugin({
-                parallel,
+                parallel: false,
             }),
         ],
     },
@@ -577,5 +579,9 @@ if (isTest) {
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
 }
 // End Testing
+
+config.stats = 'detailed';
+
+config.devtool = false;
 
 module.exports = config;
