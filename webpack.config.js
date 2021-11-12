@@ -97,7 +97,7 @@ var config = {
     stats: {
         colors: true,
     },
-
+    bail: true,
     entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.jsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
