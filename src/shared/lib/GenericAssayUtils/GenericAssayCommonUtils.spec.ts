@@ -88,6 +88,61 @@ describe('GenericAssayCommonUtils', () => {
             );
         });
 
+        it('Shows entity_stable_id and description when name is missing in properties', () => {
+            const genericAssayEntity: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    DESCRIPTION: 'desc_1',
+                },
+            };
+
+            const expect = {
+                value: 'id_1',
+                label: 'id_1: desc_1',
+            };
+            assert.deepEqual(
+                makeGenericAssayOption(genericAssayEntity),
+                expect
+            );
+        });
+
+        it('Shows entity_stable_id and name when description is missing in properties', () => {
+            const genericAssayEntity: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {
+                    NAME: 'name_1',
+                },
+            };
+
+            const expect = {
+                value: 'id_1',
+                label: 'name_1 (id_1)',
+            };
+            assert.deepEqual(
+                makeGenericAssayOption(genericAssayEntity),
+                expect
+            );
+        });
+
+        it('Shows entity_stable_id when name and description is missing in properties', () => {
+            const genericAssayEntity: GenericAssayMeta = {
+                stableId: 'id_1',
+                entityType: 'GENERIC_ASSAY',
+                genericEntityMetaProperties: {},
+            };
+
+            const expect = {
+                value: 'id_1',
+                label: 'id_1',
+            };
+            assert.deepEqual(
+                makeGenericAssayOption(genericAssayEntity),
+                expect
+            );
+        });
+
         it('add plotAxisLabel for plot tab options', () => {
             const genericAssayEntity: GenericAssayMeta = {
                 stableId: 'id_1',
