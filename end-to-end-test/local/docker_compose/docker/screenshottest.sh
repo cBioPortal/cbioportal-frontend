@@ -12,8 +12,8 @@ export FRONTEND_TEST_USE_LOCAL_DIST=false
 export HEADLESS_CHROME=false
 
 #echo START SERVE_DIST
-#cd /cbioportal-frontend
-#yarn serveDistLocalDb &
+cd /cbioportal-frontend
+yarn serveDistLocalDb &
 
 cd /cbioportal-frontend/
 cd /cbioportal-frontend/end-to-end-test
@@ -26,8 +26,8 @@ sleep 5s
 curl $CBIOPORTAL_URL > /dev/null
 sleep 20s
 
-#echo PROBE FRONTEND SERVER
-#(curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null
+echo PROBE FRONTEND SERVER
+(curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null
 
 echo RUN E2E-TESTS
 cd /cbioportal-frontend/end-to-end-test
