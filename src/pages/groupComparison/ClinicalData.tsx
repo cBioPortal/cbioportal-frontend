@@ -319,6 +319,11 @@ export default class ClinicalData extends React.Component<
                     },
                 });
 
+                // filter out NA like values
+                clinicalData = clinicalData.filter(
+                    d => d.value.toLowerCase() !== 'unknown'
+                );
+
                 let normalizedCategory: { [id: string]: string } = {};
                 for (const d of clinicalData) {
                     const lowerCaseValue = d.value.toLowerCase();
