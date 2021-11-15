@@ -230,7 +230,6 @@
     "precss": "^1.4.0",
     "progress-bar-webpack-plugin": "^2.1.0",
     "pushstate-server": "3.0.1",
-    "qtip2": "^3.0.3",
     "query-string": "^6.13.6",
     "raw-loader": "^0.5.1",
     "rc-animate": "^3.1.1",
