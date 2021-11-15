@@ -1,8 +1,6 @@
 import Raphael from 'webpack-raphael';
 import $ from 'jquery';
 import _ from 'lodash';
-import 'qtip2';
-import 'qtip2/dist/jquery.qtip.css';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { DEFAULT_GENOME_BUILD } from 'pages/patientView/genomicOverview/Tracks';
 import { default as chromosomeSizes } from './chromosomeSizes.json';
@@ -515,12 +513,41 @@ function addToolTip(
             },
         },
     };
-    // if (showDelay)
-    //     param['show'] = { delay: showDelay };
-    // if (position)
-    //     param['position'] = position;
 
-    ($(node) as any).qtip(param);
+    const TOOLTIP_CLASSNAME = 'genover-tooltip';
+
+    $(node).hover(
+        () => {
+            try {
+                const offset = $(node).offset();
+                const $el = $(`<div class="${TOOLTIP_CLASSNAME}">${tip}</div>`)
+                    .css({
+                        position: 'absolute',
+                        padding: 5,
+                        fontSize: 11,
+                        maxWidth: 260,
+                        border: '1px solid #eee',
+                        background: '#fff',
+                        borderRadius: 5,
+                        zIndex: 9999999,
+                        opacity: 0,
+                        left: offset!.left! < 120 ? 20 : offset!.left!,
+                    })
+                    .appendTo('body');
+                $el.css({
+                    top: offset!.top! - $el.height()! - 15,
+                    opacity: 1,
+                });
+            } catch (ex) {
+                // fail silent
+            }
+        },
+        () => {
+            $(`.${TOOLTIP_CLASSNAME}`).remove();
+        }
+    );
+
+    //($(node) as any).qtip(param);
 }
 
 function underlineText(textElement: any, p: any) {
