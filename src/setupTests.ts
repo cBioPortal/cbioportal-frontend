@@ -13,5 +13,4 @@ jest.mock('shared/components/copyDownloadControls/CopyDownloadQueryLinks.tsx');
 
 // explicitly set mock for legacy packages
 jest.setMock('webpack-raphael', {});
-jest.setMock('qtip2', {});
 jest.setMock('jquery-migrate', {});
