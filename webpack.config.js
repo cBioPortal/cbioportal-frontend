@@ -127,6 +127,9 @@ var config = {
             pako: join(
                 path.join(__dirname + '/node_modules/pako/dist/pako.es5.js')
             ),
+            jquery: path.join(
+                __dirname + '/node_modules/jquery/dist/jquery.js'
+            ),
         },
     },
 
