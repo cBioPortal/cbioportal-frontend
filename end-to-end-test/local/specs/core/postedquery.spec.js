@@ -13,8 +13,8 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('posting query parameters (instead of GET) to query page', function() {
     it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', function() {
-        const url = `${CBIOPORTAL_URL}/results`;
-        goToUrlAndSetLocalStorage(url);
+        const url = `${CBIOPORTAL_URL}`;
+        goToUrlAndSetLocalStorage(url, true);
 
         let query = {
             gene_list: 'CDKN2A MDM2 MDM4 TP53',
@@ -29,7 +29,7 @@ describe('posting query parameters (instead of GET) to query page', function() {
                 'study_es_0_gistic',
         };
 
-        postDataToUrl(url, query);
+        postDataToUrl(`${url}/results`, query);
 
         // the following could only occur if code passes data written above into url
         browser.waitUntil(() => {
