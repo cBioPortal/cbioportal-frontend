@@ -1,20 +1,16 @@
 var assert = require('assert');
-var goToUrlAndSetLocalStorage = require('../../../shared/specUtils')
-    .goToUrlAndSetLocalStorage;
 var postDataToUrl = require('../../../shared/specUtils').postDataToUrl;
 var _ = require('lodash');
 
-var {
-    useExternalFrontend,
-    waitForOncoprint,
-} = require('../../../shared/specUtils');
+var { waitForOncoprint } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
 describe('posting query parameters (instead of GET) to query page', function() {
     it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', function() {
-        const url = `${CBIOPORTAL_URL}/results`;
-        goToUrlAndSetLocalStorage(url);
+        const urlParam = useLocalDist ? 'localdist' : 'localdev';
+        const url = `${CBIOPORTAL_URL}/results?${urlParam}=true`;
 
         let query = {
             gene_list: 'CDKN2A MDM2 MDM4 TP53',
