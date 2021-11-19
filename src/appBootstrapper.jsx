@@ -13,8 +13,6 @@ import {
     initializeAppStore,
     initializeLoadConfiguration,
     initializeServerConfiguration,
-    setConfigDefaults,
-    setServerConfig,
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
@@ -32,6 +30,9 @@ import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
+import { setNetworkCache } from 'shared/api/networkCache';
+
+setNetworkCache();
 
 superagentCache(superagent);
 

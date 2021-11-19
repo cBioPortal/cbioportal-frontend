@@ -24,6 +24,7 @@ screenshotRoot = screenshotRoot.replace(/\/$/, '');
 const chromeArgs = [
     '--disable-composited-antialiasing',
     '--allow-insecure-localhost',
+    '--user-data-dir=/tmp/chromeData',
 ].concat(
     (function() {
         return process.env.HEADLESS_CHROME
@@ -150,9 +151,12 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //specs: [SPEC_FILE_PATTERN],
 
-    //specs: ["./remote/specs/core/home.spec.js", 'remote/specs/core/screenshot.spec.js'],
+    specs: [
+        './remote/specs/core/home.spec.js',
+        './remote/specs/core/oncoprint.spec.js',
+    ],
 
     // Patterns to exclude.
     exclude: [
@@ -458,7 +462,8 @@ exports.config = {
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details
      */
-    // afterSuite: function (suite) {
+    // afterSuite: function(suite) {
+    //
     // },
     /**
      * Runs after a WebdriverIO command gets executed
