@@ -17,6 +17,7 @@ import ComplexKeyMap from '../../../shared/lib/complexKeyDataStructures/ComplexK
 import { SingleGeneQuery } from '../../../shared/lib/oql/oql-parser';
 import oql_parser from '../../../shared/lib/oql/oql-parser';
 import _ from 'lodash';
+import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
 import { SessionGroupData } from 'shared/api/session-service/sessionServiceModels';
 
 export type ResultsViewComparisonGroup = ComparisonGroup & {
@@ -28,6 +29,7 @@ export const ALTERED_COLOR = '#dc3912';
 export const UNALTERED_COLOR = '#3366cc';
 export const ALTERED_GROUP_NAME = 'Altered group';
 export const UNALTERED_GROUP_NAME = 'Unaltered group';
+export const UNPROFILED_GROUP_NAME = 'Unprofiled group';
 
 // compute/add members to SessionGroupData to make them
 //  into complete ComparisonGroup objects
@@ -69,11 +71,14 @@ export function getAlteredVsUnalteredGroups(
     patientLevel: boolean,
     studyIds: string[],
     alteredSamples: Sample[],
-    unalteredSamples: Sample[],
-    queryContainsOql: boolean
+    unalteredAndProfiledSamples: Sample[],
+    totallyUnprofiledSamples: Sample[],
+    queryContainsOql: boolean,
+    hideUnprofiledSamples: 'any' | 'totally' | false
 ): SessionGroupData[] {
-    return [
-        {
+    const ret = [];
+    if (alteredSamples.length > 0) {
+        ret.push({
             name: ALTERED_GROUP_NAME,
             description: `${
                 patientLevel ? 'Patients' : 'Samples'
@@ -83,19 +88,42 @@ export function getAlteredVsUnalteredGroups(
             studies: getStudiesAttr(alteredSamples, alteredSamples),
             origin: studyIds,
             color: ALTERED_COLOR,
-        },
-        {
+        });
+    }
+    if (unalteredAndProfiledSamples.length > 0) {
+        ret.push({
             name: UNALTERED_GROUP_NAME,
             description: `${
                 patientLevel ? 'Patients' : 'Samples'
             } without any alterations in ${
                 queryContainsOql ? 'the OQL specification for ' : ''
             }your queried genes in the selected profiles.`,
-            studies: getStudiesAttr(unalteredSamples, unalteredSamples),
+            studies: getStudiesAttr(
+                unalteredAndProfiledSamples,
+                unalteredAndProfiledSamples
+            ),
             origin: studyIds,
             color: UNALTERED_COLOR,
-        },
-    ];
+        });
+    }
+    if (
+        totallyUnprofiledSamples.length > 0 &&
+        hideUnprofiledSamples !== 'totally'
+    ) {
+        ret.push({
+            name: UNPROFILED_GROUP_NAME,
+            description: `${
+                patientLevel ? 'Patients' : 'Samples'
+            } not profiled in any queried genes in any selected profiles.`,
+            studies: getStudiesAttr(
+                totallyUnprofiledSamples,
+                totallyUnprofiledSamples
+            ),
+            origin: studyIds,
+            color: DEFAULT_NA_COLOR,
+        });
+    }
+    return ret;
 }
 
 export function getAlteredByOncoprintTrackGroups(
