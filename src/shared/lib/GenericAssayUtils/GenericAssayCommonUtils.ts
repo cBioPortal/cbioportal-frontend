@@ -195,11 +195,13 @@ export function makeGenericAssayOption(
     // indentical to the entity_stable_id.
     const name = getGenericAssayMetaPropertyOrDefault(
         meta,
-        COMMON_GENERIC_ASSAY_PROPERTY.NAME
+        COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+        meta.stableId
     );
     const description = getGenericAssayMetaPropertyOrDefault(
         meta,
-        COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION
+        COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+        meta.stableId
     );
     const uniqueName = name !== meta.stableId;
     const uniqueDesc = description !== meta.stableId && description !== name;
