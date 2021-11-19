@@ -20,7 +20,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import {
     buildBaseConfig,
     configureGenieTimeline,
-    configureTimelineToxicityColors,
+    configureTriageTimeline,
     sortTracks,
 } from 'pages/patientView/timeline2/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
