@@ -1,15 +1,12 @@
 import GenesList from './GenesList';
 import React from 'react';
 import { assert } from 'chai';
-import Enzyme, { mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import { mount } from 'enzyme';
 
 describe('GenesList', () => {
     let wrapper: any;
 
-    after(() => {
+    afterAll(() => {
         wrapper.unmount();
     });
 

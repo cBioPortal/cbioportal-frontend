@@ -3,7 +3,7 @@ import { observer } from 'mobx-react';
 import { remoteData, isWebdriver } from 'cbioportal-frontend-commons';
 import { action, computed, observable, makeObservable } from 'mobx';
 import autobind from 'autobind-decorator';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import styles from './styles.module.scss';
 import classNames from 'classnames';
 import { MobxPromise } from 'mobxpromise';

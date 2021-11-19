@@ -8,13 +8,14 @@ set -o pipefail # pipes fail when partial command fails
 #cd /cbioportal-frontend/end-to-end-test
 #yarn install --frozen-lockfile
 
-export FRONTEND_TEST_USE_LOCAL_DIST=true
-export HEADLESS_CHROME=true
+export FRONTEND_TEST_USE_LOCAL_DIST=false
+export HEADLESS_CHROME=false
 
-echo START SERVE_DIST
+#echo START SERVE_DIST
 cd /cbioportal-frontend
 yarn serveDistLocalDb &
 
+cd /cbioportal-frontend/
 cd /cbioportal-frontend/end-to-end-test
 
 echo PROBE CBIOPORTAL

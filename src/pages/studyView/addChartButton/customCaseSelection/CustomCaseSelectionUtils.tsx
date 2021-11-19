@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Sample } from 'cbioportal-ts-api-client';
 import { ClinicalDataType, ClinicalDataTypeEnum } from '../../StudyViewUtils';
 import Pluralize from 'pluralize';

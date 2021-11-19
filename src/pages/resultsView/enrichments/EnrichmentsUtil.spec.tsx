@@ -16,7 +16,7 @@ import {
 } from './EnrichmentsUtil';
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MolecularProfile } from 'cbioportal-ts-api-client';
 
 expect.extend(expectJSX);

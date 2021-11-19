@@ -12,7 +12,7 @@ export interface UniprotFeatureList {
 
 export interface UniprotFeatureEvidence {
     code: string; // "ECO:0000269"
-    source: {
+    source?: {
         name: string; // "PubMed",
         id: string; // "18022393"
         url: string; // "http://www.ncbi.nlm.nih.gov/pubmed/18022393",
@@ -23,9 +23,17 @@ export interface UniprotFeatureEvidence {
 export interface UniprotFeature {
     type: string; // "MOD_RES"
     category: string; // "PTM"
-    description: string; // "Phosphoserine; by HIPK4"
+    description?: string; // "Phosphoserine; by HIPK4"
     begin: string; // "9"
     end: string; // "9"
-    molecule: string;
-    evidences: UniprotFeatureEvidence[];
+    molecule?: string;
+    evidences?: UniprotFeatureEvidence[];
+}
+
+export interface UniprotTopology {
+    type: string; // TOPO_DOM
+    startPosition: number; // 25
+    endPosition: number; // 645
+    description?: string; // Extracellular
+    evidence?: UniprotFeatureEvidence[]; // ECO:0000255
 }

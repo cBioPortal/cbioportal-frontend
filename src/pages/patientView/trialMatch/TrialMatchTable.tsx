@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
 import { observer } from 'mobx-react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     IClinicalGroupMatch,
     IGenomicGroupMatch,

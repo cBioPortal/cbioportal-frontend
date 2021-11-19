@@ -1,18 +1,28 @@
 import { assert } from 'chai';
-import Enzyme, { mount } from 'enzyme';
+import { mount } from 'enzyme';
 import * as React from 'react';
 import GeneSymbolValidator, {
     IGeneSymbolValidatorProps,
 } from './GeneSymbolValidator';
 import sinon from 'sinon';
-import Adapter from 'enzyme-adapter-react-16';
-
-Enzyme.configure({ adapter: new Adapter() });
+import client from 'shared/api/cbioportalClientInstance';
+import SpyInstance = jest.SpyInstance;
 
 describe('GeneSymbolValidator', () => {
     let props: IGeneSymbolValidatorProps;
     let wrapper: any;
     let instance: GeneSymbolValidator;
+    let fetchGenesStub: SpyInstance;
+
+    beforeAll(() => {
+        fetchGenesStub = jest
+            .spyOn(client, 'fetchGenesUsingPOST')
+            .mockImplementation(() => Promise.resolve([]));
+    });
+
+    afterAll(() => {
+        fetchGenesStub.mockRestore();
+    });
 
     beforeEach(() => {
         props = {

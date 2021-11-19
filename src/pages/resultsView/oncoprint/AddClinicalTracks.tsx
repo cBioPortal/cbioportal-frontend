@@ -7,7 +7,7 @@ import { remoteData } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { SpecialAttribute } from '../../../shared/cache/ClinicalDataCache';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { MakeMobxView } from '../../../shared/components/MobxView';
 import LoadingIndicator from '../../../shared/components/loadingIndicator/LoadingIndicator';
 import { toggleIncluded } from '../../../shared/lib/ArrayUtils';

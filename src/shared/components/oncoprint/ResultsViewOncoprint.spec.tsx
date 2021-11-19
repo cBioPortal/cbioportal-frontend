@@ -1,10 +1,10 @@
+jest.mock('shared/lib/onMobxPromise');
+
 import { assert } from 'chai';
 import ResultsViewOncoprint from './ResultsViewOncoprint';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import { Sample, Patient } from 'cbioportal-ts-api-client';
-import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import ExtendedRouterStore from 'shared/lib/ExtendedRouterStore';
-import sinon from 'sinon';
 import { SortByUrlParamValue } from 'shared/components/oncoprint/ResultsViewOncoprint';
 import { createMemoryHistory } from 'history';
 import { syncHistoryWithStore } from 'mobx-react-router';

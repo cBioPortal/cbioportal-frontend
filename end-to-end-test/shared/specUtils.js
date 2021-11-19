@@ -130,11 +130,15 @@ function setOncoprintMutationsMenuOpen(open) {
 function setCheckboxChecked(checked, selector, failure_message) {
     browser.waitUntil(
         () => {
-            $(selector).click();
-            return checked === $(selector).isSelected();
+            if ($(selector).isDisplayed()) {
+                $(selector).click();
+                return checked === $(selector).isSelected();
+            } else {
+                return false;
+            }
         },
         {
-            timeout: 10000,
+            timeout: 30000,
             timeoutMsg: failure_message,
             interval: 2000,
         }
@@ -184,13 +188,23 @@ function goToUrlAndSetLocalStorage(url, authenticated = false) {
     if (!useExternalFrontend) {
         browser.url(url);
         console.log('Connecting to: ' + url);
+    } else if (useNetlifyDeployPreview) {
+        browser.url(url);
+        browser.execute(
+            function(config) {
+                this.localStorage.setItem('netlify', config.netlify);
+            },
+            { netlify: netlifyDeployPreview }
+        );
+        browser.url(url);
+        console.log('Connecting to: ' + url);
     } else {
         var urlparam = useLocalDist ? 'localdist' : 'localdev';
         var prefix = url.indexOf('?') > 0 ? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
         console.log('Connecting to: ' + `${url}${prefix}${urlparam}=true`);
     }
-    if (needToLogin) keycloakLogin();
+    if (needToLogin) keycloakLogin(10000);
 
     //browser.setViewportSize({ height: 1000, width: 1600 });
 
@@ -265,6 +279,9 @@ function getNthOncoprintTrackOptionsElements(n) {
         dropdown_selector,
     };
 }
+
+const netlifyDeployPreview = process.env.NETLIFY_DEPLOY_PREVIEW;
+const useNetlifyDeployPreview = !!netlifyDeployPreview;
 
 const useExternalFrontend = !process.env
     .FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
@@ -552,7 +569,7 @@ function postDataToUrl(url, data, authenticated = true) {
         url,
         data
     );
-    if (needToLogin) keycloakLogin();
+    if (needToLogin) keycloakLogin(10000);
 }
 
 function keycloakLogin(timeout) {
@@ -560,7 +577,7 @@ function keycloakLogin(timeout) {
         timeout,
         timeoutMsg: 'No redirect to Keycloak could be detected.',
     });
-    $('body').waitForDisplayed(timeout);
+    $('#username').waitForDisplayed(timeout);
 
     $('#username').setValue('testuser');
     $('#password').setValue('P@ssword1');
@@ -637,6 +654,7 @@ module.exports = {
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     goToUrlAndSetLocalStorageWithProperty: goToUrlAndSetLocalStorageWithProperty,
     useExternalFrontend: useExternalFrontend,
+    useNetlifyDeployPreview: useNetlifyDeployPreview,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
     waitForNetworkQuiet: waitForNetworkQuiet,

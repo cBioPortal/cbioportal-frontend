@@ -2,6 +2,8 @@ import * as React from 'react';
 import $ from 'jquery';
 import { observer } from 'mobx-react';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { getServerConfig } from 'config/config';
 import { remoteData } from 'cbioportal-frontend-commons';
 import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
@@ -39,10 +41,10 @@ export default class StaticContent extends React.Component<
         if (isMarkDown(url)) {
             return (
                 <ReactMarkdown
-                    renderers={this.props.renderers || {}}
+                    components={this.props.renderers || {}}
                     className={'markdown-body'}
-                    escapeHtml={false}
-                    source={this.source.result!}
+                    children={this.source.result!}
+                    rehypePlugins={[rehypeRaw, rehypeSanitize]}
                 />
             );
         } else {

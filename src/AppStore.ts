@@ -5,7 +5,7 @@ import {
     remoteData,
 } from 'cbioportal-frontend-commons';
 import { getLoadConfig, getServerConfig } from './config/config';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { sendSentryMessage } from './shared/lib/tracking';
 
@@ -59,7 +59,10 @@ export class AppStore {
     }
 
     @computed get logoutUrl() {
-        if (this.authMethod === 'saml') {
+        if (
+            this.authMethod === 'saml' ||
+            this.authMethod === 'saml_plus_basic'
+        ) {
             return 'saml/logout';
         } else {
             return 'j_spring_security_logout';

@@ -1,3 +1,5 @@
+import $ from 'jquery';
+
 export function truncateDisplayText(
     label: string,
     textElt: SVGTextElement | null,

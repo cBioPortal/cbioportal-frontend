@@ -41,6 +41,7 @@ export * from './promise/PromiseUtils';
 export * from './ptm/PtmUtils';
 
 export * from './signal/SignalMutationUtils';
+export * from './uniprot/UniprotUtils';
 
 export * from './table/ReactTableUtils';
 

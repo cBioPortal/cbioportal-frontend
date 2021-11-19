@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend-commons",
   "description": "cBioPortal Frontend Modules",
-  "version": "0.5.7",
+  "version": "0.5.12",
   "main": "dist/index.js",
   "module": "dist/index.es.js",
   "jsnext:main": "dist/index.es.js",
@@ -27,7 +27,7 @@
     "tcm": "tcm -p src/**/*.module.scss",
     "tcm:watch": "yarn run tcm --watch",
     "prepare": "yarn run build",
-    "test": "cross-env CI=1 react-scripts-ts test --env=jsdom",
+    "test": "cross-env CI=1 jest --env=jsdom --runInBand",
     "test:watch": "yarn run test --watch"
   },
   "peerDependencies": {
@@ -38,14 +38,14 @@
   },
   "dependencies": {
     "autobind-decorator": "^2.1.0",
-    "cbioportal-utils": "^0.3.4",
+    "cbioportal-utils": "^0.3.8",
     "classnames": "^2.2.5",
     "jquery": "^3.2.1",
     "lodash": "^4.17.11",
     "measure-text": "0.0.4",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "object-sizeof": "^1.2.0",
-    "oncokb-ts-api-client": "^1.1.7",
+    "oncokb-ts-api-client": "^1.1.9",
     "rc-tooltip": "^5.0.2",
     "rc-trigger": "^5.2.1",
     "rc-util": "^5.8.0",
@@ -59,9 +59,5 @@
     "typescript": "4.0.3",
     "url": "^0.11.0",
     "victory": "30.0.0"
-  },
-  "devDependencies": {
-    "@testing-library/react": "^9.3.2",
-    "react-scripts-ts": "^3.1.0"
   }
 }

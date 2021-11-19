@@ -10,7 +10,7 @@ import {
     Bar,
 } from 'victory';
 import { computed, makeObservable, observable } from 'mobx';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     CBIOPORTAL_VICTORY_THEME,
     axisTickLabelStyles,
@@ -34,7 +34,6 @@ import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import styles from '../resultsView/survival/styles.module.scss';
-import Timer = NodeJS.Timer;
 import WindowStore from '../../shared/components/window/WindowStore';
 import invertIncreasingFunction from '../../shared/lib/invertIncreasingFunction';
 import GroupTickLabelComponent from './labelComponents/GroupTickLabelComponent';
@@ -86,9 +85,6 @@ export default class UpSet extends React.Component<IUpSetProps, {}> {
     }
 
     private makeMouseEvents() {
-        let disappearTimeout: Timer | null = null;
-        const disappearDelayMs = 250;
-
         return [
             {
                 target: 'data',

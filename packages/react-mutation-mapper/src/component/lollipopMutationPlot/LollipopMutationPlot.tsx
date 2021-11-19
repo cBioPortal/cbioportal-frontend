@@ -117,6 +117,7 @@ export type LollipopMutationPlotProps<T extends Mutation> = {
     legend?: JSX.Element;
     loadingIndicator?: JSX.Element;
     collapsePtmTrack?: boolean;
+    collapseUniprotTopologyTrack?: boolean;
 };
 
 @observer
@@ -134,6 +135,8 @@ export default class LollipopMutationPlot<
     @observable
     private _trackVisibility: TrackVisibility = initDefaultTrackVisibility();
 
+    private _controlsConfig: LollipopPlotControlsConfig = new DefaultLollipopPlotControlsConfig();
+
     private handlers: any;
     private divContainer: HTMLDivElement;
 
@@ -148,9 +151,7 @@ export default class LollipopMutationPlot<
     }
 
     @computed private get controlsConfig(): LollipopPlotControlsConfig {
-        return (
-            this.props.controlsConfig || new DefaultLollipopPlotControlsConfig()
-        );
+        return this.props.controlsConfig || this._controlsConfig;
     }
 
     private lollipopTooltip(
@@ -901,6 +902,9 @@ export default class LollipopMutationPlot<
                         proteinLength={this.proteinLength}
                         geneXOffset={this.geneXOffset}
                         collapsePtmTrack={this.props.collapsePtmTrack}
+                        collapseUniprotTopologyTrack={
+                            this.props.collapseUniprotTopologyTrack
+                        }
                     />
                 </div>
             );

@@ -5,8 +5,8 @@ var {
     goToUrlAndSetLocalStorage,
     clickQueryByGeneButton,
     useExternalFrontend,
+    useNetlifyDeployPreview,
     setInputText,
-    clickQueryByGeneButton,
     waitForNumberOfStudyCheckboxes,
     clickModifyStudySelectionButton,
     waitForOncoprint,
@@ -22,7 +22,7 @@ describe('homepage', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
-    if (useExternalFrontend) {
+    if (!useNetlifyDeployPreview) {
         it('window.frontendConfig.frontendUrl should point to localhost 3000 when testing', function() {
             // We no longer check whether the dev mode banner exits.
             // The banner is hidden in e2etests.scss

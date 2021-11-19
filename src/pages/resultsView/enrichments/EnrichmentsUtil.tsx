@@ -10,7 +10,7 @@ import {
     GenericAssayEnrichmentRow,
 } from 'shared/model/EnrichmentRow';
 import { formatLogOddsRatio, roundLogRatio } from 'shared/lib/FormatUtils';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     AlterationTypeConstants,
     DataTypeConstants,

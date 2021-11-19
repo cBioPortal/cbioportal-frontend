@@ -6,15 +6,14 @@ import {
     TimelineTrackSpecification,
     TimelineTrackType,
 } from './types';
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import _ from 'lodash';
 import {
     formatDate,
-    REMOVE_FOR_DOWNLOAD_CLASSNAME,
-    TIMELINE_LINE_CHART_TRACK_HEIGHT,
-    TIMELINE_TRACK_HEIGHT,
-    getTrackHeight,
     getAttributeValue,
+    getTrackEventColorGetter,
+    REMOVE_FOR_DOWNLOAD_CLASSNAME,
+    TIMELINE_TRACK_HEIGHT,
 } from './lib/helpers';
 import { TimelineStore } from './TimelineStore';
 import { renderStack } from './svg/renderStack';
@@ -26,6 +25,11 @@ import {
 } from './lib/lineChartAxisUtils';
 import { getColor } from 'cbioportal-frontend-commons';
 import { getTrackLabel } from './TrackHeader';
+import {
+    COLOR_ATTRIBUTE_KEY,
+    renderShape,
+    SHAPE_ATTRIBUTE_KEY,
+} from './renderHelpers';
 
 export interface ITimelineTrackProps {
     trackData: TimelineTrackSpecification;
@@ -139,8 +143,12 @@ export function randomColorGetter(e: TimelineEvent) {
     return getColor(getTrackLabel(e.containingTrack));
 }
 
+function getSpecifiedColorIfExists(e: TimelineEvent) {
+    return getAttributeValue(COLOR_ATTRIBUTE_KEY, e);
+}
+
 const defaultColorGetter = function(e: TimelineEvent) {
-    return POINT_COLOR;
+    return getSpecifiedColorIfExists(e) || POINT_COLOR;
 };
 
 export function renderPoint(
@@ -148,49 +156,35 @@ export function renderPoint(
     y: number,
     eventColorGetter: (e: TimelineEvent) => string = defaultColorGetter
 ) {
-    if (events.length === 1 && events[0].render) {
-        // If only one event, and theres an event-specific render function, show that.
-        return events[0].render(events[0]);
-    } else {
-        // events.length > 1, multiple simultaneous events.
+    // When nested tracks are collapsed, we might see multiple events that are
+    //  from different tracks. So let's check if all these events actually come
+    //  from the same track
+    const allFromSameTrack =
+        _.uniq(events.map(e => e.containingTrack.uid)).length === 1;
 
-        // When nested tracks are collapsed, we might see multiple events that are
-        //  from different tracks. So let's check if all these events actually come
-        //  from the same track
-        const allFromSameTrack =
-            _.uniq(events.map(e => e.containingTrack.uid)).length === 1;
+    let contents: any | null = null;
+    if (allFromSameTrack && events[0].containingTrack.renderEvents) {
+        // If they are all from the same track and there is a track-specific renderer,
+        // try that.
+        contents = events[0].containingTrack.renderEvents(events, y);
+    }
+    // Otherwise, or if that returns null, use default renderers. For multiple events, we'll show the individual
+    // renders in the tooltip.
 
-        if (allFromSameTrack && events[0].containingTrack.renderEvents) {
-            // If they are all from the same track and there is a track-specific multiple-event renderer,
-            //  use that.
-            return events[0].containingTrack.renderEvents(events);
+    if (contents === null) {
+        if (events.length > 1) {
+            contents = (
+                <>
+                    {renderSuperscript(events.length)}
+                    {renderStack(events.map(eventColorGetter))}
+                </>
+            );
         } else {
-            // Otherwise, show a generic stack. (We'll show the point-specific
-            //  renders in the tooltip.)
-
-            let contents: JSX.Element;
-
-            if (events.length > 1) {
-                contents = (
-                    <>
-                        {renderSuperscript(events.length)}
-                        {renderStack(events.map(eventColorGetter))}
-                    </>
-                );
-            } else {
-                contents = (
-                    <circle
-                        cx="0"
-                        cy={y}
-                        r={POINT_RADIUS}
-                        fill={eventColorGetter(events[0])}
-                    />
-                );
-            }
-
-            return <g>{contents}</g>;
+            contents = renderShape(events[0], y, eventColorGetter);
         }
     }
+
+    return <g>{contents}</g>;
 }
 
 function renderRange(
@@ -261,8 +255,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                         content = renderPoint(
                             itemGroup,
                             y,
-                            trackData.timelineConfig &&
-                                trackData.timelineConfig.eventColorGetter
+                            getTrackEventColorGetter(trackData)
                         );
                         linePoints.push({
                             x: position ? position.pixelLeft : 0,
@@ -273,8 +266,7 @@ export const TimelineTrack: React.FunctionComponent<ITimelineTrackProps> = obser
                     content = renderRange(
                         position.pixelWidth,
                         itemGroup,
-                        trackData.timelineConfig &&
-                            trackData.timelineConfig.eventColorGetter
+                        getTrackEventColorGetter(trackData)
                     );
                 }
 
@@ -389,12 +381,17 @@ const TimelineItemWithTooltip: React.FunctionComponent<{
 export const EventTooltipContent: React.FunctionComponent<{
     event: TimelineEvent;
 }> = function({ event }) {
+    const attributes = event.event.attributes.filter(attr => {
+        return (
+            attr.key !== COLOR_ATTRIBUTE_KEY && attr.key !== SHAPE_ATTRIBUTE_KEY
+        );
+    });
     return (
         <div>
             <table>
                 <tbody>
                     {_.map(
-                        event.event.attributes.sort((a: any, b: any) =>
+                        attributes.sort((a: any, b: any) =>
                             a.key > b.key ? 1 : -1
                         ),
                         (att: any) => {

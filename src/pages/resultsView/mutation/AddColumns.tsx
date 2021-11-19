@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import MobxPromise from 'mobxpromise';
 import { observer } from 'mobx-react';
 import { action, computed, makeObservable, observable } from 'mobx';

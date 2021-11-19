@@ -54,7 +54,7 @@ console.log(`diff dir: ${diffDir}`);
 console.log(`ref dir: ${refDir}`);
 console.log(`screen dir: ${screenDir}`);
 
-var defaultMaxInstances = TEST_TYPE === 'remote' ? 2 : 1;
+var defaultMaxInstances = TEST_TYPE === 'remote' ? 4 : 1;
 
 const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
@@ -80,6 +80,34 @@ function proxyComparisonMethod(target) {
         }
         return resp;
     };
+}
+
+function saveErrorImage(
+    test,
+    context,
+    { error, result, duration, passed, retries },
+    networkLog
+) {
+    if (error) {
+        if (!fs.existsSync(errorDir)) {
+            fs.mkdirSync(errorDir, 0744);
+        }
+        const title = test.title.trim().replace(/\s/g, '_');
+        const img = `${errorDir}/${title}.png`;
+        console.log('ERROR SHOT PATH' + img);
+        browser.saveScreenshot(img);
+
+        networkLog[title.trim()] = browser.execute(function() {
+            Object.keys(window.ajaxRequests).forEach(key => {
+                window.ajaxRequests[key].end = Date.now();
+                window.ajaxRequests[key].duration =
+                    window.ajaxRequests[key].end -
+                    window.ajaxRequests[key].started;
+            });
+
+            return JSON.stringify(window.ajaxRequests);
+        });
+    }
 }
 
 proxyComparisonMethod(LocalCompare);
@@ -214,6 +242,7 @@ exports.config = {
     //
     // Default request retries count
     connectionRetryCount: 3,
+
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
@@ -271,13 +300,13 @@ exports.config = {
     framework: 'mocha',
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    // specFileRetries: 1,
+    specFileRetries: 2,
     //
     // Delay in seconds between the spec file retry attempts
     // specFileRetriesDelay: 0,
     //
     // Whether or not retried specfiles should be retried immediately or deferred to the end of the queue
-    // specFileRetriesDeferred: false,
+    specFileRetriesDeferred: true,
     //
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
@@ -324,6 +353,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
+        retries: 2,
     },
     //
     // =====
@@ -392,46 +422,38 @@ exports.config = {
      */
     // beforeHook: function (test, context) {
     // },
+    networkLog: {},
     /**
      * Hook that gets executed _after_ a hook within the suite starts (e.g. runs after calling
      * afterEach in Mocha)
      */
-    // afterHook: function (test, context, { error, result, duration, passed, retries }) {
-    // },
+    afterHook: function(
+        test,
+        context,
+        { error, result, duration, passed, retries }
+    ) {
+        saveErrorImage(
+            test,
+            context,
+            { error, result, duration, passed, retries },
+            this.networkLog
+        );
+    },
     /**
      * Function to be executed after a test (in Mocha/Jasmine).
      */
-    networkLog: {},
-
     afterTest: function(
         test,
         context,
         { error, result, duration, passed, retries }
     ) {
-        if (error) {
-            if (!fs.existsSync(errorDir)) {
-                fs.mkdirSync(errorDir, 0744);
-            }
-            const title = test.title.trim().replace(/\s/g, '_');
-            const img = `${errorDir}/${title}.png`;
-            console.log('ERROR SHOT PATH' + img);
-            browser.saveScreenshot(img);
-
-            var networkLog = browser.execute(function() {
-                Object.keys(window.ajaxRequests).forEach(key => {
-                    window.ajaxRequests[key].end = Date.now();
-                    window.ajaxRequests[key].duration =
-                        window.ajaxRequests[key].end -
-                        window.ajaxRequests[key].started;
-                });
-
-                return JSON.stringify(window.ajaxRequests);
-            });
-
-            this.networkLog[title.trim()] = networkLog;
-        }
+        saveErrorImage(
+            test,
+            context,
+            { error, result, duration, passed, retries },
+            this.networkLog
+        );
     },
-
     /**
      * Hook that gets executed after the suite has ended
      * @param {Object} suite suite details

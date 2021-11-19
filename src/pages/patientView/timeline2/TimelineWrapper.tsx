@@ -20,7 +20,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import {
     buildBaseConfig,
     configureGenieTimeline,
-    configureTriageTimeline,
+    configureTimelineToxicityColors,
     sortTracks,
 } from 'pages/patientView/timeline2/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
@@ -58,8 +58,16 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
         useEffect(() => {
             const isGenieBpcStudy = window.location.href.includes('genie_bpc');
-            const isTriagePortal =
+            const isTriagePortal = [
+                'triage.cbioportal.mskcc.org',
+                'private.cbioportal.mskcc.org',
+                'cbioportal.mskcc.org',
+            ].includes(window.location.hostname);
                 window.location.hostname === 'private.cbioportal.mskcc.org';
+            const isToxicityPortal = [
+                'triage.cbioportal.mskcc.org',
+                'cbioportal.mskcc.org',
+            ].includes(window.location.hostname);
 
             const baseConfig: ITimelineConfig = buildBaseConfig(
                 sampleManager,

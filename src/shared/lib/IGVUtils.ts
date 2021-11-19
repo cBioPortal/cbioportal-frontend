@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { CopyNumberSeg } from 'cbioportal-ts-api-client';
 import { TrackProps } from 'shared/components/igv/IntegrativeGenomicsViewer';
 import { normalizeChromosome } from 'cbioportal-utils';

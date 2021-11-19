@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 
 // we don't need sourcemaps on circleci
-const sourceMap = process.env.DISABLE_SOURCEMAP ? '' : 'source-map';
+const sourceMap = process.env.DISABLE_SOURCEMAP ? false : 'source-map';
 
 const config = {
     entry: {
@@ -34,7 +34,12 @@ const config = {
     },
 
     module: {
-        rules: [{ test: /lodash/, loader: 'imports-loader?define=>false' }],
+        rules: [
+            {
+                test: /lodash/,
+                use: [{ loader: 'imports-loader?define=>false' }],
+            },
+        ],
     },
 
     output: {
@@ -47,7 +52,7 @@ const config = {
     },
 
     devtool: sourceMap,
-
+    stats: 'detailed',
     plugins: [],
 };
 
@@ -60,7 +65,7 @@ config.plugins = [
         // The path to the manifest file which maps between
         // modules included in a bundle and the internal IDs
         // within that bundle
-        path: 'common-dist/[name]-manifest.json',
+        path: path.resolve(__dirname, 'common-dist/[name]-manifest.json'),
         // The name of the global variable which the library's
         // require function has been assigned to. This must match the
         // output.library option above

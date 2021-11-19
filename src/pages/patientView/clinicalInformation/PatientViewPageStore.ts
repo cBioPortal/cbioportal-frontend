@@ -1,4 +1,4 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import {
     CBioPortalAPIInternal,
     ClinicalData,
@@ -613,13 +613,15 @@ export class PatientViewPageStore {
                 )
                 .value();
 
-            return client.fetchGenericAssayMetaDataUsingPOST({
-                genericAssayMetaFilter: {
-                    genericAssayStableIds: mutationalSignatureContributionStableIds
-                        ? mutationalSignatureContributionStableIds
-                        : [],
-                } as GenericAssayMetaFilter,
-            });
+            if (mutationalSignatureContributionStableIds.length > 0) {
+                return client.fetchGenericAssayMetaDataUsingPOST({
+                    genericAssayMetaFilter: {
+                        genericAssayStableIds: mutationalSignatureContributionStableIds,
+                    } as GenericAssayMetaFilter,
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         },
     });
 

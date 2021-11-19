@@ -15,7 +15,7 @@ import {
 import 'react-virtualized/styles.css';
 import { action, computed, observable, toJS, makeObservable } from 'mobx';
 import styles from './tables.module.scss';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import { Observer, observer } from 'mobx-react';
 import classnames from 'classnames';
 import { If } from 'react-if';
