@@ -292,7 +292,7 @@ describe('patient view page', function() {
             assert($('#patient-view-gene-panel').waitForDisplayed());
         });
 
-        it('toggles gene panel modal from sample icon in genomic tracks', () => {
+        it.skip('toggles gene panel modal from sample icon in genomic tracks', () => {
             $(
                 '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
             ).moveTo();
@@ -301,7 +301,7 @@ describe('patient view page', function() {
             assert($('#patient-view-gene-panel').waitForDisplayed());
         });
 
-        it('toggles gene panel modal from gene panel icon in genomic tracks', () => {
+        it.skip('toggles gene panel modal from gene panel icon in genomic tracks', () => {
             $(
                 '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
             ).moveTo();
