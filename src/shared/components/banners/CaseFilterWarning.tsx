@@ -41,6 +41,23 @@ export default class CaseFilterWarning extends React.Component<
 
             const is = nFiltered === 1 ? 'is' : 'are';
             const it = nFiltered === 1 ? 'it' : 'they';
+
+            let allOrAny;
+            switch (this.props.store.hideUnprofiledSamples) {
+                // The language is confusing here... if `hideUnprofiledSamples` is `any`, that means that we
+                //  filter out samples if they are unprofiled in "any" genes or profiles. This corresponds to
+                //  filtering out samples that are not profiled for "all" queried genes and profiles. If `hideUnprofiledSamples`
+                //  is `totally`, that means we filter out samples if they are "totally" unprofiled - unprofiled for every gene
+                //  and profile. This corresponds to filtering out samples that are not profiled in "any" queried genes.
+                case 'totally':
+                    allOrAny = 'any';
+                    break;
+                case 'any':
+                default:
+                    allOrAny = 'all';
+                    break;
+            }
+
             if (this.props.isUnaffected) {
                 return (
                     <div className="alert alert-unaffected">
@@ -56,7 +73,7 @@ export default class CaseFilterWarning extends React.Component<
                             this.props.isPatientMode ? 'patient' : 'sample',
                             nFiltered
                         )}`}
-                        {` that are not profiled for all queried genes in all queried profiles`}
+                        {` that are not profiled for ${allOrAny} queried genes in ${allOrAny} queried profiles`}
                         {` ${is} included in analysis.`}
                     </div>
                 );
@@ -76,7 +93,7 @@ export default class CaseFilterWarning extends React.Component<
                             nFiltered
                         )}`}
                         {` ${is} excluded from analysis since ${it} ${is} not profiled`}
-                        {` for all queried genes in all queried profiles.`}
+                        {` for ${allOrAny} queried genes in ${allOrAny} queried profiles.`}
                     </div>
                 );
             }
