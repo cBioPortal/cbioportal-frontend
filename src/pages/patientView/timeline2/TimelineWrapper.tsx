@@ -63,7 +63,6 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
                 'private.cbioportal.mskcc.org',
                 'cbioportal.mskcc.org',
             ].includes(window.location.hostname);
-                window.location.hostname === 'private.cbioportal.mskcc.org';
             const isToxicityPortal = [
                 'triage.cbioportal.mskcc.org',
                 'cbioportal.mskcc.org',
