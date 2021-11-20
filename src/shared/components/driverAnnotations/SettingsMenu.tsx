@@ -22,7 +22,6 @@ enum EVENT_KEY {
     showSomaticMutations = '4',
     showUnknownStatusMutations = '5',
     showUnknownTier = '6',
-    hideUnprofiledSamples = '7',
     toggleAllMutationStatus = '8',
     toggleAllDriverAnnotation = '9',
     toggleAllDriverTiers = '10',
@@ -81,10 +80,6 @@ export default class SettingsMenu extends React.Component<
                 this.props.store.driverAnnotationSettings.includeUnknownOncogenicity = !this
                     .props.store.driverAnnotationSettings
                     .includeUnknownOncogenicity;
-                break;
-            case EVENT_KEY.hideUnprofiledSamples:
-                this.props.store.hideUnprofiledSamples = !this.props.store
-                    .hideUnprofiledSamples;
                 break;
             case EVENT_KEY.showGermlineMutations:
                 this.props.store.includeGermlineMutations = !this.props.store

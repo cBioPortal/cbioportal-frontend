@@ -84,6 +84,7 @@ import {
     filterAndAnnotateMutations,
     generateDataQueryFilter,
     generateUniqueSampleKeyToTumorTypeMap,
+    getAllGenes,
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
@@ -523,7 +524,9 @@ export type ModifyQueryParams = {
 
 interface IResultsViewExclusionSettings {
     setExcludeGermlineMutations: (value: boolean) => void;
-    setHideUnprofiledSamples: (value: boolean) => void;
+    setHideUnprofiledSamples: (
+        value: IAnnotationFilterSettings['hideUnprofiledSamples']
+    ) => void;
 }
 
 /* fields and methods in the class below are ordered based on roughly
@@ -703,17 +706,24 @@ export class ResultsViewPageStore
 
     @computed
     public get hideUnprofiledSamples() {
-        return this.urlWrapper.query.hide_unprofiled_samples === 'true';
+        const value = this.urlWrapper.query.hide_unprofiled_samples;
+        if (value === 'any' || value === 'totally') {
+            return value;
+        } else {
+            return false;
+        }
     }
 
     @action.bound
-    public setHideUnprofiledSamples(e: boolean) {
+    public setHideUnprofiledSamples(
+        e: IAnnotationFilterSettings['hideUnprofiledSamples']
+    ) {
         this.urlWrapper.updateURL({
-            hide_unprofiled_samples: e.toString(),
+            hide_unprofiled_samples: (e || false).toString(),
         });
     }
 
-    public set hideUnprofiledSamples(include: boolean) {
+    public set hideUnprofiledSamples(include: 'any' | 'totally' | false) {
         this.setHideUnprofiledSamples(include);
     }
 
@@ -930,9 +940,8 @@ export class ResultsViewPageStore
         await: () => [
             this.studyIds,
             this.filteredAlteredSamples,
-            this.filteredUnalteredSamples,
-            this.filteredAlteredPatients,
-            this.filteredUnalteredPatients,
+            this.filteredUnalteredAndProfiledSamples,
+            this.totallyUnprofiledSamples,
             this.filteredSamples,
             this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             this.defaultOQLQuery,
@@ -946,8 +955,10 @@ export class ResultsViewPageStore
                     this.usePatientLevelEnrichments,
                     this.studyIds.result!,
                     this.filteredAlteredSamples.result!,
-                    this.filteredUnalteredSamples.result!,
-                    this.queryContainsOql
+                    this.filteredUnalteredAndProfiledSamples.result!,
+                    this.totallyUnprofiledSamples.result!,
+                    this.queryContainsOql,
+                    this.hideUnprofiledSamples
                 )
             );
 
@@ -2208,52 +2219,25 @@ export class ResultsViewPageStore
             ),
     });
 
-    readonly filteredUnalteredSampleKeys = remoteData({
-        await: () => [this.filteredSamples, this.oqlFilteredCaseAggregatedData],
-        invoke: () => {
-            const caseAggregatedData = this.oqlFilteredCaseAggregatedData
-                .result!;
-            return Promise.resolve(
-                this.filteredSamples
-                    .result!.map(s => s.uniqueSampleKey)
-                    .filter(
-                        sampleKey =>
-                            !caseAggregatedData.samples[sampleKey].length
-                    )
-            );
-        },
-    });
-
-    readonly filteredUnalteredSamples = remoteData<Sample[]>(
-        {
-            await: () => [
-                this.sampleKeyToSample,
-                this.filteredUnalteredSampleKeys,
-            ],
-            invoke: () => {
-                const unalteredSamples: Sample[] = [];
-                this.filteredUnalteredSampleKeys.result!.forEach(a =>
-                    unalteredSamples.push(this.sampleKeyToSample.result![a])
-                );
-                return Promise.resolve(unalteredSamples);
-            },
-        },
-        []
-    );
-
-    readonly filteredUnalteredPatients = remoteData({
+    readonly filteredUnalteredAndProfiledSamples = remoteData({
         await: () => [
-            this.filteredPatients,
+            this.filteredSamples,
             this.oqlFilteredCaseAggregatedData,
+            this.totallyUnprofiledSamples,
         ],
         invoke: () => {
             const caseAggregatedData = this.oqlFilteredCaseAggregatedData
                 .result!;
+            const unprofiledSamples = _.keyBy(
+                this.totallyUnprofiledSamples.result!,
+                s => s.uniqueSampleKey
+            );
             return Promise.resolve(
-                this.filteredPatients.result!.filter(
-                    patient =>
-                        !caseAggregatedData.patients[patient.uniquePatientKey]
-                            .length
+                this.filteredSamples.result!.filter(
+                    sample =>
+                        !caseAggregatedData.samples[sample.uniqueSampleKey]
+                            .length &&
+                        !(sample.uniqueSampleKey in unprofiledSamples)
                 )
             );
         },
@@ -3853,36 +3837,125 @@ export class ResultsViewPageStore
     readonly filteredSamples = remoteData({
         await: () => [
             this.samples,
-            this.coverageInformation,
-            this.genes,
-            this.selectedMolecularProfiles,
+            this.unprofiledSampleKeyToSample,
+            this.totallyUnprofiledSamples,
         ],
         invoke: () => {
             if (this.hideUnprofiledSamples) {
-                // only show samples that are profiled in every gene in every selected profile
-                const genes = this.genes.result!;
-                const coverageInfo = this.coverageInformation.result!;
-                const queryProfileIds = this.selectedMolecularProfiles.result!.map(
-                    p => p.molecularProfileId
-                );
+                let unprofiledSampleKeys: { [key: string]: Sample };
+                if (this.hideUnprofiledSamples === 'any') {
+                    unprofiledSampleKeys = this.unprofiledSampleKeyToSample
+                        .result!;
+                } else if (this.hideUnprofiledSamples === 'totally') {
+                    unprofiledSampleKeys = _.keyBy(
+                        this.totallyUnprofiledSamples.result!,
+                        s => s.uniqueSampleKey
+                    );
+                }
                 return Promise.resolve(
-                    this.samples.result!.filter(sample => {
-                        return _.every(genes, gene => {
-                            return _.every(
-                                isSampleProfiledInMultiple(
-                                    sample.uniqueSampleKey,
-                                    queryProfileIds,
-                                    coverageInfo,
-                                    gene.hugoGeneSymbol
-                                )
-                            );
-                        });
-                    })
+                    this.samples.result!.filter(
+                        s => !(s.uniqueSampleKey in unprofiledSampleKeys)
+                    )
                 );
             } else {
                 return Promise.resolve(this.samples.result!);
             }
         },
+    });
+
+    readonly unprofiledSamples = remoteData({
+        await: () => [
+            this.samples,
+            this.coverageInformation,
+            this.genes,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            // Samples that are unprofiled for at least one (gene, profile)
+            const genes = this.genes.result!;
+            const coverageInfo = this.coverageInformation.result!;
+            const studyToSelectedMolecularProfileIds = _.mapValues(
+                _.groupBy(
+                    this.selectedMolecularProfiles.result!,
+                    p => p.studyId
+                ),
+                profiles => profiles.map(p => p.molecularProfileId)
+            );
+
+            return Promise.resolve(
+                this.samples.result!.filter(sample => {
+                    // Only look at profiles for this sample's study - doesn't
+                    //  make sense to look at profiles for other studies, which
+                    //  the sample certainly is not part of.
+                    const profileIds =
+                        studyToSelectedMolecularProfileIds[sample.studyId];
+
+                    // Sample that is unprofiled for some gene
+                    return _.some(genes, gene => {
+                        // for some profile
+                        return !_.every(
+                            isSampleProfiledInMultiple(
+                                sample.uniqueSampleKey,
+                                profileIds,
+                                coverageInfo,
+                                gene.hugoGeneSymbol
+                            )
+                        );
+                    });
+                })
+            );
+        },
+    });
+
+    readonly totallyUnprofiledSamples = remoteData({
+        await: () => [
+            this.unprofiledSamples,
+            this.coverageInformation,
+            this.genes,
+            this.selectedMolecularProfiles,
+        ],
+        invoke: () => {
+            const genes = this.genes.result!;
+            const coverageInfo = this.coverageInformation.result!;
+            const studyToSelectedMolecularProfileIds = _.mapValues(
+                _.groupBy(
+                    this.selectedMolecularProfiles.result!,
+                    p => p.studyId
+                ),
+                profiles => profiles.map(p => p.molecularProfileId)
+            );
+
+            return Promise.resolve(
+                this.unprofiledSamples.result!.filter(sample => {
+                    // Only look at profiles for this sample's study - doesn't
+                    //  make sense to look at profiles for other studies, which
+                    //  the sample certainly is not part of.
+                    const profileIds =
+                        studyToSelectedMolecularProfileIds[sample.studyId];
+
+                    // Among unprofiled samples, pick out samples that are unprofiled for EVERY gene ...(gene x profile)
+                    return _.every(genes, gene => {
+                        // for EVERY profile
+                        return !_.some(
+                            isSampleProfiledInMultiple(
+                                sample.uniqueSampleKey,
+                                profileIds,
+                                coverageInfo,
+                                gene.hugoGeneSymbol
+                            )
+                        );
+                    });
+                })
+            );
+        },
+    });
+
+    readonly unprofiledSampleKeyToSample = remoteData({
+        await: () => [this.unprofiledSamples],
+        invoke: () =>
+            Promise.resolve(
+                _.keyBy(this.unprofiledSamples.result!, s => s.uniqueSampleKey)
+            ),
     });
 
     readonly filteredSampleKeyToSample = remoteData({
@@ -4362,6 +4435,12 @@ export class ResultsViewPageStore
         },
     });
 
+    readonly allGenes = remoteData<Gene[]>({
+        invoke: () => {
+            return getAllGenes();
+        },
+    });
+
     readonly hugoGeneSymbolToReferenceGene = remoteData<{
         [hugoSymbol: string]: ReferenceGenomeGene;
     }>({
@@ -4375,13 +4454,25 @@ export class ResultsViewPageStore
     });
 
     readonly entrezGeneIdToReferenceGene = remoteData<{
-        [hugoSymbol: string]: ReferenceGenomeGene;
+        [entrezGeneId: string]: ReferenceGenomeGene;
     }>({
         await: () => [this.referenceGenes],
         invoke: () => {
             // build reference gene map
             return Promise.resolve(
                 _.keyBy(this.referenceGenes.result!, g => g.entrezGeneId)
+            );
+        },
+    });
+
+    readonly entrezGeneIdToGeneAll = remoteData<{
+        [entrezGeneId: string]: Gene;
+    }>({
+        await: () => [this.allGenes],
+        invoke: () => {
+            // build reference gene map
+            return Promise.resolve(
+                _.keyBy(this.allGenes.result!, g => g.entrezGeneId)
             );
         },
     });

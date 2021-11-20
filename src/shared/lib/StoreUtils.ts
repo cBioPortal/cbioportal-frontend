@@ -210,6 +210,12 @@ export async function fetchGenes(
     }
 }
 
+export function getAllGenes(client: CBioPortalAPI = defaultClient) {
+    return client.getAllGenesUsingGET({
+        projection: 'SUMMARY',
+    });
+}
+
 export async function fetchReferenceGenomeGenes(
     genomeName: string,
     hugoGeneSymbols?: string[],

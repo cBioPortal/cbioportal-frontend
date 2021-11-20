@@ -263,6 +263,7 @@ export default class CoExpressionTab extends React.Component<
     private coExpressionCache: CoExpressionCache = new CoExpressionCache(
         q => ({
             await: () => [
+                this.props.store.entrezGeneIdToGeneAll,
                 this.props.store.entrezGeneIdToReferenceGene,
                 this.props.store.molecularProfileIdToProfiledFilteredSamples,
             ],
@@ -355,6 +356,9 @@ export default class CoExpressionTab extends React.Component<
                         this.props.store.entrezGeneIdToReferenceGene.result ||
                         {};
 
+                    const entrezGeneIdToGeneMap =
+                        this.props.store.entrezGeneIdToGeneAll.result || {};
+
                     return Promise.resolve(
                         _.reduce(
                             data,
@@ -382,6 +386,16 @@ export default class CoExpressionTab extends React.Component<
                                         entrezGeneIdToReferenceGene[
                                             datum.geneticEntityId
                                         ].cytoband;
+                                } else if (
+                                    entrezGeneIdToGeneMap[
+                                        datum.geneticEntityId
+                                    ] !== undefined
+                                ) {
+                                    geneticEntityName =
+                                        entrezGeneIdToGeneMap[
+                                            datum.geneticEntityId
+                                        ].hugoGeneSymbol;
+                                    cytoband = '';
                                 }
 
                                 if (geneticEntityName !== undefined) {

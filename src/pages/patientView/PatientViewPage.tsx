@@ -26,7 +26,6 @@ import ClinicalInformationSamples from './clinicalInformation/ClinicalInformatio
 import { inject, observer } from 'mobx-react';
 import CopyNumberTableWrapper from './copyNumberAlterations/CopyNumberTableWrapper';
 import { action, computed, observable, reaction, makeObservable } from 'mobx';
-import Timeline from './timeline/Timeline';
 import { default as PatientViewMutationTable } from './mutation/PatientViewMutationTable';
 import PathologyReport from './pathologyReport/PathologyReport';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
@@ -858,29 +857,6 @@ export default class PatientViewPage extends React.Component<
                                                         />
                                                     )}
                                                 </div>
-
-                                                {this.showOldTimeline && (
-                                                    <div
-                                                        style={{
-                                                            marginTop: 20,
-                                                        }}
-                                                    >
-                                                        <Timeline
-                                                            store={
-                                                                this
-                                                                    .patientViewPageStore
-                                                            }
-                                                            width={
-                                                                WindowStore.size
-                                                                    .width - 60
-                                                            }
-                                                            sampleManager={
-                                                                sampleManager
-                                                            }
-                                                        />
-                                                    </div>
-                                                )}
-
                                                 <hr />
                                             </div>
                                         )}
