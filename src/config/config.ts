@@ -309,7 +309,7 @@ export function initializeServerConfiguration(rawConfiguration: any) {
         {},
         ServerConfigDefaults,
         rawConfiguration,
-        frontendOverride.serverConfig,
+        frontendOverride,
         localStorageOverride.serverConfig
     );
 
