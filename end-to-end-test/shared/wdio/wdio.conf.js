@@ -10,6 +10,7 @@ var getScreenshotName = require('./getScreenshotName');
 const TEST_TYPE = process.env.TEST_TYPE || 'remote';
 
 const CustomReporter = require('./customReporter.v6');
+const { transformJUNITFiles } = require('../edit-junit');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
@@ -300,7 +301,7 @@ exports.config = {
     framework: 'mocha',
     //
     // The number of times to retry the entire specfile when it fails as a whole
-    specFileRetries: 2,
+    specFileRetries: 0,
     //
     // Delay in seconds between the spec file retry attempts
     // specFileRetriesDelay: 0,
@@ -322,17 +323,17 @@ exports.config = {
                 },
             },
         ],
-        [
-            CustomReporter,
-            {
-                testHome: TEST_TYPE,
-                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
-                    // optional
-                    return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
-                },
-            },
-        ],
+        // [
+        //     CustomReporter,
+        //     {
+        //         testHome: TEST_TYPE,
+        //         outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
+        //         outputFileFormat: function(opts) {
+        //             // optional
+        //             return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
+        //         },
+        //     },
+        // ],
         [
             'junit',
             {
@@ -497,6 +498,9 @@ exports.config = {
      */
     onComplete: function(exitCode, config, capabilities, results) {
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
+
+        // this is going to eliminate duplicate tests caused by retries
+        transformJUNITFiles(resultsDir);
     },
     /**
      * Gets executed when a refresh happens.
