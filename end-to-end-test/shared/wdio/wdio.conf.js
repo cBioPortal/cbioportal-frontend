@@ -500,7 +500,6 @@ exports.config = {
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
 
         // this is going to eliminate duplicate tests caused by retries
-        transformJUNITFiles(resultsDir);
     },
     /**
      * Gets executed when a refresh happens.

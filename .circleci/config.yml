@@ -40,6 +40,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           FRONTEND_TEST_USE_LOCAL_DIST: true
           WEBPACK_PARALLEL: false
     - run:
+        name: "transform junit xml"
+        command: |
+          node ./shared/go.js
+    - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
         command: 'for f in end-to-end-test/remote/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
     -  store_artifacts:
