@@ -75,6 +75,7 @@ import {
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { getServerConfig } from 'config/config';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -3314,6 +3315,14 @@ export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
     //  for a given pair
     const sorted = _.sortBy([xAttrId, yAttrId]);
     return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
+}
+
+export function isQueriedStudyAuthorized(study: CancerStudy) {
+    return (
+        !getServerConfig().skin_home_page_show_unauthorized_studies ||
+        (getServerConfig().skin_home_page_show_unauthorized_studies &&
+            study.readPermission !== false)
+    );
 }
 
 export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
