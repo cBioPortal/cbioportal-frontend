@@ -151,6 +151,6 @@ export interface IServerConfig {
     enable_request_body_gzip_compression: boolean;
     enable_treatment_groups: boolean;
     referenceGenomeVersion: string;
-    skin_show_unauthorized_studies: boolean;
-    skin_global_message_for_unauthorized_studies: string;
+    skin_home_page_show_unauthorized_studies: boolean;
+    skin_home_page_unauthorized_studies_global_message: string;
 }
