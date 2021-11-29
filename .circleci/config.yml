@@ -17,6 +17,9 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - attach_workspace:
         at: /tmp/
     - run:
+        name: "Create chrome browser user profile folder"
+        command: mkdir /tmp/chromeData
+    - run:
         name: "Spin up frontend over ssl if necessary and run end to end tests"
         command: |
           sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev & \
