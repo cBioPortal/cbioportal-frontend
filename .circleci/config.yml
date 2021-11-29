@@ -43,6 +43,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           FRONTEND_TEST_USE_LOCAL_DIST: true
           WEBPACK_PARALLEL: false
     - run:
+        name: "test command"
+        command: |
+          echo "this is a test command"
+    - run:
         name: "transform junit xml"
         command: |
           node ./shared/go.js
