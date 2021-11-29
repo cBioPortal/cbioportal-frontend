@@ -30,6 +30,9 @@ export function onMobxPromise<T>(
 }
 
 export function toPromise<T>(promise: MobxPromise<T>): Promise<T> {
+    // Reference the `promise` result to trigger invoke if necessary, and
+    //  to mobx-link the caller of `toPromise` to `promise`.
+    promise.result;
     return new Promise(resolve => {
         onMobxPromise(promise, resolve);
     });
