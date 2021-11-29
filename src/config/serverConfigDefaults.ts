@@ -187,9 +187,9 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     referenceGenomeVersion: 'hg19',
 
-    skin_show_unauthorized_studies: false,
+    skin_home_page_show_unauthorized_studies: false,
 
-    skin_global_message_for_unauthorized_studies:
+    skin_home_page_unauthorized_studies_global_message:
         'The study is unauthorized. You need to request access.',
 };
 
