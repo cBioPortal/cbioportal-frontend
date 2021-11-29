@@ -1,5 +1,4 @@
 import autobind from 'autobind-decorator';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { MobxCache, OncoKbCardDataType } from 'cbioportal-utils';
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
 import * as React from 'react';
@@ -63,11 +62,12 @@ export function download(
     }
 
     const oncogenic = indicator.oncogenic ? indicator.oncogenic : 'Unknown';
-    const level = indicator.highestSensitiveLevel
-        ? indicator.highestSensitiveLevel.toLowerCase()
-        : 'level NA';
+    const sensitivityLevel =
+        indicator.highestSensitiveLevel?.toLowerCase() || 'level NA';
+    const resistanceLevel =
+        indicator.highestResistanceLevel?.toLowerCase() || 'resistance NA';
 
-    return `${oncogenic}, ${level}`;
+    return `${oncogenic}, ${sensitivityLevel}, ${resistanceLevel}`;
 }
 
 @observer
