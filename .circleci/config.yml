@@ -50,7 +50,7 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
     - run:
         name: "transform junit xml"
         command: |
-          node ./shared/go.js
+          node ./end-to-end-test/shared/go.js
         when: always
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
