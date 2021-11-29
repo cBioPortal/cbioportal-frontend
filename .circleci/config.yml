@@ -43,14 +43,10 @@ run_e2e_and_save_artifacts: &run_e2e_and_save_artifacts
           FRONTEND_TEST_USE_LOCAL_DIST: true
           WEBPACK_PARALLEL: false
     - run:
-        name: "test command"
-        command: |
-          echo "this is a test command"
-        when: always
-    - run:
         name: "transform junit xml"
         command: |
-          node ./end-to-end-test/shared/go.js
+          cd end-to-end-test
+          node ./shared/go.js
         when: always
     - run:
         name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
