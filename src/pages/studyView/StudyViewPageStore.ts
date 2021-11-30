@@ -139,6 +139,7 @@ import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import autobind from 'autobind-decorator';
 import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
+import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 import { generateDownloadFilenamePrefixByStudies } from 'shared/lib/FilenameUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import sessionServiceClient from 'shared/api//sessionServiceInstance';
@@ -156,7 +157,7 @@ import {
     getStudyDownloadListUrl,
     redirectToComparisonPage,
 } from '../../shared/api/urls';
-import onMobxPromise from '../../shared/lib/onMobxPromise';
+import onMobxPromise, { toPromise } from '../../shared/lib/onMobxPromise';
 import request from 'superagent';
 import { trackStudyViewFilterEvent } from '../../shared/lib/tracking';
 import comparisonClient from '../../shared/api/comparisonGroupClientInstance';
@@ -242,7 +243,6 @@ import {
     CopyNumberEnrichmentEventType,
     MutationEnrichmentEventType,
 } from 'shared/lib/comparison/ComparisonStoreUtils';
-import { isQueriedStudyAuthorized } from 'shared/components/lazyMobXTable/utils';
 import { getServerConfig } from 'config/config';
 import {
     ChartUserSetting,
@@ -3659,13 +3659,8 @@ export class StudyViewPageStore
     }
 
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
-        await: () => [this.selectedSamples],
         invoke: () => {
-            //only invoke if there are filtered samples
-            if (
-                this.hasFilteredSamples &&
-                !_.isEmpty(this.unfilteredAttrsForNonNumerical)
-            ) {
+            if (!_.isEmpty(this.unfilteredAttrsForNonNumerical)) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this.unfilteredAttrsForNonNumerical,
@@ -3718,13 +3713,8 @@ export class StudyViewPageStore
     readonly newlyAddedUnfilteredClinicalDataCount = remoteData<
         ClinicalDataCountItem[]
     >({
-        await: () => [this.selectedSamples],
         invoke: () => {
-            //only invoke if there are filtered samples
-            if (
-                this.hasFilteredSamples &&
-                !_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)
-            ) {
+            if (!_.isEmpty(this.newlyAddedUnfilteredAttrsForNonNumerical)) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     clinicalDataCountFilter: {
                         attributes: this
@@ -3829,7 +3819,6 @@ export class StudyViewPageStore
             >({
                 await: () => {
                     return [
-                        this.selectedSamples,
                         ...getRequestedAwaitPromisesForClinicalData(
                             isDefaultAttr,
                             this.isInitialFilterState,
@@ -3860,10 +3849,6 @@ export class StudyViewPageStore
                             this._clinicalDataFilterSet.has(uniqueKey) ||
                             this.isInitialFilterState
                         ) {
-                            // return empty if there are no sample identifiers or study ids in the filter
-                            if (!this.hasFilteredSamples) {
-                                return [];
-                            }
                             result = await internalClient.fetchClinicalDataCountsUsingPOST(
                                 {
                                     clinicalDataCountFilter: {
@@ -5028,7 +5013,8 @@ export class StudyViewPageStore
         default: {},
     });
 
-    @computed get oncokbCancerGeneFilterEnabled(): boolean {
+    @computed({ keepAlive: true })
+    get oncokbCancerGeneFilterEnabled(): boolean {
         if (!getServerConfig().show_oncokb) {
             return false;
         }
@@ -5468,7 +5454,7 @@ export class StudyViewPageStore
             _chartMetaSet
         );
 
-        if (this.displaySampleTreatments.result) {
+        if (this.shouldDisplaySampleTreatments.result) {
             _chartMetaSet['SAMPLE_TREATMENTS'] = {
                 uniqueKey: 'SAMPLE_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -5483,7 +5469,7 @@ export class StudyViewPageStore
             };
         }
 
-        if (this.displayPatientTreatments.result) {
+        if (this.shouldDisplayPatientTreatments.result) {
             _chartMetaSet['PATIENT_TREATMENTS'] = {
                 uniqueKey: 'PATIENT_TREATMENTS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -5498,7 +5484,7 @@ export class StudyViewPageStore
             };
         }
 
-        if (this.displaySampleTreatmentGroups.result) {
+        if (this.shouldDisplaySampleTreatmentGroups.result) {
             _chartMetaSet['SAMPLE_TREATMENT_GROUPS'] = {
                 uniqueKey: 'SAMPLE_TREATMENT_GROUPS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -5513,7 +5499,7 @@ export class StudyViewPageStore
             };
         }
 
-        if (this.displayPatientTreatmentGroups.result) {
+        if (this.shouldDisplayPatientTreatmentGroups.result) {
             _chartMetaSet['PATIENT_TREATMENT_GROUPS'] = {
                 uniqueKey: 'PATIENT_TREATMENT_GROUPS',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
@@ -5677,7 +5663,7 @@ export class StudyViewPageStore
             this.cnaProfiles.isPending ||
             this.structuralVariantProfiles.isPending ||
             this.survivalPlots.isPending ||
-            this.displayPatientTreatments.isPending ||
+            this.shouldDisplayPatientTreatments.isPending ||
             this.sharedCustomData.isPending;
 
         if (
@@ -6139,7 +6125,7 @@ export class StudyViewPageStore
             }
         }
 
-        if (this.displayPatientTreatments.result) {
+        if (this.shouldDisplayPatientTreatments.result) {
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENTS,
                 true
@@ -6160,7 +6146,7 @@ export class StudyViewPageStore
             );
         }
 
-        if (this.displaySampleTreatmentGroups.result) {
+        if (this.shouldDisplaySampleTreatmentGroups.result) {
             this.changeChartVisibility(
                 SpecialChartsUniqueKeyEnum.SAMPLE_TREATMENT_GROUPS,
                 true
@@ -7037,14 +7023,10 @@ export class StudyViewPageStore
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
-                      this.selectedSamples,
                   ]
-                : [this.mutationProfiles, this.selectedSamples],
+                : [this.mutationProfiles],
         invoke: async () => {
-            if (
-                !_.isEmpty(this.mutationProfiles.result) &&
-                this.selectedSamples.result.length > 0
-            ) {
+            if (!_.isEmpty(this.mutationProfiles.result)) {
                 let mutatedGenes = await internalClient.fetchMutatedGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
@@ -7097,14 +7079,10 @@ export class StudyViewPageStore
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
-                      this.selectedSamples,
                   ]
-                : [this.mutationProfiles, this.selectedSamples],
+                : [this.structuralVariantProfiles],
         invoke: async () => {
-            if (
-                !_.isEmpty(this.structuralVariantProfiles.result) &&
-                this.selectedSamples.result.length > 0
-            ) {
+            if (!_.isEmpty(this.structuralVariantProfiles.result)) {
                 const structuralVariantGenes = await internalClient.fetchStructuralVariantGenesUsingPOST(
                     {
                         studyViewFilter: this.filters,
@@ -7155,14 +7133,10 @@ export class StudyViewPageStore
                       this.oncokbOncogeneEntrezGeneIds,
                       this.oncokbTumorSuppressorGeneEntrezGeneIds,
                       this.oncokbCancerGeneEntrezGeneIds,
-                      this.selectedSamples,
                   ]
-                : [this.mutationProfiles, this.selectedSamples],
+                : [this.cnaProfiles],
         invoke: async () => {
-            if (
-                !_.isEmpty(this.cnaProfiles.result) &&
-                this.selectedSamples.result.length > 0
-            ) {
+            if (!_.isEmpty(this.cnaProfiles.result)) {
                 let cnaGenes = await internalClient.fetchCNAGenesUsingPOST({
                     studyViewFilter: this.filters,
                 });
@@ -8008,24 +7982,25 @@ export class StudyViewPageStore
     readonly molecularProfileSampleCounts = remoteData<
         MultiSelectionTableRow[]
     >({
-        await: () => [this.molecularProfiles, this.selectedSamples],
+        await: () => [this.molecularProfiles],
         invoke: async () => {
-            // return empty if there are no filtered samples
-            if (!this.hasFilteredSamples) {
-                return [];
-            }
-            const counts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST(
-                {
+            const [counts, selectedSamples] = await Promise.all([
+                internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                     studyViewFilter: this.filters,
-                }
-            );
+                }),
+                toPromise(this.selectedSamples),
+            ]);
 
             return counts.map(caseListOption => {
                 return {
                     uniqueKey: caseListOption.value,
                     label: caseListOption.label,
+                    // "Altered" and "Profiled" really just mean
+                    //  "numerator" and "denominator" in percent
+                    //  calculation of table. Here, they mean
+                    //  "# filtered samples in profile" and "# filtered samples overall"
                     numberOfAlteredCases: caseListOption.count,
-                    numberOfProfiledCases: this.selectedSamples.result.length,
+                    numberOfProfiledCases: selectedSamples.length,
                 } as any;
             });
         },
@@ -8033,22 +8008,24 @@ export class StudyViewPageStore
     });
 
     readonly caseListSampleCounts = remoteData<MultiSelectionTableRow[]>({
-        await: () => [this.selectedSamples],
         invoke: async () => {
-            // return empty if there are no filtered samples
-            if (!this.hasFilteredSamples) {
-                return [];
-            }
-            const counts = await internalClient.fetchCaseListCountsUsingPOST({
-                studyViewFilter: this.filters,
-            });
+            const [counts, selectedSamples] = await Promise.all([
+                internalClient.fetchCaseListCountsUsingPOST({
+                    studyViewFilter: this.filters,
+                }),
+                toPromise(this.selectedSamples),
+            ]);
 
             return counts.map(caseListOption => {
                 return {
                     uniqueKey: caseListOption.value,
                     label: caseListOption.label,
+                    // "Altered" and "Profiled" really just mean
+                    //  "numerator" and "denominator" in percent
+                    //  calculation of table. Here, they mean
+                    //  "# filtered samples in case list" and "# filtered samples overall"
                     numberOfAlteredCases: caseListOption.count,
-                    numberOfProfiledCases: this.selectedSamples.result.length,
+                    numberOfProfiledCases: selectedSamples.length,
                 } as any;
             });
         },
@@ -8073,7 +8050,6 @@ export class StudyViewPageStore
     });
 
     readonly initialMolecularProfileSampleCounts = remoteData({
-        await: () => [this.samples, this.molecularProfiles],
         invoke: async () => {
             return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: this.initialFilters,
@@ -8938,12 +8914,9 @@ export class StudyViewPageStore
     // a row represents a list of patients that either have or have not recieved
     // a specific treatment
     public readonly sampleTreatments = remoteData({
-        await: () => [this.selectedSamples, this.displaySampleTreatments],
+        await: () => [this.shouldDisplaySampleTreatments],
         invoke: () => {
-            if (
-                this.hasFilteredSamples &&
-                this.displaySampleTreatments.result
-            ) {
+            if (this.shouldDisplaySampleTreatments.result) {
                 return defaultClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                 });
@@ -8952,7 +8925,7 @@ export class StudyViewPageStore
         },
     });
 
-    public readonly displayPatientTreatments = remoteData({
+    public readonly shouldDisplayPatientTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
             return defaultClient.getContainsTreatmentDataUsingPOST({
@@ -8961,7 +8934,7 @@ export class StudyViewPageStore
         },
     });
 
-    public readonly displaySampleTreatments = remoteData({
+    public readonly shouldDisplaySampleTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
             return defaultClient.getContainsSampleTreatmentDataUsingPOST({
@@ -8973,12 +8946,9 @@ export class StudyViewPageStore
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
     public readonly patientTreatments = remoteData({
-        await: () => [this.selectedSamples, this.displayPatientTreatments],
+        await: () => [this.shouldDisplayPatientTreatments],
         invoke: () => {
-            if (
-                this.hasFilteredSamples &&
-                this.displayPatientTreatments.result
-            ) {
+            if (this.shouldDisplayPatientTreatments.result) {
                 return defaultClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                 });
@@ -8988,12 +8958,9 @@ export class StudyViewPageStore
     });
 
     public readonly sampleTreatmentGroups = remoteData({
-        await: () => [this.selectedSamples, this.displaySampleTreatmentGroups],
+        await: () => [this.shouldDisplaySampleTreatmentGroups],
         invoke: () => {
-            if (
-                this.hasFilteredSamples &&
-                this.displaySampleTreatments.result
-            ) {
+            if (this.shouldDisplaySampleTreatmentGroups.result) {
                 return defaultClient.getAllSampleTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentClass',
@@ -9003,7 +8970,7 @@ export class StudyViewPageStore
         },
     });
 
-    public readonly displayPatientTreatmentGroups = remoteData({
+    public readonly shouldDisplayPatientTreatmentGroups = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
@@ -9016,7 +8983,7 @@ export class StudyViewPageStore
         },
     });
 
-    public readonly displaySampleTreatmentGroups = remoteData({
+    public readonly shouldDisplaySampleTreatmentGroups = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
             if (!getServerConfig().enable_treatment_groups) {
@@ -9032,12 +8999,9 @@ export class StudyViewPageStore
     // a row represents a list of samples that ether have or have not recieved
     // a specific treatment
     public readonly patientTreatmentGroups = remoteData({
-        await: () => [this.selectedSamples, this.displayPatientTreatments],
+        await: () => [this.shouldDisplayPatientTreatmentGroups],
         invoke: () => {
-            if (
-                this.hasFilteredSamples &&
-                this.displayPatientTreatmentGroups.result
-            ) {
+            if (this.shouldDisplayPatientTreatmentGroups.result) {
                 return defaultClient.getAllPatientTreatmentsUsingPOST({
                     studyViewFilter: this.filters,
                     tier: 'AgentClass',

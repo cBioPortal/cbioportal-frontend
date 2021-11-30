@@ -29,6 +29,16 @@ import './StudyTagsTooltip.scss';
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import client from 'shared/api/cbioportalClientInstance';
 import Loader from '../loadingIndicator/LoadingIndicator';
+import styles from 'pages/studyView/styles.module.scss';
+import ServerConfigDefaults from 'config/serverConfigDefaults';
+import { getServerConfig } from 'config/config';
+import { hasJsonPathPlaceholders } from 'shared/lib/JsonPathUtils';
+import { replaceJsonPathPlaceholders } from 'shared/lib/JsonPathUtils';
+
+export enum IconType {
+    INFO_ICON,
+    LOCK_ICON,
+}
 
 export type StudyTagsTooltipProps = {
     studyDescription: string;
@@ -38,12 +48,14 @@ export type StudyTagsTooltipProps = {
     mouseEnterDelay: number;
     placement: string;
     children: any;
+    iconType: IconType;
 };
 
 export type StudyInfoOverlayTooltipProps = {
     studyDescription: string;
     studyId: string;
     isVirtualStudy: boolean;
+    iconType: IconType;
 };
 
 @observer
@@ -92,19 +104,39 @@ class StudyInfoOverlay extends React.Component<
                         )}
                     />
                 );
-                overlay =
-                    resultKeyLength > 0
-                        ? [
-                              description,
-                              <br />,
-                              <div className="studyTagsTooltip">
-                                  {' '}
-                                  <JsonToTable
-                                      json={this.studyMetadata.result}
-                                  />
-                              </div>,
-                          ]
-                        : description;
+                if (this.props.iconType === IconType.INFO_ICON) {
+                    overlay =
+                        resultKeyLength > 0
+                            ? [
+                                  description,
+                                  <br />,
+                                  <div className="studyTagsTooltip">
+                                      {' '}
+                                      <JsonToTable
+                                          json={this.studyMetadata.result}
+                                      />
+                                  </div>,
+                              ]
+                            : description;
+                } else {
+                    const message = replaceJsonPathPlaceholders(
+                        getServerConfig()
+                            .skin_home_page_unauthorized_studies_global_message,
+                        this.studyMetadata.result
+                    );
+
+                    // if the placeholders couldn't be replaced, then show default global message
+                    overlay = hasJsonPathPlaceholders(message) ? (
+                        ServerConfigDefaults.skin_home_page_unauthorized_studies_global_message
+                    ) : (
+                        <div
+                            style={{ maxWidth: 300 }}
+                            dangerouslySetInnerHTML={{
+                                __html: `${message}`,
+                            }}
+                        />
+                    );
+                }
             } else if (this.studyMetadata.isError) {
                 overlay = 'error';
             }
@@ -126,11 +158,25 @@ export default class StudyTagsTooltip extends React.Component<
                 mouseEnterDelay={this.props.mouseEnterDelay}
                 placement={this.props.placement}
                 overlay={
-                    <StudyInfoOverlay
-                        studyDescription={this.props.studyDescription}
-                        studyId={this.props.studyId}
-                        isVirtualStudy={this.props.isVirtualStudy}
-                    />
+                    this.props.iconType === IconType.LOCK_ICON &&
+                    hasJsonPathPlaceholders(
+                        getServerConfig()
+                            .skin_home_page_unauthorized_studies_global_message
+                    ) === false ? (
+                        <div className={styles.tooltip}>
+                            {
+                                getServerConfig()
+                                    .skin_home_page_unauthorized_studies_global_message
+                            }
+                        </div>
+                    ) : (
+                        <StudyInfoOverlay
+                            studyDescription={this.props.studyDescription}
+                            studyId={this.props.studyId}
+                            isVirtualStudy={this.props.isVirtualStudy}
+                            iconType={this.props.iconType}
+                        />
+                    )
                 }
                 children={this.props.children}
             />
