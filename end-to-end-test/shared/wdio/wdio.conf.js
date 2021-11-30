@@ -151,12 +151,12 @@ exports.config = {
     //
     //
 
-    //specs: [SPEC_FILE_PATTERN],
+    specs: [SPEC_FILE_PATTERN],
 
-    specs: [
-        './remote/specs/core/home.spec.js',
-        './remote/specs/core/oncoprint.spec.js',
-    ],
+    // specs: [
+    //     './remote/specs/core/home.spec.js',
+    //     './remote/specs/core/oncoprint.spec.js',
+    // ],
 
     // Patterns to exclude.
     exclude: [
