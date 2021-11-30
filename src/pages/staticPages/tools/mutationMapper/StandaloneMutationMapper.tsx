@@ -63,6 +63,7 @@ export default class StandaloneMutationMapper extends MutationMapper<
                     this.props.generateGenomeNexusHgvsgUrl
                 }
                 selectedTranscriptId={this.props.store.activeTranscript.result}
+                namespaceColumns={this.props.store.namespaceColumnConfig}
             />
         );
     }
