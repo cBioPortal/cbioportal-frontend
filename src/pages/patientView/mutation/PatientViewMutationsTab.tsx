@@ -349,6 +349,7 @@ export default class PatientViewMutationsTab extends React.Component<
                         this.props.patientViewPageStore
                             .existsSomeMutationWithAscnProperty
                     }
+                    namespaceColumns={this.dataStore.namespaceColumnConfig}
                 />
             </div>
         ),
