@@ -417,7 +417,7 @@ export class StudySummaryTab extends React.Component<
                 const settings = this.store.getXVsYChartSettings(
                     props.chartMeta!.uniqueKey
                 )!;
-                props.title = `${chartInfo.yAttr.displayName} vs ${chartInfo.xAttr.displayName}`;
+                props.title = props.chartMeta!.displayName;
                 props.promise = this.store.clinicalDataDensityCache.get({
                     chartInfo,
                     chartMeta: props.chartMeta!,
@@ -470,7 +470,10 @@ export class StudySummaryTab extends React.Component<
                     );
                 };
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
-                props.getData = () => this.store.getScatterDownloadData();
+                props.getData = () =>
+                    this.store.getScatterDownloadData(
+                        props.chartMeta!.uniqueKey
+                    );
                 props.downloadTypes = ['Data', 'SVG', 'PDF'];
                 break;
             }
