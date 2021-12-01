@@ -87,6 +87,7 @@ import {
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
+    generateXVsYScatterPlotDownloadData,
     getBinBounds,
     getCategoricalFilterValues,
     getChartMetaDataType,
@@ -115,6 +116,7 @@ import {
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
+    getSampleToClinicalData,
     getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromMolecularProfileIds,
@@ -5192,7 +5194,7 @@ export class StudyViewPageStore
         } else {
             const chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
-                displayName: '',
+                displayName: `${newChart.yAttr.displayName} vs ${newChart.xAttr.displayName}`,
                 description: '',
                 dataType: ChartMetaDataTypeEnum.X_VS_Y,
                 patientAttribute: false,
@@ -7531,24 +7533,22 @@ export class StudyViewPageStore
         });
     }
 
-    public getScatterDownloadData(): Promise<string> {
-        return new Promise<string>(resolve => {
-            onMobxPromise(this.mutationCountVsFGAData, data => {
-                if (data) {
-                    resolve(
-                        generateScatterPlotDownloadData(
-                            data,
-                            this.sampleToAnalysisGroup.result,
-                            undefined,
-                            this.analysisGroupsSettings
-                                .groups as AnalysisGroup[]
-                        )
-                    );
-                } else {
-                    resolve('');
-                }
-            });
-        });
+    public async getScatterDownloadData(
+        chartUniqueKey: ChartUniqueKey
+    ): Promise<string> {
+        const chartInfo = this.getXVsYChartInfo(chartUniqueKey)!;
+        const selectedSamples = await toPromise(this.selectedSamples);
+        const [xData, yData] = await Promise.all([
+            getSampleToClinicalData(selectedSamples, chartInfo.xAttr),
+            getSampleToClinicalData(selectedSamples, chartInfo.yAttr),
+        ]);
+        return generateXVsYScatterPlotDownloadData(
+            chartInfo.xAttr,
+            chartInfo.yAttr,
+            selectedSamples,
+            xData,
+            yData
+        );
     }
 
     public getSurvivalDownloadData(chartMeta: ChartMeta): string {
