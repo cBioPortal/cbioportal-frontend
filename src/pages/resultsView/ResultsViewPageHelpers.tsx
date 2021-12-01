@@ -20,6 +20,7 @@ export enum ResultsViewTab {
     CN_SEGMENTS = 'cnSegments',
     NETWORK = 'network',
     PATHWAY_MAPPER = 'pathways',
+    NDEX = 'ndex',
     EXPRESSION_REDIRECT = 'expression',
     DOWNLOAD = 'download',
 }

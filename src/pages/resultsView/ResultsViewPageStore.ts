@@ -1587,6 +1587,46 @@ export class ResultsViewPageStore
 
     // remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
     // study.  The result is either the full URL to a portal page, or an empty string.
+    readonly remoteNdexUrl = remoteData<string>({
+        await: () => [this.studyIds, this.genes],
+        invoke: async () => {
+            var result = '';
+
+            if (this.studyIds.result!.length > 0 && this.genes.result!.length > 0) {
+                const postData = {
+                    // this might be necessary at some point
+                    // studyid: this.studyIds.result![0],
+                    geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
+                    sourceList:["enrichment"],
+                    geneAnnotationServices: {
+                        mutation: "https://iquery-cbio.dev.ucsd.edu/integratedsearch/v1/mutationfrequency"
+                    }
+                };
+
+                var urlResponse;
+
+                try {
+                    urlResponse = (await request
+                        .post('https://iquery-cbio.ucsd.edu/integratedsearch/v1/')
+                        .send(postData)
+                        .set('Accept', 'application/json')
+                        .timeout(30000)
+                    ) as any;
+                } catch (err) {
+                    // Just eat the exception. Result will be empty string.
+                }
+
+                if (urlResponse && urlResponse.body && urlResponse.body.webURL && urlResponse.body.webURL.startsWith('https://')) {
+                    result = urlResponse.body.webURL;
+                }
+            }
+
+            return Promise.resolve(result);
+        },
+    });
+
+    // remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
+    // study.  The result is either the full URL to a portal page, or an empty string.
     readonly remoteNgchmUrl = remoteData<string>({
         await: () => [this.studyIds],
         invoke: async () => {
