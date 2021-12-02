@@ -156,8 +156,6 @@ exports.config = {
     specs: [
         './remote/specs/core/home.spec.js',
         './remote/specs/core/oncoprint.spec.js',
-        './remote/specs/core/comparisonTab.screenshot.spec.js',
-        './remote/specs/core/coexpression.screenshot.spec.js',
     ],
 
     // Patterns to exclude.

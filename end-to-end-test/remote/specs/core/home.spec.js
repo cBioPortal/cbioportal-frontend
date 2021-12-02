@@ -36,7 +36,7 @@ describe('homepage', function() {
     }
 
     // this just shows that we have some studies listed
-    it('it should have some (>0) studies listed ', function() {
+    it.only('it should have some (>0) studies listed ', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');

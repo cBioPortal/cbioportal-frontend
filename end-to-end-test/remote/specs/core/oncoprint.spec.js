@@ -278,7 +278,7 @@ describe('oncoprint', function() {
                 resultsPageSettingsDropdown +
                 ' input[data-test="annotateCOSMICCount"]';
         });
-        it('annotates all types of mutations with cbioportal count and cosmic', () => {
+        it.only('annotates all types of mutations with cbioportal count and cosmic', () => {
             setSettingsMenuOpen(true);
             // select only mutation coloring by cbioportal count
             $(cbioportalCheckbox).click();
