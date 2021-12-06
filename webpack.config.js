@@ -240,6 +240,18 @@ var config = {
                 },
             },
             {
+                test: /\.md$/i,
+                use: [
+                    {
+                        loader: 'url-loader',
+                        options: {
+                            limit: 8192,
+                        },
+                    },
+                ],
+                type: 'asset/source',
+            },
+            {
                 test: /\.otf(\?\S*)?$/,
                 use: [
                     {

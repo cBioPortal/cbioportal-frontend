@@ -1,6 +1,7 @@
 // allow these file patterns to be imported
 declare module '*.scss';
 declare module '*.json';
+declare module '*.md';
 
 // these packages are missing typings
 declare module 'fmin';

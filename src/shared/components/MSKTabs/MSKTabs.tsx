@@ -113,6 +113,7 @@ interface IMSKTabsProps {
     tabButtonStyle?: string;
     unmountOnHide?: boolean;
     loadingComponent?: JSX.Element;
+    contentWindowExtra?: JSX.Element;
 }
 
 @observer
@@ -267,6 +268,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
                             />
                         }
                     >
+                        {this.props.contentWindowExtra}
                         {arr}
                     </DeferredRender>
                 </div>
