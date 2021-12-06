@@ -19,6 +19,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import {
     buildBaseConfig,
     configureGenieTimeline,
+    configureHtanOhsuTimeline,
     configureTimelineToxicityColors,
     sortTracks,
 } from 'pages/patientView/timeline2/timeline_helpers';
@@ -57,9 +58,16 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
         useEffect(() => {
             const isGenieBpcStudy = window.location.href.includes('genie_bpc');
+            // This patient has hardcoded functionality for showing an image
+            // icon (prototype). TODO: We can replace it once we have generalized
+            // functionality for adding links to a timepoint.
+            const isHtanOhsuPatient =
+                window.location.href.includes('htan_test_2021') &&
+                window.location.href.includes('HTA9_1');
             const isToxicityPortal = [
                 'triage.cbioportal.mskcc.org',
                 'cbioportal.mskcc.org',
+                'private.cbioportal.mskcc.org',
             ].includes(window.location.hostname);
 
             const baseConfig: ITimelineConfig = buildBaseConfig(
@@ -69,6 +77,33 @@ const TimelineWrapper: React.FunctionComponent<ITimeline2Props> = observer(
 
             if (isGenieBpcStudy) {
                 configureGenieTimeline(baseConfig);
+            }
+
+            if (isHtanOhsuPatient) {
+                const extraData = {
+                    uniquePatientKey: 'SFRBOV8xOmh0YW5fdGVzdF8yMDIx',
+                    studyId: 'htan_test_2021',
+                    patientId: 'HTA9_1',
+                    eventType: 'IMAGING',
+                    attributes: [
+                        {
+                            key: 'linkout',
+                            value:
+                                'https://minerva-story-htan-ohsu-demo.surge.sh/#s=1#w=1#g=6#m=-1#a=-100_-100#v=0.6178_0.57_0.6129#o=-100_-100_1_1#p=Q',
+                        },
+                        { key: 'ASSAY_TYPE', value: 'mIHC' },
+                        {
+                            key: 'FILE_FORMAT',
+                            value: 'OME-TIFF',
+                        },
+                    ],
+                    startNumberOfDaysSinceDiagnosis: 25726,
+                };
+
+                // @ts-ignore
+                data.push(extraData);
+
+                configureHtanOhsuTimeline(baseConfig);
             }
 
             if (isToxicityPortal) {
