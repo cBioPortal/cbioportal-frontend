@@ -3388,6 +3388,13 @@ export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
     return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
 }
 
+export function makeXVsYDisplayName(
+    xAttr: ClinicalAttribute,
+    yAttr: ClinicalAttribute
+) {
+    return `${yAttr.displayName} vs ${xAttr.displayName}`;
+}
+
 export function isQueriedStudyAuthorized(study: CancerStudy) {
     return (
         !getServerConfig().skin_home_page_show_unauthorized_studies ||
