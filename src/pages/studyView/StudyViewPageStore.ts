@@ -123,6 +123,7 @@ import {
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
+    makeXVsYDisplayName,
     makeXVsYUniqueKey,
     MolecularProfileOption,
     MUTATION_COUNT_PLOT_DOMAIN,
@@ -2327,7 +2328,7 @@ export class StudyViewPageStore
     );
     private _xVsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
         {},
-        { deep: false }
+        { deep: true }
     );
     private _xVsYChartSettings = observable.map<
         ChartUniqueKey,
@@ -2361,10 +2362,14 @@ export class StudyViewPageStore
     getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
         return this._xVsYChartSettings.get(uniqueKey);
     }
+    getXVsYChartMeta(uniqueKey: string): ChartMeta | undefined {
+        return this._xVsYCharts.get(uniqueKey);
+    }
     @action.bound
     swapXVsYChartAxes(uniqueKey: string): void {
         const chart = this.getXVsYChartInfo(uniqueKey)!;
         const settings = this.getXVsYChartSettings(uniqueKey)!;
+        const chartMeta = this.getXVsYChartMeta(uniqueKey)!;
 
         const xAttr = chart.xAttr;
         chart.xAttr = chart.yAttr;
@@ -2373,6 +2378,8 @@ export class StudyViewPageStore
         const xLog = settings.xLogScale;
         settings.xLogScale = settings.yLogScale;
         settings.yLogScale = xLog;
+
+        chartMeta.displayName = makeXVsYDisplayName(chart.xAttr, chart.yAttr);
 
         // trigger rerender
         this.changeChartVisibility(uniqueKey, false);
@@ -5194,7 +5201,10 @@ export class StudyViewPageStore
         } else {
             const chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
-                displayName: `${newChart.yAttr.displayName} vs ${newChart.xAttr.displayName}`,
+                displayName: makeXVsYDisplayName(
+                    newChart.xAttr,
+                    newChart.yAttr
+                ),
                 description: '',
                 dataType: ChartMetaDataTypeEnum.X_VS_Y,
                 patientAttribute: false,
