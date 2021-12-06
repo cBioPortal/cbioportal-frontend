@@ -60,6 +60,7 @@ import OQLTextArea, {
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
 import UserMessager from 'shared/components/userMessager/UserMessage';
+import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export function initStore(
     appStore: AppStore,
@@ -727,6 +728,14 @@ export default class ResultsViewPage extends React.Component<
                                         }
                                         className="mainTabs"
                                         getTabHref={this.getTabHref}
+                                        contentWindowExtra={
+                                            <HelpWidget
+                                                path={
+                                                    this.props.routing.location
+                                                        .pathname
+                                                }
+                                            />
+                                        }
                                     >
                                         {this.tabs}
                                     </MSKTabs>
