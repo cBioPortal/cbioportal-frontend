@@ -221,6 +221,7 @@
     "oncoprintjs": "5.0.4",
     "pako": "2.0.2",
     "parameter-validator": "^1.0.2",
+    "path-browserify": "^1.0.1",
     "pathway-mapper": "^2.2.2-beta.0",
     "pdfobject": "^2.0.201604172",
     "pegjs": "^0.10.0",
