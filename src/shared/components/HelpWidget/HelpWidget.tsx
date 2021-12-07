@@ -1,11 +1,9 @@
 import * as React from 'react';
-import _ from 'lodash';
-import classnames from 'classnames';
-import { observer } from 'mobx-react-lite';
 import styles from './styles.module.scss';
 import ReactMarkdown from 'react-markdown';
 import { useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import { getServerConfig } from 'config/config';
 
 interface IHelpWidgetProps {
     path: string;
@@ -31,6 +29,12 @@ function parseConfiguration(markdown: string) {
 export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
     path,
 }: IHelpWidgetProps) {
+    // only show this on public portal right now
+    // this should ultimately be by configuration
+    if (getServerConfig().app_name !== 'public-portal') {
+        return <></>;
+    }
+
     const confs = parseConfiguration(markdown);
 
     const conf = confs.find(c => {
