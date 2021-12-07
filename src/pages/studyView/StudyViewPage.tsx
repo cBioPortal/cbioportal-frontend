@@ -66,6 +66,7 @@ import { parse } from 'query-string';
 import SettingsMenu from 'shared/components/driverAnnotations/SettingsMenu';
 import ErrorScreen from 'shared/components/errorScreen/ErrorScreen';
 import { CustomChartData } from 'shared/api/session-service/sessionServiceModels';
+import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -551,6 +552,14 @@ export default class StudyViewPage extends React.Component<
                                     getPaginationWidth={() => {
                                         return this.toolbarLeft;
                                     }} // dont run into other study view UI
+                                    contentWindowExtra={
+                                        <HelpWidget
+                                            path={
+                                                this.props.routing.location
+                                                    .pathname
+                                            }
+                                        />
+                                    }
                                 >
                                     <MSKTab
                                         key={0}

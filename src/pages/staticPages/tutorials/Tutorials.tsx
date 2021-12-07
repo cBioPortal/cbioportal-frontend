@@ -140,6 +140,20 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         ></i>
                                     </a>
                                 </li>
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=Hbbs-tHh9LQ'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        Exploring the longitudinal evolution
+                                        of individual patients{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>
                             </ol>
                         </li>
                         <li>
