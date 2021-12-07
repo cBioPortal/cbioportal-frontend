@@ -76,6 +76,7 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
+import client from 'shared/api/cbioportalClientInstance';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -591,6 +592,76 @@ export function makeDensityScatterPlotTooltip(
             </div>
         );
     };
+}
+
+export async function getSampleToClinicalData(
+    samples: Sample[],
+    attr: ClinicalAttribute
+) {
+    const data = await client.fetchClinicalDataUsingPOST({
+        clinicalDataMultiStudyFilter: {
+            attributeIds: [attr.clinicalAttributeId],
+            identifiers: attr.patientAttribute
+                ? samples.map(s => ({
+                      entityId: s.patientId,
+                      studyId: s.studyId,
+                  }))
+                : samples.map(s => ({
+                      entityId: s.sampleId,
+                      studyId: s.studyId,
+                  })),
+        } as ClinicalDataMultiStudyFilter,
+        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
+        projection: 'SUMMARY',
+    });
+    let ret: { [uniqueSampleKey: string]: ClinicalData };
+    if (attr.patientAttribute) {
+        const patientToData = _.keyBy(data, d => d.uniquePatientKey);
+        ret = {};
+        for (const sample of samples) {
+            ret[sample.uniqueSampleKey] =
+                patientToData[sample.uniquePatientKey];
+        }
+    } else {
+        ret = _.keyBy(data, d => d.uniqueSampleKey);
+    }
+    return ret;
+}
+
+export function generateXVsYScatterPlotDownloadData(
+    xAttr: ClinicalAttribute,
+    yAttr: ClinicalAttribute,
+    samples: Sample[],
+    sampleXData: { [uniqueSampleKey: string]: ClinicalData },
+    sampleYData: { [uniqueSampleKey: string]: ClinicalData }
+) {
+    const header = [
+        'Cancer Study',
+        'Patient ID',
+        'Sample ID',
+        xAttr.displayName,
+        yAttr.displayName,
+    ];
+
+    const rows: string[][] = [];
+    samples.forEach(sample => {
+        const xData = sampleXData[sample.uniqueSampleKey];
+        const yData = sampleYData[sample.uniqueSampleKey];
+        if (xData && yData) {
+            rows.push([
+                sample.studyId,
+                sample.patientId,
+                sample.sampleId,
+                xData ? xData.value : '-',
+                yData ? yData.value : '-',
+            ]);
+        }
+    });
+
+    return [header]
+        .concat(rows)
+        .map(row => row.join('\t'))
+        .join('\n');
 }
 
 export function generateScatterPlotDownloadData(
@@ -3315,6 +3386,13 @@ export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
     //  for a given pair
     const sorted = _.sortBy([xAttrId, yAttrId]);
     return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
+}
+
+export function makeXVsYDisplayName(
+    xAttr: ClinicalAttribute,
+    yAttr: ClinicalAttribute
+) {
+    return `${yAttr.displayName} vs ${xAttr.displayName}`;
 }
 
 export function isQueriedStudyAuthorized(study: CancerStudy) {

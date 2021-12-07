@@ -87,6 +87,7 @@ import {
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
+    generateXVsYScatterPlotDownloadData,
     getBinBounds,
     getCategoricalFilterValues,
     getChartMetaDataType,
@@ -115,12 +116,14 @@ import {
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
+    getSampleToClinicalData,
     getStructuralVariantSamplesCount,
     getUniqueKey,
     getUniqueKeyFromMolecularProfileIds,
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
+    makeXVsYDisplayName,
     makeXVsYUniqueKey,
     MolecularProfileOption,
     MUTATION_COUNT_PLOT_DOMAIN,
@@ -2325,7 +2328,7 @@ export class StudyViewPageStore
     );
     private _xVsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
         {},
-        { deep: false }
+        { deep: true }
     );
     private _xVsYChartSettings = observable.map<
         ChartUniqueKey,
@@ -2359,10 +2362,14 @@ export class StudyViewPageStore
     getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
         return this._xVsYChartSettings.get(uniqueKey);
     }
+    getXVsYChartMeta(uniqueKey: string): ChartMeta | undefined {
+        return this._xVsYCharts.get(uniqueKey);
+    }
     @action.bound
     swapXVsYChartAxes(uniqueKey: string): void {
         const chart = this.getXVsYChartInfo(uniqueKey)!;
         const settings = this.getXVsYChartSettings(uniqueKey)!;
+        const chartMeta = this.getXVsYChartMeta(uniqueKey)!;
 
         const xAttr = chart.xAttr;
         chart.xAttr = chart.yAttr;
@@ -2371,6 +2378,8 @@ export class StudyViewPageStore
         const xLog = settings.xLogScale;
         settings.xLogScale = settings.yLogScale;
         settings.yLogScale = xLog;
+
+        chartMeta.displayName = makeXVsYDisplayName(chart.xAttr, chart.yAttr);
 
         // trigger rerender
         this.changeChartVisibility(uniqueKey, false);
@@ -5192,7 +5201,10 @@ export class StudyViewPageStore
         } else {
             const chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
-                displayName: '',
+                displayName: makeXVsYDisplayName(
+                    newChart.xAttr,
+                    newChart.yAttr
+                ),
                 description: '',
                 dataType: ChartMetaDataTypeEnum.X_VS_Y,
                 patientAttribute: false,
@@ -7531,24 +7543,22 @@ export class StudyViewPageStore
         });
     }
 
-    public getScatterDownloadData(): Promise<string> {
-        return new Promise<string>(resolve => {
-            onMobxPromise(this.mutationCountVsFGAData, data => {
-                if (data) {
-                    resolve(
-                        generateScatterPlotDownloadData(
-                            data,
-                            this.sampleToAnalysisGroup.result,
-                            undefined,
-                            this.analysisGroupsSettings
-                                .groups as AnalysisGroup[]
-                        )
-                    );
-                } else {
-                    resolve('');
-                }
-            });
-        });
+    public async getScatterDownloadData(
+        chartUniqueKey: ChartUniqueKey
+    ): Promise<string> {
+        const chartInfo = this.getXVsYChartInfo(chartUniqueKey)!;
+        const selectedSamples = await toPromise(this.selectedSamples);
+        const [xData, yData] = await Promise.all([
+            getSampleToClinicalData(selectedSamples, chartInfo.xAttr),
+            getSampleToClinicalData(selectedSamples, chartInfo.yAttr),
+        ]);
+        return generateXVsYScatterPlotDownloadData(
+            chartInfo.xAttr,
+            chartInfo.yAttr,
+            selectedSamples,
+            xData,
+            yData
+        );
     }
 
     public getSurvivalDownloadData(chartMeta: ChartMeta): string {
