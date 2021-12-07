@@ -23,6 +23,7 @@ import SampleManager from 'pages/patientView/SampleManager';
 import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getColor } from 'cbioportal-frontend-commons';
+import ReactMarkdown from 'react-markdown';
 
 const OTHER = 'Other';
 
@@ -399,7 +400,20 @@ export function buildBaseConfig(
                                                                     ' '
                                                                 )}
                                                         </th>
-                                                        <td>{d.value}</td>
+                                                        <td>
+                                                            {' '}
+                                                            <ReactMarkdown
+                                                                allowedElements={[
+                                                                    'p',
+                                                                    'a',
+                                                                ]}
+                                                                linkTarget={
+                                                                    '_blank'
+                                                                }
+                                                            >
+                                                                {d.value}
+                                                            </ReactMarkdown>
+                                                        </td>
                                                     </tr>
                                                 );
                                             }
