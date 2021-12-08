@@ -79,7 +79,7 @@ class CustomReporter extends WDIOReporter {
 
             const title = test.title.trim().replace(/\s/g, '_');
 
-            simplified.network = this.runnerStat.config.networkLog[title];
+            //simplified.network = this.runnerStat.config.networkLog[title];
 
             simplified.file = this.runnerStat.specs[0];
 

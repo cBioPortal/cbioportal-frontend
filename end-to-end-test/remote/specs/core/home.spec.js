@@ -17,6 +17,10 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 var searchInputSelector = '.autosuggest input[type=text]';
 
+function getVisibleCheckboxes() {
+    return $$('[data-test="StudySelect"] input[type=checkbox]');
+}
+
 describe('homepage', function() {
     before(() => {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
@@ -126,17 +130,13 @@ describe('homepage', function() {
         );
     });
 
-    describe('select all/deselect all functionality in study selector', function() {
+    describe.only('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             $(
                 '[data-test="StudySelect"] input[type=checkbox]'
             ).waitForDisplayed();
         });
-
-        function getVisibleCheckboxes() {
-            return $$('[data-test="StudySelect"] input[type=checkbox]');
-        }
 
         it('clicking select all studies checkbox selects all studies', function() {
             var studyCheckboxes = getVisibleCheckboxes();
