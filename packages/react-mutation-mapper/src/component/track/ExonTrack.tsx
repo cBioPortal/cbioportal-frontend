@@ -41,41 +41,41 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
         const exons = this.transcript!.exons;
         const utrs = this.transcript!.utrs || [];
 
-        const exonInfo = extractExonInformation(
-            exons,
-            utrs,
-            this.props.proteinLength
-        );
+        const exonInfo = exons
+            ? extractExonInformation(exons, utrs, this.props.proteinLength)
+            : undefined;
 
         const altColors = ['#007FFF', '#35BAF6'];
 
-        return exonInfo.map((exon: ExonDatum, index: number) => {
-            const startCodon = exon.start;
-            const endCodon = exon.start + exon.length;
-            const exonLength = exon.length;
-            const isSkippable = Number.isInteger(exonLength);
-            const stringStart = formatExonLocation(startCodon);
-            const stringEnd = formatExonLocation(endCodon);
-            const stringLength = formatExonLocation(exonLength);
+        return exonInfo
+            ? exonInfo.map((exon: ExonDatum, index: number) => {
+                  const startCodon = exon.start;
+                  const endCodon = exon.start + exon.length;
+                  const exonLength = exon.length;
+                  const isSkippable = Number.isInteger(exonLength);
+                  const stringStart = formatExonLocation(startCodon);
+                  const stringEnd = formatExonLocation(endCodon);
+                  const stringLength = formatExonLocation(exonLength);
 
-            return {
-                color: altColors[index % 2],
-                startCodon: startCodon,
-                endCodon: endCodon,
-                label: exon.rank.toString(),
-                labelColor: '#FFFFFF',
-                tooltip: (
-                    <span>
-                        <h5> Exon {exon.rank} </h5>
-                        Start: {stringStart}
-                        <br></br>
-                        End: {stringEnd}
-                        <br></br>
-                        Length: {stringLength}
-                    </span>
-                ),
-            };
-        });
+                  return {
+                      color: altColors[index % 2],
+                      startCodon: startCodon,
+                      endCodon: endCodon,
+                      label: exon.rank.toString(),
+                      labelColor: '#FFFFFF',
+                      tooltip: (
+                          <span>
+                              <h5> Exon {exon.rank} </h5>
+                              Start: {stringStart}
+                              <br></br>
+                              End: {stringEnd}
+                              <br></br>
+                              Length: {stringLength}
+                          </span>
+                      ),
+                  };
+              })
+            : [];
     }
 
     @computed get trackTitle() {
