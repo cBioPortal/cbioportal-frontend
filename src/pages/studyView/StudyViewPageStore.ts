@@ -26,6 +26,7 @@ import {
     ClinicalDataCountItem,
     ClinicalDataFilter,
     ClinicalDataMultiStudyFilter,
+    ClinicalEvent,
     CopyNumberSeg,
     DataFilterValue,
     DensityPlotBin,
@@ -259,6 +260,7 @@ import {
     StudyPageSettings,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import client from 'shared/api/cbioportalClientInstance';
 import { ClinicalViolinPlotData } from 'cbioportal-ts-api-client';
 
 type ChartUniqueKey = string;
@@ -8054,11 +8056,39 @@ export class StudyViewPageStore
         } else return '';
     }
 
+    readonly survivalSequencedMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        invoke: async () => {
+            const studyIds = this.studyIds;
+            if (
+                studyIds.length === 1 &&
+                studyIds[0] === 'heme_onc_nsclc_genie_bpc'
+            ) {
+                const data = await client.getAllClinicalDataInStudyUsingGET({
+                    attributeId: 'TT_CPT_REPORT_MOS',
+                    clinicalDataType: 'PATIENT',
+                    studyId: studyIds[0],
+                });
+                return data.reduce(
+                    (map: { [patientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] = parseFloat(next.value);
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+        },
+    });
+
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [
             this.survivalData,
             this.selectedPatientKeys,
             this.survivalPlots,
+            this.survivalSequencedMonths,
         ],
         invoke: async () => {
             return this.survivalPlots.result.map(obj => {
@@ -8067,7 +8097,8 @@ export class StudyViewPageStore
                     this.selectedPatientKeys.result!,
                     obj.associatedAttrs[0],
                     obj.associatedAttrs[1],
-                    obj.filter
+                    obj.filter,
+                    this.survivalSequencedMonths.result
                 );
                 return obj;
             });

@@ -85,8 +85,46 @@ export const survivalClinicalDataNullValueSet = new Set([
     'na',
 ]);
 
+export function getNumPatientsAtRisk(
+    sortedPatientSurvivals: Pick<PatientSurvival, 'entryMonths' | 'months'>[]
+) {
+    // returns an array in the same order as patientSurvivals
+    const atRisk: number[] = [];
+
+    const entryTimes = _.sortBy(sortedPatientSurvivals.map(s => s.entryMonths));
+
+    let entryIndex = 0;
+    let exitIndex = 0;
+    let atRiskAccumulator = 0;
+    while (exitIndex < sortedPatientSurvivals.length) {
+        const exitTime = sortedPatientSurvivals[exitIndex].months;
+        // fast forward through entries until we get past exit time
+        while (
+            entryIndex < entryTimes.length &&
+            entryTimes[entryIndex] <= exitTime
+        ) {
+            // add 1 for each entry
+            atRiskAccumulator += 1;
+            entryIndex += 1;
+        }
+        // now entryIndex points to the first entry AFTER this exit
+
+        // now push to atRisk as we move forward to the next exit time,
+        //  and subtract one from atRiskAccumulator for each exit we see
+        while (
+            exitIndex < sortedPatientSurvivals.length &&
+            sortedPatientSurvivals[exitIndex].months === exitTime
+        ) {
+            atRisk.push(atRiskAccumulator);
+            atRiskAccumulator -= 1;
+            exitIndex += 1;
+        }
+    }
+    return atRisk;
+}
+
 export function getSurvivalSummaries(
-    patientSurvivals: PatientSurvival[]
+    sortedPatientSurvivals: PatientSurvival[]
 ): SurvivalSummary[] {
     let summaries: SurvivalSummary[] = [];
     let previousEstimate: number = 1;
@@ -97,7 +135,7 @@ export function getSurvivalSummaries(
 
     // calculate number of events
     const eventCountsByMonths: Dictionary<number> = _.reduce(
-        patientSurvivals,
+        sortedPatientSurvivals,
         (dict, patientSurvival) => {
             if (patientSurvival.months in dict && patientSurvival.status) {
                 dict[patientSurvival.months] = dict[patientSurvival.months] + 1;
@@ -109,7 +147,9 @@ export function getSurvivalSummaries(
         {} as Dictionary<number>
     );
 
-    patientSurvivals.forEach((patientSurvival, index) => {
+    const atRisk = getNumPatientsAtRisk(sortedPatientSurvivals);
+
+    sortedPatientSurvivals.forEach((patientSurvival, index) => {
         // we may see multiple data points at the same time
         // only calculate the error for the last data point of the same months
         if (
@@ -128,8 +168,8 @@ export function getSurvivalSummaries(
         }
         // only calculate standard error and confidence intervals for event data
         if (patientSurvival.status) {
-            const atRisk = patientSurvivals.length - index;
-            const estimate = previousEstimate * ((atRisk - 1) / atRisk);
+            const estimate =
+                previousEstimate * ((atRisk[index] - 1) / atRisk[index]);
             previousEstimate = estimate;
             // define calculate standard error and confidence intervals
             // undefined is default value, means it's not found
@@ -141,7 +181,9 @@ export function getSurvivalSummaries(
                 // calculate standard error
                 // adjustedAtRisk need to add number of events back since we may have multiple events at the same time
                 const adjustedAtRisk =
-                    atRisk + eventCountsByMonths[patientSurvival.months] - 1;
+                    atRisk[index] +
+                    eventCountsByMonths[patientSurvival.months] -
+                    1;
                 const toBeAccumulated =
                     eventCountsByMonths[patientSurvival.months] /
                     (adjustedAtRisk *

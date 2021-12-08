@@ -23,6 +23,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    ClinicalEvent,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -1818,6 +1819,39 @@ export default abstract class ComparisonStore
         },
     });
 
+    readonly survivalSequencedMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        await: () => [this.studies],
+        invoke: async () => {
+            const studyIds = this.studies.result!.map(s => s.studyId);
+            if (studyIds.length === 1 && studyIds[0] === 'nsclc_genie_bpc') {
+                const allTimelineData = _.flatten(
+                    await Promise.all(
+                        studyIds.map(studyId =>
+                            internalClient.getAllClinicalEventsInStudyUsingGET({
+                                studyId,
+                            })
+                        )
+                    )
+                );
+                const sequencingData: ClinicalEvent[] = allTimelineData.filter(
+                    d => d.eventType === 'Sequencing'
+                );
+                return sequencingData.reduce(
+                    (map: { [uniquePatientKey: string]: number }, next) => {
+                        map[next.uniquePatientKey] =
+                            next.startNumberOfDaysSinceDiagnosis;
+                        return map;
+                    },
+                    {}
+                );
+            } else {
+                return undefined;
+            }
+        },
+    });
+
     readonly patientSurvivals = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
@@ -1825,8 +1859,11 @@ export default abstract class ComparisonStore
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
+            this.survivalSequencedMonths,
         ],
         invoke: () => {
+            console.log('ok');
+            console.log(this.survivalSequencedMonths.result);
             return Promise.resolve(
                 _.reduce(
                     this.survivalClinicalAttributesPrefix.result!,
@@ -1837,7 +1874,8 @@ export default abstract class ComparisonStore
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key)
+                            s => getSurvivalStatusBoolean(s, key),
+                            this.survivalSequencedMonths.result
                         );
                         return acc;
                     },

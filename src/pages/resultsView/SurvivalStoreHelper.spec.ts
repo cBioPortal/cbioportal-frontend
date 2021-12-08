@@ -114,7 +114,7 @@ describe('SurvivalStoreHelper', () => {
             );
         });
 
-        it('returns correct result for example data', () => {
+        it('returns correct result for example data without entry data', () => {
             assert.deepEqual(
                 getPatientSurvivals(
                     exampleClinicalData,
@@ -129,6 +129,30 @@ describe('SurvivalStoreHelper', () => {
                         uniquePatientKey: '1',
                         studyId: 'study_1',
                         months: 0,
+                        entryMonths: 0,
+                        status: true,
+                    },
+                ]
+            );
+        });
+
+        it('returns correct result for example data with entry data', () => {
+            assert.deepEqual(
+                getPatientSurvivals(
+                    exampleClinicalData,
+                    exampleTargetKeys,
+                    'OS_STATUS',
+                    'OS_MONTHS',
+                    s => s === 'DECEASED',
+                    { '1': 5 }
+                ),
+                [
+                    {
+                        patientId: 'patient_1',
+                        uniquePatientKey: '1',
+                        studyId: 'study_1',
+                        months: 0,
+                        entryMonths: 5,
                         status: true,
                     },
                 ]

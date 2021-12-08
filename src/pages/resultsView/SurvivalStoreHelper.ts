@@ -10,7 +10,8 @@ export function getPatientSurvivals(
     targetUniquePatientKeys: string[],
     statusAttributeId: string,
     monthsAttributeId: string,
-    statusFilter: (s: string) => boolean
+    statusFilter: (s: string) => boolean,
+    entryMonthsByUniquePatientKey?: { [patientKey: string]: number }
 ): PatientSurvival[] {
     if (targetUniquePatientKeys) {
         return targetUniquePatientKeys.reduce(
@@ -26,6 +27,10 @@ export function getPatientSurvivals(
                     const monthsClinicalData = clinicalData.find(
                         c => c.clinicalAttributeId === monthsAttributeId
                     );
+                    const entryMonths =
+                        (entryMonthsByUniquePatientKey &&
+                            entryMonthsByUniquePatientKey[uniquePatientKey]) ||
+                        0;
                     if (
                         statusClinicalData &&
                         monthsClinicalData &&
@@ -36,7 +41,8 @@ export function getPatientSurvivals(
                             monthsClinicalData.value
                         ) &&
                         !Number.isNaN(Number(monthsClinicalData.value)) &&
-                        Number(monthsClinicalData.value) >= 0
+                        Number(monthsClinicalData.value) >= 0 &&
+                        entryMonths < parseFloat(monthsClinicalData.value)
                     ) {
                         patientSurvivals.push({
                             uniquePatientKey,
@@ -44,6 +50,7 @@ export function getPatientSurvivals(
                             studyId: clinicalData[0].studyId,
                             status: statusFilter(statusClinicalData.value),
                             months: parseFloat(monthsClinicalData.value),
+                            entryMonths,
                         });
                     }
                 }

@@ -17,6 +17,7 @@ import {
     getSurvivalStatusBoolean,
     isNullSurvivalClinicalDataValue,
     createSurvivalAttributeIdsDict,
+    getNumPatientsAtRisk,
 } from './SurvivalUtil';
 
 const exampleAlteredPatientSurvivals = [
@@ -24,6 +25,7 @@ const exampleAlteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-OR-A5J2',
         patientId: 'TCGA-OR-A5J2',
         studyId: 'acc_tcga',
+        entryMonths: 0,
         months: 0.09,
         status: true,
     },
@@ -31,6 +33,7 @@ const exampleAlteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-OR-A5J1',
         patientId: 'TCGA-OR-A5J1',
         studyId: 'acc_tcga',
+        entryMonths: 0,
         months: 5.09,
         status: false,
     },
@@ -41,6 +44,7 @@ const exampleUnalteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-OR-A5J3',
         patientId: 'TCGA-OR-A5J3',
         studyId: 'acc_tcga',
+        entryMonths: 0,
         months: 0,
         status: false,
     },
@@ -48,6 +52,7 @@ const exampleUnalteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-2F-A9KP',
         patientId: 'TCGA-2F-A9KP',
         studyId: 'blca_tcga',
+        entryMonths: 0,
         months: 0.13,
         status: false,
     },
@@ -55,6 +60,7 @@ const exampleUnalteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-2F-A9KO',
         patientId: 'TCGA-2F-A9KO',
         studyId: 'blca_tcga',
+        entryMonths: 0,
         months: 63.83,
         status: true,
     },
@@ -62,6 +68,7 @@ const exampleUnalteredPatientSurvivals = [
         uniquePatientKey: 'TCGA-2F-A9KQ',
         patientId: 'TCGA-2F-A9KQ',
         studyId: 'blca_tcga',
+        entryMonths: 0,
         months: 182.19,
         status: true,
     },
@@ -114,118 +121,147 @@ const allScatterData: ScatterData[] = [
 const cbioExamplePatientSurvivals = [
     {
         months: 1.4,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 4.3,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 4.5,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 8,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 8.9,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 9.2,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 13.1,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 14.4,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 14.8,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 14.8,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 15.3,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 15.9,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 19.6,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 20.6,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 23,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 23,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 24,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 25.4,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 26.6,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 31.3,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 34,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 36.6,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 36.9,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 43.1,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 45.4,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 45.6,
+        entryMonths: 0,
         status: false,
     },
     {
         months: 46.5,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 46.8,
+        entryMonths: 0,
         status: true,
     },
     {
         months: 55.6,
+        entryMonths: 0,
         status: false,
     },
 ] as PatientSurvival[];
@@ -362,6 +398,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '57',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '57',
         months: 5,
         status: true,
@@ -369,6 +406,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '73',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '73',
         months: 11,
         status: true,
@@ -376,6 +414,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '79',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '79',
         months: 11,
         status: true,
@@ -383,6 +422,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '108',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '108',
         months: 11,
         status: true,
@@ -390,6 +430,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '30',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '30',
         months: 12,
         status: true,
@@ -397,6 +438,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '116',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '116',
         months: 13,
         status: true,
@@ -404,6 +446,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '215',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '215',
         months: 13,
         status: true,
@@ -411,6 +454,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '111',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '111',
         months: 15,
         status: true,
@@ -418,6 +462,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '32',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '32',
         months: 26,
         status: true,
@@ -425,6 +470,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '96',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '96',
         months: 30,
         status: true,
@@ -432,6 +478,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '149',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '149',
         months: 31,
         status: true,
@@ -439,6 +486,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '35',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '35',
         months: 53,
         status: true,
@@ -446,6 +494,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '53',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '53',
         months: 53,
         status: true,
@@ -453,6 +502,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '124',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '124',
         months: 54,
         status: true,
@@ -460,6 +510,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '202',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '202',
         months: 59,
         status: true,
@@ -467,6 +518,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '64',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '64',
         months: 60,
         status: true,
@@ -474,6 +526,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '128',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '128',
         months: 60,
         status: true,
@@ -481,6 +534,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '19',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '19',
         months: 61,
         status: true,
@@ -488,6 +542,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '144',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '144',
         months: 62,
         status: true,
@@ -495,6 +550,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '56',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '56',
         months: 65,
         status: true,
@@ -502,6 +558,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '66',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '66',
         months: 65,
         status: true,
@@ -509,6 +566,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '14',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '14',
         months: 71,
         status: true,
@@ -516,6 +574,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '201',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '201',
         months: 79,
         status: true,
@@ -523,6 +582,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '22',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '22',
         months: 81,
         status: true,
@@ -530,6 +590,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '192',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '192',
         months: 81,
         status: true,
@@ -537,6 +598,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '20',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '20',
         months: 88,
         status: true,
@@ -544,6 +606,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '93',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '93',
         months: 88,
         status: true,
@@ -551,6 +614,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '127',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '127',
         months: 92,
         status: true,
@@ -558,6 +622,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '214',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '214',
         months: 92,
         status: false,
@@ -565,6 +630,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '39',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '39',
         months: 93,
         status: true,
@@ -572,6 +638,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '46',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '46',
         months: 95,
         status: true,
@@ -579,6 +646,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '82',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '82',
         months: 95,
         status: true,
@@ -586,6 +654,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '206',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '206',
         months: 105,
         status: true,
@@ -593,6 +662,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '226',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '226',
         months: 105,
         status: false,
@@ -600,6 +670,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '34',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '34',
         months: 107,
         status: true,
@@ -607,6 +678,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '104',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '104',
         months: 107,
         status: true,
@@ -614,6 +686,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '189',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '189',
         months: 110,
         status: true,
@@ -621,6 +694,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '223',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '223',
         months: 116,
         status: true,
@@ -628,6 +702,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '28',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '28',
         months: 118,
         status: true,
@@ -635,6 +710,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '36',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '36',
         months: 122,
         status: true,
@@ -642,6 +718,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '193',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '193',
         months: 131,
         status: true,
@@ -649,6 +726,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '58',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '58',
         months: 132,
         status: true,
@@ -656,6 +734,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '74',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '74',
         months: 132,
         status: true,
@@ -663,6 +742,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '200',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '200',
         months: 135,
         status: true,
@@ -670,6 +750,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '164',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '164',
         months: 142,
         status: true,
@@ -677,6 +758,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '16',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '16',
         months: 144,
         status: true,
@@ -684,6 +766,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '44',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '44',
         months: 145,
         status: true,
@@ -691,6 +774,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '179',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '179',
         months: 145,
         status: true,
@@ -698,6 +782,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '88',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '88',
         months: 147,
         status: true,
@@ -705,6 +790,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '42',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '42',
         months: 153,
         status: true,
@@ -712,6 +798,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '106',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '106',
         months: 156,
         status: true,
@@ -719,6 +806,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '155',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '155',
         months: 156,
         status: true,
@@ -726,6 +814,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '65',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '65',
         months: 163,
         status: true,
@@ -733,6 +822,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '90',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '90',
         months: 163,
         status: true,
@@ -740,6 +830,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '148',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '148',
         months: 163,
         status: true,
@@ -747,6 +838,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '10',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '10',
         months: 166,
         status: true,
@@ -754,6 +846,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '100',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '100',
         months: 166,
         status: true,
@@ -761,6 +854,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '84',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '84',
         months: 167,
         status: true,
@@ -768,6 +862,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '11',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '11',
         months: 170,
         status: true,
@@ -775,6 +870,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '210',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '210',
         months: 173,
         status: false,
@@ -782,6 +878,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '227',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '227',
         months: 174,
         status: false,
@@ -789,6 +886,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '63',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '63',
         months: 175,
         status: true,
@@ -796,6 +894,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '220',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '220',
         months: 175,
         status: false,
@@ -803,6 +902,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '80',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '80',
         months: 176,
         status: true,
@@ -810,6 +910,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '105',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '105',
         months: 177,
         status: true,
@@ -817,6 +918,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '228',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '228',
         months: 177,
         status: false,
@@ -824,6 +926,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '97',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '97',
         months: 179,
         status: true,
@@ -831,6 +934,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '159',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '159',
         months: 179,
         status: true,
@@ -838,6 +942,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '177',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '177',
         months: 180,
         status: true,
@@ -845,6 +950,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '112',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '112',
         months: 181,
         status: true,
@@ -852,6 +958,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '169',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '169',
         months: 181,
         status: true,
@@ -859,6 +966,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '154',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '154',
         months: 182,
         status: true,
@@ -866,6 +974,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '218',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '218',
         months: 183,
         status: true,
@@ -873,6 +982,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '213',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '213',
         months: 185,
         status: false,
@@ -880,6 +990,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '178',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '178',
         months: 186,
         status: true,
@@ -887,6 +998,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '224',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '224',
         months: 188,
         status: false,
@@ -894,6 +1006,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '52',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '52',
         months: 189,
         status: true,
@@ -901,6 +1014,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '225',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '225',
         months: 191,
         status: false,
@@ -908,6 +1022,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '217',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '217',
         months: 192,
         status: false,
@@ -915,6 +1030,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '167',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '167',
         months: 194,
         status: true,
@@ -922,6 +1038,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '83',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '83',
         months: 196,
         status: false,
@@ -929,6 +1046,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '173',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '173',
         months: 197,
         status: true,
@@ -936,6 +1054,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '221',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '221',
         months: 197,
         status: false,
@@ -943,6 +1062,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '122',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '122',
         months: 199,
         status: true,
@@ -950,6 +1070,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '114',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '114',
         months: 201,
         status: true,
@@ -957,6 +1078,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '141',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '141',
         months: 201,
         status: true,
@@ -964,6 +1086,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '132',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '132',
         months: 202,
         status: true,
@@ -971,6 +1094,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '204',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '204',
         months: 202,
         status: false,
@@ -978,6 +1102,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '222',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '222',
         months: 203,
         status: false,
@@ -985,6 +1110,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '126',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '126',
         months: 207,
         status: true,
@@ -992,6 +1118,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '67',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '67',
         months: 208,
         status: true,
@@ -999,6 +1126,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '4',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '4',
         months: 210,
         status: true,
@@ -1006,6 +1134,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '219',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '219',
         months: 211,
         status: false,
@@ -1013,6 +1142,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '117',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '117',
         months: 212,
         status: true,
@@ -1020,6 +1150,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '9',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '9',
         months: 218,
         status: true,
@@ -1027,6 +1158,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '212',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '212',
         months: 221,
         status: false,
@@ -1034,6 +1166,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '143',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '143',
         months: 222,
         status: true,
@@ -1041,6 +1174,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '216',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '216',
         months: 222,
         status: false,
@@ -1048,6 +1182,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '62',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '62',
         months: 223,
         status: true,
@@ -1055,6 +1190,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '207',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '207',
         months: 224,
         status: false,
@@ -1062,6 +1198,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '194',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '194',
         months: 225,
         status: false,
@@ -1069,6 +1206,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '196',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '196',
         months: 225,
         status: false,
@@ -1076,6 +1214,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '75',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '75',
         months: 226,
         status: true,
@@ -1083,6 +1222,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '151',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '151',
         months: 229,
         status: true,
@@ -1090,6 +1230,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '70',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '70',
         months: 230,
         status: true,
@@ -1097,6 +1238,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '205',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '205',
         months: 235,
         status: false,
@@ -1104,6 +1246,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '209',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '209',
         months: 237,
         status: false,
@@ -1111,6 +1254,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '92',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '92',
         months: 239,
         status: true,
@@ -1118,6 +1262,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '208',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '208',
         months: 239,
         status: true,
@@ -1125,6 +1270,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '203',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '203',
         months: 240,
         status: false,
@@ -1132,6 +1278,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '197',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '197',
         months: 243,
         status: false,
@@ -1139,6 +1286,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '94',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '94',
         months: 245,
         status: true,
@@ -1146,6 +1294,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '54',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '54',
         months: 246,
         status: true,
@@ -1153,6 +1302,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '211',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '211',
         months: 252,
         status: false,
@@ -1160,6 +1310,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '188',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '188',
         months: 259,
         status: false,
@@ -1167,6 +1318,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '166',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '166',
         months: 266,
         status: false,
@@ -1174,6 +1326,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '135',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '135',
         months: 267,
         status: true,
@@ -1181,6 +1334,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '162',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '162',
         months: 268,
         status: true,
@@ -1188,6 +1342,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '180',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '180',
         months: 269,
         status: false,
@@ -1195,6 +1350,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '195',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '195',
         months: 269,
         status: true,
@@ -1202,6 +1358,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '191',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '191',
         months: 270,
         status: true,
@@ -1209,6 +1366,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '184',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '184',
         months: 272,
         status: false,
@@ -1216,6 +1374,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '199',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '199',
         months: 276,
         status: false,
@@ -1223,6 +1382,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '198',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '198',
         months: 279,
         status: false,
@@ -1230,6 +1390,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '113',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '113',
         months: 283,
         status: true,
@@ -1237,6 +1398,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '86',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '86',
         months: 284,
         status: true,
@@ -1244,6 +1406,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '182',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '182',
         months: 284,
         status: false,
@@ -1251,6 +1414,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '170',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '170',
         months: 285,
         status: true,
@@ -1258,6 +1422,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '187',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '187',
         months: 285,
         status: true,
@@ -1265,6 +1430,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '190',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '190',
         months: 286,
         status: true,
@@ -1272,6 +1438,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '119',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '119',
         months: 288,
         status: true,
@@ -1279,6 +1446,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '158',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '158',
         months: 291,
         status: true,
@@ -1286,6 +1454,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '163',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '163',
         months: 292,
         status: false,
@@ -1293,6 +1462,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '185',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '185',
         months: 292,
         status: false,
@@ -1300,6 +1470,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '131',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '131',
         months: 293,
         status: true,
@@ -1307,6 +1478,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '176',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '176',
         months: 296,
         status: false,
@@ -1314,6 +1486,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '181',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '181',
         months: 300,
         status: false,
@@ -1321,6 +1494,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '21',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '21',
         months: 301,
         status: true,
@@ -1328,6 +1502,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '171',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '171',
         months: 301,
         status: false,
@@ -1335,6 +1510,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '47',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '47',
         months: 303,
         status: true,
@@ -1342,6 +1518,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '175',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '175',
         months: 303,
         status: false,
@@ -1349,6 +1526,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '72',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '72',
         months: 305,
         status: true,
@@ -1356,6 +1534,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '1',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '1',
         months: 306,
         status: true,
@@ -1363,6 +1542,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '7',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '7',
         months: 310,
         status: true,
@@ -1370,6 +1550,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '98',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '98',
         months: 310,
         status: true,
@@ -1377,6 +1558,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '153',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '153',
         months: 315,
         status: false,
@@ -1384,6 +1566,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '168',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '168',
         months: 320,
         status: true,
@@ -1391,6 +1574,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '156',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '156',
         months: 329,
         status: true,
@@ -1398,6 +1582,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '186',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '186',
         months: 332,
         status: false,
@@ -1405,6 +1590,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '140',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '140',
         months: 337,
         status: true,
@@ -1412,6 +1598,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '150',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '150',
         months: 340,
         status: true,
@@ -1419,6 +1606,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '60',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '60',
         months: 345,
         status: true,
@@ -1426,6 +1614,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '172',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '172',
         months: 348,
         status: true,
@@ -1433,6 +1622,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '183',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '183',
         months: 350,
         status: true,
@@ -1440,6 +1630,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '110',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '110',
         months: 351,
         status: true,
@@ -1447,6 +1638,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '133',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '133',
         months: 353,
         status: true,
@@ -1454,6 +1646,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '147',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '147',
         months: 353,
         status: true,
@@ -1461,6 +1654,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '146',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '146',
         months: 356,
         status: false,
@@ -1468,6 +1662,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '8',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '8',
         months: 361,
         status: true,
@@ -1475,6 +1670,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '78',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '78',
         months: 363,
         status: true,
@@ -1482,6 +1678,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '120',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '120',
         months: 363,
         status: true,
@@ -1489,6 +1686,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '103',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '103',
         months: 364,
         status: true,
@@ -1496,6 +1694,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '157',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '157',
         months: 364,
         status: false,
@@ -1503,6 +1702,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '24',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '24',
         months: 371,
         status: true,
@@ -1510,6 +1710,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '137',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '137',
         months: 371,
         status: true,
@@ -1517,6 +1718,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '160',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '160',
         months: 376,
         status: false,
@@ -1524,6 +1726,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '174',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '174',
         months: 382,
         status: false,
@@ -1531,6 +1734,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '161',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '161',
         months: 384,
         status: false,
@@ -1538,6 +1742,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '138',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '138',
         months: 387,
         status: true,
@@ -1545,6 +1750,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '29',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '29',
         months: 390,
         status: true,
@@ -1552,6 +1758,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '25',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '25',
         months: 394,
         status: true,
@@ -1559,6 +1766,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '142',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '142',
         months: 404,
         status: false,
@@ -1566,6 +1774,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '165',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '165',
         months: 413,
         status: false,
@@ -1573,6 +1782,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '76',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '76',
         months: 426,
         status: true,
@@ -1580,6 +1790,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '69',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '69',
         months: 428,
         status: true,
@@ -1587,6 +1798,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '109',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '109',
         months: 429,
         status: true,
@@ -1594,6 +1806,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '43',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '43',
         months: 433,
         status: true,
@@ -1601,6 +1814,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '121',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '121',
         months: 442,
         status: true,
@@ -1608,6 +1822,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '61',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '61',
         months: 444,
         status: true,
@@ -1615,6 +1830,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '152',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '152',
         months: 444,
         status: false,
@@ -1622,6 +1838,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '102',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '102',
         months: 450,
         status: true,
@@ -1629,6 +1846,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '2',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '2',
         months: 455,
         status: true,
@@ -1636,6 +1854,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '139',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '139',
         months: 457,
         status: true,
@@ -1643,6 +1862,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '145',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '145',
         months: 458,
         status: false,
@@ -1650,6 +1870,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '41',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '41',
         months: 460,
         status: true,
@@ -1657,6 +1878,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '31',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '31',
         months: 473,
         status: true,
@@ -1664,6 +1886,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '99',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '99',
         months: 477,
         status: true,
@@ -1671,6 +1894,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '134',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '134',
         months: 511,
         status: false,
@@ -1678,6 +1902,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '136',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '136',
         months: 511,
         status: false,
@@ -1685,6 +1910,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '48',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '48',
         months: 519,
         status: true,
@@ -1692,6 +1918,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '26',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '26',
         months: 520,
         status: true,
@@ -1699,6 +1926,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '115',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '115',
         months: 524,
         status: true,
@@ -1706,6 +1934,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '118',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '118',
         months: 524,
         status: true,
@@ -1713,6 +1942,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '107',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '107',
         months: 529,
         status: false,
@@ -1720,6 +1950,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '33',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '33',
         months: 533,
         status: true,
@@ -1727,6 +1958,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '130',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '130',
         months: 543,
         status: false,
@@ -1734,6 +1966,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '123',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '123',
         months: 550,
         status: true,
@@ -1741,6 +1974,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '129',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '129',
         months: 551,
         status: false,
@@ -1748,6 +1982,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '125',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '125',
         months: 558,
         status: true,
@@ -1755,6 +1990,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '101',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '101',
         months: 559,
         status: false,
@@ -1762,6 +1998,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '15',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '15',
         months: 567,
         status: true,
@@ -1769,6 +2006,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '27',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '27',
         months: 574,
         status: true,
@@ -1776,6 +2014,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '45',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '45',
         months: 583,
         status: true,
@@ -1783,6 +2022,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '95',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '95',
         months: 588,
         status: false,
@@ -1790,6 +2030,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '17',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '17',
         months: 613,
         status: true,
@@ -1797,6 +2038,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '23',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '23',
         months: 624,
         status: true,
@@ -1804,6 +2046,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '87',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '87',
         months: 641,
         status: true,
@@ -1811,6 +2054,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '49',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '49',
         months: 643,
         status: true,
@@ -1818,6 +2062,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '12',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '12',
         months: 654,
         status: true,
@@ -1825,6 +2070,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '91',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '91',
         months: 655,
         status: true,
@@ -1832,6 +2078,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '59',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '59',
         months: 687,
         status: true,
@@ -1839,6 +2086,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '55',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '55',
         months: 689,
         status: true,
@@ -1846,6 +2094,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '77',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '77',
         months: 705,
         status: true,
@@ -1853,6 +2102,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '18',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '18',
         months: 707,
         status: true,
@@ -1860,6 +2110,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '13',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '13',
         months: 728,
         status: true,
@@ -1867,6 +2118,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '40',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '40',
         months: 731,
         status: true,
@@ -1874,6 +2126,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '51',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '51',
         months: 735,
         status: true,
@@ -1881,6 +2134,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '89',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '89',
         months: 740,
         status: false,
@@ -1888,6 +2142,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '50',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '50',
         months: 765,
         status: true,
@@ -1895,6 +2150,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '81',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '81',
         months: 791,
         status: true,
@@ -1902,6 +2158,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '85',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '85',
         months: 806,
         status: false,
@@ -1909,6 +2166,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '37',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '37',
         months: 814,
         status: true,
@@ -1916,6 +2174,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '68',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '68',
         months: 821,
         status: false,
@@ -1923,6 +2182,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '71',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '71',
         months: 840,
         status: false,
@@ -1930,6 +2190,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '5',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '5',
         months: 883,
         status: true,
@@ -1937,6 +2198,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '38',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '38',
         months: 965,
         status: false,
@@ -1944,6 +2206,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '3',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '3',
         months: 1010,
         status: false,
@@ -1951,6 +2214,7 @@ const largeExamplePatientSurvivalsFromRSurvivalPackage = [
     {
         patientId: '6',
         studyId: '1',
+        entryMonths: 0,
         uniquePatientKey: '6',
         months: 1022,
         status: false,
@@ -3193,6 +3457,67 @@ const exampleSurvivalSummaries = exampleAlteredSurvivalSummaries.concat(
 );
 
 describe('SurvivalUtil', () => {
+    describe('#getNumPatientsAtRisk()', () => {
+        it('returns empty for empty', () => {
+            assert.deepEqual(getNumPatientsAtRisk([]), []);
+        });
+        it('returns correct when all patients start at 0', () => {
+            assert.deepEqual(
+                getNumPatientsAtRisk([
+                    { entryMonths: 0, months: 5 },
+                    { entryMonths: 0, months: 10 },
+                    { entryMonths: 0, months: 15 },
+                    { entryMonths: 0, months: 20 },
+                ]),
+                [4, 3, 2, 1]
+            );
+        });
+        it('returns correct when some patients enter is equal to their exit', () => {
+            assert.deepEqual(
+                getNumPatientsAtRisk([
+                    { entryMonths: 0, months: 5 },
+                    { entryMonths: 10, months: 10 },
+                    { entryMonths: 15, months: 15 },
+                    { entryMonths: 10, months: 20 },
+                ]),
+                [1, 2, 2, 1]
+            );
+        });
+        it('returns correct when some patients enter at the same time', () => {
+            assert.deepEqual(
+                getNumPatientsAtRisk([
+                    { entryMonths: 0, months: 5 },
+                    { entryMonths: 10, months: 20 },
+                    { entryMonths: 10, months: 25 },
+                    { entryMonths: 10, months: 30 },
+                ]),
+                [1, 3, 2, 1]
+            );
+        });
+        it('returns correct when some patients exit at the same time', () => {
+            assert.deepEqual(
+                getNumPatientsAtRisk([
+                    { entryMonths: 0, months: 5 },
+                    { entryMonths: 0, months: 30 },
+                    { entryMonths: 10, months: 30 },
+                    { entryMonths: 15, months: 30 },
+                ]),
+                [2, 3, 2, 1]
+            );
+        });
+        it('returns correct when some patients enter at 0 and some enter throughout', () => {
+            assert.deepEqual(
+                getNumPatientsAtRisk([
+                    { entryMonths: 0, months: 5 },
+                    { entryMonths: 10, months: 30 },
+                    { entryMonths: 15, months: 30 },
+                    { entryMonths: 0, months: 45 },
+                    { entryMonths: 20, months: 90 },
+                ]),
+                [2, 4, 3, 2, 1]
+            );
+        });
+    });
     describe('#getSurvivalSummaries()', () => {
         it('returns empty list for empty list', () => {
             assert.deepEqual(getSurvivalSummaries([]), []);
