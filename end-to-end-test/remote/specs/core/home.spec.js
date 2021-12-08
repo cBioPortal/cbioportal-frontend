@@ -126,7 +126,7 @@ describe('homepage', function() {
         );
     });
 
-    describe.skip('select all/deselect all functionality in study selector', function() {
+    describe.only('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
@@ -147,7 +147,7 @@ describe('homepage', function() {
 
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
-            $('[data-test=selectAllStudies]').click();
+            $('[data-test=selectPanCan]').click();
 
             selectedStudies = studyCheckboxes.filter(function(el) {
                 return el.isSelected();
@@ -155,11 +155,11 @@ describe('homepage', function() {
 
             assert.equal(
                 selectedStudies.length,
-                allStudies,
-                'all studies are selected'
+                32,
+                'all pan can studies are selected'
             );
 
-            $('[data-test=selectAllStudies]').click();
+            $('[data-test=globalDeselectAllStudiesButton]').click();
 
             selectedStudies = studyCheckboxes.filter(function(el) {
                 return el.isSelected();
@@ -177,7 +177,7 @@ describe('homepage', function() {
                 'global deselect button does not exist'
             );
 
-            visibleCheckboxes[10].click();
+            visibleCheckboxes[75].click();
 
             assert.equal(
                 $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
