@@ -20,6 +20,9 @@ var setInputText = require('../../../shared/specUtils').setInputText;
 var getGroupHeaderOptionsElements = require('../../../shared/specUtils')
     .getOncoprintGroupHeaderOptionsElements;
 
+var checkOncoprintElement = require('../../../shared/specUtils')
+    .checkOncoprintElement;
+
 var {
     clickQueryByGeneButton,
     clickModifyStudySelectionButton,
@@ -42,20 +45,17 @@ describe('merged tracks', () => {
         $(trackOptionsElts.dropdown_selector).waitForDisplayed({
             timeout: 1000,
         });
+
         // click expand
         $(trackOptionsElts.dropdown_selector + ' li:nth-child(3)').click();
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-        var res = browser.checkElement('.oncoprintContainer', '', {
-            hide: ['.oncoprint__controls'],
-        }); // just hide the controls bc for some reason they keep showing up transparent in this test only
+        var res = checkOncoprintElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 });
 
 describe('oncoprint', function() {
-    this.retries(0);
-
     describe('initialization from URL parameters', () => {
         it('should start in patient mode if URL parameter show_samples=false or not specified', () => {
             // not specified
