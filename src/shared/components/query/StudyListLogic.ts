@@ -16,7 +16,7 @@ import {
     SearchResult,
 } from '../../lib/textQueryUtils';
 import { cached } from 'mobxpromise';
-import { ServerConfigHelpers } from '../../../config/config';
+import { getServerConfig, ServerConfigHelpers } from '../../../config/config';
 import memoize from 'memoize-weak-decorator';
 
 export const PAN_CAN_SIGNATURE = 'pan_can_atlas';
@@ -285,7 +285,7 @@ export class FilteredCancerTreeView {
             let checked = !!this.store.selectableSelectedStudyIds.find(
                 id => id == study.studyId
             );
-            let disabled = this.store.isDeletedVirtualStudy(study.studyId);
+            let disabled = this.isCheckBoxDisabled(node);
             return { checked, disabled };
         }
     }
@@ -297,6 +297,9 @@ export class FilteredCancerTreeView {
         } else {
             let study = node as CancerStudy;
             if (this.store.isDeletedVirtualStudy(study.studyId)) {
+                return true;
+            }
+            if (study.readPermission === false) {
                 return true;
             }
             return false;
