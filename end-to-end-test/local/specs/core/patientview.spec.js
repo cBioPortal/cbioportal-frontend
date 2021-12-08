@@ -214,7 +214,7 @@ describe('patient view page', function() {
             assert($('[data-test=mut-track-genepanel-icon-5]').isExisting());
         });
 
-        it.skip('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
+        it('shows mouse-over tooltip for gene panel icons with gene panel id', () => {
             // Tooltip elements are created when hovering the gene panel icon.
             // Control logic below is needed to access the last one after it
             // was created.
@@ -228,7 +228,7 @@ describe('patient view page', function() {
             assert.equal(text, 'Gene panel: TESTPANEL1');
         });
 
-        it.skip('shows mouse-over tooltip for gene panel icons with NA for whole-genome analyzed sample', () => {
+        it('shows mouse-over tooltip for gene panel icons with NA for whole-genome analyzed sample', () => {
             // Tooltip elements are created when hovering the gene panel icon.
             // Control logic below is needed to access the last one after it
             // was created.
@@ -292,7 +292,7 @@ describe('patient view page', function() {
             assert($('#patient-view-gene-panel').waitForDisplayed());
         });
 
-        it.skip('toggles gene panel modal from sample icon in genomic tracks', () => {
+        it('toggles gene panel modal from sample icon in genomic tracks', () => {
             $(
                 '.genomicOverviewTracksContainer svg[data-test=sample-icon]'
             ).moveTo();
@@ -301,7 +301,7 @@ describe('patient view page', function() {
             assert($('#patient-view-gene-panel').waitForDisplayed());
         });
 
-        it.skip('toggles gene panel modal from gene panel icon in genomic tracks', () => {
+        it('toggles gene panel modal from gene panel icon in genomic tracks', () => {
             $(
                 '.genomicOverviewTracksContainer [data-test=cna-track-genepanel-icon-0]'
             ).moveTo();
