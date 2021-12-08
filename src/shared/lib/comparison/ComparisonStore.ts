@@ -23,6 +23,7 @@ import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    ClinicalEvent,
     Group,
     MolecularProfile,
     MolecularProfileCasesGroupFilter,
@@ -1818,6 +1819,16 @@ export default abstract class ComparisonStore
         },
     });
 
+    readonly survivalSequencedMonths = remoteData<
+        { [uniquePatientKey: string]: number } | undefined
+    >({
+        await: () => [this.studies],
+        invoke: async () => {
+            // TODO: determine how to fetch data after we finalize our data format.
+            return undefined;
+        },
+    });
+
     readonly patientSurvivals = remoteData<{
         [prefix: string]: PatientSurvival[];
     }>({
@@ -1825,6 +1836,7 @@ export default abstract class ComparisonStore
             this.survivalClinicalDataGroupByUniquePatientKey,
             this.activePatientKeysNotOverlapRemoved,
             this.survivalClinicalAttributesPrefix,
+            this.survivalSequencedMonths,
         ],
         invoke: () => {
             return Promise.resolve(
@@ -1837,7 +1849,8 @@ export default abstract class ComparisonStore
                             this.activePatientKeysNotOverlapRemoved.result!,
                             `${key}_STATUS`,
                             `${key}_MONTHS`,
-                            s => getSurvivalStatusBoolean(s, key)
+                            s => getSurvivalStatusBoolean(s, key),
+                            this.survivalSequencedMonths.result
                         );
                         return acc;
                     },

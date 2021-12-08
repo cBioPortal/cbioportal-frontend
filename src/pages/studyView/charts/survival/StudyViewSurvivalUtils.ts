@@ -31,7 +31,7 @@ export function makeSurvivalChartData(
     );
 
     const sortedGroupedSurvivals = _.mapValues(groupedSurvivals, survivals =>
-        survivals.sort((a, b) => a.months - b.months)
+        _.orderBy(survivals, ['months', 'status'], ['asc', 'desc'])
     );
     let pValue = null;
     if (analysisGroups.length > 1) {

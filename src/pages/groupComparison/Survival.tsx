@@ -211,7 +211,11 @@ export default class Survival extends React.Component<ISurvivalProps, {}> {
                     survivalsByPrefixByAnalysisGroup,
                     survivalsByAnalysisGroup =>
                         _.mapValues(survivalsByAnalysisGroup, survivals =>
-                            survivals.sort((a, b) => a.months - b.months)
+                            _.orderBy(
+                                survivals,
+                                ['months', 'status'],
+                                ['asc', 'desc']
+                            )
                         )
                 )
             );
