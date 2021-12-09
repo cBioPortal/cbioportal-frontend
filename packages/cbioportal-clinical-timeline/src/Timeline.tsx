@@ -338,18 +338,29 @@ const Timeline: React.FunctionComponent<ITimelineProps> = observer(function({
             id={store.uniqueId}
         >
             <div className={'tl-timeline-reset-buttons'}>
-                {store.zoomBounds && (
-                    <div className={'tl-timeline-unzoom'}>
+                <div className={'tl-timeline-zoom-info'}>
+                    {store.zoomBounds && (
                         <button
                             className={'btn btn-xs'}
                             onClick={() => {
                                 store.setZoomBounds();
                             }}
                         >
-                            reset zoom
+                            <i className={'fa fa-search-minus'} /> reset zoom
                         </button>
-                    </div>
-                )}
+                    )}
+
+                    {!store.zoomBounds && (
+                        <span
+                            onClick={() => {
+                                store.setZoomBounds();
+                            }}
+                        >
+                            <i className={'fa fa-search-plus'} /> drag to zoom
+                        </span>
+                    )}
+                </div>
+
                 {store.expandedTrims && (
                     <div>
                         <button
