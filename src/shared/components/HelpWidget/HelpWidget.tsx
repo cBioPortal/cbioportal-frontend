@@ -11,7 +11,6 @@ interface IHelpWidgetProps {
 
 function parseConfiguration(markdown: string) {
     const items = markdown.trim().split(/URLMATCH:/);
-    console.log(items);
 
     const parsed = items.reduce((ret: any[], s) => {
         if (s.length) {
