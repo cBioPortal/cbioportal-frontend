@@ -3177,17 +3177,24 @@ export class ResultsViewPageStore
                 [] as StructuralVariantFilter['sampleMolecularIdentifiers']
             );
 
-            const data = {
-                entrezGeneIds: _.map(
-                    this.genes.result,
-                    (gene: Gene) => gene.entrezGeneId
-                ),
-                sampleMolecularIdentifiers: filters,
-            } as StructuralVariantFilter;
+            // filters can be an empty list
+            // when all selected samples are coming from studies that don't have structural variant profile
+            // in this case, we should not fetch structural variants data
+            if (_.isEmpty(filters)) {
+                return [];
+            } else {
+                const data = {
+                    entrezGeneIds: _.map(
+                        this.genes.result,
+                        (gene: Gene) => gene.entrezGeneId
+                    ),
+                    sampleMolecularIdentifiers: filters,
+                } as StructuralVariantFilter;
 
-            return await client.fetchStructuralVariantsUsingPOST({
-                structuralVariantFilter: data,
-            });
+                return await client.fetchStructuralVariantsUsingPOST({
+                    structuralVariantFilter: data,
+                });
+            }
         },
     });
 
