@@ -70,10 +70,17 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                 </g>
                 {store.tooltipModels.map(([uid, model, index]) => {
                     const position = model.position || store.mousePosition;
-                    const placementLeft = position.x > width / 2;
+                    let placementLeft = position.x > width / 2;
+                    placementLeft = false;
                     return (
                         <Portal container={document.body}>
                             <Popover
+                                onMouseEnter={() => {
+                                    store.togglePinTooltip(uid);
+                                }}
+                                onMouseLeave={() => {
+                                    store.removeTooltip(uid);
+                                }}
                                 arrowOffsetTop={17}
                                 placement={placementLeft ? 'left' : 'right'}
                                 style={{
@@ -83,7 +90,8 @@ export const TimelineTracks: React.FunctionComponent<ITimelineTracks> = observer
                                 }}
                                 className={'tl-timeline-tooltip cbioTooltip'}
                                 positionLeft={
-                                    position.x + (placementLeft ? -10 : 10)
+                                    //position.x
+                                    position.x + (placementLeft ? -3 : 3)
                                 }
                                 positionTop={position.y - 17}
                             >
