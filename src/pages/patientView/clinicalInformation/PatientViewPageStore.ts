@@ -32,11 +32,7 @@ import {
     runInAction,
     makeObservable,
 } from 'mobx';
-import {
-    getBrowserWindow,
-    remoteData,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
+import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
 import { cached, labelMobxPromises } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -202,6 +198,7 @@ import {
     validateMutationalSignatureRawData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
+import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -1677,6 +1674,10 @@ export class PatientViewPageStore {
         return this.oncoKbInfo.result
             ? this.oncoKbInfo.result.publicInstance
             : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
+    }
+
+    @computed get mergeOncoKbIcons() {
+        return getOncoKbIconStyle().mergeIcons;
     }
 
     readonly oncoKbAnnotatedGenes = remoteData(

@@ -71,7 +71,9 @@ export interface IMutationMapperProps {
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
     onTranscriptChange?: (transcript: string) => void;
     onClickSettingMenu?: (visible: boolean) => void;
+    onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     compactStyle?: boolean;
+    mergeOncoKbIcons?: boolean; // TODO add server config param for this as well?
 
     // server config properties
     genomeNexusUrl?: string;
