@@ -73,6 +73,7 @@ export default class OncoKbTooltip extends React.Component<
                     isCancerGene={this.props.isCancerGene}
                     pmidData={{}}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
+                    displayHighestLevelInTabTitle={true}
                 />
             );
         }
@@ -95,6 +96,7 @@ export default class OncoKbTooltip extends React.Component<
                     indicator={this.props.indicator}
                     pmidData={pmidData}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
+                    displayHighestLevelInTabTitle={true}
                 />
             );
         }

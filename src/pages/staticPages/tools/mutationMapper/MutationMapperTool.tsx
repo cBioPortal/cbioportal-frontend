@@ -29,6 +29,7 @@ import {
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
+import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -549,6 +550,10 @@ export default class MutationMapperTool extends React.Component<
                                 ensembl_transcript_url: this.ensemblLink,
                             })}
                             oncoKbPublicApiUrl={getOncoKbApiUrl()}
+                            mergeOncoKbIcons={
+                                this.userSelectionStore.mergeOncoKbIcons
+                            }
+                            onOncoKbIconToggle={this.handleOncoKbIconToggle}
                             store={mutationMapperStore}
                             trackVisibility={
                                 this.userSelectionStore.trackVisibility
@@ -678,6 +683,12 @@ export default class MutationMapperTool extends React.Component<
         getBrowserWindow().localStorage.setItem('referenceGenomeId', selection);
         // reload the page to initialize genome nexus api instance with correct url
         getBrowserWindow().location.reload();
+    }
+
+    @action.bound
+    protected handleOncoKbIconToggle(mergeIcons: boolean) {
+        this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
+        updateOncoKbIconStyle({ mergeIcons });
     }
 
     @computed get grch38Warning() {

@@ -31,6 +31,8 @@ export default class StandaloneMutationMapper extends MutationMapper<
                 usingPublicOncoKbInstance={
                     this.props.store.usingPublicOncoKbInstance
                 }
+                mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                 indexedVariantAnnotations={
                     this.props.store.indexedVariantAnnotations
                 }

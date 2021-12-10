@@ -84,7 +84,7 @@ export default class Oncokb extends React.Component<IOncokbProps> {
                         >
                             OncoKB
                         </a>{' '}
-                        is a precision oncology knowledge base and contains
+                        is a precision oncology knowledge base that contains
                         <br />
                         information about the effects and treatment implications
                         <br />

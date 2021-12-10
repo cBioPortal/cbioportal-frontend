@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
+import { Tab, Tabs } from 'react-bootstrap';
 import classnames from 'classnames';
 import { IndicatorQueryResp, MutationEffectResp } from 'oncokb-ts-api-client';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import { OncoKbCardDataType } from 'cbioportal-utils';
 
+import { ICache } from '../../model/SimpleCache';
+import {
+    annotationIconClassNames,
+    calcHighestIndicatorLevel,
+} from '../../util/OncoKbUtils';
 import OncoKbCardLevelsOfEvidenceDropdown from './OncoKbCardLevelsOfEvidenceDropdown';
 import OncoKBSuggestAnnotationLinkout from './OncoKBSuggestAnnotationLinkout';
 import OncoKbHelper from './OncoKbHelper';
-import { ICache } from '../../model/SimpleCache';
-import { Tab, Tabs } from 'react-bootstrap';
+import OncoKbTreatmentTable from './OncoKbTreatmentTable';
 import { BiologicalContent } from './oncokbCard/BiologicalContent';
 import { ImplicationContent } from './oncokbCard/ImplicationContent';
-import OncoKbTreatmentTable from './OncoKbTreatmentTable';
 
 import tabsStyles from './tabs.module.scss';
 import mainStyles from './main.module.scss';
@@ -42,6 +46,14 @@ const publicInstanceDisclaimerOverLay = (
     </div>
 );
 
+const DATA_TYPE_TO_TITLE = {
+    [OncoKbCardDataType.BIOLOGICAL]: 'Biological Effect',
+    [OncoKbCardDataType.TXS]: 'Therapeutic Implications',
+    [OncoKbCardDataType.TXR]: 'Therapeutic Implications',
+    [OncoKbCardDataType.DX]: 'Diagnostic Implications',
+    [OncoKbCardDataType.PX]: 'Prognostic Implications',
+};
+
 export type OncoKbCardBodyProps = {
     type: OncoKbCardDataType;
     geneNotExist: boolean;
@@ -50,10 +62,36 @@ export type OncoKbCardBodyProps = {
     pmidData: ICache;
     indicator?: IndicatorQueryResp;
     usingPublicOncoKbInstance: boolean;
+    displayHighestLevelInTabTitle?: boolean;
 };
 
 const TabContentWrapper: React.FunctionComponent<{}> = props => {
     return <div className={mainStyles['tab-content']}>{props.children}</div>;
+};
+
+const TabTitle: React.FunctionComponent<{
+    type: OncoKbCardDataType;
+    indicator?: IndicatorQueryResp;
+    displayHighestLevelInTabTitle?: boolean;
+}> = props => {
+    const title = DATA_TYPE_TO_TITLE[props.type];
+    const icon = props.displayHighestLevelInTabTitle ? (
+        <i
+            className={annotationIconClassNames(
+                props.type,
+                calcHighestIndicatorLevel(props.type, props.indicator),
+                props.indicator
+            )}
+        />
+    ) : null;
+
+    return icon ? (
+        <span style={{ display: 'flex' }}>
+            {icon} {title}
+        </span>
+    ) : (
+        <span>{title}</span>
+    );
 };
 
 export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = props => {
@@ -116,7 +154,15 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
             tabs.push(
                 <Tab
                     eventKey={OncoKbCardDataType.BIOLOGICAL}
-                    title="Biological Effect"
+                    title={
+                        <TabTitle
+                            type={OncoKbCardDataType.BIOLOGICAL}
+                            indicator={props.indicator}
+                            displayHighestLevelInTabTitle={
+                                props.displayHighestLevelInTabTitle
+                            }
+                        />
+                    }
                 >
                     <TabContentWrapper>
                         <BiologicalContent
@@ -139,7 +185,15 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
             tabs.push(
                 <Tab
                     eventKey={OncoKbCardDataType.TXS}
-                    title="Therapeutic Implications"
+                    title={
+                        <TabTitle
+                            type={OncoKbCardDataType.TXS}
+                            indicator={props.indicator}
+                            displayHighestLevelInTabTitle={
+                                props.displayHighestLevelInTabTitle
+                            }
+                        />
+                    }
                 >
                     <TabContentWrapper>
                         <div
@@ -164,7 +218,15 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
             tabs.push(
                 <Tab
                     eventKey={OncoKbCardDataType.DX}
-                    title="Diagnostic Implications"
+                    title={
+                        <TabTitle
+                            type={OncoKbCardDataType.DX}
+                            indicator={props.indicator}
+                            displayHighestLevelInTabTitle={
+                                props.displayHighestLevelInTabTitle
+                            }
+                        />
+                    }
                 >
                     <TabContentWrapper>
                         <ImplicationContent
@@ -184,7 +246,15 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
             tabs.push(
                 <Tab
                     eventKey={OncoKbCardDataType.PX}
-                    title="Prognostic Implications"
+                    title={
+                        <TabTitle
+                            type={OncoKbCardDataType.PX}
+                            indicator={props.indicator}
+                            displayHighestLevelInTabTitle={
+                                props.displayHighestLevelInTabTitle
+                            }
+                        />
+                    }
                 >
                     <TabContentWrapper>
                         <ImplicationContent
@@ -211,7 +281,7 @@ export const OncoKbCardBody: React.FunctionComponent<OncoKbCardBodyProps> = prop
                             }}
                             overlay={publicInstanceDisclaimerOverLay}
                         >
-                            <i className={'fa fa-info-circle'}></i>
+                            <i className={'fa fa-info-circle'} />
                         </DefaultTooltip>
                     </p>
                 ) : (

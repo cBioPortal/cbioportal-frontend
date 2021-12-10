@@ -32,6 +32,8 @@ export interface IPatientViewMutationsTabProps {
         columnVisibility?: IColumnVisibilityDef[]
     ) => void;
     sampleManager: SampleManager | null;
+    mergeOncoKbIcons?: boolean;
+    onOncoKbIconToggle?: (mergeIcons: boolean) => void;
 }
 
 enum PlotTab {
@@ -310,6 +312,8 @@ export default class PatientViewMutationsTab extends React.Component<
                         this.props.patientViewPageStore
                             .usingPublicOncoKbInstance
                     }
+                    mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                    onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                     civicGenes={this.props.patientViewPageStore.civicGenes}
                     civicVariants={
                         this.props.patientViewPageStore.civicVariants
