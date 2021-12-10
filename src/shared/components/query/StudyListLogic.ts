@@ -285,7 +285,7 @@ export class FilteredCancerTreeView {
             let checked = !!this.store.selectableSelectedStudyIds.find(
                 id => id == study.studyId
             );
-            let disabled = this.store.isDeletedVirtualStudy(study.studyId);
+            let disabled = this.isCheckBoxDisabled(node);
             return { checked, disabled };
         }
     }
@@ -297,6 +297,9 @@ export class FilteredCancerTreeView {
         } else {
             let study = node as CancerStudy;
             if (this.store.isDeletedVirtualStudy(study.studyId)) {
+                return true;
+            }
+            if (study.readPermission === false) {
                 return true;
             }
             return false;
