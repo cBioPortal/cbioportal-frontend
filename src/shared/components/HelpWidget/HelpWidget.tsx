@@ -11,7 +11,6 @@ interface IHelpWidgetProps {
 
 function parseConfiguration(markdown: string) {
     const items = markdown.trim().split(/URLMATCH:/);
-    console.log(items);
 
     const parsed = items.reduce((ret: any[], s) => {
         if (s.length) {
@@ -29,6 +28,9 @@ function parseConfiguration(markdown: string) {
 export const HelpWidget: React.FunctionComponent<IHelpWidgetProps> = function({
     path,
 }: IHelpWidgetProps) {
+    // temporarily hide all help links
+    return null;
+
     // only show this on public portal right now
     // this should ultimately be by configuration
     if (getServerConfig().app_name !== 'public-portal') {

@@ -131,6 +131,8 @@ var config = {
                 __dirname + '/node_modules/jquery/dist/jquery.js'
             ),
         },
+
+        fallback: { path: require.resolve('path-browserify') },
     },
 
     resolveLoader: {
