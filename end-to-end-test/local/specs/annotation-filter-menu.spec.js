@@ -734,7 +734,7 @@ var turnOffCancerGenesFilters = () => {
 var openAlterationFilterMenu = () => {
     $('[data-test=AlterationFilterButton]').waitForDisplayed();
     $('[data-test=AlterationFilterButton]').click();
-    $('[data-test=GlobalSettingsDropdown]').waitForDisplayed();
+    $('[data-test=GlobalSettingsDropdown] input').waitForDisplayed();
 };
 
 var openAlterationFilterMenuGroupComparison = () => {
@@ -742,5 +742,5 @@ var openAlterationFilterMenuGroupComparison = () => {
         '[data-test=AlterationEnrichmentAnnotationsSelectorButton]'
     ).waitForDisplayed();
     $('[data-test=AlterationEnrichmentAnnotationsSelectorButton]').click();
-    $('[data-test=GlobalSettingsDropdown]').waitForDisplayed();
+    $('[data-test=GlobalSettingsDropdown] input').waitForDisplayed();
 };
