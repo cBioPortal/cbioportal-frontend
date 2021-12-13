@@ -12,36 +12,41 @@ describe('results view check possibility to disable tabs', function() {
     it('check that all tabs can be disabled', () => {
         goToUrlAndSetLocalStorage(url, true);
         waitForOncoprint();
-        $('.msk-tabs.posRelative.mainTabs').waitForDisplayed();
-        // getting all visible tabs, excluding the first one, oncoprint
-        tabs = $('.nav-tabs')
-            .$$('.tabAnchor')
-            .filter(tab => tab.isDisplayed())
-            .filter(
-                tab =>
-                    tab.getAttribute('class') !==
-                    'tabAnchor tabAnchor_oncoprint'
-            )
-            .map(tab =>
-                tab
-                    .getAttribute('class')
-                    .split('_')
-                    .pop()
-            );
+        const tabsContainer = $('.mainTabs');
+        tabsContainer.waitForDisplayed();
+        const tabs = getResultsViewTabNames();
+
         // test that each tab can be disabled
         message = '';
-        allTabsDisabled = true;
-        console.log(tabs);
+        allTabsCanBeDisabled = true;
         tabs.forEach(tab => {
             goToUrlAndSetLocalStorageWithProperty(url, true, {
                 disabled_tabs: tab,
             });
-            $('.msk-tabs.posRelative.mainTabs').waitForDisplayed();
-            if ($('.tabAnchor.tabAnchor_' + tab).isDisplayed()) {
+            tabsContainer.waitForDisplayed();
+            const tabAnchor = $('.tabAnchor.tabAnchor_' + tab);
+            if (tabAnchor.isDisplayed()) {
                 message = message + 'Tab ' + tab + ' could not be disabled; ';
-                allTabsDisabled = false;
+                allTabsCanBeDisabled = false;
             }
         });
-        assert(allTabsDisabled == true, message);
+        assert(allTabsCanBeDisabled, message);
     });
 });
+
+function getResultsViewTabNames() {
+    // getting all visible tabs, excluding the first one, oncoprint
+    const tabs = $('.nav-tabs')
+        .$$('.tabAnchor')
+        .filter(tab => tab.isDisplayed())
+        .filter(
+            tab => tab.getAttribute('class') !== 'tabAnchor tabAnchor_oncoprint'
+        )
+        .map(tab =>
+            tab
+                .getAttribute('class')
+                .split('_')
+                .pop()
+        );
+    return tabs;
+}
