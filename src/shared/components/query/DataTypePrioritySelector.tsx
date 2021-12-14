@@ -78,10 +78,10 @@ export const DataTypePriorityCheckBox = observer(
         profileTypes: string[];
         store: QueryStore;
     }) => {
-        let isSelected = true;
-        props.profileTypes.forEach(profileType => {
-            isSelected =
-                isSelected && props.store.isProfileTypeSelected(profileType);
+        // as long as a profile type matches any selected profile
+        // we consider it selected
+        let isSelected = props.profileTypes.some(profileType => {
+            return props.store.isProfileTypeSelected(profileType);
         });
 
         return (
