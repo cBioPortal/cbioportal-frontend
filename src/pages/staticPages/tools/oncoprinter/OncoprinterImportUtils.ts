@@ -76,6 +76,7 @@ function getOncoprinterParsedGeneticInputLine(
         oncoprinterInput.trackName = trackLabel;
         oncoprinterInput.alteration = alteration;
         oncoprinterInput.proteinChange = d.proteinChange;
+        oncoprinterInput.eventInfo = d.eventInfo;
         oncoprinterInput.isGermline = !isNotGermlineMutation(d);
         oncoprinterInput.isCustomDriver = d.driverFilter === PUTATIVE_DRIVER;
         return oncoprinterInput as OncoprinterGeneticInputLineType2;
@@ -142,7 +143,8 @@ function getOncoprinterGeneticInputLine(parsed: OncoprinterGeneticInputLine) {
                 line.push('PROT');
                 break;
             case AlterationTypeConstants.STRUCTURAL_VARIANT:
-                line.push('STRUCTURAL VARIANT');
+                line.push(parsed.eventInfo || 'structural_variant');
+                line.push('FUSION');
                 break;
         }
         if (parsed.trackName) {
