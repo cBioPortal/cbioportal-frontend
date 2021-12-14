@@ -41,6 +41,9 @@ describe('gsva feature', function() {
         });
 
         it('shows GSVA-profile option when selecting study_es_0', () => {
+            // somehow reloading the page is needed to turn on the GSVA feature for the first test
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+            waitForStudyQueryPage();
             checkTestStudy();
 
             var gsvaProfileCheckbox = $('[data-test=GENESET_SCORE]');
@@ -357,20 +360,18 @@ describe('gsva feature', function() {
 
             var horzProfileSelect = $('[name=h-profile-name-selector]').$('..');
             horzProfileSelect.$('.Select-arrow-zone').click();
-            horzProfileSelect
-                .$(
-                    '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
-                )
-                .click();
+            var profileMenuEntry =
+                '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
+            horzProfileSelect.$(profileMenuEntry).waitForExist();
+            horzProfileSelect.$(profileMenuEntry).click();
 
             var horzEntitySelect = $('[name=h-geneset-selector]').$('..');
             horzEntitySelect.$('.Select-arrow-zone').click();
+            var entityMenuEntry =
+                '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
+            horzEntitySelect.$(entityMenuEntry).waitForExist();
 
-            assert(
-                horzEntitySelect.$(
-                    '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                )
-            );
+            assert(horzEntitySelect.$(entityMenuEntry));
         });
 
         it('vertical axis menu shows gene set entry in entity menu', () => {
@@ -380,26 +381,18 @@ describe('gsva feature', function() {
 
             var vertProfileSelect = $('[name=v-profile-name-selector]').$('..');
             vertProfileSelect.$('.Select-arrow-zone').click();
-            vertProfileSelect
-                .$(
-                    '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
-                )
-                .waitForDisplayed();
-
-            vertProfileSelect
-                .$(
-                    '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets'
-                )
-                .click();
+            var profileMenuEntry =
+                '.Select-option=Pvalues of GSVA scores on oncogenic signatures gene sets';
+            vertProfileSelect.$(profileMenuEntry).waitForExist();
+            vertProfileSelect.$(profileMenuEntry).click();
 
             var vertEntitySelect = $('[name=v-geneset-selector]').$('..');
             vertEntitySelect.$('.Select-arrow-zone').click();
+            var entityMenuEntry =
+                '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING';
+            vertEntitySelect.$(entityMenuEntry).waitForExist();
 
-            assert(
-                vertEntitySelect.$(
-                    '.Select-option=GO_ATP_DEPENDENT_CHROMATIN_REMODELING'
-                )
-            );
+            assert(vertEntitySelect.$(entityMenuEntry));
         });
     });
 
