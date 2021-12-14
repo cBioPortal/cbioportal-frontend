@@ -633,9 +633,11 @@ export function makeGeneticTrackTooltip(
                 }) => {
                     var ret = $('<span>').addClass('nobreak');
                     ret.append(
-                        `<b class="nobreak">${site1HugoSymbol}${
+                        `<b class="nobreak">${site1HugoSymbol || ''}${
                             site2HugoSymbol ? '-' + site2HugoSymbol : ''
-                        }, ${variantClass}, Event Info: ${eventInfo}</b>`
+                        }${
+                            variantClass ? ', ' + variantClass + ',' : ''
+                        } Event Info: ${eventInfo}</b>`
                     );
                     if (oncokb_oncogenic) {
                         ret.append(
