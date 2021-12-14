@@ -100,6 +100,7 @@ export type OncoprinterGeneticInputLineType2 = OncoprinterGeneticInputLineType1 
     isGermline?: boolean;
     isCustomDriver?: boolean;
     proteinChange?: string;
+    eventInfo?: string;
 };
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 export type OncoprinterInputLineType3_Incomplete = OncoprinterInputLineType1 & {
@@ -350,6 +351,7 @@ export function makeGeneticTrackDatum_Data(
         // these are the same always or almost always
         hugoGeneSymbol: oncoprinterInputLine.hugoGeneSymbol,
         proteinChange: oncoprinterInputLine.proteinChange,
+        eventInfo: oncoprinterInputLine.eventInfo,
         mutationStatus: oncoprinterInputLine.isGermline
             ? MUTATION_STATUS_GERMLINE
             : '',
@@ -856,7 +858,7 @@ export function parseGeneticInput(
                             );
                         } else {
                             ret.alteration = 'structuralVariant';
-                            ret.proteinChange = alteration;
+                            ret.eventInfo = alteration;
                         }
                         break;
                     default:
