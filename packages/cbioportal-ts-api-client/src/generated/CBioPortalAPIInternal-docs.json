@@ -3494,6 +3494,13 @@
         "attributeId": {
           "type": "string"
         },
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE"
+          ]
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -3505,6 +3512,9 @@
         },
         "end": {
           "type": "number"
+        },
+        "generateBins": {
+          "$ref": "#/definitions/GenerateBins"
         },
         "start": {
           "type": "number"
@@ -4010,6 +4020,20 @@
       },
       "title": "GeneFilterQuery"
     },
+    "GenerateBins": {
+      "type": "object",
+      "properties": {
+        "anchorValue": {
+          "type": "number",
+          "format": "float"
+        },
+        "binSize": {
+          "type": "number",
+          "format": "float"
+        }
+      },
+      "title": "GenerateBins"
+    },
     "GenericAssayDataBin": {
       "type": "object",
       "properties": {
@@ -4053,6 +4077,13 @@
     "GenericAssayDataBinFilter": {
       "type": "object",
       "properties": {
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE"
+          ]
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -4064,6 +4095,9 @@
         },
         "end": {
           "type": "number"
+        },
+        "generateBins": {
+          "$ref": "#/definitions/GenerateBins"
         },
         "profileType": {
           "type": "string"
@@ -4354,6 +4388,13 @@
     "GenomicDataBinFilter": {
       "type": "object",
       "properties": {
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE"
+          ]
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -4365,6 +4406,9 @@
         },
         "end": {
           "type": "number"
+        },
+        "generateBins": {
+          "$ref": "#/definitions/GenerateBins"
         },
         "hugoGeneSymbol": {
           "type": "string"
