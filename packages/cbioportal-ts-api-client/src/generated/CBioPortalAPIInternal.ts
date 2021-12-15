@@ -118,11 +118,15 @@ export type ClinicalDataBinCountFilter = {
 export type ClinicalDataBinFilter = {
     'attributeId': string
 
+        'binMethod': "MEDIAN" | "QUARTILE"
+
         'customBins': Array < number >
 
         'disableLogScale': boolean
 
         'end': number
+
+        'generateBins': GenerateBins
 
         'start': number
 
@@ -340,6 +344,12 @@ export type GeneFilterQuery = {
         'tiersBooleanMap': {}
 
 };
+export type GenerateBins = {
+    'anchorValue': number
+
+        'binSize': number
+
+};
 export type GenericAssayDataBin = {
     'count': number
 
@@ -361,11 +371,15 @@ export type GenericAssayDataBinCountFilter = {
 
 };
 export type GenericAssayDataBinFilter = {
-    'customBins': Array < number >
+    'binMethod': "MEDIAN" | "QUARTILE"
+
+        'customBins': Array < number >
 
         'disableLogScale': boolean
 
         'end': number
+
+        'generateBins': GenerateBins
 
         'profileType': string
 
@@ -501,11 +515,15 @@ export type GenomicDataBinCountFilter = {
 
 };
 export type GenomicDataBinFilter = {
-    'customBins': Array < number >
+    'binMethod': "MEDIAN" | "QUARTILE"
+
+        'customBins': Array < number >
 
         'disableLogScale': boolean
 
         'end': number
+
+        'generateBins': GenerateBins
 
         'hugoGeneSymbol': string
 
