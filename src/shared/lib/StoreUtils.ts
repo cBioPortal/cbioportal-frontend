@@ -1079,16 +1079,14 @@ export function isMutationProfile(profile: MolecularProfile): boolean {
 export function findMutationMolecularProfile(
     molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
     studyId: string,
-    suffix: string = MOLECULAR_PROFILE_MUTATIONS_SUFFIX
+    type: string
 ) {
     if (!molecularProfilesInStudy.result) {
         return undefined;
     }
 
-    const profile = molecularProfilesInStudy.result.find(
-        (p: MolecularProfile) => {
-            return p.molecularProfileId === `${studyId}${suffix}`;
-        }
+    const profile = molecularProfilesInStudy.result!.find(
+        (profile: MolecularProfile) => profile.molecularAlterationType === type
     );
 
     return profile;
@@ -1096,13 +1094,12 @@ export function findMutationMolecularProfile(
 
 export function findUncalledMutationMolecularProfileId(
     molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
-    studyId: string,
-    suffix: string = MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX
+    studyId: string
 ) {
     const profile = findMutationMolecularProfile(
         molecularProfilesInStudy,
         studyId,
-        suffix
+        AlterationTypeConstants.MUTATION_UNCALLED
     );
     if (profile) {
         return profile.molecularProfileId;
