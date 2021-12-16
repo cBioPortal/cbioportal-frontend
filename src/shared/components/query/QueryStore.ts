@@ -982,14 +982,15 @@ export class QueryStore {
                                 profile.molecularAlterationType +
                                 profile.datatype
                         )
-                        .map(alterationTypeProfiles => {
-                            // A study can have multiple profiles for same alteration type and datatpye.
-                            // we need just one profile of each
-                            return getSuffixOfMolecularProfile(
-                                alterationTypeProfiles[0]
+                        .reduce((agg: string[], alterationTypeProfiles) => {
+                            const profileTypes = alterationTypeProfiles.map(
+                                p => {
+                                    return getSuffixOfMolecularProfile(p);
+                                }
                             );
-                        })
-                        .value();
+                            agg.push(...profileTypes);
+                            return agg;
+                        }, []);
                 })
                 .value();
 
