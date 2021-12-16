@@ -388,7 +388,8 @@ export class PatientViewPageStore {
         invoke: async () =>
             findMutationMolecularProfile(
                 this.molecularProfilesInStudy,
-                this.studyId
+                this.studyId,
+                AlterationTypeConstants.MUTATION_EXTENDED
             ),
     });
 
