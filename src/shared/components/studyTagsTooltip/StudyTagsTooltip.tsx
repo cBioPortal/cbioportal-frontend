@@ -131,9 +131,9 @@ class StudyInfoOverlay extends React.Component<
                     ) : (
                         <div
                             style={{ maxWidth: 300 }}
-                            dangerouslySetInnerHTML={{
-                                __html: `${message}`,
-                            }}
+                            dangerouslySetInnerHTML={this.addHTMLDescription(
+                                message.toString()
+                            )}
                         />
                     );
                 }
@@ -154,7 +154,7 @@ export default class StudyTagsTooltip extends React.Component<
     renderTooltip() {
         return (
             <DefaultTooltip
-                key={this.props.key}
+                //key={this.props.key}
                 mouseEnterDelay={this.props.mouseEnterDelay}
                 placement={this.props.placement}
                 overlay={
