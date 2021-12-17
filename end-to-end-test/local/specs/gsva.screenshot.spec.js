@@ -76,6 +76,7 @@ describe('gsva feature', () => {
             ).waitForDisplayed();
             $(trackOptionsElts.dropdown_selector + ' li:nth-child(7)').click();
 
+            waitForOncoprint(20000);
             var res = checkOncoprintElement('.oncoprintContainer');
             assertScreenShotMatch(res);
         });
