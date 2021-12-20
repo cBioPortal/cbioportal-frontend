@@ -153,8 +153,7 @@ export default class StudyTagsTooltip extends React.Component<
 > {
     renderTooltip() {
         return (
-            <DefaultTooltip
-                //key={this.props.key}
+            <DefaultTooltip 
                 mouseEnterDelay={this.props.mouseEnterDelay}
                 placement={this.props.placement}
                 overlay={
