@@ -189,7 +189,12 @@ export const CompactAnnotationIcon: React.FunctionComponent<{
         : props.indicator;
 
     return (
-        <svg version="1.1" width="18" height="18">
+        <svg
+            version="1.1"
+            width="18"
+            height="18"
+            data-test="oncogenic-icon-image"
+        >
             {getOncogenicShape(props.indicator)}
             {getTherapeuticSensitivityShape(
                 indicatorForLevelIcons,
