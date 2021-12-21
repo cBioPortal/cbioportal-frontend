@@ -1432,12 +1432,17 @@ export function intervalFiltersDisplayValue(
                         onUpdate({ end });
                     } else {
                         const valNum = parseFloat(val);
+                        if (valNum === end!) {
+                            // invalid value
+                            return false;
+                        }
                         if (valNum > end!) {
                             // invert range
                             onUpdate({ start: end, end: valNum });
                         } else {
                             onUpdate({ start: valNum, end });
                         }
+                        return true;
                     }
                 }}
                 numericOnly={true}
@@ -1457,6 +1462,10 @@ export function intervalFiltersDisplayValue(
                         onUpdate({ start });
                     } else {
                         const valNum = parseFloat(val);
+                        if (valNum === start!) {
+                            // invalid value
+                            return false;
+                        }
                         if (valNum < start!) {
                             // invert range
                             onUpdate({ start: valNum, end: start });
@@ -1464,6 +1473,7 @@ export function intervalFiltersDisplayValue(
                             onUpdate({ start, end: valNum });
                         }
                     }
+                    return true;
                 }}
                 numericOnly={true}
                 allowEmptyValue={true}
@@ -1475,6 +1485,7 @@ export function intervalFiltersDisplayValue(
         ) : (
             <EditableSpan
                 value={startValue}
+                className={styles.editableSpanStyles}
                 setValue={val => {
                     if (!val) {
                         // empty

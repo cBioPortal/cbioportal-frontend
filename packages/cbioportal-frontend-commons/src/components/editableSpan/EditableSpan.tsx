@@ -8,7 +8,7 @@ export interface IEditableSpanProps
         HTMLSpanElement
     > {
     value: string;
-    setValue: (val: string) => void;
+    setValue: (val: string) => boolean | void;
     maxChars?: number;
     numericOnly?: boolean;
     isPercentage?: boolean;
@@ -102,9 +102,14 @@ export default class EditableSpan extends React.Component<
             !(inputText.length === 0 && !this.props.allowEmptyValue) &&
             (inputText !== this.props.value || this.enterPressedSinceLastBlur)
         ) {
-            // if proposed value is valid, submit it
+            // if proposed value is valid, try to submit it
             this.dirty = true;
-            this.props.setValue(inputText);
+            const valid = this.props.setValue(inputText);
+            if (valid === false) {
+                // if the submit failed, revert input box to props.value
+                this.dirty = false;
+                this.setText(this.props.value);
+            }
         } else {
             // otherwise, revert input box to props.value
             this.setText(this.props.value);
