@@ -13,7 +13,6 @@ import {
     initializeAppStore,
     initializeLoadConfiguration,
     initializeServerConfiguration,
-    setConfigDefaults,
     setServerConfig,
 } from './config/config';
 
@@ -32,6 +31,28 @@ import { handleLongUrls } from 'shared/lib/handleLongUrls';
 import 'shared/polyfill/canvasToBlob';
 import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
+import request from 'superagent';
+import { IServerConfig } from 'config/IAppConfig';
+
+export interface ICBioWindow {
+    globalStores: {
+        routing: ExtendedRoutingStore;
+        appStore: AppStore;
+    };
+    routingStore: ExtendedRoutingStore;
+    $: JQueryStatic;
+    jQuery: JQueryStatic;
+
+    e2etest: boolean;
+    FRONTEND_VERSION: string;
+    FRONTEND_COMMIT: string;
+    rawServerConfig: IServerConfig;
+
+    postLoadForMskCIS: () => void;
+    isMSKCIS: boolean;
+}
+
+const browserWindow: ICBioWindow = window as any;
 
 superagentCache(superagent);
 
@@ -53,14 +74,15 @@ handleLongUrls();
 // YOU MUST RUN THESE initialize and then set the public path after
 initializeLoadConfiguration();
 // THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
+//@ts-ignore
 __webpack_public_path__ = getLoadConfig().frontendUrl;
 
-if (!window.hasOwnProperty('$')) {
-    window.$ = $;
+if (!browserWindow.hasOwnProperty('$')) {
+    browserWindow.$ = $;
 }
 
-if (!window.hasOwnProperty('jQuery')) {
-    window.jQuery = $;
+if (!browserWindow.hasOwnProperty('jQuery')) {
+    browserWindow.jQuery = $;
 }
 
 // write browser name, version to body tag
@@ -74,7 +96,7 @@ if (browser) {
 if (getBrowserWindow().navigator.webdriver) {
     $(document).ready(() => {
         $('body').addClass('e2etest');
-        window.e2etest = true;
+        browserWindow.e2etest = true;
     });
 }
 
@@ -86,7 +108,7 @@ if (getBrowserWindow().navigator.webdriver || localStorage.recordAjaxQuiet) {
 if (localStorage.getItem('timeElementVisible')) {
     const interval = setInterval(() => {
         const elementIsVisible = $(
-            localStorage.getItem('timeElementVisible')
+            localStorage.getItem('timeElementVisible')!
         ).is(':visible');
         if (elementIsVisible) {
             clearInterval(interval);
@@ -105,18 +127,20 @@ if (/cbioportal\.org/.test(getBrowserWindow().location.href)) {
 }
 
 // expose version on window
-window.FRONTEND_VERSION = VERSION;
-window.FRONTEND_COMMIT = COMMIT;
+//@ts-ignore
+browserWindow.FRONTEND_VERSION = VERSION;
+//@ts-ignore
+browserWindow.FRONTEND_COMMIT = COMMIT;
 
 // this is special function allowing MSKCC CIS to hide login UI in
 // portal header
-window.postLoadForMskCIS = function() {
+browserWindow.postLoadForMskCIS = function() {
     getLoadConfig().hide_login = true;
-    window.isMSKCIS = true;
+    browserWindow.isMSKCIS = true;
 };
 
 // this is the only supported way to disable tracking for the $3Dmol.js
-window.$3Dmol = { notrack: true };
+(browserWindow as any).$3Dmol = { notrack: true };
 
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();
@@ -135,14 +159,16 @@ const stores = {
     appStore: new AppStore(),
 };
 
-window.globalStores = stores;
+browserWindow.globalStores = stores;
 
+//@ts-ignore
 const end = superagent.Request.prototype.end;
 
 let redirecting = false;
 
+//@ts-ignore
 superagent.Request.prototype.end = function(callback) {
-    return end.call(this, (error, response) => {
+    return end.call(this, (error: any, response: any) => {
         if (redirecting) {
             return;
         }
@@ -152,6 +178,7 @@ superagent.Request.prototype.end = function(callback) {
             localStorage.setItem(storageKey, window.location.href);
 
             // build URL with a reference to storage key so that /restore route can restore it after login
+            //@ts-ignore because we're using buildCBioPortalPageUrl without a pathname, which is normally required
             const loginUrl = buildCBioPortalPageUrl({
                 query: {
                     'spring-security-redirect': buildCBioPortalPageUrl({
@@ -169,9 +196,9 @@ superagent.Request.prototype.end = function(callback) {
     });
 };
 //
-window.routingStore = routingStore;
+browserWindow.routingStore = routingStore;
 
-let render = () => {
+let render = (key?: number) => {
     if (!getBrowserWindow().navigator.webdriver) initializeTracking();
 
     const rootNode = document.getElementById('reactRoot');
@@ -179,6 +206,7 @@ let render = () => {
     ReactDOM.render(
         <Provider {...stores}>
             <Router history={syncedHistory}>
+                {/*@ts-ignore*/}
                 <Container location={routingStore.location} />
             </Router>
         </Provider>,
@@ -186,10 +214,12 @@ let render = () => {
     );
 };
 
+//@ts-ignore
 if (__DEBUG__ && module.hot) {
     const renderApp = render;
     render = () => renderApp(Math.random());
 
+    //@ts-ignore
     module.hot.accept('./routes', () => render());
 }
 
@@ -203,7 +233,7 @@ $(document).ready(async () => {
     // or fetch from config service if not
     // need to use jsonp, so use jquery
     let initialServerConfig =
-        window.rawServerConfig || (await fetchServerConfig());
+        browserWindow.rawServerConfig || (await fetchServerConfig());
 
     initializeServerConfiguration(initialServerConfig);
 
