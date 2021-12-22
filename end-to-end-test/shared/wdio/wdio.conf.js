@@ -60,7 +60,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0.1,
+    misMatchTolerance: 0,
 });
 
 function proxyComparisonMethod(target) {
@@ -70,6 +70,10 @@ function proxyComparisonMethod(target) {
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
         const resp = oldProcessScreenshot.apply(this, arguments);
+
+        resp.then(d =>
+            console.log('MISMATCH REPORT:', referencePath, d.misMatchPercentage)
+        );
 
         if (referenceExists === false) {
             console.log(`MISSING REFERENCE SCREENSHOT: ${referencePath}`);
