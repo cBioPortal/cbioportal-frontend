@@ -51,9 +51,13 @@ export interface IMutationMapperProps {
     isPutativeDriver?: (mutation: Partial<AnnotatedMutation>) => boolean;
     trackVisibility?: TrackVisibility;
     columnVisibility?: { [columnId: string]: boolean };
-    storeColumnVisibility?: (columnVisibility: {
-        [columnId: string]: boolean;
-    }) => void;
+    storeColumnVisibility?: (
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) => void;
     showPlotYMaxSlider?: boolean;
     showPlotLegendToggle?: boolean;
     showPlotDownloadControls?: boolean;

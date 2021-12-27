@@ -127,9 +127,13 @@ export interface IMutationTableProps {
     selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
-    storeColumnVisibility?: (columnVisibility: {
-        [columnId: string]: boolean;
-    }) => void;
+    storeColumnVisibility?: (
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) => void;
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;

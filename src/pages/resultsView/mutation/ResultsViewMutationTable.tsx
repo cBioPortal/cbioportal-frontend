@@ -1,6 +1,4 @@
 import * as React from 'react';
-import _ from 'lodash';
-import { observer } from 'mobx-react';
 import MobxPromise from 'mobxpromise';
 import {
     IMutationTableProps,
@@ -80,27 +78,41 @@ export default class ResultsViewMutationTable extends MutationTable<
         super(props);
         this.props.columnVisibilityProps!.customDropdown = (
             columnVisibilityControlsProps: IColumnVisibilityControlsProps
-        ) => (
-            <AddColumns
-                className={columnVisibilityControlsProps.className}
-                columnVisibility={
-                    columnVisibilityControlsProps.columnVisibility
+        ) => {
+            const resetColumnVisibility = () => {
+                if (columnVisibilityControlsProps.resetColumnVisibility) {
+                    columnVisibilityControlsProps.resetColumnVisibility();
                 }
-                onColumnToggled={columnVisibilityControlsProps.onColumnToggled}
-                resetColumnVisibility={
-                    columnVisibilityControlsProps.resetColumnVisibility
+
+                // resetting the controls is not enough,
+                // we need to also reset the column visibility stored in the user selection store
+                if (this.props.storeColumnVisibility) {
+                    this.props.storeColumnVisibility(undefined); // reset
                 }
-                showResetColumnsButton={
-                    columnVisibilityControlsProps.showResetColumnsButton
-                }
-                clinicalAttributes={
-                    this.props.mutationsTabClinicalAttributes.result!
-                }
-                clinicalAttributeIdToAvailableFrequency={
-                    this.props.clinicalAttributeIdToAvailableFrequency
-                }
-            />
-        );
+            };
+
+            return (
+                <AddColumns
+                    className={columnVisibilityControlsProps.className}
+                    columnVisibility={
+                        columnVisibilityControlsProps.columnVisibility
+                    }
+                    onColumnToggled={
+                        columnVisibilityControlsProps.onColumnToggled
+                    }
+                    resetColumnVisibility={resetColumnVisibility}
+                    showResetColumnsButton={
+                        columnVisibilityControlsProps.showResetColumnsButton
+                    }
+                    clinicalAttributes={
+                        this.props.mutationsTabClinicalAttributes.result!
+                    }
+                    clinicalAttributeIdToAvailableFrequency={
+                        this.props.clinicalAttributeIdToAvailableFrequency
+                    }
+                />
+            );
+        };
     }
 
     componentWillUpdate(nextProps: IResultsViewMutationTableProps) {
