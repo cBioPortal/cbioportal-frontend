@@ -450,6 +450,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             this.props.chartMeta
                         )}
                         updateCustomBins={this.props.store.updateCustomBins}
+                        store={this.props.store}
                     />
                 </li>
             );

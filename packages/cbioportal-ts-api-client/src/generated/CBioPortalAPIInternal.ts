@@ -118,7 +118,7 @@ export type ClinicalDataBinCountFilter = {
 export type ClinicalDataBinFilter = {
     'attributeId': string
 
-        'binMethod': "MEDIAN" | "QUARTILE"
+        'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
 
         'customBins': Array < number >
 
@@ -126,7 +126,7 @@ export type ClinicalDataBinFilter = {
 
         'end': number
 
-        'generateBins': GenerateBins
+        'generateBinsConfig': GenerateBinsConfig
 
         'start': number
 
@@ -344,7 +344,7 @@ export type GeneFilterQuery = {
         'tiersBooleanMap': {}
 
 };
-export type GenerateBins = {
+export type GenerateBinsConfig = {
     'anchorValue': number
 
         'binSize': number
@@ -371,7 +371,7 @@ export type GenericAssayDataBinCountFilter = {
 
 };
 export type GenericAssayDataBinFilter = {
-    'binMethod': "MEDIAN" | "QUARTILE"
+    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
 
         'customBins': Array < number >
 
@@ -379,7 +379,7 @@ export type GenericAssayDataBinFilter = {
 
         'end': number
 
-        'generateBins': GenerateBins
+        'generateBinsConfig': GenerateBinsConfig
 
         'profileType': string
 
@@ -515,7 +515,7 @@ export type GenomicDataBinCountFilter = {
 
 };
 export type GenomicDataBinFilter = {
-    'binMethod': "MEDIAN" | "QUARTILE"
+    'binMethod': "MEDIAN" | "QUARTILE" | "CUSTOM" | "GENERATE"
 
         'customBins': Array < number >
 
@@ -523,7 +523,7 @@ export type GenomicDataBinFilter = {
 
         'end': number
 
-        'generateBins': GenerateBins
+        'generateBinsConfig': GenerateBinsConfig
 
         'hugoGeneSymbol': string
 
