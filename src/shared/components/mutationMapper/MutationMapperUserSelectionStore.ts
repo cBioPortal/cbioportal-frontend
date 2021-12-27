@@ -7,9 +7,11 @@ import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
 export default class MutationMapperUserSelectionStore {
     @observable trackVisibility: TrackVisibility;
-    @observable columnVisibility: {
-        [columnId: string]: boolean;
-    };
+    @observable columnVisibility:
+        | {
+              [columnId: string]: boolean;
+          }
+        | undefined;
     @observable mergeOncoKbIcons: boolean;
 
     constructor() {
@@ -19,9 +21,13 @@ export default class MutationMapperUserSelectionStore {
     }
 
     @action.bound
-    public storeColumnVisibility(columnVisibility: {
-        [columnId: string]: boolean;
-    }) {
+    public storeColumnVisibility(
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) {
         if (
             JSON.stringify(this.columnVisibility) !==
             JSON.stringify(columnVisibility)
