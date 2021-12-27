@@ -3498,7 +3498,9 @@
           "type": "string",
           "enum": [
             "MEDIAN",
-            "QUARTILE"
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
           ]
         },
         "customBins": {
@@ -3513,8 +3515,8 @@
         "end": {
           "type": "number"
         },
-        "generateBins": {
-          "$ref": "#/definitions/GenerateBins"
+        "generateBinsConfig": {
+          "$ref": "#/definitions/GenerateBinsConfig"
         },
         "start": {
           "type": "number"
@@ -4020,19 +4022,17 @@
       },
       "title": "GeneFilterQuery"
     },
-    "GenerateBins": {
+    "GenerateBinsConfig": {
       "type": "object",
       "properties": {
         "anchorValue": {
-          "type": "number",
-          "format": "float"
+          "type": "number"
         },
         "binSize": {
-          "type": "number",
-          "format": "float"
+          "type": "number"
         }
       },
-      "title": "GenerateBins"
+      "title": "GenerateBinsConfig"
     },
     "GenericAssayDataBin": {
       "type": "object",
@@ -4081,7 +4081,9 @@
           "type": "string",
           "enum": [
             "MEDIAN",
-            "QUARTILE"
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
           ]
         },
         "customBins": {
@@ -4096,8 +4098,8 @@
         "end": {
           "type": "number"
         },
-        "generateBins": {
-          "$ref": "#/definitions/GenerateBins"
+        "generateBinsConfig": {
+          "$ref": "#/definitions/GenerateBinsConfig"
         },
         "profileType": {
           "type": "string"
@@ -4392,7 +4394,9 @@
           "type": "string",
           "enum": [
             "MEDIAN",
-            "QUARTILE"
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
           ]
         },
         "customBins": {
@@ -4407,8 +4411,8 @@
         "end": {
           "type": "number"
         },
-        "generateBins": {
-          "$ref": "#/definitions/GenerateBins"
+        "generateBinsConfig": {
+          "$ref": "#/definitions/GenerateBinsConfig"
         },
         "hugoGeneSymbol": {
           "type": "string"
