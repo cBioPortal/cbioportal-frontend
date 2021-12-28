@@ -30,6 +30,10 @@ const config = {
             'react-select1',
             'igv',
             'jstat',
+            'react-markdown',
+            'rehype-raw',
+            'rehype-sanitize',
+            'remark-gfm',
         ],
     },
 

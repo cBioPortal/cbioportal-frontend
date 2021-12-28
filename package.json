@@ -285,6 +285,7 @@
     "regression": "^2.0.1",
     "rehype-raw": "^6.1.0",
     "rehype-sanitize": "^5.0.0",
+    "remark-gfm": "^3.0.1",
     "render-if": "^0.1.1",
     "reselect": "^2.5.4",
     "resolve-url-loader": "^1.6.1",
