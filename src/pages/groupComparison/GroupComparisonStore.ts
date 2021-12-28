@@ -278,10 +278,10 @@ export default class GroupComparisonStore extends ComparisonStore {
     private readonly _samples = remoteData({
         await: () => [this._session],
         invoke: async () => {
-            const allStudies = _.flatMapDeep(
-                this._session.result!.groups,
-                groupData => groupData.studies.map(s => s.id)
-            );
+            const allStudies = _(this._session.result!.groups)
+                .flatMapDeep(groupData => groupData.studies.map(s => s.id))
+                .uniq()
+                .value();
 
             // fetch all samples - faster backend processing time
             const allSamples = await client.fetchSamplesUsingPOST({
@@ -304,6 +304,9 @@ export default class GroupComparisonStore extends ComparisonStore {
                     }
                 }
             }
+
+            debugger;
+
             return allSamples.filter(sample => {
                 return sampleSet.has({
                     studyId: sample.studyId,
