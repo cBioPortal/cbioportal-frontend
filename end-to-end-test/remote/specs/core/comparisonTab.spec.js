@@ -20,112 +20,134 @@ describe('results view comparison tab venn diagram tests', function() {
             });
         });
 
-        it('create group button disabled as default', function() {
-            assert.equal($(SampleCreateGroupButton).isEnabled(), false);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), false);
+        it('create group button disabled as default', async function() {
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), false);
         });
 
-        it('select from sample venn diagram', function() {
+        it('select from sample venn diagram', async function() {
             jsApiClick('rect[data-test="sample0VennRegion"]');
             browser.pause(100);
-            assert.equal($(SampleCreateGroupButton).isEnabled(), true);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), true);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), false);
         });
 
-        it('click sample venn diagram create group button', function() {
-            $(SampleCreateGroupButton).click();
+        it('click sample venn diagram create group button', async function() {
+            await $(SampleCreateGroupButton).click();
             $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
+                await $(
+                    '[data-test="sampleGroupNameInputField"]'
+                ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('sample venn diagram: group name exists, should disable submit button', function() {
+        it('sample venn diagram: group name exists, should disable submit button', async function() {
             $('[data-test="sampleGroupNameInputField"]').setValue(
                 'Altered group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="sampleDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
 
-            $('[data-test="sampleGroupNameInputField"]').setValue('KRAS');
+            await $('[data-test="sampleGroupNameInputField"]').setValue('KRAS');
             browser.pause(100);
             $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="sampleDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('sample venn diagram: new group name, should enable submit button', function() {
+        it('sample venn diagram: new group name, should enable submit button', async function() {
             $('[data-test="sampleGroupNameInputField"]').setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 true
             );
         });
 
-        it('select from patient venn diagram', function() {
+        it('select from patient venn diagram', async function() {
             // unselect sample venn diagram first
             jsApiClick('rect[data-test="sample0VennRegion"]');
             jsApiClick('rect[data-test="patient0VennRegion"]');
-            browser.pause(100);
-            assert.equal($(SampleCreateGroupButton).isEnabled(), false);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), true);
+            await browser.pause(100);
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), true);
         });
 
-        it('click patient venn diagram create group button', function() {
-            $(PatientCreateGroupButton).click();
+        it('click patient venn diagram create group button', async function() {
+            await $(PatientCreateGroupButton).click();
             $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameInputField"]').isDisplayed(),
+                await $(
+                    '[data-test="patientGroupNameInputField"]'
+                ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('patient venn diagram: group name exists, should disable submit button', function() {
+        it('patient venn diagram: group name exists, should disable submit button', async function() {
             $('[data-test="patientGroupNameInputField"]').setValue(
                 'Unaltered group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             $('[data-test="patientDuplicateGroupNameMessage"]').waitForExist({
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="patientDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
 
@@ -135,27 +157,33 @@ describe('results view comparison tab venn diagram tests', function() {
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="patientDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('patient venn diagram: new group name, should enable submit button', function() {
+        it('patient venn diagram: new group name, should enable submit button', async function() {
             $('[data-test="patientGroupNameInputField"]').setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 true
             );
         });
     });
 });
 
-describe('results view comparison tab upset diagram tests', function() {
+describe('results view comparison tab upset diagram tests', async function() {
     describe('create new group tests', function() {
         before(function() {
             goToUrlAndSetLocalStorage(
@@ -166,105 +194,125 @@ describe('results view comparison tab upset diagram tests', function() {
             });
         });
 
-        it('create group button disabled as default', function() {
-            assert.equal($(SampleCreateGroupButton).isEnabled(), false);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), false);
+        it('create group button disabled as default', async function() {
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), false);
         });
 
-        it('select from sample upset diagram', function() {
+        it('select from sample upset diagram', async function() {
             jsApiClick('.sample_Altered_group_KRAS_bar');
             browser.pause(100);
-            assert.equal($(SampleCreateGroupButton).isEnabled(), true);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), true);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), false);
         });
 
-        it('click sample upset diagram create group button', function() {
-            $(SampleCreateGroupButton).click();
+        it('click sample upset diagram create group button', async function() {
+            await $(SampleCreateGroupButton).click();
             $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameInputField"]').isDisplayed(),
+                await $(
+                    '[data-test="sampleGroupNameInputField"]'
+                ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('sample upset diagram: group name exists, should disable submit button', function() {
+        it('sample upset diagram: group name exists, should disable submit button', async function() {
             $('[data-test="sampleGroupNameInputField"]').setValue(
                 'Altered group'
             );
-            browser.pause(100);
+            await browser.pause(100);
             $('[data-test="sampleDuplicateGroupNameMessage"]').waitForExist({
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="sampleDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="sampleDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('sample upset diagram: new group name, should enable submit button', function() {
+        it('sample upset diagram: new group name, should enable submit button', async function() {
             $('[data-test="sampleGroupNameInputField"]').setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="sampleGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="sampleGroupNameSubmitButton"]'
+                ).isEnabled(),
                 true
             );
         });
 
-        it('select from patient upset diagram', function() {
+        it('select from patient upset diagram', async function() {
             // unselect sample venn diagram first
             jsApiClick('.sample_Altered_group_KRAS_bar');
             jsApiClick('.patient_Unaltered_group_bar');
-            browser.pause(100);
-            assert.equal($(SampleCreateGroupButton).isEnabled(), false);
-            assert.equal($(PatientCreateGroupButton).isEnabled(), true);
+            await browser.pause(100);
+            assert.equal(await $(SampleCreateGroupButton).isEnabled(), false);
+            assert.equal(await $(PatientCreateGroupButton).isEnabled(), true);
         });
 
-        it('click patient upset diagram create group button', function() {
-            $(PatientCreateGroupButton).click();
+        it('click patient upset diagram create group button', async function() {
+            await $(PatientCreateGroupButton).click();
             $('div.rc-tooltip-inner').waitForExist({ timeout: 20000 });
             browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameInputField"]').isDisplayed(),
+                await $(
+                    '[data-test="patientGroupNameInputField"]'
+                ).isDisplayed(),
                 true,
                 'group name input exists'
             );
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('patient upset diagram: group name exists, should disable submit button', function() {
+        it('patient upset diagram: group name exists, should disable submit button', async function() {
             $('[data-test="patientGroupNameInputField"]').setValue('BRAF');
-            browser.pause(100);
+            await browser.pause(100);
             $('[data-test="patientDuplicateGroupNameMessage"]').waitForExist({
                 timeout: 20000,
             });
             assert.equal(
-                $('[data-test="patientDuplicateGroupNameMessage"]').getText(),
+                await $(
+                    '[data-test="patientDuplicateGroupNameMessage"]'
+                ).getText(),
                 'Another group already has this name.'
             );
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 false
             );
         });
 
-        it('patient upset diagram: new group name, should enable submit button', function() {
+        it('patient upset diagram: new group name, should enable submit button', async function() {
             $('[data-test="patientGroupNameInputField"]').setValue('new group');
-            browser.pause(100);
+            await browser.pause(100);
             assert.equal(
-                $('[data-test="patientGroupNameSubmitButton"]').isEnabled(),
+                await $(
+                    '[data-test="patientGroupNameSubmitButton"]'
+                ).isEnabled(),
                 true
             );
         });
