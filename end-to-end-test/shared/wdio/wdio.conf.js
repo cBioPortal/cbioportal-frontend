@@ -9,7 +9,7 @@ var getScreenshotName = require('./getScreenshotName');
 
 const TEST_TYPE = process.env.TEST_TYPE || 'remote';
 
-const CustomReporter = require('./customReporter.v6');
+//const CustomReporter = require('./customReporter.v6');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
@@ -319,17 +319,6 @@ exports.config = {
                 outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
                 outputFileFormat: function(opts) {
                     return `results-${opts.cid}.json`;
-                },
-            },
-        ],
-        [
-            CustomReporter,
-            {
-                testHome: TEST_TYPE,
-                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
-                    // optional
-                    return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
                 },
             },
         ],
