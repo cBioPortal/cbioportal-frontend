@@ -145,21 +145,21 @@ function setCheckboxChecked(checked, selector, failure_message) {
     );
 }
 
-function setDropdownOpen(
+async function setDropdownOpen(
     open,
     button_selector_or_elt,
     dropdown_selector_or_elt,
     failure_message
 ) {
-    browser.waitUntil(
-        () => {
+    await browser.waitUntil(
+        async () => {
             const dropdown_elt =
                 typeof dropdown_selector_or_elt === 'string'
                     ? $(dropdown_selector_or_elt)
                     : dropdown_selector_or_elt;
             // check if exists first because sometimes we get errors with isVisible if it doesn't exist
-            const isOpen = dropdown_elt.isExisting()
-                ? dropdown_elt.isDisplayedInViewport()
+            const isOpen = await dropdown_elt.isExisting()
+                ? await dropdown_elt.isDisplayedInViewport()
                 : false;
             if (open === isOpen) {
                 return true;
@@ -168,8 +168,8 @@ function setDropdownOpen(
                     typeof button_selector_or_elt === 'string'
                         ? $(button_selector_or_elt)
                         : button_selector_or_elt;
-                button_elt.waitForExist();
-                button_elt.click();
+                await button_elt.waitForExist();
+                await button_elt.click();
                 return false;
             }
         },
@@ -433,8 +433,8 @@ function jsApiHover(selector) {
     }, selector);
 }
 
-function jsApiClick(selector) {
-    browser.execute(function(_selector) {
+async function jsApiClick(selector) {
+    await browser.execute(function(_selector) {
         $(_selector)[0].dispatchEvent(
             new MouseEvent('click', { bubbles: true })
         );
@@ -445,23 +445,23 @@ function executeInBrowser(callback) {
     return browser.execute(callback);
 }
 
-function checkElementWithTemporaryClass(
+async function checkElementWithTemporaryClass(
     selectorForChecking,
     selectorForTemporaryClass,
     temporaryClass,
     pauseTime,
     options
 ) {
-    browser.execute(
+    await browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).addClass(temporaryClass);
         },
         selectorForTemporaryClass,
         temporaryClass
     );
-    browser.pause(pauseTime);
-    var res = browser.checkElement(selectorForChecking, '', options);
-    browser.execute(
+    await browser.pause(pauseTime);
+    var res = await browser.checkElement(selectorForChecking, '', options);
+    await browser.execute(
         function(selectorForTemporaryClass, temporaryClass) {
             $(selectorForTemporaryClass).removeClass(temporaryClass);
         },
@@ -501,7 +501,7 @@ function checkElementWithElementHidden(selector, selectorToHide, options) {
         ).appendTo('head');
     }, selectorToHide);
 
-    var res = browser.checkElement(selector, '', options);
+    var res = await browser.checkElement(selector, '', options);
 
     browser.execute(selectorToHide => {
         $('#tempHiddenStyles').remove();

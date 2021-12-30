@@ -58,7 +58,7 @@ describe('Results Page', function() {
                 });
             });
 
-            it("defaults to grouping by studyId when there's more than one study", function() {
+            it("defaults to grouping by studyId when there's more than one study", async function() {
                 var el = $('[data-value="studyId"]');
                 assert.equal(el.isSelected(), true);
             });
@@ -73,7 +73,7 @@ describe('Results Page', function() {
                 });
             });
 
-            it("defaults to cancerType grouping when there's more than one cancer type in query", function() {
+            it("defaults to cancerType grouping when there's more than one cancer type in query", async function() {
                 var el = $('[data-value="cancerType"]');
                 assert.equal(el.isSelected(), true);
             });
@@ -88,10 +88,10 @@ describe('Results Page', function() {
                 });
             });
 
-            it('shows an alert message on tabs for missing genes', function() {
+            it('shows an alert message on tabs for missing genes', async function() {
                 $('=CDKN2A').click();
                 $('body').moveTo({ xOffset: 0, yOffset: 0 });
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -109,10 +109,10 @@ describe('Results Page', function() {
                 });
             });
 
-            it('group by detailed type', function() {
+            it('group by detailed type', async function() {
                 var el = $('[data-value="cancerTypeDetailed"]');
                 el.click();
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -120,9 +120,9 @@ describe('Results Page', function() {
                 assertScreenShotMatch(res);
             });
 
-            it('handles change to absolute value yaxis', function() {
+            it('handles change to absolute value yaxis', async function() {
                 $('[data-test="cancerSummaryYAxisSelect"]').selectByIndex(1);
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -130,9 +130,9 @@ describe('Results Page', function() {
                 assertScreenShotMatch(res);
             });
 
-            it('handles change to sort of xaxis', function() {
+            it('handles change to sort of xaxis', async function() {
                 $('[data-test="cancerSummaryXAxisSelect"]').selectByIndex(1);
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -140,10 +140,10 @@ describe('Results Page', function() {
                 assertScreenShotMatch(res);
             });
 
-            it('handles change to alteration threshold', function() {
+            it('handles change to alteration threshold', async function() {
                 $("[data-test='alterationThresholdInput']").setValue(300);
                 browser.keys('Enter');
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -153,10 +153,10 @@ describe('Results Page', function() {
                 browser.keys('Enter');
             });
 
-            it('handles change to sample total threshold', function() {
+            it('handles change to sample total threshold', async function() {
                 $("[data-test='sampleTotalThresholdInput']").setValue(312);
                 browser.keys('Enter');
-                var res = browser.checkElement(
+                var res = await browser.checkElement(
                     '[data-test="cancerTypeSummaryWrapper"]',
                     '',
                     { hide: ['.qtip'] }
@@ -261,7 +261,7 @@ describe('Results Page', function() {
             waitForOncoprint(10000);
         });
 
-        it('should not be present in oncoprint tab with simple query', function() {
+        it('should not be present in oncoprint tab with simple query', async function() {
             assert(
                 !$(
                     `${yesBannerSelector}.oncoprint-oql-status-banner`
@@ -273,7 +273,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not be present in cancer types summary with simple query', function() {
+        it('should not be present in cancer types summary with simple query', async function() {
             $('.tabAnchor_cancerTypesSummary').click();
             browser.pause(500);
             assert(
@@ -287,7 +287,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not be present in mutual exclusivity tab with simple query', function() {
+        it('should not be present in mutual exclusivity tab with simple query', async function() {
             $('.tabAnchor_mutualExclusivity').click();
             browser.pause(500);
             assert(
@@ -297,7 +297,7 @@ describe('Results Page', function() {
                 !$(`${noBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
         });
-        it('should not be present in plots tab with simple query', function() {
+        it('should not be present in plots tab with simple query', async function() {
             $('.tabAnchor_plots').click();
             browser.pause(500);
             assert(
@@ -307,7 +307,7 @@ describe('Results Page', function() {
                 !$(`${noBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
         });
-        it('should not be present in mutations tab with simple query', function() {
+        it('should not be present in mutations tab with simple query', async function() {
             $('.tabAnchor_mutations').click();
             browser.pause(500);
             assert(
@@ -326,7 +326,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not be present in coexpression tab with simple query', function() {
+        it('should not be present in coexpression tab with simple query', async function() {
             $('.tabAnchor_coexpression').click();
             browser.pause(500);
             assert(
@@ -336,7 +336,7 @@ describe('Results Page', function() {
                 !$(`${noBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
         });
-        it('should not be present in alteration enrichments tab with simple query', function() {
+        it('should not be present in alteration enrichments tab with simple query', async function() {
             $('.tabAnchor_comparison').click();
             $(
                 '.comparisonTabSubTabs .tabAnchor_alterations'
@@ -354,7 +354,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not be present in survival tab with simple query', function() {
+        it('should not be present in survival tab with simple query', async function() {
             $('.comparisonTabSubTabs .tabAnchor_survival').click();
             browser.pause(500);
             assert(
@@ -368,7 +368,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should not be present in download tab with simple query', function() {
+        it('should not be present in download tab with simple query', async function() {
             $('.tabAnchor_download').click();
             browser.pause(500);
             assert(
@@ -383,7 +383,7 @@ describe('Results Page', function() {
             );
         });
 
-        it('should be present in oncoprint tab with explicit query', function() {
+        it('should be present in oncoprint tab with explicit query', async function() {
             goToUrlAndSetLocalStorage(explicitOqlQueryUrl);
             waitForOncoprint(10000);
             assert(
@@ -397,7 +397,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should be present in cancer types summary with explicit query', function() {
+        it('should be present in cancer types summary with explicit query', async function() {
             $('.tabAnchor_cancerTypesSummary').click();
             $(
                 `${yesBannerSelector}.cancer-types-summary-oql-status-banner`
@@ -413,7 +413,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should be present in mutual exclusivity tab with explicit query', function() {
+        it('should be present in mutual exclusivity tab with explicit query', async function() {
             $('.tabAnchor_mutualExclusivity').click();
             $(`${yesBannerSelector}.mutex-oql-status-banner`).waitForDisplayed({
                 timeout: 10000,
@@ -425,7 +425,7 @@ describe('Results Page', function() {
                 !$(`${noBannerSelector}.mutex-oql-status-banner`).isDisplayed()
             );
         });
-        it('should be present in plots tab with explicit query', function() {
+        it('should be present in plots tab with explicit query', async function() {
             $('.tabAnchor_plots').click();
             $(`${noBannerSelector}.plots-oql-status-banner`).waitForDisplayed({
                 timeout: 10000,
@@ -437,7 +437,7 @@ describe('Results Page', function() {
                 $(`${noBannerSelector}.plots-oql-status-banner`).isDisplayed()
             );
         });
-        it('should be present in alterations tab with explicit query', function() {
+        it('should be present in alterations tab with explicit query', async function() {
             $('.tabAnchor_comparison').click();
             $('.tabAnchor_alterations').waitForDisplayed();
             $('.tabAnchor_alterations').click();
@@ -461,7 +461,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should be present in coexpression tab with explicit query', function() {
+        it('should be present in coexpression tab with explicit query', async function() {
             $('.tabAnchor_coexpression').click();
             $(`${noBannerSelector}.coexp-oql-status-banner`).waitForDisplayed({
                 timeout: 10000,
@@ -473,7 +473,7 @@ describe('Results Page', function() {
                 $(`${noBannerSelector}.coexp-oql-status-banner`).isDisplayed()
             );
         });
-        it('should be present in alteration enrichments tab with explicit query', function() {
+        it('should be present in alteration enrichments tab with explicit query', async function() {
             $('.tabAnchor_comparison').click();
             $(
                 '.comparisonTabSubTabs .tabAnchor_alterations'
@@ -493,7 +493,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should be present in survival tab with explicit query', function() {
+        it('should be present in survival tab with explicit query', async function() {
             $('.comparisonTabSubTabs .tabAnchor_survival').click();
             $(
                 `${yesBannerSelector}.comparison-oql-status-banner`
@@ -509,7 +509,7 @@ describe('Results Page', function() {
                 ).isDisplayed()
             );
         });
-        it('should be present in download tab with explicit query', function() {
+        it('should be present in download tab with explicit query', async function() {
             $('.tabAnchor_download').click();
             $(
                 `${yesBannerSelector}.download-oql-status-banner`

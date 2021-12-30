@@ -65,7 +65,7 @@ describe('study laml_tcga tests', () => {
         waitForNetworkQuiet();
         // screenshot seems to occasionally fail because of tooltip showing up
         // see "need-fixing" tests
-        // const res = browser.checkElement('#mainColumn');
+        // const res = await browser.checkElement('#mainColumn');
         // assertScreenShotMatch(res);
     });
     it('study view laml_tcga clinical data clicked', () => {
@@ -74,7 +74,7 @@ describe('study laml_tcga tests', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         waitForNetworkQuiet();
-        const res = browser.checkElement('#mainColumn');
+        const res = await browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
     });
 
@@ -116,7 +116,7 @@ describe('study laml_tcga tests', () => {
         ).waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        const res = browser.checkElement(
+        const res = await browser.checkElement(
             "[data-test='chart-container-OTHER_SAMPLE_ID']"
         );
         assertScreenShotMatch(res);
@@ -241,7 +241,7 @@ describe('study laml_tcga tests', () => {
                 );
 
                 // make sure the chart is filtered
-                const res = browser.checkElement('.userSelections');
+                const res = await browser.checkElement('.userSelections');
                 assertScreenShotMatch(res);
             });
             after(() => {
@@ -284,13 +284,13 @@ describe('check the filters are working properly', () => {
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
-    it('filter study from url', function() {
+    it('filter study from url', async function() {
         waitForNetworkQuiet(60000);
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
-    it('removing filters are working properly', function() {
+    it('removing filters are working properly', async function() {
         // Remove pie chart filter
         $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
@@ -342,13 +342,13 @@ describe('check the fusion filter is working properly', () => {
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
-    it('fusion filter filter study from url', function() {
+    it('fusion filter filter study from url', async function() {
         waitForStudyViewSelectedInfo();
         const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
-    it('fusion filter removing filters are working properly', function() {
+    it('fusion filter removing filters are working properly', async function() {
         // Remove cna genes filter
         $("[data-test='pill-tag-delete']").click();
         waitForStudyViewSelectedInfo();
@@ -770,7 +770,7 @@ describe('submit genes to results view query', () => {
 });
 
 describe('study view treatments table', () => {
-    it('loads multiple studies with treatments tables', function() {
+    it('loads multiple studies with treatments tables', async function() {
         var url = `${CBIOPORTAL_URL}/study/summary?id=gbm_columbia_2019%2Clgg_ucsf_2014`;
         goToUrlAndSetLocalStorage(url);
         $('[data-test="PATIENT_TREATMENTS-table"]').waitForExist();
@@ -780,7 +780,7 @@ describe('study view treatments table', () => {
         assertScreenShotMatch(res);
     });
 
-    it('can filter a study by sample treatments', function() {
+    it('can filter a study by sample treatments', async function() {
         const sampleTreatmentsFirstCheckbox =
             '[data-test="SAMPLE_TREATMENTS-table"] .ReactVirtualized__Table__row:nth-child(1) input';
         const sampleTreatmentsSelectSamplesButton =
@@ -798,7 +798,7 @@ describe('study view treatments table', () => {
         assertScreenShotMatch(res);
     });
 
-    it('can filter a study by patient treatments', function() {
+    it('can filter a study by patient treatments', async function() {
         var url = `${CBIOPORTAL_URL}/study/summary?id=lgg_ucsf_2014`;
         goToUrlAndSetLocalStorage(url);
 

@@ -7,7 +7,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 const loggedInButton = '#rightHeaderContent .identity';
 
 describe('hide logged-in button feature', function() {
-    it('does not show logged-in button when portal property set', function() {
+    it('does not show logged-in button when portal property set', async function() {
         goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
             skin_hide_logout_button: true,
         });

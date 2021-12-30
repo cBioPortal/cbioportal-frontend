@@ -10,7 +10,7 @@ describe('patient page', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
-    it('should show all samples button for single sample view of multi sample patient', function() {
+    it('should show all samples button for single sample view of multi sample patient', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&tab=summaryTab&sampleId=P04_Pri`
         );

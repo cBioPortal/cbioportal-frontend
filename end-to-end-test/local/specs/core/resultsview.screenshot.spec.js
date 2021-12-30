@@ -15,7 +15,7 @@ describe('results view mutation table', function() {
         $(
             'table[class="simple-table table table-striped table-border-top"]'
         ).waitForExist();
-        res = browser.checkElement(
+        res = await browser.checkElement(
             'table[class="simple-table table table-striped table-border-top"]'
         );
         assertScreenShotMatch(res);
@@ -32,7 +32,7 @@ describe('results view mutation table', function() {
             $('th').css({ color: 'red' });
         });
 
-        res = browser.checkElement(
+        res = await browser.checkElement(
             'table[class="simple-table table table-striped table-border-top"]'
         );
         assertScreenShotMatch(res);
@@ -44,7 +44,7 @@ describe('results view mutation table', function() {
         $(
             'table[class="simple-table table table-striped table-border-top"]'
         ).waitForExist();
-        res = browser.checkElement(
+        res = await browser.checkElement(
             'table[class="simple-table table table-striped table-border-top"]'
         );
         assertScreenShotMatch(res);

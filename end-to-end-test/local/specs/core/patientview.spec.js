@@ -431,7 +431,7 @@ describe('patient view page', function() {
     });
 
     describe('allele frequency', () => {
-        it('should show number under allele frequency column for multiple samples patient in one sample view', function() {
+        it('should show number under allele frequency column for multiple samples patient in one sample view', async function() {
             goToUrlAndSetLocalStorage(ALLELE_FREQ_SAMPLE_VIEW_URL, true);
             waitForPatientView();
 
@@ -445,7 +445,7 @@ describe('patient view page', function() {
             );
         });
 
-        it('should show bars(svg) under allele frequency column for multiple samples patient in patient view', function() {
+        it('should show bars(svg) under allele frequency column for multiple samples patient in patient view', async function() {
             goToUrlAndSetLocalStorage(ALLELE_FREQ_PATIENT_VIEW_URL, true);
             waitForPatientView();
             assert.strictEqual(

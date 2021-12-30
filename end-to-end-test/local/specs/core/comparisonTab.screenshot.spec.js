@@ -22,9 +22,9 @@ describe('results view comparison tab screenshot tests', function() {
             });
         });
 
-        it('results view comparison tab alteration enrichments several groups', function() {
+        it('results view comparison tab alteration enrichments several groups', async function() {
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -34,7 +34,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments patient mode', function() {
+        it('results view comparison tab alteration enrichments patient mode', async function() {
             browser.execute(function() {
                 comparisonTab.store.setUsePatientLevelEnrichments(true);
             });
@@ -42,7 +42,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 20000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -52,7 +52,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments 2 genes with highest frequency in any group', function() {
+        it('results view comparison tab alteration enrichments 2 genes with highest frequency in any group', async function() {
             browser.execute(function() {
                 comparisonTab.store.setUsePatientLevelEnrichments(false);
             });
@@ -66,7 +66,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -76,7 +76,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments gene box highest average frequency', function() {
+        it('results view comparison tab alteration enrichments gene box highest average frequency', async function() {
             openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
@@ -92,7 +92,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -102,7 +102,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments gene box most significant pValues', function() {
+        it('results view comparison tab alteration enrichments gene box most significant pValues', async function() {
             openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
@@ -118,7 +118,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -128,7 +128,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments gene box user-defined genes', function() {
+        it('results view comparison tab alteration enrichments gene box user-defined genes', async function() {
             openGeneSelectorMenu();
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             waitForNetworkQuiet();
@@ -140,7 +140,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 30000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -150,7 +150,7 @@ describe('results view comparison tab screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('results view comparison tab alteration enrichments two groups', function() {
+        it('results view comparison tab alteration enrichments two groups', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_test_generic_assay_mutations&cancer_study_list=lgg_ucsf_2014_test_generic_assay&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=lgg_ucsf_2014_test_generic_assay_sequenced&gene_list=TOPAZ1%2520ANK1%2520ACAN%2520INTS4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&comparison_subtab=alterations&comparison_selectedGroups=%5B"ACAN"%2C"INTS4"%5D`,
                 true
@@ -159,7 +159,7 @@ describe('results view comparison tab screenshot tests', function() {
                 timeout: 20000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {

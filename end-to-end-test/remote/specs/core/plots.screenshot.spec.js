@@ -12,13 +12,13 @@ var waitForAndCheckPlotsTab = require('../../../shared/specUtils')
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('plots tab screenshot tests', function() {
-    it('plots tab mutation type view', function() {
+    it('plots tab mutation type view', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2&Z_SCORE_THRESHOLD=2&cancer_study_id=brca_tcga&case_set_id=brca_tcga_cnaseq&data_priority=0&gene_list=TP53%20MDM2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&plots_vert_selection=%7B"selectedDataSourceOption"%3A"rna_seq_v2_mrna_median_Zscores"%7D&tab_index=tab_visualize`
         );
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular same gene', function() {
+    it('plots tab molecular vs molecular same gene', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?Action=Submit&RPPA_SCORE_THRESHOLD=2&Z_SCORE_THRESHOLD=2&cancer_study_id=brca_tcga&case_set_id=brca_tcga_cnaseq&data_priority=0&gene_list=TP53%20MDM2&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&plots_horz_selection=%7B"dataType"%3A"MRNA_EXPRESSION"%2C"selectedDataSourceOption"%3A"mrna"%7D&plots_vert_selection=%7B"selectedDataSourceOption"%3A"rna_seq_v2_mrna_median_Zscores"%7D&tab_index=tab_visualize`
         );
@@ -29,7 +29,7 @@ describe('plots tab screenshot tests', function() {
         $('input[data-test="ViewCopyNumber"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular same gene changed gene', function() {
+    it('plots tab molecular vs molecular same gene changed gene', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.test__selectGeneOption(false, 4193);
         });
@@ -39,18 +39,18 @@ describe('plots tab screenshot tests', function() {
         $('input[data-test="ShowRegressionline"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number view', function() {
+    it('plots tab copy number view', async function() {
         $('input[data-test="ShowRegressionline"]').click();
         $('input[data-test="ViewCopyNumber"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular different genes', function() {
+    it('plots tab molecular vs molecular different genes', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.test__selectGeneOption(true, 7157);
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular different genes different profiles', function() {
+    it('plots tab molecular vs molecular different genes different profiles', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
                 value: 'rna_seq_v2_mrna',
@@ -62,19 +62,19 @@ describe('plots tab screenshot tests', function() {
         $('input[data-test="ShowRegressionline"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs molecular swapped axes', function() {
+    it('plots tab molecular vs molecular swapped axes', async function() {
         $('input[data-test="ShowRegressionline"]').click();
         $('[data-test="swapHorzVertButton"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab search case id', function() {
+    it('plots tab search case id', async function() {
         $('input[data-test="ViewMutationType"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchCase('TCGA-E2 TCGA-A8-A08G');
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab search case id and mutation', function() {
+    it('plots tab search case id and mutation', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchMutation(
                 'L321 V2L apsdoifjapsoid'
@@ -82,17 +82,17 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab search mutation', function() {
+    it('plots tab search mutation', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchCase('');
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab log scale off', function() {
+    it('plots tab log scale off', async function() {
         $('input[data-test="VerticalLogCheckbox"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs molecular', function() {
+    it('plots tab clinical vs molecular', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({
                 value: 'clinical_attribute',
@@ -105,7 +105,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs molecular boxplot', function() {
+    it('plots tab clinical vs molecular boxplot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
                 value: 'AJCC_PATHOLOGIC_TUMOR_STAGE',
@@ -113,14 +113,14 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab molecular vs clinical boxplot, mutation search off', function() {
+    it('plots tab molecular vs clinical boxplot, mutation search off', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchMutation('');
         });
         $('[data-test="swapHorzVertButton"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical boxplot', function() {
+    it('plots tab mutations vs clinical boxplot', async function() {
         $('[data-test="swapHorzVertButton"]').click();
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
@@ -135,7 +135,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations driver mode vs clinical boxplot', function() {
+    it('plots tab mutations driver mode vs clinical boxplot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({
                 value: 'DriverVsVUS',
@@ -143,7 +143,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wild type mode vs clinical boxplot', function() {
+    it('plots tab mutations wild type mode vs clinical boxplot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({
                 value: 'MutatedVsWildType',
@@ -151,7 +151,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical boxplot', function() {
+    it('plots tab clinical vs clinical boxplot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onVerticalAxisDataTypeSelect({
                 value: 'clinical_attribute',
@@ -174,7 +174,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab search case id in clinical vs clinical boxplot', function() {
+    it('plots tab search case id in clinical vs clinical boxplot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.executeSearchCase(
                 'kjpoij12     TCGA-B6 asdfas TCGA-A7-A13'
@@ -182,7 +182,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical stacked bar plot', function() {
+    it('plots tab clinical vs clinical stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({
                 value: 'AJCC_TUMOR_PATHOLOGIC_PT',
@@ -191,11 +191,11 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
     //commenting this for now because of https://github.com/zinserjan/wdio-screenshot/issues/87
-    /* it("plots tab clinical vs clinical grouped bar plot", function() {
+    /* it("plots tab clinical vs clinical grouped bar plot", async function() {
         browser.execute(function() { resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({ value: "Bar" }); });
         waitForAndCheckPlotsTab();
     }); */
-    it('plots tab clinical vs clinical percentage stacked bar plot', function() {
+    it('plots tab clinical vs clinical percentage stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
@@ -203,7 +203,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical horizontal stacked bar plot', function() {
+    it('plots tab clinical vs clinical horizontal stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'StackedBar',
@@ -213,7 +213,7 @@ describe('plots tab screenshot tests', function() {
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical horizontal grouped bar plot', function() {
+    it('plots tab clinical vs clinical horizontal grouped bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Bar',
@@ -221,7 +221,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical horizontal percentage stacked bar plot', function() {
+    it('plots tab clinical vs clinical horizontal percentage stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
@@ -229,7 +229,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab clinical vs clinical table plot', function() {
+    it('plots tab clinical vs clinical table plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         browser.execute(function() {
@@ -239,7 +239,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number vs clinical stacked bar plot', function() {
+    it('plots tab copy number vs clinical stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'StackedBar',
@@ -252,12 +252,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number vs clinical horizontal stacked bar plot', function() {
+    it('plots tab copy number vs clinical horizontal stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number vs clinical horizontal percentage stacked bar plot', function() {
+    it('plots tab copy number vs clinical horizontal percentage stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
@@ -265,12 +265,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number vs clinical percentage stacked bar plot', function() {
+    it('plots tab copy number vs clinical percentage stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab copy number vs clinical table plot', function() {
+    it('plots tab copy number vs clinical table plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Table',
@@ -278,7 +278,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wildtype mode vs clinical stacked bar plot', function() {
+    it('plots tab mutations wildtype mode vs clinical stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'StackedBar',
@@ -296,12 +296,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wildtype mode vs clinical horizontal stacked bar plot', function() {
+    it('plots tab mutations wildtype mode vs clinical horizontal stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wildtype mode vs clinical horizontal percentage stacked bar plot', function() {
+    it('plots tab mutations wildtype mode vs clinical horizontal percentage stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
@@ -309,12 +309,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wildtype mode vs clinical percentage stacked bar plot', function() {
+    it('plots tab mutations wildtype mode vs clinical percentage stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations wildtype mode vs clinical table plot', function() {
+    it('plots tab mutations wildtype mode vs clinical table plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Table',
@@ -322,7 +322,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical stacked bar plot', function() {
+    it('plots tab mutations vs clinical stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'StackedBar',
@@ -335,12 +335,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical horizontal stacked bar plot', function() {
+    it('plots tab mutations vs clinical horizontal stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical horizontal percentage stacked bar plot', function() {
+    it('plots tab mutations vs clinical horizontal percentage stacked bar plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'PercentageStackedBar',
@@ -348,12 +348,12 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical percentage stacked bar plot', function() {
+    it('plots tab mutations vs clinical percentage stacked bar plot', async function() {
         $('input[data-test="horizontalBars"]').waitForExist();
         $('input[data-test="horizontalBars"]').click();
         waitForAndCheckPlotsTab();
     });
-    it('plots tab mutations vs clinical table plot', function() {
+    it('plots tab mutations vs clinical table plot', async function() {
         browser.execute(function() {
             resultsViewPlotsTab.onDiscreteVsDiscretePlotTypeSelect({
                 value: 'Table',
@@ -361,7 +361,7 @@ describe('plots tab screenshot tests', function() {
         });
         waitForAndCheckPlotsTab();
     });
-    it('plots tab one box clinical vs clinical boxplot', function() {
+    it('plots tab one box clinical vs clinical boxplot', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT`
         );
@@ -381,7 +381,7 @@ describe('plots tab screenshot tests', function() {
         waitForAndCheckPlotsTab();
     });
 
-    it('plots tab mutations profile with duplicates', function() {
+    it('plots tab mutations profile with duplicates', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/plots?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`
         );
@@ -481,7 +481,7 @@ describe('plots tab multiple studies screenshot tests', function() {
             timeout: 20000,
         });
     });
-    it('plots tab multiple studies with data availability alert', function() {
+    it('plots tab multiple studies with data availability alert', async function() {
         waitForAndCheckPlotsTab();
     });
 });

@@ -21,12 +21,12 @@ describe('comparison alterations tab', function() {
         openAlterationTypeSelectionMenu();
     });
 
-    it('shows basic counts', function() {
+    it('shows basic counts', async function() {
         var alteredCount = selectAlteredCount('ABLIM1');
         assert.strictEqual(selectAlteredCount('ABLIM1'), '1 (8.33%)');
     });
 
-    it('shows banner when no results retrieved', function() {
+    it('shows banner when no results retrieved', async function() {
         clickAlterationTypeCheckBox('Mutations');
         clickAlterationTypeCheckBox('Structural Variants / Fusions');
         clickAlterationTypeCheckBox('Copy Number Alterations');
@@ -35,7 +35,7 @@ describe('comparison alterations tab', function() {
         assert($('div=No data/result available').isDisplayed());
     });
 
-    it('filters mutation types', function() {
+    it('filters mutation types', async function() {
         clickAlterationTypeCheckBox('Copy Number Alterations');
         clickAlterationTypeCheckBox('Structural Variants / Fusions');
         submitEnrichmentRequest();
@@ -50,7 +50,7 @@ describe('comparison alterations tab', function() {
         assert.strictEqual(rows.length, 2, 'table has 2 rows');
     });
 
-    it('filters CNA types', function() {
+    it('filters CNA types', async function() {
         clickAlterationTypeCheckBox('Mutations');
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();

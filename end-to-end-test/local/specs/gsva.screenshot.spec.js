@@ -36,7 +36,7 @@ describe('gsva feature', () => {
         });
 
         it('shows volcano plot for gene sets selection', () => {
-            var res = browser.checkElement('div.VictoryContainer');
+            var res = await browser.checkElement('div.VictoryContainer');
             assertScreenShotMatch(res);
         });
 
@@ -46,7 +46,7 @@ describe('gsva feature', () => {
             modal.$('.Select-value-label').click();
             modal.$('.Select-option=50%').waitForExist();
             modal.$('.Select-option=50%').click();
-            var res = browser.checkElement('div.VictoryContainer');
+            var res = await browser.checkElement('div.VictoryContainer');
             assertScreenShotMatch(res);
         });
     });
@@ -58,7 +58,7 @@ describe('gsva feature', () => {
         });
 
         it('shows GSVA heatmap track', () => {
-            var res = browser.checkElement('div[id=oncoprintDiv]');
+            var res = await browser.checkElement('div[id=oncoprintDiv]');
             assertScreenShotMatch(res);
         });
 
@@ -96,7 +96,7 @@ describe('gsva feature', () => {
             var vertDataSelect = $('[name=v-profile-type-selector]').$('..');
             vertDataSelect.$('.Select-arrow-zone').click();
             vertDataSelect.$('.Select-option=Gene Sets').click();
-            var res = browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
+            var res = await browser.checkElement('div[data-test="PlotsTabPlotDiv"]');
             assertScreenShotMatch(res);
         });
     });
@@ -113,7 +113,7 @@ describe('gsva feature', () => {
                 'GSVA scores on oncogenic signatures gene sets (5 samples)'
             );
             $('#coexpressionTabGeneTabs').waitForExist();
-            var res = browser.checkElement('#coexpression-plot-svg');
+            var res = await browser.checkElement('#coexpression-plot-svg');
             assertScreenShotMatch(res);
         });
     });

@@ -28,7 +28,7 @@ describe.skip('homepage', function() {
         });
     });
 
-    it('test login observes authenticationMethod config property', function() {
+    it('test login observes authenticationMethod config property', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         $('#rightHeaderContent').waitForExist();
@@ -48,10 +48,10 @@ describe.skip('homepage', function() {
 
         $('#rightHeaderContent').waitForExist();
 
-        assert.equal($('button=Login').isExisting(), false);
+        assert.equal(await $('button=Login').isExisting(), false);
     });
 
-    it('test login observes authenticationMethod config property', function() {
+    it('test login observes authenticationMethod config property', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         $('#rightHeaderContent').waitForExist();
@@ -64,10 +64,10 @@ describe.skip('homepage', function() {
 
         $('#rightHeaderContent').waitForExist();
 
-        assert.equal($('a=Data Sets').isExisting(), false);
+        assert.equal(await $('a=Data Sets').isExisting(), false);
     });
 
-    it('shows right logo in header bar depending on skin_right_logo', function() {
+    it('shows right logo in header bar depending on skin_right_logo', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         $('#rightHeaderContent').waitForExist();
@@ -93,7 +93,7 @@ describe.skip('homepage', function() {
         $("img[src*='images/msk_logo_transparent_black.png']").waitForExist();
     });
 
-    it('shows skin_blurb as configured', function() {
+    it('shows skin_blurb as configured', async function() {
         setServerConfiguration({
             skin_blurb: "<div id='blurbDiv'>This is the blurb</div>",
         });

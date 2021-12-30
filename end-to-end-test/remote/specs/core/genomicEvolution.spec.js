@@ -18,48 +18,52 @@ describe('Patient View Genomic Evolution tab', function() {
             );
             waitForNetworkQuiet(10000);
         });
-        it('shows only highlighted, or all mutations, depending on setting', () => {
+        it('shows only highlighted, or all mutations, depending on setting', async () => {
             // at first, showing all mutations
-            $('input[data-test="TableShowOnlyHighlighted"]').waitForExist({
-                timeout: 3000,
-            });
+            await $('input[data-test="TableShowOnlyHighlighted"]').waitForExist(
+                {
+                    timeout: 3000,
+                }
+            );
             assert(
-                !$('input[data-test="TableShowOnlyHighlighted"]').isSelected()
+                !(await $(
+                    'input[data-test="TableShowOnlyHighlighted"]'
+                ).isSelected())
             );
 
             // at first, more than 2 mutations (making this ambiguous to be unaffected by data changes
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
             ).waitForExist();
-            let numMutationsText = $(
+            let numMutationsText = await $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
             ).getText();
             let numMutations = parseInt(numMutationsText, 10);
             assert(numMutations > 2);
 
             // now select two mutations
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
             ).click();
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(4)'
             ).click();
 
             // should still show all
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
             ).waitForExist();
-            numMutationsText = $(
+            numMutationsText = await $(
                 'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
             ).getText();
             numMutations = parseInt(numMutationsText, 10);
             assert(numMutations > 2);
 
             // now select "show only highlighted"
-            $('input[data-test="TableShowOnlyHighlighted"]').click();
-            browser.waitUntil(
-                () => {
-                    numMutationsText = $(
+            await $('input[data-test="TableShowOnlyHighlighted"]').click();
+            await browser.waitUntil(
+                async () => {
+                    numMutationsText = await $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
                     ).getText();
                     numMutations = parseInt(numMutationsText, 10);
@@ -70,12 +74,12 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on one of the 2 mutations
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
             ).click();
-            browser.waitUntil(
-                () => {
-                    numMutationsText = $(
+            await browser.waitUntil(
+                async () => {
+                    numMutationsText = await $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
                     ).getText();
                     numMutations = parseInt(numMutationsText, 10);
@@ -86,12 +90,12 @@ describe('Patient View Genomic Evolution tab', function() {
             );
 
             // now click on the last remaining mutation
-            $(
+            await $(
                 'div[data-test="GenomicEvolutionMutationTable"] table tbody > tr:nth-child(1)'
             ).click();
-            browser.waitUntil(
-                () => {
-                    numMutationsText = $(
+            await browser.waitUntil(
+                async () => {
+                    numMutationsText = await $(
                         'div[data-test="GenomicEvolutionMutationTable"] span[data-test="LazyMobXTable_CountHeader"]'
                     ).getText();
                     numMutations = parseInt(numMutationsText, 10);

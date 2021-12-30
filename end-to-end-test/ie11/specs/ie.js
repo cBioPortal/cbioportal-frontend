@@ -6,12 +6,12 @@ var waitForOncoprint = require('../../shared/specUtils').waitForOncoprint;
 const CBIOPORTAL_URL = 'http://localhost:3000';
 
 describe('Application in IE11', function() {
-    it('renders query page study items', function() {
+    it('renders query page study items', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         $('[data-test="StudySelect"]').waitForExist(30000);
     });
 
-    // it('renders the oncoprint', function() {
+    // it('renders the oncoprint', async function() {
     //     $('.exampleQueries').waitForExist();
     //     $('.exampleQueries')
     //         .$$('a')[1]

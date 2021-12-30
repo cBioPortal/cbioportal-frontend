@@ -116,7 +116,7 @@ describe('gsva feature', function() {
             $('[id=filterButton]').click();
             waitForModalUpdate();
 
-            assert.equal($$('*=GO_').length, 5);
+            assert.equal(await $$('*=GO_').length, 5);
 
             // reset state
             $('[id=GSVAScore]').setValue('0.5');
@@ -157,7 +157,7 @@ describe('gsva feature', function() {
             waitForModalUpdate();
             var after = $$('*=GO_');
 
-            assert.equal($$('*=GO_').length, 0);
+            assert.equal(await $$('*=GO_').length, 0);
 
             // reset state
             $('[id=Pvalue]').setValue('0.05');
@@ -172,7 +172,7 @@ describe('gsva feature', function() {
             modal.$('[id=filterButton]').click();
             waitForModalUpdate();
 
-            assert.equal($$('*=GO_').length, 2);
+            assert.equal(await $$('*=GO_').length, 2);
 
             // reset state
             modal.$('.Select-value-label').click();
@@ -515,7 +515,7 @@ describe('gsva feature', function() {
             );
             $('//*[@id="coexpressionTabGeneTabs"]').waitForExist();
             $('span*=GO_').waitForExist();
-            assert.equal($$('span*=GO_').length, 7);
+            assert.equal(await $$('span*=GO_').length, 7);
         });
 
         it('shows `Enter gene set.` placeholder in table search box when GSVA scores selected in first select box', () => {

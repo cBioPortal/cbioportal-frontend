@@ -23,7 +23,7 @@ describe('homepage', function() {
     });
 
     if (!useNetlifyDeployPreview) {
-        it('window.frontendConfig.frontendUrl should point to localhost 3000 when testing', function() {
+        it('window.frontendConfig.frontendUrl should point to localhost 3000 when testing', async function() {
             // We no longer check whether the dev mode banner exits.
             // The banner is hidden in e2etests.scss
             assert.equal(
@@ -36,7 +36,7 @@ describe('homepage', function() {
     }
 
     // this just shows that we have some studies listed
-    it('it should have some (>0) studies listed ', function() {
+    it('it should have some (>0) studies listed ', async function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
@@ -48,7 +48,7 @@ describe('homepage', function() {
         );
     });
 
-    it('should filter study list according to filter text input', function() {
+    it('should filter study list according to filter text input', async function() {
         var input = $(searchInputSelector);
 
         input.waitForExist({ timeout: 10000 });
@@ -58,14 +58,14 @@ describe('homepage', function() {
         waitForNumberOfStudyCheckboxes(4);
     });
 
-    it('when a single study is selected, a case set selector is provided', function() {
+    it('when a single study is selected, a case set selector is provided', async function() {
         var caseSetSelectorClass = '[data-test="CaseSetSelector"]';
 
         var checkBox = $('[data-test="StudySelect"]');
 
         checkBox.waitForExist({ timeout: 10000 });
 
-        assert.equal($(caseSetSelectorClass).isExisting(), false);
+        assert.equal(await $(caseSetSelectorClass).isExisting(), false);
 
         $('[data-test="StudySelect"] input').click();
 
@@ -74,7 +74,7 @@ describe('homepage', function() {
         var caseSetSelector = $(caseSetSelectorClass);
         caseSetSelector.waitForExist({ timeout: 10000 });
 
-        assert.equal($(caseSetSelectorClass).isExisting(), true);
+        assert.equal(await $(caseSetSelectorClass).isExisting(), true);
     });
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', () => {
@@ -126,7 +126,7 @@ describe('homepage', function() {
         );
     });
 
-    describe.skip('select all/deselect all functionality in study selector', function() {
+    describe.skip('select all/deselect all functionality in study selector', async function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
@@ -136,7 +136,7 @@ describe('homepage', function() {
             return $$('[data-test="StudySelect"] input[type=checkbox]');
         }
 
-        it('clicking select all studies checkbox selects all studies', function() {
+        it('clicking select all studies checkbox selects all studies', async function() {
             var studyCheckboxes = getVisibleCheckboxes();
 
             var selectedStudies = studyCheckboxes.filter(function(el) {
@@ -168,7 +168,7 @@ describe('homepage', function() {
             assert.equal(selectedStudies.length, 0, 'no studies are selected');
         });
 
-        it('global deselect button clears all selected studies, even during filter', function() {
+        it('global deselect button clears all selected studies, even during filter', async function() {
             var visibleCheckboxes = getVisibleCheckboxes();
 
             assert.equal(

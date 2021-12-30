@@ -22,7 +22,7 @@ const ONCOPRINT_TIMEOUT = 60000;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('oncoprinter screenshot tests', function() {
-    it('oncoprinter genetic only example data', function() {
+    it('oncoprinter genetic only example data', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterGeneticExampleData').click();
@@ -32,7 +32,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter clinical only example data', function() {
+    it('oncoprinter clinical only example data', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterClinicalExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').click();
@@ -42,7 +42,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter heatmap only example data', function() {
+    it('oncoprinter heatmap only example data', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterHeatmapExampleData').waitForExist();
         $('.oncoprinterHeatmapExampleData').click();
@@ -52,7 +52,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data', function() {
+    it('oncoprinter example data', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -66,7 +66,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, annotated by oncokb', function() {
+    it('oncoprinter example data, annotated by oncokb', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -92,7 +92,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter clinical example data', function() {
+    it('oncoprinter clinical example data', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterClinicalExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').click();
@@ -102,7 +102,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, then set gene order, including all genes', function() {
+    it('oncoprinter example data, then set gene order, including all genes', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -122,7 +122,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, then set gene order, not including all genes', function() {
+    it('oncoprinter example data, then set gene order, not including all genes', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -142,7 +142,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, then set sample order, including all samples', function() {
+    it('oncoprinter example data, then set sample order, including all samples', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -173,11 +173,11 @@ describe('oncoprinter screenshot tests', function() {
             `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=STK11%253A%2520HOMDEL%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`
         );
         waitForOncoprint(ONCOPRINT_TIMEOUT);
-        var res = browser.checkElement('.oncoprintContainer');
+        var res = await browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
-    it('oncoprinter example data, then set sample order, not including all samples', function() {
+    it('oncoprinter example data, then set sample order, not including all samples', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -199,7 +199,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, start by set gene order, then set sample order', function() {
+    it('oncoprinter example data, start by set gene order, then set sample order', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -223,7 +223,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, start by set sample order, then set gene order', function() {
+    it('oncoprinter example data, start by set sample order, then set gene order', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -248,7 +248,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, dont color by mutation type', function() {
+    it('oncoprinter example data, dont color by mutation type', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -266,7 +266,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, dont color by driver vs VUS', function() {
+    it('oncoprinter example data, dont color by driver vs VUS', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();
@@ -284,7 +284,7 @@ describe('oncoprinter screenshot tests', function() {
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
     });
-    it('oncoprinter example data, hide VUS', function() {
+    it('oncoprinter example data, hide VUS', async function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/oncoprinter`);
         $('.oncoprinterGeneticExampleData').waitForExist();
         $('.oncoprinterClinicalExampleData').waitForExist();

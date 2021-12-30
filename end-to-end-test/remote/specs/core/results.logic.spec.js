@@ -15,7 +15,7 @@ const ONCOPRINT_TIMEOUT = 15000;
 const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
 
 describe('cross cancer query', function() {
-    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
+    it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', async function() {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_list=chol_tcga%2Cblca_tcga_pub%2Ccoadread_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=all&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
@@ -36,7 +36,7 @@ describe('single study query', function() {
     this.retries(1);
 
     describe('mutation mapper ', function() {
-        it('should show somatic and germline mutation rate', function() {
+        it('should show somatic and germline mutation rate', async function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
 
             var input = $('.autosuggest input[type=text]');
@@ -75,7 +75,7 @@ describe('single study query', function() {
             assert(text.search('3.5%') > -1);
         });
 
-        it('should show lollipop for MUC2', function() {
+        it('should show lollipop for MUC2', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`
             );
@@ -92,7 +92,7 @@ describe('single study query', function() {
     describe('enrichments', function() {
         //this.retries(3)
 
-        it('should show mutations plot', function() {
+        it('should show mutations plot', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/comparison?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`
             );
@@ -124,8 +124,8 @@ describe('results page', function() {
             assert(!$('a.tabAnchor_survival').isDisplayed());
         });
     });
-    describe('mutual exclusivity tab', function() {
-        it('should appear in a single study query with multiple genes', function() {
+    describe('mutual exclusivity tab', async function() {
+        it('should appear in a single study query with multiple genes', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
@@ -133,7 +133,7 @@ describe('results page', function() {
 
             assert($('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
-        it('should appear in a multiple study with multiple genes', function() {
+        it('should appear in a multiple study with multiple genes', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
@@ -141,7 +141,7 @@ describe('results page', function() {
 
             assert($('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
-        it('should not appear in a single study query with one gene', function() {
+        it('should not appear in a single study query with one gene', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`
             );
@@ -154,7 +154,7 @@ describe('results page', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
-        it.skip('should not appear in a multiple study query with one gene', function() {
+        it.skip('should not appear in a multiple study query with one gene', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );

@@ -12,7 +12,7 @@ var {
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
 describe('posting query parameters (instead of GET) to query page', function() {
-    it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', function() {
+    it('reads posted data (written by backend) and successfully passes params into URL, resulting in oncoprint display', async function() {
         const url = `${CBIOPORTAL_URL}`;
         goToUrlAndSetLocalStorage(url, true);
 

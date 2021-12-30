@@ -43,7 +43,7 @@ describe('Quick Search', () => {
         $('strong=BRAF_PS314').click();
         $('a=BRAF_PS314').waitForExist({ timeout: 60000 });
 
-        assert.equal($('a=BRAF_PS314').isDisplayed(), true, 'modal is visible');
+        assert.equal(await $('a=BRAF_PS314').isDisplayed(), true, 'modal is visible');
     });
 
     it('should give results for patients', () => {

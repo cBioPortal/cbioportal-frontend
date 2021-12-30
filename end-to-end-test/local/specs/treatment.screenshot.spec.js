@@ -50,7 +50,7 @@ describe('treatment feature', () => {
             var addTracksButton = $('button[id=addTracksDropdown]');
             addTracksButton.click();
             waitForOncoprint();
-            var res = browser.checkElement('[id=oncoprintDiv]');
+            var res = await browser.checkElement('[id=oncoprintDiv]');
             assertScreenShotMatch(res);
         });
     });
@@ -63,7 +63,7 @@ describe('treatment feature', () => {
         });
 
         it('shows `value larger_than_8.00` in figure legend and indicates sub-threshold data points in plot', () => {
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
 
             browser.execute(() => {
                 $('div').css({ border: '1px solid red !important' });
@@ -75,7 +75,7 @@ describe('treatment feature', () => {
         it('when option deselected, hides `value larger_than_8.00` in figure legend and sub-threshold data points in plot', () => {
             $('[data-test=ViewLimitValues]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewLimitValues]').click();
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -87,7 +87,7 @@ describe('treatment feature', () => {
             $('[data-test=ViewCopyNumber]').waitForExist({ timeout: 10000 });
             $('[data-test=ViewCopyNumber]').click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -101,7 +101,7 @@ describe('treatment feature', () => {
 
             $('[data-test=ViewLimitValues]').click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -115,7 +115,7 @@ describe('treatment feature', () => {
 
             $('[data-test=swapHorzVertButton]').click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -137,7 +137,7 @@ describe('treatment feature', () => {
                 .$$('div');
             geneMenuEntries[3].click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -151,7 +151,7 @@ describe('treatment feature', () => {
 
             $('[data-test=VerticalLogCheckbox]').click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -165,7 +165,7 @@ describe('treatment feature', () => {
 
             $('[data-test=changeSortOrderButton]').click();
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
 
@@ -182,7 +182,7 @@ describe('treatment feature', () => {
                 .$('input');
             sampleSearch.setValue('TCGA-A2-A04U-01 TCGA-A1-A0SE-01');
 
-            var res = browser.checkElement('[id=plots-tab-plot-svg]');
+            var res = await browser.checkElement('[id=plots-tab-plot-svg]');
             assertScreenShotMatch(res);
         });
     });

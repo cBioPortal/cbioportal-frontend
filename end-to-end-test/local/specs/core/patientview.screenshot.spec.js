@@ -23,7 +23,7 @@ describe('patient view page', function() {
         });
 
         it('displays ASCN columns', () => {
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test=patientview-mutation-table] table'
             );
             assertScreenShotMatch(res);
@@ -37,7 +37,7 @@ describe('patient view page', function() {
         });
 
         it('does not display ASCN columns for studies with no ASCN data', () => {
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test=patientview-mutation-table] table'
             );
             assertScreenShotMatch(res);
@@ -54,7 +54,7 @@ describe('patient view page', function() {
         });
 
         it('shows gene panel icons behind mutation and CNA genomic tracks', () => {
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div.genomicOverviewTracksContainer'
             );
             assertScreenShotMatch(res);
@@ -62,7 +62,7 @@ describe('patient view page', function() {
 
         it('filters mutation tracks based on gene filter setting', () => {
             switchGeneFilter('allSamples');
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div.genomicOverviewTracksContainer'
             );
             assertScreenShotMatch(res);
@@ -96,7 +96,7 @@ describe('patient view page', function() {
 
         it('show stacked bar chart for patient who has significant v2 significant signatures', () => {
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
-            var res = browser.checkElement('div.patientSamples');
+            var res = await browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
@@ -107,7 +107,7 @@ describe('patient view page', function() {
         });
 
         it('show mutational signatures table for patient who has significant v2 significant signatures', () => {
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
             );
             assertScreenShotMatch(res);
@@ -116,7 +116,7 @@ describe('patient view page', function() {
         it('show stacked bar chart for patient who has significant v3 significant signatures', () => {
             selectMutationalSignaturesVersion3();
             $('div.patientSamples').waitForDisplayed({ timeout: 20000 });
-            var res = browser.checkElement('div.patientSamples');
+            var res = await browser.checkElement('div.patientSamples');
             assertScreenShotMatch(res);
         });
 
@@ -134,7 +134,7 @@ describe('patient view page', function() {
 
         it('show mutational signatures table for patient who has significant v3 significant signatures', () => {
             selectMutationalSignaturesVersion3();
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="MutationalSignaturesContainer"]'
             );
             assertScreenShotMatch(res);
@@ -166,11 +166,11 @@ const doVafPlotScreenshotTest = () => {
     $('//*[text()="Annotation"]').click();
     // close on columns dropdown
     $('button*=Columns').click();
-    var res = browser.checkElement('[data-test=vaf-plot]'); // grabs the full plot
+    var res = await browser.checkElement('[data-test=vaf-plot]'); // grabs the full plot
     $('svg[data-test=vaf-plot]').moveTo(); // moves pointer to plot thumbnail
-    var res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
+    var res = await browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
     $('div[role=tooltip] [data-test=vaf-plot]').waitForExist();
-    res = browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
+    res = await browser.checkElement('div[role=tooltip] [data-test=vaf-plot]'); // grabs the full plot
     assertScreenShotMatch(res);
 };
 

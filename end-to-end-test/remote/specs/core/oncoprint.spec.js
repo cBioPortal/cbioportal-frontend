@@ -46,7 +46,7 @@ describe.skip('merged tracks', () => {
         $(trackOptionsElts.dropdown_selector + ' li:nth-child(3)').click();
         waitForOncoprint(ONCOPRINT_TIMEOUT);
 
-        var res = browser.checkElement('.oncoprintContainer', '', {
+        var res = await browser.checkElement('.oncoprintContainer', '', {
             hide: ['.oncoprint__controls'],
         }); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
@@ -625,7 +625,7 @@ describe('oncoprint', function() {
     describe('only show clinical legends for altered cases', function() {
         const checkboxSelector =
             '.oncoprintContainer .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
-        it('only shows legend items for cases which are altered', function() {
+        it('only shows legend items for cases which are altered', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-AA-A00D-01%2Bcoadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`
             );
@@ -664,7 +664,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf('Male') > -1, 'a sample is male');
             assert(legendText.indexOf('Female') > -1, 'a sample is female');
         });
-        it('does not show a legend when no altered cases', function() {
+        it('does not show a legend when no altered cases', async function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`
             );

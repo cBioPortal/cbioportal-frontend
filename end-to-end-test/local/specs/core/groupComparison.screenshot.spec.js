@@ -26,9 +26,9 @@ describe('group comparison page screenshot tests', function() {
             ).waitForExist({ timeout: 20000 });
         });
 
-        it('group comparison page alteration enrichments tab several groups', function() {
+        it('group comparison page alteration enrichments tab several groups', async function() {
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -37,7 +37,7 @@ describe('group comparison page screenshot tests', function() {
             );
             assertScreenShotMatch(res);
         });
-        it('group comparison page alteration enrichments tab patient mode', function() {
+        it('group comparison page alteration enrichments tab patient mode', async function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(true);
             });
@@ -45,7 +45,7 @@ describe('group comparison page screenshot tests', function() {
                 '[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForExist({ timeout: 20000 });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
@@ -55,7 +55,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', function() {
+        it('group comparison page alteration enrichments tab 2 genes with highest frequency in any group', async function() {
             browser.execute(function() {
                 groupComparisonStore.setUsePatientLevelEnrichments(false);
             });
@@ -69,7 +69,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -79,7 +79,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box highest average frequency', function() {
+        it('group comparison page alteration enrichments tab gene box highest average frequency', async function() {
             openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
@@ -95,7 +95,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -105,7 +105,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box most significant pValues', function() {
+        it('group comparison page alteration enrichments tab gene box most significant pValues', async function() {
             openGeneSelectorMenu();
             browser.execute(function() {
                 genesSelection.onGeneListOptionChange({
@@ -121,7 +121,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -131,7 +131,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison page alteration enrichments tab gene box user-defined genes', function() {
+        it('group comparison page alteration enrichments tab gene box user-defined genes', async function() {
             openGeneSelectorMenu();
             setInputText('textarea[data-test="geneSet"]', 'TP53');
             waitForNetworkQuiet();
@@ -143,7 +143,7 @@ describe('group comparison page screenshot tests', function() {
                 timeout: 10000,
             });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 'div[data-test="GeneBarPlotDiv"]',
                 '',
                 {
@@ -153,7 +153,7 @@ describe('group comparison page screenshot tests', function() {
             assertScreenShotMatch(res);
         });
 
-        it('group comparison alteration enrichments two groups', function() {
+        it('group comparison alteration enrichments two groups', async function() {
             goToUrlAndSetLocalStorage(
                 `${browser.getUrl()}&unselectedGroups=%5B"GB"%2C"OAST"%2C"ODG"%5D`,
                 true
@@ -162,7 +162,7 @@ describe('group comparison page screenshot tests', function() {
                 '[data-test="GroupComparisonAlterationEnrichments"]'
             ).waitForExist({ timeout: 20000 });
             $('body').moveTo({ xOffset: 0, yOffset: 0 });
-            var res = browser.checkElement(
+            var res = await browser.checkElement(
                 '.msk-tab:not(.hiddenByPosition)',
                 '',
                 {
