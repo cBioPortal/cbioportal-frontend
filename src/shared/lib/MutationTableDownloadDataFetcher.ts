@@ -27,6 +27,7 @@ import {
     default as GenomeNexusMutationAssessorCache,
     defaultGNFetch as fetchGenomeNexusMutationAssessorData,
 } from 'shared/cache/GenomeNexusMutationAssessorCache';
+import { shouldShowMutationAssessor } from 'shared/lib/genomeNexusAnnotationSourcesUtils';
 
 export class MutationTableDownloadDataFetcher
     implements ILazyMobXTableApplicationLazyDownloadDataFetcher {
@@ -84,7 +85,10 @@ export class MutationTableDownloadDataFetcher
             }
         }
 
-        if (this.genomeNexusMutationAssessorCache) {
+        if (
+            shouldShowMutationAssessor() &&
+            this.genomeNexusMutationAssessorCache
+        ) {
             if (this.mutationData.result) {
                 promises.push(
                     fetchGenomeNexusMutationAssessorData(
