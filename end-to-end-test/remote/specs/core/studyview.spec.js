@@ -817,3 +817,18 @@ describe('study view treatments table', () => {
         assertScreenShotMatch(res);
     });
 });
+
+describe('study view mutations table', () => {
+    // this guards against server-side regression
+    // in which frequencies are miscalculated for
+    // with mutations which are called but not profile
+    it('shows mutation frequencies correctly for called but unprofiled mutations', () => {
+        var url = `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+
+        const res = checkElementWithMouseDisabled(
+            "[data-test='chart-container-msk_impact_2017_mutations']"
+        );
+        assertScreenShotMatch(res);
+    });
+});
