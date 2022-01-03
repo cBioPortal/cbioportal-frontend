@@ -14,6 +14,22 @@ const ONCOPRINT_TIMEOUT = 15000;
 
 const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
 
+describe('Invalid query handling', () => {
+    it('shows query form if no genes are submitted', () => {
+        const url = `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=metastatic_solid_tumors_mich_2017`;
+        goToUrlAndSetLocalStorage(url);
+        $('[data-test="studyList"]').waitForDisplayed();
+
+        assert($('[data-test="studyList"]').isDisplayed());
+
+        const elem = $('.studyItem_metastatic_solid_tumors_mich_2017'); // or $(() => document.getElementById('elem'))
+        const checkbox = elem.$(function() {
+            return this.previousSibling;
+        });
+        assert(checkbox.isSelected(), 'study in url is selected in query form');
+    });
+});
+
 describe('cross cancer query', function() {
     it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
         goToUrlAndSetLocalStorage(
