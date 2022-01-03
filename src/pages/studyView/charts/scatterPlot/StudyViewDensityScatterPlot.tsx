@@ -493,6 +493,14 @@ export default class StudyViewDensityScatterPlot
                 </text>,
             ];
             let correlationLabels;
+
+            const pearson = _.isNumber(this.props.pearsonCorr)
+                ? this.props.pearsonCorr.toFixed(4)
+                : this.props.pearsonCorr;
+            const spearman = _.isNumber(this.props.spearmanCorr)
+                ? this.props.spearmanCorr.toFixed(4)
+                : this.props.spearmanCorr;
+
             if (this.numSamples > 2) {
                 // otherwise p-values are null
 
@@ -512,7 +520,7 @@ export default class StudyViewDensityScatterPlot
                         y={rectY + rectHeight + 55}
                         dy={'-0.3em'}
                     >
-                        {this.props.pearsonCorr.toFixed(4)}
+                        {pearson}
                     </text>,
                     <text
                         fontSize={10.5}
@@ -538,7 +546,7 @@ export default class StudyViewDensityScatterPlot
                         y={rectY + rectHeight + 115}
                         dy={'-0.3em'}
                     >
-                        {this.props.spearmanCorr.toFixed(4)}
+                        {spearman}
                     </text>,
                     <text
                         fontSize={10.5}
