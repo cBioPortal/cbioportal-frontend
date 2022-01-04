@@ -327,7 +327,8 @@
     "webpack": "^5.55.1",
     "webpack-cli": "^4.8.0",
     "webpack-raphael": "github:DmitryBaranovskiy/raphael#v2.3.0",
-    "word-wrap": "^1.2.3"
+    "word-wrap": "^1.2.3",
+    "xml2js": "^0.4.23"
   },
   "devDependencies": {
     "@testing-library/react": "^12.1.0",
