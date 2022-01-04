@@ -281,6 +281,28 @@ export type HrdScore = {
         'ntelomericAi': number
 
 };
+export type Index = {
+    'cdna': Array < string >
+
+        'hgvsc': Array < string >
+
+        'hgvsp': Array < string >
+
+        'hgvspShort': Array < string >
+
+        'hugoSymbol': Array < string >
+
+        'rsid': Array < string >
+
+        'variant': string
+
+};
+export type IndexSearch = {
+    'queryType': "GENE_HGVSPSHORT" | "GENE_CDNA" | "GENE_HGVSP" | "HGVSG" | "HGVSC"
+
+        'results': Array < Index >
+
+};
 export type IntegerRange = {
     'end': number
 
@@ -1838,6 +1860,99 @@ export default class GenomeNexusAPIInternal {
             return response.body;
         });
     };
+    searchAnnotationByKeywordGETUsingGETURL(parameters: {
+        'keyword': string,
+        'limit' ? : number,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/search';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
+        if (parameters['limit'] !== undefined) {
+            queryParameters['limit'] = parameters['limit'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Performs index search.
+     * @method
+     * @name GenomeNexusAPIInternal#searchAnnotationByKeywordGETUsingGET
+     * @param {string} keyword - keyword. For example 13:g.32890665G>A, TP53 p.R273C, BRAF c.1799T>A
+     * @param {integer} limit - Max number of matching results to return
+     */
+    searchAnnotationByKeywordGETUsingGETWithHttpInfo(parameters: {
+        'keyword': string,
+        'limit' ? : number,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/search';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
+
+            if (parameters['keyword'] === undefined) {
+                reject(new Error('Missing required  parameter: keyword'));
+                return;
+            }
+
+            if (parameters['limit'] !== undefined) {
+                queryParameters['limit'] = parameters['limit'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Performs index search.
+     * @method
+     * @name GenomeNexusAPIInternal#searchAnnotationByKeywordGETUsingGET
+     * @param {string} keyword - keyword. For example 13:g.32890665G>A, TP53 p.R273C, BRAF c.1799T>A
+     * @param {integer} limit - Max number of matching results to return
+     */
+    searchAnnotationByKeywordGETUsingGET(parameters: {
+            'keyword': string,
+            'limit' ? : number,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < IndexSearch >
+        > {
+            return this.searchAnnotationByKeywordGETUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchSignalMutationsByHugoSymbolGETUsingGETURL(parameters: {
         'hugoGeneSymbol' ? : string,
         $queryParameters ? : any
