@@ -432,7 +432,8 @@
               "missense_variant",
               "splice_region_variant",
               "stop_gained",
-              "synonymous_variant"
+              "synonymous_variant",
+              "intron_variant"
             ]
           },
           {
