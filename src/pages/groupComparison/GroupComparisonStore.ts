@@ -305,8 +305,6 @@ export default class GroupComparisonStore extends ComparisonStore {
                 }
             }
 
-            debugger;
-
             return allSamples.filter(sample => {
                 return sampleSet.has({
                     studyId: sample.studyId,
