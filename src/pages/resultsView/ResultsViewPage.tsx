@@ -593,7 +593,10 @@ export default class ResultsViewPage extends React.Component<
     });
 
     @computed get pageContent() {
-        if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
+        if (
+            this.resultsViewPageStore.hugoGeneSymbols.length === 0 ||
+            this.resultsViewPageStore.invalidStudyIds.result.length > 0
+        ) {
             return (
                 <div>
                     <div className={'headBlock'}></div>
@@ -616,13 +619,13 @@ export default class ResultsViewPage extends React.Component<
             const tabsReady =
                 this.showTabs &&
                 !this.resultsViewPageStore.genesInvalid &&
-                !this.resultsViewPageStore.isQueryInvalid &&
+                !this.resultsViewPageStore.queryExceedsLimit &&
                 this.resultsViewPageStore.customDriverAnnotationReport
                     .isComplete;
             return (
                 <>
                     {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
-                    this.resultsViewPageStore.isQueryInvalid && (
+                    this.resultsViewPageStore.queryExceedsLimit && (
                         <div
                             className="alert alert-danger queryInvalid"
                             style={{ marginBottom: '40px' }}
@@ -764,10 +767,16 @@ export default class ResultsViewPage extends React.Component<
             );
         }
 
+        // if we don't have a tabId, we need figure out
+        // which tab should be default based upon
+        // characteristics of study (handled in tabId getter)
         if (
             this.resultsViewPageStore.studies.isComplete &&
             !this.resultsViewPageStore.tabId
         ) {
+            // we have to use timeout in order to
+            // circumvent restriction on updating state
+            // inside of render
             setTimeout(() => {
                 this.resultsViewPageStore.handleTabChange(
                     this.resultsViewPageStore.tabId,

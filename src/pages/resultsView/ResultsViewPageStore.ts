@@ -728,7 +728,10 @@ export class ResultsViewPageStore
     }
 
     @computed get hugoGeneSymbols() {
-        if (this.urlWrapper.query.gene_list.length > 0) {
+        if (
+            this.urlWrapper.query.gene_list &&
+            this.urlWrapper.query.gene_list.length > 0
+        ) {
             return uniqueGenesInOQLQuery(this.urlWrapper.query.gene_list);
         } else {
             return [];
@@ -4493,7 +4496,7 @@ export class ResultsViewPageStore
         return this.genes.isError;
     }
 
-    @computed get isQueryInvalid() {
+    @computed get queryExceedsLimit() {
         return (
             this.hugoGeneSymbols.length * this.samples.result.length >
             getServerConfig().query_product_limit
