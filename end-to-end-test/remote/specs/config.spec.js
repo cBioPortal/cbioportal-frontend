@@ -28,7 +28,7 @@ describe.skip('homepage', function() {
         });
     });
 
-    it('test login observes authenticationMethod config property', function() {
+    it('login ui observes authenticationMethod', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         $('#rightHeaderContent').waitForExist();
@@ -51,7 +51,7 @@ describe.skip('homepage', function() {
         assert.equal($('button=Login').isExisting(), false);
     });
 
-    it('test login observes authenticationMethod config property', function() {
+    it('dataset nav observes authenticationMethod', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         $('#rightHeaderContent').waitForExist();
