@@ -3,18 +3,6 @@ var fs = require('fs'),
 var _ = require('lodash');
 
 function transformJUNITFiles(dir) {
-    // fs.readdir(dir, function(err, files) {
-    //     if (err) {
-    //         console.log(err);
-    //         return;
-    //     }
-    //     files
-    //         .filter(s => /results.*.xml$/.test(s))
-    //         .forEach(f => {
-    //             tranformFile(`${dir}${f}`);
-    //         });
-    // });
-
     const files = fs.readdirSync(dir).filter(s => /results-.*\.xml$/i.test(s));
 
     console.log(`transforming ${files.length} in results in directory: `, dir);
@@ -31,9 +19,6 @@ function tranformFile(filePath) {
 
     xml2js.parseString(data, function(err, result) {
         if (err) console.log(err);
-
-        // for debugging, save original file
-        //writeToXMLFile(`${filePath}.BK`, data);
 
         getTestCase(result, testcases => {
             const groups = _.groupBy(testcases, t => t.$.name);
@@ -66,46 +51,8 @@ function tranformFile(filePath) {
             }
         });
 
-        console.log(result.testsuites.testsuite[2]); // need to transform tessuides here
-
         writeToXMLFile(filePath, result);
     });
-
-    // fs.readFile(filePath, 'utf-8', function(err, data) {
-    //     if (err) console.log(err);
-    //
-    //     console.log('reading xml', filePath);
-    //
-    //     xml2js.parseString(data, function(err, result) {
-    //         if (err) console.log(err);
-    //
-    //         // for debugging, save original file
-    //         //writeToXMLFile(`${filePath}.BK`, data);
-    //
-    //         getTestCase(result, testcase => {
-    //             const groups = _.groupBy(testcase, t => t.$.name);
-    //
-    //             _.forEach(groups, group => {
-    //                 // if there is more than one test with matching name (retries)
-    //                 // remove all but the last test
-    //                 // which will either be an error or passing
-    //                 if (group.length > 1) {
-    //                     const removed = _.pull(testcase, ...group.slice(0, -1));
-    //                     try {
-    //                         console.log(
-    //                             'Eliminating duplicate test report',
-    //                             removed[0].$.name
-    //                         );
-    //                     } catch (ex) {
-    //                         // silent
-    //                     }
-    //                 }
-    //             });
-    //         });
-    //
-    //         writeToXMLFile(filePath, result);
-    //     });
-    // });
 }
 
 function writeToXMLFile(path, json) {
