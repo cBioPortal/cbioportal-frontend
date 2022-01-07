@@ -246,6 +246,7 @@ export default class ClinicalData extends React.Component<
     @observable logScaleFunction: IAxisLogScaleParams | undefined;
     @observable swapAxes = false;
     @observable horizontalBars = false;
+    @observable showNA = false;
 
     @action.bound
     private onClickLogScale() {
@@ -272,6 +273,53 @@ export default class ClinicalData extends React.Component<
     private onClickhorizontalBars() {
         this.horizontalBars = !this.horizontalBars;
     }
+
+    @action.bound
+    private onClickShowNA() {
+        this.showNA = !this.showNA;
+    }
+
+    private readonly clinicalDataPromiseFiltered = remoteData({
+        await: () => [this.clinicalDataPromise, this.props.store.samples],
+        invoke: () => {
+            const axisData = this.clinicalDataPromise.result!;
+            // for string like values include NA values if requested
+            // TODO: implement for numbers
+            if (
+                this.showNA &&
+                axisData.datatype === 'string' &&
+                this.props.store.samples.result!.length > 0
+            ) {
+                const naSamples = _.difference(
+                    _.uniq(
+                        this.props.store.samples.result!.map(
+                            x => x.uniqueSampleKey
+                        )
+                    ),
+                    _.uniq(axisData.data.map(x => x.uniqueSampleKey))
+                );
+                return Promise.resolve({
+                    ...axisData,
+                    data: axisData.data.concat(
+                        naSamples.map(x => ({
+                            uniqueSampleKey: x,
+                            value: 'NA',
+                        }))
+                    ),
+                });
+            } else {
+                // filter out NA-like values (e.g. unknown)
+                return Promise.resolve({
+                    ...axisData,
+                    data: axisData.data.filter(
+                        x =>
+                            typeof x.value !== 'string' ||
+                            x.value.toLowerCase() !== 'unknown'
+                    ),
+                });
+            }
+        },
+    });
 
     private readonly clinicalDataPromise = remoteData({
         await: () => [
@@ -318,11 +366,6 @@ export default class ClinicalData extends React.Component<
                             : sampleIdentifiers,
                     },
                 });
-
-                // filter out NA like values
-                clinicalData = clinicalData.filter(
-                    d => d.value.toLowerCase() !== 'unknown'
-                );
 
                 let normalizedCategory: { [id: string]: string } = {};
                 for (const d of clinicalData) {
@@ -430,12 +473,12 @@ export default class ClinicalData extends React.Component<
     @computed get vertAxisDataPromise() {
         return this.swapAxes
             ? this.groupMembershipAxisData
-            : this.clinicalDataPromise;
+            : this.clinicalDataPromiseFiltered;
     }
 
     @computed get horzAxisDataPromise() {
         return this.swapAxes
-            ? this.clinicalDataPromise
+            ? this.clinicalDataPromiseFiltered
             : this.groupMembershipAxisData;
     }
 
@@ -646,6 +689,19 @@ export default class ClinicalData extends React.Component<
                             Log Scale
                         </label>
                     )}
+                    {this.clinicalDataPromise.result &&
+                        this.clinicalDataPromise.result.datatype ===
+                            'string' && (
+                            <label className="checkbox-inline">
+                                <input
+                                    type="checkbox"
+                                    checked={this.showNA}
+                                    onClick={this.onClickShowNA}
+                                    data-test="showNA"
+                                />
+                                Show NA
+                            </label>
+                        )}
                 </div>
             </div>
         );
