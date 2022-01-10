@@ -16,6 +16,54 @@ const UPDATE_BUTTON = '.btn-sm';
 const BIN_SIZE = 'span=Bin size';
 const MIN_VALUE = 'span=Min value';
 
+describe('Custom Bins menu in study view chart header', function() {
+    beforeEach(() => {
+        goToUrlAndSetLocalStorage(studyViewUrl, true);
+        openCustomBinsMenu();
+    });
+
+    it('creates quartiles bins', () => {
+        selectMenuOption('label=Quartiles');
+        clickUpdate();
+        $('body').moveTo();
+        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+        assertScreenShotMatch(res);
+    });
+
+    it('creates median split bins', () => {
+        selectMenuOption('label=Median split');
+        clickUpdate();
+        $('body').moveTo();
+        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+        assertScreenShotMatch(res);
+    });
+
+    it('generates bins using min and bin size input fields', () => {
+        selectMenuOption('label=Generate bins');
+        $(BIN_SIZE)
+            .$('..')
+            .$('.input-sm')
+            .setValue('2');
+        $(MIN_VALUE)
+            .$('..')
+            .$('.input-sm')
+            .setValue('2');
+        clickUpdate();
+        $('body').moveTo();
+        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+        assertScreenShotMatch(res);
+    });
+
+    it('creates custom bins using custom bins input field', () => {
+        selectMenuOption('label=Custom bins');
+        $$('.input-sm')[2].setValue('0,10,20,30,40');
+        clickUpdate();
+        $('body').moveTo();
+        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
+        assertScreenShotMatch(res);
+    });
+});
+
 function openCustomBinsMenu() {
     $(MUTATION_COUNT_CHART).waitForDisplayed();
     jsApiHover(MUTATION_COUNT_CHART);
@@ -31,69 +79,14 @@ function openCustomBinsMenu() {
     $(CUSTOM_BINS_MENU).waitForDisplayed();
 }
 
-describe('custom bins menu', function() {
-    it('select quartiles and verify chart', () => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
-        openCustomBinsMenu();
-        $(CUSTOM_BINS_MENU)
-            .$('label=Quartiles')
-            .click();
-        $(CUSTOM_BINS_MENU)
-            .$(UPDATE_BUTTON)
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
-        assertScreenShotMatch(res);
-    });
+function selectMenuOption(identifier) {
+    $(CUSTOM_BINS_MENU)
+        .$(identifier)
+        .click();
+}
 
-    it('select median split and verify chart', () => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
-        openCustomBinsMenu();
-        $(CUSTOM_BINS_MENU)
-            .$('label=Median split')
-            .click();
-        $(CUSTOM_BINS_MENU)
-            .$(UPDATE_BUTTON)
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
-        assertScreenShotMatch(res);
-    });
-
-    it('select generate bins, introduce values and verify chart', () => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
-        openCustomBinsMenu();
-        $(CUSTOM_BINS_MENU)
-            .$('label=Generate bins')
-            .click();
-        $(BIN_SIZE)
-            .$('..')
-            .$('.input-sm')
-            .setValue('2');
-        $(MIN_VALUE)
-            .$('..')
-            .$('.input-sm')
-            .setValue('2');
-        $(CUSTOM_BINS_MENU)
-            .$(UPDATE_BUTTON)
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
-        assertScreenShotMatch(res);
-    });
-
-    it('select custom bins, introduce values and verify chart', () => {
-        goToUrlAndSetLocalStorage(studyViewUrl, true);
-        openCustomBinsMenu();
-        $(CUSTOM_BINS_MENU)
-            .$('label=Custom bins')
-            .click();
-        $$('.input-sm')[2].setValue('0,10,20,30,40');
-        $(CUSTOM_BINS_MENU)
-            .$(UPDATE_BUTTON)
-            .click();
-        $('body').moveTo();
-        const res = checkElementWithMouseDisabled(MUTATION_COUNT_CHART);
-        assertScreenShotMatch(res);
-    });
-});
+function clickUpdate() {
+    $(CUSTOM_BINS_MENU)
+        .$(UPDATE_BUTTON)
+        .click();
+}
