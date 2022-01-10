@@ -25,6 +25,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import _ from 'lodash';
 import ResultsViewURLWrapper from '../ResultsViewURLWrapper';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -157,6 +158,12 @@ export default class Mutations extends React.Component<
         this.setSelectedGeneSymbol(id);
     }
 
+    @action.bound
+    protected handleOncoKbIconToggle(mergeIcons: boolean) {
+        this.userSelectionStore.mergeOncoKbIcons = mergeIcons;
+        updateOncoKbIconStyle({ mergeIcons });
+    }
+
     @computed get geneTabContent() {
         if (
             this.selectedGene &&
@@ -212,6 +219,10 @@ export default class Mutations extends React.Component<
                                 : false,
                         })}
                         oncoKbPublicApiUrl={getOncoKbApiUrl()}
+                        mergeOncoKbIcons={
+                            this.userSelectionStore.mergeOncoKbIcons
+                        }
+                        onOncoKbIconToggle={this.handleOncoKbIconToggle}
                         store={mutationMapperStore}
                         isPutativeDriver={
                             this.props.store.driverAnnotationSettings

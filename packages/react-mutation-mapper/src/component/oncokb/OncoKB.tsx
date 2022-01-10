@@ -13,18 +13,19 @@ import {
     calcSensitivityLevelScore,
 } from '../../util/OncoKbUtils';
 import { errorIcon, loaderIcon } from '../StatusHelpers';
+import { AnnotationIcon, AnnotationIconWithTooltip } from './AnnotationIcon';
+import { CompactAnnotationIcon } from './CompactAnnotationIcon';
 import OncoKbTooltip from './OncoKbTooltip';
 import OncoKbFeedback from './OncoKbFeedback';
 
-import annotationStyles from '../column/annotation.module.scss';
 import './oncokb.scss';
 import 'oncokb-styles/dist/oncokb.css';
-import { AnnotationIcon } from './AnnotationIcon';
 
 export interface IOncoKbProps {
     status: 'pending' | 'error' | 'complete';
     indicator?: IndicatorQueryResp;
     availableDataTypes?: OncoKbCardDataType[];
+    mergeAnnotationIcons?: boolean;
     pubMedCache?: MobxCache;
     usingPublicOncoKbInstance: boolean;
     isCancerGene: boolean;
@@ -70,6 +71,45 @@ export function download(
     return `${oncogenic}, ${sensitivityLevel}, ${resistanceLevel}`;
 }
 
+function findDefaultDataTypeForTooltip(
+    usingPublicOncoKbInstance: boolean,
+    indicator?: IndicatorQueryResp,
+    availableDataTypes?: OncoKbCardDataType[]
+) {
+    if (usingPublicOncoKbInstance || !indicator) {
+        return OncoKbCardDataType.BIOLOGICAL;
+    }
+
+    // priority is in this order: Tx > Dx > Px > Biological
+    if (
+        indicator.highestSensitiveLevel &&
+        availableDataTypes &&
+        availableDataTypes.includes(OncoKbCardDataType.TXS)
+    ) {
+        return OncoKbCardDataType.TXS;
+    } else if (
+        indicator.highestResistanceLevel &&
+        availableDataTypes &&
+        availableDataTypes.includes(OncoKbCardDataType.TXR)
+    ) {
+        return OncoKbCardDataType.TXR;
+    } else if (
+        indicator.highestDiagnosticImplicationLevel &&
+        availableDataTypes &&
+        availableDataTypes.includes(OncoKbCardDataType.DX)
+    ) {
+        return OncoKbCardDataType.DX;
+    } else if (
+        indicator.highestPrognosticImplicationLevel &&
+        availableDataTypes &&
+        availableDataTypes.includes(OncoKbCardDataType.PX)
+    ) {
+        return OncoKbCardDataType.PX;
+    }
+
+    return OncoKbCardDataType.BIOLOGICAL;
+}
+
 @observer
 export default class OncoKB extends React.Component<IOncoKbProps, {}> {
     constructor(props: any) {
@@ -80,52 +120,17 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
     @observable tooltipDataLoadComplete: boolean = false;
 
     public render() {
-        let oncoKbContent: JSX.Element = (
-            <span className={`${annotationStyles['annotation-item']}`} />
-        );
+        let oncoKbContent: JSX.Element;
 
         if (this.props.status === 'error') {
             oncoKbContent = errorIcon('Error fetching OncoKB data');
         } else if (this.props.status === 'pending') {
             oncoKbContent = loaderIcon('pull-left');
         } else {
-            oncoKbContent = (
-                <span
-                    className="oncokb-content"
-                    style={{ display: 'inline-flex' }}
-                >
-                    <AnnotationIcon
-                        type={OncoKbCardDataType.BIOLOGICAL}
-                        tooltipOverlay={this.tooltipContent(
-                            OncoKbCardDataType.BIOLOGICAL
-                        )}
-                        indicator={this.props.indicator}
-                        availableDataTypes={this.props.availableDataTypes}
-                    />
-                    {!this.props.usingPublicOncoKbInstance &&
-                        this.props.indicator && (
-                            <>
-                                {[
-                                    OncoKbCardDataType.TXS,
-                                    OncoKbCardDataType.TXR,
-                                    OncoKbCardDataType.DX,
-                                    OncoKbCardDataType.PX,
-                                ].map(dataType => (
-                                    <AnnotationIcon
-                                        type={dataType}
-                                        tooltipOverlay={this.tooltipContent(
-                                            dataType
-                                        )}
-                                        indicator={this.props.indicator}
-                                        availableDataTypes={
-                                            this.props.availableDataTypes
-                                        }
-                                    />
-                                ))}
-                            </>
-                        )}
-                </span>
-            );
+            oncoKbContent = this.props.mergeAnnotationIcons
+                ? this.singleAnnotationIcon()
+                : this.multiAnnotationIcon();
+
             if (!this.props.disableFeedback && this.showFeedback) {
                 oncoKbContent = (
                     <span>
@@ -147,6 +152,86 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
         }
 
         return oncoKbContent;
+    }
+
+    private multiAnnotationIcon() {
+        return (
+            <span className="oncokb-content" style={{ display: 'inline-flex' }}>
+                <AnnotationIcon
+                    type={OncoKbCardDataType.BIOLOGICAL}
+                    tooltipOverlay={this.tooltipContent(
+                        OncoKbCardDataType.BIOLOGICAL
+                    )}
+                    indicator={this.props.indicator}
+                    availableDataTypes={this.props.availableDataTypes}
+                />
+                {this.levelIcons()}
+            </span>
+        );
+    }
+
+    private levelIcons() {
+        if (this.props.usingPublicOncoKbInstance) {
+            return null;
+        }
+
+        if (this.props.indicator) {
+            return (
+                <>
+                    {[
+                        OncoKbCardDataType.TXS,
+                        OncoKbCardDataType.TXR,
+                        OncoKbCardDataType.DX,
+                        OncoKbCardDataType.PX,
+                    ].map(dataType => (
+                        <AnnotationIcon
+                            type={dataType}
+                            tooltipOverlay={this.tooltipContent(dataType)}
+                            indicator={this.props.indicator}
+                            availableDataTypes={this.props.availableDataTypes}
+                        />
+                    ))}
+                </>
+            );
+        } else {
+            // TODO This doesn't always work, in some cases it adds unnecessary empty icons, we need a better solution.
+            // we still need to draw empty icons even if there is no indicator data.
+            // this is to keep the icon alignment consistent with the rest of the column
+            // return (
+            //     <>
+            //         {this.props.availableDataTypes?.map(() => (
+            //             <AnnotationIconWithTooltip icon={<i />} />
+            //         ))}
+            //     </>
+            // );
+
+            return null;
+        }
+    }
+
+    private singleAnnotationIcon() {
+        return (
+            <span className="oncokb-content" style={{ display: 'inline-flex' }}>
+                <AnnotationIconWithTooltip
+                    tooltipOverlay={this.tooltipContent(
+                        findDefaultDataTypeForTooltip(
+                            this.props.usingPublicOncoKbInstance,
+                            this.props.indicator,
+                            this.props.availableDataTypes
+                        )
+                    )}
+                    icon={
+                        <CompactAnnotationIcon
+                            indicator={this.props.indicator}
+                            availableDataTypes={this.props.availableDataTypes}
+                            usingPublicOncoKbInstance={
+                                this.props.usingPublicOncoKbInstance
+                            }
+                        />
+                    }
+                />
+            </span>
+        );
     }
 
     @autobind

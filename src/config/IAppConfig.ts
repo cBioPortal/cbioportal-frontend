@@ -144,6 +144,7 @@ export interface IServerConfig {
     skin_geneset_hierarchy_default_gsva_score: number;
     skin_geneset_hierarchy_default_p_value: number;
     oncoKbTokenDefined: boolean;
+    oncokb_merge_icons_by_default: boolean;
     generic_assay_display_text: string; // this has a default
     saml_logout_local: boolean;
     patient_view_use_legacy_timeline: boolean;
