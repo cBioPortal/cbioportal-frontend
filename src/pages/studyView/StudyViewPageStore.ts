@@ -3266,6 +3266,15 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    public updateGenerateBinsConfig(
+        binSize: number,
+        anchorValue: number
+    ): void {
+        this.generateBinsConfig.binSize = binSize;
+        this.generateBinsConfig.anchorValue = anchorValue;
+    }
+
+    @action.bound
     public updateCustomBins(
         uniqueKey: string,
         bins: number[],
