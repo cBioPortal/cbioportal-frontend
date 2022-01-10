@@ -102,9 +102,13 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?: boolean;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     columnVisibility?: { [columnId: string]: boolean };
-    storeColumnVisibility?: (columnVisibility: {
-        [columnId: string]: boolean;
-    }) => void;
+    storeColumnVisibility?: (
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) => void;
     pageToHighlight?: boolean;
     showCountHeader?: boolean;
     onRowClick?: (d: T) => void;

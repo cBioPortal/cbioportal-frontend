@@ -103,7 +103,7 @@ class TherapeuticImplication extends React.Component<
                         >
                             OncoKB
                         </a>
-                        &nbsp;is a precision oncology knowledge base and
+                        &nbsp;is a precision oncology knowledge base that
                         contains
                         <br />
                         information about the effects and treatment implications
