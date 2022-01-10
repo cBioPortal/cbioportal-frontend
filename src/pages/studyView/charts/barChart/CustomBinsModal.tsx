@@ -23,6 +23,7 @@ export type ICustomBinsProps = {
         binMethod: string,
         generateBins: GenerateBinsConfig
     ) => void;
+    updateGenerateBinsConfig: (binSize: number, anchorValue: number) => void;
     store: StudyViewPageStore;
 };
 
@@ -33,7 +34,7 @@ export default class CustomBinsModal extends React.Component<
 > {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
-    @observable private currentGenerateBins: GenerateBinsConfig;
+    @observable private currentGenerateBinsConfig: GenerateBinsConfig;
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
@@ -42,7 +43,7 @@ export default class CustomBinsModal extends React.Component<
             const bins = _.sortBy(this.props.currentBins);
             this.currentBinsValue = bins.join(`${this.binSeparator} `);
         }
-        this.currentGenerateBins = this.props.store.generateBinsConfig;
+        this.currentGenerateBinsConfig = this.props.store.generateBinsConfig;
     }
 
     @autobind
@@ -57,12 +58,18 @@ export default class CustomBinsModal extends React.Component<
             this.currentBinsValue = newBins.join(`${this.binSeparator} `);
         }
 
+        this.props.updateGenerateBinsConfig(
+            this.currentGenerateBinsConfig.binSize,
+            this.currentGenerateBinsConfig.anchorValue
+        );
+
         this.props.updateCustomBins(
             this.props.chartMeta.uniqueKey,
             newBins,
             this.props.store.binMethod,
-            this.currentGenerateBins
+            this.currentGenerateBinsConfig
         );
+
         this.props.onHide();
     }
 
@@ -82,14 +89,12 @@ export default class CustomBinsModal extends React.Component<
 
     @action
     updateBinSize(value: number) {
-        this.currentGenerateBins.binSize = value;
-        this.props.store.generateBinsConfig.binSize = value;
+        this.currentGenerateBinsConfig.binSize = value;
     }
 
     @action
     updateAnchorValue(value: number) {
-        this.currentGenerateBins.anchorValue = value;
-        this.props.store.generateBinsConfig.anchorValue = value;
+        this.currentGenerateBinsConfig.anchorValue = value;
     }
 
     render() {
@@ -158,7 +163,7 @@ export default class CustomBinsModal extends React.Component<
                                     marginLeft: '20px',
                                 }}
                                 rows={1}
-                                value={this.currentGenerateBins.binSize}
+                                value={this.currentGenerateBinsConfig.binSize}
                                 className="form-control input-sm"
                                 onChange={event =>
                                     this.updateBinSize(
@@ -179,7 +184,9 @@ export default class CustomBinsModal extends React.Component<
                                     marginLeft: '9px',
                                 }}
                                 rows={1}
-                                value={this.currentGenerateBins.anchorValue}
+                                value={
+                                    this.currentGenerateBinsConfig.anchorValue
+                                }
                                 className="form-control input-sm"
                                 onChange={event =>
                                     this.updateAnchorValue(
