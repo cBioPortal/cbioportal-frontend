@@ -17,6 +17,8 @@ import {
     ChartType,
     getGenomicChartUniqueKey,
     getGenericAssayChartUniqueKey,
+    DataBin,
+    updateCustomIntervalFilter,
 } from 'pages/studyView/StudyViewUtils';
 import {
     ChartMeta,
@@ -48,8 +50,11 @@ import {
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_MISSENSE,
 } from 'cbioportal-frontend-commons';
+import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
+import { toPromise } from 'cbioportal-frontend-commons';
 
 export interface IUserSelectionsProps {
+    store: StudyViewPageStore;
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: ClinicalDataFilter[];
     numberOfSelectedSamplesInCustomSelection: number;
@@ -215,6 +220,26 @@ export default class UserSelections extends React.Component<
                                     </span>,
                                     this.renderDataBinFilter(
                                         genomicDataIntervalFilter.values,
+                                        (
+                                            chartUniqueKey: string,
+                                            newRange: {
+                                                start?: number;
+                                                end?: number;
+                                            }
+                                        ) => {
+                                            updateCustomIntervalFilter(
+                                                newRange,
+                                                chartMeta,
+                                                this.props.store
+                                                    .getGenomicChartDataBin,
+                                                this.props.store
+                                                    .getGenomicDataIntervalFiltersByUniqueKey,
+                                                this.props.store
+                                                    .updateCustomBins,
+                                                this.props.store
+                                                    .updateGenomicDataIntervalFilters
+                                            );
+                                        },
                                         this.props
                                             .updateGenomicDataIntervalFilter,
                                         chartMeta
@@ -256,7 +281,24 @@ export default class UserSelections extends React.Component<
                                         </span>,
                                         <PillTag
                                             content={intervalFiltersDisplayValue(
-                                                genericAssayDataFilter.values
+                                                genericAssayDataFilter.values,
+                                                (newRange: {
+                                                    start?: number;
+                                                    end?: number;
+                                                }) => {
+                                                    updateCustomIntervalFilter(
+                                                        newRange,
+                                                        chartMeta,
+                                                        this.props.store
+                                                            .getGenericAssayChartDataBin,
+                                                        this.props.store
+                                                            .getGenericAssayDataFiltersByUniqueKey,
+                                                        this.props.store
+                                                            .updateCustomBins,
+                                                        this.props.store
+                                                            .updateGenericAssayDataFilters
+                                                    );
+                                                }
                                             )}
                                             backgroundColor={
                                                 STUDY_VIEW_CONFIG.colors.theme
@@ -451,6 +493,21 @@ export default class UserSelections extends React.Component<
                               )
                             : this.renderDataBinFilter(
                                   clinicalDataFilter.values,
+                                  (
+                                      chartUniqueKey: string,
+                                      newRange: { start?: number; end?: number }
+                                  ) => {
+                                      updateCustomIntervalFilter(
+                                          newRange,
+                                          chartMeta,
+                                          this.props.store.getClinicalDataBin,
+                                          this.props.store
+                                              .getClinicalDataFiltersByUniqueKey,
+                                          this.props.store.updateCustomBins,
+                                          this.props.store
+                                              .updateClinicalDataIntervalFilters
+                                      );
+                                  },
                                   onDelete,
                                   chartMeta
                               );
@@ -483,12 +540,20 @@ export default class UserSelections extends React.Component<
     // Bar chart filter
     private renderDataBinFilter(
         values: DataFilterValue[],
+        onUpdate: (
+            chartUniqueKey: string,
+            update: { start?: number; end?: number }
+        ) => void,
         onDelete: (chartUniqueKey: string, values: DataFilterValue[]) => void,
         chartMeta: ChartMeta
     ): JSX.Element {
         return (
             <PillTag
-                content={intervalFiltersDisplayValue(values)}
+                content={intervalFiltersDisplayValue(
+                    values,
+                    (update: { start?: number; end?: number }) =>
+                        onUpdate(chartMeta.uniqueKey, update)
+                )}
                 backgroundColor={
                     STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
                 }
