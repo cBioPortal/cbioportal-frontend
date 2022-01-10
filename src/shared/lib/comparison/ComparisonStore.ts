@@ -80,7 +80,7 @@ import {
     ResultsViewPageStore,
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import { getSurvivalStatusBoolean } from 'pages/resultsView/survival/SurvivalUtil';
-import onMobxPromise from '../onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     cnaEventTypeSelectInit,
     CopyNumberEnrichmentEventType,

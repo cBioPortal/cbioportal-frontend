@@ -32,7 +32,7 @@ import { Else, If, Then } from 'react-if';
 import CustomCaseSelection from './addChartButton/customCaseSelection/CustomCaseSelection';
 import { AppStore } from '../../AppStore';
 import ActionButtons from './studyPageHeader/ActionButtons';
-import onMobxPromise from '../../shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     GACustomFieldsEnum,
     serializeEvent,

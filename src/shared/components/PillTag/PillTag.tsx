@@ -6,7 +6,7 @@ import contrast from 'contrast';
 import { computed, makeObservable } from 'mobx';
 
 export interface IPillTagProps {
-    content: string;
+    content: JSX.Element | string;
     backgroundColor: string;
     infoSection?: JSX.Element | null;
     onDelete?: () => void;

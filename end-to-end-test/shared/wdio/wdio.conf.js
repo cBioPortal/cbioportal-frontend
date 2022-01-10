@@ -61,7 +61,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0,
+    misMatchTolerance: 0.01,
 });
 
 function proxyComparisonMethod(target) {
