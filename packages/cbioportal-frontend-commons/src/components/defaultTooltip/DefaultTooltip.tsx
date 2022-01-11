@@ -84,7 +84,5 @@ export function setArrowLeft(tooltipEl: any, left: string) {
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
 export function placeArrowBottomLeft(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    // @ts-ignore: no-implicit-this
-    const targetEl = this.getRootDomNode(); // eslint-disable-line no-invalid-this
     arrowEl.style.left = '10px';
 }
