@@ -132,9 +132,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         </div>
                     </Then>
                     <Else>
-                        <div className="contentWrapper">
-                            {makeRoutes(this.routingStore)}
-                        </div>
+                        <div className="contentWrapper">{makeRoutes()}</div>
                     </Else>
                 </If>
             </div>
