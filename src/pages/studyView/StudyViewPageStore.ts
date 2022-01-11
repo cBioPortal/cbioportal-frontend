@@ -5019,7 +5019,6 @@ export class StudyViewPageStore
                                     ),
                                 };
                             })
-                            .filter(record => record.count > 0)
                             .value();
                     })
                     .value()
