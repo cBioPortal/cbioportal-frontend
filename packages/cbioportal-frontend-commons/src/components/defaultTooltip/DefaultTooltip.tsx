@@ -54,7 +54,7 @@ export default class DefaultTooltip extends React.Component<
     }
 
     render() {
-        let { disabled, visible, ...restProps } = this.props;
+        let { disabled, visible, onPopupAlign, ...restProps } = this.props;
         let tooltipProps: TooltipProps = restProps;
         if (disabled) {
             visible = false;
@@ -63,7 +63,13 @@ export default class DefaultTooltip extends React.Component<
             tooltipProps.visible = visible;
         }
         return (
-            <Tooltip {...tooltipProps} onPopupAlign={this.defaultSetArrowLeft}>
+            <Tooltip
+                {...tooltipProps}
+                onPopupAlign={(...args) => {
+                    this.defaultSetArrowLeft(...args);
+                    onPopupAlign && onPopupAlign(...args);
+                }}
+            >
                 {this.props.children as any}
             </Tooltip>
         );

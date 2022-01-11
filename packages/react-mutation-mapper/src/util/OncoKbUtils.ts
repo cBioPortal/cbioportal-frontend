@@ -4,6 +4,7 @@ import {
     IOncoKbData,
     LEVELS,
     Mutation,
+    OncoKbCardDataType,
 } from 'cbioportal-utils';
 import { IndicatorQueryResp, TumorType } from 'oncokb-ts-api-client';
 
@@ -78,6 +79,13 @@ export function normalizeLevel(level: string | null): string | null {
     }
 }
 
+export function normalizeOncogenicity(oncogenicity?: string) {
+    return (oncogenicity || 'unknown')
+        .trim()
+        .toLowerCase()
+        .replace(/\s/, '-');
+}
+
 export function oncogenicXPosition(highestSensitiveLevel: string | null) {
     const map: { [id: string]: number } = {
         '1': 1,
@@ -138,13 +146,43 @@ export function levelIconClassNames(level: string) {
 }
 
 export function oncogenicityIconClassNames(oncogenicity: string) {
-    if (!oncogenicity) {
-        oncogenicity = 'unknown';
+    return `oncokb icon ${normalizeOncogenicity(oncogenicity)}`;
+}
+
+export function annotationIconClassNames(
+    type: OncoKbCardDataType,
+    highestLevel: string,
+    indicator?: IndicatorQueryResp
+) {
+    return type === OncoKbCardDataType.BIOLOGICAL
+        ? oncogenicityIconClassNames(indicator?.oncogenic || '')
+        : levelIconClassNames(normalizeLevel(highestLevel) || '');
+}
+
+export function calcHighestIndicatorLevel(
+    type: OncoKbCardDataType,
+    indicator?: IndicatorQueryResp
+) {
+    let highestLevel = '';
+
+    if (indicator) {
+        switch (type) {
+            case OncoKbCardDataType.TXS:
+                highestLevel = indicator.highestSensitiveLevel;
+                break;
+            case OncoKbCardDataType.TXR:
+                highestLevel = indicator.highestResistanceLevel;
+                break;
+            case OncoKbCardDataType.DX:
+                highestLevel = indicator.highestDiagnosticImplicationLevel;
+                break;
+            case OncoKbCardDataType.PX:
+                highestLevel = indicator.highestPrognosticImplicationLevel;
+                break;
+        }
     }
-    return `oncokb icon ${oncogenicity
-        .trim()
-        .toLowerCase()
-        .replace(/\s/, '-')}`;
+
+    return highestLevel;
 }
 
 export function calcOncogenicScore(oncogenic: string) {

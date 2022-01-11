@@ -61,7 +61,7 @@ import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/Window
 import { DefaultTooltip, remoteData } from 'cbioportal-frontend-commons';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import {
     MolecularProfile,
     Sample,

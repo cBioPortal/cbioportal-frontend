@@ -1,4 +1,3 @@
-import autobind from 'autobind-decorator';
 import * as React from 'react';
 import _ from 'lodash';
 import classnames from 'classnames';
@@ -14,7 +13,6 @@ import { action, computed, observable, makeObservable } from 'mobx';
 import { getRemoteDataGroupStatus } from 'cbioportal-utils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
-import { Checkbox } from 'react-bootstrap';
 import {
     columnIdToFilterId,
     matchCategoricalFilterSearch,
@@ -39,7 +37,6 @@ import MutationMapperDataStore, {
 
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
-import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 import {
     getPatientSampleSummary,
@@ -220,6 +217,8 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 usingPublicOncoKbInstance={
                     this.props.store.usingPublicOncoKbInstance
                 }
+                mergeOncoKbIcons={this.props.mergeOncoKbIcons}
+                onOncoKbIconToggle={this.props.onOncoKbIconToggle}
                 civicGenes={this.props.store.civicGenes}
                 civicVariants={this.props.store.civicVariants}
                 userEmailAddress={this.props.userEmailAddress}

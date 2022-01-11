@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import { remoteData } from 'cbioportal-frontend-commons';
 import onMobxPromise from './onMobxPromise';
 import { IReactionDisposer, observable } from 'mobx';
+import { remoteData } from '../../api/remoteData';
 
 describe('onMobxPromise', () => {
     it('executes the given callback with the result when the mobx promise completes', done => {

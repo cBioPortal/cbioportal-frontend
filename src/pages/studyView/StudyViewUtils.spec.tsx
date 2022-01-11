@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import * as React from 'react';
 import {
     calcIntervalBinValues,
     calculateLayout,
@@ -61,6 +62,7 @@ import {
     annotationFilterActive,
     driverTierFilterActive,
     statusFilterActive,
+    updateCustomIntervalFilter,
 } from 'pages/studyView/StudyViewUtils';
 import {
     Sample,
@@ -86,6 +88,14 @@ import {
     ChartUserSetting,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { spy } from 'sinon';
+import { shallow, render, mount } from 'enzyme';
+import {
+    EditableSpan,
+    remoteData,
+    toPromise,
+} from 'cbioportal-frontend-commons';
+import { autorun, observable, runInAction } from 'mobx';
 
 describe('StudyViewUtils', () => {
     const emptyStudyViewFilter: StudyViewFilter = {
@@ -1358,89 +1368,119 @@ describe('StudyViewUtils', () => {
 
         it('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsClosed
+                filterValuesWithBothEndsClosed,
+                () => {},
+                true
             );
+
             assert.equal(value, '10 < x ≤ 50');
         });
 
         it('generates display value for filter values with both ends closed, with special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsClosedAndSpecialValues
+                filterValuesWithBothEndsClosedAndSpecialValues,
+                () => {},
+                true
             );
+
             assert.equal(value, '10 < x ≤ 50, NA, REDACTED');
         });
 
         it('generates display value for filter values with both ends open', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsOpen
+                filterValuesWithBothEndsOpen,
+                () => {},
+                true
             );
             assert.equal(value, 'All Numbers');
         });
 
         it('generates display value for filter values with both ends open, with special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithBothEndsOpenAndSpecialValues
+                filterValuesWithBothEndsOpenAndSpecialValues,
+                () => {},
+                true
             );
             assert.equal(value, 'All Numbers, NA, REDACTED');
         });
 
         it('generates display value for filter values with start open, end closed', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithStartOpen
+                filterValuesWithStartOpen,
+                () => {},
+                true
             );
             assert.equal(value, '≤ 50');
         });
 
         it('generates display value for filter values with start open, end closed, with special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithStartOpenAndSpecialValues
+                filterValuesWithStartOpenAndSpecialValues,
+                () => {},
+                true
             );
             assert.equal(value, '≤ 50, NA, REDACTED');
         });
 
         it('generates display value for filter values with start closed, end open', () => {
-            const value = intervalFiltersDisplayValue(filterValuesWithEndOpen);
+            const value = intervalFiltersDisplayValue(
+                filterValuesWithEndOpen,
+                () => {},
+                true
+            );
             assert.equal(value, '> 10');
         });
 
         it('generates display value for filter values with start closed, end open, with special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithEndOpenAndSpecialValues
+                filterValuesWithEndOpenAndSpecialValues,
+                () => {},
+                true
             );
             assert.equal(value, '> 10, NA, REDACTED');
         });
 
         it('generates display value for filter values with special values only', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithSpecialValuesOnly
+                filterValuesWithSpecialValuesOnly,
+                () => {},
+                true
             );
             assert.equal(value, 'NA, REDACTED');
         });
 
         it('generates display value for filter values with distinct values only', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithDistinctNumerals
+                filterValuesWithDistinctNumerals,
+                () => {},
+                true
             );
             assert.equal(value, '20 ≤ x ≤ 40');
         });
 
         it('generates display value for filter values with distinct values and special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithDistinctNumeralsAndSpecialValues
+                filterValuesWithDistinctNumeralsAndSpecialValues,
+                () => {},
+                true
             );
             assert.equal(value, '20 ≤ x ≤ 40, NA, REDACTED');
         });
 
         it('generates display value for filter values with a single distinct value', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithSingleDistinctValue
+                filterValuesWithSingleDistinctValue,
+                () => {},
+                true
             );
             assert.equal(value, '666');
         });
 
         it('generates display value for filter values with a single distinct value and special values', () => {
             const value = intervalFiltersDisplayValue(
-                filterValuesWithSingleDistinctValueAndSpecialValues
+                filterValuesWithSingleDistinctValueAndSpecialValues,
+                () => {},
+                true
             );
             assert.equal(value, '666, NA, REDACTED');
         });
@@ -1494,6 +1534,203 @@ describe('StudyViewUtils', () => {
                 isEveryBinDistinct(someBinsDistinct),
                 'should be false when some bins are distinct'
             );
+        });
+    });
+
+    describe('updateCustomIntervalFilter', () => {
+        let newRange: { start?: number; end?: number };
+        let getDataBinsResult1 = observable.box<DataBin[]>([], { deep: false });
+        let getDataBinsResult2 = observable.box<DataBin[]>([], { deep: false });
+        let getCurrentFiltersResult: DataFilterValue[];
+        let afterUpdatingCustomBins: boolean;
+
+        const dataBinsPromise1 = remoteData({
+            invoke: () => Promise.resolve(getDataBinsResult1.get()),
+        });
+        const dataBinsPromise2 = remoteData({
+            invoke: () => Promise.resolve(getDataBinsResult2.get()),
+        });
+        const disposer = autorun(() => {
+            dataBinsPromise1.result;
+            dataBinsPromise2.result;
+        });
+
+        const updateCustomBins = spy(() => {
+            afterUpdatingCustomBins = true;
+        });
+        const getDataBins = spy(() => {
+            if (afterUpdatingCustomBins) {
+                return dataBinsPromise2;
+            } else {
+                return dataBinsPromise1;
+            }
+        });
+        const getCurrentFilters = spy(() => {
+            return getCurrentFiltersResult;
+        });
+        const updateIntervalFilters = spy(() => {});
+
+        beforeEach(() => {
+            updateCustomBins.resetHistory();
+            getDataBins.resetHistory();
+            updateIntervalFilters.resetHistory();
+            getCurrentFilters.resetHistory();
+            afterUpdatingCustomBins = false;
+        });
+        afterAll(() => {
+            disposer();
+        });
+        it('retains categorical filters when updating the range ', async () => {
+            newRange = { start: 3, end: 8 };
+            getCurrentFiltersResult = ([
+                { value: 'NA' },
+                { start: 0, end: 10 },
+            ] as any) as DataFilterValue[];
+            runInAction(() => {
+                getDataBinsResult1.set(([
+                    {
+                        id: '0',
+                        count: 5,
+                        specialValue: 'NA',
+                    },
+                    {
+                        id: '1',
+                        count: 5,
+                        start: 0,
+                        end: 10,
+                    },
+                ] as any) as DataBin[]);
+                getDataBinsResult2.set(([
+                    {
+                        id: '0',
+                        count: 5,
+                        specialValue: 'NA',
+                    },
+                    {
+                        id: '1',
+                        count: 5,
+                        start: 0,
+                        end: 3,
+                    },
+                    {
+                        id: '2',
+                        count: 5,
+                        start: 3,
+                        end: 8,
+                    },
+                    {
+                        id: '3',
+                        count: 5,
+                        start: 8,
+                        end: 10,
+                    },
+                ] as any) as DataBin[]);
+            });
+            await toPromise(dataBinsPromise1);
+            await toPromise(dataBinsPromise2);
+
+            await updateCustomIntervalFilter(
+                newRange,
+                {} as ChartMeta,
+                getDataBins,
+                getCurrentFilters,
+                updateCustomBins,
+                updateIntervalFilters
+            );
+
+            assert.deepEqual(updateCustomBins.args[0][1], [0, 3, 8, 10]);
+            assert.deepEqual(updateIntervalFilters.args[0][1], [
+                {
+                    id: '2',
+                    count: 5,
+                    start: 3,
+                    end: 8,
+                },
+                {
+                    specialValue: 'NA',
+                    start: undefined,
+                    end: undefined,
+                },
+            ]);
+        });
+        it('updates a range correctly when it is partially overlapping', async () => {
+            newRange = { start: 3, end: 14 };
+            getCurrentFiltersResult = ([
+                { value: 'NA' },
+                { start: 0, end: 10 },
+            ] as any) as DataFilterValue[];
+            runInAction(() => {
+                getDataBinsResult1.set(([
+                    {
+                        id: '0',
+                        count: 5,
+                        specialValue: 'NA',
+                    },
+                    {
+                        id: '1',
+                        count: 5,
+                        start: 0,
+                        end: 10,
+                    },
+                ] as any) as DataBin[]);
+                getDataBinsResult2.set(([
+                    {
+                        id: '0',
+                        count: 5,
+                        specialValue: 'NA',
+                    },
+                    {
+                        id: '1',
+                        count: 5,
+                        start: 0,
+                        end: 3,
+                    },
+                    {
+                        id: '2',
+                        count: 5,
+                        start: 3,
+                        end: 10,
+                    },
+                    {
+                        id: '3',
+                        count: 5,
+                        start: 10,
+                        end: 14,
+                    },
+                ] as any) as DataBin[]);
+            });
+            await toPromise(dataBinsPromise1);
+            await toPromise(dataBinsPromise2);
+
+            await updateCustomIntervalFilter(
+                newRange,
+                {} as ChartMeta,
+                getDataBins,
+                getCurrentFilters,
+                updateCustomBins,
+                updateIntervalFilters
+            );
+
+            assert.deepEqual(updateCustomBins.args[0][1], [0, 3, 10, 14]);
+            assert.deepEqual(updateIntervalFilters.args[0][1], [
+                {
+                    id: '2',
+                    count: 5,
+                    start: 3,
+                    end: 10,
+                },
+                {
+                    id: '3',
+                    count: 5,
+                    start: 10,
+                    end: 14,
+                },
+                {
+                    specialValue: 'NA',
+                    start: undefined,
+                    end: undefined,
+                },
+            ]);
         });
     });
 

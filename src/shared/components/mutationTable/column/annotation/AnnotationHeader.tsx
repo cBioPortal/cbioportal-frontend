@@ -1,6 +1,6 @@
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import * as React from 'react';
-import { Tab, Tabs } from 'react-bootstrap';
+import { ButtonGroup, Radio, Tab, Tabs } from 'react-bootstrap';
 import ReactTable from 'react-table';
 import {
     levelIconClassNames,
@@ -63,7 +63,7 @@ export const sourceTooltipInfo = {
             sourceUrl: 'https://www.oncokb.org/',
             sourceName: 'OncoKB',
             sourceDescription:
-                'a precision oncology knowledge base and contains information about the effects and treatment implications of variants in cancer',
+                'a precision oncology knowledge base that contains information about the effects and treatment implications of variants in cancer',
             reference: 'Chakravarty et al. 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28890946/',
         },
@@ -91,7 +91,7 @@ export const sourceTooltipInfo = {
             sourceUrl: 'https://www.cancerhotspots.org/',
             sourceName: 'Cancer Hotspots',
             sourceDescription:
-                'statistically significant recurrent mutational hotspots in cancer',
+                'a resource for statistically significant recurrent mutational hotspots in cancer',
             reference: 'Chang et al. 2018',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/29247016/',
         },
@@ -99,7 +99,7 @@ export const sourceTooltipInfo = {
             sourceUrl: 'https://www.3dhotspots.org/',
             sourceName: '3D Cancer Hotspots',
             sourceDescription:
-                'statistically significant recurrent 3D clustered hotspots in cancer',
+                'a resource for statistically significant recurrent 3D clustered hotspots in cancer',
             reference: 'Gao et al. 2017',
             referenceUrl: 'https://pubmed.ncbi.nlm.nih.gov/28115009/',
         },
@@ -254,10 +254,41 @@ const OncokbLegendContent: React.FunctionComponent<{}> = props => {
         <Tabs
             defaultActiveKey={OncokbTabs.ONCOGENIC}
             className={classnames('oncokb-card-tabs')}
-            style={{ height: 460, paddingTop: 10 }}
+            style={{ height: 250, paddingTop: 10 }}
         >
             {getOncokbTabs()}
         </Tabs>
+    );
+};
+
+const OncoKbControls: React.FunctionComponent<{
+    mergeIcons?: boolean;
+    handleChange?: (mergeIcons: boolean) => void;
+}> = props => {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+            <strong style={{ paddingRight: '5px' }}>OncoKB Icon Style: </strong>
+            <ButtonGroup>
+                <Radio
+                    checked={!!props.mergeIcons}
+                    onChange={() =>
+                        props.handleChange && props.handleChange(true)
+                    }
+                    inline={true}
+                >
+                    Compact
+                </Radio>
+                <Radio
+                    checked={!props.mergeIcons}
+                    onChange={() =>
+                        props.handleChange && props.handleChange(false)
+                    }
+                    inline={true}
+                >
+                    Expanded
+                </Radio>
+            </ButtonGroup>
+        </div>
     );
 };
 
@@ -271,8 +302,8 @@ const AnnotationHeaderTooltipCardInfo: React.FunctionComponent<{
                     <div>
                         <a href={p.sourceUrl} target="_blank">
                             {p.sourceName}
-                        </a>
-                        : {p.sourceDescription}{' '}
+                        </a>{' '}
+                        is {p.sourceDescription}{' '}
                         {p.reference && p.referenceUrl && (
                             <>
                                 (
@@ -294,6 +325,9 @@ export const LegendTable: React.FunctionComponent<{
 }> = props => {
     return (
         <ReactTable
+            style={{
+                maxHeight: 200, // this will enable overflow and scroll
+            }}
             data={props.legendDescriptions}
             columns={columns}
             showPagination={false}
@@ -304,14 +338,16 @@ export const LegendTable: React.FunctionComponent<{
 };
 
 export const AnnotationHeaderTooltipCard: React.FunctionComponent<{
-    InfoProps: AnnotationHeaderTooltipCardInfoProps[];
+    controls?: JSX.Element;
+    infoProps: AnnotationHeaderTooltipCardInfoProps[];
     legendDescriptions?: LegendDescription[];
     overrideContent?: JSX.Element;
 }> = props => {
     const showLegendTable = !props.overrideContent && props.legendDescriptions;
     return (
         <div style={{ width: 450 }}>
-            <AnnotationHeaderTooltipCardInfo infoProps={props.InfoProps} />
+            <AnnotationHeaderTooltipCardInfo infoProps={props.infoProps} />
+            {props.controls}
             {!!props.overrideContent && props.overrideContent}
             {showLegendTable && (
                 <LegendTable legendDescriptions={props.legendDescriptions!} />
@@ -323,6 +359,8 @@ export const AnnotationHeaderTooltipCard: React.FunctionComponent<{
 const AnnotationHeader: React.FunctionComponent<{
     name: string;
     width: number;
+    mergeOncoKbIcons?: boolean;
+    onOncoKbIconToggle?: (mergeIcons: boolean) => void;
 }> = props => {
     return (
         <span>
@@ -333,7 +371,13 @@ const AnnotationHeader: React.FunctionComponent<{
                     placement="top"
                     overlay={
                         <AnnotationHeaderTooltipCard
-                            InfoProps={
+                            controls={
+                                <OncoKbControls
+                                    mergeIcons={props.mergeOncoKbIcons}
+                                    handleChange={props.onOncoKbIconToggle}
+                                />
+                            }
+                            infoProps={
                                 sourceTooltipInfo[AnnotationSources.ONCOKB]
                             }
                             legendDescriptions={civicData}
@@ -359,7 +403,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     placement="top"
                     overlay={
                         <AnnotationHeaderTooltipCard
-                            InfoProps={
+                            infoProps={
                                 sourceTooltipInfo[AnnotationSources.CIVIC]
                             }
                             legendDescriptions={civicData}
@@ -382,7 +426,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     placement="top"
                     overlay={
                         <AnnotationHeaderTooltipCard
-                            InfoProps={
+                            infoProps={
                                 sourceTooltipInfo[
                                     AnnotationSources.MY_CANCER_GENOME
                                 ]
@@ -407,7 +451,7 @@ const AnnotationHeader: React.FunctionComponent<{
                     placement="top"
                     overlay={
                         <AnnotationHeaderTooltipCard
-                            InfoProps={
+                            infoProps={
                                 sourceTooltipInfo[
                                     AnnotationSources.CANCER_HOTSPOTS
                                 ]
