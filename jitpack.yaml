@@ -1,0 +1,9 @@
+jdk:
+    - openjdk9
+before_install:
+
+install:
+    - echo "Running a custom install command"
+    - touch ~/.m2/repository/main.js
+env:
+    MYVAR: 'custom environment variable'
