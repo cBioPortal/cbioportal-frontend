@@ -34,6 +34,7 @@ export type IFixedHeaderTableProps<T> = {
     sortBy?: string;
     sortDirection?: SortDirection;
     defaultSelectionOperator?: SelectionOperatorEnum;
+    onScroll?: () => void;
     width?: number;
     height?: number;
     headerHeight?: number;
@@ -488,6 +489,7 @@ export default class FixedHeaderTable<T> extends React.Component<
                         <RVTable
                             width={this.props.width!}
                             height={this.props.height!}
+                            onScroll={this.props.onScroll}
                             headerHeight={this.props.headerHeight!}
                             rowHeight={this.props.rowHeight!}
                             rowCount={

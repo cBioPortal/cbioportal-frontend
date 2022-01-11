@@ -87,7 +87,7 @@ import {
     geneFilterQueryFromOql,
     geneFilterQueryToOql,
     generateScatterPlotDownloadData,
-    generateXVsYScatterPlotDownloadData,
+    generateXvsYScatterPlotDownloadData,
     getBinBounds,
     getCategoricalFilterValues,
     getChartMetaDataType,
@@ -123,8 +123,8 @@ import {
     getUserGroupColor,
     isFiltered,
     isLogScaleByDataBins,
-    makeXVsYDisplayName,
-    makeXVsYUniqueKey,
+    makeXvsYDisplayName,
+    makeXvsYUniqueKey,
     MolecularProfileOption,
     MUTATION_COUNT_PLOT_DOMAIN,
     NumericalGroupComparisonType,
@@ -257,7 +257,7 @@ import {
     StudyPageSettings,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
-import { ClinicalViolinPlotData } from 'cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal';
+import { ClinicalViolinPlotData } from 'cbioportal-ts-api-client';
 
 type ChartUniqueKey = string;
 type ResourceId = string;
@@ -303,7 +303,7 @@ export type StudyViewURLQuery = {
     sharedCustomData?: string;
 };
 
-export type XVsYScatterChart = {
+export type XvsYScatterChart = {
     xAttr: ClinicalAttribute;
     yAttr: ClinicalAttribute;
     plotDomain?: {
@@ -312,13 +312,13 @@ export type XVsYScatterChart = {
     };
 };
 
-export type XVsYViolinChart = {
+export type XvsYViolinChart = {
     categoricalAttr: ClinicalAttribute;
     numericalAttr: ClinicalAttribute;
     violinDomain?: { min?: number; max?: number };
 };
 
-export type XVsYChartSettings = {
+export type XvsYChartSettings = {
     xLogScale?: boolean;
     yLogScale?: boolean;
     violinLogScale?: boolean;
@@ -2332,21 +2332,21 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ChartMeta
     >({}, { deep: false });
-    private _xVsYViolinChartMap = observable.map<
+    private _XvsYViolinChartMap = observable.map<
         ChartUniqueKey,
-        XVsYViolinChart
+        XvsYViolinChart
     >({}, { deep: true });
-    private _xVsYScatterChartMap = observable.map<
+    private _XvsYScatterChartMap = observable.map<
         ChartUniqueKey,
-        XVsYScatterChart
+        XvsYScatterChart
     >({}, { deep: true });
-    private _xVsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
+    private _XvsYCharts = observable.map<ChartUniqueKey, ChartMeta>(
         {},
         { deep: true }
     );
-    private _xVsYChartSettings = observable.map<
+    private _XvsYChartSettings = observable.map<
         ChartUniqueKey,
-        XVsYChartSettings
+        XvsYChartSettings
     >({}, { deep: true });
 
     @observable private _customChartsSelectedCases = observable.map<
@@ -2370,23 +2370,23 @@ export class StudyViewPageStore
         }
     >({}, { deep: false });
 
-    getXVsYViolinChartInfo(uniqueKey: string): XVsYViolinChart | undefined {
-        return this._xVsYViolinChartMap.get(uniqueKey);
+    getXvsYViolinChartInfo(uniqueKey: string): XvsYViolinChart | undefined {
+        return this._XvsYViolinChartMap.get(uniqueKey);
     }
-    getXVsYScatterChartInfo(uniqueKey: string): XVsYScatterChart | undefined {
-        return this._xVsYScatterChartMap.get(uniqueKey);
+    getXvsYScatterChartInfo(uniqueKey: string): XvsYScatterChart | undefined {
+        return this._XvsYScatterChartMap.get(uniqueKey);
     }
-    getXVsYChartSettings(uniqueKey: string): XVsYChartSettings | undefined {
-        return this._xVsYChartSettings.get(uniqueKey);
+    getXvsYChartSettings(uniqueKey: string): XvsYChartSettings | undefined {
+        return this._XvsYChartSettings.get(uniqueKey);
     }
-    getXVsYChartMeta(uniqueKey: string): ChartMeta | undefined {
-        return this._xVsYCharts.get(uniqueKey);
+    getXvsYChartMeta(uniqueKey: string): ChartMeta | undefined {
+        return this._XvsYCharts.get(uniqueKey);
     }
     @action.bound
-    swapXVsYChartAxes(uniqueKey: string): void {
-        const chart = this.getXVsYScatterChartInfo(uniqueKey)!;
-        const settings = this.getXVsYChartSettings(uniqueKey)!;
-        const chartMeta = this.getXVsYChartMeta(uniqueKey)!;
+    swapXvsYChartAxes(uniqueKey: string): void {
+        const chart = this.getXvsYScatterChartInfo(uniqueKey)!;
+        const settings = this.getXvsYChartSettings(uniqueKey)!;
+        const chartMeta = this.getXvsYChartMeta(uniqueKey)!;
 
         const xAttr = chart.xAttr;
         chart.xAttr = chart.yAttr;
@@ -2396,16 +2396,16 @@ export class StudyViewPageStore
         settings.xLogScale = settings.yLogScale;
         settings.yLogScale = xLog;
 
-        chartMeta.displayName = makeXVsYDisplayName(chart.xAttr, chart.yAttr);
+        chartMeta.displayName = makeXvsYDisplayName(chart.xAttr, chart.yAttr);
 
         // trigger rerender
         this.changeChartVisibility(uniqueKey, false);
         this.changeChartVisibility(uniqueKey, true);
     }
-    isXVsYChartVisible(attrIdA: string, attrIdB: string) {
-        const allCharts = this._xVsYScatterChartMap.entries();
+    isXvsYChartVisible(attrIdA: string, attrIdB: string) {
+        const charts = this._XvsYScatterChartMap.entries();
         let matchingChartKey: ChartUniqueKey | null = null;
-        for (const [chartKey, chart] of allCharts) {
+        for (const [chartKey, chart] of charts) {
             const chartAttrIds = [
                 chart.xAttr.clinicalAttributeId,
                 chart.yAttr.clinicalAttributeId,
@@ -2749,7 +2749,7 @@ export class StudyViewPageStore
         chartUniqueKey: string,
         bounds?: RectangleBounds
     ): void {
-        const chartInfo = this.getXVsYScatterChartInfo(chartUniqueKey)!;
+        const chartInfo = this.getXvsYScatterChartInfo(chartUniqueKey)!;
         if (bounds === undefined) {
             this._clinicalDataFilterSet.delete(
                 chartInfo.xAttr.clinicalAttributeId
@@ -2764,7 +2764,7 @@ export class StudyViewPageStore
                 chartInfo.yAttr.clinicalAttributeId
             );
         } else {
-            const chartSettings = this.getXVsYChartSettings(chartUniqueKey)!;
+            const chartSettings = this.getXvsYChartSettings(chartUniqueKey)!;
             const yFilter: DataFilterValue = {
                 start: bounds.yStart,
                 end: bounds.yEnd,
@@ -3141,7 +3141,7 @@ export class StudyViewPageStore
                 }
                 return this._clinicalDataFilterSet.has(chartUniqueKey);
             case ChartTypeEnum.SCATTER:
-                const chart = this._xVsYScatterChartMap.get(chartUniqueKey)!;
+                const chart = this._XvsYScatterChartMap.get(chartUniqueKey)!;
                 return (
                     this._customBinsFromScatterPlotSelectionSet.has(
                         chart.xAttr.clinicalAttributeId
@@ -3524,7 +3524,7 @@ export class StudyViewPageStore
     public getScatterPlotFiltersByUniqueKey(
         uniqueKey: string
     ): RectangleBounds[] {
-        const chartInfo = this.getXVsYScatterChartInfo(uniqueKey)!;
+        const chartInfo = this.getXvsYScatterChartInfo(uniqueKey)!;
 
         const xAxisFilter = this._clinicalDataFilterSet.get(
             chartInfo.xAttr.clinicalAttributeId
@@ -5176,7 +5176,7 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    addXVsYScatterChart(
+    addXvsYScatterChart(
         attrIds: { xAttrId: string; yAttrId: string },
         loadedfromUserSettings: boolean = false,
         dontAddToNewlyAddedCharts: boolean = false
@@ -5190,7 +5190,7 @@ export class StudyViewPageStore
         const yAttr = this.clinicalAttributes.result!.find(
             a => a.clinicalAttributeId === attrIds.yAttrId
         )!;
-        const newChart: XVsYScatterChart = { xAttr, yAttr, plotDomain: {} };
+        const newChart: XvsYScatterChart = { xAttr, yAttr, plotDomain: {} };
         if (
             xAttr.clinicalAttributeId ===
             SpecialChartsUniqueKeyEnum.MUTATION_COUNT
@@ -5213,17 +5213,17 @@ export class StudyViewPageStore
         ) {
             newChart.plotDomain!.y = FGA_PLOT_DOMAIN;
         }
-        const uniqueKey = makeXVsYUniqueKey(
+        const uniqueKey = makeXvsYUniqueKey(
             newChart.xAttr.clinicalAttributeId,
             newChart.yAttr.clinicalAttributeId
         );
 
-        if (this._xVsYScatterChartMap.has(uniqueKey)) {
+        if (this._XvsYScatterChartMap.has(uniqueKey)) {
             this.changeChartVisibility(uniqueKey, true);
         } else {
             const chartMeta: ChartMeta = {
                 uniqueKey: uniqueKey,
-                displayName: makeXVsYDisplayName(
+                displayName: makeXvsYDisplayName(
                     newChart.xAttr,
                     newChart.yAttr
                 ),
@@ -5239,10 +5239,10 @@ export class StudyViewPageStore
                 );
             }
 
-            this._xVsYCharts.set(uniqueKey, chartMeta);
+            this._XvsYCharts.set(uniqueKey, chartMeta);
 
-            this._xVsYScatterChartMap.set(uniqueKey, newChart);
-            this._xVsYChartSettings.set(uniqueKey, {
+            this._XvsYScatterChartMap.set(uniqueKey, newChart);
+            this._XvsYChartSettings.set(uniqueKey, {
                 xLogScale: false,
                 yLogScale: false,
             });
@@ -5264,7 +5264,7 @@ export class StudyViewPageStore
     }
 
     @action.bound
-    addXVsYViolinChart(
+    addXvsYViolinChart(
         attrIds: { categoricalAttrId: string; numericalAttrId: string },
         loadedfromUserSettings: boolean = false,
         dontAddToNewlyAddedCharts: boolean = false
@@ -5278,7 +5278,7 @@ export class StudyViewPageStore
         const numericalAttr = this.clinicalAttributes.result!.find(
             a => a.clinicalAttributeId === attrIds.numericalAttrId
         )!;
-        const newChart: XVsYViolinChart = {
+        const newChart: XvsYViolinChart = {
             categoricalAttr,
             numericalAttr,
             violinDomain: {},
@@ -5291,12 +5291,12 @@ export class StudyViewPageStore
                 newChart.violinDomain = FGA_PLOT_DOMAIN;
                 break;
         }
-        const uniqueKey = makeXVsYUniqueKey(
+        const uniqueKey = makeXvsYUniqueKey(
             newChart.categoricalAttr.clinicalAttributeId,
             newChart.numericalAttr.clinicalAttributeId
         );
 
-        if (this._xVsYViolinChartMap.has(uniqueKey)) {
+        if (this._XvsYViolinChartMap.has(uniqueKey)) {
             this.changeChartVisibility(uniqueKey, true);
         } else {
             const chartMeta: ChartMeta = {
@@ -5309,10 +5309,10 @@ export class StudyViewPageStore
                 priority: 0,
             };
 
-            this._xVsYCharts.set(uniqueKey, chartMeta);
+            this._XvsYCharts.set(uniqueKey, chartMeta);
 
-            this._xVsYViolinChartMap.set(uniqueKey, newChart);
-            this._xVsYChartSettings.set(uniqueKey, {
+            this._XvsYViolinChartMap.set(uniqueKey, newChart);
+            this._XvsYChartSettings.set(uniqueKey, {
                 violinLogScale: false,
                 showBox: true,
                 showViolin: true,
@@ -5506,7 +5506,7 @@ export class StudyViewPageStore
             _chartMetaSet,
             _.fromPairs(this._geneSpecificCharts.toJSON()),
             _.fromPairs(this._genericAssayCharts.toJSON()),
-            _.fromPairs(this._xVsYCharts.toJSON())
+            _.fromPairs(this._XvsYCharts.toJSON())
         );
 
         // Add meta information for each of the clinical attribute
@@ -5837,7 +5837,8 @@ export class StudyViewPageStore
                 _.fromPairs(this.chartsType.toJSON()),
                 _.fromPairs(this._geneSpecificChartMap.toJSON()),
                 _.fromPairs(this._genericAssayChartMap.toJSON()),
-                _.fromPairs(this._xVsYScatterChartMap.toJSON()),
+                _.fromPairs(this._XvsYScatterChartMap.toJSON()),
+                _.fromPairs(this._XvsYViolinChartMap.toJSON()),
                 _.fromPairs(this._clinicalDataBinFilterSet.toJSON()),
                 this._filterMutatedGenesTableByCancerGenes,
                 this._filterSVGenesTableByCancerGenes,
@@ -5967,8 +5968,9 @@ export class StudyViewPageStore
         ChartUniqueKey,
         ClinicalDataBinFilter & { showNA?: boolean }
     >();
-    @computed get _defaultXVsYChartMap() {
-        const map: { [uniqueKey: string]: XVsYScatterChart } = {};
+
+    @computed get _defaultXvsYChartMap() {
+        const map: { [uniqueKey: string]: XvsYScatterChart } = {};
 
         let mutationCountAttr: ClinicalAttribute | undefined;
         let fractionGenomeAlteredAttr: ClinicalAttribute | undefined;
@@ -6038,7 +6040,8 @@ export class StudyViewPageStore
             _.fromPairs(this._defaultChartsType.toJSON()),
             {},
             {},
-            this._defaultXVsYChartMap,
+            this._defaultXvsYChartMap,
+            {},
             _.fromPairs(this._defaultClinicalDataBinFilterSet.toJSON())
         );
     }
@@ -6122,10 +6125,21 @@ export class StudyViewPageStore
                 );
             }
             if (chartUserSettings.chartType === ChartTypeEnum.SCATTER) {
-                this.addXVsYScatterChart(
+                this.addXvsYScatterChart(
                     {
                         xAttrId: chartUserSettings.xAttrId!,
                         yAttrId: chartUserSettings.yAttrId!,
+                    },
+                    true
+                );
+            }
+            if (
+                chartUserSettings.chartType === ChartTypeEnum.VIOLIN_PLOT_TABLE
+            ) {
+                this.addXvsYViolinChart(
+                    {
+                        categoricalAttrId: chartUserSettings.categoricalAttrId!,
+                        numericalAttrId: chartUserSettings.numericalAttrId!,
                     },
                     true
                 );
@@ -6418,7 +6432,7 @@ export class StudyViewPageStore
             fractionGenomeAlteredAttr &&
             getDefaultPriorityByUniqueKey(FGA_VS_MUTATION_COUNT_KEY) !== 0
         ) {
-            this.addXVsYScatterChart(
+            this.addXvsYScatterChart(
                 {
                     xAttrId: SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
                     yAttrId: SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
@@ -7007,7 +7021,7 @@ export class StudyViewPageStore
 
     public clinicalViolinDataCache = new MobxPromiseCache<
         {
-            chartInfo: XVsYViolinChart;
+            chartInfo: XvsYViolinChart;
             violinLogScale: boolean;
         },
         ClinicalViolinPlotData
@@ -7043,7 +7057,7 @@ export class StudyViewPageStore
         {
             xAxisLogScale: boolean;
             yAxisLogScale: boolean;
-            chartInfo: XVsYScatterChart;
+            chartInfo: XvsYScatterChart;
         },
         {
             bins: DensityPlotBin[];
@@ -7665,13 +7679,13 @@ export class StudyViewPageStore
     public async getScatterDownloadData(
         chartUniqueKey: ChartUniqueKey
     ): Promise<string> {
-        const chartInfo = this.getXVsYScatterChartInfo(chartUniqueKey)!;
+        const chartInfo = this.getXvsYScatterChartInfo(chartUniqueKey)!;
         const selectedSamples = await toPromise(this.selectedSamples);
         const [xData, yData] = await Promise.all([
             getSampleToClinicalData(selectedSamples, chartInfo.xAttr),
             getSampleToClinicalData(selectedSamples, chartInfo.yAttr),
         ]);
-        return generateXVsYScatterPlotDownloadData(
+        return generateXvsYScatterPlotDownloadData(
             chartInfo.xAttr,
             chartInfo.yAttr,
             selectedSamples,

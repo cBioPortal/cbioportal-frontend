@@ -122,13 +122,13 @@ export interface IChartContainerProps {
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
-    onToggleLogScale: (chartMeta: ChartMeta) => void;
-    onToggleLogScaleX: (chartMeta: ChartMeta) => void;
-    onToggleLogScaleY: (chartMeta: ChartMeta) => void;
-    onToggleViolinPlot: (chartMeta: ChartMeta) => void;
-    onToggleBoxPlot: (chartMeta: ChartMeta) => void;
-    onToggleNAValue: (chartMeta: ChartMeta) => void;
-    onSwapAxes: (chartMeta: ChartMeta) => void;
+    onToggleLogScale?: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleX?: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleY?: (chartMeta: ChartMeta) => void;
+    onToggleViolinPlot?: (chartMeta: ChartMeta) => void;
+    onToggleBoxPlot?: (chartMeta: ChartMeta) => void;
+    onToggleNAValue?: (chartMeta: ChartMeta) => void;
+    onSwapAxes?: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
     logScaleXChecked?: boolean;
@@ -200,39 +200,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
             }),
             onToggleLogScale: action(() => {
-                if (this.props.onToggleLogScale) {
-                    this.props.onToggleLogScale(this.props.chartMeta);
-                }
+                this.props.onToggleLogScale?.(this.props.chartMeta);
             }),
             onToggleLogScaleX: action(() => {
-                if (this.props.onToggleLogScaleX) {
-                    this.props.onToggleLogScaleX(this.props.chartMeta);
-                }
+                this.props.onToggleLogScaleX?.(this.props.chartMeta);
             }),
             onToggleLogScaleY: action(() => {
-                if (this.props.onToggleLogScaleY) {
-                    this.props.onToggleLogScaleY(this.props.chartMeta);
-                }
+                this.props.onToggleLogScaleY?.(this.props.chartMeta);
             }),
             onToggleBoxPlot: action(() => {
-                if (this.props.onToggleBoxPlot) {
-                    this.props.onToggleBoxPlot(this.props.chartMeta);
-                }
+                this.props.onToggleBoxPlot?.(this.props.chartMeta);
             }),
             onToggleViolinPlot: action(() => {
-                if (this.props.onToggleViolinPlot) {
-                    this.props.onToggleViolinPlot(this.props.chartMeta);
-                }
+                this.props.onToggleViolinPlot?.(this.props.chartMeta);
             }),
             onToggleNAValue: action(() => {
-                if (this.props.onToggleNAValue) {
-                    this.props.onToggleNAValue(this.props.chartMeta);
-                }
+                this.props.onToggleNAValue?.(this.props.chartMeta);
             }),
             onSwapAxes: action(() => {
-                if (this.props.onSwapAxes) {
-                    this.props.onSwapAxes(this.props.chartMeta);
-                }
+                this.props.onSwapAxes?.(this.props.chartMeta);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 if (this.mouseLeaveTimeout) {
@@ -422,8 +408,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get borderWidth() {
-        return 1;
-        //return this.highlightChart ? 2 : 1;
+        return this.highlightChart ? 2 : 1;
     }
 
     @computed get comparisonButtonForTables() {
@@ -1042,7 +1027,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartTypeEnum.VIOLIN_PLOT_TABLE:
-                const chartSettings = this.props.store.getXVsYChartSettings(
+                const chartSettings = this.props.store.getXvsYChartSettings(
                     this.props.chartMeta!.uniqueKey
                 )!;
                 return () => (

@@ -408,10 +408,10 @@ export class StudySummaryTab extends React.Component<
                 break;
             }
             case ChartTypeEnum.VIOLIN_PLOT_TABLE:
-                const chartInfo = this.store.getXVsYViolinChartInfo(
+                const chartInfo = this.store.getXvsYViolinChartInfo(
                     props.chartMeta!.uniqueKey
                 )!;
-                const settings = this.store.getXVsYChartSettings(
+                const settings = this.store.getXvsYChartSettings(
                     props.chartMeta!.uniqueKey
                 )!;
                 props.title = `${chartInfo.numericalAttr.displayName}${
@@ -431,7 +431,7 @@ export class StudySummaryTab extends React.Component<
                 );
                 props.logScaleChecked = settings.violinLogScale;
                 props.onToggleLogScale = () => {
-                    const settings = this.store.getXVsYChartSettings(
+                    const settings = this.store.getXvsYChartSettings(
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.violinLogScale = !settings.violinLogScale;
@@ -439,7 +439,7 @@ export class StudySummaryTab extends React.Component<
                 props.showViolinPlotToggle = true;
                 props.violinPlotChecked = settings.showViolin;
                 props.onToggleViolinPlot = () => {
-                    const settings = this.store.getXVsYChartSettings(
+                    const settings = this.store.getXvsYChartSettings(
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.showViolin = !settings.showViolin;
@@ -447,7 +447,7 @@ export class StudySummaryTab extends React.Component<
                 props.showBoxPlotToggle = true;
                 props.boxPlotChecked = settings.showBox;
                 props.onToggleBoxPlot = () => {
-                    const settings = this.store.getXVsYChartSettings(
+                    const settings = this.store.getXvsYChartSettings(
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.showBox = !settings.showBox;
@@ -457,10 +457,10 @@ export class StudySummaryTab extends React.Component<
                 props.filters = this.store.getScatterPlotFiltersByUniqueKey(
                     props.chartMeta!.uniqueKey
                 );
-                const chartInfo = this.store.getXVsYScatterChartInfo(
+                const chartInfo = this.store.getXvsYScatterChartInfo(
                     props.chartMeta!.uniqueKey
                 )!;
-                const settings = this.store.getXVsYChartSettings(
+                const settings = this.store.getXvsYChartSettings(
                     props.chartMeta!.uniqueKey
                 )!;
                 props.title = props.chartMeta!.displayName;
@@ -478,19 +478,19 @@ export class StudySummaryTab extends React.Component<
                 props.logScaleXChecked = settings.xLogScale;
                 props.logScaleYChecked = settings.yLogScale;
                 props.onToggleLogScaleX = () => {
-                    const settings = this.store.getXVsYChartSettings(
+                    const settings = this.store.getXvsYChartSettings(
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.xLogScale = !settings.xLogScale;
                 };
                 props.onToggleLogScaleY = () => {
-                    const settings = this.store.getXVsYChartSettings(
+                    const settings = this.store.getXvsYChartSettings(
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.yLogScale = !settings.yLogScale;
                 };
                 props.onSwapAxes = () => {
-                    this.store.swapXVsYChartAxes(props.chartMeta!.uniqueKey);
+                    this.store.swapXvsYChartAxes(props.chartMeta!.uniqueKey);
                 };
                 props.plotDomain = chartInfo.plotDomain;
                 props.axisLabelX = `${chartInfo.xAttr.displayName}${

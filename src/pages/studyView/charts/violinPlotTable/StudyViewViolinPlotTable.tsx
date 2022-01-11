@@ -18,6 +18,13 @@ import {
     violinPlotXPadding,
 } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotUtils';
 import { scaleLinear, scaleLog } from 'd3-scale';
+import { ClinicalViolinPlotIndividualPoint } from 'cbioportal-ts-api-client/src';
+import classnames from 'classnames';
+import styles from 'pages/resultsView/survival/styles.module.scss';
+import { Popover } from 'react-bootstrap';
+import * as ReactDOM from 'react-dom';
+import autobind from 'autobind-decorator';
+import { getSampleViewUrl, getStudySummaryUrl } from 'shared/api/urls';
 
 const NUM_SAMPLES_COL_NAME = '#';
 
@@ -45,6 +52,26 @@ export default class StudyViewViolinPlotTable extends React.Component<
     constructor(props: any) {
         super(props);
         makeObservable(this);
+        (window as any).BLAH = this;
+    }
+
+    @observable tooltipModel: {
+        point: ClinicalViolinPlotIndividualPoint;
+        category: string;
+        mouseX: number;
+        mouseY: number;
+    } | null = null;
+    private tooltipResetTimer: any = null;
+    private mouseInTooltip = false;
+
+    @autobind
+    private onMouseEnterTooltip() {
+        this.mouseInTooltip = true;
+    }
+
+    @autobind
+    private onMouseLeaveTooltip() {
+        this.mouseInTooltip = false;
     }
 
     @observable sampleNumberFilter = '10';
@@ -62,14 +89,58 @@ export default class StudyViewViolinPlotTable extends React.Component<
         );
     }
     @computed get violinColumnWidth() {
-        return (
-            180 +
-            (this.props.dimension.w > 3
-                ? STUDY_VIEW_CONFIG.layout.grid.w *
-                  (1 + (this.props.dimension.w - 4))
-                : 0)
-        );
+        const baseViolinWidth = 180;
+        let additionalViolinWidth = 0;
+        if (this.props.dimension.w > 3) {
+            // starting after grid width 3, we will absorb
+            //  all grid width increases directly into the violin plot
+            additionalViolinWidth =
+                (this.props.dimension.w - 3) * STUDY_VIEW_CONFIG.layout.grid.w;
+        }
+        return baseViolinWidth + additionalViolinWidth;
     }
+
+    @action.bound
+    private onMouseOverPoint(
+        point: ClinicalViolinPlotIndividualPoint,
+        mouseX: number,
+        mouseY: number,
+        category: string
+    ) {
+        // mouse on point means mouse not in tooltip
+        this.onMouseLeaveTooltip();
+        // cancel hiding the tooltip
+        this.cancelResetTooltip();
+        // Only update tooltip if this is not the same point as we're already showing
+        if (
+            !this.tooltipModel ||
+            this.tooltipModel.category !== category ||
+            !_.isEqual(this.tooltipModel.point, point)
+        ) {
+            this.tooltipModel = { point, category, mouseX, mouseY };
+        }
+    }
+
+    @action.bound
+    private onMouseOverBackground() {
+        // mouse hovering background means mouse not in tooltip
+        this.onMouseLeaveTooltip();
+        if (this.tooltipResetTimer === null) {
+            // add hide timer if it's not already pending
+            this.tooltipResetTimer = setTimeout(() => {
+                this.tooltipResetTimer = null;
+                if (!this.mouseInTooltip) {
+                    this.tooltipModel = null;
+                }
+            }, 400);
+        }
+    }
+
+    private cancelResetTooltip() {
+        clearTimeout(this.tooltipResetTimer);
+        this.tooltipResetTimer = null;
+    }
+
     @computed get columns() {
         return [
             {
@@ -99,6 +170,10 @@ export default class StudyViewViolinPlotTable extends React.Component<
                             showBox={this.props.showBox}
                             width={this.violinColumnWidth}
                             gridValues={this.gridTicks}
+                            onMouseOverPoint={(p, x, y) =>
+                                this.onMouseOverPoint(p, x, y, row.category)
+                            }
+                            onMouseOverBackground={this.onMouseOverBackground}
                         />
                     );
                 },
@@ -172,13 +247,16 @@ export default class StudyViewViolinPlotTable extends React.Component<
         return (
             <svg
                 style={{
+                    // We position the grid labels manually at the top of the violin column
+                    //  because it's too hard to put them into the column through the
+                    //  table library
                     position: 'absolute',
                     top: 52,
                 }}
                 width={this.props.width}
                 height={20}
             >
-                <rect width={this.props.width} height={20} fill={'white'} />
+                <rect width={this.props.width} height={20} fill={'#ffffff'} />
                 <g transform={`translate(${this.gridLabelsOffset},0)`}>
                     {this.gridTicks.map((val, index) => {
                         const x = this.violinX(val);
@@ -248,6 +326,54 @@ export default class StudyViewViolinPlotTable extends React.Component<
         return ret;
     }
 
+    private renderTooltip() {
+        const model = this.tooltipModel;
+        if (!model) {
+            return null;
+        }
+        return (ReactDOM as any).createPortal(
+            <Popover
+                arrowOffsetTop={17}
+                className={classnames(
+                    'cbioportal-frontend',
+                    'cbioTooltip',
+                    styles.Tooltip
+                )}
+                positionLeft={model.mouseX + 7}
+                positionTop={model.mouseY - 19}
+                onMouseEnter={this.onMouseEnterTooltip}
+                onMouseLeave={this.onMouseLeaveTooltip}
+            >
+                <b>Study ID:</b>
+                {` `}
+                <a href={getStudySummaryUrl(model.point.studyId)}>
+                    {model.point.studyId}
+                </a>
+                <br />
+                <b>Sample ID:</b>
+                {` `}
+                <a
+                    href={getSampleViewUrl(
+                        model.point.studyId,
+                        model.point.sampleId
+                    )}
+                >
+                    {model.point.sampleId}
+                </a>
+                <br />
+                <b>{this.props.violinColumnName}:</b>
+                {` `}
+                {model.point.value}
+            </Popover>,
+            document.body
+        );
+    }
+    @action.bound onScroll() {
+        // hide tooltip on scroll
+        this.tooltipModel = null;
+        this.cancelResetTooltip();
+    }
+
     render() {
         return (
             <>
@@ -262,8 +388,10 @@ export default class StudyViewViolinPlotTable extends React.Component<
                     sortBy={NUM_SAMPLES_COL_NAME}
                     sortDirection={'desc'}
                     extraFooterElements={this.extraFooterElements}
+                    onScroll={this.onScroll}
                 />
                 {this.renderGridLabels()}
+                {this.renderTooltip()}
             </>
         );
     }

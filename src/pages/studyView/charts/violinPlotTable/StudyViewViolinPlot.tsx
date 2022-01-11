@@ -20,6 +20,12 @@ export interface IStudyViewViolinPlotProps {
     showBox: boolean;
     width: number;
     gridValues: number[];
+    onMouseOverPoint: (
+        p: ClinicalViolinPlotIndividualPoint,
+        mouseX: number,
+        mouseY: number
+    ) => void;
+    onMouseOverBackground: () => void;
 }
 
 export const yPadding = 3;
@@ -38,17 +44,32 @@ export default class StudyViewViolinPlot extends React.Component<
     }
     renderCurve() {
         if (this.props.curveMagnitudes.length > 0) {
+            // This code draws a violin plot from the given curve magnitudes.
+            // The violin plot is a mirrored version of the given curve.
+
+            // Central y-coordinate
             const center = violinPlotSvgHeight / 2;
 
+            // Maximum drawn magnitude (i.e. distance from the center) of each
+            //  half of the violin.
             const curveLimit = height / 2;
+
+            // Multiplicative factor converting the given magnitudes to the
+            //  svg coordinate space.
             const scale = Math.min(
                 1,
                 curveLimit / Math.max(...this.props.curveMagnitudes)
             );
+
+            // Compute the curve magnitudes in svg coordinates by multiplying the scale factor.
             const curve = this.props.curveMagnitudes.map(y => scale * y);
 
+            // Compute the step width in the x-direction (i.e. the x distance between
+            //  each given curve point).
             const stepSize = this.violinWidth / (curve.length - 1);
 
+            // Draw the same curve twice, mirrored halves - one will be
+            //  on the upper side of the y-center, one will be on the lower side.
             let dUpperHalf = `M 0 ${center} L 0 ${center - curve[0]}`;
             let dLowerHalf = `M 0 ${center} L 0 ${center + curve[0]}`;
             for (let i = 1; i < curve.length; i++) {
@@ -76,9 +97,22 @@ export default class StudyViewViolinPlot extends React.Component<
     }
 
     renderPoints() {
+        // Render individual given points (e.g. outliers, or points if
+        //  there are too few to create a density/violin plot).
         const y = violinPlotSvgHeight / 2;
         return this.props.individualPoints.map(d => {
-            return <circle cx={this.x(d.value)} cy={y} r={3} />;
+            return (
+                <circle
+                    key={`${d.studyId}:${d.sampleId}`}
+                    onMouseMove={e => {
+                        this.props.onMouseOverPoint(d, e.pageX, e.pageY);
+                        e.stopPropagation();
+                    }}
+                    cx={this.x(d.value)}
+                    cy={y}
+                    r={3}
+                />
+            );
         });
     }
 
@@ -186,6 +220,12 @@ export default class StudyViewViolinPlot extends React.Component<
                 {this.renderGridLines()}
                 {this.props.showViolin && this.renderCurve()}
                 {!this.onlyPoints && this.props.showBox && this.renderBox()}
+                <rect
+                    width={this.svgWidth}
+                    height={violinPlotSvgHeight}
+                    fillOpacity={0}
+                    onMouseMove={this.props.onMouseOverBackground}
+                />
                 {this.renderPoints()}
             </svg>
         );
