@@ -95,7 +95,7 @@ var sassResourcesLoader = {
 
 var config = {
     stats: 'detailed',
-    entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.jsx')}`],
+    entry: [`babel-polyfill`, `${path.join(src, 'appBootstrapper.tsx')}`],
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
