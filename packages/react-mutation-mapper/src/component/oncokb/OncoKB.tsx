@@ -33,6 +33,7 @@ export interface IOncoKbProps {
     hugoGeneSymbol: string;
     userEmailAddress?: string;
     disableFeedback?: boolean;
+    contentPadding?: number;
 }
 
 export function sortValue(
@@ -112,10 +113,11 @@ function findDefaultDataTypeForTooltip(
 
 @observer
 export default class OncoKB extends React.Component<IOncoKbProps, {}> {
-    constructor(props: any) {
+    constructor(props: IOncoKbProps) {
         super(props);
         makeObservable(this);
     }
+
     @observable showFeedback: boolean = false;
     @observable tooltipDataLoadComplete: boolean = false;
 
@@ -194,18 +196,11 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}> {
                 </>
             );
         } else {
-            // TODO This doesn't always work, in some cases it adds unnecessary empty icons, we need a better solution.
-            // we still need to draw empty icons even if there is no indicator data.
-            // this is to keep the icon alignment consistent with the rest of the column
-            // return (
-            //     <>
-            //         {this.props.availableDataTypes?.map(() => (
-            //             <AnnotationIconWithTooltip icon={<i />} />
-            //         ))}
-            //     </>
-            // );
-
-            return null;
+            // workaround: use content padding value to draw an empty icon when there is no indicator data.
+            // this is to keep the icon alignment consistent with the rest of the column.
+            // ideally we should implement grouped columns to avoid these kind of workarounds
+            // (see https://github.com/cBioPortal/cbioportal/issues/8723)
+            return <i style={{ paddingRight: this.props.contentPadding }} />;
         }
     }
 
