@@ -59,7 +59,9 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
-import UserMessager from 'shared/components/userMessager/UserMessage';
+import UserMessager, {
+    IUserMessage,
+} from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export function initStore(
@@ -545,50 +547,14 @@ export default class ResultsViewPage extends React.Component<
         });
     }
 
-    readonly userMessages = remoteData({
+    readonly userMessages = remoteData<IUserMessage[]>({
         await: () => [
             this.resultsViewPageStore.expressionProfiles,
             this.resultsViewPageStore.studies,
         ],
         invoke: () => {
-            // TODO: This is only here temporarily to shepherd users from
-            //      now-deleted Expression tab to the Plots tab.
-            //  Remove a few months after 10/2020
-            if (
-                this.resultsViewPageStore.expressionProfiles.result.length >
-                    0 &&
-                this.resultsViewPageStore.studies.result.length > 1
-            ) {
-                return Promise.resolve([
-                    {
-                        dateEnd: 10000000000000000000,
-                        content: (
-                            <span>
-                                Looking for the <strong>Expression</strong> tab?
-                                {` `}
-                                That functionality is now available{` `}
-                                <a
-                                    style={{
-                                        color: 'white',
-                                        textDecoration: 'underline',
-                                    }}
-                                    onClick={() =>
-                                        this.urlWrapper.updateURL(
-                                            {},
-                                            `results/${ResultsViewTab.EXPRESSION_REDIRECT}`
-                                        )
-                                    }
-                                >
-                                    in the <strong>Plots</strong> tab.
-                                </a>
-                            </span>
-                        ),
-                        id: '2020_merge_expression_to_plots',
-                    },
-                ]);
-            } else {
-                return Promise.resolve([]);
-            }
+            // TODO: make this configurable from outside app
+            return Promise.resolve([]);
         },
     });
 
