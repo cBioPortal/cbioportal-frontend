@@ -14,20 +14,75 @@
             //frontendUrl:'//'+window.location.host + '/',
             //apiRoot: 'http://www.cbioportal.org/rc',
             //sessionServiceUrl:'http://www.cbioportal.org/rc/api-legacy/proxy/session/',
-            // custom_tabs:[
-            //     {
-            //         "title": "Custom Tab",
-            //         "location": "RESULTS_PAGE",
-            //         "mountCallbackName": "renderCustomTab1",
-            //         "pathsToJs":["http:127.0.0.1:8081/customTab1.js"],
-            //         "showWithMultipleStudies": true,
-            //         "customParameters": { example:1 },
-            //         "unmountOnHide":false
-            //     }
-            // ],
-            serverConfig:{}
+
+//             serverConfig:{
+//
+// //             custom_tabs:[
+// //                             {
+// //                                 "title": "Custom Tab",
+// //                                 "location": "RESULTS_PAGE",
+// //                                 "mountCallbackName": "renderCustomTab1",
+// //                                 "hide":false,
+// //                                 //"pathsToJs":["http:127.0.0.1:8081/customTab1.js"],
+// //                                 "showWithMultipleStudies": true,
+// //                                 "customParameters": { example:1 },
+// //                                 "unmountOnHide":false
+// //                             }
+// //                         ],
+// //
+// //             }
 
         };
+
+        localStorage.frontendConfig = JSON.stringify(
+            {
+                serverConfig:{
+
+                       custom_tabs:[
+                                       {
+                                           "title": "CustomTab",
+                                           "id": "customTab2",
+                                           "location": "RESULTS_PAGE",
+                                           "mountCallbackName": "renderCustomTab1",
+                                           "hide":false,
+                                           //"pathsToJs":["http:127.0.0.1:8081/customTab1.js"],
+                                           "showWithMultipleStudies": true,
+                                           "customParameters": { example:1 },
+                                           "unmountOnHide":false,
+                                           "showCondition":  `()=>{
+                                                    console.log("firing show condition");
+                                                   return new Promise((resolve)=>{
+                                                        setTimeout(()=>{
+                                                            console.log("resolving custom tab promise");
+                                                            resolve(true);
+                                                        }, 3000);
+                                                   });
+                                           }`
+                                         },
+//                                       {
+//                                           "title": "CustomTab2",
+//                                           "id": "customTab3",
+//                                           "location": "RESULTS_PAGE",
+//                                           "mountCallbackName": "renderCustomTab1",
+//                                           "hide":false,
+//                                           "showWithMultipleStudies": true,
+//                                           "customParameters": { example:1 },
+//                                           "unmountOnHide":false,
+//                                           "showCondition":  `()=>{
+//                                                return true;
+//                                           }`
+//                                       }
+                                   ]
+
+                }
+
+           }
+        );
+
+    function renderCustomTab1(...args){
+        console.log(args);
+    }
+
 
     </script>
     <script src="/reactapp/common.bundle.js"></script>

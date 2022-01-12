@@ -6,6 +6,7 @@ export interface ITabConfiguration {
 }
 
 export interface ICustomTabConfiguration {
+    id: string;
     title: string;
     location: string;
     mountCallbackName: string;
@@ -15,4 +16,5 @@ export interface ICustomTabConfiguration {
     customParameters: { [key: string]: any };
     unmountOnHide: boolean;
     dependencyPromise?: Promise<any>;
+    showCondition?: () => boolean | Promise<boolean>;
 }

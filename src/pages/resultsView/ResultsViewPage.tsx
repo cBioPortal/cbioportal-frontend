@@ -26,7 +26,10 @@ import PlotsTab from './plots/PlotsTab';
 import { MSKTab, MSKTabs } from '../../shared/components/MSKTabs/MSKTabs';
 import { PageLayout } from '../../shared/components/PageLayout/PageLayout';
 import autobind from 'autobind-decorator';
-import { ITabConfiguration } from '../../shared/model/ITabConfiguration';
+import {
+    ICustomTabConfiguration,
+    ITabConfiguration,
+} from '../../shared/model/ITabConfiguration';
 import { getBrowserWindow, remoteData } from 'cbioportal-frontend-commons';
 import CoExpressionTab from './coExpression/CoExpressionTab';
 import Helmet from 'react-helmet';
@@ -63,6 +66,12 @@ import UserMessager, {
     IUserMessage,
 } from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import {
+    CoverageInformation,
+    getCoverageInformation,
+} from 'shared/lib/GenePanelUtils';
+import { sleep } from 'shared/lib/TimeUtils';
+import MobxPromise from 'mobxpromise';
 
 export function initStore(
     appStore: AppStore,
@@ -119,6 +128,8 @@ export default class ResultsViewPage extends React.Component<
 
     constructor(props: IResultsViewPageProps) {
         super(props);
+
+        console.log('resultsview constructor');
 
         makeObservable(this);
 
@@ -446,32 +457,123 @@ export default class ResultsViewPage extends React.Component<
             .filter(this.evaluateTabInclusion)
             .map(tab => tab.getTab());
 
-        // now add custom tabs
-        if (getServerConfig().custom_tabs) {
-            const customResultsTabs = getServerConfig()
-                .custom_tabs.filter(
-                    (tab: any) => tab.location === 'RESULTS_PAGE'
-                )
-                .map((tab: any, i: number) => {
-                    return (
+        _.forEach(this.customTabs, tab => {
+            const thisTab = tab.tab;
+
+            const tabKey = thisTab.title;
+
+            if (tab.promise) {
+                // it's pending
+                if (tab.promise.isPending) {
+                    filteredTabs.push(
                         <MSKTab
-                            key={100 + i}
-                            id={'customTab' + i}
-                            unmountOnHide={tab.unmountOnHide === true}
-                            onTabDidMount={div => {
-                                this.customTabCallback(div, tab);
-                            }}
-                            onTabUnmount={div => {
-                                this.customTabCallback(div, tab, true);
-                            }}
-                            linkText={tab.title}
-                        />
+                            key={'loading-' + tabKey}
+                            id={thisTab.id}
+                            linkText={thisTab.title}
+                            pending={true}
+                        >
+                            Loading
+                        </MSKTab>
                     );
-                });
-            filteredTabs = filteredTabs.concat(customResultsTabs);
-        }
+                } else if (tab.promise.isComplete) {
+                    filteredTabs.push(
+                        <MSKTab
+                            key={tabKey}
+                            id={thisTab.id}
+                            unmountOnHide={thisTab.unmountOnHide === true}
+                            onTabDidMount={div => {
+                                this.customTabCallback(div, thisTab);
+                            }}
+                            hide={false}
+                            onTabUnmount={div => {
+                                this.customTabCallback(div, thisTab, true);
+                            }}
+                            linkText={thisTab.title}
+                        >
+                            done tab
+                        </MSKTab>
+                    );
+                } else {
+                    filteredTabs.push(
+                        <MSKTab
+                            key={tabKey}
+                            id={thisTab.id}
+                            unmountOnHide={thisTab.unmountOnHide === true}
+                            hide={false}
+                            linkText={thisTab.title}
+                        >
+                            Error
+                        </MSKTab>
+                    );
+                }
+            } else {
+                // there is no promise, so just push the tab
+                filteredTabs.push(
+                    <MSKTab
+                        key={tabKey}
+                        id={thisTab.id}
+                        unmountOnHide={thisTab.unmountOnHide === true}
+                        hide={false}
+                        linkText={thisTab.title}
+                    >
+                        Loading
+                    </MSKTab>
+                );
+            }
+        });
+
+        console.log('filtered tabs', filteredTabs);
 
         return filteredTabs;
+    }
+
+    @computed get customTabs() {
+        const tabs: {
+            [k: string]: {
+                promise?: MobxPromise<boolean>;
+                tab: ICustomTabConfiguration;
+            };
+        } = {};
+
+        if (getServerConfig().custom_tabs) {
+            // convert it from string to function
+            const custom_tabs: ICustomTabConfiguration[] = getServerConfig().custom_tabs.map(
+                t => {
+                    if (t.showCondition)
+                        t.showCondition = eval(t.showCondition);
+                    return t as ICustomTabConfiguration;
+                }
+            );
+
+            const customResultsTabs = custom_tabs.filter(
+                (tab: ICustomTabConfiguration) =>
+                    tab.location === 'RESULTS_PAGE'
+            );
+
+            customResultsTabs?.forEach(tabny => {
+                if (tabny.showCondition) {
+                    tabs[tabny.id] = {
+                        promise: remoteData(async () => {
+                            const ret = tabny!.showCondition!();
+                            if (_.has(ret, 'then')) {
+                                return ret;
+                            } else {
+                                return Promise.resolve(ret);
+                            }
+                        }),
+                        tab: tabny,
+                    };
+                } else {
+                    tabs[tabny.id] = {
+                        tab: tabny,
+                    };
+                }
+            });
+        }
+
+        console.log('calculated tabs', tabs);
+
+        return tabs;
     }
 
     @autobind
@@ -559,6 +661,8 @@ export default class ResultsViewPage extends React.Component<
     });
 
     @computed get pageContent() {
+        console.log('ref custom tabs', this.customTabs);
+
         if (
             this.resultsViewPageStore.hugoGeneSymbols.length === 0 ||
             this.resultsViewPageStore.invalidStudyIds.result.length > 0
@@ -686,6 +790,12 @@ export default class ResultsViewPage extends React.Component<
                                         //  want to remount the tabs so that we rerun any initialization code
                                         //  that depends on the query.
                                         key={this.urlWrapper.hash}
+                                        name={'main nav'}
+                                        onConstruct={() =>
+                                            console.log(
+                                                'MSKTABS MAIN CONSTRUCT'
+                                            )
+                                        }
                                         activeTabId={
                                             this.resultsViewPageStore.tabId
                                         }

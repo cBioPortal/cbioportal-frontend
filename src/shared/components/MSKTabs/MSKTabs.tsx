@@ -10,6 +10,7 @@ import LoadingIndicator from '../loadingIndicator/LoadingIndicator';
 import {
     action,
     autorun,
+    computed,
     IReactionDisposer,
     makeObservable,
     observable,
@@ -27,7 +28,7 @@ export interface IMSKTabProps {
     linkText: string | JSX.Element;
     activeId?: string;
     className?: string;
-    hide?: boolean;
+    hide?: boolean | (() => boolean);
     datum?: any;
     anchorStyle?: { [k: string]: string | number | boolean };
     anchorClassName?: string;
@@ -35,6 +36,7 @@ export interface IMSKTabProps {
     onTabDidMount?: (tab: HTMLDivElement) => void;
     onTabUnmount?: (tab: HTMLDivElement) => void;
     onClickClose?: (tabId: string) => void;
+    pending?: boolean;
 }
 
 @observer
@@ -114,6 +116,8 @@ interface IMSKTabsProps {
     unmountOnHide?: boolean;
     loadingComponent?: JSX.Element;
     contentWindowExtra?: JSX.Element;
+    onConstruct?: () => void;
+    name?: string;
 }
 
 @observer
@@ -147,6 +151,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
     constructor(props: IMSKTabsProps) {
         super(props);
+        props.onConstruct?.();
         makeObservable(this);
     }
 
@@ -222,6 +227,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
 
             let arr: React.ReactElement<IMSKTabProps>[] = [];
 
+            // NOTE: we have to clone tab in order to manipulate
+            // it's props, which are immutable for an instance of a child element
+            // in this case we are to manipulate it's "inactive" prop
             arr = _.reduce(
                 toArrayedChildren,
                 (
@@ -327,6 +335,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
         );
     }
 
+    // tabHiddenState:any = {
+    //
+    // }
+
     protected tabPages(
         children: React.ReactElement<IMSKTabProps>[],
         effectiveActiveTab: string
@@ -337,8 +349,20 @@ export class MSKTabs extends React.Component<IMSKTabsProps> {
         React.Children.forEach(
             children,
             (tab: React.ReactElement<IMSKTabProps>) => {
-                if (!tab || tab.props.hide) {
-                    return;
+                // we should figure out why tab would be null here
+                if (!tab) return;
+
+                const isActive = effectiveActiveTab === tab.props.id;
+
+                if (!isActive) {
+                    // we should perhaps try to combine hide and pending
+                    // since they do the same thing
+                    if (tab.props.hide) {
+                        return;
+                    }
+                    if (tab.props.pending) {
+                        return;
+                    }
                 }
 
                 let activeClass =

@@ -54,7 +54,7 @@ export function showCustomTab(
         }
     };
 
-    tab.dependencyPromise!.then(() => {
+    tab.dependencyPromise?.then(() => {
         runCallback(tab);
     });
 }
