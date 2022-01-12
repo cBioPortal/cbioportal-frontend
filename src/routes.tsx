@@ -16,10 +16,10 @@ import { parse } from 'qs';
 import _ from 'lodash';
 
 /* HOW TO ADD A NEW ROUTE
- * 1. Import the "page" component using the bundle-loader directives as seen in imports below
- * 2. Add a Route element with getComponent set to the result the lazyLoadComponent function passed your new component
- * If your route includes tabs, include `null, tabParamValidator(YourPageTabEnum) in the lazyLoadComponent call.
- * This ensures that invalid sub routes 404 correctly
+ * 1. Import the "page" component using SuspenseWrapper and React.lazy as seen in imports below
+ * 2. Add a Route element with `component` prop set to the component, wrapped in LocationValidationWrapper
+ *      which validates the parameters of a page and goes to an error page if it fails. Other wrappers like
+ *      ScrollToTop modify the page in other ways and may also be used here.
  */
 
 // import page components here
@@ -28,68 +28,87 @@ import _ from 'lodash';
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 const PatientViewPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/patientView/PatientViewPage'))
 );
 const ResultsViewPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/resultsView/ResultsViewPage'))
 );
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import GroupComparisonLoading from './pages/groupComparison/GroupComparisonLoading';
 const DatasetPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/datasetView/DatasetPage'))
 );
 const Homepage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/home/HomePage'))
 );
 const StudyViewPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/studyView/StudyViewPage'))
 );
 const MutationMapperTool = SuspenseWrapper(
     React.lazy(() =>
+        // @ts-ignore
         import('./pages/staticPages/tools/mutationMapper/MutationMapperTool')
     )
 );
 const OncoprinterTool = SuspenseWrapper(
     React.lazy(() =>
+        // @ts-ignore
         import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
     )
 );
 const WebAPIPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
 );
 const RMATLAB = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/rmatlab/RMatLAB'))
 );
 const Tutorials = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/tutorials/Tutorials'))
 );
 const Visualize = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/visualize/Visualize'))
 );
 const AboutUs = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/aboutus/AboutUs'))
 );
 const InstallationMap = SuspenseWrapper(
     React.lazy(() =>
+        // @ts-ignore
         import('./pages/staticPages/installations/InstallationMap')
     )
 );
 const Software = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/software/Software'))
 );
 const News = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/news/News'))
 );
 const FAQ = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/faq/FAQ'))
 );
 const OQL = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/staticPages/oql/OQL'))
 );
 const GroupComparisonPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/groupComparison/GroupComparisonPage'))
 );
 const ErrorPage = SuspenseWrapper(
+    // @ts-ignore
     React.lazy(() => import('./pages/resultsView/ErrorPage'))
 );
 
@@ -114,7 +133,6 @@ import {
     GroupComparisonTab,
     LegacyGroupComparisonTab,
 } from 'pages/groupComparison/GroupComparisonTabs';
-import { handleEncodedURLRedirect } from 'shared/lib/redirectHelpers';
 import { CLIN_ATTR_DATA_TYPE } from 'pages/resultsView/plots/PlotsTabUtils';
 import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
@@ -124,17 +142,22 @@ import {
 } from 'shared/lib/comparison/ComparisonStoreUtils';
 import { MapValues } from 'shared/lib/TypeScriptUtils';
 import { ResultsViewURLQuery } from 'pages/resultsView/ResultsViewURLWrapper';
+import { EnumDeclaration, EnumType } from 'typescript';
 
-function SuspenseWrapper(Component) {
-    return props => (
+function SuspenseWrapper(Component: any) {
+    return (props: any) => (
         <React.Suspense fallback={null}>
             <Component {...props} />
         </React.Suspense>
     );
 }
 
-function LocationValidationWrapper(Component, validator, queryParamsAdjuster) {
-    return props => {
+function LocationValidationWrapper(
+    Component: any,
+    validator: (params: any) => boolean,
+    queryParamsAdjuster?: (oldParams: any) => any | undefined
+) {
+    return (props: any) => {
         if (props.location) {
             if (queryParamsAdjuster) {
                 const query = parse(props.location.search, {
@@ -165,7 +188,7 @@ function LocationValidationWrapper(Component, validator, queryParamsAdjuster) {
     };
 }
 
-function ResultsViewQueryParamsAdjuster(oldParams) {
+function ResultsViewQueryParamsAdjuster(oldParams: ResultsViewURLQuery) {
     let changeMade = false;
     const newParams = _.cloneDeep(oldParams);
     if (
@@ -193,8 +216,8 @@ function ResultsViewQueryParamsAdjuster(oldParams) {
     }
 }
 
-function ScrollToTop(Component, onLoad = () => {}) {
-    return props => {
+function ScrollToTop(Component: any, onLoad = () => {}) {
+    return (props: any) => {
         useEffect(() => {
             $(document).scrollTop(0);
             onLoad();
@@ -203,8 +226,8 @@ function ScrollToTop(Component, onLoad = () => {}) {
     };
 }
 
-function GoToHashLink(Component) {
-    return props => {
+function GoToHashLink(Component: any) {
+    return (props: any) => {
         useEffect(handleEnter, []);
         return <Component {...props} />;
     };
@@ -216,8 +239,8 @@ function GoToHashLink(Component) {
  * value in `tabEnum`
  * @param tabEnum a TypeScript string enum
  */
-function tabParamValidator(tabEnum) {
-    return function(params) {
+function tabParamValidator(tabEnum: any) {
+    return function(params: any) {
         return !params.tab || Object.values(tabEnum).indexOf(params.tab) > -1;
     };
 }
@@ -226,11 +249,11 @@ function comparisonTabParamValidator() {
     // comparison tab includes generic assay tabs which is not predictable
     // validate tabs by checking it's degined in GroupComparisonTab
     // or validate generic assay tabs by checking if it starts with GroupComparisonTab.GENERIC_ASSAY_PREFIX
-    return function(params) {
+    return function(params: any) {
         return (
             !params.tab ||
             Object.values(GroupComparisonTab).indexOf(params.tab) > -1 ||
-            !params.tab.startsWith(GroupComparisonTab.GENERIC_ASSAY_PREFIX)
+            params.tab.startsWith(GroupComparisonTab.GENERIC_ASSAY_PREFIX)
         );
     };
 }
@@ -239,7 +262,7 @@ function comparisonTabParamValidator() {
  * Validates results page and patient page custom tabs
  * @param location
  */
-function customTabParamValidator(location) {
+function customTabParamValidator(location: Location) {
     const resultsRegex = /results\/customTab\d+/;
     const patientViewRegex = new RegExp(
         `patient\/${PatientViewResourceTabPrefix}.+`
@@ -252,45 +275,13 @@ function customTabParamValidator(location) {
     );
 }
 
-// accepts bundle-loader's deferred loader function and defers execution of route's render
-// until chunk is loaded
-function lazyLoadComponent(
-    loader,
-    loadingCallback,
-    validator = _ => {
-        return true;
-    }
-) {
-    return (location, cb) => {
-        if (
-            location &&
-            !(
-                validator(location.params) ||
-                customTabParamValidator(location.location)
-            )
-        ) {
-            loader = ErrorPage;
-        }
-        loader(module => {
-            if (cb) {
-                cb(null, module.default);
-            }
-            if (loadingCallback) {
-                loadingCallback();
-            }
-        });
-    };
-}
-
-var defaultRoute = window.defaultRoute || '/home';
-
 var restoreRoute = inject('routing')(restoreRouteAfterRedirect);
 
-let getBlankPage = function(callback) {
-    return props => {
-        if (callback) {
+let getBlankPage = function(onLoad: any) {
+    return (props: any) => {
+        if (onLoad) {
             useEffect(() => {
-                callback();
+                onLoad();
                 // make sure that useEffect argument doesn't return anything
             }, []);
         }
@@ -317,13 +308,14 @@ function handleEnter() {
 // results will load in background while user plays with query interface
 function preloadImportantComponents() {
     setTimeout(() => {
+        //@ts-ignore
         import('./pages/resultsView/ResultsViewPage');
+        //@ts-ignore
         import('./pages/studyView/StudyViewPage');
     }, 2000);
 }
 
-export const makeRoutes = routing => {
-    const homepage = Homepage;
+export const makeRoutes = () => {
     return (
         <React.Suspense fallback={null}>
             <Switch>
@@ -443,7 +435,7 @@ export const makeRoutes = routing => {
                     component={ScrollToTop(
                         LocationValidationWrapper(
                             GroupComparisonPage,
-                            comparisonTabParamValidator
+                            comparisonTabParamValidator()
                         )
                     )}
                 />

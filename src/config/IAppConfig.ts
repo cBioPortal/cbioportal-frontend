@@ -11,6 +11,7 @@ export interface IAppConfig {
 export interface ILoadConfig {
     apiRoot?: string;
     baseUrl?: string;
+    basePath?: string;
     configurationServiceUrl?: string;
     frontendUrl?: string;
     hide_login?: boolean;
