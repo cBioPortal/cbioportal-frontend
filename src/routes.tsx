@@ -263,15 +263,15 @@ function comparisonTabParamValidator() {
  * @param location
  */
 function customTabParamValidator(location: Location) {
-    const resultsRegex = /results\/customTab\d+/;
     const patientViewRegex = new RegExp(
         `patient\/${PatientViewResourceTabPrefix}.+`
     );
     const studyViewRegex = new RegExp(`study\/${StudyViewResourceTabPrefix}.+`);
+    const customTabRegex = /.+\/customTab\d/;
     return (
-        location.pathname.match(resultsRegex) !== null ||
         patientViewRegex.test(location.pathname) ||
-        studyViewRegex.test(location.pathname)
+        studyViewRegex.test(location.pathname) ||
+        customTabRegex.test(location.pathname)
     );
 }
 
