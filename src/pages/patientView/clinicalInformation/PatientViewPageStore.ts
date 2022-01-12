@@ -1310,7 +1310,11 @@ export class PatientViewPageStore {
         {
             await: () => [this.molecularProfilesInStudy],
             invoke: async () =>
-                findMrnaRankMolecularProfileId(this.molecularProfilesInStudy),
+                findMrnaRankMolecularProfileId(
+                    this.molecularProfilesInStudy.result!.map(
+                        p => p.molecularProfileId
+                    )
+                ),
         },
         null
     );
