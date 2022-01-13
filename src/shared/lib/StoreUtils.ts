@@ -1109,33 +1109,16 @@ export function findUncalledMutationMolecularProfileId(
 }
 
 export function findMrnaRankMolecularProfileId(
-    molecularProfilesInStudy: MobxPromise<MolecularProfile[]>
+    molecularProfilesInStudy: string[]
 ) {
-    if (!molecularProfilesInStudy.result) {
-        return null;
-    }
-
-    const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
-    const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
-    const preferredProfile:
-        | MolecularProfile
-        | undefined = molecularProfilesInStudy.result.find(
-        (gp: MolecularProfile) =>
-            regex1.test(gp.molecularProfileId.toLowerCase())
+    const regex1 = /^.+rna_seq.*_zscores$/i; // We prefer profiles that look like this
+    const preferredProfileId:
+        | string
+        | undefined = molecularProfilesInStudy.find(profileId =>
+        regex1.test(profileId)
     );
 
-    if (preferredProfile) {
-        return preferredProfile.molecularProfileId;
-    } else {
-        const fallbackProfile:
-            | MolecularProfile
-            | undefined = molecularProfilesInStudy.result.find(
-            (gp: MolecularProfile) =>
-                regex2.test(gp.molecularProfileId.toLowerCase())
-        );
-
-        return fallbackProfile ? fallbackProfile.molecularProfileId : null;
-    }
+    return preferredProfileId || null;
 }
 
 export function generateUniqueSampleKeyToTumorTypeMap(
