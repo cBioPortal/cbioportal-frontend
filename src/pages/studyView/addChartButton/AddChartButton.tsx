@@ -518,11 +518,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 // And one tab can only has one selected profile at a time
                 // selectedGenericAssayProfileIdByType been initialzed at the begining
                 // so we know we can always find a selected profile for each Generic Assay type
-                const molecularProfileIdsInType = options.find(
-                    option =>
-                        option.value ===
-                        this.selectedGenericAssayProfileIdByType.get(type)
-                )!.profileIds;
+                const molecularProfileIdsInType =
+                    options.find(
+                        option =>
+                            option.value ===
+                            this.selectedGenericAssayProfileIdByType.get(type)
+                    )?.profileIds || [];
                 const entities = _.reduce(
                     molecularProfileIdsInType,
                     (set, profileId) => {
