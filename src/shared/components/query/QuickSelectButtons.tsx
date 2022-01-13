@@ -21,7 +21,6 @@ export default class QuickSelectButtons extends React.Component<
 
                     const buttonEl = (
                         <button
-                            data-test="selectPanCan"
                             className={'btn btn-default btn-xs'}
                             onClick={() => this.props.onSelect(values)}
                         >

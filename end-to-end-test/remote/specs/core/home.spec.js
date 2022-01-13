@@ -126,7 +126,7 @@ describe('homepage', function() {
         );
     });
 
-    describe.skip('select all/deselect all functionality in study selector', function() {
+    describe('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
@@ -137,31 +137,27 @@ describe('homepage', function() {
         }
 
         it('clicking select all studies checkbox selects all studies', function() {
-            var studyCheckboxes = getVisibleCheckboxes();
-
-            var selectedStudies = studyCheckboxes.filter(function(el) {
+            var selectedStudies = getVisibleCheckboxes().filter(function(el) {
                 return el.isSelected();
             });
 
-            var allStudies = studyCheckboxes.length;
-
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
-            $('[data-test=selectAllStudies]').click();
+            $('button=TCGA PanCancer Atlas Studies').click();
 
-            selectedStudies = studyCheckboxes.filter(function(el) {
+            selectedStudies = getVisibleCheckboxes().filter(function(el) {
                 return el.isSelected();
             });
 
             assert.equal(
                 selectedStudies.length,
-                allStudies,
-                'all studies are selected'
+                32,
+                'all pan can studies are selected'
             );
 
-            $('[data-test=selectAllStudies]').click();
+            $('[data-test=globalDeselectAllStudiesButton]').click();
 
-            selectedStudies = studyCheckboxes.filter(function(el) {
+            selectedStudies = getVisibleCheckboxes().filter(function(el) {
                 return el.isSelected();
             });
 
@@ -169,7 +165,7 @@ describe('homepage', function() {
         });
 
         it('global deselect button clears all selected studies, even during filter', function() {
-            var visibleCheckboxes = getVisibleCheckboxes();
+            this.retries(0);
 
             assert.equal(
                 $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
@@ -177,7 +173,7 @@ describe('homepage', function() {
                 'global deselect button does not exist'
             );
 
-            visibleCheckboxes[10].click();
+            getVisibleCheckboxes()[50].click();
 
             assert.equal(
                 $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
@@ -187,7 +183,7 @@ describe('homepage', function() {
 
             var input = $('.autosuggest input[type=text]');
 
-            var selectedStudies = visibleCheckboxes.filter(function(el) {
+            var selectedStudies = getVisibleCheckboxes().filter(function(el) {
                 return el.isSelected();
             });
 
@@ -196,15 +192,11 @@ describe('homepage', function() {
             // add a filter
             input.setValue('breast');
 
-            browser.pause(500);
-
             //click global deselect all while filtered
             $('[data-test=globalDeselectAllStudiesButton]').click();
 
             // click unfilter button
             $('[data-test=clearStudyFilter]').click();
-
-            browser.pause(500);
 
             // we have to reselect elements b/c react has re-rendered them
             selectedStudies = checkboxes = getVisibleCheckboxes().filter(
@@ -687,9 +679,9 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 });
 
 describe('results page quick oql edit', () => {
-    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+            `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=ccrcc_dfci_2019&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations&case_set_id=ccrcc_dfci_2019_sequenced&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
         $('[data-test="oqlQuickEditButton"]').waitForExist({ timeout: 20000 });
