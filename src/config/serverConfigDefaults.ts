@@ -42,6 +42,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     isoformOverrideSource: 'uniprot',
     show_hotspot: true,
     show_oncokb: true,
+    show_oncokb_cbiocosmic: true,
     show_civic: false,
     show_pathway_mapper: true,
     show_mutation_mapper_tool_grch38: true,
