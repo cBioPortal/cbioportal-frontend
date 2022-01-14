@@ -1,6 +1,6 @@
-export interface IPharmacoDBGeneDrugAssociationData {
-    drug_name: string;
-    drug_url: string;
+export interface IPharmacoDBGeneCompoundAssociationData {
+    compound_name: string;
+    compound_url: string;
     in_clinical_trials: boolean;
     fda_approved: boolean;
     correlation: string;
@@ -19,7 +19,7 @@ export interface IPharmacoDBmRnaEntry {
     tissue_name: string;
     direction: string;
     gene_url: string;
-    gene_drug_associations: IPharmacoDBGeneDrugAssociationData[];
+    gene_compound_associations: IPharmacoDBGeneCompoundAssociationData[];
 }
 
 export interface IPharmacoDBCnaEntry {
@@ -29,7 +29,7 @@ export interface IPharmacoDBCnaEntry {
     status: string;
     cancer_type: string;
     gene_url: string;
-    gene_drug_associations: IPharmacoDBGeneDrugAssociationData[];
+    gene_compound_associations: IPharmacoDBGeneCompoundAssociationData[];
 }
 
 export interface IPharmacoDBView {
