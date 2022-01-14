@@ -26,7 +26,7 @@ function waitForAndCheckPlotsTab() {
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
-        var res = browser.checkElement('.oncoprintContainer'); // just hide the controls bc for some reason they keep showing up transparent in this test only
+        var res = checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
