@@ -2,9 +2,9 @@ import Raphael from 'webpack-raphael';
 import $ from 'jquery';
 import _ from 'lodash';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { DEFAULT_GENOME_BUILD } from 'pages/patientView/genomicOverview/Tracks';
 import { default as chromosomeSizes } from './chromosomeSizes.json';
 import { IIconData } from './GenomicOverviewUtils.js';
+import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
 
 export function GenomicOverviewConfig(
     nRows: any,
@@ -77,17 +77,6 @@ function getChmEndsPerc(chms: Array<any>, total: any) {
     return ends;
 }
 
-/**
- * storing chromesome length info
- */
-export const genomeBuilds: Map<string, string> = new Map([
-    ['hg19', 'GRCh37'],
-    ['37', 'GRCh37'],
-    ['hg38', 'GRCh38'],
-    ['38', 'GRCh38'],
-    ['mm10', 'GRCm38'],
-]);
-
 export type ChromosomeSizes = {
     genomeBuild: string;
     chromosomeSize: number[];
@@ -95,21 +84,18 @@ export type ChromosomeSizes = {
 
 const referenceGenomeSizes: {
     [genomeBuild: string]: number[];
-} = chromosomeSizes.reduce(
-    (map: { [genomeBuild: string]: number[] }, next: ChromosomeSizes) => {
-        map[next.genomeBuild] = next.chromosomeSize || [];
-        return map;
-    },
-    {}
-);
+} = _(chromosomeSizes)
+    .keyBy(entry => entry.genomeBuild)
+    .mapValues(entry => entry.chromosomeSize)
+    .value();
 
-export function getChmInfo(genomeBuild: string) {
+export function getRelativeCoordinates(genomeBuild: string) {
     const sel: any = { genomeRef: {}, total: 0 };
-    let referenceGenome = genomeBuilds.get(genomeBuild);
-    if (!referenceGenome || referenceGenome === '') {
-        referenceGenome = DEFAULT_GENOME_BUILD;
-    }
-    const genomeSize = referenceGenomeSizes[referenceGenome];
+    // Code expects the 'genomeBuild' to reflect the NCBI build identifier (e.g., "GRCh37").
+    // For legacy reasons, we derive NCBI build identifier for incomplete build identifiers
+    // (e.g., "37") or from UCSC genome identifiers (e.g., 'hg19').
+    const genomeBuildTranslated = _.get(GENOME_ID_TO_GENOME_BUILD, genomeBuild);
+    const genomeSize = referenceGenomeSizes[genomeBuildTranslated];
     if (genomeSize) {
         sel.genomeRef = genomeSize;
         sel.total = _.sum(genomeSize);
