@@ -18,6 +18,17 @@ export const REFERENCE_GENOME = {
     },
 };
 
+export const GENOME_ID_TO_GENOME_BUILD = {
+    GRCh37: 'GRCh37',
+    '37': 'GRCh37',
+    hg19: 'GRCh37',
+    GRCh38: 'GRCh38',
+    '38': 'GRCh38',
+    hg38: 'GRCh38',
+    GRCm38: 'GRCm38',
+    mm10: 'GRCm38',
+};
+
 export function isMixedReferenceGenome(studies: CancerStudy[]): boolean {
     const isAllStudiesGRCh37 = _.every(studies, study => {
         return isGrch37(study.referenceGenome);

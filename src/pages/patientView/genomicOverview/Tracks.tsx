@@ -11,7 +11,6 @@ import {
 import SampleManager from '../SampleManager';
 import { IKeyedIconData, IIconData } from './GenomicOverviewUtils';
 import { observable, action, makeObservable } from 'mobx';
-import autobind from 'autobind-decorator';
 import { observer } from 'mobx-react';
 
 interface TracksPropTypes {
@@ -85,7 +84,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         if (this.props.mutations && this.props.mutations.length > 0) {
             genomeBuild = this.props.mutations[0].ncbiBuild;
         }
-        const chmInfo = tracksHelper.getChmInfo(genomeBuild);
+        const chmInfo = tracksHelper.getRelativeCoordinates(genomeBuild);
         tracksHelper.plotChromosomes(paper, config, chmInfo, genomeBuild);
         // --- end of chromosome chart ---
 
