@@ -147,6 +147,7 @@ export interface IMutationTableProps {
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
 import {
+    calculateOncoKbContentPadding,
     calculateOncoKbContentWidthOnNextFrame,
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
@@ -866,6 +867,9 @@ export default class MutationTable<
                         usingPublicOncoKbInstance: this.props
                             .usingPublicOncoKbInstance,
                         mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
                         pubMedCache: this.props.pubMedCache,
                         civicGenes: this.props.civicGenes,
                         civicVariants: this.props.civicVariants,

@@ -45,6 +45,7 @@ export type AnnotationProps = {
     oncoKbCancerGenes?: RemoteData<CancerGene[] | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
     mergeOncoKbIcons?: boolean;
+    oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
     resolveEntrezGeneId?: (mutation: Mutation) => number;
     resolveTumorType?: (mutation: Mutation) => string;
@@ -61,6 +62,7 @@ export type GenericAnnotationProps = {
     enableMyCancerGenome: boolean;
     enableOncoKb: boolean;
     mergeOncoKbIcons?: boolean;
+    oncoKbContentPadding?: number;
     pubMedCache?: MobxCache;
     userEmailAddress?: string;
 };
@@ -303,6 +305,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
         pubMedCache,
         userEmailAddress,
         mergeOncoKbIcons,
+        oncoKbContentPadding,
     } = props;
 
     return (
@@ -321,6 +324,7 @@ export function GenericAnnotation(props: GenericAnnotationProps): JSX.Element {
                     mergeAnnotationIcons={mergeOncoKbIcons}
                     pubMedCache={pubMedCache}
                     userEmailAddress={userEmailAddress}
+                    contentPadding={oncoKbContentPadding}
                 />
             )}
             {enableCivic && (

@@ -49,6 +49,10 @@ export function calculateOncoKbContentWidthWithInterval(
     return interval;
 }
 
+export function calculateOncoKbContentPadding(oncoKbContentWidth?: number) {
+    return oncoKbContentWidth || 0 > 22 ? oncoKbContentWidth! - 22 : 0;
+}
+
 export function updateOncoKbIconStyle(style: { mergeIcons: boolean }) {
     getBrowserWindow().localStorage.setItem(
         'mergeOncoKbIcons',
