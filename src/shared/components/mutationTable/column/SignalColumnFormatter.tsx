@@ -20,6 +20,7 @@ export default class SignalColumnFormatter {
             <Signal
                 mutation={mutation[0]}
                 indexedVariantAnnotations={indexedVariantAnnotations}
+                mutationType={Pathogenicity.GERMLINE}
             />
         );
     }

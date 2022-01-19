@@ -57,7 +57,7 @@ export {
     getSignalData,
     getSortValue as signalSortValue,
     download as signalDownload,
-    getSignalValue,
+    getSingleSignalValue,
     SignalTable,
 } from './component/column/Signal';
 

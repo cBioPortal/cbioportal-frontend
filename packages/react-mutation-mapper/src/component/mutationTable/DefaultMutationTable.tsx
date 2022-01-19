@@ -277,6 +277,7 @@ export default class DefaultMutationTable extends React.Component<
                         indexedVariantAnnotations={
                             this.props.indexedVariantAnnotations
                         }
+                        mutationType={Pathogenicity.GERMLINE}
                     />
                 );
             default:
