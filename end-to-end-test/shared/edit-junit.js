@@ -41,7 +41,7 @@ function tranformFile(filePath) {
             });
         });
 
-        result.testsuites.testsuite.forEach(testsuite => {
+        result.testsuites.testsuite?.forEach(testsuite => {
             if (testsuite.testcase) {
                 testsuite.$.errors = testsuite.testcase
                     .filter(t => 'error' in t)
