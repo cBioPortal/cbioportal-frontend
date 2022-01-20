@@ -28,8 +28,8 @@ describe('alteration filter menu', function() {
                 clickCheckBoxStudyView('Somatic');
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '6',
-                    ATM: '1',
                     BRCA1: '1',
+                    ATM: '1',
                     TP53: '1',
                 });
                 assert.deepStrictEqual(
@@ -68,8 +68,8 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '6',
                     ACPP: '5',
+                    BRCA1: '4',
                     ATM: '1',
-                    BRCA1: '1',
                     DTNB: '1',
                     ABLIM1: '1',
                     MSH3: '1',
@@ -117,8 +117,8 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
                     ACPP: '5',
+                    BRCA1: '5',
                     ATM: '2',
-                    BRCA1: '2',
                     DTNB: '1',
                     ABLIM1: '1',
                     MSH3: '1',
@@ -163,9 +163,9 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
                     ACPP: '5',
+                    BRCA1: '3',
                     PIEZO1: '1',
                     ATM: '2',
-                    BRCA1: '2',
                     TP53: '2',
                     ADAMTS20: '1',
                     TMEM247: '1',
@@ -208,8 +208,8 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
                     ACPP: '5',
+                    BRCA1: '4',
                     ATM: '2',
-                    BRCA1: '2',
                     ABLIM1: '1',
                     TP53: '2',
                     ADAMTS20: '1',
@@ -249,11 +249,12 @@ describe('alteration filter menu', function() {
                 $('[data-test=ShowUnknownOncogenicity]').click();
                 waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
+                    BRCA1: '3',
+                    PIEZO1: '1',
                     DTNB: '1',
                     ABLIM1: '1',
                     MSH3: '1',
                     MYB: '1',
-                    PIEZO1: '1',
                     OR11H1: '1',
                     TMEM247: '1',
                 });
@@ -280,8 +281,8 @@ describe('alteration filter menu', function() {
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
                     BRCA2: '12',
                     ACPP: '5',
+                    BRCA1: '5',
                     ATM: '2',
-                    BRCA1: '2',
                     DTNB: '1',
                     ABLIM1: '1',
                     MSH3: '1',
@@ -325,6 +326,7 @@ describe('alteration filter menu', function() {
                 $('[data-test=Class_1]').click();
                 waitForStudyView();
                 assert.deepStrictEqual(geneTableCounts('mutations-table'), {
+                    BRCA1: '3',
                     ABLIM1: '1',
                     DTNB: '1',
                 });

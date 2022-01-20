@@ -20,6 +20,7 @@ import { ServerConfigHelpers } from 'config/config';
 import ChromosomeColumnFormatter from 'shared/components/mutationTable/column/ChromosomeColumnFormatter';
 import { remoteData } from 'cbioportal-frontend-commons';
 import {
+    calculateOncoKbContentPadding,
     calculateOncoKbContentWidthOnNextFrame,
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
@@ -244,6 +245,9 @@ export default class PatientViewStructuralVariantTable extends React.Component<
                             usingPublicOncoKbInstance: this.props.store
                                 .usingPublicOncoKbInstance,
                             mergeOncoKbIcons: this.mergeOncoKbIcons,
+                            oncoKbContentPadding: calculateOncoKbContentPadding(
+                                this.oncokbWidth
+                            ),
                             enableOncoKb: getServerConfig()
                                 .show_oncokb as boolean,
                             pubMedCache: this.props.store.pubMedCache,

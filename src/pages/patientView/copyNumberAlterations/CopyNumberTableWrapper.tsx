@@ -32,6 +32,7 @@ import {
 } from 'cbioportal-utils';
 import { CancerGene } from 'oncokb-ts-api-client';
 import {
+    calculateOncoKbContentPadding,
     calculateOncoKbContentWidthOnNextFrame,
     calculateOncoKbContentWidthWithInterval,
     DEFAULT_ONCOKB_CONTENT_WIDTH,
@@ -251,6 +252,9 @@ export default class CopyNumberTableWrapper extends React.Component<
                         usingPublicOncoKbInstance: this.props
                             .usingPublicOncoKbInstance,
                         mergeOncoKbIcons: this.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
                         enableOncoKb: this.props.enableOncoKb as boolean,
                         pubMedCache: this.props.pubMedCache,
                         civicGenes: this.props.cnaCivicGenes,
