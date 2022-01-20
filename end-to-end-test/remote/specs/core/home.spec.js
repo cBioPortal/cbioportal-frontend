@@ -171,8 +171,6 @@ describe('homepage', function() {
         });
 
         it('global deselect button clears all selected studies, even during filter', function() {
-            this.retries(0);
-
             assert.equal(
                 $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
                 false,
