@@ -135,14 +135,14 @@ describe('homepage', function() {
             ).waitForDisplayed();
         });
 
-        function getVisibleCheckboxes() {
-            $(
-                '[data-test="StudySelect"] input[type=checkbox]'
-            ).waitForDisplayed();
-            return $$('[data-test="StudySelect"] input[type=checkbox]');
-        }
-
         it('clicking select all studies checkbox selects all studies', function() {
+            function getVisibleCheckboxes() {
+                $(
+                    '[data-test="StudySelect"] input[type=checkbox]'
+                ).waitForDisplayed();
+                return $$('[data-test="StudySelect"] input[type=checkbox]');
+            }
+
             var selectedStudies = getVisibleCheckboxes().filter(function(el) {
                 return el.isSelected();
             });
@@ -171,6 +171,13 @@ describe('homepage', function() {
         });
 
         it('global deselect button clears all selected studies, even during filter', function() {
+            function getVisibleCheckboxes() {
+                $(
+                    '[data-test="StudySelect"] input[type=checkbox]'
+                ).waitForDisplayed();
+                return $$('[data-test="StudySelect"] input[type=checkbox]');
+            }
+
             assert.equal(
                 $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
                 false,
