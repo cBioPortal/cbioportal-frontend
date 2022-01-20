@@ -129,10 +129,16 @@ describe('homepage', function() {
     describe('select all/deselect all functionality in study selector', function() {
         beforeEach(function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
+
+            $(
+                '[data-test="StudySelect"] input[type=checkbox]'
+            ).waitForDisplayed();
         });
 
         function getVisibleCheckboxes() {
+            $(
+                '[data-test="StudySelect"] input[type=checkbox]'
+            ).waitForDisplayed();
             return $$('[data-test="StudySelect"] input[type=checkbox]');
         }
 
