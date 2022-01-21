@@ -3,9 +3,11 @@ import _ from 'lodash';
 import { GenericAssayChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable, toJS } from 'mobx';
+import WindowedSelect from 'react-windowed-select';
 import ReactSelect from 'react-select';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import OptimizedOption from 'shared/components/select/OptimizedOption';
 
 export interface IGenericAssaySelectionProps {
     molecularProfileOptions:
@@ -293,7 +295,7 @@ export default class GenericAssaySelection extends React.Component<
                             than 100 options.
                         </div>
                     )} */}
-                    <ReactSelect
+                    <WindowedSelect
                         name="generic-assay-select"
                         placeholder={`Search for ${deriveDisplayTextFromGenericAssayType(
                             this.props.genericAssayType,
@@ -313,6 +315,8 @@ export default class GenericAssaySelection extends React.Component<
                                 whiteSpace: 'normal',
                             }),
                         }}
+                        components={{ Option: OptimizedOption }}
+                        menuRenderer={{ options: this.genericAssayOptions }}
                     />
                 </div>
                 <div style={{ display: 'flex', marginTop: 10 }}>

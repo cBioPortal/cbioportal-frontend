@@ -278,6 +278,7 @@
     "react-transition-group": "^2.5.1",
     "react-twitter-widgets": "^1.7.1",
     "react-virtualized": "^9.20.1",
+    "react-windowed-select": "^3.1.2",
     "react-zeroclipboard": "^3.2.2",
     "reactable": "^0.14.1",
     "reactour": "^1.15.0",
