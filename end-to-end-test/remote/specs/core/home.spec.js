@@ -127,16 +127,18 @@ describe('homepage', function() {
     });
 });
 
-describe('select all/deselect all functionality in study selector', function() {
-    function getVisibleCheckboxes() {
+describe.only('select all/deselect all functionality in study selector', function() {
+    const getVisibleCheckboxes = () => {
         $('[data-test="StudySelect"] input[type=checkbox]').waitForDisplayed();
         return $$('[data-test="StudySelect"] input[type=checkbox]');
-    }
+    };
 
     it('clicking select all studies checkbox selects all studies', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        var selectedStudies = getVisibleCheckboxes().filter(function(el) {
+        let cbs = getVisibleCheckboxes();
+
+        var selectedStudies = cbs.filter(function(el) {
             return el.isSelected();
         });
 
@@ -144,7 +146,9 @@ describe('select all/deselect all functionality in study selector', function() {
 
         $('button=TCGA PanCancer Atlas Studies').click();
 
-        selectedStudies = getVisibleCheckboxes().filter(function(el) {
+        cbs = getVisibleCheckboxes();
+
+        selectedStudies = cbs.filter(function(el) {
             return el.isSelected();
         });
 
@@ -156,7 +160,9 @@ describe('select all/deselect all functionality in study selector', function() {
 
         $('[data-test=globalDeselectAllStudiesButton]').click();
 
-        selectedStudies = getVisibleCheckboxes().filter(function(el) {
+        cbs = getVisibleCheckboxes();
+
+        selectedStudies = cbs.filter(function(el) {
             return el.isSelected();
         });
 
