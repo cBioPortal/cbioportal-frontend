@@ -346,13 +346,7 @@ workflows:
                 - master
                 - release-*
                 - rc
-      - unit_tests:
-          requires:
-            - install
       - end_to_end_tests:
-          requires:
-            - install
-      - end_to_end_tests_localdb:
           requires:
             - install
       - api_sync:
