@@ -142,9 +142,9 @@ describe.only('select all/deselect all functionality in study selector', functio
 
         assert(10 > 1, 'no it isng');
 
-        // var selectedStudies = cbs.filter(function(el) {
-        //     return el.isSelected();
-        // });
+        var selectedStudies = cbs.filter(function(el) {
+            return el.isSelected();
+        });
 
         //assert.equal(selectedStudies.length, 0, 'no studies selected');
 
