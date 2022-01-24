@@ -82,6 +82,7 @@ import {
     DataType,
     driverTierFilterActive,
     ensureBackwardCompatibilityOfFilters,
+    excludeFiltersForAttribute,
     FGA_PLOT_DOMAIN,
     FGA_VS_MUTATION_COUNT_KEY,
     geneFilterQueryFromOql,
@@ -137,6 +138,7 @@ import {
     statusFilterActive,
     StudyWithSamples,
     submitToPage,
+    updateCustomIntervalFilter,
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -2646,20 +2648,47 @@ export class StudyViewPageStore
         if (this.chartMetaSet[chartUniqueKey]) {
             let chartMeta = this.chartMetaSet[chartUniqueKey];
             trackStudyViewFilterEvent('clinicalDataFilters', this);
-            if (values.length > 0) {
-                const clinicalDataFilter = {
-                    attributeId: chartMeta.clinicalAttribute!
-                        .clinicalAttributeId,
-                    values: values,
-                };
-                this._clinicalDataFilterSet.set(
-                    chartMeta.uniqueKey,
-                    clinicalDataFilter
-                );
-            } else {
-                this._clinicalDataFilterSet.delete(chartMeta.uniqueKey);
-            }
+            this.updateClinicalAttributeFilterByValues(
+                chartMeta.clinicalAttribute!.clinicalAttributeId,
+                values
+            );
         }
+    }
+    @action.bound
+    updateClinicalAttributeFilterByValues(
+        clinicalAttributeId: string,
+        values: DataFilterValue[]
+    ): void {
+        if (values.length > 0) {
+            const clinicalDataFilter = {
+                attributeId: clinicalAttributeId,
+                values: values,
+            };
+            this._clinicalDataFilterSet.set(
+                clinicalAttributeId,
+                clinicalDataFilter
+            );
+        } else {
+            this._clinicalDataFilterSet.delete(clinicalAttributeId);
+        }
+    }
+
+    @action.bound
+    async updateClinicalDataCustomIntervalFilter(
+        clinicalAttributeId: string,
+        newRange: { start?: number; end?: number }
+    ) {
+        await updateCustomIntervalFilter(
+            newRange,
+            ({
+                uniqueKey: clinicalAttributeId,
+                clinicalAttribute: { clinicalAttributeId },
+            } as any) as ChartMeta,
+            this.getClinicalDataBin,
+            this.getClinicalDataFiltersByUniqueKey,
+            this.updateCustomBins,
+            this.updateClinicalDataIntervalFilters
+        );
     }
 
     @action.bound
@@ -5248,7 +5277,10 @@ export class StudyViewPageStore
             });
             this.changeChartVisibility(uniqueKey, true);
             this.chartsType.set(uniqueKey, ChartTypeEnum.SCATTER);
-            this.chartsDimension.set(uniqueKey, { w: 2, h: 2 });
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER]
+            );
 
             /*this._customBinsFromScatterPlotSelectionSet.set(uniqueKey, {
                 clinicalDataType: 'SAMPLE',
@@ -5319,7 +5351,12 @@ export class StudyViewPageStore
             });
             this.changeChartVisibility(uniqueKey, true);
             this.chartsType.set(uniqueKey, ChartTypeEnum.VIOLIN_PLOT_TABLE);
-            this.chartsDimension.set(uniqueKey, { w: 2, h: 2 });
+            this.chartsDimension.set(
+                uniqueKey,
+                STUDY_VIEW_CONFIG.layout.dimensions[
+                    ChartTypeEnum.VIOLIN_PLOT_TABLE
+                ]
+            );
         }
 
         if (!loadedfromUserSettings && !dontAddToNewlyAddedCharts) {
@@ -7035,8 +7072,11 @@ export class StudyViewPageStore
                         q.chartInfo.numericalAttr.clinicalAttributeId,
                     logScale: q.violinLogScale,
                     sigmaMultiplier: 4,
-                    studyViewFilter: this.filters,
-                }), // TODO: take out "as any" when you update api
+                    studyViewFilter: excludeFiltersForAttribute(
+                        this.filters,
+                        q.chartInfo.categoricalAttr.clinicalAttributeId
+                    ),
+                }),
             default: {
                 axisStart: -1,
                 axisEnd: -1,

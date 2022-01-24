@@ -414,15 +414,20 @@ export class StudySummaryTab extends React.Component<
                 const settings = this.store.getXvsYChartSettings(
                     props.chartMeta!.uniqueKey
                 )!;
+                props.filters = [
+                    ...this.store.getClinicalDataFiltersByUniqueKey(
+                        chartInfo.categoricalAttr.clinicalAttributeId
+                    ),
+                    ...this.store.getClinicalDataFiltersByUniqueKey(
+                        chartInfo.numericalAttr.clinicalAttributeId
+                    ),
+                ];
                 props.title = `${chartInfo.numericalAttr.displayName}${
                     settings.violinLogScale ? ' (log)' : ''
                 } vs ${chartInfo.categoricalAttr.displayName}`;
                 props.promise = this.store.clinicalViolinDataCache.get({
                     chartInfo,
                     violinLogScale: !!settings.violinLogScale,
-                    //chartMeta: props.chartMeta!,
-                    //xAxisLogScale: !!settings.xLogScale,
-                    //yAxisLogScale: !!settings.yLogScale,
                 });
                 props.axisLabelX = chartInfo.categoricalAttr.displayName;
                 props.axisLabelY = chartInfo.numericalAttr.displayName;
@@ -451,6 +456,42 @@ export class StudySummaryTab extends React.Component<
                         props.chartMeta!.uniqueKey
                     )!;
                     settings.showBox = !settings.showBox;
+                };
+                props.onValueSelection = (
+                    type: 'categorical' | 'numerical',
+                    values: string[] | { start: number; end: number }
+                ) => {
+                    switch (type) {
+                        case 'categorical':
+                            this.store.updateClinicalAttributeFilterByValues(
+                                chartInfo.categoricalAttr.clinicalAttributeId,
+                                (values as string[]).map(
+                                    value => ({ value } as DataFilterValue)
+                                )
+                            );
+                            break;
+                        case 'numerical':
+                            this.store.updateClinicalDataCustomIntervalFilter(
+                                chartInfo.numericalAttr.clinicalAttributeId,
+                                values as { start: number; end: number }
+                            );
+                            break;
+                    }
+                };
+                props.selectedCategories = this.store
+                    .getClinicalDataFiltersByUniqueKey(
+                        chartInfo.categoricalAttr.clinicalAttributeId
+                    )
+                    .map(x => x.value);
+                props.onResetSelection = () => {
+                    this.store.updateClinicalAttributeFilterByValues(
+                        chartInfo.categoricalAttr.clinicalAttributeId,
+                        []
+                    );
+                    this.store.updateClinicalAttributeFilterByValues(
+                        chartInfo.numericalAttr.clinicalAttributeId,
+                        []
+                    );
                 };
                 break;
             case ChartTypeEnum.SCATTER: {

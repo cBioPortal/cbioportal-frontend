@@ -3561,8 +3561,10 @@ export function getUserGroupColor(
 
 export async function updateCustomIntervalFilter(
     newRange: { start?: number; end?: number },
-    chartMeta: ChartMeta,
-    getDataBinsPromise: (chartMeta: ChartMeta) => MobxPromise<DataBin[]>,
+    chartMeta: Pick<ChartMeta, 'uniqueKey'>,
+    getDataBinsPromise: (
+        chartMeta: Pick<ChartMeta, 'uniqueKey'>
+    ) => MobxPromise<DataBin[]>,
     getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
     updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
     updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
@@ -3683,6 +3685,17 @@ export function isQueriedStudyAuthorized(study: CancerStudy) {
         (getServerConfig().skin_home_page_show_unauthorized_studies &&
             study.readPermission !== false)
     );
+}
+
+export function excludeFiltersForAttribute(
+    filters: StudyViewFilter,
+    clinicalAttributeId: string
+) {
+    let { clinicalDataFilters, ...rest } = filters;
+    clinicalDataFilters = clinicalDataFilters?.filter(
+        f => f.attributeId !== clinicalAttributeId
+    );
+    return { clinicalDataFilters, ...rest };
 }
 
 export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(

@@ -1,6 +1,20 @@
 import { scaleLinear, scaleLog } from 'd3-scale';
 import _ from 'lodash';
 
+export function getDataX(
+    violinX: number,
+    dataBounds: { min: number; max: number },
+    plotWidth: number
+) {
+    // inverse of getViolinX
+    // map from violin scale to data scale
+    return (
+        dataBounds.min +
+        ((violinX - violinPlotXPadding) * (dataBounds.max - dataBounds.min)) /
+            plotWidth
+    );
+}
+
 export function getViolinX(
     dataX: number,
     dataBounds: { min: number; max: number },
@@ -9,7 +23,7 @@ export function getViolinX(
     // map from data scale to violin scale
     return (
         violinPlotXPadding +
-        ((dataX - dataBounds.min) * (plotWidth - 10)) /
+        ((dataX - dataBounds.min) * plotWidth) /
             (dataBounds.max - dataBounds.min)
     );
 }

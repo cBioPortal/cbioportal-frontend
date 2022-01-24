@@ -141,6 +141,7 @@ export interface IChartContainerProps {
     violinPlotChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
+    selectedCategories?: string[];
     selectedGenes?: any;
     cancerGenes: number[];
     onGeneSelect?: any;
@@ -1030,29 +1031,44 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 const chartSettings = this.props.store.getXvsYChartSettings(
                     this.props.chartMeta!.uniqueKey
                 )!;
-                return () => (
-                    <StudyViewViolinPlotTable
-                        dimension={this.props.dimension}
-                        width={getWidthByDimension(
-                            this.props.dimension,
-                            this.borderWidth
-                        )}
-                        height={getTableHeightByDimension(
-                            this.props.dimension,
-                            this.chartHeaderHeight
-                        )}
-                        categoryColumnName={this.props.axisLabelX!}
-                        violinColumnName={this.props.axisLabelY!}
-                        violinBounds={{
-                            min: this.props.promise.result.axisStart,
-                            max: this.props.promise.result.axisEnd,
-                        }}
-                        rows={this.props.promise.result.rows}
-                        showViolin={this.props.violinPlotChecked!}
-                        showBox={this.props.boxPlotChecked!}
-                        logScale={chartSettings?.violinLogScale!}
-                    />
-                );
+                const chartInfo = this.props.store.getXvsYViolinChartInfo(
+                    this.props.chartMeta!.uniqueKey
+                )!;
+                return () => {
+                    const isLoading =
+                        !this.props.store.clinicalDataBinPromises[
+                            chartInfo.numericalAttr.clinicalAttributeId
+                        ] ||
+                        this.props.store.clinicalDataBinPromises[
+                            chartInfo.numericalAttr.clinicalAttributeId
+                        ].isPending;
+                    return (
+                        <StudyViewViolinPlotTable
+                            dimension={this.props.dimension}
+                            width={getWidthByDimension(
+                                this.props.dimension,
+                                this.borderWidth
+                            )}
+                            height={getTableHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            )}
+                            categoryColumnName={this.props.axisLabelX!}
+                            violinColumnName={this.props.axisLabelY!}
+                            violinBounds={{
+                                min: this.props.promise.result.axisStart,
+                                max: this.props.promise.result.axisEnd,
+                            }}
+                            rows={this.props.promise.result.rows || []}
+                            showViolin={this.props.violinPlotChecked!}
+                            showBox={this.props.boxPlotChecked!}
+                            logScale={chartSettings?.violinLogScale!}
+                            setFilters={this.props.onValueSelection}
+                            selectedCategories={this.props.selectedCategories!}
+                            isLoading={isLoading}
+                        />
+                    );
+                };
                 break;
             default:
                 return null;
