@@ -6,7 +6,6 @@ import {
     TableCellStatusIndicator,
     TableCellStatus,
 } from 'cbioportal-frontend-commons';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import GenomeNexusCache, {
     GenomeNexusCacheDataType,
 } from 'shared/cache/GenomeNexusCache';
@@ -119,7 +118,7 @@ export default class ExonColumnFormatter {
             const genomeNexusData = genomeNexusCache.data;
             const exon =
                 genomeNexusData.annotation_summary?.transcriptConsequenceSummary
-                    .exon;
+                    ?.exon;
             if (exon) {
                 exonData = exon;
             } else if (genomeNexusData.transcript_consequences) {
@@ -127,7 +126,7 @@ export default class ExonColumnFormatter {
                     x =>
                         x.transcript_id ===
                             genomeNexusData.annotation_summary
-                                ?.transcriptConsequenceSummary.transcriptId &&
+                                ?.transcriptConsequenceSummary?.transcriptId &&
                         x.exon
                 )[0];
                 exonData = transcriptConsequence?.exon || null;
