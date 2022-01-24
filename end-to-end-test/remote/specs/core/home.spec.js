@@ -128,23 +128,23 @@ describe('homepage', function() {
     });
 });
 
-describe.only('select all/deselect all functionality in study selector', function() {
-    const getVisibleCheckboxes = () => {
+describe('select all/deselect all functionality in study selector', function() {
+    const getCheckedCheckboxes = () => {
         $('[data-test="StudySelect"] input[type=checkbox]').waitForDisplayed();
         // return $$('[data-test="StudySelect"] input[type=checkbox]');
 
         return jq(`[data-test=\"StudySelect\"] input[type=checkbox]:checked`);
     };
 
-    it.only('clicking select all studies checkbox selects all studies', function() {
+    it('clicking select all studies checkbox selects all studies', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        assert.equal(getVisibleCheckboxes().length, 0, 'no studies selected');
+        assert.equal(getCheckedCheckboxes().length, 0, 'no studies selected');
 
         $('button=TCGA PanCancer Atlas Studies').click();
 
         assert.equal(
-            getVisibleCheckboxes().length,
+            getCheckedCheckboxes().length,
             32,
             'all pan can studies are selected'
         );
@@ -152,7 +152,7 @@ describe.only('select all/deselect all functionality in study selector', functio
         $('[data-test=globalDeselectAllStudiesButton]').click();
 
         assert.equal(
-            getVisibleCheckboxes().length,
+            getCheckedCheckboxes().length,
             0,
             'no studies are selected'
         );
@@ -161,15 +161,14 @@ describe.only('select all/deselect all functionality in study selector', functio
     it('global deselect button clears all selected studies, even during filter', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        $('[data-test="StudySelect"] input[type=checkbox]').waitForDisplayed();
-
         assert.equal(
             $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
             false,
             'global deselect button does not exist'
         );
 
-        getVisibleCheckboxes()[50].click();
+        browser.pause(500);
+        $$('[data-test="StudySelect"] input[type=checkbox]')[50].click();
 
         assert.equal(
             $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
@@ -179,11 +178,7 @@ describe.only('select all/deselect all functionality in study selector', functio
 
         var input = $('.autosuggest input[type=text]');
 
-        var selectedStudies = getVisibleCheckboxes().filter(function(el) {
-            return el.isSelected();
-        });
-
-        assert.equal(selectedStudies.length, 1, 'we selected one study');
+        assert.equal(getCheckedCheckboxes().length, 1, 'we selected one study');
 
         // add a filter
         input.setValue('breast');
@@ -194,15 +189,8 @@ describe.only('select all/deselect all functionality in study selector', functio
         // click unfilter button
         $('[data-test=clearStudyFilter]').click();
 
-        // we have to reselect elements b/c react has re-rendered them
-        selectedStudies = checkboxes = getVisibleCheckboxes().filter(function(
-            el
-        ) {
-            return el.isSelected();
-        });
-
         assert.equal(
-            selectedStudies.length,
+            getCheckedCheckboxes().length,
             0,
             'no selected studies are selected after deselect all clicked'
         );
