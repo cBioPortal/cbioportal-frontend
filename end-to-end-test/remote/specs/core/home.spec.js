@@ -11,6 +11,7 @@ var {
     clickModifyStudySelectionButton,
     waitForOncoprint,
     setDropdownOpen,
+    jq,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -130,47 +131,31 @@ describe('homepage', function() {
 describe.only('select all/deselect all functionality in study selector', function() {
     const getVisibleCheckboxes = () => {
         $('[data-test="StudySelect"] input[type=checkbox]').waitForDisplayed();
-        return $$('[data-test="StudySelect"] input[type=checkbox]');
+        // return $$('[data-test="StudySelect"] input[type=checkbox]');
+
+        return jq(`[data-test=\"StudySelect\"] input[type=checkbox]:checked`);
     };
 
-    it('clicking select all studies checkbox selects all studies', function() {
+    it.only('clicking select all studies checkbox selects all studies', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        let cbs = getVisibleCheckboxes();
+        assert.equal(getVisibleCheckboxes().length, 0, 'no studies selected');
 
-        assert($('div').isDisplayed());
+        $('button=TCGA PanCancer Atlas Studies').click();
 
-        assert(10 > 1, 'no it isng');
+        assert.equal(
+            getVisibleCheckboxes().length,
+            32,
+            'all pan can studies are selected'
+        );
 
-        var selectedStudies = cbs.filter(function(el) {
-            return el.isSelected();
-        });
+        $('[data-test=globalDeselectAllStudiesButton]').click();
 
-        //assert.equal(selectedStudies.length, 0, 'no studies selected');
-
-        // $('button=TCGA PanCancer Atlas Studies').click();
-        //
-        // cbs = getVisibleCheckboxes();
-        //
-        // selectedStudies = cbs.filter(function(el) {
-        //     return el.isSelected();
-        // });
-        //
-        // assert.equal(
-        //     selectedStudies.length,
-        //     32,
-        //     'all pan can studies are selected'
-        // );
-        //
-        // $('[data-test=globalDeselectAllStudiesButton]').click();
-        //
-        // cbs = getVisibleCheckboxes();
-        //
-        // selectedStudies = cbs.filter(function(el) {
-        //     return el.isSelected();
-        // });
-        //
-        // assert.equal(selectedStudies.length, 0, 'no studies are selected');
+        assert.equal(
+            getVisibleCheckboxes().length,
+            0,
+            'no studies are selected'
+        );
     });
 
     it('global deselect button clears all selected studies, even during filter', function() {
