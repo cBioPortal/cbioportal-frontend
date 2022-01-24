@@ -136,13 +136,13 @@ describe.only('select all/deselect all functionality in study selector', functio
     it('clicking select all studies checkbox selects all studies', function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-        //let cbs = getVisibleCheckboxes();
+        let cbs = getVisibleCheckboxes();
 
         assert($('div').isDisplayed());
 
         assert(10 > 1, 'no it isng');
 
-        // var selectedStudies = cbs.fislter(function(el) {
+        // var selectedStudies = cbs.filter(function(el) {
         //     return el.isSelected();
         // });
 
