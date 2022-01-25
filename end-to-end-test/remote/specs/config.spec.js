@@ -8,7 +8,7 @@ var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe.skip('homepage', function() {
+describe('homepage', function() {
     this.retries(0);
 
     before(() => {

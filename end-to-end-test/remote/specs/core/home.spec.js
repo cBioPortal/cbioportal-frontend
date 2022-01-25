@@ -11,6 +11,7 @@ var {
     clickModifyStudySelectionButton,
     waitForOncoprint,
     setDropdownOpen,
+    jq,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -125,100 +126,74 @@ describe('homepage', function() {
             'submit should be disabled w/ PROT in oql'
         );
     });
+});
 
-    describe.skip('select all/deselect all functionality in study selector', function() {
-        beforeEach(function() {
-            goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            $('[data-test="StudySelect"] input[type=checkbox]').waitForExist();
-        });
+describe('select all/deselect all functionality in study selector', function() {
+    const getCheckedCheckboxes = () => {
+        $('[data-test="StudySelect"] input[type=checkbox]').waitForDisplayed();
+        // return $$('[data-test="StudySelect"] input[type=checkbox]');
 
-        function getVisibleCheckboxes() {
-            return $$('[data-test="StudySelect"] input[type=checkbox]');
-        }
+        return jq(`[data-test=\"StudySelect\"] input[type=checkbox]:checked`);
+    };
 
-        it('clicking select all studies checkbox selects all studies', function() {
-            var studyCheckboxes = getVisibleCheckboxes();
+    it('clicking select all studies checkbox selects all studies', function() {
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            var selectedStudies = studyCheckboxes.filter(function(el) {
-                return el.isSelected();
-            });
+        assert.equal(getCheckedCheckboxes().length, 0, 'no studies selected');
 
-            var allStudies = studyCheckboxes.length;
+        $('button=TCGA PanCancer Atlas Studies').click();
 
-            assert.equal(selectedStudies.length, 0, 'no studies selected');
+        assert.equal(
+            getCheckedCheckboxes().length,
+            32,
+            'all pan can studies are selected'
+        );
 
-            $('[data-test=selectAllStudies]').click();
+        $('[data-test=globalDeselectAllStudiesButton]').click();
 
-            selectedStudies = studyCheckboxes.filter(function(el) {
-                return el.isSelected();
-            });
+        assert.equal(
+            getCheckedCheckboxes().length,
+            0,
+            'no studies are selected'
+        );
+    });
 
-            assert.equal(
-                selectedStudies.length,
-                allStudies,
-                'all studies are selected'
-            );
+    it('global deselect button clears all selected studies, even during filter', function() {
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            $('[data-test=selectAllStudies]').click();
+        assert.equal(
+            $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
+            false,
+            'global deselect button does not exist'
+        );
 
-            selectedStudies = studyCheckboxes.filter(function(el) {
-                return el.isSelected();
-            });
+        browser.pause(500);
+        $$('[data-test="StudySelect"] input[type=checkbox]')[50].click();
 
-            assert.equal(selectedStudies.length, 0, 'no studies are selected');
-        });
+        assert.equal(
+            $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
+            true,
+            'global deselect button DOES exist'
+        );
 
-        it('global deselect button clears all selected studies, even during filter', function() {
-            var visibleCheckboxes = getVisibleCheckboxes();
+        var input = $('.autosuggest input[type=text]');
 
-            assert.equal(
-                $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
-                false,
-                'global deselect button does not exist'
-            );
+        assert.equal(getCheckedCheckboxes().length, 1, 'we selected one study');
 
-            visibleCheckboxes[10].click();
+        // add a filter
+        input.setValue('breast');
 
-            assert.equal(
-                $('[data-test=globalDeselectAllStudiesButton]').isExisting(),
-                true,
-                'global deselect button DOES exist'
-            );
+        //click global deselect all while filtered
+        $('[data-test=globalDeselectAllStudiesButton]').click();
 
-            var input = $('.autosuggest input[type=text]');
+        // click unfilter button
+        $('[data-test=clearStudyFilter]').click();
 
-            var selectedStudies = visibleCheckboxes.filter(function(el) {
-                return el.isSelected();
-            });
-
-            assert.equal(selectedStudies.length, 1, 'we selected one study');
-
-            // add a filter
-            input.setValue('breast');
-
-            browser.pause(500);
-
-            //click global deselect all while filtered
-            $('[data-test=globalDeselectAllStudiesButton]').click();
-
-            // click unfilter button
-            $('[data-test=clearStudyFilter]').click();
-
-            browser.pause(500);
-
-            // we have to reselect elements b/c react has re-rendered them
-            selectedStudies = checkboxes = getVisibleCheckboxes().filter(
-                function(el) {
-                    return el.isSelected();
-                }
-            );
-
-            assert.equal(
-                selectedStudies.length,
-                0,
-                'no selected studies are selected after deselect all clicked'
-            );
-        });
+        assert.equal(
+            getCheckedCheckboxes().length,
+            0,
+            'no selected studies are selected after deselect all clicked'
+        );
     });
 });
 
@@ -687,9 +662,9 @@ describe('auto-selecting needed profiles for oql in query form', () => {
 });
 
 describe('results page quick oql edit', () => {
-    it.skip('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
+    it('gives a submit error if protein oql is inputted and no protein profile is available for the study', () => {
         goToUrlAndSetLocalStorage(
-            `${CBIOPORTAL_URL}/results/oncoprint?genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_tcga_pub_gistic&cancer_study_list=prad_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&profileFilter=0&case_set_id=prad_tcga_pub_cnaseq&gene_list=BRCA1&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
+            `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=ccrcc_dfci_2019&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&profileFilter=mutations&case_set_id=ccrcc_dfci_2019_sequenced&gene_list=TP53&geneset_list=%20&tab_index=tab_visualize&Action=Submit`
         );
 
         $('[data-test="oqlQuickEditButton"]').waitForExist({ timeout: 20000 });
