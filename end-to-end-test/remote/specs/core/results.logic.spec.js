@@ -170,7 +170,7 @@ describe('results page', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
-        it.skip('should not appear in a multiple study query with one gene', function() {
+        it('should not appear in a multiple study query with one gene', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
