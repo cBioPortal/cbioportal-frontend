@@ -9,6 +9,7 @@ import {
     ExonDatum,
     extractExonInformation,
     formatExonLocation,
+    formatExonLength,
 } from 'cbioportal-utils';
 import { EnsemblTranscript } from 'genome-nexus-ts-api-client';
 
@@ -53,9 +54,9 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                   const endCodon = exon.start + exon.length;
                   const exonLength = exon.length;
                   const isSkippable = Number.isInteger(exonLength);
-                  const stringStart = formatExonLocation(startCodon);
+                  const stringStart = formatExonLocation(startCodon, index);
                   const stringEnd = formatExonLocation(endCodon);
-                  const stringLength = formatExonLocation(exonLength);
+                  const stringLength = formatExonLength(exonLength);
 
                   return {
                       color: altColors[index % 2],
