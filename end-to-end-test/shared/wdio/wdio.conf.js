@@ -17,6 +17,8 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
+const retries = process.env.RETRIES || 2;
+
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
 // correct if screenshot directory has trailing slash
@@ -366,7 +368,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
-        retries: 2,
+        retries: retries,
     },
     //
     // =====

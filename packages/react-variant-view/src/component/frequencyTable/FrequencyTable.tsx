@@ -8,9 +8,8 @@ import { SignalAnnotation } from 'genome-nexus-ts-api-client';
 import {
     ISignalTumorTypeDecomposition,
     generateTumorTypeDecomposition,
+    Pathogenicity,
 } from 'cbioportal-utils';
-
-import { Pathogenicity } from '../../util/Constants';
 
 interface IFrequencyTableProps {
     signalAnnotation?: SignalAnnotation;

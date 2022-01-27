@@ -27,12 +27,6 @@ export const ANNOTATION_QUERY_FIELDS = [
     'clinvar',
 ];
 
-export enum Pathogenicity {
-    GERMLINE = 'germline',
-    SOMATIC = 'somatic',
-    BIALLELIC = 'biallelic',
-}
-
 export const SHOW_MUTATION_ASSESSOR = true;
 
 export const MskImpactFrequencyDigits = 3;
