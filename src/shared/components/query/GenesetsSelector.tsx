@@ -139,9 +139,7 @@ export default class GenesetsSelector extends QueryStoreComponent<
                                         'GENESET_SCORE'
                                     )[0].molecularProfileId
                                 }
-                                sampleListId={
-                                    this.store.defaultSelectedSampleListId
-                                }
+                                sampleList={this.store.selectedSampleList}
                                 onSelect={map_geneset_selected => {
                                     this.store.applyGenesetSelection(
                                         map_geneset_selected
