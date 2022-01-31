@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { action, observable, computed, makeObservable } from 'mobx';
+import {
+    action,
+    observable,
+    computed,
+    makeObservable,
+    makeAutoObservable,
+} from 'mobx';
 import _ from 'lodash';
 import {
     default as LazyMobXTable,
@@ -260,7 +266,7 @@ const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
 export default class MutationTable<
     P extends IMutationTableProps
 > extends React.Component<P, {}> {
-    @observable protected _columns: Record<
+    protected _columns: Record<
         ExtendedMutationTableColumnType,
         MutationTableColumn
     >;
@@ -1204,6 +1210,7 @@ export default class MutationTable<
             visible: false,
             align: 'right',
         };
+
         this._columns[MutationTableColumnType.SIGNAL] = {
             name: MutationTableColumnType.SIGNAL,
             render: (d: Mutation[]) =>
@@ -1238,6 +1245,12 @@ export default class MutationTable<
             visible: false,
             shouldExclude: () => !getServerConfig().show_signal,
         };
+
+        // we do not want to make the JSX observable as this causes bugs
+        // i believe the only thing that needs to be observable is the boolean visible flag
+        // so really this should be managed outside of this collection but refactoring too
+        // difficult
+        this._columns = observable(this._columns, { tooltip: false });
     }
 
     @computed
