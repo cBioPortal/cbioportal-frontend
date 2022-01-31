@@ -3,6 +3,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { action, computed, observable, makeObservable } from 'mobx';
 import _ from 'lodash';
 import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
+import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 
 function mutationMatch(d: Mutation[], id: Mutation) {
     return (
@@ -84,6 +85,21 @@ export default class PatientViewMutationsDataStore extends SimpleGetterLazyMobXT
 
     public isMutationSelected(m: Mutation) {
         return this.selectedMutationsMap.has(mutationIdKey(m));
+    }
+
+    @computed get namespaceColumnData(): NamespaceColumnConfig {
+        const namespaceData = _(this.allData)
+            .flatMap()
+            .map(mutation => mutation.namespaceColumns)
+            .value();
+        const namespaceDataMerged = _.reduce(
+            namespaceData,
+            (result, value, key) => _.assign(result, value),
+            {}
+        );
+        return _.mapValues(namespaceDataMerged, namespaceColumnData =>
+            _.keys(namespaceColumnData)
+        );
     }
 
     protected getSortedFilteredData = () => {
