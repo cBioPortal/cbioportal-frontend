@@ -1,6 +1,8 @@
 var assert = require('assert');
 var goToUrlAndSetLocalStorage = require('../../shared/specUtils')
     .goToUrlAndSetLocalStorage;
+var goToUrlAndSetLocalStorageWithProperty = require('../../shared/specUtils')
+    .goToUrlAndSetLocalStorageWithProperty;
 var waitForStudyQueryPage = require('../../shared/specUtils')
     .waitForStudyQueryPage;
 var waitForGeneQueryPage = require('../../shared/specUtils')
@@ -14,7 +16,6 @@ var getReactSelectOptions = require('../../shared/specUtils')
     .getReactSelectOptions;
 var selectReactSelectOption = require('../../shared/specUtils')
     .selectReactSelectOption;
-var useExternalFrontend = require('../../shared/specUtils').useExternalFrontend;
 
 var { clickQueryByGeneButton, showGsva } = require('../../shared/specUtils');
 
@@ -179,6 +180,43 @@ describe('gsva feature', function() {
             modal.$('.Select-option=75%').click();
             modal.$('[id=filterButton]').click();
             waitForModalUpdate();
+        });
+
+        describe('skin.geneset_hierarchy.collapse_by_default property', () => {
+            it('collapses tree on init when property set to true', () => {
+                goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
+                    skin_geneset_hierarchy_collapse_by_default: true,
+                });
+                showGsva();
+                waitForStudyQueryPage();
+                checkTestStudy();
+                checkGSVAprofile();
+                openGsvaHierarchyDialog();
+                var gsvaEntriesNotShown = $$('*=GO_').length === 0;
+                assert(gsvaEntriesNotShown);
+            });
+            it('expands tree on init when property set to false', () => {
+                goToUrlAndSetLocalStorageWithProperty(CBIOPORTAL_URL, true, {
+                    skin_geneset_hierarchy_collapse_by_default: false,
+                });
+                showGsva();
+                waitForStudyQueryPage();
+                checkTestStudy();
+                checkGSVAprofile();
+                openGsvaHierarchyDialog();
+                var gsvaEntriesShown = $$('*=GO_').length > 0;
+                assert(gsvaEntriesShown);
+            });
+            it('expands tree on init when property not defined', () => {
+                goToUrlAndSetLocalStorage(CBIOPORTAL_URL, true);
+                showGsva();
+                waitForStudyQueryPage();
+                checkTestStudy();
+                checkGSVAprofile();
+                openGsvaHierarchyDialog();
+                var gsvaEntriesShown = $$('*=GO_').length > 0;
+                assert(gsvaEntriesShown);
+            });
         });
     });
 
