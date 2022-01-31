@@ -20295,6 +20295,11 @@ range-parser@~1.2.0:
   resolved "https://registry.yarnpkg.com/range-parser/-/range-parser-1.2.0.tgz#f49be6b487894ddc40dcc94a322f611092e00d5e"
   integrity sha1-9JvmtIeJTdxA3MlKMi9hEJLgDV4=
 
+range-ts@^0.1.5:
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/range-ts/-/range-ts-0.1.5.tgz#a0e6a18d32a4cd20cc2a0d48f7b95b983af940cf"
+  integrity sha512-U2Ksx7g/+MBb1eP8jbhma7/WkF5pFLRrbvTXx5VvRHkjhs2d/as27Zgv5uVt/m/QEEk0liY4CCwQzF22SRDknQ==
+
 rat-vec@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/rat-vec/-/rat-vec-1.1.1.tgz#0dde2b66b7b34bb1bcd2a23805eac806d87fd17f"

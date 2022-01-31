@@ -21,6 +21,7 @@ import {
     generateNumericalData,
     needAdditionShiftForLogScaleBarChart,
     DataBin,
+    isDataBinSelected,
 } from '../../StudyViewUtils';
 import { STUDY_VIEW_CONFIG } from '../../StudyViewConfig';
 import { DEFAULT_NA_COLOR } from 'shared/lib/Colors';
@@ -82,28 +83,6 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
             bars.map(bar => bar.data.map(barDatum => barDatum.dataBin))
         );
         this.props.onUserSelection(dataBins);
-    }
-
-    private isDataBinSelected(
-        dataBin: DataBin,
-        filters: DataFilterValue[]
-    ): boolean {
-        return _.some(filters, filter => {
-            let isFiltered = false;
-            if (filter.start !== undefined && filter.end !== undefined) {
-                isFiltered =
-                    filter.start <= dataBin.start && filter.end >= dataBin.end;
-            } else if (filter.start !== undefined && filter.end === undefined) {
-                isFiltered = dataBin.start >= filter.start;
-            } else if (filter.start === undefined && filter.end !== undefined) {
-                isFiltered = dataBin.end <= filter.end;
-            } else {
-                isFiltered =
-                    filter.value !== undefined &&
-                    filter.value === dataBin.specialValue;
-            }
-            return isFiltered;
-        });
     }
 
     public toSVGDOMNode(): Element {
@@ -370,7 +349,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}>
                             style={{
                                 data: {
                                     fill: (d: BarDatum) =>
-                                        this.isDataBinSelected(
+                                        isDataBinSelected(
                                             d.dataBin,
                                             this.props.filters
                                         ) || this.props.filters.length === 0

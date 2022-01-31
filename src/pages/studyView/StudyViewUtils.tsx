@@ -1,37 +1,35 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
-    ClinicalDataCount,
-    SampleIdentifier,
-    StudyViewFilter,
-    ClinicalDataBinFilter,
-    DataFilterValue,
-    GenomicDataBin,
-    GenomicDataCount,
-    GenericAssayDataMultipleStudyFilter,
-    GenericAssayData,
-    GeneFilterQuery,
-    DensityPlotBin,
-} from 'cbioportal-ts-api-client';
-import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalData,
+    ClinicalDataBinFilter,
+    ClinicalDataCount,
+    ClinicalDataMultiStudyFilter,
+    DataFilterValue,
+    DensityPlotBin,
     Gene,
+    GeneFilterQuery,
+    GenePanelData,
+    GenericAssayData,
+    GenericAssayDataMultipleStudyFilter,
+    GenomicDataBin,
+    GenomicDataCount,
+    MolecularDataMultipleStudyFilter,
+    MolecularProfile,
+    NumericGeneMolecularData,
     PatientIdentifier,
     Sample,
-    ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    MolecularProfile,
-    GenePanelData,
-    MolecularDataMultipleStudyFilter,
-    NumericGeneMolecularData,
+    SampleIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
-    GenomicChart,
     GenericAssayChart,
+    GenomicChart,
     XVsYChart,
     XVsYChartSettings,
 } from './StudyViewPageStore';
@@ -39,6 +37,7 @@ import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import {
     ChartDimension,
     ChartTypeEnum,
@@ -48,6 +47,8 @@ import {
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
 import MobxPromise from 'mobxpromise';
 import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
     EditableSpan,
     getTextWidth,
     stringListToIndexSet,
@@ -66,11 +67,10 @@ import {
     StructuralVariantProfilesEnum,
 } from 'shared/components/query/QueryStoreUtils';
 import {
-    GenericAssayDataBin,
     ClinicalDataBin,
+    GenericAssayDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import {
     ChartUserSetting,
@@ -78,8 +78,8 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
-import client from 'shared/api/cbioportalClientInstance';
 import joinJsx from 'shared/lib/joinJsx';
+import { BoundType, NumberRange } from 'range-ts';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -1216,6 +1216,74 @@ export function isEveryBinDistinct(data?: DataBin[]) {
         data.length > 0 &&
         data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
+}
+
+function createRangeForDataBinOrFilter(
+    start?: number,
+    end?: number,
+    specialValue?: string
+): NumberRange {
+    if (start !== undefined && end !== undefined) {
+        if (start === end) {
+            return NumberRange.closed(start, end); // [start, end]
+        } else {
+            return NumberRange.openClosed(start, end); // (start, end]
+        }
+    } else if (start !== undefined && end === undefined) {
+        if (specialValue === '>=') {
+            return NumberRange.downTo(start, BoundType.CLOSED); // [start, Infinity)
+        } else {
+            return NumberRange.downTo(start, BoundType.OPEN); // (start, Infinity)
+        }
+    } else if (start === undefined && end !== undefined) {
+        if (specialValue === '<') {
+            return NumberRange.upTo(end, BoundType.OPEN); // (-Infinity, end)
+        } else {
+            return NumberRange.upTo(end, BoundType.CLOSED); // (-Infinity, end]
+        }
+    } else {
+        return NumberRange.all();
+    }
+}
+
+export function isDataBinSelected(
+    dataBin: DataBin,
+    filters: DataFilterValue[]
+): boolean {
+    let isSelected: boolean;
+
+    // numerical bin:
+    // the entire bin range (from bin.start to bin.end) should be enclosed by at least one of the filters
+    if (dataBin.start !== undefined || dataBin.end !== undefined) {
+        const numericalFilters = filters.filter(
+            filter => filter.start !== undefined || filter.end !== undefined
+        );
+        isSelected = _.some(numericalFilters, filter => {
+            const filterRange = createRangeForDataBinOrFilter(
+                filter.start,
+                filter.end,
+                filter.value
+            );
+            const binRange = createRangeForDataBinOrFilter(
+                dataBin.start,
+                dataBin.end,
+                dataBin.specialValue
+            );
+            return filterRange.encloses(binRange);
+        });
+    }
+    // categorical bin:
+    // there should be at least one filter with the same filter value
+    else {
+        const categoricalFilters = filters.filter(
+            filter => filter.start === undefined && filter.end === undefined
+        );
+        isSelected = _.compact(
+            categoricalFilters.map(filter => filter.value)
+        ).includes(dataBin.specialValue);
+    }
+
+    return isSelected;
 }
 
 export function isLogScaleByDataBins(data?: DataBin[]) {
