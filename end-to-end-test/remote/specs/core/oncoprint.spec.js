@@ -54,8 +54,6 @@ describe('merged tracks', () => {
 });
 
 describe('oncoprint', function() {
-    this.retries(0);
-
     describe('initialization from URL parameters', () => {
         it('should start in patient mode if URL parameter show_samples=false or not specified', () => {
             // not specified
@@ -215,11 +213,24 @@ describe('oncoprint', function() {
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_BOLD
             );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
+            );
+
             assert.equal(
                 $(
                     mrnaElements.dropdown_selector + ' li:nth-child(2)'
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_NORMAL
+            );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
             );
 
             // Uncluster
@@ -240,6 +251,13 @@ describe('oncoprint', function() {
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_NORMAL
             );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
+            );
+
             assert.equal(
                 $(
                     mrnaElements.dropdown_selector + ' li:nth-child(2)'
