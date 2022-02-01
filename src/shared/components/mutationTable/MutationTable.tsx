@@ -119,7 +119,6 @@ export interface IMutationTableProps {
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];
-    namespaceColumns?: NamespaceColumnConfig;
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
@@ -205,21 +204,11 @@ export enum MutationTableColumnType {
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
 }
-export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
+type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
-export type MutationTableColumn = Column<Mutation[]> & {
+type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
     shouldExclude?: () => boolean;
-};
-
-// Namespace columns are custom columns that can be added to the MAF file.
-// They are imported via the namespace configuration during data import.
-// See: https://docs.cbioportal.org/5.1-data-loading/data-loading/file-formats#adding-mutation-annotation-columns-through-namespaces
-// The MutationTable component will render these columns dynamically.
-export type NamespaceColumnConfig = {
-    [namespaceName: string]: {
-        [namespaceColumnName: string]: 'string' | 'number';
-    };
 };
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}
@@ -254,10 +243,18 @@ export function defaultFilter(
     dataField: string,
     filterStringUpper: string
 ): boolean {
-    return !!_(data)
-        .map((mutation: Mutation) => _.get(mutation, dataField, ''))
-        .find(value => value.toUpperCase().includes(filterStringUpper))
-        .value();
+    if (data.length > 0) {
+        return data.reduce((match: boolean, next: Mutation) => {
+            const val = (next as any)[dataField];
+            if (val) {
+                return match || val.toUpperCase().includes(filterStringUpper);
+            } else {
+                return match;
+            }
+        }, false);
+    } else {
+        return false;
+    }
 }
 
 const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
