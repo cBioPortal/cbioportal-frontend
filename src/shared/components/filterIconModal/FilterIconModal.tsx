@@ -5,7 +5,7 @@ import { RootCloseWrapper } from 'react-overlays';
 import { Dropdown } from 'react-bootstrap';
 import { observer } from 'mobx-react';
 import { action, observable, makeObservable } from 'mobx';
-import { ICON_FILTER_OFF } from 'shared/lib/Colors';
+import { ICON_ACTIVE, ICON_FILTER_OFF } from 'shared/lib/Colors';
 
 export interface IFilterIconModalProps {
     id: string;
@@ -21,7 +21,7 @@ class FilterIcon extends React.Component<any, {}> {
             <span
                 onClick={this.props.onClickFilter}
                 style={{
-                    color: this.props.isActive ? '#0000ff' : ICON_FILTER_OFF,
+                    color: this.props.isActive ? ICON_ACTIVE : ICON_FILTER_OFF,
                     display: 'inline-block',
                     cursor: 'pointer',
                     visibility: 'hidden',

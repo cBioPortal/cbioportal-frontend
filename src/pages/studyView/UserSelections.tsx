@@ -43,7 +43,10 @@ import {
     OredPatientTreatmentFilters,
     OredSampleTreatmentFilters,
 } from 'cbioportal-ts-api-client';
-import { ClinicalDataFilter } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
+import {
+    ClinicalDataFilter,
+    GenePanelFilter,
+} from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPI';
 import {
     STRUCTURAL_VARIANT_COLOR,
     MUT_COLOR_MISSENSE,
@@ -52,7 +55,7 @@ import {
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: ClinicalDataFilter[];
-    numberOfSelectedSamplesInCustomSelection: number;
+    selectionCount: number;
     comparisonGroupSelection: StudyViewComparisonGroup[];
     attributesMetaSet: { [id: string]: ChartMeta & { chartType: ChartType } };
     updateClinicalDataFilterByValues: (
@@ -83,6 +86,7 @@ export interface IUserSelectionsProps {
         oredIndex: number,
         metaKey: string
     ) => void;
+    removeGenePanelFilter: (value: GenePanelFilter) => void;
 }
 
 @observer
@@ -105,7 +109,7 @@ export default class UserSelections extends React.Component<
         let components = [] as JSX.Element[];
 
         // Show the filter for the custom selection
-        if (this.props.numberOfSelectedSamplesInCustomSelection > 0) {
+        if (this.props.selectionCount > 0) {
             components.push(
                 <div className={styles.parentGroupLogic}>
                     <GroupLogic
@@ -114,16 +118,10 @@ export default class UserSelections extends React.Component<
                                 Custom Selection
                             </span>,
                             <PillTag
-                                content={`${
-                                    this.props
-                                        .numberOfSelectedSamplesInCustomSelection
-                                } sample${
-                                    this.props
-                                        .numberOfSelectedSamplesInCustomSelection >
-                                    1
-                                        ? 's'
-                                        : ''
-                                }`}
+                                content={`
+                                    ${this.props.selectionCount} sample
+                                    ${this.props.selectionCount > 1 ? 's' : ''}
+                                `}
                                 backgroundColor={
                                     STUDY_VIEW_CONFIG.colors.theme
                                         .clinicalFilterContent
@@ -424,6 +422,16 @@ export default class UserSelections extends React.Component<
             );
             components.push(f);
         }
+
+        if (
+            this.props.filter.genePanelFilters &&
+            this.props.filter.genePanelFilters.length > 0
+        ) {
+            const f = this.renderGenePanelFilter(
+                this.props.filter.genePanelFilters
+            );
+            components.push(f);
+        }
         return components;
     }
 
@@ -530,6 +538,33 @@ export default class UserSelections extends React.Component<
                     }
                 )}
                 operation={'or'}
+                group={false}
+            />
+        );
+    }
+
+    private renderGenePanelFilter(filters: GenePanelFilter[]): JSX.Element {
+        const filterComponents = filters.map(f => {
+            return (
+                <div>
+                    <span className={styles.filterClinicalAttrName}>
+                        {'Gene panel: '}
+                    </span>
+                    <PillTag
+                        content={f.genePanel}
+                        onDelete={() => this.props.removeGenePanelFilter(f)}
+                        backgroundColor={
+                            STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent
+                        }
+                    />
+                </div>
+            );
+        });
+
+        return (
+            <GroupLogic
+                components={filterComponents}
+                operation="and"
                 group={false}
             />
         );

@@ -989,7 +989,7 @@ export default abstract class ComparisonStore
                                 acc.push({
                                     name: group.name,
                                     molecularProfileCaseIdentifiers,
-                                });
+                                } as any);
                             }
                             return acc;
                         },
@@ -1141,7 +1141,7 @@ export default abstract class ComparisonStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.mrnaEnrichmentDataRequestGroups.result!,
+                    groups: this.mrnaEnrichmentDataRequestGroups.result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1227,7 +1227,8 @@ export default abstract class ComparisonStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.proteinEnrichmentDataRequestGroups.result!,
+                    groups: this.proteinEnrichmentDataRequestGroups
+                        .result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1312,7 +1313,8 @@ export default abstract class ComparisonStore
             ) {
                 return internalClient.fetchGenomicEnrichmentsUsingPOST({
                     enrichmentType: 'SAMPLE',
-                    groups: this.methylationEnrichmentDataRequestGroups.result!,
+                    groups: this.methylationEnrichmentDataRequestGroups
+                        .result! as any,
                 });
             } else {
                 return Promise.resolve([]);
@@ -1433,7 +1435,7 @@ export default abstract class ComparisonStore
                                     return internalClient.fetchGenericAssayEnrichmentsUsingPOST(
                                         {
                                             enrichmentType: 'SAMPLE',
-                                            groups: genericAssayEnrichmentDataRequestGroups,
+                                            groups: genericAssayEnrichmentDataRequestGroups as any,
                                         }
                                     );
                                 } else {

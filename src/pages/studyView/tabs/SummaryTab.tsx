@@ -30,6 +30,7 @@ import {
     SpecialChartsUniqueKeyEnum,
     makeDensityScatterPlotTooltip,
     logScalePossible,
+    isGenePanelChart,
 } from '../StudyViewUtils';
 import { DataType } from 'cbioportal-frontend-commons';
 import { GenericAssayDataBin } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
@@ -153,15 +154,21 @@ export class StudySummaryTab extends React.Component<
         switch (this.store.chartsType.get(chartMeta.uniqueKey)) {
             case ChartTypeEnum.PIE_CHART: {
                 //if the chart is one of the custom charts then get the appropriate promise
-                if (
+                if (isGenePanelChart(chartMeta.uniqueKey)) {
+                    props.filters = this.store
+                        .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
+                        .map(f => f.value);
+                    props.onValueSelection = this.store.setGenePanelFiltersForChart;
+                    props.onResetSelection = this.store.clearGenePanelFiltersForChart;
+                    props.promise = this.store.getGenePanelDataForChart(
+                        chartMeta
+                    );
+                } else if (
                     this.store.isUserDefinedCustomDataChart(chartMeta.uniqueKey)
                 ) {
                     props.filters = this.store
                         .getCustomDataFiltersByUniqueKey(chartMeta.uniqueKey)
-                        .map(
-                            clinicalDataFilterValue =>
-                                clinicalDataFilterValue.value
-                        );
+                        .map(f => f.value);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
                     props.promise = this.store.getCustomDataCount(chartMeta);
@@ -373,7 +380,7 @@ export class StudySummaryTab extends React.Component<
                 props.filterAlterations = this.store.isGlobalAlterationFilterActive;
                 break;
             }
-            case ChartTypeEnum.GENOMIC_PROFILES_TABLE: {
+            case ChartTypeEnum.DATA_PROFILES_TABLE: {
                 props.filters = toJS(this.store.genomicProfilesFilter);
                 props.promise = this.store.molecularProfileSampleCounts;
                 props.onValueSelection = this.store.addGenomicProfilesFilter;

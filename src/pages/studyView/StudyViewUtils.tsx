@@ -105,7 +105,7 @@ export enum SpecialChartsUniqueKeyEnum {
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = 'MUTATION_COUNT',
     FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED',
-    GENOMIC_PROFILES_SAMPLE_COUNT = 'GENOMIC_PROFILES_SAMPLE_COUNT',
+    DATA_PROFILES = 'DATA_PROFILES',
     CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
     PATIENT_TREATMENTS = 'PATIENT_TREATMENTS',
     PATIENT_TREATMENT_GROUPS = 'PATIENT_TREATMENT_GROUPS',
@@ -197,10 +197,10 @@ export const SPECIAL_CHARTS: ChartMetaWithDimensionAndChartType[] = [
         priority: 70,
     },
     {
-        uniqueKey: SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
-        displayName: 'Genomic Profile Sample Counts',
+        uniqueKey: SpecialChartsUniqueKeyEnum.DATA_PROFILES,
+        displayName: 'Data Profiles',
         description: '',
-        chartType: ChartTypeEnum.GENOMIC_PROFILES_TABLE,
+        chartType: ChartTypeEnum.DATA_PROFILES_TABLE,
         dataType: ChartMetaDataTypeEnum.GENOMIC,
         patientAttribute: false,
         dimension: {
@@ -763,6 +763,16 @@ export function getGenericAssayChartUniqueKey(
     return entityId + '_' + profileType;
 }
 
+export const GENE_PANEL_PREFIX = 'gene_panel_';
+
+export function getGenePanelChartUniqueKey(profileId: string) {
+    return GENE_PANEL_PREFIX + profileId;
+}
+
+export function isGenePanelChart(uniqueKey: string) {
+    return uniqueKey.startsWith(GENE_PANEL_PREFIX);
+}
+
 const UNIQUE_KEY_SEPARATOR = ':';
 
 export function getUniqueKeyFromMolecularProfileIds(
@@ -838,7 +848,7 @@ export function getVirtualStudyDescription(
             });
 
             if (!_.isEmpty(filter.genomicProfiles)) {
-                filterLines.push('- Genomic Profile Sample Counts:');
+                filterLines.push('- Data Profiles:');
                 filterLines = filterLines.concat(
                     filter.genomicProfiles
                         .map(profiles =>
@@ -1468,9 +1478,10 @@ export function getChartMetaDataType(uniqueKey: string): ChartMetaDataTypeEnum {
     const GENOMIC_DATA_TYPES = [
         SpecialChartsUniqueKeyEnum.MUTATION_COUNT,
         SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
-        SpecialChartsUniqueKeyEnum.GENOMIC_PROFILES_SAMPLE_COUNT,
+        SpecialChartsUniqueKeyEnum.DATA_PROFILES,
     ];
-    return _.includes(GENOMIC_DATA_TYPES, uniqueKey)
+    return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ||
+        isGenePanelChart(uniqueKey)
         ? ChartMetaDataTypeEnum.GENOMIC
         : ChartMetaDataTypeEnum.CLINICAL;
 }
@@ -2985,6 +2996,80 @@ export async function getGenericAssayDataAsClinicalData(
         }
         return clinicaData;
     });
+}
+
+export async function getGenePanelDataAsClinicalData(
+    chartInfo: ChartMeta,
+    molecularProfileMap: { [id: string]: MolecularProfile[] },
+    samples: Sample[]
+): Promise<ClinicalData[]> {
+    // TODO: This needs to be updated to return the proper clinicalData
+    return Promise.resolve([]);
+    // const gene: Gene = await defaultClient.getGeneUsingGET({
+    //     geneId: chartInfo.hugoGeneSymbol,
+    // });
+
+    // const molecularProfiles = molecularProfileMap[chartInfo.profileType];
+    // if (_.isEmpty(molecularProfiles)) {
+    //     return [];
+    // }
+    // const molecularProfileMapByStudyId = _.keyBy(
+    //     molecularProfiles,
+    //     molecularProfile => molecularProfile.studyId
+    // );
+    // // samples are coming from all studies, need to be filtered before fetching
+    // const filteredSamples = samples.filter(
+    //     sample => sample.studyId in molecularProfileMapByStudyId
+    // );
+    // const sampleMolecularIdentifiers = filteredSamples.map(sample => ({
+    //     sampleId: sample.sampleId,
+    //     molecularProfileId:
+    //         molecularProfileMapByStudyId[sample.studyId].molecularProfileId,
+    // }));
+    // const genomicDataList = await defaultClient.fetchMolecularDataInMultipleMolecularProfilesUsingPOST(
+    //     {
+    //         projection: 'DETAILED',
+    //         molecularDataMultipleStudyFilter: {
+    //             entrezGeneIds: [gene.entrezGeneId],
+    //             sampleMolecularIdentifiers: sampleMolecularIdentifiers,
+    //         } as MolecularDataMultipleStudyFilter,
+    //     }
+    // );
+
+    // const genomicDataSet = new ComplexKeyMap<NumericGeneMolecularData>();
+    // genomicDataList.forEach(datum =>
+    //     genomicDataSet.set(
+    //         {
+    //             sampleId: datum.sampleId,
+    //             molecularProfileId: datum.molecularProfileId,
+    //         },
+    //         datum
+    //     )
+    // );
+
+    // return filteredSamples.map(sample => {
+    //     const molecularProfileId =
+    //         molecularProfileMapByStudyId[sample.studyId].molecularProfileId;
+    //     let datum = genomicDataSet.get({
+    //         sampleId: sample.sampleId,
+    //         molecularProfileId: molecularProfileId,
+    //     });
+    //     const clinicaData: ClinicalData = {
+    //         clinicalAttributeId: gene.entrezGeneId + '-' + molecularProfileId,
+    //         patientId: sample.patientId,
+    //         sampleId: sample.sampleId,
+    //         studyId: sample.studyId,
+    //         uniquePatientKey: sample.uniquePatientKey,
+    //         uniqueSampleKey: sample.uniqueSampleKey,
+    //     } as any;
+
+    //     if (datum) {
+    //         clinicaData.value = `${datum.value}`;
+    //     } else {
+    //         clinicaData.value = Datalabel.NA;
+    //     }
+    //     return clinicaData;
+    // });
 }
 
 export function getStructuralVariantSamplesCount(molecularProfileSampleCountSet: {

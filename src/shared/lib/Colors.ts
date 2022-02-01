@@ -20,6 +20,7 @@ export const DEFAULT_GREY = '#BEBEBE';
 export const DARK_GREY = '#A9A9A9';
 
 // icon colors
+export const ICON_ACTIVE = '#0000ff';
 export const ICON_FILTER_ON = BLACK;
 export const ICON_FILTER_OFF = DEFAULT_GREY;
 
