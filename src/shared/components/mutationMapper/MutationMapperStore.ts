@@ -50,12 +50,8 @@ import {
 import PdbChainDataStore from './PdbChainDataStore';
 import MutationMapperDataStore from './MutationMapperDataStore';
 import { IMutationMapperConfig } from './MutationMapperConfig';
-import {
-    buildNamespaceColumnConfig,
-    normalizeMutations,
-} from './MutationMapperUtils';
+import { normalizeMutations } from './MutationMapperUtils';
 import { getOncoKbApiUrl } from 'shared/api/urls';
-import { NamespaceColumnConfig } from 'shared/components/mutationTable/MutationTable';
 
 export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?: boolean;
@@ -193,10 +189,6 @@ export default class MutationMapperStore extends DefaultMutationMapperStore<
         },
         []
     );
-
-    @computed get namespaceColumnConfig(): NamespaceColumnConfig {
-        return buildNamespaceColumnConfig(this.mutationData.result);
-    }
 
     public countUniqueMutations(mutations: Mutation[]): number {
         return countUniqueMutations(mutations);

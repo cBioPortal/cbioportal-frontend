@@ -1,14 +1,12 @@
 import * as React from 'react';
+import { observer } from 'mobx-react';
 import {
     IMutationTableProps,
     MutationTableColumnType,
     default as MutationTable,
-    MutationTableColumn,
 } from 'shared/components/mutationTable/MutationTable';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
-import _ from 'lodash';
-import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 
 export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
@@ -57,24 +55,6 @@ export default class StandaloneMutationTable extends MutationTable<
 
     protected generateColumns() {
         super.generateColumns();
-
-        // generate namespace columns
-        const namespaceColumns = createNamespaceColumns(
-            this.props.namespaceColumns
-        );
-        _.forIn(
-            namespaceColumns,
-            (column: MutationTableColumn, columnName: string) => {
-                if (
-                    this.props.columns &&
-                    !this.props.columns.includes(columnName)
-                ) {
-                    this.props.columns.push(columnName);
-                }
-
-                this._columns[columnName] = column;
-            }
-        );
 
         // override default visibility for some columns
         this._columns[
