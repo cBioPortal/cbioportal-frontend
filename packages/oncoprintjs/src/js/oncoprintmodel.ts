@@ -87,6 +87,7 @@ export type UserTrackSpec<D> = {
     custom_track_options?:CustomTrackOption[];
     $track_info_tooltip_elt?:JQuery;
     track_can_show_gaps?:boolean;
+    show_gaps_on_init?:boolean
 };
 export type LibraryTrackSpec<D> = UserTrackSpec<D> & { rule_set:RuleSet, track_id:TrackId};
 export type TrackOverlappingCells = {
@@ -1153,7 +1154,7 @@ export default class OncoprintModel {
         }
 
         this.track_can_show_gaps[track_id] = ifndef(params.track_can_show_gaps, false);
-        this.track_show_gaps[track_id] = false;
+        this.track_show_gaps[track_id] = ifndef(params.show_gaps_on_init, false);
 
         this.track_sort_cmp_fn[track_id] = params.sortCmpFn;
 
