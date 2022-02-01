@@ -144,6 +144,7 @@ export interface IServerConfig {
     skin_show_gsva: boolean;
     skin_geneset_hierarchy_default_gsva_score: number;
     skin_geneset_hierarchy_default_p_value: number;
+    skin_geneset_hierarchy_collapse_by_default: boolean;
     oncoKbTokenDefined: boolean;
     oncokb_merge_icons_by_default: boolean;
     generic_assay_display_text: string; // this has a default
@@ -155,4 +156,5 @@ export interface IServerConfig {
     referenceGenomeVersion: string;
     skin_home_page_show_unauthorized_studies: boolean;
     skin_home_page_unauthorized_studies_global_message: string;
+    skin_mutation_table_namespace_column_show_by_default: boolean;
 }

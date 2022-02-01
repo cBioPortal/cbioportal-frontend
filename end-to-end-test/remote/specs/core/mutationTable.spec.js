@@ -6,6 +6,7 @@ var {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     setCheckboxChecked,
+    jq,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
@@ -234,6 +235,52 @@ describe('Mutation Table', function() {
                 },
                 60000,
                 `Failed: There's 25 dbsnp rows in table (${res} found)`
+            );
+        });
+    });
+
+    describe('try filtering', () => {
+        it('should show filter dropdown and filter tabe based on text entry', () => {
+            var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=brca_broad&case_set_id=brca_broad_sequenced&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_broad_mutations&tab_index=tab_visualize`;
+
+            goToUrlAndSetLocalStorage(url);
+
+            const filterButton = $('.lazy-mobx-table th .fa-filter');
+
+            filterButton.waitForExist();
+
+            filterButton.click();
+
+            $('.multilineHeader .dropdown').waitForDisplayed();
+
+            assert.equal(
+                jq('.multilineHeader .dropdown.open input:checkbox').length,
+                28,
+                '28 filter checkboxes available'
+            );
+
+            $('.multilineHeader .dropdown.open input.input-sm').setValue(
+                'BR-V-033'
+            );
+
+            browser.waitUntil(() => {
+                return (
+                    jq('.multilineHeader .dropdown.open input:checkbox')
+                        .length === 1
+                );
+            });
+
+            assert.equal(
+                jq('.multilineHeader .dropdown.open input:checkbox').length,
+                1,
+                'List filtered to one'
+            );
+
+            assert.equal($$('.lazy-mobx-table tbody tr').length, 1);
+
+            assert.equal(
+                $('.lazy-mobx-table tbody tr td').getText(),
+                'BR-V-033'
             );
         });
     });

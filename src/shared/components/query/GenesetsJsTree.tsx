@@ -5,13 +5,11 @@ import { getHierarchyData } from 'shared/lib/StoreUtils';
 import 'jstree'; // tslint:disable-line
 import 'shared/components/query/styles/jstree/style.css'; // tslint:disable-line
 import _ from 'lodash';
-import { remoteData } from 'cbioportal-frontend-commons';
-import CBioPortalAPIInternal, {
-    GenesetHierarchyInfo,
-} from 'cbioportal-ts-api-client';
+import { GenesetHierarchyInfo } from 'cbioportal-ts-api-client';
 import { observer } from 'mobx-react';
 import { observable, ObservableMap, makeObservable } from 'mobx';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import { getServerConfig } from 'config/config';
 
 export interface GenesetsJsTreeProps {
     initialSelection: string[];
@@ -92,7 +90,8 @@ export default class GenesetsJsTree extends React.Component<
                 },
                 geneset: false,
                 state: {
-                    opened: true,
+                    opened: !getServerConfig()
+                        .skin_geneset_hierarchy_collapse_by_default,
                     selected: false,
                 },
             });
