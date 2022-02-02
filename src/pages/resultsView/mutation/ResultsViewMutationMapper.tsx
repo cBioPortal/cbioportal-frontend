@@ -599,6 +599,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                         );
                                     }
                                 }}
+                                data-test="numerical-filter-menu-remove-empty-rows"
                             />
                             {'Hide empty values'}
                         </label>

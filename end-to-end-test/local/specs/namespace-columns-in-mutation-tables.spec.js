@@ -39,19 +39,36 @@ describe('namespace columns in mutation tables', function() {
             assert(namespaceColumnsAreDisplayed());
         });
         it('has filter icons', () => {
-            $("//span[text() = 'Zygosity Code']").moveTo();
-            assert(
-                filterIconOfHeader(
-                    "//span[text() = 'Zygosity Code']"
-                ).isDisplayed()
-            );
+            $("//span[text() = 'Zygosity Code']").click();
+            filterIconOfHeader(
+                "//span[text() = 'Zygosity Code']"
+            ).waitForDisplayed();
+            $("//span[text() = 'Zygosity Name']").click();
+            filterIconOfHeader(
+                "//span[text() = 'Zygosity Name']"
+            ).waitForDisplayed();
         });
-        it('filters rows when using filter icon', () => {
-            assert($('=TEST_SAMPLE_SOMATIC_HOMOZYGOUS').isDisplayed());
+        it('filters rows when using numerical filter menu', () => {
             filterIconOfHeader("//span[text() = 'Zygosity Code']").click();
-            // Hide row with Zygosity code = 2.
-            $("//span[text()='2']").click();
-            assert(!$('=TEST_SAMPLE_SOMATIC_HOMOZYGOUS').isDisplayed());
+            // Empty rows
+            var numberOfRowsBefore = numberOfTableRows();
+            $('#Zygosity_Code-lowerValue-box').setValue('2');
+            $('[data-test=numerical-filter-menu-remove-empty-rows]').click();
+            browser.waitUntil(() => numberOfTableRows() < numberOfRowsBefore);
+
+            // reset state
+            $('#Zygosity_Code-lowerValue-box').setValue('1');
+            $('[data-test=numerical-filter-menu-remove-empty-rows]').click();
+            browser.waitUntil(() => numberOfTableRows() === numberOfRowsBefore);
+        });
+        it('filters rows when using categorical filter menu', () => {
+            filterIconOfHeader("//span[text() = 'Zygosity Name']").click();
+            // Empty rows
+            var numberOfRowsBefore = numberOfTableRows();
+            $('[data-test=categorical-filter-menu-search-input]').setValue(
+                'Homozygous'
+            );
+            browser.waitUntil(() => numberOfTableRows() < numberOfRowsBefore);
         });
     });
     describe('patient view', () => {
@@ -111,3 +128,5 @@ filterIconOfHeader = selector => {
         .parentElement()
         .$('.fa-filter');
 };
+
+numberOfTableRows = () => $$('.lazy-mobx-table tr').length;
