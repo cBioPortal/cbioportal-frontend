@@ -15,7 +15,7 @@ import {
     GenomeNexusAPI,
     GenomeNexusAPIInternal,
 } from 'genome-nexus-ts-api-client';
-import { MobxPromise } from 'mobxpromise';
+import { labelMobxPromises, MobxPromise, cached } from 'mobxpromise';
 import { fetchCosmicData } from 'shared/lib/StoreUtils';
 import MutationCountCache from 'shared/cache/MutationCountCache';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
@@ -27,7 +27,7 @@ import MutationMapperStore, {
     IMutationMapperStoreConfig,
 } from 'shared/components/mutationMapper/MutationMapperStore';
 import { IServerConfig } from '../../../config/IAppConfig';
-import { computed, makeObservable } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
 import {
     createNumericalFilter,
     createCategoricalFilter,
@@ -43,10 +43,6 @@ import DiscreteCNAColumnFormatter from 'shared/components/mutationTable/column/D
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import HgvscColumnFormatter from 'shared/components/mutationTable/column/HgvscColumnFormatter';
 import ClinicalAttributeColumnFormatter from 'shared/components/mutationTable/column/ClinicalAttributeColumnFormatter';
-import _ from 'lodash';
-import { createNamespaceColumnName } from 'shared/components/mutationMapper/MutationMapperUtils';
-import NumericNamespaceColumnFormatter from 'shared/components/mutationTable/column/NumericNamespaceColumnFormatter';
-import CategoricalNamespaceColumnFormatter from 'shared/components/mutationTable/column/CategoricalNamespaceColumnFormatter';
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore {
     constructor(
@@ -226,31 +222,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
             }
         });
 
-        // Add numerical namespace column definitions.
-        _.forIn(
-            this.namespaceColumnConfig,
-            (namespaceColumnNames, namespaceName) => {
-                _.forIn(namespaceColumnNames, (type, namespaceColumnName) => {
-                    if (type === 'number') {
-                        const columnName = createNamespaceColumnName(
-                            namespaceName,
-                            namespaceColumnName
-                        );
-                        columnIds.add(columnName);
-                        this.mutationMapperStoreConfig[
-                            'filterAppliersOverride'
-                        ]![columnName] = createNumericalFilter((d: Mutation) =>
-                            NumericNamespaceColumnFormatter.getData(
-                                [d],
-                                namespaceName,
-                                namespaceColumnName
-                            )
-                        );
-                    }
-                });
-            }
-        );
-
         return columnIds;
     }
 
@@ -335,33 +306,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore 
                 );
             }
         });
-
-        // Add categorical namespace column definitions.
-        _.forIn(
-            this.namespaceColumnConfig,
-            (namespaceColumnNames, namespaceName) => {
-                _.forIn(namespaceColumnNames, (type, namespaceColumnName) => {
-                    if (type !== 'number') {
-                        const columnName = createNamespaceColumnName(
-                            namespaceName,
-                            namespaceColumnName
-                        );
-                        columnIds.add(columnName);
-                        this.mutationMapperStoreConfig[
-                            'filterAppliersOverride'
-                        ]![
-                            columnName
-                        ] = createCategoricalFilter((d: Mutation) =>
-                            CategoricalNamespaceColumnFormatter.download(
-                                [d],
-                                namespaceName,
-                                namespaceColumnName
-                            )
-                        );
-                    }
-                });
-            }
-        );
 
         return columnIds;
     }

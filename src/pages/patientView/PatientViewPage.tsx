@@ -1220,10 +1220,6 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .existsSomeMutationWithAscnProperty
                                                     }
-                                                    namespaceColumns={
-                                                        this.dataStore
-                                                            .namespaceColumnData
-                                                    }
                                                 />
                                             </div>
                                         )}

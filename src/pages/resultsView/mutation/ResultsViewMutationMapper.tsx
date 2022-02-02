@@ -251,7 +251,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.deactivateColumnFilter}
-                namespaceColumns={this.props.store.namespaceColumnConfig}
             />
         );
     }
