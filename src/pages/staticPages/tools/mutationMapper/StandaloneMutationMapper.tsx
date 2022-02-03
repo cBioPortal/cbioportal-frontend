@@ -7,6 +7,14 @@ import {
 } from 'shared/components/mutationMapper/MutationMapper';
 import { MutationTableDownloadDataFetcher } from 'shared/lib/MutationTableDownloadDataFetcher';
 import MutationMapperDataStore from 'shared/components/mutationMapper/MutationMapperDataStore';
+import { computed } from 'mobx';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import _ from 'lodash';
+import {
+    createNamespaceColumnName,
+    extractColumnNames,
+} from 'shared/components/mutationMapper/MutationMapperUtils';
+import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     // add standalone view specific props here if needed
@@ -63,7 +71,19 @@ export default class StandaloneMutationMapper extends MutationMapper<
                     this.props.generateGenomeNexusHgvsgUrl
                 }
                 selectedTranscriptId={this.props.store.activeTranscript.result}
+                namespaceColumns={this.props.store.namespaceColumnConfig}
+                columns={this.columns}
             />
+        );
+    }
+
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.props.store.namespaceColumnConfig
+        );
+        return _.concat(
+            StandaloneMutationTable.defaultProps.columns,
+            namespaceColumnNames
         );
     }
 

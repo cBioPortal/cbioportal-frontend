@@ -3,6 +3,7 @@ import { computed, makeObservable } from 'mobx';
 import {
     default as MutationTable,
     IMutationTableProps,
+    MutationTableColumn,
     MutationTableColumnType,
 } from 'shared/components/mutationTable/MutationTable';
 import SampleManager from '../SampleManager';
@@ -21,6 +22,8 @@ import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTabl
 import { getDefaultExpectedAltCopiesColumnDefinition } from 'shared/components/mutationTable/column/expectedAltCopies/ExpectedAltCopiesColumnFormatter';
 import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import AnnotationHeader from 'shared/components/mutationTable/column/annotation/AnnotationHeader';
+import _ from 'lodash';
+import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager: SampleManager | null;
@@ -385,6 +388,17 @@ export default class PatientViewMutationTable extends MutationTable<
                 this.getSamples().length > 1
             );
         };
+
+        // generate namespace columns
+        const namespaceColumns = createNamespaceColumns(
+            this.props.namespaceColumns
+        );
+        _.forIn(
+            namespaceColumns,
+            (column: MutationTableColumn, columnName: string) => {
+                this._columns[columnName] = column;
+            }
+        );
     }
 
     @computed private get hasUncalledMutations(): boolean {
