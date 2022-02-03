@@ -183,13 +183,6 @@ export default class ResultsViewMutationTable extends MutationTable<
         _.forIn(
             namespaceColumns,
             (column: MutationTableColumn, columnName: string) => {
-                if (
-                    this.props.columns &&
-                    !this.props.columns.includes(columnName)
-                ) {
-                    this.props.columns.push(columnName);
-                }
-
                 this._columns[columnName] = column;
             }
         );

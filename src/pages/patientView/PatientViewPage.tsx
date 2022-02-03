@@ -80,6 +80,8 @@ import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -551,6 +553,16 @@ export default class PatientViewPage extends React.Component<
     @action.bound
     private onMutationalSignatureVersionChange(version: string) {
         this.patientViewPageStore.setMutationalSignaturesVersion(version);
+    }
+
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.dataStore.namespaceColumnConfig
+        );
+        return _.concat(
+            PatientViewMutationTable.defaultProps.columns,
+            namespaceColumnNames
+        );
     }
 
     public render() {
@@ -1224,6 +1236,7 @@ export default class PatientViewPage extends React.Component<
                                                         this.dataStore
                                                             .namespaceColumnConfig
                                                     }
+                                                    columns={this.columns}
                                                 />
                                             </div>
                                         )}

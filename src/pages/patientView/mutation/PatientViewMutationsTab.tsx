@@ -21,6 +21,13 @@ import WindowStore from '../../../shared/components/window/WindowStore';
 import VAFChartWrapper from 'pages/patientView/timeline2/VAFChartWrapper';
 import TimelineWrapper from 'pages/patientView/timeline2/TimelineWrapper';
 import VAFChartWrapperStore from '../timeline2/VAFChartWrapperStore';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import _ from 'lodash';
+import {
+    createNamespaceColumnName,
+    extractColumnNames,
+} from 'shared/components/mutationMapper/MutationMapperUtils';
+import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IPatientViewMutationsTabProps {
     patientViewPageStore: PatientViewPageStore;
@@ -350,10 +357,21 @@ export default class PatientViewMutationsTab extends React.Component<
                             .existsSomeMutationWithAscnProperty
                     }
                     namespaceColumns={this.dataStore.namespaceColumnConfig}
+                    columns={this.columns}
                 />
             </div>
         ),
     });
+
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.dataStore.namespaceColumnConfig
+        );
+        return _.concat(
+            PatientViewMutationTable.defaultProps.columns,
+            namespaceColumnNames
+        );
+    }
 
     readonly timeline = MakeMobxView({
         await: () => [this.props.patientViewPageStore.clinicalEvents],

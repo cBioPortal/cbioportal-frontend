@@ -63,6 +63,17 @@ export function createNamespaceColumnName(
     return namespaceName + ' ' + _.capitalize(namespaceColumnName);
 }
 
+export function extractColumnNames(config: NamespaceColumnConfig): string[] {
+    return _.flatMap(config, (namespaceCol, namespaceName) =>
+        _.keys(namespaceCol).map(namespaceColumnName =>
+            createNamespaceColumnName(
+                namespaceName.toString(),
+                namespaceColumnName
+            )
+        )
+    );
+}
+
 function fMerge(refObject: any, addedObject: any) {
     if (_.isArray(refObject)) {
         return refObject.concat(addedObject);
