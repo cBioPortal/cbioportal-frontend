@@ -67,11 +67,14 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                       tooltip: (
                           <span>
                               <h5> Exon {exon.rank} </h5>
-                              Start: {stringStart}
+                              <strong>Start:</strong> {stringStart}
                               <br></br>
-                              End: {stringEnd}
+                              <strong>End:</strong> {stringEnd}
                               <br></br>
-                              Length: {stringLength}
+                              <strong>Length:</strong> {stringLength}
+                              <br></br>
+                              <strong>Genomic location:</strong>
+                              {` ${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`}
                           </span>
                       ),
                   };

@@ -7,7 +7,12 @@ export function extractExonInformation(
     proteinLength: number
 ): ExonDatum[] {
     let totalLength = 0;
-    const exonLocList: { exonRank: number; length: number }[] = [];
+    const exonLocList: {
+        exonRank: number;
+        length: number;
+        startLocation: number;
+        endLocation: number;
+    }[] = [];
     exons.forEach(exon => {
         let utrStartSitesWithinExon = false;
         for (let j = 0; j < utrs.length; j++) {
@@ -27,6 +32,8 @@ export function extractExonInformation(
                     exonLocList.push({
                         exonRank: exon.rank,
                         length: aaLength,
+                        startLocation: exon.exonStart,
+                        endLocation: exon.exonEnd,
                     });
                     totalLength += aaLength;
                 }
@@ -36,7 +43,12 @@ export function extractExonInformation(
         // if there are no utr start sites within exon
         if (!utrStartSitesWithinExon) {
             const aaLength = (exon.exonEnd - exon.exonStart + 1) / 3;
-            exonLocList.push({ exonRank: exon.rank, length: aaLength });
+            exonLocList.push({
+                exonRank: exon.rank,
+                length: aaLength,
+                startLocation: exon.exonStart,
+                endLocation: exon.exonEnd,
+            });
             totalLength += aaLength;
         }
     });
@@ -54,6 +66,8 @@ export function extractExonInformation(
             rank: exon.exonRank,
             length: exon.length,
             start: startOfExon,
+            genomicLocationStart: exon.startLocation,
+            genomicLocationEnd: exon.endLocation,
         };
         startOfExon += exon.length;
         return exonDatum;
