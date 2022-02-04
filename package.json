@@ -30,6 +30,7 @@
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "yarn run build && yarn add pushstate-server@3.0.1 -g",
     "updateAPI": "yarn run fetchAPI && yarn run buildAPI && yarn run updateOncoKbAPI && yarn run updateGenomeNexusAPI",
+    "fetchAPILocal":"export CBIOPORTAL_URL=http://localhost:8090 && curl -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
     "fetchAPI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && curl -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
     "buildAPI": "node scripts/generate-api.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",

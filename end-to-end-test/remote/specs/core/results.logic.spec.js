@@ -537,7 +537,7 @@ describe('invalid query from url', function() {
         // correct to valid gene symbol RB1
         $('[data-test="geneSet"]').setValue('RB1');
 
-        $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
+        $('[data-test="queryButton"]').waitForEnabled({ timeout: 15000 });
         $('[data-test="queryButton"]').click();
 
         $('#modifyQueryBtn').waitForExist({ timeout: 3000 });

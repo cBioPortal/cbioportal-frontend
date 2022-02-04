@@ -30,8 +30,9 @@ import { BarDatum } from './charts/barChart/BarChart';
 import {
     GenericAssayChart,
     GenomicChart,
-    XVsYChart,
-    XVsYChartSettings,
+    XvsYScatterChart,
+    XvsYChartSettings,
+    XvsYViolinChart,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -125,7 +126,8 @@ export type AnalysisGroup = {
 
 export enum ChartMetaDataTypeEnum {
     CUSTOM_DATA = 'Custom_Data',
-    X_VS_Y = 'X_Vs_Y',
+    X_VS_Y_SCATTER = 'X_Vs_Y_Scatter',
+    X_VS_Y_VIOLIN = 'X_Vs_Y_Violin',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene_Specific',
@@ -572,8 +574,8 @@ function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
 }
 
 export function makeDensityScatterPlotTooltip(
-    chartInfo: XVsYChart,
-    chartSettings: XVsYChartSettings
+    chartInfo: XvsYScatterChart,
+    chartSettings: XvsYChartSettings
 ) {
     return (d: IStudyViewDensityScatterPlotDatum) => {
         const binStats = getBinStatsForTooltip(d);
@@ -631,7 +633,7 @@ export async function getSampleToClinicalData(
     return ret;
 }
 
-export function generateXVsYScatterPlotDownloadData(
+export function generateXvsYScatterPlotDownloadData(
     xAttr: ClinicalAttribute,
     yAttr: ClinicalAttribute,
     samples: Sample[],
@@ -2621,7 +2623,8 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
-    xVsYChartSet: { [id: string]: XVsYChart },
+    XvsYScatterChartSet: { [id: string]: XvsYScatterChart },
+    XvsYViolinChartSet: { [id: string]: XvsYViolinChart },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
@@ -2677,10 +2680,17 @@ export function getChartSettingsMap(
             chartSetting.dataType = genericAssayChart.dataType;
             chartSetting.patientLevelProfile = genericAssayChart.patientLevel;
         }
-        const xVsYChart = xVsYChartSet[id];
-        if (xVsYChart) {
-            chartSetting.xAttrId = xVsYChart.xAttr.clinicalAttributeId;
-            chartSetting.yAttrId = xVsYChart.yAttr.clinicalAttributeId;
+        const XvsYScatterChart = XvsYScatterChartSet[id];
+        if (XvsYScatterChart) {
+            chartSetting.xAttrId = XvsYScatterChart.xAttr.clinicalAttributeId;
+            chartSetting.yAttrId = XvsYScatterChart.yAttr.clinicalAttributeId;
+        }
+        const XvsYViolinChart = XvsYViolinChartSet[id];
+        if (XvsYViolinChart) {
+            chartSetting.categoricalAttrId =
+                XvsYViolinChart.categoricalAttr.clinicalAttributeId;
+            chartSetting.numericalAttrId =
+                XvsYViolinChart.numericalAttr.clinicalAttributeId;
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
@@ -3551,8 +3561,10 @@ export function getUserGroupColor(
 
 export async function updateCustomIntervalFilter(
     newRange: { start?: number; end?: number },
-    chartMeta: ChartMeta,
-    getDataBinsPromise: (chartMeta: ChartMeta) => MobxPromise<DataBin[]>,
+    chartMeta: Pick<ChartMeta, 'uniqueKey'>,
+    getDataBinsPromise: (
+        chartMeta: Pick<ChartMeta, 'uniqueKey'>
+    ) => MobxPromise<DataBin[]>,
     getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
     updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
     updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
@@ -3653,14 +3665,14 @@ export function logScalePossible(clinicalAttributeId: string) {
     return clinicalAttributeId === SpecialChartsUniqueKeyEnum.MUTATION_COUNT;
 }
 
-export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
+export function makeXvsYUniqueKey(xAttrId: string, yAttrId: string) {
     // make key the same regardless of axis order - only one chart allowed
     //  for a given pair
     const sorted = _.sortBy([xAttrId, yAttrId]);
     return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
 }
 
-export function makeXVsYDisplayName(
+export function makeXvsYDisplayName(
     xAttr: ClinicalAttribute,
     yAttr: ClinicalAttribute
 ) {
@@ -3675,7 +3687,18 @@ export function isQueriedStudyAuthorized(study: CancerStudy) {
     );
 }
 
-export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
+export function excludeFiltersForAttribute(
+    filters: StudyViewFilter,
+    clinicalAttributeId: string
+) {
+    let { clinicalDataFilters, ...rest } = filters;
+    clinicalDataFilters = clinicalDataFilters?.filter(
+        f => f.attributeId !== clinicalAttributeId
+    );
+    return { clinicalDataFilters, ...rest };
+}
+
+export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(
     SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
     SpecialChartsUniqueKeyEnum.MUTATION_COUNT
 );
