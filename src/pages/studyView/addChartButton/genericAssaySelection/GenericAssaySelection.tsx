@@ -3,9 +3,11 @@ import _ from 'lodash';
 import { GenericAssayChart } from 'pages/studyView/StudyViewPageStore';
 import { observer } from 'mobx-react';
 import { action, computed, observable, makeObservable, toJS } from 'mobx';
-import ReactSelect from 'react-select';
+import Select, { components } from 'react-select';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import { MolecularProfileOption } from 'pages/studyView/StudyViewUtils';
+import numeral from 'numeral';
+import styles from './styles.module.scss';
 
 export interface IGenericAssaySelectionProps {
     molecularProfileOptions:
@@ -34,6 +36,8 @@ interface ISelectOption {
     value: string;
     label: string;
 }
+
+export const DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING: number = 100;
 
 @observer
 export default class GenericAssaySelection extends React.Component<
@@ -193,25 +197,13 @@ export default class GenericAssaySelection extends React.Component<
         return toJS(this.selectedGenericAssayEntities);
     }
 
-    private doesOptionMatchSearchText(text: string, option: ISelectOption) {
-        let result = false;
-        if (
-            !text ||
-            new RegExp(text, 'i').test(option.label) ||
-            new RegExp(text, 'i').test(option.value)
-        ) {
-            result = true;
-        }
-        return result;
-    }
-
     @computed get genericAssayOptions() {
         // add select all option only when options have been filtered and has at least one filtered option
         // one generic assay profile usually contains hundreds of options, we don't want user try to add all options without filtering the option
         let allOptionsInSelectedProfile = this.props.genericAssayEntityOptions;
         const filteredOptionsLength = this.props.genericAssayEntityOptions.filter(
             option =>
-                this.doesOptionMatchSearchText(
+                doesOptionMatchSearchText(
                     this._genericAssaySearchText,
                     option
                 ) && !this._selectedGenericAssayEntityIds.includes(option.value)
@@ -232,13 +224,53 @@ export default class GenericAssaySelection extends React.Component<
         return allOptionsInSelectedProfile;
     }
 
+    @computed get showingGenericAssayOptions() {
+        let showingOptions: ISelectOption[] = [];
+        const filteredOptionsWithSpecialOption = _.filter(
+            this.genericAssayOptions,
+            option => {
+                // do not filter out select all option
+                if (option.value === 'select_all_filtered_options') {
+                    return true;
+                }
+                return doesOptionMatchSearchText(
+                    this._genericAssaySearchText,
+                    option
+                );
+            }
+        );
+
+        const specialOptionExist =
+            filteredOptionsWithSpecialOption.length !==
+            this.filteredGenericAssayOptions.length;
+        if (
+            DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING >=
+            this.filteredGenericAssayOptions.length
+        ) {
+            showingOptions = filteredOptionsWithSpecialOption;
+        } else {
+            if (specialOptionExist) {
+                showingOptions = filteredOptionsWithSpecialOption.slice(
+                    0,
+                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING + 1
+                );
+            } else {
+                showingOptions = filteredOptionsWithSpecialOption.slice(
+                    0,
+                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
+                );
+            }
+        }
+        return showingOptions;
+    }
+
     @computed get filteredGenericAssayOptions() {
         return _.filter(this.genericAssayOptions, option => {
-            // do not filter out select all option
+            // filter out select all option
             if (option.value === 'select_all_filtered_options') {
                 return false;
             }
-            return this.doesOptionMatchSearchText(
+            return doesOptionMatchSearchText(
                 this._genericAssaySearchText,
                 option
             );
@@ -251,7 +283,7 @@ export default class GenericAssaySelection extends React.Component<
             return true;
         }
         return (
-            this.doesOptionMatchSearchText(filterString, option) &&
+            doesOptionMatchSearchText(filterString, option) &&
             !this._selectedGenericAssayEntityIds.includes(option.value)
         );
     }
@@ -293,7 +325,7 @@ export default class GenericAssaySelection extends React.Component<
                             than 100 options.
                         </div>
                     )} */}
-                    <ReactSelect
+                    <Select
                         name="generic-assay-select"
                         placeholder={`Search for ${deriveDisplayTextFromGenericAssayType(
                             this.props.genericAssayType,
@@ -303,15 +335,30 @@ export default class GenericAssaySelection extends React.Component<
                         value={this.selectedGenericAssaysJS}
                         isMulti
                         isClearable={false}
-                        options={this.genericAssayOptions}
+                        options={this.showingGenericAssayOptions}
                         filterOption={this.filterGenericAssayOption}
                         onInputChange={this.onGenericAssayInputChange}
                         onChange={this.onSelectGenericAssayEntities}
+                        noOptionsMessage={() => 'No results'}
                         styles={{
                             multiValueLabel: (base: any) => ({
                                 ...base,
                                 whiteSpace: 'normal',
                             }),
+                        }}
+                        components={{
+                            MenuList: MenuList,
+                            MenuListHeader: (
+                                <MenuListHeader
+                                    current={
+                                        this.filteredGenericAssayOptions.length
+                                    }
+                                    total={
+                                        this.props.genericAssayEntityOptions
+                                            .length
+                                    }
+                                />
+                            ),
                         }}
                     />
                 </div>
@@ -323,7 +370,7 @@ export default class GenericAssaySelection extends React.Component<
                             marginRight: 15,
                         }}
                     >
-                        <ReactSelect
+                        <Select
                             value={this.selectedProfileOption}
                             onChange={this.handleProfileSelect}
                             options={this.props.molecularProfileOptions}
@@ -343,4 +390,40 @@ export default class GenericAssaySelection extends React.Component<
             </div>
         );
     }
+}
+
+export const MenuList = (props: any) => {
+    const {
+        MenuListHeader = null,
+        MenuListFooter = null,
+    } = props.selectProps.components;
+
+    return (
+        <components.MenuList {...props}>
+            {props.children.length && MenuListHeader}
+            {props.children}
+            {props.children.length && MenuListFooter}
+        </components.MenuList>
+    );
+};
+
+export const MenuListHeader = ({ current, total }: any) =>
+    current > DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING ? (
+        <span className={styles.menuHeader}>
+            Showing first {DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING} of{' '}
+            {numeral(total).format('0,0')} results. Refine search for specific
+            options.
+        </span>
+    ) : null;
+
+export function doesOptionMatchSearchText(text: string, option: ISelectOption) {
+    let result = false;
+    if (
+        !text ||
+        new RegExp(text, 'i').test(option.label) ||
+        new RegExp(text, 'i').test(option.value)
+    ) {
+        result = true;
+    }
+    return result;
 }

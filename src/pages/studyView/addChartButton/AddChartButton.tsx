@@ -524,20 +524,21 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                             option.value ===
                             this.selectedGenericAssayProfileIdByType.get(type)
                     )?.profileIds || [];
-                const entities = _.reduce(
-                    molecularProfileIdsInType,
-                    (set, profileId) => {
+
+                const entitityMap = molecularProfileIdsInType.reduce(
+                    (acc, profileId) => {
                         this.props.store.genericAssayEntitiesGroupedByProfileId.result![
                             profileId
-                        ].forEach(set.add, set);
-                        return set;
+                        ].forEach(meta => {
+                            acc[meta.stableId] = meta;
+                        });
+                        return acc;
                     },
-                    new Set<GenericAssayMeta>()
+                    {} as { [stableId: string]: GenericAssayMeta }
                 );
 
-                const genericAssayEntityOptions = _.map(
-                    Array.from(entities),
-                    entity => makeGenericAssayOption(entity, false)
+                const genericAssayEntityOptions = _.map(entitityMap, entity =>
+                    makeGenericAssayOption(entity, false)
                 );
 
                 const shouldShowChartOptionTable =
