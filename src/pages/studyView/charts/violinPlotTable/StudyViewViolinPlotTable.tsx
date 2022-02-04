@@ -18,7 +18,7 @@ import {
     getViolinX,
     violinPlotXPadding,
 } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotUtils';
-import { ClinicalViolinPlotIndividualPoint } from 'cbioportal-ts-api-client/src';
+import { ClinicalViolinPlotIndividualPoint } from 'cbioportal-ts-api-client';
 import classnames from 'classnames';
 import styles from 'pages/resultsView/survival/styles.module.scss';
 import chartStyles from 'pages/studyView/charts/styles.module.scss';
