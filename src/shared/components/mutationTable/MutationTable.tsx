@@ -63,8 +63,8 @@ import {
     IHotspotIndex,
     IMyCancerGenomeData,
     RemoteData,
+    IMyVariantInfoIndex,
 } from 'cbioportal-utils';
-import { IMyVariantInfoIndex } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
@@ -119,6 +119,7 @@ export interface IMutationTableProps {
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];
+    namespaceColumns?: NamespaceColumnConfig;
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
@@ -204,11 +205,21 @@ export enum MutationTableColumnType {
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
 }
-type ExtendedMutationTableColumnType = MutationTableColumnType | string;
+export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
-type MutationTableColumn = Column<Mutation[]> & {
+export type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
     shouldExclude?: () => boolean;
+};
+
+// Namespace columns are custom columns that can be added to the MAF file.
+// They are imported via the namespace configuration during data import.
+// See: https://docs.cbioportal.org/5.1-data-loading/data-loading/file-formats#adding-mutation-annotation-columns-through-namespaces
+// The MutationTable component will render these columns dynamically.
+export type NamespaceColumnConfig = {
+    [namespaceName: string]: {
+        [namespaceColumnName: string]: 'string' | 'number';
+    };
 };
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}

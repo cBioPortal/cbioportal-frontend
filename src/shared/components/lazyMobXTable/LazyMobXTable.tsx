@@ -1138,6 +1138,7 @@ export default class LazyMobXTable<T> extends React.Component<
                                 onInput={this.handlers.onFilterTextChange}
                                 className="form-control tableSearchInput"
                                 style={{ width: this.props.filterBoxWidth }}
+                                data-test="table-search-input"
                             />
                             {this.props.showFilterClearButton &&
                             this.store.filterString ? (

@@ -244,7 +244,7 @@ describe('track group headers', function() {
             mrnaElements.dropdown_selector + ' li:nth-child(2)'
         );
         $(mrnaElements.dropdown_selector + ' li:nth-child(2)').click(); // Click Don't Cluster
-        browser.pause(500); // give it time to sort
+        browser.pause(2000); // give it time to sort
 
         var res = checkOncoprintElement();
         assertScreenShotMatch(res);
