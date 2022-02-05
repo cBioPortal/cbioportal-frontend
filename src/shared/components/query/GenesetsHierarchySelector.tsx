@@ -6,11 +6,12 @@ import GenesetsHierarchyFilterForm, {
     validPercentile,
 } from './GenesetsHierarchyFilterForm';
 import { getServerConfig } from 'config/config';
+import { SampleList } from 'cbioportal-ts-api-client';
 
 export interface GenesetsHierarchySelectorProps {
     initialSelection: string[];
     gsvaProfile: string;
-    sampleListId: string | undefined;
+    sampleList: SampleList | undefined;
     onSelect: (map_geneSet_selected: ObservableMap<string, boolean>) => void;
 }
 
@@ -47,6 +48,20 @@ export default class GenesetsHierarchySelector extends React.Component<
     render() {
         return (
             <div>
+                <div style={{ marginBottom: 15 }}>
+                    <text>
+                        Selected sample set:{' '}
+                        <i>
+                            {this.props.sampleList?.name} (
+                            {this.props.sampleList?.sampleCount})
+                        </i>
+                    </text>
+                    <br />
+                    <text>
+                        The outcome of score-based selection depends on the
+                        geneset scores of samples included in the analysis.
+                    </text>
+                </div>
                 <text>Search hierarchy</text>
                 <div
                     className={`form-group has-feedback input-group-sm`}
@@ -79,7 +94,7 @@ export default class GenesetsHierarchySelector extends React.Component<
                     pvalueThreshold={this.pvalueThreshold}
                     percentile={this.percentile}
                     gsvaProfile={this.props.gsvaProfile}
-                    sampleListId={this.props.sampleListId}
+                    sampleListId={this.props.sampleList?.sampleListId}
                     searchValue={this.searchValue}
                     onSelect={this.props.onSelect}
                 />

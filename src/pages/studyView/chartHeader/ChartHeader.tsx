@@ -37,6 +37,8 @@ export interface IChartHeaderProps {
     toggleLogScale?: () => void;
     toggleLogScaleX?: () => void;
     toggleLogScaleY?: () => void;
+    toggleBoxPlot?: () => void;
+    toggleViolinPlot?: () => void;
     toggleNAValue?: () => void;
     swapAxes?: () => void;
     hideLabel?: boolean;
@@ -66,6 +68,10 @@ export interface ChartControls {
     logScaleXChecked?: boolean;
     showLogScaleYToggle?: boolean;
     logScaleYChecked?: boolean;
+    showBoxPlotToggle?: boolean;
+    boxPlotChecked?: boolean;
+    showViolinPlotToggle?: boolean;
+    violinPlotChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
     showSwapAxes?: boolean;
@@ -353,6 +359,65 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             label={
                                 <span style={{ marginTop: -3 }}>
                                     Log Scale Y
+                                </span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
+                </li>
+            );
+        }
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showViolinPlotToggle &&
+            this.props.toggleViolinPlot
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item violinCheckbox"
+                        onClick={this.props.toggleViolinPlot}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls.violinPlotChecked
+                                )
+                            }
+                            label={
+                                <span style={{ marginTop: -3 }}>
+                                    Show Violin Plot
+                                </span>
+                            }
+                            style={{ marginTop: 1, marginBottom: -3 }}
+                        />
+                    </a>
+                </li>
+            );
+        }
+
+        if (
+            this.props.chartControls &&
+            this.props.chartControls.showBoxPlotToggle &&
+            this.props.toggleBoxPlot
+        ) {
+            items.push(
+                <li>
+                    <a
+                        className="dropdown-item violinCheckbox"
+                        onClick={this.props.toggleBoxPlot}
+                    >
+                        <FlexAlignedCheckbox
+                            checked={
+                                !!(
+                                    this.props.chartControls &&
+                                    this.props.chartControls.boxPlotChecked
+                                )
+                            }
+                            label={
+                                <span style={{ marginTop: -3 }}>
+                                    Show Box Plot
                                 </span>
                             }
                             style={{ marginTop: 1, marginBottom: -3 }}

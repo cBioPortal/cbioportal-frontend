@@ -465,6 +465,13 @@ export class QueryStore {
         this._selectedSampleListId = value;
     }
 
+    @computed
+    public get selectedSampleList() {
+        return this.selectedSampleListId
+            ? this.dict_sampleListId_sampleList[this.selectedSampleListId]
+            : undefined;
+    }
+
     @observable caseIds = '';
 
     // this variable is used to set set custom case ids if the query is a shared virtual study query
@@ -1759,7 +1766,7 @@ export class QueryStore {
                 Number(this.volcanoPlotSelectedPercentile.value),
                 0,
                 1,
-                this.defaultSelectedSampleListId
+                this.selectedSampleListId
             );
             return hierarchyData;
         },

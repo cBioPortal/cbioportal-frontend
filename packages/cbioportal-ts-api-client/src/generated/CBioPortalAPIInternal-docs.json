@@ -553,6 +553,101 @@
         "deprecated": false
       }
     },
+    "/clinical-data-violin-plots/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch violin plot curves per categorical clinical data value, filtered by study view filter",
+        "operationId": "fetchClinicalDataViolinPlotsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "axisEnd",
+            "in": "query",
+            "description": "Ending point  of the violin plot axis, if different than largest value",
+            "required": false,
+            "type": "number",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "axisStart",
+            "in": "query",
+            "description": "Starting point of the violin plot axis, if different than smallest value",
+            "required": false,
+            "type": "number",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "categoricalAttributeId",
+            "in": "query",
+            "description": "Clinical Attribute ID of the categorical attribute",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "logScale",
+            "in": "query",
+            "description": "Use log scale for the numerical attribute",
+            "required": false,
+            "type": "boolean",
+            "default": false,
+            "allowEmptyValue": false,
+            "x-example": false
+          },
+          {
+            "name": "numCurvePoints",
+            "in": "query",
+            "description": "Number of points in the curve",
+            "required": false,
+            "type": "number",
+            "default": 100,
+            "allowEmptyValue": false
+          },
+          {
+            "name": "numericalAttributeId",
+            "in": "query",
+            "description": "Clinical Attribute ID of the numerical attribute",
+            "required": true,
+            "type": "string",
+            "allowEmptyValue": false
+          },
+          {
+            "name": "sigmaMultiplier",
+            "in": "query",
+            "description": "Sigma stepsize multiplier",
+            "required": false,
+            "type": "number",
+            "default": 1,
+            "allowEmptyValue": false
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/ClinicalViolinPlotData"
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/cna-genes/fetch": {
       "post": {
         "tags": [
@@ -3649,6 +3744,97 @@
         }
       },
       "title": "ClinicalEventData"
+    },
+    "ClinicalViolinPlotBoxData": {
+      "type": "object",
+      "properties": {
+        "median": {
+          "type": "number",
+          "format": "double"
+        },
+        "q1": {
+          "type": "number",
+          "format": "double"
+        },
+        "q3": {
+          "type": "number",
+          "format": "double"
+        },
+        "whiskerLower": {
+          "type": "number",
+          "format": "double"
+        },
+        "whiskerUpper": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "ClinicalViolinPlotBoxData"
+    },
+    "ClinicalViolinPlotData": {
+      "type": "object",
+      "properties": {
+        "axisEnd": {
+          "type": "number",
+          "format": "double"
+        },
+        "axisStart": {
+          "type": "number",
+          "format": "double"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalViolinPlotRowData"
+          }
+        }
+      },
+      "title": "ClinicalViolinPlotData"
+    },
+    "ClinicalViolinPlotIndividualPoint": {
+      "type": "object",
+      "properties": {
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "ClinicalViolinPlotIndividualPoint"
+    },
+    "ClinicalViolinPlotRowData": {
+      "type": "object",
+      "properties": {
+        "boxData": {
+          "$ref": "#/definitions/ClinicalViolinPlotBoxData"
+        },
+        "category": {
+          "type": "string"
+        },
+        "curveData": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "individualPoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalViolinPlotIndividualPoint"
+          }
+        },
+        "numSamples": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ClinicalViolinPlotRowData"
     },
     "CoExpression": {
       "type": "object",

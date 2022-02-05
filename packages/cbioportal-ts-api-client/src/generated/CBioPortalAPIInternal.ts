@@ -185,6 +185,46 @@ export type ClinicalEventData = {
         'value': string
 
 };
+export type ClinicalViolinPlotBoxData = {
+    'median': number
+
+        'q1': number
+
+        'q3': number
+
+        'whiskerLower': number
+
+        'whiskerUpper': number
+
+};
+export type ClinicalViolinPlotData = {
+    'axisEnd': number
+
+        'axisStart': number
+
+        'rows': Array < ClinicalViolinPlotRowData >
+
+};
+export type ClinicalViolinPlotIndividualPoint = {
+    'sampleId': string
+
+        'studyId': string
+
+        'value': number
+
+};
+export type ClinicalViolinPlotRowData = {
+    'boxData': ClinicalViolinPlotBoxData
+
+        'category': string
+
+        'curveData': Array < number >
+
+        'individualPoints': Array < ClinicalViolinPlotIndividualPoint >
+
+        'numSamples': number
+
+};
 export type CoExpression = {
     'geneticEntityId': string
 
@@ -1727,6 +1767,182 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchClinicalDataViolinPlotsUsingPOSTURL(parameters: {
+        'axisEnd' ? : number,
+        'axisStart' ? : number,
+        'categoricalAttributeId': string,
+        'logScale' ? : boolean,
+        'numCurvePoints' ? : number,
+        'numericalAttributeId': string,
+        'sigmaMultiplier' ? : number,
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-data-violin-plots/fetch';
+        if (parameters['axisEnd'] !== undefined) {
+            queryParameters['axisEnd'] = parameters['axisEnd'];
+        }
+
+        if (parameters['axisStart'] !== undefined) {
+            queryParameters['axisStart'] = parameters['axisStart'];
+        }
+
+        if (parameters['categoricalAttributeId'] !== undefined) {
+            queryParameters['categoricalAttributeId'] = parameters['categoricalAttributeId'];
+        }
+
+        if (parameters['logScale'] !== undefined) {
+            queryParameters['logScale'] = parameters['logScale'];
+        }
+
+        if (parameters['numCurvePoints'] !== undefined) {
+            queryParameters['numCurvePoints'] = parameters['numCurvePoints'];
+        }
+
+        if (parameters['numericalAttributeId'] !== undefined) {
+            queryParameters['numericalAttributeId'] = parameters['numericalAttributeId'];
+        }
+
+        if (parameters['sigmaMultiplier'] !== undefined) {
+            queryParameters['sigmaMultiplier'] = parameters['sigmaMultiplier'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch violin plot curves per categorical clinical data value, filtered by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataViolinPlotsUsingPOST
+     * @param {number} axisEnd - Ending point  of the violin plot axis, if different than largest value
+     * @param {number} axisStart - Starting point of the violin plot axis, if different than smallest value
+     * @param {string} categoricalAttributeId - Clinical Attribute ID of the categorical attribute
+     * @param {boolean} logScale - Use log scale for the numerical attribute
+     * @param {number} numCurvePoints - Number of points in the curve
+     * @param {string} numericalAttributeId - Clinical Attribute ID of the numerical attribute
+     * @param {number} sigmaMultiplier - Sigma stepsize multiplier
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataViolinPlotsUsingPOSTWithHttpInfo(parameters: {
+        'axisEnd' ? : number,
+        'axisStart' ? : number,
+        'categoricalAttributeId': string,
+        'logScale' ? : boolean,
+        'numCurvePoints' ? : number,
+        'numericalAttributeId': string,
+        'sigmaMultiplier' ? : number,
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-data-violin-plots/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['axisEnd'] !== undefined) {
+                queryParameters['axisEnd'] = parameters['axisEnd'];
+            }
+
+            if (parameters['axisStart'] !== undefined) {
+                queryParameters['axisStart'] = parameters['axisStart'];
+            }
+
+            if (parameters['categoricalAttributeId'] !== undefined) {
+                queryParameters['categoricalAttributeId'] = parameters['categoricalAttributeId'];
+            }
+
+            if (parameters['categoricalAttributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: categoricalAttributeId'));
+                return;
+            }
+
+            if (parameters['logScale'] !== undefined) {
+                queryParameters['logScale'] = parameters['logScale'];
+            }
+
+            if (parameters['numCurvePoints'] !== undefined) {
+                queryParameters['numCurvePoints'] = parameters['numCurvePoints'];
+            }
+
+            if (parameters['numericalAttributeId'] !== undefined) {
+                queryParameters['numericalAttributeId'] = parameters['numericalAttributeId'];
+            }
+
+            if (parameters['numericalAttributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: numericalAttributeId'));
+                return;
+            }
+
+            if (parameters['sigmaMultiplier'] !== undefined) {
+                queryParameters['sigmaMultiplier'] = parameters['sigmaMultiplier'];
+            }
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch violin plot curves per categorical clinical data value, filtered by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataViolinPlotsUsingPOST
+     * @param {number} axisEnd - Ending point  of the violin plot axis, if different than largest value
+     * @param {number} axisStart - Starting point of the violin plot axis, if different than smallest value
+     * @param {string} categoricalAttributeId - Clinical Attribute ID of the categorical attribute
+     * @param {boolean} logScale - Use log scale for the numerical attribute
+     * @param {number} numCurvePoints - Number of points in the curve
+     * @param {string} numericalAttributeId - Clinical Attribute ID of the numerical attribute
+     * @param {number} sigmaMultiplier - Sigma stepsize multiplier
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataViolinPlotsUsingPOST(parameters: {
+        'axisEnd' ? : number,
+        'axisStart' ? : number,
+        'categoricalAttributeId': string,
+        'logScale' ? : boolean,
+        'numCurvePoints' ? : number,
+        'numericalAttributeId': string,
+        'sigmaMultiplier' ? : number,
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < ClinicalViolinPlotData > {
+        return this.fetchClinicalDataViolinPlotsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchCNAGenesUsingPOSTURL(parameters: {
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
