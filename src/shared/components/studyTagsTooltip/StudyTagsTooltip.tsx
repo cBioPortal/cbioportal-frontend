@@ -58,6 +58,10 @@ export type StudyInfoOverlayTooltipProps = {
     iconType: IconType;
 };
 
+function addHTMLDescription(description: string) {
+    return { __html: description };
+}
+
 @observer
 class StudyInfoOverlay extends React.Component<
     StudyInfoOverlayTooltipProps,
@@ -77,16 +81,12 @@ class StudyInfoOverlay extends React.Component<
         makeObservable(this);
     }
 
-    addHTMLDescription(description: string) {
-        return { __html: description };
-    }
-
     render() {
         let overlay: any = '';
         if (this.props.isVirtualStudy) {
             overlay = (
                 <div
-                    dangerouslySetInnerHTML={this.addHTMLDescription(
+                    dangerouslySetInnerHTML={addHTMLDescription(
                         this.props.studyDescription
                     )}
                 />
@@ -99,7 +99,7 @@ class StudyInfoOverlay extends React.Component<
                     .length;
                 const description = (
                     <div
-                        dangerouslySetInnerHTML={this.addHTMLDescription(
+                        dangerouslySetInnerHTML={addHTMLDescription(
                             this.props.studyDescription
                         )}
                     />
@@ -122,7 +122,8 @@ class StudyInfoOverlay extends React.Component<
                     const message = replaceJsonPathPlaceholders(
                         getServerConfig()
                             .skin_home_page_unauthorized_studies_global_message,
-                        this.studyMetadata.result
+                        this.studyMetadata.result,
+                        this.props.studyId
                     );
 
                     // if the placeholders couldn't be replaced, then show default global message
@@ -131,7 +132,7 @@ class StudyInfoOverlay extends React.Component<
                     ) : (
                         <div
                             style={{ maxWidth: 300 }}
-                            dangerouslySetInnerHTML={this.addHTMLDescription(
+                            dangerouslySetInnerHTML={addHTMLDescription(
                                 message.toString()
                             )}
                         />
@@ -153,7 +154,7 @@ export default class StudyTagsTooltip extends React.Component<
 > {
     renderTooltip() {
         return (
-            <DefaultTooltip 
+            <DefaultTooltip
                 mouseEnterDelay={this.props.mouseEnterDelay}
                 placement={this.props.placement}
                 overlay={
@@ -162,12 +163,13 @@ export default class StudyTagsTooltip extends React.Component<
                         getServerConfig()
                             .skin_home_page_unauthorized_studies_global_message
                     ) === false ? (
-                        <div className={styles.tooltip}>
-                            {
+                        <div
+                            className={styles.tooltip}
+                            dangerouslySetInnerHTML={addHTMLDescription(
                                 getServerConfig()
                                     .skin_home_page_unauthorized_studies_global_message
-                            }
-                        </div>
+                            )}
+                        />
                     ) : (
                         <StudyInfoOverlay
                             studyDescription={this.props.studyDescription}

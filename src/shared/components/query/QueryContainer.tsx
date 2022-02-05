@@ -24,6 +24,7 @@ import { StudySelectorStats } from 'shared/components/query/StudySelectorStats';
 import $ from 'jquery';
 import { serializeEvent } from 'shared/lib/tracking';
 import { ModifyQueryParams } from 'pages/resultsView/ResultsViewPageStore';
+import { getServerConfig } from 'config/config';
 
 interface QueryContainerProps {
     store: QueryStore;
@@ -202,11 +203,13 @@ export default class QueryContainer extends React.Component<
                         </div>
                     )}
 
-                {this.store.unknownStudyIds.isComplete && (
-                    <UnknownStudiesWarning
-                        ids={this.store.unknownStudyIds.result}
-                    />
-                )}
+                {this.store.unknownStudyIds.isComplete &&
+                    !!getServerConfig()
+                        .skin_home_page_show_unauthorized_studies === false && (
+                        <UnknownStudiesWarning
+                            ids={this.store.unknownStudyIds.result}
+                        />
+                    )}
 
                 {this.store.forDownloadTab && (
                     <div className={'alert alert-danger'} role="alert">
