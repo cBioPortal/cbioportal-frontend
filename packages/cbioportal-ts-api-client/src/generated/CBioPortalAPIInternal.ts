@@ -380,6 +380,12 @@ export type GeneFilterQuery = {
         'tiersBooleanMap': {}
 
 };
+export type GenePanelFilter = {
+    'genePanel': string
+
+        'molecularProfileIds': Array < string >
+
+};
 export type GenericAssayDataBin = {
     'count': number
 
@@ -655,6 +661,8 @@ export type MolecularProfileCaseIdentifier = {
 
         'molecularProfileId': string
 
+        'studyStableId': string
+
 };
 export type MolecularProfileCasesGroupAndAlterationTypeFilter = {
     'alterationEventTypes': AlterationFilter
@@ -865,6 +873,8 @@ export type StudyViewFilter = {
         'customDataFilters': Array < ClinicalDataFilter >
 
         'geneFilters': Array < GeneFilter >
+
+        'genePanelFilters': Array < GenePanelFilter >
 
         'genericAssayDataFilters': Array < GenericAssayDataFilter >
 
@@ -1955,6 +1965,7 @@ export default class CBioPortalAPIInternal {
                 var parameter = parameters.$queryParameters[parameterName];
                 queryParameters[parameterName] = parameter;
             });
+            
         }
         let keys = Object.keys(queryParameters);
         return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
@@ -3080,6 +3091,82 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    fetchGenePanelCountsUsingPOSTURL(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/gene-panel-counts/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch gene panel counts for each molecular profile suffix present in the study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenePanelCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchGenePanelCountsUsingPOSTWithHttpInfo(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/gene-panel-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch gene panel counts for each molecular profile suffix present in the study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenePanelCountsUsingPOST
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchGenePanelCountsUsingPOST(parameters: {
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < {} > {
+        return this.fetchGenePanelCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchGenericAssayDataBinCountsUsingPOSTURL(parameters: {
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
         'genericAssayDataBinCountFilter': GenericAssayDataBinCountFilter,

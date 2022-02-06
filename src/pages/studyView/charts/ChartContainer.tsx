@@ -26,6 +26,7 @@ import {
     ChartMetaDataTypeEnum,
     ChartType,
     ClinicalDataCountSummary,
+    getGenePanelChartUniqueKey,
     DataBin,
     getHeightByDimension,
     getTableHeightByDimension,
@@ -33,6 +34,8 @@ import {
     logScalePossible,
     MutationCountVsCnaYBinsMin,
     NumericalGroupComparisonType,
+    GENE_PANEL_PREFIX,
+    isGenePanelChart,
 } from '../StudyViewUtils';
 import { makeSurvivalChartData } from './survival/StudyViewSurvivalUtils';
 import StudyViewDensityScatterPlot from './scatterPlot/StudyViewDensityScatterPlot';
@@ -766,10 +769,18 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         onChangeCancerGeneFilter={
                             this.props.onChangeCancerGeneFilter!
                         }
+                        toggleGenePanelChartVisibility={(profileId: string) => {
+                            this.props.store.resetFilterAndToggleChartVisibility(
+                                GENE_PANEL_PREFIX + profileId
+                            );
+                        }}
+                        visibleChartIds={this.props.store.visibleAttributes.map(
+                            chartMeta => chartMeta.uniqueKey
+                        )}
                         columns={[
                             {
                                 columnKey:
-                                    MultiSelectionTableColumnKey.MOLECULAR_PROFILE,
+                                    MultiSelectionTableColumnKey.DATA_PROFILE,
                             },
                             {
                                 columnKey: MultiSelectionTableColumnKey.NUMBER,
@@ -1080,6 +1091,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return this.newlyAdded;
     }
 
+    get chartReadyToRender() {
+        return (
+            this.props.chartMeta.renderWhenDataChange ||
+            this.props.promise.isComplete
+        );
+    }
+
     componentDidMount() {
         if (this.props.isNewlyAdded(this.props.chartMeta.uniqueKey)) {
             this.newlyAdded = true;
@@ -1149,8 +1167,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         </div>
                     )}
 
-                    {(!this.props.chartMeta.renderWhenDataChange ||
-                        this.props.promise.isComplete) && (
+                    {this.chartReadyToRender && (
                         <div
                             style={{
                                 visibility: this.props.promise.isPending

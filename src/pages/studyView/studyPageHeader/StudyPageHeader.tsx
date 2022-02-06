@@ -61,7 +61,7 @@ export default class StudyPageHeader extends React.Component<
                         comparisonGroupSelection={
                             this.props.store.filterComparisonGroups
                         }
-                        numberOfSelectedSamplesInCustomSelection={
+                        selectionCount={
                             this.props.store
                                 .numberOfSelectedSamplesInCustomSelection
                         }
@@ -114,6 +114,9 @@ export default class StudyPageHeader extends React.Component<
                         }
                         removeTreatmentsFilter={
                             this.props.store.removeTreatmentsFilter
+                        }
+                        removeGenePanelFilter={
+                            this.props.store.removeGenePanelFilter
                         }
                     />
                 )}

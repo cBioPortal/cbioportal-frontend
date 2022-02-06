@@ -603,7 +603,6 @@ export default class StudyViewDensityScatterPlot
     }
 
     render() {
-        //console.log(this.plotDomain);
         return (
             <div>
                 {this.data.length > 0 && (

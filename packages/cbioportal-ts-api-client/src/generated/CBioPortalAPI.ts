@@ -320,6 +320,12 @@ export type GenePanelDataMultipleStudyFilter = {
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
+export type GenePanelFilter = {
+    'genePanel': string
+
+        'molecularProfileIds': Array < string >
+
+};
 export type GenePanelToGene = {
     'entrezGeneId': number
 
@@ -785,6 +791,8 @@ export type StudyViewFilter = {
         'customDataFilters': Array < ClinicalDataFilter >
 
         'geneFilters': Array < GeneFilter >
+
+        'genePanelFilters': Array < GenePanelFilter >
 
         'genericAssayDataFilters': Array < GenericAssayDataFilter >
 

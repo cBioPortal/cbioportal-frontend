@@ -1171,6 +1171,47 @@
         "deprecated": false
       }
     },
+    "/gene-panel-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch gene panel counts for each molecular profile suffix present in the study view filter",
+        "operationId": "fetchGenePanelCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/ClinicalDataCount"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
     "/generic-assay-data-bin-counts/fetch": {
       "post": {
         "tags": [
@@ -4196,6 +4237,21 @@
       },
       "title": "GeneFilterQuery"
     },
+    "GenePanelFilter": {
+      "type": "object",
+      "properties": {
+        "genePanel": {
+          "type": "string"
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GenePanelFilter"
+    },
     "GenericAssayDataBin": {
       "type": "object",
       "properties": {
@@ -4806,6 +4862,9 @@
         },
         "molecularProfileId": {
           "type": "string"
+        },
+        "studyStableId": {
+          "type": "string"
         }
       },
       "title": "MolecularProfileCaseIdentifier"
@@ -5306,6 +5365,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GeneFilter"
+          }
+        },
+        "genePanelFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenePanelFilter"
           }
         },
         "genericAssayDataFilters": {

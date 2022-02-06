@@ -424,7 +424,6 @@ export default class QuickSearch extends React.Component<QuickSearchProps, {}> {
     @autobind
     private renderInput(props: any) {
         delete props.value;
-        console.log(props);
         return (
             <div className="Select-input">
                 <input placeholder="e.g. Lung, EGFR, TCGA-OR-A5J2" {...props} />

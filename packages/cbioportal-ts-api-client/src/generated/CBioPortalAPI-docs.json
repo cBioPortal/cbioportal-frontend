@@ -5098,6 +5098,21 @@
       },
       "title": "GenePanelDataMultipleStudyFilter"
     },
+    "GenePanelFilter": {
+      "type": "object",
+      "properties": {
+        "genePanel": {
+          "type": "string"
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "GenePanelFilter"
+    },
     "GenePanelToGene": {
       "type": "object",
       "required": [
@@ -6139,6 +6154,12 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GeneFilter"
+          }
+        },
+        "genePanelFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenePanelFilter"
           }
         },
         "genericAssayDataFilters": {
