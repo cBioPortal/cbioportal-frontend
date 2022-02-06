@@ -72,6 +72,7 @@ import {
 import { DefaultMutationMapperDataStore } from './DefaultMutationMapperDataStore';
 import { DefaultMutationMapperDataFetcher } from './DefaultMutationMapperDataFetcher';
 import { DefaultMutationMapperFilterApplier } from './DefaultMutationMapperFilterApplier';
+import { get } from 'superagent';
 
 interface DefaultMutationMapperStoreConfig {
     annotationFields?: string[];
@@ -1115,6 +1116,19 @@ class DefaultMutationMapperStore<T extends Mutation>
             0
         );
     }
+
+    readonly transcriptLookUp: MobxPromise<any | undefined> = remoteData({
+        await: () => [this.activeTranscript],
+        invoke: async () =>
+            this.activeTranscript.result
+                ? get(
+                      `https://grch37.rest.ensembl.org/lookup/id/${this.activeTranscript.result}?content-type=application/json`
+                  )
+                : undefined,
+        onError: () => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        },
+    });
 }
 
 export default DefaultMutationMapperStore;
