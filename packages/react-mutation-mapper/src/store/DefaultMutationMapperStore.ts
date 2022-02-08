@@ -96,6 +96,7 @@ interface DefaultMutationMapperStoreConfig {
     selectionFilters?: DataFilter[];
     highlightFilters?: DataFilter[];
     groupFilters?: { group: string; filter: DataFilter }[];
+    genomeBuild?: string;
 }
 
 class DefaultMutationMapperStore<T extends Mutation>
@@ -1117,18 +1118,29 @@ class DefaultMutationMapperStore<T extends Mutation>
         );
     }
 
-    readonly transcriptLookUp: MobxPromise<any | undefined> = remoteData({
-        await: () => [this.activeTranscript],
-        invoke: async () =>
-            this.activeTranscript.result
-                ? get(
-                      `https://grch37.rest.ensembl.org/lookup/id/${this.activeTranscript.result}?content-type=application/json`
-                  )
-                : undefined,
-        onError: () => {
-            // fail silently, leave the error handling responsibility to the data consumer
-        },
-    });
+    readonly ensemblTranscriptLookUp: MobxPromise<any | undefined> = remoteData(
+        {
+            await: () => [this.activeTranscript],
+            invoke: async () => {
+                const ensemblTranscriptLookUpLink =
+                    this.genomeBuild === 'hg19'
+                        ? `https://grch37.rest.ensembl.org/lookup/id/${this.activeTranscript.result}?content-type=application/json`
+                        : `https://rest.ensembl.org/lookup/id/${this.activeTranscript.result}?content-type=application/json`;
+                return this.activeTranscript.result
+                    ? get(ensemblTranscriptLookUpLink)
+                    : undefined;
+            },
+            onError: () => {
+                // fail silently, leave the error handling responsibility to the data consumer
+            },
+        }
+    );
+
+    @computed
+    // Get genome build for exon track
+    public get genomeBuild(): string {
+        return this.config.genomeBuild || 'hg19';
+    }
 }
 
 export default DefaultMutationMapperStore;

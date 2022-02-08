@@ -77,7 +77,8 @@ export interface MutationMapperStore<T extends Mutation> {
     transcriptsWithAnnotations: RemoteData<string[] | undefined>;
     transcriptsWithProteinLength: RemoteData<string[] | undefined>;
     mutationsByTranscriptId: { [transcriptId: string]: T[] };
-    transcriptLookUp: RemoteData<any | Error | undefined>;
+    ensemblTranscriptLookUp: RemoteData<any | Error | undefined>;
+    genomeBuild: string;
     setSelectedTranscript?: (id: string | undefined) => void;
     getTranscriptId?: () => string | undefined;
     selectedTranscript?: string | undefined;

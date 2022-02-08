@@ -35,7 +35,12 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
     }
 
     @computed get chromosome(): string {
-        return this.props.store.transcriptLookUp.result?.body?.seq_region_name;
+        return this.props.store.ensemblTranscriptLookUp.result?.body
+            ?.seq_region_name;
+    }
+
+    @computed get genomeBuild(): string {
+        return this.props.store.genomeBuild;
     }
 
     @computed get exonSpecs(): TrackItemSpec[] {
@@ -63,10 +68,10 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                   const exonEndLocation = formatExonLocation(endCodon);
                   const exonLength = formatExonLength(exon.length);
                   const link = this.chromosome
-                      ? `https://igv.org/app/?locus=chr${this.chromosome}:${exon.genomicLocationStart}-${exon.genomicLocationEnd}&genome=hg19`
+                      ? `https://igv.org/app/?locus=chr${this.chromosome}:${exon.genomicLocationStart}-${exon.genomicLocationEnd}&genome=${this.genomeBuild}`
                       : 'https://igv.org';
                   const linkText = this.chromosome
-                      ? `hg19:chr${this.chromosome}:${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`
+                      ? `${this.genomeBuild}:chr${this.chromosome}:${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`
                       : `${exon.genomicLocationStart} - ${exon.genomicLocationEnd}`;
                   return {
                       color: altColors[index % 2],
@@ -116,7 +121,11 @@ export default class ExonTrack extends React.Component<ExonTrackProps, {}> {
                                   href={link}
                                   rel="noopener noreferrer"
                               >
-                                  {linkText}
+                                  <>
+                                      {linkText}
+                                      {` `}
+                                      <i className="fa fa-external-link" />
+                                  </>
                               </a>
                           </span>
                       ),
