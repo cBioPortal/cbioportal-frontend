@@ -2,8 +2,8 @@ import _ from 'lodash';
 import {
     CancerTreeNode,
     CancerTypeWithVisibility,
+    NodeMetadata,
 } from './CancerStudyTreeData';
-import { NodeMetadata } from './CancerStudyTreeData';
 import {
     TypeOfCancer as CancerType,
     CancerStudy,
@@ -316,9 +316,10 @@ export class FilteredCancerTreeView {
 
         if (meta.isCancerType) {
             if (!this.store.forDownloadTab)
-                clickedStudyIds = this.getDescendantCancerStudies(node).map(
-                    study => study.studyId
-                );
+                clickedStudyIds = this.getDescendantCancerStudies(node)
+                    // The user can only check studies for which she/he is authorized.
+                    .filter(study => study.readPermission)
+                    .map(study => study.studyId);
         } else {
             clickedStudyIds = [(node as CancerStudy).studyId];
         }
