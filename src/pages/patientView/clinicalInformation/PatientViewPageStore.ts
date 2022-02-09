@@ -203,6 +203,38 @@ import {
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
 
+import { IMtb, IDeletions } from '../../../shared/model/TherapyRecommendation';
+import {
+    StudyListEntry,
+    StudyList,
+} from '../clinicalTrialMatch/utils/StudyList';
+import {
+    Study,
+    ClinicalTrialsGovStudies,
+    Location,
+    LocationList,
+    Intervention,
+    InterventionList,
+    EligibilityModule,
+} from 'shared/api/ClinicalTrialsGovStudyStrucutre';
+import { IDetailedClinicalTrialMatch } from '../clinicalTrialMatch/ClinicalTrialMatchTable';
+import {
+    searchStudiesForKeywordAsString,
+    getStudiesByCondtionsFromOncoKB,
+    IOncoKBStudyDictionary,
+    getAllStudyNctIdsByOncoTreeCode,
+    getAllStudyNctIdsByOncoTreeCodes,
+    getStudiesNCTIds,
+} from 'shared/api/ClinicalTrialMatchAPI';
+import {
+    fetchMtbsUsingGET,
+    updateMtbUsingPUT,
+    deleteMtbUsingDELETE,
+    checkPermissionUsingGET,
+} from 'shared/api/TherapyRecommendationAPI';
+import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
+import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
+
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
 
@@ -304,6 +336,40 @@ function transformClinicalInformationToStoreShape(
     return rv;
 }
 
+class ClinicalTrialsSearchParams {
+    clinicalTrialsCountires: string[] = [];
+    clinicalTrialsRecruitingStatus: RecruitingStatus[] = [];
+    symbolsToSearch: string[] = [];
+    necSymbolsToSearch: string[] = [];
+    gender: string;
+    patientLocation: string;
+    age: number;
+    filterDistance: boolean;
+    maximumDistance: number;
+
+    constructor(
+        clinicalTrialsCountires: string[],
+        clinicalTrialsRecruitingStatus: RecruitingStatus[],
+        symbolsToSearch: string[] = [],
+        necSymbolsToSearch: string[] = [],
+        gender: string,
+        patientLocation: string,
+        age: number,
+        filterDistance: boolean,
+        maximumDistance: number
+    ) {
+        this.clinicalTrialsRecruitingStatus = clinicalTrialsRecruitingStatus;
+        this.clinicalTrialsCountires = clinicalTrialsCountires;
+        this.symbolsToSearch = symbolsToSearch;
+        this.necSymbolsToSearch = necSymbolsToSearch;
+        this.gender = gender;
+        this.patientLocation = patientLocation;
+        this.age = age;
+        this.filterDistance = filterDistance;
+        this.maximumDistance = maximumDistance;
+    }
+}
+
 export class PatientViewPageStore {
     constructor(private appStore: AppStore) {
         makeObservable(this);
@@ -312,6 +378,23 @@ export class PatientViewPageStore {
     }
 
     public internalClient: CBioPortalAPIInternal;
+
+    @observable
+    public isClinicalTrialsLoading: boolean = false;
+    public showLoadingScreen: boolean = false;
+
+    @observable
+    private clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
+        [],
+        [],
+        [],
+        [],
+        '',
+        '',
+        0,
+        false,
+        0
+    );
 
     @observable public activeTabId = '';
 
@@ -1987,6 +2070,23 @@ export class PatientViewPageStore {
         return mergeMutations(this.mutationData);
     }
 
+    @computed get mutationHugoGeneSymbols(): string[] {
+        var gene_symbols: string[] = [];
+        this.mergedMutationData.forEach(function(value: Mutation[]) {
+            gene_symbols.push(value[0].gene.hugoGeneSymbol);
+        });
+
+        this.mergedDiscreteCNADataFilteredByGene.forEach(function(
+            value: DiscreteCopyNumberData[]
+        ) {
+            gene_symbols.push(value[0].gene.hugoGeneSymbol);
+        });
+
+        var unique_gene_symbols = [...new Set(gene_symbols)];
+
+        return unique_gene_symbols;
+    }
+
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(
             this.mutationData,
@@ -2416,6 +2516,386 @@ export class PatientViewPageStore {
         []
     );
 
+    readonly mtbs = remoteData<IMtb[]>(
+        {
+            invoke: () => {
+                return fetchMtbsUsingGET(
+                    this.getMtbJsonStoreUrl(this.getSafePatientId()),
+                    this.getSafeStudyId()
+                );
+            },
+        },
+        []
+    );
+
+    updateMtbs = async (mtbs: IMtb[]): Promise<boolean> => {
+        console.log('update');
+        return updateMtbUsingPUT(
+            this.getSafePatientId(),
+            this.getSafeStudyId(),
+            this.getMtbJsonStoreUrl(this.getSafePatientId()),
+            mtbs
+        );
+    };
+
+    readonly deletions: IDeletions = {
+        mtb: [],
+        therapyRecommendation: [],
+    };
+
+    deleteMtbs = (deletions: IDeletions) => {
+        console.log('delete');
+        deleteMtbUsingDELETE(
+            this.getSafePatientId(),
+            this.getSafeStudyId(),
+            this.getMtbJsonStoreUrl(this.getSafePatientId()),
+            deletions
+        );
+    };
+
+    checkPermission = async (): Promise<boolean[]> => {
+        let checkUrl =
+            this.getMtbJsonStoreUrl(this.getSafePatientId()) + '/permission';
+        return checkPermissionUsingGET(checkUrl, this.getSafeStudyId());
+    };
+
+    getMtbJsonStoreUrl = (id: string) => {
+        let host: string | null = window.location.hostname;
+        let port = ':' + window.location.port;
+        if (
+            getServerConfig().fhirspark &&
+            getServerConfig().fhirspark!.host &&
+            getServerConfig().fhirspark!.host !== 'undefined'
+        )
+            host = getServerConfig().fhirspark!.host;
+        if (
+            getServerConfig().fhirspark &&
+            getServerConfig().fhirspark!.port &&
+            getServerConfig().fhirspark!.port !== 'undefined'
+        )
+            port = ':' + getServerConfig().fhirspark!.port;
+        return '//' + host + port + '/mtb/' + id;
+    };
+
+    private getSafePatientId = () => {
+        return encodeURIComponent(this.patientId);
+    };
+
+    private getSafeStudyId = () => {
+        return encodeURIComponent(this.studyId);
+    };
+
+    readonly getStudiesFromOncoKBSortedByCondition = remoteData<
+        IOncoKBStudyDictionary
+    >({
+        await: () => [],
+        invoke: async () => {
+            var res: IOncoKBStudyDictionary = await getStudiesByCondtionsFromOncoKB();
+            return res;
+        },
+    });
+
+    readonly getStudiesFromClinicalTrialsGov = remoteData<StudyListEntry[]>(
+        {
+            await: () => [
+                this.getStudiesFromOncoKBSortedByCondition,
+                this.patientViewData,
+            ],
+            invoke: async () => {
+                var study_list = new StudyList();
+                var sortedList;
+                var all_gene_symbols: string[] = this.mutationHugoGeneSymbols;
+                var clinicalTrialQuery = this.clinicalTrialSerchParams;
+                var search_symbols = clinicalTrialQuery.symbolsToSearch;
+                var nec_search_symbols = clinicalTrialQuery.necSymbolsToSearch;
+                var gene_symbols: string[] = [];
+                var study_dictionary:
+                    | IOncoKBStudyDictionary
+                    | undefined = await this
+                    .getStudiesFromOncoKBSortedByCondition.result;
+                var trials_for_condtion: string[] = [];
+
+                gene_symbols = [];
+                if (
+                    search_symbols.length == 0 &&
+                    nec_search_symbols.length == 0
+                ) {
+                    gene_symbols = [];
+                } else {
+                    gene_symbols = search_symbols.concat(nec_search_symbols);
+                    gene_symbols = [...new Set(gene_symbols)];
+                }
+
+                for (const symbol of gene_symbols) {
+                    var result: Study[] = await this.getAllStudiesForKeyword(
+                        symbol,
+                        nec_search_symbols
+                    );
+                    for (const std of result) {
+                        study_list.addStudy(std, symbol);
+                    }
+                }
+
+                var patientData = await this.patientViewData.result;
+                var samples = patientData.samples;
+                var oncotree_codes_in_samples: string[] = [];
+                var tumor_entities: string[] = [];
+                var nctIDs_with_tumor_entity: string[] = [];
+
+                for (var i = 0; i < samples!.length; i++) {
+                    for (var k = 0; k < samples![i].clinicalData.length; k++) {
+                        if (
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                            'ONCOTREE_CODE'
+                        ) {
+                            oncotree_codes_in_samples.push(
+                                samples![i].clinicalData[k].value
+                            );
+                        }
+
+                        if (
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE_DETAILED' ||
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE'
+                        ) {
+                            tumor_entities.push(
+                                samples![i].clinicalData[k].value
+                            );
+                        }
+                    }
+                }
+
+                nctIDs_with_tumor_entity = await getStudiesNCTIds(
+                    tumor_entities,
+                    nec_search_symbols,
+                    search_symbols,
+                    this.clinicalTrialSerchParams.clinicalTrialsCountires,
+                    this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
+                );
+
+                var study_dictionary:
+                    | IOncoKBStudyDictionary
+                    | undefined = await this
+                    .getStudiesFromOncoKBSortedByCondition.result;
+                trials_for_condtion = getAllStudyNctIdsByOncoTreeCodes(
+                    study_dictionary,
+                    oncotree_codes_in_samples
+                );
+
+                study_list.calculateScores(
+                    trials_for_condtion,
+                    clinicalTrialQuery.age,
+                    clinicalTrialQuery.gender,
+                    clinicalTrialQuery.patientLocation,
+                    nctIDs_with_tumor_entity
+                );
+
+                if (
+                    clinicalTrialQuery.filterDistance &&
+                    clinicalTrialQuery.maximumDistance > 0
+                ) {
+                    study_list.filterByDistance(
+                        clinicalTrialQuery.maximumDistance
+                    );
+                }
+
+                var tmp: Map<
+                    String,
+                    StudyListEntry
+                > = study_list.getStudyListEntires();
+                var arr: StudyListEntry[] = Array.from(tmp.values());
+                var sorted_arr: StudyListEntry[] = arr.sort(
+                    (a, b) => b.getScore() - a.getScore()
+                );
+
+                var res = '["';
+                for (const a of sorted_arr) {
+                    res += a.getStudy().ProtocolSection.IdentificationModule
+                        .NCTId;
+                    res += '","';
+                }
+
+                return sorted_arr;
+            },
+        },
+        []
+    );
+
+    readonly clinicalTrialMatches = remoteData<IDetailedClinicalTrialMatch[]>(
+        {
+            await: () => [this.getStudiesFromClinicalTrialsGov],
+            invoke: async () => {
+                var result: IDetailedClinicalTrialMatch[] = [];
+                for (const std of this.getStudiesFromClinicalTrialsGov.result) {
+                    var loc: string[] = [];
+                    var inv: string[] = [];
+
+                    var locationModule: Location[] = [];
+                    var interventionModule: Intervention[] = [];
+                    var eligibilityCriteria: string = '';
+
+                    try {
+                        locationModule = std.getStudy().ProtocolSection
+                            .ContactsLocationsModule.LocationList.Location;
+                    } catch (e) {
+                        //no location module in study
+                        locationModule = [];
+                    }
+
+                    try {
+                        interventionModule = std.getStudy().ProtocolSection
+                            .ArmsInterventionsModule.InterventionList
+                            .Intervention;
+                    } catch (e) {
+                        //no intervention module in study
+                        interventionModule = [];
+                    }
+
+                    try {
+                        eligibilityCriteria = std.getStudy().ProtocolSection
+                            .EligibilityModule.EligibilityCriteria;
+                    } catch (e) {
+                        eligibilityCriteria = '';
+                    }
+
+                    for (let i = 0; i < locationModule.length; i++) {
+                        let location: Location = locationModule[i];
+                        loc.push(
+                            location.LocationCity +
+                                ': ' +
+                                location.LocationFacility +
+                                ': ' +
+                                location.LocationState
+                        );
+                    }
+
+                    for (let i = 0; i < interventionModule.length; i++) {
+                        let intervention: Intervention = interventionModule[i];
+                        inv.push(intervention.InterventionName);
+                    }
+
+                    var newTrial = {
+                        found: std.getNumberFound(),
+                        keywords: std.getKeywords().toString(),
+                        conditions: std.getStudy().ProtocolSection
+                            .ConditionsModule.ConditionList.Condition,
+                        title:
+                            std.getStudy().ProtocolSection.IdentificationModule
+                                .OfficialTitle ||
+                            std.getStudy().ProtocolSection.IdentificationModule
+                                .BriefTitle,
+                        nct: std.getStudy().ProtocolSection.IdentificationModule
+                            .NCTId,
+                        status: std.getStudy().ProtocolSection.StatusModule
+                            .OverallStatus,
+                        locations: loc,
+                        interventions: inv,
+                        condition_matching: false,
+                        score: std.getScore(),
+                        eligibility: eligibilityCriteria,
+                        explanation: std.getExplanations(),
+                    };
+                    result.push(newTrial);
+                }
+                this.showLoadingScreen = false;
+                return result;
+            },
+        },
+        []
+    );
+
+    private async getAllStudiesForKeyword(
+        keyword: string,
+        nec_search_symbols: string[]
+    ): Promise<Study[]> {
+        const STEPSIZE = 100;
+        var all_studies: Study[] = [];
+        var result: ClinicalTrialsGovStudies = await searchStudiesForKeywordAsString(
+            keyword,
+            nec_search_symbols,
+            1,
+            1,
+            this.clinicalTrialSerchParams.clinicalTrialsCountires,
+            this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
+        ); //find amount of available studies.
+        var num_studies_found = result.FullStudiesResponse.NStudiesFound;
+        var current_max = STEPSIZE; //ClinicalTrials.gov API Allows to oly fetch 100 studies at a time
+        var current_min = 1;
+
+        if (num_studies_found <= 0) {
+            return all_studies;
+        }
+
+        //get first batch of avialable studies
+        result = await searchStudiesForKeywordAsString(
+            keyword,
+            nec_search_symbols,
+            current_min,
+            current_max,
+            this.clinicalTrialSerchParams.clinicalTrialsCountires,
+            this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
+        );
+
+        result.FullStudiesResponse.FullStudies.forEach(function(value) {
+            all_studies.push(value.Study);
+        });
+
+        //check if there are more studies to fetch
+        while (current_max < num_studies_found) {
+            current_min = current_max + 1;
+            current_max = current_max + STEPSIZE;
+
+            result = await searchStudiesForKeywordAsString(
+                keyword,
+                nec_search_symbols,
+                current_min,
+                current_max,
+                this.clinicalTrialSerchParams.clinicalTrialsCountires,
+                this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
+            );
+            result.FullStudiesResponse.FullStudies.forEach(function(value) {
+                all_studies.push(value.Study);
+            });
+        }
+
+        return all_studies;
+    }
+
+    public setClinicalTrialSearchParams(
+        countries: string[],
+        status: RecruitingStatus[],
+        symbols: string[],
+        necSymbols: string[],
+        gender: string,
+        patientLocation: string,
+        age: number,
+        filterDistance: boolean,
+        maximumDistance: number
+    ) {
+        var cntr: string[] = [];
+
+        if (countries.length == 0) {
+            cntr = [];
+        } else {
+            cntr = countries;
+        }
+
+        this.isClinicalTrialsLoading = !this.isClinicalTrialsLoading;
+        this.showLoadingScreen = true;
+
+        this.clinicalTrialSerchParams = new ClinicalTrialsSearchParams(
+            cntr,
+            status,
+            symbols,
+            necSymbols,
+            gender,
+            patientLocation,
+            age,
+            filterDistance,
+            maximumDistance
+        );
+    }
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData | Error>(
         {
             await: () => [this.mutationData, this.oncoKbAnnotatedGenes],

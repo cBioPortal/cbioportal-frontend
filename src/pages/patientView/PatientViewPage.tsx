@@ -77,6 +77,8 @@ import TimelineWrapper from './timeline2/TimelineWrapper';
 import { isFusion } from '../../shared/lib/MutationUtils';
 import { Mutation } from 'cbioportal-ts-api-client';
 import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
+import { ClinicalTrialMatchTable } from './clinicalTrialMatch/ClinicalTrialMatchTable';
+import MtbTable from './therapyRecommendation/MtbTable';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
 
@@ -359,6 +361,18 @@ export default class PatientViewPage extends React.Component<
             this.patientViewPageStore.detailedTrialMatches.isComplete &&
             this.patientViewPageStore.detailedTrialMatches.result.length > 0
         );
+    }
+
+    private shouldShowTherapyRecommendation(
+        patientViewPageStore: PatientViewPageStore
+    ): boolean {
+        return false;
+    }
+
+    private shouldShowMtbTab(
+        patientViewPageStore: PatientViewPageStore
+    ): boolean {
+        return true;
     }
 
     @autobind
@@ -1574,6 +1588,143 @@ export default class PatientViewPage extends React.Component<
                                     </MSKTab>
                                 )}
 
+                                {this.shouldShowMtbTab(
+                                    this.patientViewPageStore
+                                ) &&
+                                    this.patientViewPageStore.mutationData
+                                        .isComplete &&
+                                    this.patientViewPageStore.discreteCNAData
+                                        .isComplete &&
+                                    (this.patientViewPageStore.oncoKbData
+                                        .isComplete ||
+                                        this.patientViewPageStore.oncoKbData
+                                            .isError) &&
+                                    (this.patientViewPageStore.mtbs
+                                        .isComplete ||
+                                        this.patientViewPageStore.mtbs
+                                            .isError) &&
+                                    (this.patientViewPageStore.cnaOncoKbData
+                                        .isComplete ||
+                                        this.patientViewPageStore.cnaOncoKbData
+                                            .isError) && (
+                                        <MSKTab
+                                            key={42}
+                                            id={PatientViewPageTabs.Mtb}
+                                            linkText="MTB"
+                                            unmountOnHide={false}
+                                        >
+                                            <MtbTable
+                                                patientId={
+                                                    this.patientViewPageStore
+                                                        .patientId
+                                                }
+                                                mutations={
+                                                    this.patientViewPageStore
+                                                        .mutationData.result
+                                                }
+                                                indexedVariantAnnotations={
+                                                    this.patientViewPageStore
+                                                        .indexedVariantAnnotations
+                                                        .result
+                                                }
+                                                indexedMyVariantInfoAnnotations={
+                                                    this.patientViewPageStore
+                                                        .indexedMyVariantInfoAnnotations
+                                                        .result
+                                                }
+                                                cna={
+                                                    this.patientViewPageStore
+                                                        .discreteCNAData.result
+                                                }
+                                                clinicalData={this.patientViewPageStore.clinicalDataPatient.result.concat(
+                                                    this.patientViewPageStore
+                                                        .clinicalDataForSamples
+                                                        .result
+                                                )}
+                                                mutationSignatureData={
+                                                    this.patientViewPageStore
+                                                        .mutationalSignatureDataGroupByVersion
+                                                        .result
+                                                }
+                                                sampleManager={sampleManager}
+                                                oncoKbAvailable={
+                                                    getServerConfig()
+                                                        .show_oncokb &&
+                                                    !this.patientViewPageStore
+                                                        .cnaOncoKbData
+                                                        .isError &&
+                                                    !this.patientViewPageStore
+                                                        .oncoKbData.isError
+                                                }
+                                                mtbs={
+                                                    this.patientViewPageStore
+                                                        .mtbs.result
+                                                }
+                                                deletions={
+                                                    this.patientViewPageStore
+                                                        .deletions
+                                                }
+                                                containerWidth={
+                                                    WindowStore.size.width - 20
+                                                }
+                                                onDeleteData={
+                                                    this.patientViewPageStore
+                                                        .deleteMtbs
+                                                }
+                                                onSaveData={
+                                                    this.patientViewPageStore
+                                                        .updateMtbs
+                                                }
+                                                mtbUrl={this.patientViewPageStore.getMtbJsonStoreUrl(
+                                                    ''
+                                                )}
+                                                checkPermission={
+                                                    this.patientViewPageStore
+                                                        .checkPermission
+                                                }
+                                                oncoKbData={
+                                                    this.patientViewPageStore
+                                                        .oncoKbData
+                                                }
+                                                cnaOncoKbData={
+                                                    this.patientViewPageStore
+                                                        .cnaOncoKbData
+                                                }
+                                                pubMedCache={
+                                                    this.patientViewPageStore
+                                                        .pubMedCache
+                                                }
+                                            />
+                                        </MSKTab>
+                                    )}
+
+                                <MSKTab
+                                    key={43}
+                                    id={PatientViewPageTabs.ClinicalTrialsGov}
+                                    linkText="ClinicalTrialsGov"
+                                    unmountOnHide={false}
+                                >
+                                    <ClinicalTrialMatchTable
+                                        store={this.patientViewPageStore}
+                                        clinicalTrialMatches={
+                                            this.patientViewPageStore
+                                                .clinicalTrialMatches.result
+                                        }
+                                    />
+                                </MSKTab>
+
+                                {/*<MSKTab key={5} id={{PatientViewPageTabs.MutationalSignatures}} linkText="Mutational Signature Data" hide={true}>*/}
+                                {/*<div className="clearfix">*/}
+                                {/*<FeatureTitle title="Mutational Signatures" isLoading={ this.patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
+                                {/*<LoadingIndicator isLoading={this.patientViewPageStore.mutationalSignatureData.isPending}/>*/}
+                                {/*{*/}
+                                {/*(this.patientViewPageStore.clinicalDataGroupedBySample.isComplete && this.patientViewPageStore.mutationalSignatureData.isComplete) && (*/}
+                                {/*<ClinicalInformationMutationalSignatureTable data={this.patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>*/}
+                                {/*)*/}
+                                {/*}*/}
+                                {/*</div>*/}
+
+                                {/*</MSKTab>*/}
                                 {this.patientViewPageStore
                                     .hasMutationalSignatureData.result && (
                                     <MSKTab

@@ -284,6 +284,52 @@ export function initializeServerConfiguration(rawConfiguration: any) {
         ? JSON.parse(rawConfiguration.frontendConfigOverride)
         : {};
 
+    let miracumConfig: any = {};
+
+    if (frontendOverride.fhirspark) {
+        console.log(`Overriding fhirspark with: `, frontendOverride.fhirspark);
+        miracumConfig.fhirspark = frontendOverride.fhirspark;
+    }
+
+    if (frontendOverride.cancerdrugsUrl) {
+        console.log(
+            `Overriding cancerdrugs URL with: `,
+            frontendOverride.cancerdrugsUrl
+        );
+        miracumConfig.cancerdrugsUrl = frontendOverride.cancerdrugsUrl;
+    }
+
+    if (frontendOverride.cancerdrugsJsonUrl) {
+        console.log(
+            `Overriding cancerdrugs JSON URL with: `,
+            frontendOverride.cancerdrugsJsonUrl
+        );
+        miracumConfig.cancerdrugsJsonUrl = frontendOverride.cancerdrugsJsonUrl;
+    }
+
+    miracumConfig.fhirspark = miracumConfig.fhirspark || {};
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    miracumConfig.fhirspark.host = `${ENV_FHIRSPARK_HOST ||
+        miracumConfig.fhirspark.host}`;
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    miracumConfig.fhirspark.port = `${ENV_FHIRSPARK_PORT ||
+        miracumConfig.fhirspark.port}`;
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    miracumConfig.cancerdrugsUrl = `${ENV_CANCERDRUGS_URL ||
+        miracumConfig.cancerdrugsUrl}`;
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    miracumConfig.cancerdrugsJsonUrl = `${ENV_CANCERDRUGSJSON_URL ||
+        miracumConfig.cancerdrugsJsonUrl}`;
+
+    localStorage.setItem('cancerdrugsUrl', miracumConfig.cancerdrugsUrl || '');
+    localStorage.setItem(
+        'cancerdrugsJsonUrl',
+        miracumConfig.cancerdrugsJsonUrl || ''
+    );
+
     let localStorageOverride: any = {};
 
     // handle localStorage
@@ -310,6 +356,7 @@ export function initializeServerConfiguration(rawConfiguration: any) {
         ServerConfigDefaults,
         rawConfiguration,
         frontendOverride,
+        miracumConfig,
         localStorageOverride.serverConfig
     );
 

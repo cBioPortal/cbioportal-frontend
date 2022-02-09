@@ -264,7 +264,7 @@ export default class AlleleFreqColumnFormatter {
         return result;
     }
 
-    protected static calcFrequency(mutation: Mutation): number | null {
+    public static calcFrequency(mutation: Mutation): number | null {
         if (!mutation) {
             return null;
         }

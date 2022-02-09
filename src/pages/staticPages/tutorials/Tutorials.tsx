@@ -147,8 +147,8 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         }
                                         target={'_blank'}
                                     >
-                                        Exploring the longitudinal evolution
-                                        of individual patients{' '}
+                                        Exploring the longitudinal evolution of
+                                        individual patients{' '}
                                         <i
                                             className={'fa fa-external-link'}
                                         ></i>

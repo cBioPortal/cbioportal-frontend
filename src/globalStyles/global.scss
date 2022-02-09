@@ -467,7 +467,7 @@ h3 {
 }
 
 .fixedWidth .contentWidth {
-    width: 1200px;
+    width: 800px;
     padding-left: 20px;
     padding-right: 20px;
     margin: 0 auto;
@@ -668,4 +668,8 @@ h2.divider {
     margin: 40px 0 !important;
     padding-bottom: 10px;
     border-bottom: 1px solid $borderColor;
+}
+
+.react-date-picker__inputGroup__input--hasLeadingZero {
+    padding-left: 0 !important;
 }

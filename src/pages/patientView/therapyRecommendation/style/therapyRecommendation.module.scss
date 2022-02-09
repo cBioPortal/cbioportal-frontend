@@ -1,0 +1,229 @@
+.armDiv {
+    margin: 0 0 3px 0;
+}
+.criteriaHr {
+    margin: 3px 0 !important;
+    border-top-color: rgb(221, 221, 221) !important;
+}
+.alterationUl {
+    margin-bottom: -20px !important;
+    list-style-type: none;
+    padding-left: 15px;
+}
+.genomicSpan {
+    margin-right: 5px;
+}
+.tooltip {
+    max-height: 400px;
+    max-width: 600px;
+    overflow: auto;
+}
+
+.icon {
+    .marginLeft {
+        margin-left: 5px;
+    }
+    .marginRight {
+        margin-right: 5px;
+    }
+}
+
+.reasoningInfoContainer {
+    display: flex;
+    justify-content: space-between;
+
+    .sampleIdsContainer {
+        flex: 0 0 auto;
+        width: 30px;
+    }
+
+    .genomicInfoContainer {
+        flex: 1 1 auto;
+        margin: 0 5px 0 0;
+    }
+}
+
+.reasoningContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+
+    .firstLeft {
+        display: flex;
+        flex: 0 0 auto;
+        width: 200px;
+        justify-content: space-between;
+
+        .secondLeft {
+            flex: 0 0 auto;
+            width: auto; /*195px;*/
+            margin-right: 10px;
+        }
+        .secondRight {
+            flex: 1 1 auto;
+        }
+    }
+
+    .firstRight {
+        flex: 1 1 auto;
+        margin: 0 5px 0 0;
+    }
+}
+.powered {
+    padding-right: 9px;
+    text-align: right;
+    font-size: 13px;
+}
+.editContainer {
+    margin: 20% 0 20% 0;
+    text-align: center;
+
+    a:hover {
+        text-decoration: none;
+    }
+}
+.edit {
+    font-size: 14px;
+
+    .repositionButton {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: auto;
+        margin-top: 10px;
+    }
+
+    .editIcon {
+        display: inline-block;
+    }
+
+    .editButton {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        width: 90px;
+        margin-top: 10px;
+    }
+
+    .deleteButton {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+        width: 90px;
+        /*background: red !important;
+        color: white !important;*/
+        color: red !important;
+    }
+
+    .deleteMtbButton {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+        width: 120px;
+        /*background: red !important;
+        color: white !important;*/
+        color: red !important;
+    }
+
+    .addButton {
+        float: left;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 5px;
+        width: 90px;
+        color: white !important;
+        background: #73ad21 !important;
+    }
+
+    .addMtbButton {
+        float: left;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+        width: 120px;
+        color: white !important;
+        background: #73ad21 !important;
+    }
+
+    .addOncoKbButton {
+        float: left;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 5px;
+        width: 180px;
+        color: white !important;
+        background: #5bc0de !important;
+    }
+
+    .testButton {
+        float: left;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+        width: 180px;
+        color: white !important;
+        background: #333333 !important;
+    }
+
+    .loginButton {
+        float: left;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 10px;
+        width: 180px;
+        color: white !important;
+        background: #311da3 !important;
+    }
+}
+
+.successBox {
+    width: 400px;
+    border-radius: 16px;
+    box-shadow: 10px 15px 40px -16px rgb(50, 50, 50);
+    background-color: #90cd3c;
+    font-size: 20px;
+    z-index: 99999999;
+    padding: 20px 20px 20px 20px;
+    box-sizing: border-box;
+    color: #000000;
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    margin-left: -200px;
+    font-weight: 400;
+    line-height: 14px;
+    text-align: center;
+}
+
+.checkbox-align {
+    margin-top: 8px;
+}
+
+/*
+.mtb-table {
+  ​table tr {
+      border-bottom: 3px solid black !important;
+  }​
+
+  table tr:last-child {
+      border-bottom: none;
+  }
+}
+
+.statusBackground {
+  display: block;
+  padding: 10px;
+  width: 130px;
+  border-radius: 10px;
+  background: #73AD21;
+  text-align: center;
+  color: #ffffff;
+}
+*/

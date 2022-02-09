@@ -645,7 +645,7 @@ export default class MutationTable<
                 filterString: string,
                 filterStringUpper: string
             ) => defaultFilter(d, 'mutationStatus', filterStringUpper),
-            visible: false,
+            visible: true,
         };
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
@@ -802,7 +802,7 @@ export default class MutationTable<
                         .genomeNexusMutationAssessorCache as GenomeNexusMutationAssessorCache
                 ),
             headerRender: FunctionalImpactColumnFormatter.headerRender,
-            visible: false,
+            visible: true,
             shouldExclude: () => !this.props.enableFunctionalImpact,
         };
 
@@ -1077,7 +1077,7 @@ export default class MutationTable<
                 </span>
             ),
             defaultSortDirection: 'desc',
-            visible: false,
+            visible: true,
             align: 'left',
         };
 
@@ -1111,7 +1111,7 @@ export default class MutationTable<
                 </span>
             ),
             defaultSortDirection: 'desc',
-            visible: false,
+            visible: true,
             align: 'left',
         };
 
@@ -1163,7 +1163,7 @@ export default class MutationTable<
                 </span>
             ),
             defaultSortDirection: 'desc',
-            visible: false,
+            visible: true,
             align: 'right',
         };
         this._columns[MutationTableColumnType.SIGNAL] = {

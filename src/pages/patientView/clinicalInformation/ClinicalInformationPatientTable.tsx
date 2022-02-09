@@ -7,6 +7,7 @@ import { SHOW_ALL_PAGE_SIZE } from '../../../shared/components/paginationControl
 import { sortByClinicalAttributePriorityThenName } from '../../../shared/lib/SortUtils';
 import { isUrl } from 'cbioportal-frontend-commons';
 import autobind from 'autobind-decorator';
+import parse from 'html-react-parser';
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -39,6 +40,29 @@ export default class ClinicalInformationPatientTable extends React.Component<
                 break;
             default:
                 ret = data.value;
+                break;
+        }
+        return ret;
+    }
+
+    private getHtmlDisplayValue(data: {
+        attribute: string;
+        value: string;
+    }): string | JSX.Element | JSX.Element[] {
+        let ret: string | JSX.Element | JSX.Element[];
+        switch (data.attribute) {
+            case 'Overall Survival (Months)':
+                ret = parseInt(data.value, 10).toFixed(0);
+                break;
+            default:
+                const search = ['Ã¤', 'Ã¼', 'Ã¶', 'Ã„', 'Ã–', 'Ãœ', 'ÃŸ'];
+                const replace = ['ä', 'ü', 'ö', 'Ä', 'Ö', 'Ü', 'ß'];
+                let regex;
+                for (let i = 0; i < search.length; i++) {
+                    regex = new RegExp(search[i], 'g');
+                    data.value = data.value.replace(regex, replace[i]);
+                }
+                ret = parse(data.value);
                 break;
         }
         return ret;
@@ -120,7 +144,9 @@ export default class ClinicalInformationPatientTable extends React.Component<
                             } else if (data.attribute === 'Gene Panel') {
                                 return this.renderGenePanelLinks(data.value);
                             }
-                            return <span>{this.getDisplayValue(data)}</span>;
+                            return (
+                                <span>{this.getHtmlDisplayValue(data)}</span>
+                            );
                         },
                         download: data => this.getDisplayValue(data),
                         filter: (

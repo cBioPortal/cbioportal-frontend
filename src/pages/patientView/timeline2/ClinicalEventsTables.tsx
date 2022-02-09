@@ -42,9 +42,28 @@ const ClinicalEventsTables: React.FunctionComponent<{
                 );
 
                 const cleanedDataCategory = dataCategory.map((row, i) => {
-                    return row.filter((item, i) => {
-                        return !hiddenColumnIndex.includes(i);
-                    });
+                    return row
+                        .filter((item, i) => {
+                            return !hiddenColumnIndex.includes(i);
+                        })
+                        .map(item => {
+                            const search = [
+                                'Ã¤',
+                                'Ã¼',
+                                'Ã¶',
+                                'Ã„',
+                                'Ã–',
+                                'Ãœ',
+                                'ÃŸ',
+                            ];
+                            const replace = ['ä', 'ü', 'ö', 'Ä', 'Ö', 'Ü', 'ß'];
+                            let regex;
+                            for (let i = 0; i < search.length; i++) {
+                                regex = new RegExp(search[i], 'g');
+                                item = item.replace(regex, replace[i]);
+                            }
+                            return item;
+                        });
                 });
 
                 return (

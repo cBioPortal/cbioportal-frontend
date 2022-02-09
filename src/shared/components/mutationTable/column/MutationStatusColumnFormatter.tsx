@@ -37,6 +37,9 @@ export default class MutationStatusColumnFormatter {
             } else if (value.toLowerCase().indexOf('germline') > -1) {
                 content = <span className={styles.germline}>G</span>;
                 needTooltip = true;
+            } else if (value.toLowerCase().indexOf('loh') > -1) {
+                content = <span className={styles.loh}>L</span>;
+                needTooltip = true;
             } else {
                 content = <span className={styles.unknown}>{value}</span>;
             }

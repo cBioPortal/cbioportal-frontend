@@ -23,6 +23,7 @@ import ProgressIndicator, {
 } from '../../../shared/components/progressIndicator/ProgressIndicator';
 import autobind from 'autobind-decorator';
 import { WindowWidthBox } from '../../../shared/components/WindowWidthBox/WindowWidthBox';
+import parse from 'html-react-parser';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -55,7 +56,11 @@ export class ClinicalDataTab extends React.Component<
                         </a>
                     );
                 }
-                return <span data-test={data[key]}>{data[key]}</span>;
+                return (
+                    <span data-test={data[key]}>
+                        {this.format(data[key] || '')}
+                    </span>
+                );
             },
             download: (data: { [id: string]: string }) => data[key] || '',
             sortBy: (data: { [id: string]: any }) => {
@@ -159,6 +164,17 @@ export class ClinicalDataTab extends React.Component<
         },
         default: [],
     });
+
+    readonly format = function(input: string) {
+        const search = ['Ã¤', 'Ã¼', 'Ã¶', 'Ã„', 'Ã–', 'Ãœ', 'ÃŸ'];
+        const replace = ['ä', 'ü', 'ö', 'Ä', 'Ö', 'Ü', 'ß'];
+        let regex;
+        for (let i = 0; i < search.length; i++) {
+            regex = new RegExp(search[i], 'g');
+            input = input.replace(regex, replace[i]);
+        }
+        return parse(input);
+    };
 
     @autobind
     getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {

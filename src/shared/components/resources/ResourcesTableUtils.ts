@@ -23,5 +23,5 @@ export function getFileExtension(url: string) {
 }
 
 export function buildPDFUrl(url: string): string {
-    return `https://docs.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+    return url;
 }

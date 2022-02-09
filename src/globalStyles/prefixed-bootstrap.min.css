@@ -1020,7 +1020,7 @@
 @media (min-width: 992px) {
   .cbioportal-frontend .container {
     width: 970px; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .container {
     width: 1170px; } }
 .cbioportal-frontend .container-fluid {
@@ -1366,7 +1366,7 @@
     margin-left: 91.6666666667%; }
   .cbioportal-frontend .col-md-offset-12 {
     margin-left: 100%; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .col-lg-1, .cbioportal-frontend .col-lg-2, .cbioportal-frontend .col-lg-3, .cbioportal-frontend .col-lg-4, .cbioportal-frontend .col-lg-5, .cbioportal-frontend .col-lg-6, .cbioportal-frontend .col-lg-7, .cbioportal-frontend .col-lg-8, .cbioportal-frontend .col-lg-9, .cbioportal-frontend .col-lg-10, .cbioportal-frontend .col-lg-11, .cbioportal-frontend .col-lg-12 {
     float: left; }
   .cbioportal-frontend .col-lg-1 {
@@ -4226,7 +4226,7 @@
 @media (min-width: 992px) and (max-width: 1199px) {
   .cbioportal-frontend .visible-md-inline-block {
     display: inline-block !important; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .visible-lg {
     display: block !important; }
   .cbioportal-frontend table.visible-lg {
@@ -4235,13 +4235,13 @@
     display: table-row !important; }
   .cbioportal-frontend th.visible-lg, .cbioportal-frontend td.visible-lg {
     display: table-cell !important; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .visible-lg-block {
     display: block !important; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .visible-lg-inline {
     display: inline !important; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .visible-lg-inline-block {
     display: inline-block !important; } }
 @media (max-width: 767px) {
@@ -4253,7 +4253,7 @@
 @media (min-width: 992px) and (max-width: 1199px) {
   .cbioportal-frontend .hidden-md {
     display: none !important; } }
-@media (min-width: 1200px) {
+@media (min-width: 800px) {
   .cbioportal-frontend .hidden-lg {
     display: none !important; } }
 .cbioportal-frontend .visible-print {
