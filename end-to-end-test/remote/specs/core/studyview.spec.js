@@ -90,7 +90,13 @@ describe('study laml_tcga tests', () => {
         waitForNetworkQuiet();
         // Click on three options
         $("[data-test='add-chart-option-fab'] input").click();
+
+        !$('.addChartTabs').isDisplayed() && $(ADD_CHART_BUTTON).click();
+
         $("[data-test='add-chart-option-basophils-cell-count'] input").click();
+
+        !$('.addChartTabs').isDisplayed() && $(ADD_CHART_BUTTON).click();
+
         $("[data-test='add-chart-option-blast-count'] input").click();
 
         // Pause a bit time to let the page render the charts
@@ -100,9 +106,14 @@ describe('study laml_tcga tests', () => {
     });
 
     it('when adding chart with categories more than the pie2Table threshold, the pie chart should be converted to table', () => {
-        $("[data-test='fixed-header-table-search-input']").setValue(
+        $(ADD_CHART_BUTTON).click();
+
+        $("[data-test='fixed-header-table-search-input']").addValue(
             'Other Sample ID'
         );
+
+        !$('.addChartTabs').isDisplayed() && $(ADD_CHART_BUTTON).click();
+
         $(
             "[data-test='add-chart-option-other-sample-id'] input"
         ).waitForDisplayed({ timeout: WAIT_FOR_VISIBLE_TIMEOUT });
