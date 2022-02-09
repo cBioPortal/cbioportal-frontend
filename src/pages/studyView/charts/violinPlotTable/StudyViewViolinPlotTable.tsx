@@ -117,7 +117,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
         return getViolinX(v, this.props.violinBounds, this.violinPlotWidth);
     }
     @computed get violinColumnWidth() {
-        const baseViolinWidth = 180;
+        const baseViolinWidth = 160; //180;
         let additionalViolinWidth = 0;
         if (this.props.dimension.w > 3) {
             // starting after grid width 3, we will absorb
