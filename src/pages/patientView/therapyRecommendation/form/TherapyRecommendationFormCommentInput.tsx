@@ -108,7 +108,7 @@ export const TherapyRecommendationFormCommentInput = (
                 onKeyDown={onKeyDown}
                 value={value}
                 options={options}
-                tabSelectsOption={true}
+                tabSelectsValue={true}
                 backspaceRemovesValue={false}
                 isMulti
             />

@@ -27,7 +27,6 @@ export default class TherapyRecommendationFormReferenceInput extends React.Compo
         );
         return (
             <AsyncCreatableSelect
-                isCreatable
                 isMulti
                 defaultValue={referenceDefault}
                 cacheOptions
