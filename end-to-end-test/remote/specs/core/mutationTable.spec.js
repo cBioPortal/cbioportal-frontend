@@ -6,9 +6,11 @@ var {
     goToUrlAndSetLocalStorage,
     waitForNetworkQuiet,
     setCheckboxChecked,
+    jq,
 } = require('../../../shared/specUtils');
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
+const RESULTS_MUTATION_TABLE_URL = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&Z_SCORE_THRESHOLD=1.0&cancer_study_id=gbm_tcga_pub&cancer_study_list=gbm_tcga_pub&case_set_id=gbm_tcga_pub_sequenced&clinicallist=PROFILED_IN_gbm_tcga_pub_cna_rae&gene_list=TP53%20MDM2%20MDM4&gene_set_choice=user-defined_list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&show_samples=false`;
 
 function waitForGenomeNexusAnnotation() {
     browser.pause(5000); // wait for annotation
@@ -19,11 +21,28 @@ describe('Mutation Table', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
     });
 
+    describe('basic mutation table functions', () => {
+        before(() => {
+            goToUrlAndSetLocalStorage(RESULTS_MUTATION_TABLE_URL);
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            $(
+                'tr:nth-child(1) [data-test=oncogenic-icon-image]'
+            ).waitForDisplayed({ timeout: 30000 });
+        });
+
+        it('filters table with search box', () => {
+            var searchInput = '[data-test=table-search-input]';
+            var numberOfRowsBefore = $$('tr').length;
+            $(searchInput).setValue('TCGA-02-0010-01');
+            browser.waitUntil(() => $$('tr').length < numberOfRowsBefore);
+            assert($$('tr').length < numberOfRowsBefore);
+        });
+    });
+
     describe('try getting exon and hgvsc info from genome nexus', () => {
         before(() => {
-            var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&Z_SCORE_THRESHOLD=1.0&cancer_study_id=gbm_tcga_pub&cancer_study_list=gbm_tcga_pub&case_set_id=gbm_tcga_pub_sequenced&clinicallist=PROFILED_IN_gbm_tcga_pub_cna_rae&gene_list=TP53%20MDM2%20MDM4&gene_set_choice=user-defined_list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&show_samples=false`;
-
-            goToUrlAndSetLocalStorage(url);
+            goToUrlAndSetLocalStorage(RESULTS_MUTATION_TABLE_URL);
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
             $(
@@ -234,6 +253,52 @@ describe('Mutation Table', function() {
                 },
                 60000,
                 `Failed: There's 25 dbsnp rows in table (${res} found)`
+            );
+        });
+    });
+
+    describe('try filtering', () => {
+        it('should show filter dropdown and filter tabe based on text entry', () => {
+            var url = `${CBIOPORTAL_URL}/results/mutations?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=brca_broad&case_set_id=brca_broad_sequenced&data_priority=0&gene_list=TP53&geneset_list=%20&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_broad_mutations&tab_index=tab_visualize`;
+
+            goToUrlAndSetLocalStorage(url);
+
+            const filterButton = $('.lazy-mobx-table th .fa-filter');
+
+            filterButton.waitForExist();
+
+            filterButton.click();
+
+            $('.multilineHeader .dropdown').waitForDisplayed();
+
+            assert.equal(
+                jq('.multilineHeader .dropdown.open input:checkbox').length,
+                28,
+                '28 filter checkboxes available'
+            );
+
+            $('.multilineHeader .dropdown.open input.input-sm').setValue(
+                'BR-V-033'
+            );
+
+            browser.waitUntil(() => {
+                return (
+                    jq('.multilineHeader .dropdown.open input:checkbox')
+                        .length === 1
+                );
+            });
+
+            assert.equal(
+                jq('.multilineHeader .dropdown.open input:checkbox').length,
+                1,
+                'List filtered to one'
+            );
+
+            assert.equal($$('.lazy-mobx-table tbody tr').length, 1);
+
+            assert.equal(
+                $('.lazy-mobx-table tbody tr td').getText(),
+                'BR-V-033'
             );
         });
     });

@@ -1,11 +1,10 @@
 import * as React from 'react';
-import _ from 'lodash';
-import { observer } from 'mobx-react';
 import MobxPromise from 'mobxpromise';
 import {
     IMutationTableProps,
     MutationTableColumnType,
     default as MutationTable,
+    MutationTableColumn,
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
@@ -16,6 +15,8 @@ import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import AddColumns from './AddColumns';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
+import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
+import _ from 'lodash';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -80,27 +81,41 @@ export default class ResultsViewMutationTable extends MutationTable<
         super(props);
         this.props.columnVisibilityProps!.customDropdown = (
             columnVisibilityControlsProps: IColumnVisibilityControlsProps
-        ) => (
-            <AddColumns
-                className={columnVisibilityControlsProps.className}
-                columnVisibility={
-                    columnVisibilityControlsProps.columnVisibility
+        ) => {
+            const resetColumnVisibility = () => {
+                if (columnVisibilityControlsProps.resetColumnVisibility) {
+                    columnVisibilityControlsProps.resetColumnVisibility();
                 }
-                onColumnToggled={columnVisibilityControlsProps.onColumnToggled}
-                resetColumnVisibility={
-                    columnVisibilityControlsProps.resetColumnVisibility
+
+                // resetting the controls is not enough,
+                // we need to also reset the column visibility stored in the user selection store
+                if (this.props.storeColumnVisibility) {
+                    this.props.storeColumnVisibility(undefined); // reset
                 }
-                showResetColumnsButton={
-                    columnVisibilityControlsProps.showResetColumnsButton
-                }
-                clinicalAttributes={
-                    this.props.mutationsTabClinicalAttributes.result!
-                }
-                clinicalAttributeIdToAvailableFrequency={
-                    this.props.clinicalAttributeIdToAvailableFrequency
-                }
-            />
-        );
+            };
+
+            return (
+                <AddColumns
+                    className={columnVisibilityControlsProps.className}
+                    columnVisibility={
+                        columnVisibilityControlsProps.columnVisibility
+                    }
+                    onColumnToggled={
+                        columnVisibilityControlsProps.onColumnToggled
+                    }
+                    resetColumnVisibility={resetColumnVisibility}
+                    showResetColumnsButton={
+                        columnVisibilityControlsProps.showResetColumnsButton
+                    }
+                    clinicalAttributes={
+                        this.props.mutationsTabClinicalAttributes.result!
+                    }
+                    clinicalAttributeIdToAvailableFrequency={
+                        this.props.clinicalAttributeIdToAvailableFrequency
+                    }
+                />
+            );
+        };
     }
 
     componentWillUpdate(nextProps: IResultsViewMutationTableProps) {
@@ -160,6 +175,17 @@ export default class ResultsViewMutationTable extends MutationTable<
                 order: 300,
             };
         }
+
+        // generate namespace columns
+        const namespaceColumns = createNamespaceColumns(
+            this.props.namespaceColumns
+        );
+        _.forIn(
+            namespaceColumns,
+            (column: MutationTableColumn, columnName: string) => {
+                this._columns[columnName] = column;
+            }
+        );
 
         // override default visibility for some columns
         this._columns[

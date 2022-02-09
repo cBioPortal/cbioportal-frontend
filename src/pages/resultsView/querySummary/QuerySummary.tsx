@@ -271,7 +271,9 @@ export default class QuerySummary extends React.Component<
     }
 
     @computed get isQueryOrGeneInvalid() {
-        return this.props.store.genesInvalid || this.props.store.isQueryInvalid;
+        return (
+            this.props.store.genesInvalid || this.props.store.queryExceedsLimit
+        );
     }
 
     render() {

@@ -26,17 +26,14 @@ function waitForAndCheckPlotsTab() {
 function runResultsTestSuite(prefix, options = {}) {
     it(`${prefix} render the oncoprint`, function() {
         waitForOncoprint(10000);
-        var res = browser.checkElement('.oncoprintContainer'); // just hide the controls bc for some reason they keep showing up transparent in this test only
+        var res = checkElementWithMouseDisabled('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
 
-    // can't get it to pass reliably
-    it.skip(`${prefix} igv_tab tab`, function() {
+    it(`${prefix} igv_tab tab`, function() {
         $('a.tabAnchor_cnSegments').click();
-        $('#cnSegmentsFrame').waitForExist({ timeout: 20000 });
-        var res = browser.checkElement('.cnSegmentsMSKTabs', {
-            hide: ['.qtip'],
-        });
+        $('.igvControlDiv').waitForExist({ timeout: 20000 });
+        var res = browser.checkElement('.pillTabs');
         assertScreenShotMatch(res);
     });
 
@@ -170,18 +167,13 @@ function runResultsTestSuite(prefix, options = {}) {
         assertScreenShotMatch(res);
     });
 
-    it.skip(`${prefix} data_download tab`, function() {
+    it(`${prefix} data_download tab`, function() {
         $('a.tabAnchor_download').click();
         //  browser.pause(1000);
-        $('#text_area_gene_alteration_freq', 20000).waitForExist();
-        browser.waitUntil(function() {
-            return (
-                browser.getValue('#text_area_gene_alteration_freq').length > 0
-            );
-        }, 20000);
-        var res = browser.checkElement('[data-test="downloadTabDiv"]', '', {
-            hide: ['.qtip'],
-        });
+        $(`[data-test='downloadTabDiv']`, 20000).waitForExist();
+
+        var res = browser.checkElement(`[data-test="downloadTabDiv"]`);
+
         assertScreenShotMatch(res);
     });
 }

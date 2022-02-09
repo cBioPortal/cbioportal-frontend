@@ -1,5 +1,3 @@
-jest.mock('shared/lib/onMobxPromise');
-
 import { assert } from 'chai';
 import ResultsViewOncoprint from './ResultsViewOncoprint';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';

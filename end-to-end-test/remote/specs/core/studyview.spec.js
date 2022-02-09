@@ -221,28 +221,22 @@ describe('study laml_tcga tests', () => {
             //Skipping it for now since this feature is dependent on session-service and
             // heroku instance of it not stable (would not be active/running all the time)
             // also data-test would be dynamic and depends on chart id (session id)
-            it.skip('a new chart should be added and filtered', () => {
+            it('a new chart should be added and filtered', () => {
                 $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).waitForEnabled();
                 const beforeClick = getNumberOfStudyViewCharts();
                 $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).click();
 
-                $(
-                    "[data-test='chart-container-CUSTOM_FILTERS_3']"
-                ).waitForDisplayed();
+                $('.chartTitle*=Custom Data 1').waitForDisplayed();
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
 
-                // make sure the title is reflected
                 assert(
-                    getTextFromElement(
-                        "[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle"
-                    ) === 'Custom data 1'
+                    $('.userSelections')
+                        .$('span=Custom Data 1')
+                        .isExisting(),
+                    'new chart filter state is reflected in filter breadcrumb'
                 );
-
-                // make sure the chart is filtered
-                const res = browser.checkElement('.userSelections');
-                assertScreenShotMatch(res);
             });
             after(() => {
                 // Close the tooltip
@@ -814,6 +808,21 @@ describe('study view treatments table', () => {
         waitForNetworkQuiet();
 
         const res = checkElementWithMouseDisabled('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+});
+
+describe('study view mutations table', () => {
+    // this guards against server-side regression
+    // in which frequencies are miscalculated for
+    // with mutations which are called but not profile
+    it('shows mutation frequencies correctly for called but unprofiled mutations', () => {
+        var url = `${CBIOPORTAL_URL}/study/summary?id=msk_impact_2017`;
+        goToUrlAndSetLocalStorage(url);
+
+        const res = checkElementWithMouseDisabled(
+            "[data-test='chart-container-msk_impact_2017_mutations']"
+        );
         assertScreenShotMatch(res);
     });
 });

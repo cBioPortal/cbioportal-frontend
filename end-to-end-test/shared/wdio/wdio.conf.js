@@ -10,11 +10,14 @@ var getScreenshotName = require('./getScreenshotName');
 const TEST_TYPE = process.env.TEST_TYPE || 'remote';
 
 const CustomReporter = require('./customReporter.v6');
+const { transformJUNITFiles } = require('../edit-junit');
 
 const debug = process.env.DEBUG;
 const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
+
+const retries = process.env.RETRIES || 2;
 
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
@@ -60,7 +63,7 @@ const LocalCompare = new VisualRegressionCompare.LocalCompare({
     referenceName: getScreenshotName(refDir),
     screenshotName: getScreenshotName(screenDir),
     diffName: getScreenshotName(diffDir),
-    misMatchTolerance: 0.1,
+    misMatchTolerance: 0.01,
 });
 
 function proxyComparisonMethod(target) {
@@ -69,15 +72,27 @@ function proxyComparisonMethod(target) {
         const screenshotPath = this.getScreenshotFile(context);
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
-        const resp = oldProcessScreenshot.apply(this, arguments);
 
+        // add it to test data in case it's needed later
+        context.test.referenceExists = referenceExists;
+
+        const resp = await oldProcessScreenshot.apply(this, arguments);
+
+        // process screenshot will create a reference screenshot
+        // if it's missing.  this will cause subsequent retries to fail
+        // for this reason, we just delete the reference image
+        // so that the test will fail with missing reference error
         if (referenceExists === false) {
             console.log(`MISSING REFERENCE SCREENSHOT: ${referencePath}`);
-            return {
+            console.log('REMOVING auto generated reference image');
+            fs.rmSync(referencePath);
+            const report = {
                 ...this.createResultReport(1000, false, true),
                 referenceExists,
             };
+            return report;
         }
+
         return resp;
     };
 }
@@ -323,6 +338,15 @@ exports.config = {
             },
         ],
         [
+            'junit',
+            {
+                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
+                outputFileFormat: function(opts) {
+                    return `results-${opts.cid}.${opts.capabilities.browserName}.xml`;
+                },
+            },
+        ],
+        [
             CustomReporter,
             {
                 testHome: TEST_TYPE,
@@ -330,15 +354,6 @@ exports.config = {
                 outputFileFormat: function(opts) {
                     // optional
                     return `custom-results-${opts.cid}.${opts.capabilities}.xml`;
-                },
-            },
-        ],
-        [
-            'junit',
-            {
-                outputDir: process.env.JUNIT_REPORT_PATH || './shared/results/',
-                outputFileFormat: function(opts) {
-                    return `results-${opts.cid}.${opts.capabilities.browserName}.xml`;
                 },
             },
         ],
@@ -353,7 +368,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
-        retries: 2,
+        retries: retries,
     },
     //
     // =====
@@ -496,7 +511,13 @@ exports.config = {
      * @param {<Object>} results object containing test results
      */
     onComplete: function(exitCode, config, capabilities, results) {
+        //const resultsDir = process.env.JUNIT_REPORT_PATH;
+
         mergeReports(resultsDir, `${resultsDir}/completeResults.json`);
+
+        // this is going to eliminate duplicate tests caused by retries
+        // leaving, for each unique test name only one result (error or pass)
+        transformJUNITFiles(resultsDir);
     },
     /**
      * Gets executed when a refresh happens.

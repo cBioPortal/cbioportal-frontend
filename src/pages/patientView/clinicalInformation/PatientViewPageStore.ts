@@ -32,11 +32,7 @@ import {
     runInAction,
     makeObservable,
 } from 'mobx';
-import {
-    getBrowserWindow,
-    remoteData,
-    stringListToSet,
-} from 'cbioportal-frontend-commons';
+import { remoteData, stringListToSet } from 'cbioportal-frontend-commons';
 import { IGisticData } from 'shared/model/Gistic';
 import { cached, labelMobxPromises } from 'mobxpromise';
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -202,6 +198,7 @@ import {
     validateMutationalSignatureRawData,
 } from 'shared/lib/GenericAssayUtils/MutationalSignaturesUtils';
 import { getServerConfig } from 'config/config';
+import { getOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
 
 import { IMtb, IDeletions } from '../../../shared/model/TherapyRecommendation';
 import {
@@ -471,7 +468,8 @@ export class PatientViewPageStore {
         invoke: async () =>
             findMutationMolecularProfile(
                 this.molecularProfilesInStudy,
-                this.studyId
+                this.studyId,
+                AlterationTypeConstants.MUTATION_EXTENDED
             ),
     });
 
@@ -1395,7 +1393,11 @@ export class PatientViewPageStore {
         {
             await: () => [this.molecularProfilesInStudy],
             invoke: async () =>
-                findMrnaRankMolecularProfileId(this.molecularProfilesInStudy),
+                findMrnaRankMolecularProfileId(
+                    this.molecularProfilesInStudy.result!.map(
+                        p => p.molecularProfileId
+                    )
+                ),
         },
         null
     );
@@ -1759,6 +1761,10 @@ export class PatientViewPageStore {
         return this.oncoKbInfo.result
             ? this.oncoKbInfo.result.publicInstance
             : USE_DEFAULT_PUBLIC_INSTANCE_FOR_ONCOKB;
+    }
+
+    @computed get mergeOncoKbIcons() {
+        return getOncoKbIconStyle().mergeIcons;
     }
 
     readonly oncoKbAnnotatedGenes = remoteData(

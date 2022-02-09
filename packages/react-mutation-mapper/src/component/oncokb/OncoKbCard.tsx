@@ -1,5 +1,4 @@
 import { IndicatorQueryResp } from 'oncokb-ts-api-client';
-import classnames from 'classnames';
 import { computed, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
 import * as React from 'react';
@@ -20,6 +19,7 @@ export type OncoKbCardProps = {
     usingPublicOncoKbInstance: boolean;
     pmidData: ICache;
     indicator?: IndicatorQueryResp;
+    displayHighestLevelInTabTitle?: boolean;
     handleFeedbackOpen?: React.EventHandler<any>;
 };
 
@@ -45,7 +45,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
         return link;
     }
 
-    // TODO we should replace the tabs with an actual ReactBootstrap Tab,
     public render() {
         const oncokbLogo = (
             <img
@@ -77,6 +76,9 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps> {
                         pmidData={this.props.pmidData}
                         usingPublicOncoKbInstance={
                             this.props.usingPublicOncoKbInstance
+                        }
+                        displayHighestLevelInTabTitle={
+                            this.props.displayHighestLevelInTabTitle
                         }
                     />
                     <div className={mainStyles.footer}>

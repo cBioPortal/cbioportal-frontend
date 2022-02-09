@@ -14,6 +14,22 @@ const ONCOPRINT_TIMEOUT = 15000;
 
 const ALL_CASE_SET_REGEXP = /^All \(\d+\)$/;
 
+describe('Invalid query handling', () => {
+    it('shows query form if no genes are submitted', () => {
+        const url = `${CBIOPORTAL_URL}/results/oncoprint?cancer_study_list=metastatic_solid_tumors_mich_2017`;
+        goToUrlAndSetLocalStorage(url);
+        $('[data-test="studyList"]').waitForDisplayed();
+
+        assert($('[data-test="studyList"]').isDisplayed());
+
+        const elem = $('.studyItem_metastatic_solid_tumors_mich_2017'); // or $(() => document.getElementById('elem'))
+        const checkbox = elem.$(function() {
+            return this.previousSibling;
+        });
+        assert(checkbox.isSelected(), 'study in url is selected in query form');
+    });
+});
+
 describe('cross cancer query', function() {
     it('should show cross cancer bar chart be defai;t with TP53 in title when selecting multiple studies and querying for single gene TP53', function() {
         goToUrlAndSetLocalStorage(
@@ -154,7 +170,7 @@ describe('results page', function() {
             waitForOncoprint(ONCOPRINT_TIMEOUT);
             assert(!$('a.tabAnchor_mutualExclusivity').isDisplayed());
         });
-        it.skip('should not appear in a multiple study query with one gene', function() {
+        it('should not appear in a multiple study query with one gene', function() {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`
             );
@@ -521,7 +537,7 @@ describe('invalid query from url', function() {
         // correct to valid gene symbol RB1
         $('[data-test="geneSet"]').setValue('RB1');
 
-        $('[data-test="queryButton"]').waitForEnabled({ timeout: 10000 });
+        $('[data-test="queryButton"]').waitForEnabled({ timeout: 15000 });
         $('[data-test="queryButton"]').click();
 
         $('#modifyQueryBtn').waitForExist({ timeout: 3000 });

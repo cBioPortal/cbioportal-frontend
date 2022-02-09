@@ -54,11 +54,11 @@ describe('comparison alterations tab', function() {
         clickAlterationTypeCheckBox('Mutations');
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();
-        assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.17%)');
+        assert.strictEqual(selectUnalteredCount('ACAP3'), '9 (1.16%)');
         clickAlterationTypeCheckBox('Deletion');
         submitEnrichmentRequest();
         $('[data-test=LazyMobXTable]').waitForDisplayed();
-        assert.strictEqual(selectUnalteredCount('ACAP3'), '7 (0.91%)');
+        assert.strictEqual(selectUnalteredCount('ACAP3'), '7 (0.90%)');
     });
 });
 

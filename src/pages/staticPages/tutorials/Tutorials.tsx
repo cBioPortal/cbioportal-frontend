@@ -154,6 +154,20 @@ export default class Tutorials extends React.Component<{}, {}> {
                                         ></i>
                                     </a>
                                 </li>
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=kHlFXw2TMzc'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        Using Onco Query Language (OQL) to query based on
+                                        the expression level of genes{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>                                
                             </ol>
                         </li>
                         <li>

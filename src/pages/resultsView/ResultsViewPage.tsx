@@ -47,7 +47,7 @@ import GeneSymbolValidationError from 'shared/components/query/GeneSymbolValidat
 import ResultsViewURLWrapper from 'pages/resultsView/ResultsViewURLWrapper';
 import setWindowVariable from 'shared/lib/setWindowVariable';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
-import onMobxPromise from 'shared/lib/onMobxPromise';
+import { onMobxPromise } from 'cbioportal-frontend-commons';
 import { createQueryStore } from 'shared/lib/createQueryStore';
 import {
     handleLegacySubmission,
@@ -59,7 +59,9 @@ import OQLTextArea, {
 } from 'shared/components/GeneSelectionBox/OQLTextArea';
 import browser from 'bowser';
 import { QueryStore } from '../../shared/components/query/QueryStore';
-import UserMessager from 'shared/components/userMessager/UserMessage';
+import UserMessager, {
+    IUserMessage,
+} from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
 
 export function initStore(
@@ -545,55 +547,22 @@ export default class ResultsViewPage extends React.Component<
         });
     }
 
-    readonly userMessages = remoteData({
+    readonly userMessages = remoteData<IUserMessage[]>({
         await: () => [
             this.resultsViewPageStore.expressionProfiles,
             this.resultsViewPageStore.studies,
         ],
         invoke: () => {
-            // TODO: This is only here temporarily to shepherd users from
-            //      now-deleted Expression tab to the Plots tab.
-            //  Remove a few months after 10/2020
-            if (
-                this.resultsViewPageStore.expressionProfiles.result.length >
-                    0 &&
-                this.resultsViewPageStore.studies.result.length > 1
-            ) {
-                return Promise.resolve([
-                    {
-                        dateEnd: 10000000000000000000,
-                        content: (
-                            <span>
-                                Looking for the <strong>Expression</strong> tab?
-                                {` `}
-                                That functionality is now available{` `}
-                                <a
-                                    style={{
-                                        color: 'white',
-                                        textDecoration: 'underline',
-                                    }}
-                                    onClick={() =>
-                                        this.urlWrapper.updateURL(
-                                            {},
-                                            `results/${ResultsViewTab.EXPRESSION_REDIRECT}`
-                                        )
-                                    }
-                                >
-                                    in the <strong>Plots</strong> tab.
-                                </a>
-                            </span>
-                        ),
-                        id: '2020_merge_expression_to_plots',
-                    },
-                ]);
-            } else {
-                return Promise.resolve([]);
-            }
+            // TODO: make this configurable from outside app
+            return Promise.resolve([]);
         },
     });
 
     @computed get pageContent() {
-        if (this.resultsViewPageStore.invalidStudyIds.result.length > 0) {
+        if (
+            this.resultsViewPageStore.hugoGeneSymbols.length === 0 ||
+            this.resultsViewPageStore.invalidStudyIds.result.length > 0
+        ) {
             return (
                 <div>
                     <div className={'headBlock'}></div>
@@ -616,13 +585,13 @@ export default class ResultsViewPage extends React.Component<
             const tabsReady =
                 this.showTabs &&
                 !this.resultsViewPageStore.genesInvalid &&
-                !this.resultsViewPageStore.isQueryInvalid &&
+                !this.resultsViewPageStore.queryExceedsLimit &&
                 this.resultsViewPageStore.customDriverAnnotationReport
                     .isComplete;
             return (
                 <>
                     {// if query invalid(we only check gene count * sample count < 1,000,000 for now), return error page
-                    this.resultsViewPageStore.isQueryInvalid && (
+                    this.resultsViewPageStore.queryExceedsLimit && (
                         <div
                             className="alert alert-danger queryInvalid"
                             style={{ marginBottom: '40px' }}
@@ -764,10 +733,16 @@ export default class ResultsViewPage extends React.Component<
             );
         }
 
+        // if we don't have a tabId, we need figure out
+        // which tab should be default based upon
+        // characteristics of study (handled in tabId getter)
         if (
             this.resultsViewPageStore.studies.isComplete &&
             !this.resultsViewPageStore.tabId
         ) {
+            // we have to use timeout in order to
+            // circumvent restriction on updating state
+            // inside of render
             setTimeout(() => {
                 this.resultsViewPageStore.handleTabChange(
                     this.resultsViewPageStore.tabId,

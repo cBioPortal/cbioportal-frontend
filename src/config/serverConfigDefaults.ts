@@ -35,6 +35,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     oncoprint_hotspots_default: true,
     oncoprint_hide_vus_default: false,
     oncokb_public_api_url: 'oncokb.org/api/v1',
+    oncokb_merge_icons_by_default: true,
 
     pubmed_url: 'https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>',
 
@@ -45,7 +46,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     show_pathway_mapper: true,
     show_mutation_mapper_tool_grch38: true,
     show_transcript_dropdown: false,
-    show_signal: false,
+    show_signal: true,
     survival_show_p_q_values_in_survival_type_table: true,
     survival_min_group_threshold: 3,
     skin_description:

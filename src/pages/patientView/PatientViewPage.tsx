@@ -81,6 +81,9 @@ import { ClinicalTrialMatchTable } from './clinicalTrialMatch/ClinicalTrialMatch
 import MtbTable from './therapyRecommendation/MtbTable';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
+import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -114,7 +117,7 @@ export default class PatientViewPage extends React.Component<
         | { [columnId: string]: boolean }
         | undefined;
     @observable genePanelModal = { genePanelId: '', isOpen: false };
-
+    @observable mergeMutationTableOncoKbIcons;
     // use this wrapper rather than interacting with the url directly
     @observable
     public urlWrapper: PatientViewUrlWrapper;
@@ -202,6 +205,8 @@ export default class PatientViewPage extends React.Component<
             },
             { fireImmediately: true }
         );
+
+        this.mergeMutationTableOncoKbIcons = this.patientViewPageStore.mergeOncoKbIcons;
     }
 
     private dataStore: PatientViewMutationsDataStore;
@@ -259,6 +264,12 @@ export default class PatientViewPage extends React.Component<
         } else {
             this.urlWrapper.updateURL({ caseId: id, sampleId: undefined });
         }
+    }
+
+    @action.bound
+    protected handleOncoKbIconToggle(mergeIcons: boolean) {
+        this.mergeMutationTableOncoKbIcons = mergeIcons;
+        updateOncoKbIconStyle({ mergeIcons });
     }
 
     @computed get cnaTableStatus() {
@@ -556,6 +567,16 @@ export default class PatientViewPage extends React.Component<
     @action.bound
     private onMutationalSignatureVersionChange(version: string) {
         this.patientViewPageStore.setMutationalSignaturesVersion(version);
+    }
+
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.dataStore.namespaceColumnConfig
+        );
+        return _.concat(
+            PatientViewMutationTable.defaultProps.columns,
+            namespaceColumnNames
+        );
     }
 
     public render() {
@@ -1128,6 +1149,14 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .usingPublicOncoKbInstance
                                                     }
+                                                    mergeOncoKbIcons={
+                                                        this
+                                                            .mergeMutationTableOncoKbIcons
+                                                    }
+                                                    onOncoKbIconToggle={
+                                                        this
+                                                            .handleOncoKbIconToggle
+                                                    }
                                                     civicGenes={
                                                         this
                                                             .patientViewPageStore
@@ -1217,6 +1246,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .existsSomeMutationWithAscnProperty
                                                     }
+                                                    namespaceColumns={
+                                                        this.dataStore
+                                                            .namespaceColumnConfig
+                                                    }
+                                                    columns={this.columns}
                                                 />
                                             </div>
                                         )}
@@ -1235,6 +1269,10 @@ export default class PatientViewPage extends React.Component<
                                         store={this.patientViewPageStore}
                                         onSelectGenePanel={
                                             this.toggleGenePanelModal
+                                        }
+                                        mergeOncoKbIcons={
+                                            this.patientViewPageStore
+                                                .mergeOncoKbIcons
                                         }
                                     />
 
@@ -1304,6 +1342,11 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .usingPublicOncoKbInstance
+                                                    }
+                                                    mergeOncoKbIcons={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .mergeOncoKbIcons
                                                     }
                                                     enableOncoKb={
                                                         getServerConfig()
@@ -1414,6 +1457,13 @@ export default class PatientViewPage extends React.Component<
                                                 }
                                                 sampleManager={sampleManager}
                                                 urlWrapper={this.urlWrapper}
+                                                mergeOncoKbIcons={
+                                                    this
+                                                        .mergeMutationTableOncoKbIcons
+                                                }
+                                                onOncoKbIconToggle={
+                                                    this.handleOncoKbIconToggle
+                                                }
                                             />
                                         </MSKTab>
                                     )}

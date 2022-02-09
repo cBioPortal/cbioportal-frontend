@@ -628,6 +628,12 @@ function selectElementByText(text) {
     return $(`//*[text()="${text}"]`);
 }
 
+function jq(selector) {
+    return browser.execute(selector => {
+        return jQuery(selector).toArray();
+    }, selector);
+}
+
 var openAlterationTypeSelectionMenu = () => {
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').waitForExist();
     $('[data-test=AlterationEnrichmentTypeSelectorButton]').click();
@@ -696,4 +702,5 @@ module.exports = {
     setCheckboxChecked,
     openAlterationTypeSelectionMenu,
     strIsNumeric,
+    jq,
 };

@@ -294,7 +294,19 @@ export default class AnnotationColumnFormatter {
         return <GenericAnnotation {...columnProps} annotation={annotation} />;
     }
 
-    public static headerRender(name: string, width: number) {
-        return <AnnotationHeader name={name} width={width} />;
+    public static headerRender(
+        name: string,
+        width: number,
+        mergeOncoKbIcons?: boolean,
+        onOncoKbIconToggle?: (mergeIcons: boolean) => void
+    ) {
+        return (
+            <AnnotationHeader
+                name={name}
+                width={width}
+                mergeOncoKbIcons={mergeOncoKbIcons}
+                onOncoKbIconToggle={onOncoKbIconToggle}
+            />
+        );
     }
 }

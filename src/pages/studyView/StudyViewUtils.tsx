@@ -1,44 +1,44 @@
 import _ from 'lodash';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import {
-    ClinicalDataCount,
-    SampleIdentifier,
-    StudyViewFilter,
-    ClinicalDataBinFilter,
-    DataFilterValue,
-    GenomicDataBin,
-    GenomicDataCount,
-    GenericAssayDataMultipleStudyFilter,
-    GenericAssayData,
-    GeneFilterQuery,
-    DensityPlotBin,
-} from 'cbioportal-ts-api-client';
-import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalData,
+    ClinicalDataBinFilter,
+    ClinicalDataCount,
+    ClinicalDataMultiStudyFilter,
+    DataFilterValue,
+    DensityPlotBin,
     Gene,
+    GeneFilterQuery,
+    GenePanelData,
+    GenericAssayData,
+    GenericAssayDataMultipleStudyFilter,
+    GenomicDataBin,
+    GenomicDataCount,
+    MolecularDataMultipleStudyFilter,
+    MolecularProfile,
+    NumericGeneMolecularData,
     PatientIdentifier,
     Sample,
-    ClinicalData,
-    ClinicalDataMultiStudyFilter,
-    MolecularProfile,
-    GenePanelData,
-    MolecularDataMultipleStudyFilter,
-    NumericGeneMolecularData,
+    SampleIdentifier,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import * as React from 'react';
 import { buildCBioPortalPageUrl } from '../../shared/api/urls';
 import { BarDatum } from './charts/barChart/BarChart';
 import {
-    GenomicChart,
     GenericAssayChart,
-    XVsYChart,
-    XVsYChartSettings,
+    GenomicChart,
+    XvsYScatterChart,
+    XvsYChartSettings,
+    XvsYViolinChart,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import defaultClient from 'shared/api/cbioportalClientInstance';
+import client from 'shared/api/cbioportalClientInstance';
 import {
     ChartDimension,
     ChartTypeEnum,
@@ -48,8 +48,12 @@ import {
 import { IStudyViewDensityScatterPlotDatum } from './charts/scatterPlot/StudyViewDensityScatterPlot';
 import MobxPromise from 'mobxpromise';
 import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_HOMDEL,
+    EditableSpan,
     getTextWidth,
     stringListToIndexSet,
+    toPromise,
 } from 'cbioportal-frontend-commons';
 import { DEFAULT_NA_COLOR, getClinicalValueColor } from 'shared/lib/Colors';
 import { StudyViewComparisonGroup } from '../groupComparison/GroupComparisonUtils';
@@ -64,11 +68,10 @@ import {
     StructuralVariantProfilesEnum,
 } from 'shared/components/query/QueryStoreUtils';
 import {
-    GenericAssayDataBin,
     ClinicalDataBin,
+    GenericAssayDataBin,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
-import { CNA_COLOR_AMP, CNA_COLOR_HOMDEL } from 'cbioportal-frontend-commons';
 import { observer } from 'mobx-react';
 import {
     ChartUserSetting,
@@ -76,7 +79,8 @@ import {
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
 import { getServerConfig } from 'config/config';
-import client from 'shared/api/cbioportalClientInstance';
+import joinJsx from 'shared/lib/joinJsx';
+import { BoundType, NumberRange } from 'range-ts';
 
 // Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export enum ClinicalDataTypeEnum {
@@ -122,7 +126,8 @@ export type AnalysisGroup = {
 
 export enum ChartMetaDataTypeEnum {
     CUSTOM_DATA = 'Custom_Data',
-    X_VS_Y = 'X_Vs_Y',
+    X_VS_Y_SCATTER = 'X_Vs_Y_Scatter',
+    X_VS_Y_VIOLIN = 'X_Vs_Y_Violin',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic',
     GENE_SPECIFIC = 'Gene_Specific',
@@ -569,8 +574,8 @@ function getBinStatsForTooltip(d: IStudyViewDensityScatterPlotDatum) {
 }
 
 export function makeDensityScatterPlotTooltip(
-    chartInfo: XVsYChart,
-    chartSettings: XVsYChartSettings
+    chartInfo: XvsYScatterChart,
+    chartSettings: XvsYChartSettings
 ) {
     return (d: IStudyViewDensityScatterPlotDatum) => {
         const binStats = getBinStatsForTooltip(d);
@@ -628,7 +633,7 @@ export async function getSampleToClinicalData(
     return ret;
 }
 
-export function generateXVsYScatterPlotDownloadData(
+export function generateXvsYScatterPlotDownloadData(
     xAttr: ClinicalAttribute,
     yAttr: ClinicalAttribute,
     samples: Sample[],
@@ -872,7 +877,9 @@ export function getVirtualStudyDescription(
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            clinicalDataFilter.values
+                            clinicalDataFilter.values,
+                            () => {},
+                            true
                         )}`
                     );
                 }
@@ -887,7 +894,9 @@ export function getVirtualStudyDescription(
                 if (name) {
                     filterLines.push(
                         `- ${name}: ${intervalFiltersDisplayValue(
-                            genomicDataFilter.values
+                            genomicDataFilter.values,
+                            () => {},
+                            true
                         )}`
                     );
                 }
@@ -904,7 +913,9 @@ export function getVirtualStudyDescription(
                     if (name) {
                         filterLines.push(
                             `- ${name}: ${intervalFiltersDisplayValue(
-                                genericAssayDataFilters.values
+                                genericAssayDataFilters.values,
+                                () => {},
+                                true
                             )}`
                         );
                     }
@@ -1050,7 +1061,7 @@ export function toSvgDomNodeWithLegend(
 }
 
 export function getDataIntervalFilterValues(
-    data: Array<DataBin | GenomicDataBin | GenericAssayDataBin>
+    data: Array<{ start?: number; end?: number; specialValue?: string }>
 ): DataFilterValue[] {
     return data.map(
         dataBin =>
@@ -1207,6 +1218,74 @@ export function isEveryBinDistinct(data?: DataBin[]) {
         data.length > 0 &&
         data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
+}
+
+function createRangeForDataBinOrFilter(
+    start?: number,
+    end?: number,
+    specialValue?: string
+): NumberRange {
+    if (start !== undefined && end !== undefined) {
+        if (start === end) {
+            return NumberRange.closed(start, end); // [start, end]
+        } else {
+            return NumberRange.openClosed(start, end); // (start, end]
+        }
+    } else if (start !== undefined && end === undefined) {
+        if (specialValue === '>=') {
+            return NumberRange.downTo(start, BoundType.CLOSED); // [start, Infinity)
+        } else {
+            return NumberRange.downTo(start, BoundType.OPEN); // (start, Infinity)
+        }
+    } else if (start === undefined && end !== undefined) {
+        if (specialValue === '<') {
+            return NumberRange.upTo(end, BoundType.OPEN); // (-Infinity, end)
+        } else {
+            return NumberRange.upTo(end, BoundType.CLOSED); // (-Infinity, end]
+        }
+    } else {
+        return NumberRange.all();
+    }
+}
+
+export function isDataBinSelected(
+    dataBin: DataBin,
+    filters: DataFilterValue[]
+): boolean {
+    let isSelected: boolean;
+
+    // numerical bin:
+    // the entire bin range (from bin.start to bin.end) should be enclosed by at least one of the filters
+    if (dataBin.start !== undefined || dataBin.end !== undefined) {
+        const numericalFilters = filters.filter(
+            filter => filter.start !== undefined || filter.end !== undefined
+        );
+        isSelected = _.some(numericalFilters, filter => {
+            const filterRange = createRangeForDataBinOrFilter(
+                filter.start,
+                filter.end,
+                filter.value
+            );
+            const binRange = createRangeForDataBinOrFilter(
+                dataBin.start,
+                dataBin.end,
+                dataBin.specialValue
+            );
+            return filterRange.encloses(binRange);
+        });
+    }
+    // categorical bin:
+    // there should be at least one filter with the same filter value
+    else {
+        const categoricalFilters = filters.filter(
+            filter => filter.start === undefined && filter.end === undefined
+        );
+        isSelected = _.compact(
+            categoricalFilters.map(filter => filter.value)
+        ).includes(dataBin.specialValue);
+    }
+
+    return isSelected;
 }
 
 export function isLogScaleByDataBins(data?: DataBin[]) {
@@ -1376,7 +1455,21 @@ export function closestIntegerPowerOfTen(
     }
 }
 
-export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput?: false
+): JSX.Element;
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput: true
+): string;
+export function intervalFiltersDisplayValue(
+    values: DataFilterValue[],
+    onUpdate: (newRange: { start?: number; end?: number }) => void,
+    stringOutput?: boolean
+) {
     const categories = values
         .filter(value => value.start === undefined && value.end === undefined)
         .map(value => value.value);
@@ -1392,27 +1485,121 @@ export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
             ? numericals[numericals.length - 1].end
             : undefined;
 
-    let displayValues: string[] = [];
+    let displayValues: any[] = [];
 
     if (numericals.length > 0) {
+        const startValue = formatValue(start!);
+        const endValue = formatValue(end!);
+        const startText = stringOutput ? (
+            startValue
+        ) : (
+            <EditableSpan
+                value={startValue}
+                className={styles.editableSpanStyles}
+                setValue={val => {
+                    if (!val) {
+                        // empty start
+                        onUpdate({ end });
+                    } else {
+                        const valNum = parseFloat(val);
+                        if (valNum === end!) {
+                            // invalid value
+                            return false;
+                        }
+                        if (valNum > end!) {
+                            // invert range
+                            onUpdate({ start: end, end: valNum });
+                        } else {
+                            onUpdate({ start: valNum, end });
+                        }
+                        return true;
+                    }
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+        const endText = stringOutput ? (
+            endValue
+        ) : (
+            <EditableSpan
+                value={endValue}
+                className={styles.editableSpanStyles}
+                setValue={val => {
+                    if (!val) {
+                        // empty end
+                        onUpdate({ start });
+                    } else {
+                        const valNum = parseFloat(val);
+                        if (valNum === start!) {
+                            // invalid value
+                            return false;
+                        }
+                        if (valNum < start!) {
+                            // invert range
+                            onUpdate({ start: valNum, end: start });
+                        } else {
+                            onUpdate({ start, end: valNum });
+                        }
+                    }
+                    return true;
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+        const startEqualsEndText = stringOutput ? (
+            startValue
+        ) : (
+            <EditableSpan
+                value={startValue}
+                className={styles.editableSpanStyles}
+                setValue={val => {
+                    if (!val) {
+                        // empty
+                        onUpdate({ start: undefined, end: undefined });
+                    } else {
+                        onUpdate({
+                            start: parseFloat(val),
+                            end: parseFloat(val),
+                        });
+                    }
+                }}
+                numericOnly={true}
+                allowEmptyValue={true}
+                textFieldAppearance={true}
+            />
+        );
+
+        const intervalDisplayValues = [];
         // both ends open
         if (start === undefined && end === undefined) {
-            displayValues.push('All Numbers');
+            intervalDisplayValues.push('All Numbers');
         } else if (start === undefined) {
-            displayValues.push(`≤ ${formatValue(end)}`);
+            intervalDisplayValues.push(`≤ `);
+            intervalDisplayValues.push(endText);
         } else if (end === undefined) {
-            displayValues.push(`> ${formatValue(start)}`);
+            intervalDisplayValues.push(`> `);
+            intervalDisplayValues.push(startText);
         } else if (start === end) {
-            displayValues.push(`${formatValue(start)}`);
+            intervalDisplayValues.push(startEqualsEndText);
         } else if (numericals[0].start === numericals[0].end) {
-            displayValues.push(
-                `${formatValue(start)} ≤ x ≤ ${formatValue(end)}`
-            );
+            intervalDisplayValues.push(startText);
+            intervalDisplayValues.push(` ≤ x ≤ `);
+            intervalDisplayValues.push(endText);
         } else {
-            displayValues.push(
-                `${formatValue(start)} < x ≤ ${formatValue(end)}`
-            );
+            intervalDisplayValues.push(startText);
+            intervalDisplayValues.push(` < x ≤ `);
+            intervalDisplayValues.push(endText);
         }
+
+        displayValues.push(
+            stringOutput
+                ? intervalDisplayValues.join('')
+                : intervalDisplayValues
+        );
     }
 
     // copy categories as is
@@ -1420,9 +1607,19 @@ export function intervalFiltersDisplayValue(values: DataFilterValue[]) {
         displayValues = displayValues.concat(categories);
     }
 
-    return displayValues.length > 0 ? displayValues.join(', ') : '';
+    if (stringOutput) {
+        return displayValues.length > 0 ? displayValues.join(', ') : '';
+    } else {
+        return displayValues.length > 0 ? (
+            joinJsx(displayValues, <span>{`, `}</span>)
+        ) : (
+            <>''</>
+        );
+    }
 }
 
+export function formatValue(value: number): string;
+export function formatValue(value: undefined): undefined;
 export function formatValue(value: number | undefined) {
     let formatted;
 
@@ -2426,7 +2623,8 @@ export function getChartSettingsMap(
     chartTypeSet: { [uniqueId: string]: ChartType },
     genomicChartSet: { [id: string]: GenomicChart },
     genericAssayChartSet: { [id: string]: GenericAssayChart },
-    xVsYChartSet: { [id: string]: XVsYChart },
+    XvsYScatterChartSet: { [id: string]: XvsYScatterChart },
+    XvsYViolinChartSet: { [id: string]: XvsYViolinChart },
     clinicalDataBinFilterSet: {
         [uniqueId: string]: ClinicalDataBinFilter & { showNA?: boolean };
     },
@@ -2482,10 +2680,17 @@ export function getChartSettingsMap(
             chartSetting.dataType = genericAssayChart.dataType;
             chartSetting.patientLevelProfile = genericAssayChart.patientLevel;
         }
-        const xVsYChart = xVsYChartSet[id];
-        if (xVsYChart) {
-            chartSetting.xAttrId = xVsYChart.xAttr.clinicalAttributeId;
-            chartSetting.yAttrId = xVsYChart.yAttr.clinicalAttributeId;
+        const XvsYScatterChart = XvsYScatterChartSet[id];
+        if (XvsYScatterChart) {
+            chartSetting.xAttrId = XvsYScatterChart.xAttr.clinicalAttributeId;
+            chartSetting.yAttrId = XvsYScatterChart.yAttr.clinicalAttributeId;
+        }
+        const XvsYViolinChart = XvsYViolinChartSet[id];
+        if (XvsYViolinChart) {
+            chartSetting.categoricalAttrId =
+                XvsYViolinChart.categoricalAttr.clinicalAttributeId;
+            chartSetting.numericalAttrId =
+                XvsYViolinChart.numericalAttr.clinicalAttributeId;
         }
         if (clinicalDataBinFilterSet[id]) {
             if (clinicalDataBinFilterSet[id].disableLogScale) {
@@ -3354,6 +3559,85 @@ export function getUserGroupColor(
         : undefined;
 }
 
+export async function updateCustomIntervalFilter(
+    newRange: { start?: number; end?: number },
+    chartMeta: Pick<ChartMeta, 'uniqueKey'>,
+    getDataBinsPromise: (
+        chartMeta: Pick<ChartMeta, 'uniqueKey'>
+    ) => MobxPromise<DataBin[]>,
+    getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
+    updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
+    updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
+) {
+    /* This function does what is necessary in order to set a custom range to filter a numerical attribute.
+     What makes this necessary is that filters are specified in terms of data bins. Thus,
+     to set up a custom range, we must first set up custom data bins, then use those custom
+     bins to define the filter. At the same time, we need to retain the existing
+     categorical filters (e.g. NA).
+     */
+
+    const currentCategoricals = getCurrentFilters(chartMeta.uniqueKey).filter(
+        bin => bin.start === undefined && bin.end === undefined
+    );
+    const allBins: DataBin[] = getDataBinsPromise(chartMeta).result!;
+
+    // Determine the new custom bin bounds (e.g. 0, 3, 5, 10) by taking the
+    // current ones, adding the new custom range bounds, and then sorting
+    // and getting unique elements.
+    const allNumericals = allBins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+    const newBinBounds = _.chain(allNumericals)
+        .flatMap(bin => [bin.start, bin.end]) // put starts and ends into a list
+        .concat(newRange.start, newRange.end) // add update
+        .filter(x => x !== undefined && x !== null) // get rid of any non-numbers
+        .uniq() // get uniques
+        .sortBy() // sort in ascending order
+        .value() as number[];
+
+    // Invoke the given callback to update the custom bins
+    updateCustomBins(chartMeta.uniqueKey, newBinBounds);
+
+    // Now, we will use the custom bins to define the new filter.
+    // First, wait for the new bins to come back from the server.
+    const newBins: DataBin[] = await toPromise(getDataBinsPromise(chartMeta)!);
+    // Get the numerical ones only
+    const newNumericals = newBins.filter(
+        bin => bin.start !== undefined || bin.end !== undefined
+    );
+    // Find the desired bins in the API response
+    const startBinIndex =
+        newRange.start === undefined
+            ? 0
+            : newNumericals.findIndex(
+                  bin => bin.start !== undefined && bin.start >= newRange.start!
+              );
+    const endBinIndex =
+        newRange.end === undefined
+            ? newNumericals.length - 1
+            : _.findLastIndex(
+                  newNumericals,
+                  bin => bin.end !== undefined && bin.end <= newRange.end!
+              );
+
+    const targetNumericalBins = newNumericals.slice(
+        startBinIndex,
+        endBinIndex + 1
+    );
+
+    const categoricalsAsBins = currentCategoricals.map(v => ({
+        start: v.start,
+        end: v.end,
+        specialValue: v.value,
+    })) as DataBin[];
+
+    // Update the filter, making sure to retain the existing categorical filters
+    updateIntervalFilters(
+        chartMeta.uniqueKey,
+        targetNumericalBins.concat(categoricalsAsBins)
+    );
+}
+
 export function getBinBounds(bins: DensityPlotBin[]) {
     const x = {
         max: Number.NEGATIVE_INFINITY,
@@ -3381,14 +3665,14 @@ export function logScalePossible(clinicalAttributeId: string) {
     return clinicalAttributeId === SpecialChartsUniqueKeyEnum.MUTATION_COUNT;
 }
 
-export function makeXVsYUniqueKey(xAttrId: string, yAttrId: string) {
+export function makeXvsYUniqueKey(xAttrId: string, yAttrId: string) {
     // make key the same regardless of axis order - only one chart allowed
     //  for a given pair
     const sorted = _.sortBy([xAttrId, yAttrId]);
     return `X-VS-Y-${sorted[0]}-${sorted[1]}`;
 }
 
-export function makeXVsYDisplayName(
+export function makeXvsYDisplayName(
     xAttr: ClinicalAttribute,
     yAttr: ClinicalAttribute
 ) {
@@ -3403,7 +3687,18 @@ export function isQueriedStudyAuthorized(study: CancerStudy) {
     );
 }
 
-export const FGA_VS_MUTATION_COUNT_KEY = makeXVsYUniqueKey(
+export function excludeFiltersForAttribute(
+    filters: StudyViewFilter,
+    clinicalAttributeId: string
+) {
+    let { clinicalDataFilters, ...rest } = filters;
+    clinicalDataFilters = clinicalDataFilters?.filter(
+        f => f.attributeId !== clinicalAttributeId
+    );
+    return { clinicalDataFilters, ...rest };
+}
+
+export const FGA_VS_MUTATION_COUNT_KEY = makeXvsYUniqueKey(
     SpecialChartsUniqueKeyEnum.FRACTION_GENOME_ALTERED,
     SpecialChartsUniqueKeyEnum.MUTATION_COUNT
 );

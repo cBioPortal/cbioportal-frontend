@@ -465,6 +465,13 @@ export class QueryStore {
         this._selectedSampleListId = value;
     }
 
+    @computed
+    public get selectedSampleList() {
+        return this.selectedSampleListId
+            ? this.dict_sampleListId_sampleList[this.selectedSampleListId]
+            : undefined;
+    }
+
     @observable caseIds = '';
 
     // this variable is used to set set custom case ids if the query is a shared virtual study query
@@ -982,14 +989,15 @@ export class QueryStore {
                                 profile.molecularAlterationType +
                                 profile.datatype
                         )
-                        .map(alterationTypeProfiles => {
-                            // A study can have multiple profiles for same alteration type and datatpye.
-                            // we need just one profile of each
-                            return getSuffixOfMolecularProfile(
-                                alterationTypeProfiles[0]
+                        .reduce((agg: string[], alterationTypeProfiles) => {
+                            const profileTypes = alterationTypeProfiles.map(
+                                p => {
+                                    return getSuffixOfMolecularProfile(p);
+                                }
                             );
-                        })
-                        .value();
+                            agg.push(...profileTypes);
+                            return agg;
+                        }, []);
                 })
                 .value();
 
@@ -1758,7 +1766,7 @@ export class QueryStore {
                 Number(this.volcanoPlotSelectedPercentile.value),
                 0,
                 1,
-                this.defaultSelectedSampleListId
+                this.selectedSampleListId
             );
             return hierarchyData;
         },

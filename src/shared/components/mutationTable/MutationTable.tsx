@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { observer } from 'mobx-react';
-import { observable, computed, makeObservable } from 'mobx';
+import {
+    action,
+    observable,
+    computed,
+    makeObservable,
+    makeAutoObservable,
+} from 'mobx';
 import _ from 'lodash';
 import {
     default as LazyMobXTable,
@@ -57,8 +63,8 @@ import {
     IHotspotIndex,
     IMyCancerGenomeData,
     RemoteData,
+    IMyVariantInfoIndex,
 } from 'cbioportal-utils';
-import { IMyVariantInfoIndex } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import { CancerGene } from 'oncokb-ts-api-client';
 import { getAnnotationData, IAnnotation } from 'react-mutation-mapper';
@@ -106,11 +112,14 @@ export interface IMutationTableProps {
     cosmicData?: ICosmicData;
     oncoKbData?: RemoteData<IOncoKbData | Error | undefined>;
     usingPublicOncoKbInstance: boolean;
+    mergeOncoKbIcons?: boolean;
+    onOncoKbIconToggle?: (mergeIcons: boolean) => void;
     civicGenes?: RemoteData<ICivicGeneIndex | undefined>;
     civicVariants?: RemoteData<ICivicVariantIndex | undefined>;
     mrnaExprRankMolecularProfileId?: string;
     discreteCNAMolecularProfileId?: string;
     columns?: ExtendedMutationTableColumnType[];
+    namespaceColumns?: NamespaceColumnConfig;
     data?: Mutation[][];
     dataStore?: ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
@@ -125,9 +134,13 @@ export interface IMutationTableProps {
     selectedTranscriptId?: string;
     columnVisibility?: { [columnId: string]: boolean };
     columnVisibilityProps?: IColumnVisibilityControlsProps;
-    storeColumnVisibility?: (columnVisibility: {
-        [columnId: string]: boolean;
-    }) => void;
+    storeColumnVisibility?: (
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) => void;
     onRowClick?: (d: Mutation[]) => void;
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
@@ -140,6 +153,12 @@ export interface IMutationTableProps {
 }
 import MobxPromise from 'mobxpromise';
 import { getServerConfig } from 'config/config';
+import {
+    calculateOncoKbContentPadding,
+    calculateOncoKbContentWidthOnNextFrame,
+    calculateOncoKbContentWidthWithInterval,
+    DEFAULT_ONCOKB_CONTENT_WIDTH,
+} from 'shared/lib/AnnotationColumnUtils';
 
 export enum MutationTableColumnType {
     STUDY = 'Study of Origin',
@@ -186,11 +205,21 @@ export enum MutationTableColumnType {
     GENE_PANEL = 'Gene panel',
     SIGNAL = 'SIGNAL',
 }
-type ExtendedMutationTableColumnType = MutationTableColumnType | string;
+export type ExtendedMutationTableColumnType = MutationTableColumnType | string;
 
-type MutationTableColumn = Column<Mutation[]> & {
+export type MutationTableColumn = Column<Mutation[]> & {
     order?: number;
     shouldExclude?: () => boolean;
+};
+
+// Namespace columns are custom columns that can be added to the MAF file.
+// They are imported via the namespace configuration during data import.
+// See: https://docs.cbioportal.org/5.1-data-loading/data-loading/file-formats#adding-mutation-annotation-columns-through-namespaces
+// The MutationTable component will render these columns dynamically.
+export type NamespaceColumnConfig = {
+    [namespaceName: string]: {
+        [namespaceColumnName: string]: 'string' | 'number';
+    };
 };
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {}
@@ -239,16 +268,18 @@ export function defaultFilter(
     }
 }
 
+const ANNOTATION_ELEMENT_ID = 'mutation-annotation';
+
 @observer
 export default class MutationTable<
     P extends IMutationTableProps
 > extends React.Component<P, {}> {
-    @observable protected _columns: Record<
+    protected _columns: Record<
         ExtendedMutationTableColumnType,
         MutationTableColumn
     >;
     @observable.ref public table: LazyMobXTable<Mutation[]> | null = null;
-    @observable oncokbWidth = 22;
+    @observable oncokbWidth = DEFAULT_ONCOKB_CONTENT_WIDTH;
     private oncokbInterval: any;
 
     public static defaultProps = {
@@ -273,15 +304,13 @@ export default class MutationTable<
             MutationTableColumn
         >;
         this.generateColumns();
-        this.oncokbInterval = setInterval(() => {
-            const oncokbContentWidth = document
-                .getElementById('mutation-annotation')
-                ?.getElementsByClassName('oncokb-content')[0]?.clientWidth;
-            if (oncokbContentWidth) {
-                this.oncokbWidth = Number(oncokbContentWidth) || 22;
-                clearInterval(this.oncokbInterval);
-            }
-        }, 500);
+
+        // here we wait for the oncokb icons to fully finish rendering
+        // then update the oncokb width in order to align annotation column header icons with the cell content
+        this.oncokbInterval = calculateOncoKbContentWidthWithInterval(
+            ANNOTATION_ELEMENT_ID,
+            oncoKbContentWidth => (this.oncokbWidth = oncoKbContentWidth)
+        );
     }
 
     public destroy() {
@@ -313,6 +342,20 @@ export default class MutationTable<
 
         // return Unknown, this should not happen...
         return 'Unknown';
+    }
+
+    @action.bound
+    protected handleOncoKbIconModeToggle(mergeIcons: boolean) {
+        if (this.props.onOncoKbIconToggle) {
+            this.props.onOncoKbIconToggle(mergeIcons);
+
+            // we need to set the OncoKB width on the next render cycle, otherwise it is not updated yet
+            calculateOncoKbContentWidthOnNextFrame(
+                ANNOTATION_ELEMENT_ID,
+                width =>
+                    (this.oncokbWidth = width || DEFAULT_ONCOKB_CONTENT_WIDTH)
+            );
+        }
     }
 
     protected generateColumns() {
@@ -825,7 +868,12 @@ export default class MutationTable<
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: MutationTableColumnType.ANNOTATION,
             headerRender: (name: string) =>
-                AnnotationColumnFormatter.headerRender(name, this.oncokbWidth),
+                AnnotationColumnFormatter.headerRender(
+                    name,
+                    this.oncokbWidth,
+                    this.props.mergeOncoKbIcons,
+                    this.handleOncoKbIconModeToggle
+                ),
             render: (d: Mutation[]) => (
                 <span id="mutation-annotation">
                     {AnnotationColumnFormatter.renderFunction(d, {
@@ -835,6 +883,10 @@ export default class MutationTable<
                         oncoKbCancerGenes: this.props.oncoKbCancerGenes,
                         usingPublicOncoKbInstance: this.props
                             .usingPublicOncoKbInstance,
+                        mergeOncoKbIcons: this.props.mergeOncoKbIcons,
+                        oncoKbContentPadding: calculateOncoKbContentPadding(
+                            this.oncokbWidth
+                        ),
                         pubMedCache: this.props.pubMedCache,
                         civicGenes: this.props.civicGenes,
                         civicVariants: this.props.civicVariants,
@@ -1166,6 +1218,7 @@ export default class MutationTable<
             visible: true,
             align: 'right',
         };
+
         this._columns[MutationTableColumnType.SIGNAL] = {
             name: MutationTableColumnType.SIGNAL,
             render: (d: Mutation[]) =>
@@ -1200,6 +1253,12 @@ export default class MutationTable<
             visible: false,
             shouldExclude: () => !getServerConfig().show_signal,
         };
+
+        // we do not want to make the JSX observable as this causes bugs
+        // i believe the only thing that needs to be observable is the boolean visible flag
+        // so really this should be managed outside of this collection but refactoring too
+        // difficult
+        this._columns = observable(this._columns, { tooltip: false });
     }
 
     @computed

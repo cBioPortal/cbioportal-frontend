@@ -9,6 +9,7 @@ import {
     formatNumberValueInSignificantDigits,
     defaultSortMethod,
     generateTumorTypeDecomposition,
+    Pathogenicity,
 } from 'cbioportal-utils';
 import { VariantAnnotation } from 'genome-nexus-ts-api-client';
 import {
@@ -24,6 +25,7 @@ type SignalProps = {
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >;
+    mutationType?: Pathogenicity;
 };
 
 type SignalValueProps = SignalProps & {
@@ -34,9 +36,10 @@ export function getSignalData(
     mutation: Mutation,
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
-    >
-): IExtendedSignalMutation {
-    let signalData = {} as IExtendedSignalMutation;
+    >,
+    mutationType?: Pathogenicity // mutationType could be "germline", "somatic", or "undefined" which means both
+): IExtendedSignalMutation[] {
+    let signalData: IExtendedSignalMutation[] = [];
     const variantAnnotation = indexedVariantAnnotations
         ? getVariantAnnotation(mutation, indexedVariantAnnotations.result)
         : undefined;
@@ -46,12 +49,50 @@ export function getSignalData(
         variantAnnotation.signalAnnotation.annotation &&
         variantAnnotation.signalAnnotation.annotation.length > 0
     ) {
-        variantAnnotation.signalAnnotation.annotation.forEach(annotation => {
-            // only have one germline annotation
-            if (annotation.mutationStatus.includes('germline')) {
-                signalData = extendMutations([annotation])[0];
+        // if mutation is somatic OR germline, get annotation depending on mutationType
+        if (variantAnnotation.signalAnnotation.annotation.length === 1) {
+            if (
+                (mutationType === Pathogenicity.GERMLINE &&
+                    variantAnnotation.signalAnnotation.annotation[0].mutationStatus.includes(
+                        'germline'
+                    )) ||
+                (mutationType === Pathogenicity.SOMATIC &&
+                    variantAnnotation.signalAnnotation.annotation[0].mutationStatus.includes(
+                        'somatic'
+                    ))
+            ) {
+                signalData = extendMutations([
+                    variantAnnotation.signalAnnotation.annotation[0],
+                ]);
             }
-        });
+        }
+        // if mutation is both somatic AND germline, get annotation for both or get one of them depending on mutationType
+        else {
+            // if mutationType is undefined, get annotation for both somatic and germline
+            if (mutationType === undefined) {
+                signalData = extendMutations(
+                    variantAnnotation.signalAnnotation.annotation
+                );
+            }
+            // if mutationType is defined, get annotation depending on mutationType
+            else {
+                variantAnnotation.signalAnnotation.annotation.forEach(
+                    annotation => {
+                        if (
+                            mutationType === Pathogenicity.GERMLINE &&
+                            annotation.mutationStatus.includes('germline')
+                        ) {
+                            signalData = extendMutations([annotation]);
+                        } else if (
+                            mutationType === Pathogenicity.SOMATIC &&
+                            annotation.mutationStatus.includes('somatic')
+                        ) {
+                            signalData = extendMutations([annotation]);
+                        }
+                    }
+                );
+            }
+        }
     }
     return signalData;
 }
@@ -64,11 +105,14 @@ export function signalSortMethod(
 export function getSortValue(
     signalData: IExtendedSignalMutation
 ): number | null {
-    return signalData.germlineFrequency || null;
+    return signalData ? signalData.germlineFrequency || null : null;
 }
 
-export function download(signalData: IExtendedSignalMutation): string {
-    return signalData.germlineFrequency != null
+export function download(
+    signalData: IExtendedSignalMutation,
+    mutationType?: Pathogenicity
+): string {
+    return signalData && signalData.germlineFrequency !== null
         ? `${formatNumberValueInSignificantDigits(
               signalData.germlineFrequency,
               2
@@ -76,17 +120,27 @@ export function download(signalData: IExtendedSignalMutation): string {
         : '';
 }
 
-export function getSignalValue(
+// Get germline OR somatic frequency value
+export function getSingleSignalValue(
     mutation: Mutation,
+    mutationType: Pathogenicity,
     indexedVariantAnnotations?: RemoteData<
         { [genomicLocation: string]: VariantAnnotation } | undefined
     >,
     significantDigits?: number
 ) {
-    const signalData = getSignalData(mutation, indexedVariantAnnotations);
-    if (signalData.tumorTypeDecomposition) {
+    const signalData = getSignalData(
+        mutation,
+        indexedVariantAnnotations,
+        mutationType
+    );
+    if (
+        signalData &&
+        signalData.length === 1 &&
+        signalData[0].tumorTypeDecomposition
+    ) {
         return formatNumberValueInSignificantDigits(
-            signalData.germlineFrequency,
+            signalData[0].germlineFrequency || signalData[0].somaticFrequency,
             significantDigits || 2
         );
     } else {
@@ -95,12 +149,18 @@ export function getSignalValue(
 }
 
 export const SignalTable: React.FunctionComponent<SignalValueProps> = props => {
+    // signal data should be either germline or somatic, so should be only one element
     const signalData = getSignalData(
         props.mutation,
-        props.indexedVariantAnnotations
-    );
+        props.indexedVariantAnnotations,
+        props.mutationType
+    )[0];
     if (
-        getSignalValue(props.mutation, props.indexedVariantAnnotations) !== null
+        getSingleSignalValue(
+            props.mutation,
+            props.mutationType || Pathogenicity.GERMLINE,
+            props.indexedVariantAnnotations
+        ) !== null
     ) {
         return (
             <MutationTumorTypeFrequencyTable
@@ -168,8 +228,9 @@ export default class Signal extends React.Component<SignalProps, {}> {
                 content = errorIcon('Error fetching Genome Nexus annotation');
             } else {
                 content = <div />;
-                const signalValue = getSignalValue(
+                const signalValue = getSingleSignalValue(
                     this.props.mutation,
+                    this.props.mutationType || Pathogenicity.GERMLINE,
                     this.props.indexedVariantAnnotations
                 );
                 if (signalValue !== null) {
@@ -185,6 +246,7 @@ export default class Signal extends React.Component<SignalProps, {}> {
                                     indexedVariantAnnotations={
                                         this.props.indexedVariantAnnotations
                                     }
+                                    mutationType={this.props.mutationType}
                                 />
                             }
                         >

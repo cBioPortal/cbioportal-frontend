@@ -73,6 +73,8 @@ export type ChartUserSetting = {
     };
     xAttrId?: string;
     yAttrId?: string;
+    categoricalAttrId?: string;
+    numericalAttrId?: string;
     patientAttribute: boolean;
     filterByCancerGenes?: boolean;
     customBins?: number[];

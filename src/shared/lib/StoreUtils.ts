@@ -1079,16 +1079,14 @@ export function isMutationProfile(profile: MolecularProfile): boolean {
 export function findMutationMolecularProfile(
     molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
     studyId: string,
-    suffix: string = MOLECULAR_PROFILE_MUTATIONS_SUFFIX
+    type: string
 ) {
     if (!molecularProfilesInStudy.result) {
         return undefined;
     }
 
-    const profile = molecularProfilesInStudy.result.find(
-        (p: MolecularProfile) => {
-            return p.molecularProfileId === `${studyId}${suffix}`;
-        }
+    const profile = molecularProfilesInStudy.result!.find(
+        (profile: MolecularProfile) => profile.molecularAlterationType === type
     );
 
     return profile;
@@ -1096,13 +1094,12 @@ export function findMutationMolecularProfile(
 
 export function findUncalledMutationMolecularProfileId(
     molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
-    studyId: string,
-    suffix: string = MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX
+    studyId: string
 ) {
     const profile = findMutationMolecularProfile(
         molecularProfilesInStudy,
         studyId,
-        suffix
+        AlterationTypeConstants.MUTATION_UNCALLED
     );
     if (profile) {
         return profile.molecularProfileId;
@@ -1112,33 +1109,16 @@ export function findUncalledMutationMolecularProfileId(
 }
 
 export function findMrnaRankMolecularProfileId(
-    molecularProfilesInStudy: MobxPromise<MolecularProfile[]>
+    molecularProfilesInStudy: string[]
 ) {
-    if (!molecularProfilesInStudy.result) {
-        return null;
-    }
-
-    const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
-    const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
-    const preferredProfile:
-        | MolecularProfile
-        | undefined = molecularProfilesInStudy.result.find(
-        (gp: MolecularProfile) =>
-            regex1.test(gp.molecularProfileId.toLowerCase())
+    const regex1 = /^.+rna_seq.*_zscores$/i; // We prefer profiles that look like this
+    const preferredProfileId:
+        | string
+        | undefined = molecularProfilesInStudy.find(profileId =>
+        regex1.test(profileId)
     );
 
-    if (preferredProfile) {
-        return preferredProfile.molecularProfileId;
-    } else {
-        const fallbackProfile:
-            | MolecularProfile
-            | undefined = molecularProfilesInStudy.result.find(
-            (gp: MolecularProfile) =>
-                regex2.test(gp.molecularProfileId.toLowerCase())
-        );
-
-        return fallbackProfile ? fallbackProfile.molecularProfileId : null;
-    }
+    return preferredProfileId || null;
 }
 
 export function generateUniqueSampleKeyToTumorTypeMap(

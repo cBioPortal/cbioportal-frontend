@@ -29,7 +29,7 @@ var {
 const ONCOPRINT_TIMEOUT = 60000;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, '');
 
-describe.skip('merged tracks', () => {
+describe('merged tracks', () => {
     it('oncoprint loads and expands a merged track', () => {
         goToUrlAndSetLocalStorage(
             `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=coadread_tcga&case_set_id=coadread_tcga_cnaseq&data_priority=0&gene_list=%255B%2522RAS%2522%2520KRAS%2520NRAS%2520HRAS%255D&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_mutations&tab_index=tab_visualize`
@@ -54,8 +54,6 @@ describe.skip('merged tracks', () => {
 });
 
 describe('oncoprint', function() {
-    this.retries(0);
-
     describe('initialization from URL parameters', () => {
         it('should start in patient mode if URL parameter show_samples=false or not specified', () => {
             // not specified
@@ -157,7 +155,7 @@ describe('oncoprint', function() {
         });
     });
 
-    describe.skip('heatmap clustering', () => {
+    describe('heatmap clustering', () => {
         it('track group options UI reflects clustered state correctly', () => {
             goToUrlAndSetLocalStorage(
                 `${CBIOPORTAL_URL}/results/oncoprint?Z_SCORE_THRESHOLD=2.0&cancer_study_id=coadread_tcga_pub&cancer_study_list=coadread_tcga_pub&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&gene_set_choice=user-defined-list&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bcoadread_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF&show_samples=false`
@@ -215,11 +213,24 @@ describe('oncoprint', function() {
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_BOLD
             );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
+            );
+
             assert.equal(
                 $(
                     mrnaElements.dropdown_selector + ' li:nth-child(2)'
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_NORMAL
+            );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
             );
 
             // Uncluster
@@ -240,6 +251,13 @@ describe('oncoprint', function() {
                 ).getCSSProperty('font-weight').value,
                 FONT_WEIGHT_NORMAL
             );
+
+            setDropdownOpen(
+                true,
+                mrnaElements.button_selector,
+                mrnaElements.dropdown_selector
+            );
+
             assert.equal(
                 $(
                     mrnaElements.dropdown_selector + ' li:nth-child(2)'
@@ -720,19 +738,6 @@ describe('oncoprint', function() {
                 legendText.indexOf('Female') > -1,
                 'Female item is shown (in sample mode)'
             );
-        });
-    });
-
-    describe.skip('other mutation', () => {
-        it('should have Other mutations in oncoprint', () => {
-            browser.url(
-                CBIOPORTAL_URL +
-                    '/results?Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=prad_fhcrc_cnaseq&gene_list=YEATS2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=prad_fhcrc_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=prad_fhcrc_cna&cancer_study_list=prad_fhcrc'
-            );
-            waitForOncoprint(ONCOPRINT_TIMEOUT);
-
-            const legendText = getTextInOncoprintLegend();
-            assert(legendText.indexOf('Other Mutation') > -1);
         });
     });
 });

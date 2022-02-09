@@ -67,7 +67,7 @@ export type Column<T> = {
         | ((data: T) => (number | null)[])
         | ((data: T) => (string | null)[])
         | ((data: T) => (string | number | null)[]);
-    render: (data: T) => JSX.Element;
+    render: (data: T, rowIndex?: number) => JSX.Element;
     download?: (data: T) => string | string[];
     tooltip?: JSX.Element;
     defaultSortDirection?: SortDirection;
@@ -102,9 +102,13 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?: boolean;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     columnVisibility?: { [columnId: string]: boolean };
-    storeColumnVisibility?: (columnVisibility: {
-        [columnId: string]: boolean;
-    }) => void;
+    storeColumnVisibility?: (
+        columnVisibility:
+            | {
+                  [columnId: string]: boolean;
+              }
+            | undefined
+    ) => void;
     pageToHighlight?: boolean;
     showCountHeader?: boolean;
     onRowClick?: (d: T) => void;
@@ -617,7 +621,7 @@ export class LazyMobXTableStore<T> {
     }
 
     @computed get tds(): JSX.Element[][] {
-        return this.visibleData.map((datum: T) => {
+        return this.visibleData.map((datum: T, rowIndex: number) => {
             return this.visibleColumns.map((column: Column<T>) => {
                 const cellProps: any = {
                     key: column.name,
@@ -627,7 +631,9 @@ export class LazyMobXTableStore<T> {
                     cellProps.className = 'lazyMobXTableTruncatedCell';
                 }
 
-                const result = <td {...cellProps}>{column.render(datum)}</td>;
+                const result = (
+                    <td {...cellProps}>{column.render(datum, rowIndex)}</td>
+                );
 
                 if (column.resizable) {
                     return (
@@ -1134,6 +1140,7 @@ export default class LazyMobXTable<T> extends React.Component<
                                 onInput={this.handlers.onFilterTextChange}
                                 className="form-control tableSearchInput"
                                 style={{ width: this.props.filterBoxWidth }}
+                                data-test="table-search-input"
                             />
                             {this.props.showFilterClearButton &&
                             this.store.filterString ? (

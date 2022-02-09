@@ -39,7 +39,7 @@ export const TOOLTIP_DIV_CLASS = 'oncoprint__tooltip';
 const tooltipTextElementNaN = 'N/A';
 import './styles.scss';
 import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
-import { PUTATIVE_DRIVER } from 'shared/lib/StoreUtils';
+import { PUTATIVE_DRIVER, PUTATIVE_PASSENGER } from 'shared/lib/StoreUtils';
 
 function sampleViewAnchorTag(study_id: string, sample_id: string) {
     return `<a class="nobreak" href="${getSampleViewUrl(
@@ -585,6 +585,18 @@ export function makeGeneticTrackTooltip(
                             `<img src="${customDriverImg}" title="${driver_filter}: ${driver_filter_annotation}" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>`
                         );
                     }
+                    //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
+                    else if (
+                        driver_filter &&
+                        driver_filter === PUTATIVE_PASSENGER
+                    ) {
+                        ret.append(
+                            `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" style="height:16px; width:16px; margin-bottom:-2px; margin-right:-2px">
+                                <title>"${driver_filter}: ${driver_filter_annotation}"</title>
+                                <circle cx="10" cy="10" r="5" stroke="#bebebe" stroke-width="2" fill="none"/>
+                            </svg>`
+                        );
+                    }
                     //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
                     if (driver_tiers_filter) {
                         ret.append(
@@ -633,9 +645,11 @@ export function makeGeneticTrackTooltip(
                 }) => {
                     var ret = $('<span>').addClass('nobreak');
                     ret.append(
-                        `<b class="nobreak">${site1HugoSymbol}${
+                        `<b class="nobreak">${site1HugoSymbol || ''}${
                             site2HugoSymbol ? '-' + site2HugoSymbol : ''
-                        }, ${variantClass}, Event Info: ${eventInfo}</b>`
+                        }${
+                            variantClass ? ', ' + variantClass + ',' : ''
+                        } Event Info: ${eventInfo}</b>`
                     );
                     if (oncokb_oncogenic) {
                         ret.append(
