@@ -7072,10 +7072,10 @@ export class StudyViewPageStore
                         q.chartInfo.numericalAttr.clinicalAttributeId,
                     logScale: q.violinLogScale,
                     sigmaMultiplier: 4,
-                    studyViewFilter: excludeFiltersForAttribute(
-                        this.filters,
-                        q.chartInfo.categoricalAttr.clinicalAttributeId
-                    ),
+                    studyViewFilter: excludeFiltersForAttribute(this.filters, [
+                        q.chartInfo.categoricalAttr.clinicalAttributeId,
+                        q.chartInfo.numericalAttr.clinicalAttributeId,
+                    ]),
                 }),
             default: {
                 axisStart: -1,
@@ -7088,7 +7088,13 @@ export class StudyViewPageStore
                 `Category:${q.chartInfo.categoricalAttr.clinicalAttributeId}/` +
                 `Numerical:${q.chartInfo.numericalAttr.clinicalAttributeId}/` +
                 `violinDomain:${JSON.stringify(q.chartInfo.violinDomain)}/` +
-                `violinLog:${q.violinLogScale}`
+                `violinLog:${q.violinLogScale}/` +
+                `Filters:${JSON.stringify(
+                    excludeFiltersForAttribute(this.filters, [
+                        q.chartInfo.categoricalAttr.clinicalAttributeId,
+                        q.chartInfo.numericalAttr.clinicalAttributeId,
+                    ])
+                )}` // make sure we don't update unless other filters change
             );
         }
     );
