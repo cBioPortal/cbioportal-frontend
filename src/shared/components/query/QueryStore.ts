@@ -65,6 +65,7 @@ import {
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
+import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -832,7 +833,9 @@ export class QueryStore {
             let result: { [studyId: string]: string[] } = {};
 
             _.each(this.physicalStudiesSet.result, (study, studyId) => {
-                result[studyId] = [studyId];
+                if (isQueriedStudyAuthorized(study)) {
+                    result[studyId] = [studyId];
+                }
             });
 
             _.each(
