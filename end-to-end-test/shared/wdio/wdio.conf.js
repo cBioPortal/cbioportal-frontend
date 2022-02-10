@@ -165,9 +165,9 @@ exports.config = {
     //
     //
 
-    specs: [SPEC_FILE_PATTERN],
+    //specs: [SPEC_FILE_PATTERN],
 
-    //specs: ["./remote/specs/core/home.spec.js", 'remote/specs/core/screenshot.spec.js'],
+    specs: ['./remote/specs/core/studyview.spec.js'],
 
     // Patterns to exclude.
     exclude: [
@@ -368,7 +368,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
-        retries: retries,
+        retries: 0,
     },
     //
     // =====
