@@ -346,18 +346,18 @@ workflows:
                 - master
                 - release-*
                 - rc
-      - unit_tests:
-          requires:
-            - install
+#      - unit_tests:
+#          requires:
+#            - install
       - end_to_end_tests:
           requires:
             - install
-      - end_to_end_tests_localdb:
-          requires:
-            - install
-      - api_sync:
-          requires:
-            - install
+#      - end_to_end_tests_localdb:
+#          requires:
+#            - install
+#      - api_sync:
+#          requires:
+#            - install
       - check_forgotten_spec_only_statements:
           requires:
             - install
