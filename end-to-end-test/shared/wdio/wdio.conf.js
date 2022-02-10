@@ -368,7 +368,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
-        retries: 0,
+        retries: retries,
     },
     //
     // =====
