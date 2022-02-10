@@ -63,6 +63,7 @@ import UserMessager, {
     IUserMessage,
 } from 'shared/components/userMessager/UserMessage';
 import { HelpWidget } from 'shared/components/HelpWidget/HelpWidget';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
 
 export function initStore(
     appStore: AppStore,
@@ -541,7 +542,7 @@ export default class ResultsViewPage extends React.Component<
     @autobind
     private getTabHref(tabId: string) {
         return URL.format({
-            pathname: tabId,
+            pathname: buildCBioPortalPageUrl(`./results/${tabId}`),
             query: this.props.routing.query,
             hash: this.props.routing.location.hash,
         });
@@ -696,7 +697,9 @@ export default class ResultsViewPage extends React.Component<
                                             )
                                         }
                                         className="mainTabs"
-                                        getTabHref={this.getTabHref}
+                                        hrefRoot={buildCBioPortalPageUrl(
+                                            'results'
+                                        )}
                                         contentWindowExtra={
                                             <HelpWidget
                                                 path={
