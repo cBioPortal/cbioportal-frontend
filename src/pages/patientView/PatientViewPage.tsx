@@ -37,6 +37,7 @@ import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataSt
 import './patient.scss';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import {
+    buildCBioPortalPageUrl,
     getDigitalSlideArchiveIFrameUrl,
     getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
@@ -804,6 +805,7 @@ export default class PatientViewPage extends React.Component<
                                     this.urlWrapper.setActiveTab(id)
                                 }
                                 className="mainTabs"
+                                hrefRoot={buildCBioPortalPageUrl('patient')}
                                 getPaginationWidth={WindowStore.getWindowWidth}
                             >
                                 <MSKTab
