@@ -88,6 +88,7 @@ import {
     getGenomeNexusUrl,
     getOncoKbOncogenic,
     getSurvivalClinicalAttributesPrefix,
+    getGenomeBuildFromStudies,
     groupBy,
     groupBySampleId,
     IDataQueryFilter,
@@ -3546,6 +3547,7 @@ export class ResultsViewPageStore
             {
                 filterMutationsBySelectedTranscript: true,
                 filterAppliersOverride: this.customDataFilterAppliers,
+                genomeBuild: this.genomeBuild,
             },
             gene,
             this.filteredSamples,
@@ -4091,6 +4093,13 @@ export class ResultsViewPageStore
         },
         []
     );
+
+    @computed get genomeBuild() {
+        if (!this.studies.isComplete) {
+            throw new Error('Failed to get studies');
+        }
+        return getGenomeBuildFromStudies(this.studies.result);
+    }
 
     @computed get referenceGenomeBuild() {
         if (!this.studies.isComplete) {

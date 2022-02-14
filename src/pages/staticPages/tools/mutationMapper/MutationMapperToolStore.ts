@@ -50,6 +50,7 @@ import autobind from 'autobind-decorator';
 import { getGenomeNexusHgvsgUrl } from 'shared/api/urls';
 import { GENOME_NEXUS_ARG_FIELD_ENUM } from 'shared/constants';
 import { getServerConfig } from 'config/config';
+import { REFERENCE_GENOME } from 'shared/lib/referenceGenomeUtils';
 
 export default class MutationMapperToolStore {
     @observable mutationData: Partial<MutationInput>[] | undefined;
@@ -313,6 +314,9 @@ export default class MutationMapperToolStore {
                                     {
                                         filterMutationsBySelectedTranscript: !this
                                             .hasInputWithProteinChanges,
+                                        genomeBuild: this.grch38GenomeNexusUrl
+                                            ? REFERENCE_GENOME.grch38.UCSC
+                                            : REFERENCE_GENOME.grch37.UCSC,
                                     },
                                     gene,
                                     getMutations,
