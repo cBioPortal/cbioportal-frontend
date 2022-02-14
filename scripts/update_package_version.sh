@@ -15,6 +15,10 @@ if [[ "$GITHUB_RUN_ID" ]]; then
   git config --local user.name "Lerna Publish Bot"
   git config --global github.token $GITHUB_TOKEN
 
+  # this is a workaround to ignore a possible mismatching yarn.lock file
+  # see https://github.com/lerna/lerna/issues/1994
+  git stash
+
   # by default just bump to the next patch
   # so this will, for example, bump 1.0.0 to 1.0.1, 1.0.0-alpha.2 to 1.0.0, 0.1.1-beta.0 to 0.1.1, etc.
   lerna version patch --yes
