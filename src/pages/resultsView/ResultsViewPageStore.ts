@@ -1585,8 +1585,8 @@ export class ResultsViewPageStore
         },
     });
 
-    // remoteNgchmUrl queries mdanderson.org to test if there are NGCHMs for one selected
-    // study.  The result is either the full URL to a portal page, or an empty string.
+    // remoteNdexUrl queries Ndex's iquery. The result is either the full URL to
+    // query, or an empty string.
     readonly remoteNdexUrl = remoteData<string>({
         await: () => [this.studyIds, this.genes],
         invoke: async () => {
@@ -1599,7 +1599,8 @@ export class ResultsViewPageStore
                     geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
                     sourceList:["enrichment"],
                     geneAnnotationServices: {
-                        mutation: "https://iquery-cbio.dev.ucsd.edu/integratedsearch/v1/mutationfrequency"
+                        mutation: "https://iquery-cbio.dev.ucsd.edu/integratedsearch/v1/mutationfrequency",
+                        alteration: "http://localhost"
                     }
                 };
 
