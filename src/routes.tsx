@@ -61,6 +61,14 @@ const OncoprinterTool = SuspenseWrapper(
         import('./pages/staticPages/tools/oncoprinter/OncoprinterTool')
     )
 );
+
+const OncoprinterTool_Simple = SuspenseWrapper(
+    React.lazy(() =>
+        // @ts-ignore
+        import('./pages/staticPages/tools/oncoprinter/OncoprinterTool_Simple')
+    )
+);
+
 const WebAPIPage = SuspenseWrapper(
     // @ts-ignore
     React.lazy(() => import('./pages/staticPages/webAPI/WebAPIPage'))
@@ -442,6 +450,10 @@ export const makeRoutes = () => {
 
                 <Route path="/mutation_mapper" component={MutationMapperTool} />
                 <Route path="/oncoprinter" component={OncoprinterTool} />
+                <Route
+                    path="/oncoprinter_simple"
+                    component={OncoprinterTool_Simple}
+                />
                 <Route path="/webAPI" component={GoToHashLink(WebAPIPage)} />
                 <Route path="/rmatlab" component={ScrollToTop(RMATLAB)} />
                 <Route path="/datasets" component={ScrollToTop(DatasetPage)} />

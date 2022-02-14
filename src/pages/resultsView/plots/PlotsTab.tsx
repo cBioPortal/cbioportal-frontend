@@ -123,12 +123,6 @@ import {
 } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 import { getBoxWidth } from 'shared/lib/boxPlotUtils';
 import ScrollWrapper from '../cancerSummary/ScrollWrapper';
-import {
-    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING,
-    MenuList,
-    MenuListHeader,
-    doesOptionMatchSearchText,
-} from 'pages/studyView/addChartButton/genericAssaySelection/GenericAssaySelection';
 
 enum EventKey {
     horz_logScale,
@@ -320,8 +314,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
         string,
         LegendDataWithId
     >({}, { deep: false });
-    @observable _horzGenericAssaySearchText: string = '';
-    @observable _vertGenericAssaySearchText: string = '';
 
     @action.bound
     private onClickLegendItem(ld: LegendDataWithId<any>) {
@@ -3346,54 +3338,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                 axisSelection.dataType
             ];
         }
-        let genericAssayOptionsCount: number = 0;
-        let filteredGenericAssayOptionsCount: number = 0;
         if (vertical && this.vertGenericAssayOptions.result) {
             genericAssayOptions =
                 this.makeGenericAssayGroupOptions(
                     this.vertGenericAssayOptions.result,
-                    selectedEntities,
-                    this._vertGenericAssaySearchText
+                    selectedEntities
                 ) || [];
-            // generate statistics for options
-            genericAssayOptionsCount = this.vertGenericAssayOptions.result
-                .length;
-            const selectedOptions = this.vertGenericAssayOptions.result.filter(
-                option => selectedEntities.includes(option.value)
-            );
-            const otherEntities = _.difference(
-                this.vertGenericAssayOptions.result,
-                selectedOptions
-            );
-            filteredGenericAssayOptionsCount = otherEntities.filter(option =>
-                doesOptionMatchSearchText(
-                    this._vertGenericAssaySearchText,
-                    option
-                )
-            ).length;
         } else if (!vertical && this.horzGenericAssayOptions.result) {
             genericAssayOptions =
                 this.makeGenericAssayGroupOptions(
                     this.horzGenericAssayOptions.result,
-                    selectedEntities,
-                    this._horzGenericAssaySearchText
+                    selectedEntities
                 ) || [];
-            // generate statistics for options
-            genericAssayOptionsCount = this.horzGenericAssayOptions.result
-                .length;
-            const selectedOptions = this.horzGenericAssayOptions.result.filter(
-                option => selectedEntities.includes(option.value)
-            );
-            const otherEntities = _.difference(
-                this.horzGenericAssayOptions.result,
-                selectedOptions
-            );
-            filteredGenericAssayOptionsCount = otherEntities.filter(option =>
-                doesOptionMatchSearchText(
-                    this._horzGenericAssaySearchText,
-                    option
-                )
-            ).length;
         }
 
         const axisCategoriesPromise = vertical
@@ -3706,26 +3662,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                                                 axisSelection
                                             )
                                         }
-                                        onInputChange={
-                                            vertical
-                                                ? this
-                                                      .onVerticalAxisGenericAssayInputChange
-                                                : this
-                                                      .onHorizontalAxisGenericAssayInputChange
-                                        }
-                                        components={{
-                                            MenuList: MenuList,
-                                            MenuListHeader: (
-                                                <MenuListHeader
-                                                    current={
-                                                        filteredGenericAssayOptionsCount
-                                                    }
-                                                    total={
-                                                        genericAssayOptionsCount
-                                                    }
-                                                />
-                                            ),
-                                        }}
                                     />
                                     {genericAssayDescription && (
                                         <div data-test="generic-assay-info-icon">
@@ -3840,28 +3776,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
             value: string;
             label: string;
         }[],
-        selectedEntities: string[],
-        serchText: string
+        selectedEntities: string[]
     ) {
         if (alloptions) {
             const entities = alloptions.filter(option =>
                 selectedEntities.includes(option.value)
             );
             const otherEntities = _.difference(alloptions, entities);
-            let filteredOtherOptions = otherEntities.filter(option =>
-                doesOptionMatchSearchText(serchText, option)
-            );
-            if (
-                filteredOtherOptions.length >
-                DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-            ) {
-                filteredOtherOptions = filteredOtherOptions.slice(
-                    0,
-                    DEFAULT_GENERIC_ASSAY_OPTIONS_SHOWING
-                );
-            }
             if (entities.length === 0) {
-                return filteredOtherOptions;
+                return alloptions;
             } else {
                 return [
                     {
@@ -3870,36 +3793,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps, {}> {
                     },
                     {
                         label: 'Other entities',
-                        options: filteredOtherOptions,
+                        options: otherEntities,
                     },
                 ];
             }
         } else {
             return undefined;
-        }
-    }
-
-    @action.bound
-    private onVerticalAxisGenericAssayInputChange(
-        input: string,
-        inputInfo: any
-    ) {
-        if (inputInfo.action === 'input-change') {
-            this._vertGenericAssaySearchText = input;
-        } else if (inputInfo.action !== 'set-value') {
-            this._vertGenericAssaySearchText = '';
-        }
-    }
-
-    @action.bound
-    private onHorizontalAxisGenericAssayInputChange(
-        input: string,
-        inputInfo: any
-    ) {
-        if (inputInfo.action === 'input-change') {
-            this._horzGenericAssaySearchText = input;
-        } else if (inputInfo.action !== 'set-value') {
-            this._horzGenericAssaySearchText = '';
         }
     }
 

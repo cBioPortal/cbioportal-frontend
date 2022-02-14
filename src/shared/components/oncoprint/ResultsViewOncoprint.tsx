@@ -991,11 +991,13 @@ export default class ResultsViewOncoprint extends React.Component<
                                 const oncoprinterWindow = window.open(
                                     buildCBioPortalPageUrl('/oncoprinter')
                                 ) as any;
-                                oncoprinterWindow.clientPostedData = {
+                                const postData = {
                                     genetic: geneticInput,
                                     clinical: clinicalInput,
                                     heatmap: heatmapInput,
                                 };
+
+                                oncoprinterWindow.clientPostedData = postData;
                             }
                         );
                         break;
