@@ -13,6 +13,7 @@ import LoadingIndicator from '../../../shared/components/loadingIndicator/Loadin
 import { toggleIncluded } from '../../../shared/lib/ArrayUtils';
 import MobxPromise from 'mobxpromise';
 import { ChartDataCountSet } from 'pages/studyView/StudyViewUtils';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 export interface IAddClinicalTrackProps {
     store: ResultsViewPageStore;
@@ -64,6 +65,10 @@ export default class AddClinicalTracks extends React.Component<
         super(props);
 
         makeObservable(this);
+
+        this.props.onChangeSelectedClinicalTracks(
+            this.defaultClinicalAttributeIds
+        );
     }
     @observable open = false;
     @observable tabId = Tab.CLINICAL;
@@ -101,6 +106,13 @@ export default class AddClinicalTracks extends React.Component<
                 this.props.getSelectedClinicalAttributeIds()
             )
         );
+    }
+
+    @computed get defaultClinicalAttributeIds() {
+        const defaultTracks = ServerConfigHelpers.parseDefaultOncoprintClinicalTracks(
+            getServerConfig().oncoprint_clinical_tracks_show_by_default!
+        );
+        return defaultTracks.map(track => track.stableId);
     }
 
     @computed get selectedClinicalAttributeIds() {

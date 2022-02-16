@@ -1,6 +1,7 @@
 import { TrackSortComparator, TrackSortVector } from 'oncoprintjs';
 import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
 import naturalSort from 'javascript-natural-sort';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 /**
  * Make comparator metric
@@ -300,6 +301,42 @@ export function getClinicalTrackSortComparator(track: ClinicalTrackSpec) {
         preferred: alphabeticalDefault(comparator),
         mandatory: comparator,
     };
+}
+
+export function getClinicalTrackInitialSortDirection(
+    track: ClinicalTrackSpec
+): 0 | 1 | -1 {
+    let initialSortOrder: 0 | 1 | -1 = 0;
+
+    const defaultTracks = ServerConfigHelpers.parseDefaultOncoprintClinicalTracks(
+        getServerConfig().oncoprint_clinical_tracks_show_by_default!
+    );
+
+    defaultTracks.forEach(t => {
+        if (t.stableId === track.attributeId) {
+            if (t.sortOrder === 'ASC') {
+                initialSortOrder = 1;
+            } else if (t.sortOrder === 'DESC') {
+                initialSortOrder = -1;
+            }
+        }
+    });
+    return initialSortOrder;
+}
+
+export function getClinicalTrackInitialShowGapsConfig(
+    track: ClinicalTrackSpec
+): boolean {
+    let gapOn = false;
+    const defaultTracks = ServerConfigHelpers.parseDefaultOncoprintClinicalTracks(
+        getServerConfig().oncoprint_clinical_tracks_show_by_default!
+    );
+    defaultTracks.forEach(t => {
+        if (t.stableId === track.attributeId) {
+            gapOn = !!t.gapOn;
+        }
+    });
+    return gapOn;
 }
 
 export const heatmapTrackSortComparator = (() => {
