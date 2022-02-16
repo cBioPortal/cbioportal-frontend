@@ -1,7 +1,11 @@
 import { assert } from 'chai';
 
 import { ExonDatum } from '../model/Exon';
-import { extractExonInformation } from './ExonUtils';
+import {
+    extractExonInformation,
+    formatExonLength,
+    formatExonLocation,
+} from './ExonUtils';
 
 describe('ExonUtils', () => {
     const transcriptInfo = {
@@ -203,6 +207,66 @@ describe('ExonUtils', () => {
                 exonInfo[0].length,
                 13.0 / 3,
                 'Difference between end of utr 2 and exon 2 ends'
+            );
+        });
+    });
+    describe('formatExonLocation', () => {
+        it('generate exon location description', () => {
+            const exonInfo = extractExonInformation(
+                transcriptInfo.exons,
+                transcriptInfo.utrs,
+                transcriptInfo.proteinLength
+            );
+
+            assert.deepEqual(
+                formatExonLocation(exonInfo[0].start, 0),
+                { nucleotideLocation: 1, aminoAcidLocation: 1 },
+                'First exon always starts at 1st nucleotide of amino acid 1'
+            );
+
+            assert.deepEqual(
+                formatExonLocation(exonInfo[1].start, 1),
+                { nucleotideLocation: 2, aminoAcidLocation: 5 },
+                'Second exon start location should be 2nd nucleotide of amino acid 5th, because exonInfo[1].start is 4.333333333333333, which is actrually the first exon end position, start position for second exon should be the next nucleotide of first exon end position'
+            );
+
+            assert.deepEqual(
+                formatExonLocation(exonInfo[0].start + exonInfo[0].length),
+                { nucleotideLocation: 1, aminoAcidLocation: 5 },
+                'First exon ends at 4.333333333333333, which should be 1st nucleotide of amino acid 5th. No index needed to calculate end position.'
+            );
+
+            assert.deepEqual(
+                formatExonLocation(exonInfo[2].start + exonInfo[2].length),
+                { nucleotideLocation: 3, aminoAcidLocation: 165 },
+                'Third exon ends at 165, which should be 3rd nucleotide of amino acid 165th. No index needed to calculate end position.'
+            );
+        });
+    });
+    describe('formatExonLength', () => {
+        it('generate exon length description', () => {
+            const exonInfo = extractExonInformation(
+                transcriptInfo.exons,
+                transcriptInfo.utrs,
+                transcriptInfo.proteinLength
+            );
+
+            assert.deepEqual(
+                formatExonLength(exonInfo[0].length),
+                { aminoAcidLength: 4, nucleotideLength: 1 },
+                'First exon length is 4.333333333333333, which is 4 amino acids and 1 nucleotide'
+            );
+
+            assert.deepEqual(
+                formatExonLength(exonInfo[1].length),
+                { aminoAcidLength: 76 },
+                'Second exon length is 76, which is 76 nucleotide'
+            );
+
+            assert.deepEqual(
+                formatExonLength(exonInfo[2].length),
+                { aminoAcidLength: 84, nucleotideLength: 2 },
+                'Third exon length is 84.66666666666667, which is 84 amino acids and 2 nucleotide'
             );
         });
     });

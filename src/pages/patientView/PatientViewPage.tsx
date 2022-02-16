@@ -37,6 +37,7 @@ import PatientViewMutationsDataStore from './mutation/PatientViewMutationsDataSt
 import './patient.scss';
 import IFrameLoader from '../../shared/components/iframeLoader/IFrameLoader';
 import {
+    buildCBioPortalPageUrl,
     getDigitalSlideArchiveIFrameUrl,
     getWholeSlideViewerUrl,
 } from '../../shared/api/urls';
@@ -80,6 +81,8 @@ import ClinicalEventsTables from './timeline2/ClinicalEventsTables';
 import MutationalSignaturesContainer from './mutationalSignatures/MutationalSignaturesContainer';
 import SampleSummaryList from './sampleHeader/SampleSummaryList';
 import { updateOncoKbIconStyle } from 'shared/lib/AnnotationColumnUtils';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import { extractColumnNames } from 'shared/components/mutationMapper/MutationMapperUtils';
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -553,6 +556,16 @@ export default class PatientViewPage extends React.Component<
         this.patientViewPageStore.setMutationalSignaturesVersion(version);
     }
 
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.dataStore.namespaceColumnConfig
+        );
+        return _.concat(
+            PatientViewMutationTable.defaultProps.columns,
+            namespaceColumnNames
+        );
+    }
+
     public render() {
         let sampleManager: SampleManager | null = null;
         if (this.patientViewPageStore.sampleManager.isComplete) {
@@ -792,6 +805,7 @@ export default class PatientViewPage extends React.Component<
                                     this.urlWrapper.setActiveTab(id)
                                 }
                                 className="mainTabs"
+                                hrefRoot={buildCBioPortalPageUrl('patient')}
                                 getPaginationWidth={WindowStore.getWindowWidth}
                             >
                                 <MSKTab
@@ -1220,6 +1234,11 @@ export default class PatientViewPage extends React.Component<
                                                             .patientViewPageStore
                                                             .existsSomeMutationWithAscnProperty
                                                     }
+                                                    namespaceColumns={
+                                                        this.dataStore
+                                                            .namespaceColumnConfig
+                                                    }
+                                                    columns={this.columns}
                                                 />
                                             </div>
                                         )}

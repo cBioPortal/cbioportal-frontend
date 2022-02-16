@@ -76,6 +76,7 @@ export default class CategoricalFilterMenu extends React.Component<
                 value={this.filterString}
                 onChange={this.onChangeFilterString}
                 style={{ width: '160px' }}
+                data-test="categorical-filter-menu-search-input"
             />
         );
     }

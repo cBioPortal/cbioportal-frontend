@@ -94,15 +94,6 @@ export default class GroupComparisonPage extends React.Component<
         return GENOMIC_ALTERATIONS_TAB_NAME;
     }
 
-    @autobind
-    private getTabHref(tabId: string) {
-        return URL.format({
-            pathname: tabId,
-            query: this.props.routing.query,
-            hash: this.props.routing.location.hash,
-        });
-    }
-
     @computed get selectedGroupsKey() {
         // for components which should remount whenever selected groups change
         const selectedGroups = this.store._selectedGroups.result || [];
@@ -135,7 +126,7 @@ export default class GroupComparisonPage extends React.Component<
                     activeTabId={this.urlWrapper.tabId}
                     onTabClick={this.urlWrapper.setTabId}
                     className="primaryTabs mainTabs"
-                    getTabHref={this.getTabHref}
+                    hrefRoot={buildCBioPortalPageUrl('comparison')}
                 >
                     <MSKTab id={GroupComparisonTab.OVERLAP} linkText="Overlap">
                         <Overlap

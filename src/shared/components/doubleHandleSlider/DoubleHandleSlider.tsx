@@ -36,6 +36,10 @@ export default class DoubleHandleSlider extends React.Component<
         return Math.ceil(POWER * tmp) / POWER;
     }
 
+    @computed get id() {
+        return this.props.id.replace(/\s+/, '_');
+    }
+
     // this is used to prevent unintended changes to the handle positions
     // which may occur once a handle is released, e.g. due to table resizing
     private justReleasedHandle: boolean;
@@ -68,19 +72,19 @@ export default class DoubleHandleSlider extends React.Component<
     }
 
     get LHId() {
-        return this.props.id + ' lowerValue-handle';
+        return this.id + '-lowerValue-handle';
     }
     get UHId() {
-        return this.props.id + ' upperValue-handle';
+        return this.id + '-upperValue-handle';
     }
     get LBId() {
-        return this.props.id + ' lowerValue-box';
+        return this.id + '-lowerValue-box';
     }
     get UBId() {
-        return this.props.id + ' upperValue-box';
+        return this.id + '-upperValue-box';
     }
     get MIDId() {
-        return this.props.id + ' middleTrack';
+        return this.id + '-middleTrack';
     }
     get LH() {
         return document.getElementById(this.LHId) as HTMLInputElement;

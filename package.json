@@ -1,7 +1,7 @@
 {
   "name": "cbioportal-frontend",
   "private": true,
-  "version": "3.3.163",
+  "version": "3.3.165",
   "workspaces": {
     "packages": [
       ".",
@@ -30,6 +30,7 @@
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "yarn run build && yarn add pushstate-server@3.0.1 -g",
     "updateAPI": "yarn run fetchAPI && yarn run buildAPI && yarn run updateOncoKbAPI && yarn run updateGenomeNexusAPI",
+    "fetchAPILocal":"export CBIOPORTAL_URL=http://localhost:8090 && curl -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
     "fetchAPI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && curl -k ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPI-docs.json && curl -k ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > packages/cbioportal-ts-api-client/src/generated/CBioPortalAPIInternal-docs.json",
     "buildAPI": "node scripts/generate-api.js packages/cbioportal-ts-api-client/src/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateOncoKbAPI": "yarn run fetchOncoKbAPI && yarn run buildOncoKbAPI",
@@ -62,7 +63,7 @@
     "syncmock": "node src/test/fetchMockData.js --diff",
     "e2e:spinup": "./scripts/e2e.sh",
     "e2e:local": "export CBIOPORTAL_URL=http://localhost:8080 && export && export SCREENSHOT_DIRECTORY=/local/screenshots/ && cd end-to-end-test && yarn run test-webdriver-manager-local",
-    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export SCREENSHOT_DIRECTORY=/remote/screenshots/ &&  rm -r -f end-to-end-test/shared/results && cd end-to-end-test && yarn run test-webdriver-manager-remote",
+    "e2e:remote": "export CBIOPORTAL_URL=https://www.cbioportal.org && export RETRIES=0 && export SCREENSHOT_DIRECTORY=/remote/screenshots/ &&  rm -r -f end-to-end-test/shared/results && cd end-to-end-test && yarn run test-webdriver-manager-remote",
     "e2e:report": "npx http-server end-to-end-test -o /shared/imageCompare.html -p 8089"
   },
   "engines": {
@@ -149,10 +150,10 @@
     "bootstrap-sass": "3.4.1",
     "bowser": "^1.7.1",
     "bundle-loader": "^0.5.4",
-    "cbioportal-clinical-timeline": "^0.3.25",
-    "cbioportal-frontend-commons": "^0.5.17",
+    "cbioportal-clinical-timeline": "^0.3.26",
+    "cbioportal-frontend-commons": "^0.5.18",
     "cbioportal-ts-api-client": "^0.9.37",
-    "cbioportal-utils": "^0.3.10",
+    "cbioportal-utils": "^0.3.11",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
     "clinical-timeline": "0.0.30",
@@ -234,6 +235,7 @@
     "pushstate-server": "3.0.1",
     "query-string": "^6.13.6",
     "raw-loader": "^0.5.1",
+    "range-ts": "^0.1.5",
     "rc-animate": "^3.1.1",
     "rc-tooltip": "^5.0.2",
     "rc-trigger": "^5.2.1",
@@ -260,7 +262,7 @@
     "react-markdown": "^7.0.1",
     "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
-    "react-mutation-mapper": "^0.8.32",
+    "react-mutation-mapper": "^0.8.33",
     "react-overlays": "0.7.4",
     "react-portal": "^4.2.0",
     "react-rangeslider": "^2.1.0",

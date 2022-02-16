@@ -66,6 +66,7 @@ export enum ChartTypeEnum {
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
     SCATTER = 'SCATTER',
+    VIOLIN_PLOT_TABLE = 'VIOLIN_PLOT_TABLE',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     STRUCTURAL_VARIANT_GENES_TABLE = 'STRUCTURAL_VARIANT_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
@@ -84,6 +85,7 @@ export enum ChartTypeNameEnum {
     SURVIVAL = 'survival plot',
     TABLE = 'table',
     SCATTER = 'density plot',
+    VIOLIN_PLOT_TABLE = 'table',
     MUTATED_GENES_TABLE = 'table',
     STRUCTURAL_VARIANT_GENES_TABLE = 'table',
     CNA_GENES_TABLE = 'table',
@@ -172,6 +174,11 @@ const studyViewFrontEnd = {
             [ChartTypeEnum.SCATTER]: {
                 w: 2,
                 h: 2,
+            },
+            [ChartTypeEnum.VIOLIN_PLOT_TABLE]: {
+                w: 2,
+                h: 2,
+                minW: 2,
             },
             [ChartTypeEnum.TABLE]: {
                 w: 2,

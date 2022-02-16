@@ -10,6 +10,12 @@ import {
 } from '../model/SignalMutation';
 import { SignalMutationStatus } from '../model/SignalMutationStatus';
 
+export enum Pathogenicity {
+    GERMLINE = 'germline',
+    SOMATIC = 'somatic',
+    BIALLELIC = 'biallelic',
+}
+
 export function isGermlineMutation(mutation: SignalMutation) {
     return mutation.mutationStatus.toLowerCase() === 'germline';
 }

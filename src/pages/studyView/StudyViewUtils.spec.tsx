@@ -1,39 +1,53 @@
 import { assert } from 'chai';
 import * as React from 'react';
 import {
+    annotationFilterActive,
     calcIntervalBinValues,
     calculateLayout,
     calculateNewLayoutForFocusedChart,
+    ChartMeta,
     chartMetaComparator,
+    ChartMetaDataTypeEnum,
     clinicalDataCountComparator,
     customBinsAreValid,
+    DataBin,
+    driverTierFilterActive,
     filterCategoryBins,
     filterIntervalBins,
     filterNumericalBins,
     findSpot,
     formatFrequency,
     formatNumericalTickValues,
+    formatRange,
+    geneFilterQueryFromOql,
+    geneFilterQueryToOql,
     generateCategoricalData,
     generateMatrixByLayout,
     generateNumericalData,
+    getBinName,
     getClinicalDataCountWithColorByCategoryCounts,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getDataIntervalFilterValues,
     getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
+    getDataIntervalFilterValues,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getGroupedClinicalDataByBins,
+    getNonZeroUniqueBins,
+    getPatientIdentifiers,
     getPositionXByUniqueKey,
     getPositionYByUniqueKey,
     getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
+    getStudyViewTabId,
     getVirtualStudyDescription,
     intervalFiltersDisplayValue,
+    isDataBinSelected,
     isEveryBinDistinct,
     isFocusedChartShrunk,
     isLogScaleByDataBins,
@@ -42,39 +56,26 @@ import {
     makePatientToClinicalAnalysisGroup,
     needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
-    showOriginStudiesInSummaryDescription,
     shouldShowChart,
-    toFixedDigit,
-    updateGeneQuery,
-    StudyViewFilterWithSampleIdentifierFilters,
-    ChartMeta,
-    ChartMetaDataTypeEnum,
-    getStudyViewTabId,
-    formatRange,
-    getBinName,
-    getGroupedClinicalDataByBins,
-    updateSavedUserPreferenceChartIds,
-    getNonZeroUniqueBins,
-    DataBin,
-    getPatientIdentifiers,
-    geneFilterQueryFromOql,
-    geneFilterQueryToOql,
-    annotationFilterActive,
-    driverTierFilterActive,
+    showOriginStudiesInSummaryDescription,
     statusFilterActive,
+    StudyViewFilterWithSampleIdentifierFilters,
+    toFixedDigit,
     updateCustomIntervalFilter,
+    updateGeneQuery,
+    updateSavedUserPreferenceChartIds,
 } from 'pages/studyView/StudyViewUtils';
 import {
-    Sample,
-    StudyViewFilter,
-    DataFilterValue,
     CancerStudy,
     ClinicalAttribute,
+    DataFilterValue,
+    Sample,
+    StudyViewFilter,
 } from 'cbioportal-ts-api-client';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { SpecialChartsUniqueKeyEnum } from './StudyViewUtils';
 import { Layout } from 'react-grid-layout';
-import sinon from 'sinon';
+import sinon, { spy } from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { ChartDimension, ChartTypeEnum } from './StudyViewConfig';
 import { MobxPromise } from 'mobxpromise';
@@ -88,13 +89,7 @@ import {
     ChartUserSetting,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
-import { spy } from 'sinon';
-import { shallow, render, mount } from 'enzyme';
-import {
-    EditableSpan,
-    remoteData,
-    toPromise,
-} from 'cbioportal-frontend-commons';
+import { remoteData, toPromise } from 'cbioportal-frontend-commons';
 import { autorun, observable, runInAction } from 'mobx';
 
 describe('StudyViewUtils', () => {
@@ -1534,6 +1529,894 @@ describe('StudyViewUtils', () => {
                 isEveryBinDistinct(someBinsDistinct),
                 'should be false when some bins are distinct'
             );
+        });
+    });
+
+    describe('isDataBinSelected', () => {
+        const categoryFilter = {
+            value: 'Unknown',
+        } as DataFilterValue;
+
+        const singlePointFilter = {
+            start: 14,
+            end: 14,
+        } as DataFilterValue;
+
+        const startExclusiveEndInclusiveFilter = {
+            start: 14,
+            end: 15,
+        } as DataFilterValue;
+
+        const startExclusiveOpenEndedFilter: DataFilterValue = {
+            start: 14,
+            value: '>',
+        } as DataFilterValue;
+
+        const startInclusiveOpenEndedFilter: DataFilterValue = {
+            start: 14,
+            value: '>=',
+        } as DataFilterValue;
+
+        const endExclusiveOpenStartFilter: DataFilterValue = {
+            end: 14,
+            value: '<',
+        } as DataFilterValue;
+
+        const endInclusiveOpenStartFilter: DataFilterValue = {
+            end: 14,
+            value: '<=',
+        } as DataFilterValue;
+
+        describe('test isDataBinSelected with a single point data bin for all filters', () => {
+            it('rejects a single point data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '14 should be rejected by Unknown'
+                );
+            });
+
+            it('accepts a single point data bin that falls into a single point filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '14 should be accepted by 14'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 13,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '13 should be rejected by 14'
+                );
+            });
+
+            it('accepts a single point data bin that falls into a start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 15,
+                    end: 15,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '15 should be accepted by (14, 15]'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into a start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '14 should be rejected by (14, 15]'
+                );
+            });
+
+            it('accepts a single point data bin that falls into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 15,
+                    end: 15,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '15 should be accepted by (14, Infinity)'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '14 should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('accepts a single point data bin that falls into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '14 should be accepted by [14, Infinity)'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 13,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '13 should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('accepts a single point data bin that falls into a end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 13,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '13 should be accepted by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into an end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '14 should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('accepts a single point data bin that falls into an end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 14,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '14 should be accepted by (-Infinity, 14]'
+                );
+            });
+
+            it('rejects a single point data bin that does not fall into an end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 15,
+                    end: 15,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '15 should be rejected by (-Infinity, 14]'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with a start exclusive end inclusive data bin for all filters', () => {
+            it('rejects a start exclusive end inclusive data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '(13, 14] should be rejected by Unknown'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin for any single point filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '(13, 14] should be accepted by 14'
+                );
+            });
+
+            it('accepts a start exclusive end inclusive data bin that falls into a start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 15,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '(14, 15] should be accepted by (14, 15]'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin that does not fall into a start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 15,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '(13, 15] should be rejected by (14, 15]'
+                );
+            });
+
+            it('accepts a start exclusive end inclusive data bin that falls into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 15,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(14, 15] should be accepted by (14, Infinity)'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin that does not fall into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 15,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(13, 15] should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('accepts a start exclusive end inclusive data bin that falls into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 15,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(14, 15] should be accepted by [14, Infinity)'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin that does not fall into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 15,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(13, 15] should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('accepts a start exclusive end inclusive data bin that falls into a end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 12,
+                    end: 13,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(12, 13] should be accepted by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin that does not fall into an end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 14,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(13, 14] should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('accepts a start exclusive end inclusive data bin that falls into an end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    end: 14,
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(13, 14] should be accepted by (-Infinity, 14]'
+                );
+            });
+
+            it('rejects a start exclusive end inclusive data bin that does not fall into an end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 14,
+                    end: 15,
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(14, 15] should be rejected by (-Infinity, 14]'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with a start exclusive open ended data bin for all filters', () => {
+            it('rejects a start exclusive open ended data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '(14, Infinity) should be rejected by Unknown'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin for any single point filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '(13, Infinity) should be rejected by 14'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin for any start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '(14, Infinity) should be rejected by (14, 15]'
+                );
+            });
+
+            it('accepts a start exclusive open ended data bin that falls into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(14, Infinity) should be accepted by (14, Infinity)'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin that does not fall into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(13, Infinity) should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('accepts a start exclusive open ended data bin that falls into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(14, Infinity) should be accepted by [14, Infinity)'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin that does not fall into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(13, Infinity) should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin for any end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(13, Infinity) should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects a start exclusive open ended data bin for any end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(13, Infinity) should be rejected by (-Infinity, 14]'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with a start inclusive open ended data bin for all filters', () => {
+            it('rejects a start inclusive open ended data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '[14, Infinity) should be rejected by Unknown'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin for any single point filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '[14, Infinity) should be rejected by 14'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin for any start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '[14, Infinity) should be rejected by (14, 15]'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin for any end exclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '[13, Infinity) should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin for any end inclusive open start filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '[13, Infinity) should be rejected by (-Infinity, 14]'
+                );
+            });
+
+            it('accepts a start inclusive open ended data bin that falls into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 15,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '[15, Infinity) should be accepted by (14, Infinity)'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin that does not fall into a start exclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '[14, Infinity) should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('accepts a start inclusive open ended data bin that falls into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '[14, Infinity) should be accepted by [14, Infinity)'
+                );
+            });
+
+            it('rejects a start inclusive open ended data bin that does not fall into a start inclusive open ended filter', () => {
+                const dataBin = {
+                    start: 13,
+                    specialValue: '>=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '[13, Infinity) should be rejected by [14, Infinity)'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with an end exclusive open start data bin for all filters', () => {
+            it('rejects an end exclusive open start data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '(-Infinity, 14) should be rejected by Unknown'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin for any single point filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '(-Infinity, 15) should be rejected by 14'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin for any start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '(-Infinity, 15) should be rejected by (14, 15]'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin for any start exclusive open ended filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(-Infinity, 15) should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin for any start inclusive open ended filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(-Infinity, 14) should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('accepts an end exclusive open start data bin that falls into an end exclusive open start filter', () => {
+                const dataBin = {
+                    end: 13,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(-Infinity, 13) should be accepted by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin that does not fall into an end exclusive open start filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(-Infinity, 15) should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('accepts an end exclusive open start data bin that falls into an end inclusive open start filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(-Infinity, 14) should be accepted by (-Infinity, 14]'
+                );
+            });
+
+            it('rejects an end exclusive open start data bin that does not fall into an end inclusive open start filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(-Infinity, 15) should be rejected by (-Infinity, 14]'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with an end inclusive open start data bin for all filters', () => {
+            it('rejects an end inclusive open start data bin for any categorical filter', () => {
+                const dataBin = {
+                    start: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    '(-Infinity, 14] should be rejected by Unknown'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin for any single point filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    '(-Infinity, 14] should be rejected by 14'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin for any start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    '(-Infinity, 14] should be rejected by (14, 15]'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin for any start exclusive open ended filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    '(-Infinity, 14] should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin for any start inclusive open ended filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    '(-Infinity, 14] should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('accepts an end inclusive open start data bin that falls into an end exclusive open start filter', () => {
+                const dataBin = {
+                    end: 13,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(-Infinity, 13] should be accepted by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin that does not fall into an end exclusive open start filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    '(-Infinity, 14] should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('accepts an end inclusive open start data bin that falls into an end inclusive open start filter', () => {
+                const dataBin = {
+                    end: 14,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(-Infinity, 14] should be accepted by (-Infinity, 14]'
+                );
+            });
+
+            it('rejects an end inclusive open start data bin that does not fall into an end inclusive open start filter', () => {
+                const dataBin = {
+                    end: 15,
+                    specialValue: '<=',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    '(-Infinity, 15] should be rejected by (-Infinity, 14]'
+                );
+            });
+        });
+
+        describe('test isDataBinSelected with a categorical data bin for all filters', () => {
+            it('rejects a categorical data bin for any single point filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [singlePointFilter]),
+                    'Unknown should be rejected by 14'
+                );
+            });
+
+            it('rejects a categorical data bin for any start exclusive end inclusive filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [
+                        startExclusiveEndInclusiveFilter,
+                    ]),
+                    'Unknown should be rejected by (14, 15]'
+                );
+            });
+
+            it('rejects a categorical data bin for any start exclusive open ended filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startExclusiveOpenEndedFilter]),
+                    'Unknown should be rejected by (14, Infinity)'
+                );
+            });
+
+            it('rejects a categorical data bin for any start inclusive open ended filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [startInclusiveOpenEndedFilter]),
+                    'Unknown should be rejected by [14, Infinity)'
+                );
+            });
+
+            it('rejects a categorical data bin for any end exclusive open start filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endExclusiveOpenStartFilter]),
+                    'Unknown should be rejected by (-Infinity, 14)'
+                );
+            });
+
+            it('rejects a categorical data bin for any an end inclusive open start filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [endInclusiveOpenStartFilter]),
+                    'Unknown should be rejected by (-Infinity, 14]'
+                );
+            });
+
+            it('accepts a categorical data bin that matches a categorical filter', () => {
+                const dataBin = {
+                    specialValue: 'Unknown',
+                } as DataBin;
+
+                assert.isTrue(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    'Unknown should be accepted by Unknown'
+                );
+            });
+
+            it('rejects a categorical data bin that does not match a categorical filter', () => {
+                const dataBin = {
+                    specialValue: 'Known',
+                } as DataBin;
+
+                assert.isFalse(
+                    isDataBinSelected(dataBin, [categoryFilter]),
+                    'Known should be rejected by Unknown'
+                );
+            });
         });
     });
 

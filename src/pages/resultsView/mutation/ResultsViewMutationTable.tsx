@@ -4,6 +4,7 @@ import {
     IMutationTableProps,
     MutationTableColumnType,
     default as MutationTable,
+    MutationTableColumn,
 } from 'shared/components/mutationTable/MutationTable';
 import CancerTypeColumnFormatter from 'shared/components/mutationTable/column/CancerTypeColumnFormatter';
 import TumorAlleleFreqColumnFormatter from 'shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter';
@@ -14,6 +15,8 @@ import { ASCNAttributes } from 'shared/enums/ASCNEnums';
 import { IColumnVisibilityControlsProps } from 'shared/components/columnVisibilityControls/ColumnVisibilityControls';
 import AddColumns from './AddColumns';
 import ClinicalAttributeCache from 'shared/cache/ClinicalAttributeCache';
+import { createNamespaceColumns } from 'shared/components/mutationTable/MutationTableUtils';
+import _ from 'lodash';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -172,6 +175,17 @@ export default class ResultsViewMutationTable extends MutationTable<
                 order: 300,
             };
         }
+
+        // generate namespace columns
+        const namespaceColumns = createNamespaceColumns(
+            this.props.namespaceColumns
+        );
+        _.forIn(
+            namespaceColumns,
+            (column: MutationTableColumn, columnName: string) => {
+                this._columns[columnName] = column;
+            }
+        );
 
         // override default visibility for some columns
         this._columns[

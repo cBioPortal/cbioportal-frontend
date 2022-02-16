@@ -65,6 +65,7 @@ import {
 import { isMixedReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getSuffixOfMolecularProfile } from 'shared/lib/molecularProfileUtils';
 import { VirtualStudy } from 'shared/api/session-service/sessionServiceModels';
+import { isQueriedStudyAuthorized } from 'pages/studyView/StudyViewUtils';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -465,6 +466,13 @@ export class QueryStore {
         this._selectedSampleListId = value;
     }
 
+    @computed
+    public get selectedSampleList() {
+        return this.selectedSampleListId
+            ? this.dict_sampleListId_sampleList[this.selectedSampleListId]
+            : undefined;
+    }
+
     @observable caseIds = '';
 
     // this variable is used to set set custom case ids if the query is a shared virtual study query
@@ -825,7 +833,9 @@ export class QueryStore {
             let result: { [studyId: string]: string[] } = {};
 
             _.each(this.physicalStudiesSet.result, (study, studyId) => {
-                result[studyId] = [studyId];
+                if (isQueriedStudyAuthorized(study)) {
+                    result[studyId] = [studyId];
+                }
             });
 
             _.each(
@@ -1759,7 +1769,7 @@ export class QueryStore {
                 Number(this.volcanoPlotSelectedPercentile.value),
                 0,
                 1,
-                this.defaultSelectedSampleListId
+                this.selectedSampleListId
             );
             return hierarchyData;
         },

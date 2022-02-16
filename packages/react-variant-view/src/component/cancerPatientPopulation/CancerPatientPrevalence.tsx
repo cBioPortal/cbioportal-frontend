@@ -11,8 +11,8 @@ import {
     isGermlineMutation,
     isSomaticMutation,
     formatFrequencyValue,
+    Pathogenicity,
 } from 'cbioportal-utils';
-import { Pathogenicity } from '../../util/Constants';
 import { signalLogoInTable } from '../featureTable/SignalLogo';
 
 interface ICancerPatientPopulationProps {

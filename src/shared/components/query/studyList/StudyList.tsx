@@ -16,8 +16,9 @@ import {
     CancerTypeWithVisibility,
 } from '../CancerStudyTreeData';
 import { StudyLink } from '../../StudyLink/StudyLink';
-import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
-import { IconType } from '../../studyTagsTooltip/StudyTagsTooltip';
+import StudyTagsTooltip, {
+    IconType,
+} from '../../studyTagsTooltip/StudyTagsTooltip';
 import { formatStudyReferenceGenome } from 'shared/lib/referenceGenomeUtils';
 import { getServerConfig } from 'config/config';
 
@@ -121,7 +122,7 @@ export default class StudyList extends QueryStoreComponent<
                         {indentArrow}
 
                         <span>{cancerType.name}</span>
-                        {!!!this.store.forDownloadTab && (
+                        {!this.store.forDownloadTab && (
                             <span className={styles.SelectAll}>
                                 {_.intersection(
                                     childStudyIds,

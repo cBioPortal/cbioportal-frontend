@@ -17,6 +17,8 @@ const defaultTimeoutInterval = 180000;
 
 const resultsDir = process.env.JUNIT_REPORT_PATH || './shared/results/';
 
+const retries = process.env.RETRIES || 2;
+
 let screenshotRoot = process.env.SCREENSHOT_DIRECTORY;
 
 // correct if screenshot directory has trailing slash
@@ -70,19 +72,27 @@ function proxyComparisonMethod(target) {
         const screenshotPath = this.getScreenshotFile(context);
         const referencePath = this.getReferencefile(context);
         const referenceExists = await fs.existsSync(referencePath);
-        const resp = oldProcessScreenshot.apply(this, arguments);
 
-        resp.then(d =>
-            console.log('MISMATCH REPORT:', referencePath, d.misMatchPercentage)
-        );
+        // add it to test data in case it's needed later
+        context.test.referenceExists = referenceExists;
 
+        const resp = await oldProcessScreenshot.apply(this, arguments);
+
+        // process screenshot will create a reference screenshot
+        // if it's missing.  this will cause subsequent retries to fail
+        // for this reason, we just delete the reference image
+        // so that the test will fail with missing reference error
         if (referenceExists === false) {
             console.log(`MISSING REFERENCE SCREENSHOT: ${referencePath}`);
-            return {
+            console.log('REMOVING auto generated reference image');
+            fs.rmSync(referencePath);
+            const report = {
                 ...this.createResultReport(1000, false, true),
                 referenceExists,
             };
+            return report;
         }
+
         return resp;
     };
 }
@@ -358,7 +368,7 @@ exports.config = {
         ui: 'bdd',
         timeout: debug ? 20000000 : defaultTimeoutInterval, // make big when using browser.debug()
         require: './shared/wdio/it-override.js',
-        retries: 2,
+        retries: retries,
     },
     //
     // =====

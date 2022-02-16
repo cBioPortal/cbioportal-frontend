@@ -221,28 +221,22 @@ describe('study laml_tcga tests', () => {
             //Skipping it for now since this feature is dependent on session-service and
             // heroku instance of it not stable (would not be active/running all the time)
             // also data-test would be dynamic and depends on chart id (session id)
-            it.skip('a new chart should be added and filtered', () => {
+            it('a new chart should be added and filtered', () => {
                 $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).waitForEnabled();
                 const beforeClick = getNumberOfStudyViewCharts();
                 $(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON).click();
 
-                $(
-                    "[data-test='chart-container-CUSTOM_FILTERS_3']"
-                ).waitForDisplayed();
+                $('.chartTitle*=Custom Data 1').waitForDisplayed();
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
 
-                // make sure the title is reflected
                 assert(
-                    getTextFromElement(
-                        "[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle"
-                    ) === 'Custom data 1'
+                    $('.userSelections')
+                        .$('span=Custom Data 1')
+                        .isExisting(),
+                    'new chart filter state is reflected in filter breadcrumb'
                 );
-
-                // make sure the chart is filtered
-                const res = browser.checkElement('.userSelections');
-                assertScreenShotMatch(res);
             });
             after(() => {
                 // Close the tooltip
@@ -258,23 +252,15 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
     it('check add chart button doesnt exist on heatmap', () => {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
         waitForNetworkQuiet(30000);
-        $('#studyViewTabs a.tabAnchor_heatmaps').waitForDisplayed({
-            timeout: WAIT_FOR_VISIBLE_TIMEOUT,
-        });
-        $('#studyViewTabs a.tabAnchor_heatmaps').click();
-        assert(!$(ADD_CHART_BUTTON).isExisting());
-    });
-    it('should hide add chart button on clinical data tab', () => {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
-        waitForNetworkQuiet(30000);
+
         $('#studyViewTabs a.tabAnchor_clinicalData').waitForDisplayed({
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
-        $('#studyViewTabs a.tabAnchor_clinicalData').click();
 
-        // unfortunately we just re-use button for columns instead of changing component
-        // so only way to test identity of button is to look at its contents
-        assert.equal(getTextFromElement(ADD_CHART_BUTTON), 'Columns ▾');
+        assert($('button=Charts ▾').isExisting());
+
+        $('#studyViewTabs a.tabAnchor_clinicalData').click();
+        assert(!$('button=Charts ▾').isExisting());
     });
 });
 

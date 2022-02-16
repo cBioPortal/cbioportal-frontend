@@ -69,6 +69,7 @@ import {
     SURVIVAL_PLOT_Y_LABEL_TOOLTIP,
 } from 'pages/resultsView/survival/SurvivalUtil';
 import Timer = NodeJS.Timer;
+import StudyViewViolinPlotTable from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotTable';
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -121,19 +122,26 @@ export interface IChartContainerProps {
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
-    onToggleLogScale: (chartMeta: ChartMeta) => void;
-    onToggleLogScaleX: (chartMeta: ChartMeta) => void;
-    onToggleLogScaleY: (chartMeta: ChartMeta) => void;
-    onToggleNAValue: (chartMeta: ChartMeta) => void;
-    onSwapAxes: (chartMeta: ChartMeta) => void;
+    onToggleLogScale?: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleX?: (chartMeta: ChartMeta) => void;
+    onToggleLogScaleY?: (chartMeta: ChartMeta) => void;
+    onToggleViolinPlot?: (chartMeta: ChartMeta) => void;
+    onToggleBoxPlot?: (chartMeta: ChartMeta) => void;
+    onToggleNAValue?: (chartMeta: ChartMeta) => void;
+    onSwapAxes?: (chartMeta: ChartMeta) => void;
     logScaleChecked?: boolean;
     showLogScaleToggle?: boolean;
     logScaleXChecked?: boolean;
     showLogScaleXToggle?: boolean;
     logScaleYChecked?: boolean;
     showLogScaleYToggle?: boolean;
+    showBoxPlotToggle?: boolean;
+    boxPlotChecked?: boolean;
+    showViolinPlotToggle?: boolean;
+    violinPlotChecked?: boolean;
     isShowNAChecked?: boolean;
     showNAToggle?: boolean;
+    selectedCategories?: string[];
     selectedGenes?: any;
     cancerGenes: number[];
     onGeneSelect?: any;
@@ -193,29 +201,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.props.onDataBinSelection(this.props.chartMeta, dataBins);
             }),
             onToggleLogScale: action(() => {
-                if (this.props.onToggleLogScale) {
-                    this.props.onToggleLogScale(this.props.chartMeta);
-                }
+                this.props.onToggleLogScale?.(this.props.chartMeta);
             }),
             onToggleLogScaleX: action(() => {
-                if (this.props.onToggleLogScaleX) {
-                    this.props.onToggleLogScaleX(this.props.chartMeta);
-                }
+                this.props.onToggleLogScaleX?.(this.props.chartMeta);
             }),
             onToggleLogScaleY: action(() => {
-                if (this.props.onToggleLogScaleY) {
-                    this.props.onToggleLogScaleY(this.props.chartMeta);
-                }
+                this.props.onToggleLogScaleY?.(this.props.chartMeta);
+            }),
+            onToggleBoxPlot: action(() => {
+                this.props.onToggleBoxPlot?.(this.props.chartMeta);
+            }),
+            onToggleViolinPlot: action(() => {
+                this.props.onToggleViolinPlot?.(this.props.chartMeta);
             }),
             onToggleNAValue: action(() => {
-                if (this.props.onToggleNAValue) {
-                    this.props.onToggleNAValue(this.props.chartMeta);
-                }
+                this.props.onToggleNAValue?.(this.props.chartMeta);
             }),
             onSwapAxes: action(() => {
-                if (this.props.onSwapAxes) {
-                    this.props.onSwapAxes(this.props.chartMeta);
-                }
+                this.props.onSwapAxes?.(this.props.chartMeta);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 if (this.mouseLeaveTimeout) {
@@ -293,6 +297,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 };
                 break;
             }
+            case ChartTypeEnum.VIOLIN_PLOT_TABLE:
+                controls = {
+                    showLogScaleToggle: this.props.showLogScaleToggle,
+                    logScaleChecked: this.props.logScaleChecked,
+                    showViolinPlotToggle: this.props.showViolinPlotToggle,
+                    violinPlotChecked: this.props.violinPlotChecked,
+                    showBoxPlotToggle: this.props.showBoxPlotToggle,
+                    boxPlotChecked: this.props.boxPlotChecked,
+                };
+                break;
             case ChartTypeEnum.PIE_CHART: {
                 controls = { showTableIcon: true };
                 break;
@@ -1013,6 +1027,49 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     </div>
                 );
             }
+            case ChartTypeEnum.VIOLIN_PLOT_TABLE:
+                const chartSettings = this.props.store.getXvsYChartSettings(
+                    this.props.chartMeta!.uniqueKey
+                )!;
+                const chartInfo = this.props.store.getXvsYViolinChartInfo(
+                    this.props.chartMeta!.uniqueKey
+                )!;
+                return () => {
+                    const isLoading =
+                        !this.props.store.clinicalDataBinPromises[
+                            chartInfo.numericalAttr.clinicalAttributeId
+                        ] ||
+                        this.props.store.clinicalDataBinPromises[
+                            chartInfo.numericalAttr.clinicalAttributeId
+                        ].isPending;
+                    return (
+                        <StudyViewViolinPlotTable
+                            dimension={this.props.dimension}
+                            width={getWidthByDimension(
+                                this.props.dimension,
+                                this.borderWidth
+                            )}
+                            height={getTableHeightByDimension(
+                                this.props.dimension,
+                                this.chartHeaderHeight
+                            )}
+                            categoryColumnName={this.props.axisLabelX!}
+                            violinColumnName={this.props.axisLabelY!}
+                            violinBounds={{
+                                min: this.props.promise.result.axisStart,
+                                max: this.props.promise.result.axisEnd,
+                            }}
+                            rows={this.props.promise.result.rows || []}
+                            showViolin={this.props.violinPlotChecked!}
+                            showBox={this.props.boxPlotChecked!}
+                            logScale={chartSettings?.violinLogScale!}
+                            setFilters={this.props.onValueSelection}
+                            selectedCategories={this.props.selectedCategories!}
+                            isLoading={isLoading}
+                        />
+                    );
+                };
+                break;
             default:
                 return null;
         }
@@ -1065,6 +1122,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     toggleLogScale={this.handlers.onToggleLogScale}
                     toggleLogScaleX={this.handlers.onToggleLogScaleX}
                     toggleLogScaleY={this.handlers.onToggleLogScaleY}
+                    toggleBoxPlot={this.handlers.onToggleBoxPlot}
+                    toggleViolinPlot={this.handlers.onToggleViolinPlot}
                     swapAxes={this.handlers.onSwapAxes}
                     toggleNAValue={this.handlers.onToggleNAValue}
                     chartControls={this.chartControls}

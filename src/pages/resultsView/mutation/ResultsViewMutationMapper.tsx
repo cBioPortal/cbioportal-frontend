@@ -42,6 +42,12 @@ import {
     getPatientSampleSummary,
     submitToStudyViewPage,
 } from '../querySummary/QuerySummaryUtils';
+import { ExtendedMutationTableColumnType } from 'shared/components/mutationTable/MutationTable';
+import {
+    buildNamespaceColumnConfig,
+    createNamespaceColumnName,
+    extractColumnNames,
+} from 'shared/components/mutationMapper/MutationMapperUtils';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     store: ResultsViewMutationMapperStore;
@@ -251,7 +257,19 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                     this.columnToHeaderFilterIconModal
                 }
                 deactivateColumnFilter={this.deactivateColumnFilter}
+                namespaceColumns={this.props.store.namespaceColumnConfig}
+                columns={this.columns}
             />
+        );
+    }
+
+    @computed get columns(): ExtendedMutationTableColumnType[] {
+        const namespaceColumnNames = extractColumnNames(
+            this.props.store.namespaceColumnConfig
+        );
+        return _.concat(
+            ResultsViewMutationTable.defaultProps.columns,
+            namespaceColumnNames
         );
     }
 
@@ -598,6 +616,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                                         );
                                     }
                                 }}
+                                data-test="numerical-filter-menu-remove-empty-rows"
                             />
                             {'Hide empty values'}
                         </label>
