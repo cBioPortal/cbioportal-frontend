@@ -13,14 +13,14 @@ import {
 import {
     getEventColor,
     getSampleInfo,
-} from 'pages/patientView/timeline2/TimelineWrapperUtils';
+} from 'pages/patientView/timeline/TimelineWrapperUtils';
 import React from 'react';
 import _ from 'lodash';
 import SampleMarker, {
     MultipleSampleMarker,
-} from 'pages/patientView/timeline2/SampleMarker';
+} from 'pages/patientView/timeline/SampleMarker';
 import SampleManager from 'pages/patientView/SampleManager';
-import { ISampleMetaDeta } from 'pages/patientView/timeline2/TimelineWrapper';
+import { ISampleMetaDeta } from 'pages/patientView/timeline/TimelineWrapper';
 import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { getColor } from 'cbioportal-frontend-commons';
 import ReactMarkdown from 'react-markdown';

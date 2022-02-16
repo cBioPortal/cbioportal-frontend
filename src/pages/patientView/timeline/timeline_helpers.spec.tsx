@@ -1,4 +1,4 @@
-import { allResultValuesAreNumerical } from 'pages/patientView/timeline2/timeline_helpers';
+import { allResultValuesAreNumerical } from 'pages/patientView/timeline/timeline_helpers';
 import { assert } from 'chai';
 import { TimelineEvent } from 'cbioportal-clinical-timeline';
 

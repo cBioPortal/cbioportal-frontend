@@ -2,7 +2,7 @@ import React from 'react';
 import {
     getNumberRangeLabel,
     getSortedSampleInfo,
-} from 'pages/patientView/timeline2/TimelineWrapperUtils';
+} from 'pages/patientView/timeline/TimelineWrapperUtils';
 import { getTextWidth } from 'cbioportal-frontend-commons';
 import _ from 'lodash';
 
