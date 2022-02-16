@@ -3,7 +3,10 @@ import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicato
 import TimelineWrapper from 'pages/patientView/timeline/TimelineWrapper';
 import WindowStore from 'shared/components/window/WindowStore';
 import GenomicOverview from 'pages/patientView/genomicOverview/GenomicOverview';
-import { default as PatientViewMutationTable } from 'pages/patientView/mutation/PatientViewMutationTable';
+import {
+    default as PatientViewMutationTable,
+    defaultAlleleFrequencyHeaderTooltip,
+} from 'pages/patientView/mutation/PatientViewMutationTable';
 import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import PatientViewStructuralVariantTable from 'pages/patientView/structuralVariant/PatientViewStructuralVariantTable';
 import CopyNumberTableWrapper from 'pages/patientView/copyNumberAlterations/CopyNumberTableWrapper';
@@ -23,10 +26,15 @@ import _ from 'lodash';
 import MutationalSignaturesContainer from 'pages/patientView/mutationalSignatures/MutationalSignaturesContainer';
 import { buildCustomTabs } from 'shared/lib/customTabs/customTabHelpers';
 import * as React from 'react';
-import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
 import SampleManager from 'pages/patientView/SampleManager';
 import PatientViewPage from 'pages/patientView/PatientViewPage';
 import PatientViewUrlWrapper from 'pages/patientView/PatientViewUrlWrapper';
+import { CompactVAFPlot } from 'pages/patientView/genomicOverview/CompactVAFPlot';
+import {
+    computeMutationFrequencyBySample,
+    doesFrequencyExist,
+} from 'pages/patientView/genomicOverview/GenomicOverviewUtils';
+import genomicOverviewStyles from 'pages/patientView/genomicOverview/styles.module.scss';
 
 export enum PatientViewPageTabs {
     Summary = 'summary',
@@ -142,7 +150,14 @@ export function tabs(
             <LoadingIndicator
                 isLoading={
                     pageComponent.patientViewPageStore.mutationData.isPending ||
-                    pageComponent.patientViewPageStore.cnaSegments.isPending
+                    pageComponent.patientViewPageStore.cnaSegments.isPending ||
+                    pageComponent.patientViewPageStore.sequencedSampleIdsInStudy
+                        .isPending ||
+                    pageComponent.patientViewPageStore
+                        .sampleToMutationGenePanelId.isPending ||
+                    pageComponent.patientViewPageStore
+                        .sampleToDiscreteGenePanelId.isPending ||
+                    pageComponent.patientViewPageStore.studies.isPending
                 }
             />
 
@@ -154,6 +169,7 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.sampleToDiscreteGenePanelId
                     .isComplete &&
+                pageComponent.patientViewPageStore.studies.isComplete &&
                 (pageComponent.patientViewPageStore
                     .mergedMutationDataFilteredByGene.length > 0 ||
                     pageComponent.patientViewPageStore.cnaSegments.result
@@ -190,6 +206,13 @@ export function tabs(
                                 pageComponent.toggleGenePanelModal
                             }
                             disableTooltip={pageComponent.genePanelModal.isOpen}
+                            locus={pageComponent.activeLocus}
+                            handleLocusChange={pageComponent.handleLocusChange}
+                            // assuming that all studies have the same reference genome
+                            genome={
+                                pageComponent.patientViewPageStore.studies
+                                    .result[0]?.referenceGenome
+                            }
                         />
                         <hr />
                     </div>
@@ -213,6 +236,8 @@ export function tabs(
                     .isComplete &&
                 pageComponent.patientViewPageStore.studyIdToStudy.isComplete &&
                 pageComponent.patientViewPageStore.sampleToMutationGenePanelId
+                    .isComplete &&
+                pageComponent.patientViewPageStore.sampleToDiscreteGenePanelId
                     .isComplete &&
                 pageComponent.patientViewPageStore.genePanelIdToEntrezGeneIds
                     .isComplete &&
@@ -388,6 +413,69 @@ export function tabs(
                                     .namespaceColumnConfig
                             }
                             columns={pageComponent.columns}
+                            alleleFreqHeaderRender={
+                                pageComponent.patientViewPageStore
+                                    .mergedMutationDataFilteredByGene.length >
+                                    0 &&
+                                doesFrequencyExist(
+                                    computeMutationFrequencyBySample(
+                                        pageComponent.patientViewPageStore
+                                            .mergedMutationDataFilteredByGene,
+                                        sampleManager?.sampleIndex || {}
+                                    )
+                                )
+                                    ? (name: string) => (
+                                          <CompactVAFPlot
+                                              mergedMutations={
+                                                  pageComponent
+                                                      .patientViewPageStore
+                                                      .mergedMutationDataFilteredByGene
+                                              }
+                                              sampleManager={sampleManager}
+                                              sampleIdToMutationGenePanelId={
+                                                  pageComponent
+                                                      .patientViewPageStore
+                                                      .sampleToMutationGenePanelId
+                                                      .result
+                                              }
+                                              sampleIdToCopyNumberGenePanelId={
+                                                  pageComponent
+                                                      .patientViewPageStore
+                                                      .sampleToDiscreteGenePanelId
+                                                      .result
+                                              }
+                                              tooltip={
+                                                  <div>
+                                                      {
+                                                          defaultAlleleFrequencyHeaderTooltip
+                                                      }
+                                                  </div>
+                                              }
+                                              thumbnailComponent={
+                                                  <span
+                                                      style={{
+                                                          display:
+                                                              'inline-flex',
+                                                      }}
+                                                  >
+                                                      <span>{name}</span>
+                                                      <span
+                                                          className={
+                                                              genomicOverviewStyles.compactVafPlot
+                                                          }
+                                                      >
+                                                          {
+                                                              CompactVAFPlot
+                                                                  .defaultProps
+                                                                  .thumbnailComponent
+                                                          }
+                                                      </span>
+                                                  </span>
+                                              }
+                                          />
+                                      )
+                                    : undefined
+                            }
                         />
                     </div>
                 )}
@@ -518,6 +606,7 @@ export function tabs(
                                 pageComponent.toggleGenePanelModal
                             }
                             disableTooltip={pageComponent.genePanelModal.isOpen}
+                            onGeneClick={pageComponent.handleCNATableGeneClick}
                         />
                     </div>
                 )}

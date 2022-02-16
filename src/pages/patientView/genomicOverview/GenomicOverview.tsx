@@ -1,25 +1,43 @@
+import classnames from 'classnames';
 import * as React from 'react';
 import _ from 'lodash';
-import { If } from 'react-if';
-import Tracks from './Tracks';
-import { ThumbnailExpandVAFPlot } from '../vafPlot/ThumbnailExpandVAFPlot';
-import {
-    ClinicalDataBySampleId,
-    Mutation,
-    Sample,
-} from 'cbioportal-ts-api-client';
+import { CopyNumberSeg, Mutation, Sample } from 'cbioportal-ts-api-client';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 import SampleManager from '../SampleManager';
-import { MutationFrequenciesBySample } from '../vafPlot/VAFPlot';
-import { computed, makeObservable } from 'mobx';
+import GenePanelManager from '../GenePanelManager';
+
+import { action, computed, makeObservable, observable } from 'mobx';
+import { observer } from 'mobx-react';
 import {
-    sampleIdToIconData,
     IKeyedIconData,
-    genePanelIdToIconData,
+    IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
 } from './GenomicOverviewUtils';
+import {
+    calcIgvTrackHeight,
+    CNA_TRACK_NAME,
+    defaultGrch37ReferenceProps,
+    defaultGrch38ReferenceProps,
+    defaultMutationTrackProps,
+    defaultSegmentTrackProps,
+    generateMutationFeatures,
+    generateSegmentFeatures,
+    MUTATION_TRACK_NAME,
+    MutationTrackFeatures,
+    SegmentTrackFeatures,
+    WHOLE_GENOME,
+} from 'shared/lib/IGVUtils';
+import { isGrch38 } from 'shared/lib/referenceGenomeUtils';
+import IntegrativeGenomicsViewer from 'shared/components/igv/IntegrativeGenomicsViewer';
+import CnaTrackSampleSummary from './CnaTrackSampleSummary';
+import CustomIgvColumn from './CustomIgvColumn';
+import GenePanelIcon from './GenePanelIcon';
+import MutationTrackSampleSummary from './MutationTrackSampleSummary';
+
+import styles from './styles.module.scss';
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
-    cnaSegments: any;
+    cnaSegments: CopyNumberSeg[];
     samples: Sample[];
     sampleOrder: { [s: string]: number };
     sampleLabels: { [s: string]: string };
@@ -30,143 +48,381 @@ interface IGenomicOverviewProps {
     sampleIdToCopyNumberGenePanelId?: { [sampleId: string]: string };
     onSelectGenePanel?: (name: string) => void;
     disableTooltip?: boolean;
+    locus?: string;
+    handleLocusChange?: (locus: string) => void;
+    genome?: string;
 }
 
+function getCnaTrackSampleSummariesForIgvTrack(
+    features: SegmentTrackFeatures[] = []
+) {
+    return _.entries(_.groupBy(features, f => f.sample)).map(
+        ([sample, featuresGroupedBySample]) => (
+            <div
+                style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
+                key={sample}
+            >
+                <CnaTrackSampleSummary data={featuresGroupedBySample} />
+            </div>
+        )
+    );
+}
+
+function getMutationTrackSampleSummariesForIgvTrack(
+    features: MutationTrackFeatures[] = []
+) {
+    return _.entries(_.groupBy(features, f => f.sample)).map(
+        ([sample, featuresGroupedBySample]) => (
+            <div
+                style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
+                key={sample}
+            >
+                <MutationTrackSampleSummary data={featuresGroupedBySample} />
+            </div>
+        )
+    );
+}
+
+function getGenePanelInfoForIgvTrack(
+    features: { sample: string }[] = [],
+    genePanelIconData: IKeyedIconData,
+    dataTextPrefix: string = 'genepanel-icon'
+) {
+    return _.entries(_.groupBy(features, f => f.sample)).map(
+        ([sample, featuresGroupedBySample], index) => (
+            <div
+                style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
+                key={sample}
+                data-test={`${dataTextPrefix}-${index}`}
+            >
+                <GenePanelIcon
+                    sampleId={sample}
+                    genePanelIconData={genePanelIconData}
+                />
+            </div>
+        )
+    );
+}
+
+function getUniqSampleKeys(sortedSamples: { uniqueSampleKey: string }[]) {
+    return _.uniq(sortedSamples.map(s => s.uniqueSampleKey));
+}
+
+// TODO see if it is possible to pass custom components for "customButtons"
+const ResetZoomButton: React.FunctionComponent<{
+    handleResetZoom?: () => void;
+    className?: string;
+}> = props => (
+    <DefaultTooltip placement="topRight" overlay="Reset Zoom">
+        <div
+            className={classnames('igv-navbar-button', props.className)}
+            onClick={props.handleResetZoom}
+        >
+            <i className="fa fa-home" />
+        </div>
+    </DefaultTooltip>
+);
+
+// TODO see if it is possible to pass custom components for "customButtons"
+const ToggleButton: React.FunctionComponent<{
+    handleSwitchView?: () => void;
+    compactIgvView?: boolean;
+    className?: string;
+}> = props => (
+    <DefaultTooltip
+        placement="topRight"
+        overlay={`Switch to the ${
+            props.compactIgvView ? 'advanced' : 'compact'
+        } view`}
+    >
+        <div
+            className={classnames('igv-navbar-button', props.className, {
+                'igv-navbar-button-clicked': !props.compactIgvView,
+            })}
+            onClick={props.handleSwitchView}
+        >
+            Advanced
+        </div>
+    </DefaultTooltip>
+);
+
+@observer
 export default class GenomicOverview extends React.Component<
-    IGenomicOverviewProps,
-    { frequencies: MutationFrequenciesBySample }
+    IGenomicOverviewProps
 > {
+    @observable locus: string | undefined;
+    @observable compactIgvView = true;
+
+    private genePanelManager: GenePanelManager;
+
     constructor(props: IGenomicOverviewProps) {
         super(props);
         makeObservable(this);
-    }
-
-    @computed get frequencies() {
-        return this.computeMutationFrequencyBySample(
-            this.props.mergedMutations
+        this.locus = props.locus;
+        this.genePanelManager = new GenePanelManager(
+            props.sampleIdToMutationGenePanelId,
+            props.sampleIdToCopyNumberGenePanelId
         );
     }
 
-    @computed get genePanelIds() {
-        return _.uniq(
-            _.concat(
-                _.values(this.props.sampleIdToMutationGenePanelId),
-                _.values(this.props.sampleIdToCopyNumberGenePanelId)
+    public get tracks() {
+        const tracks: any[] = [];
+
+        const compareFn = (a: { sampleId: string }, b: { sampleId: string }) =>
+            this.props.sampleOrder[a.sampleId] -
+            this.props.sampleOrder[b.sampleId];
+
+        if (this.props.mergedMutations.length > 0) {
+            const sortedMutations = _.flatten(this.props.mergedMutations).sort(
+                compareFn
+            );
+            const mutFeatures = generateMutationFeatures(sortedMutations);
+            const mutHeight = calcIgvTrackHeight(
+                mutFeatures,
+                600,
+                25,
+                IGV_TRACK_SAMPLE_EXPAND_HEIGHT
+            );
+
+            tracks.push({
+                ...defaultMutationTrackProps(),
+                displayMode: 'EXPAND',
+                sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
+                height: mutHeight,
+                features: mutFeatures,
+                samples: getUniqSampleKeys(sortedMutations),
+            });
+        }
+
+        if (this.props.cnaSegments.length > 0) {
+            // sort segments by sample order
+            const sortedSegments = this.props.cnaSegments
+                .slice()
+                .sort(compareFn);
+            const segFeatures = generateSegmentFeatures(sortedSegments);
+            const segHeight = calcIgvTrackHeight(
+                segFeatures,
+                600,
+                25,
+                IGV_TRACK_SAMPLE_EXPAND_HEIGHT
+            );
+
+            tracks.push({
+                ...defaultSegmentTrackProps(),
+                displayMode: 'EXPAND',
+                sampleExpandHeight: IGV_TRACK_SAMPLE_EXPAND_HEIGHT,
+                height: segHeight,
+                features: segFeatures,
+                samples: getUniqSampleKeys(sortedSegments),
+            });
+        }
+
+        return tracks;
+    }
+
+    @computed get igvProps() {
+        const coreProps = {
+            locus: this.locus,
+            onLocusChange: this.handleLocusChange,
+            tracks: this.tracks,
+            showTrackLabels: false,
+            showAllChromosomes: false,
+            showTrackControls: false,
+            disableContextMenuSort: true,
+            customButtons: [
+                // {
+                //     label: this.compactIgvView ? 'Advanced' : 'Compact',
+                //     callback: this.handleSwitchView,
+                // },
+                {
+                    label: 'Reset View',
+                    callback: this.handleResetView,
+                },
+            ],
+        };
+
+        if (this.compactIgvView) {
+            return {
+                ...coreProps,
+                showNavigation: false,
+                showSearch: false,
+                showSampleNameButton: false,
+                showChromosomeWidget: false,
+                showIdeogram: false,
+                showSVGButton: false,
+                showTrackLabelButton: false,
+                showCursorTrackingGuideButton: false,
+                showCenterGuideButton: false,
+                showSequenceTrack: false,
+                compactRulerTrack: true,
+                reference: {
+                    ...(isGrch38(this.props.genome || '')
+                        ? defaultGrch38ReferenceProps()
+                        : defaultGrch37ReferenceProps()),
+                    tracks: [], // do not include RefSeq track
+                },
+            };
+        } else {
+            return {
+                ...coreProps,
+                genome: isGrch38(this.props.genome || '') ? 'hg38' : 'hg19',
+                showNavigation: true,
+                showSearch: true,
+                showSampleNameButton: true,
+                showChromosomeWidget: true,
+                showSVGButton: true,
+                showTrackLabelButton: true,
+                showCursorTrackingGuideButton: true,
+                showCenterGuideButton: true,
+                showIdeogram: true,
+                showSequenceTrack: true,
+                compactRulerTrack: false,
+            };
+        }
+    }
+
+    @computed get shouldShowGenePanelIcons() {
+        return (
+            !_.isEmpty(
+                this.genePanelManager.sampleIdToMutationGenePanelIconData
+            ) ||
+            !_.isEmpty(
+                this.genePanelManager.sampleIdToCopyNumberGenePanelIconData
             )
         );
     }
 
-    @computed get genePanelIdToIconData(): IKeyedIconData {
-        return genePanelIdToIconData(this.genePanelIds);
-    }
-
-    @computed get sampleIdToMutationGenePanelIconData(): IKeyedIconData {
-        return sampleIdToIconData(
-            this.props.sampleIdToMutationGenePanelId,
-            this.genePanelIdToIconData
-        );
-    }
-
-    @computed get sampleIdToCopyNumberGenePanelIconData(): IKeyedIconData {
-        return sampleIdToIconData(
-            this.props.sampleIdToCopyNumberGenePanelId,
-            this.genePanelIdToIconData
-        );
+    private getSampleIconsForIgvTrack(features: { sample: string }[] = []) {
+        return _.uniq(features.map(f => f.sample)).map(sampleId => (
+            <div
+                style={{ height: IGV_TRACK_SAMPLE_EXPAND_HEIGHT }}
+                key={sampleId}
+            >
+                {this.props.sampleManager.getComponentForSample(
+                    sampleId,
+                    1,
+                    '',
+                    null,
+                    this.props.onSelectGenePanel
+                )}
+            </div>
+        ));
     }
 
     public render() {
-        const labels = _.reduce(
-            this.props.sampleManager.samples,
-            (result: any, sample: ClinicalDataBySampleId, i: number) => {
-                result[sample.id] = i + 1;
-                return result;
-            },
-            {}
-        );
+        const tracks = this.tracks;
+        const mutationTrack = tracks.find(t => t.name === MUTATION_TRACK_NAME);
+        const cnaTrack = tracks.find(t => t.name === CNA_TRACK_NAME);
 
         return (
-            <div style={{ display: 'flex' }}>
-                <Tracks
-                    mutations={_.flatten(this.props.mergedMutations)}
-                    key={Math.random() /* Force remounting on every render */}
-                    sampleManager={this.props.sampleManager}
-                    width={this.getTracksWidth()}
-                    cnaSegments={this.props.cnaSegments}
-                    samples={this.props.samples}
-                    mutationGenePanelIconData={
-                        this.sampleIdToMutationGenePanelIconData
-                    }
-                    copyNumberGenePanelIconData={
-                        this.sampleIdToCopyNumberGenePanelIconData
-                    }
-                    onSelectGenePanel={this.props.onSelectGenePanel}
-                />
-                <If condition={this.shouldShowVAFPlot()}>
-                    <ThumbnailExpandVAFPlot
-                        data={this.frequencies}
-                        order={this.props.sampleManager.sampleIndex}
-                        colors={this.props.sampleColors}
-                        labels={labels}
-                        overlayPlacement="right"
-                        cssClass="vafPlot"
-                        genePanelIconData={
-                            this.sampleIdToMutationGenePanelIconData
-                        }
+            <div>
+                <div style={{ display: 'flex' }}>
+                    <CustomIgvColumn
+                        classname={styles.compactIgvColumn}
+                        compactView={this.compactIgvView}
+                        mutationTrack={this.getSampleIconsForIgvTrack(
+                            mutationTrack?.features
+                        )}
+                        mutationTrackHeight={mutationTrack?.height}
+                        cnaTrack={this.getSampleIconsForIgvTrack(
+                            cnaTrack?.features
+                        )}
+                        cnaTrackHeight={cnaTrack?.height}
                     />
-                </If>
+                    <div
+                        className={styles.igvContainer}
+                        style={{ width: this.tracksWidth }}
+                    >
+                        <IntegrativeGenomicsViewer {...this.igvProps} />
+                    </div>
+                    <CustomIgvColumn
+                        classname={classnames(
+                            styles.rightAlignedIgvColumn,
+                            styles.rightEmbeddedIgvColumn
+                        )}
+                        compactView={this.compactIgvView}
+                        mutationTrack={getMutationTrackSampleSummariesForIgvTrack(
+                            mutationTrack?.features
+                        )}
+                        mutationTrackHeight={mutationTrack?.height}
+                        cnaTrack={getCnaTrackSampleSummariesForIgvTrack(
+                            cnaTrack?.features
+                        )}
+                        cnaTrackHeight={cnaTrack?.height}
+                    />
+                    {this.shouldShowGenePanelIcons && (
+                        <CustomIgvColumn
+                            classname={styles.centerAlignedIgvColumn}
+                            compactView={this.compactIgvView}
+                            mutationTrack={getGenePanelInfoForIgvTrack(
+                                mutationTrack?.features,
+                                this.genePanelManager
+                                    .sampleIdToMutationGenePanelIconData,
+                                'mut-track-genepanel-icon-'
+                            )}
+                            mutationTrackHeight={mutationTrack?.height}
+                            cnaTrack={getGenePanelInfoForIgvTrack(
+                                cnaTrack?.features,
+                                this.genePanelManager
+                                    .sampleIdToCopyNumberGenePanelIconData,
+                                'cna-track-genepanel-icon-'
+                            )}
+                            cnaTrackHeight={cnaTrack?.height}
+                        />
+                    )}
+                </div>
             </div>
         );
     }
 
-    private shouldShowVAFPlot(): boolean {
-        return this.props.mergedMutations.length > 0 && this.isFrequencyExist();
+    componentWillReceiveProps(nextProps: Readonly<IGenomicOverviewProps>) {
+        // update the observable locus only if nextProps.locus is different than the current one
+        // no need to update if it is the same as the current one
+        if (this.locus !== nextProps.locus) {
+            this.locus = nextProps.locus;
+        }
     }
 
-    private isFrequencyExist(): boolean {
-        for (const frequencyId of Object.keys(this.frequencies)) {
-            if (this.frequencies.hasOwnProperty(frequencyId)) {
-                for (const frequency of this.frequencies[frequencyId]) {
-                    return !isNaN(frequency);
-                }
-            }
-        }
-        return false;
+    private get tracksWidth(): number {
+        return this.props.containerWidth - 40;
     }
 
-    private getTracksWidth(): number {
-        return (
-            this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40)
-        );
+    @action.bound
+    private handleLocusChange(locus: string) {
+        // update the observable locus only if it is different than the current one
+        // no need to update (and re-render) if it is same as the current one
+        if (this.locus !== locus) {
+            this.locus = locus;
+        }
+
+        if (this.props.handleLocusChange) {
+            this.props.handleLocusChange(locus);
+        }
+
+        // switch to advanced view if locus is updated to anything other than whole genome
+        if (this.locus !== WHOLE_GENOME) {
+            this.compactIgvView = false;
+        }
     }
 
-    private computeMutationFrequencyBySample(
-        mergedMutations: Mutation[][]
-    ): MutationFrequenciesBySample {
-        const ret: MutationFrequenciesBySample = {};
-        let sampleId;
-        let freq;
-        for (const mutations of mergedMutations) {
-            for (const mutation of mutations) {
-                if (
-                    mutation.tumorAltCount >= 0 &&
-                    mutation.tumorRefCount >= 0
-                ) {
-                    sampleId = mutation.sampleId;
-                    freq =
-                        mutation.tumorAltCount /
-                        (mutation.tumorRefCount + mutation.tumorAltCount);
-                    ret[sampleId] = ret[sampleId] || [];
-                    ret[sampleId].push(freq);
-                }
-            }
+    @action.bound
+    private handleResetZoom() {
+        // reset the observable locus to whole genome if it is not set to whole genome already
+        // no need to reset (and re-render) if it is already set to whole genome
+        if (this.locus !== WHOLE_GENOME) {
+            this.handleLocusChange(WHOLE_GENOME);
         }
-        for (const sampleId of Object.keys(this.props.sampleOrder)) {
-            ret[sampleId] = ret[sampleId] || [];
-            const shouldAdd = mergedMutations.length - ret[sampleId].length;
-            for (let i = 0; i < shouldAdd; i++) {
-                ret[sampleId].push(NaN);
-            }
-        }
-        return ret;
+    }
+
+    @action.bound
+    private handleResetView() {
+        // reset to default view
+        this.compactIgvView = true;
+        this.handleResetZoom();
+    }
+
+    @action.bound
+    private handleSwitchView() {
+        this.compactIgvView = !this.compactIgvView;
     }
 }
