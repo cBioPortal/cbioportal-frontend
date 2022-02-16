@@ -12,6 +12,7 @@ import {
     getNCBIlink,
 } from 'cbioportal-frontend-commons';
 import 'rc-tooltip/assets/bootstrap_white.css';
+import { getServerConfig } from 'config/config';
 
 enum EVENT_KEY {
     distinguishDrivers = '0',
@@ -244,69 +245,74 @@ export default class DriverAnnotationControls extends React.Component<
                                         </label>
                                     </div>
                                 )}
-                            {this.props.handlers
-                                .onChangeAnnotateCBioPortalInputValue && (
-                                <div className="checkbox">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.annotateCBioPortal}
-                                            checked={
+                            {getServerConfig().show_cbioportal &&
+                                this.props.handlers
+                                    .onChangeAnnotateCBioPortalInputValue && (
+                                    <div className="checkbox">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                value={
+                                                    EVENT_KEY.annotateCBioPortal
+                                                }
+                                                checked={
+                                                    this.props.state
+                                                        .annotateDriversCBioPortal
+                                                }
+                                                onClick={this.onInputClick}
+                                                data-test="annotateCBioPortalCount"
+                                            />
+                                            cBioPortal {'>'}=
+                                        </label>
+                                        <EditableSpan
+                                            value={
                                                 this.props.state
-                                                    .annotateDriversCBioPortal
+                                                    .annotateCBioPortalInputValue ||
+                                                ''
                                             }
-                                            onClick={this.onInputClick}
-                                            data-test="annotateCBioPortalCount"
+                                            setValue={
+                                                this.props.handlers
+                                                    .onChangeAnnotateCBioPortalInputValue
+                                            }
+                                            numericOnly={true}
+                                            textFieldAppearance={true}
+                                            maxChars={10}
                                         />
-                                        cBioPortal {'>'}=
-                                    </label>
-                                    <EditableSpan
-                                        value={
-                                            this.props.state
-                                                .annotateCBioPortalInputValue ||
-                                            ''
-                                        }
-                                        setValue={
-                                            this.props.handlers
-                                                .onChangeAnnotateCBioPortalInputValue
-                                        }
-                                        numericOnly={true}
-                                        textFieldAppearance={true}
-                                        maxChars={10}
-                                    />
-                                </div>
-                            )}
-                            {this.props.handlers
-                                .onChangeAnnotateCOSMICInputValue && (
-                                <div className="checkbox">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.annotateCOSMIC}
-                                            checked={
+                                    </div>
+                                )}
+                            {getServerConfig().show_cosmic &&
+                                this.props.handlers
+                                    .onChangeAnnotateCOSMICInputValue && (
+                                    <div className="checkbox">
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                value={EVENT_KEY.annotateCOSMIC}
+                                                checked={
+                                                    this.props.state
+                                                        .annotateDriversCOSMIC
+                                                }
+                                                onClick={this.onInputClick}
+                                                data-test="annotateCOSMICCount"
+                                            />
+                                            COSMIC {'>'}=
+                                        </label>
+                                        <EditableSpan
+                                            value={
                                                 this.props.state
-                                                    .annotateDriversCOSMIC
+                                                    .annotateCOSMICInputValue ||
+                                                ''
                                             }
-                                            onClick={this.onInputClick}
-                                            data-test="annotateCOSMICCount"
+                                            setValue={
+                                                this.props.handlers
+                                                    .onChangeAnnotateCOSMICInputValue
+                                            }
+                                            numericOnly={true}
+                                            textFieldAppearance={true}
+                                            maxChars={10}
                                         />
-                                        COSMIC {'>'}=
-                                    </label>
-                                    <EditableSpan
-                                        value={
-                                            this.props.state
-                                                .annotateCOSMICInputValue || ''
-                                        }
-                                        setValue={
-                                            this.props.handlers
-                                                .onChangeAnnotateCOSMICInputValue
-                                        }
-                                        numericOnly={true}
-                                        textFieldAppearance={true}
-                                        maxChars={10}
-                                    />
-                                </div>
-                            )}
+                                    </div>
+                                )}
                         </span>
                     )}
                     {!!this.props.state
