@@ -22,7 +22,7 @@ import {
     configureHtanOhsuTimeline,
     configureTimelineToxicityColors,
     sortTracks,
-} from 'pages/patientView/timeline2/timeline_helpers';
+} from 'pages/patientView/timeline/timeline_helpers';
 import { downloadZippedTracks } from './timelineDataUtils';
 
 export interface ISampleMetaDeta {
