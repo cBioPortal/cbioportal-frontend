@@ -1666,6 +1666,27 @@ export default class PatientViewPage extends React.Component<
                                     </MSKTab>
                                 )}
 
+                                <MSKTab
+                                    key={9}
+                                    id={PatientViewPageTabs.Images}
+                                    linkText="Imaging"
+                                >
+                                    <p>
+                                        <h1>Images</h1>
+                                        {
+                                            'RC-MSK-001-pt.png RC-MSK-001-tm.png RC002_03.18.2015_5.png RC002_05.14.2015_3.png RC002_07.22.15_1.png RC002_10.08.2014_2.png'.split(' ').map((image, index) => (
+                                                <>
+                                                    <h5>{image}</h5>
+                                                    <img width={image.includes('RC002')? 600: undefined} src={`https://github.mskcc.org/pages/debruiji/cbioportal-images/${image}`} />
+                                                    <br />
+                                                </>
+
+                                            ))
+                                        }
+                                    </p>
+                                </MSKTab>
+
+
                                 {this.resourceTabs.component}
 
                                 {getServerConfig().custom_tabs &&
