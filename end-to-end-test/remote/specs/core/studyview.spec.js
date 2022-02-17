@@ -82,16 +82,18 @@ describe('study laml_tcga tests', () => {
         assert($(STUDY_SUMMARY_RAW_DATA_DOWNLOAD).isExisting());
     });
 
-    it('when quickly adding charts, each chart should get proper data.', () => {
+    it('when quickly adding charts, each chart should get proper data.', function() {
+        this.retries(0);
+
         toStudyViewSummaryTab();
         waitForStudyViewSelectedInfo();
         $(ADD_CHART_BUTTON).click();
         // Wait for the data frequency is calculated
         waitForNetworkQuiet();
-        // Click on three options
-        $("[data-test='add-chart-option-fab'] input").click();
-        $("[data-test='add-chart-option-basophils-cell-count'] input").click();
-        $("[data-test='add-chart-option-blast-count'] input").click();
+
+        // Add three charts
+        $("[data-test='add-chart-option-cancer-type'] input").click();
+        $("[data-test='add-chart-option-case-lists'] input").click();
 
         // Pause a bit time to let the page render the charts
         waitForStudyView();
