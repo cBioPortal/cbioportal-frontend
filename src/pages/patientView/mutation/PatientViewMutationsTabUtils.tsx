@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Mutation } from 'cbioportal-ts-api-client';
-import { TooltipDatum } from 'pages/patientView/timeline2/VAFChart';
+import { TooltipDatum } from 'pages/patientView/timeline/VAFChart';
 import { VAFReport } from 'shared/lib/MutationUtils';
 
 export enum MutationStatus {

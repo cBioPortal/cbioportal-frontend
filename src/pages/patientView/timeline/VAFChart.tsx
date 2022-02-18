@@ -38,8 +38,8 @@ type TooltipModel = {
 };
 import VAFChartWrapperStore from './VAFChartWrapperStore';
 import { CustomTrackSpecification } from 'cbioportal-clinical-timeline/dist/CustomTrack';
-import { VAFChartHeader } from 'pages/patientView/timeline2/VAFChartHeader';
-import { yValueScaleFunction } from 'pages/patientView/timeline2/VAFChartUtils';
+import { VAFChartHeader } from 'pages/patientView/timeline/VAFChartHeader';
+import { yValueScaleFunction } from 'pages/patientView/timeline/VAFChartUtils';
 import './styles.scss';
 import { getVariantAlleleFrequency, VAFReport } from 'shared/lib/MutationUtils';
 
