@@ -1,8 +1,10 @@
 import React from 'react';
+import styles from './style/clinicalTrialMatch.module.scss';
 import ClinicalTrialMatchMutationSelect from './ClinicalTrialMatchSelectUtil';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import Select from 'react-select';
+import { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
 import {
     recruitingValueNames,
@@ -11,7 +13,10 @@ import {
 } from './utils/SelectValues';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
 import { Collapse } from 'react-collapse';
-import { DefaultTooltip } from 'cbioportal-frontend-commons';
+import {
+    DefaultTooltip,
+    placeArrowBottomLeft,
+} from 'cbioportal-frontend-commons';
 
 const OPTIONAL_MUTATIONS_TOOLTIP: string =
     'Search studies for selected keywords. Studies containing at least one keyword are found. You may add custom keywords.';
@@ -31,8 +36,88 @@ const LOCATION_TOOLTIP: string =
 const MAX_DISTANCE_TOOLTIP: string =
     'Select the maximum distance from patient to closest recruiting site. Other studies are not shown, unless none of the locations were recognized';
 
-const components = {
+const customComponents = {
     DropdownIndicator: null,
+};
+
+const recruitingOption = (props: any) => {
+    return (
+        <div>
+            <components.Option {...props}>
+                <span style={{ marginRight: 5 }}>{props.label}</span>
+                <DefaultTooltip
+                    placement="bottomLeft"
+                    trigger={['hover', 'focus']}
+                    overlay={getTooltipRecruitingContent(props.label)}
+                    destroyTooltipOnHide={false}
+                    onPopupAlign={placeArrowBottomLeft}
+                >
+                    <i className={'fa fa-info-circle ' + styles.icon}></i>
+                </DefaultTooltip>
+            </components.Option>
+        </div>
+    );
+};
+
+const getTooltipRecruitingContent = (recruitingStatus: string) => {
+    const statusMap: { [status: string]: JSX.Element } = {
+        'Not yet recruiting': (
+            <span>The study has not started recruiting participants.</span>
+        ),
+        Recruiting: (
+            <span>The study is currently recruiting participants.</span>
+        ),
+        'Enrolling by invitation': (
+            <span>
+                The study is selecting its participants from a population, or
+                group of people, decided on by the researchers in advance. These
+                studies are not open to everyone who meets the eligibility
+                criteria but only to people in that particular population, who
+                are specifically invited to participate.
+            </span>
+        ),
+        'Active, not recruiting': (
+            <span>
+                The study is ongoing, and participants are receiving an
+                intervention or being examined, but potential participants are
+                not currently being recruited or enrolled.
+            </span>
+        ),
+        Suspended: (
+            <span>The study has stopped early but may start again.</span>
+        ),
+        Terminated: (
+            <span>
+                The study has stopped early and will not start again.
+                Participants are no longer being examined or treated.
+            </span>
+        ),
+        Completed: (
+            <span>
+                The study has ended normally, and participants are no longer
+                being examined or treated (that is, the last participant's last
+                visit has occurred).
+            </span>
+        ),
+        Withdrawn: (
+            <span>
+                The study stopped early, before enrolling its first participant.
+            </span>
+        ),
+        'Unknown status': (
+            <span>
+                A study on ClinicalTrials.gov whose last known status was
+                recruiting; not yet recruiting; or active, not recruiting but
+                that has passed its completion date, and the status has not been
+                last verified within the past 2 years.
+            </span>
+        ),
+    };
+    return (
+        <div className={styles.tooltip} style={{ width: '300px' }}>
+            {statusMap[recruitingStatus]}
+        </div>
+    );
 };
 
 interface IClinicalTrialOptionsMatchProps {
@@ -267,6 +352,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 className="basic-multi-select"
                                 classNamePrefix="select"
                                 placeholder="Select status..."
+                                components={{ Option: recruitingOption }}
                                 onChange={(selectedOption: Array<any>) => {
                                     const newStatuses = [];
                                     if (selectedOption !== null) {
@@ -337,7 +423,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                             <CreatableSelect
                                 isClearable
                                 isMulti={false}
-                                components={components}
+                                components={customComponents}
                                 placeholder="Select age..."
                                 onChange={(newValue: any) => {
                                     if (newValue !== null) {
