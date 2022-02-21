@@ -80,17 +80,16 @@ class CollapseList extends React.PureComponent<
                         <ul>{this.asHiddenListElement(str)}</ul>
                     </Collapse>
                     <div className="config">
-                        <label>
-                            Show More:
-                            <input
-                                className="input"
-                                type="checkbox"
-                                checked={this.state.isOpened}
-                                onChange={({ target: { checked } }) =>
-                                    this.setState({ isOpened: checked })
-                                }
-                            />
-                        </label>
+                        <button
+                            children={
+                                !this.state.isOpened ? 'show more' : 'show less'
+                            }
+                            onClick={event => {
+                                this.setState({
+                                    isOpened: !this.state.isOpened,
+                                });
+                            }}
+                        />
                     </div>
                 </div>
             );
@@ -147,17 +146,12 @@ class CompleteCollapseList extends React.PureComponent<
                     <div>{str}</div>
                 </Collapse>
                 <div className="config">
-                    <label>
-                        Show:
-                        <input
-                            className="input"
-                            type="checkbox"
-                            checked={this.state.isOpened}
-                            onChange={({ target: { checked } }) =>
-                                this.setState({ isOpened: checked })
-                            }
-                        />
-                    </label>
+                    <button
+                        children={!this.state.isOpened ? 'show' : 'collapse'}
+                        onClick={event => {
+                            this.setState({ isOpened: !this.state.isOpened });
+                        }}
+                    />
                 </div>
             </div>
         );
