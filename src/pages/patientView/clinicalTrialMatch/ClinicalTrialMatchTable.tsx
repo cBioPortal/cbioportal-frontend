@@ -8,6 +8,7 @@ import { StudyListEntry } from './utils/StudyList';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import ClinicalTrialMatchTableOptions from './ClinicalTrialMatchTableOptions';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
+import styles from 'shared/components/loadingIndicator/styles.module.scss';
 
 enum ColumnKey {
     NUM_FOUND = 'Appearences',
@@ -269,6 +270,15 @@ export class ClinicalTrialMatchTable extends React.Component<
             <div>
                 <div>
                     <ClinicalTrialMatchTableOptions store={this.props.store} />
+                </div>
+                <div>
+                    <label style={{ paddingTop: '8px', paddingLeft: '8px' }}>
+                        {!(this.props.clinicalTrialMatches.length > 0)
+                            ? ''
+                            : '\n' +
+                              this.props.clinicalTrialMatches.length +
+                              ' results have been found'}
+                    </label>
                 </div>
                 <div>
                     <LoadingIndicator
