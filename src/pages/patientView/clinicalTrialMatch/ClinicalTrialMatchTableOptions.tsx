@@ -7,6 +7,7 @@ import CreatableSelect from 'react-select/creatable';
 import {
     recruitingValueNames,
     countriesNames,
+    countriesGroups,
     genderNames,
 } from './utils/SelectValues';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
@@ -96,7 +97,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.recruiting_values = recruitingValueNames;
 
         this.genders = genderNames;
-        this.countries = countriesNames;
+        this.countries = countriesNames.concat(Object.keys(countriesGroups));
         this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
     }
 
@@ -308,8 +309,24 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 onChange={(selectedOption: Array<any>) => {
                                     const newStatuses = [];
                                     if (selectedOption !== null) {
-                                        const statuses = selectedOption.map(
-                                            item => item.value
+                                        const statuses = selectedOption.reduce(
+                                            (list: any, item: any) => {
+                                                if (
+                                                    item.value in
+                                                    countriesGroups
+                                                ) {
+                                                    return list.concat(
+                                                        countriesGroups[
+                                                            item.value
+                                                        ]
+                                                    );
+                                                } else {
+                                                    return list.concat(
+                                                        item.value
+                                                    );
+                                                }
+                                            },
+                                            []
                                         );
                                         newStatuses.push(...statuses);
                                     }

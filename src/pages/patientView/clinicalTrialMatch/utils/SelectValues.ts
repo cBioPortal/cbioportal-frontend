@@ -14,6 +14,19 @@ export var recruitingValueNames: RecruitingStatus[] = [
     RecruitingStatus.Withdrawn,
 ];
 
+export var countriesGroups: { [name: string]: string[] } = {
+    'European Union member states': [
+        'Austria',
+        'Belgium',
+        'Bulgaria',
+        'Croatia',
+        'Cyprus',
+        'Czech Republic',
+        'Denmark',
+    ],
+    'German-speaking': ['Germany', 'Austria', 'Switzerland'],
+};
+
 export var countriesNames: string[] = [
     'Afghanistan',
     'Albania',
