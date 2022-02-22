@@ -242,6 +242,47 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                     }}
                 >
                     <DefaultTooltip
+                        overlay={NECESSARY_MUTATIONS_TOOLTIP}
+                        placement="topRight"
+                        trigger={['hover', 'focus']}
+                        destroyTooltipOnHide={true}
+                    >
+                        <div
+                            style={{
+                                display: 'block',
+                                marginLeft: '5px',
+                                marginBottom: '5px',
+                            }}
+                        >
+                            <ClinicalTrialMatchMutationSelect
+                                options={this.props.store.mutationHugoGeneSymbols.map(
+                                    geneSymbol => ({
+                                        label: geneSymbol,
+                                        value: geneSymbol,
+                                    })
+                                )}
+                                isMulti
+                                data={this.state.mutationNecSymbolItems}
+                                name="mutationSearch"
+                                className="basic-multi-select"
+                                classNamePrefix="select"
+                                placeholder="Select NECESSARY mutations and additional search keywords..."
+                                onChange={(selectedOption: Array<any>) => {
+                                    const newMutations = [];
+                                    if (selectedOption !== null) {
+                                        const mutations = selectedOption.map(
+                                            item => item.value
+                                        );
+                                        newMutations.push(...mutations);
+                                    }
+                                    this.setState({
+                                        mutationNecSymbolItems: newMutations,
+                                    });
+                                }}
+                            />
+                        </div>
+                    </DefaultTooltip>
+                    <DefaultTooltip
                         overlay={OPTIONAL_MUTATIONS_TOOLTIP}
                         placement="topRight"
                         trigger={['hover', 'focus']}
@@ -282,47 +323,6 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                     console.group('TRIALS Mutation Changed');
                                     console.log(this.state.mutationSymbolItems);
                                     console.groupEnd();
-                                }}
-                            />
-                        </div>
-                    </DefaultTooltip>
-                    <DefaultTooltip
-                        overlay={NECESSARY_MUTATIONS_TOOLTIP}
-                        placement="topRight"
-                        trigger={['hover', 'focus']}
-                        destroyTooltipOnHide={true}
-                    >
-                        <div
-                            style={{
-                                display: 'block',
-                                marginLeft: '5px',
-                                marginBottom: '5px',
-                            }}
-                        >
-                            <ClinicalTrialMatchMutationSelect
-                                options={this.props.store.mutationHugoGeneSymbols.map(
-                                    geneSymbol => ({
-                                        label: geneSymbol,
-                                        value: geneSymbol,
-                                    })
-                                )}
-                                isMulti
-                                data={this.state.mutationNecSymbolItems}
-                                name="mutationSearch"
-                                className="basic-multi-select"
-                                classNamePrefix="select"
-                                placeholder="Select NECESSARY mutations and additional search keywords..."
-                                onChange={(selectedOption: Array<any>) => {
-                                    const newMutations = [];
-                                    if (selectedOption !== null) {
-                                        const mutations = selectedOption.map(
-                                            item => item.value
-                                        );
-                                        newMutations.push(...mutations);
-                                    }
-                                    this.setState({
-                                        mutationNecSymbolItems: newMutations,
-                                    });
                                 }}
                             />
                         </div>
