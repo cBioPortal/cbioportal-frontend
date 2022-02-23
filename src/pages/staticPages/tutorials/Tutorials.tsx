@@ -167,7 +167,34 @@ export default class Tutorials extends React.Component<{}, {}> {
                                             className={'fa fa-external-link'}
                                         ></i>
                                     </a>
-                                </li>                                
+                                </li>   
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=N8ffDgkqDWc'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        How to explore the data in a study{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>   
+                                <li>
+                                    <a
+                                        href={
+                                            'https://www.youtube.com/watch?v=MH-kY5usA70'
+                                        }
+                                        target={'_blank'}
+                                    >
+                                        How to run a query for genes of
+                                        interest{' '}
+                                        <i
+                                            className={'fa fa-external-link'}
+                                        ></i>
+                                    </a>
+                                </li>   
                             </ol>
                         </li>
                         <li>
