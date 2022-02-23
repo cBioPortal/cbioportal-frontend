@@ -267,12 +267,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 className="basic-multi-select"
                                 classNamePrefix="select"
                                 placeholder="Select NECESSARY mutations and additional search keywords..."
-                                onChange={(selectedOption: Array<any>) => {
+                                onChange={(selectedOption: string[]) => {
                                     const newMutations = [];
                                     if (selectedOption !== null) {
-                                        const mutations = selectedOption.map(
-                                            item => item.value
-                                        );
+                                        const mutations = selectedOption;
                                         newMutations.push(...mutations);
                                     }
                                     this.setState({
@@ -308,12 +306,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 className="basic-multi-select"
                                 classNamePrefix="select"
                                 placeholder="Select OPTIONAL mutations and additional search keywords..."
-                                onChange={(selectedOption: Array<any>) => {
+                                onChange={(selectedOption: string[]) => {
                                     const newMutations = [];
                                     if (selectedOption !== null) {
-                                        const mutations = selectedOption.map(
-                                            item => item.value
-                                        );
+                                        const mutations = selectedOption;
                                         newMutations.push(...mutations);
                                     }
                                     this.setState({
