@@ -348,10 +348,13 @@ export default class SurvivalChart
 
     private get pValue() {
         // show NA if any group has least than 10 cases
-        const showNA = _.some(
-            this.props.analysisGroups,
-            group => this.props.sortedGroupedSurvivals[group.value].length < 10
-        );
+        const showNA = _.some(this.props.analysisGroups, group => {
+            return (
+                !this.props.sortedGroupedSurvivals[group.value] ||
+                this.props.sortedGroupedSurvivals[group.value].length < 10
+            );
+        });
+
         // TODO: Temporarily use the show_p_q_values parameter to hide p value
         // for GENIE. We can make a more general config class in the future once
         // we have a better idea of how to handle p/q values in small groups for
