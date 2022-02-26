@@ -85,18 +85,33 @@ export default class PatientViewStructuralVariantTable extends React.Component<
             if (numSamples >= 2) {
                 columns.push({
                     name: 'Samples',
-                    render: (d: StructuralVariant[]) =>
-                        TumorColumnFormatter.renderFunction(
-                            d.map(datum => ({
-                                sampleId: datum.sampleId,
-                                entrezGeneId: datum.site1EntrezGeneId,
-                            })),
+                    render: (d: StructuralVariant[]) => {
+                        return TumorColumnFormatter.renderFunction(
+                            d.map(datum => {
+                                // if both are available, return both genes in an array
+                                // otherwise, return whichever is available
+                                const genes =
+                                    datum.site1EntrezGeneId &&
+                                    datum.site2EntrezGeneId
+                                        ? [
+                                              datum.site1EntrezGeneId,
+                                              datum.site2EntrezGeneId,
+                                          ]
+                                        : datum.site1EntrezGeneId ||
+                                          datum.site2EntrezGeneId;
+                                return {
+                                    sampleId: datum.sampleId,
+                                    entrezGeneId: genes,
+                                    sv: true,
+                                };
+                            }),
                             this.props.store.sampleManager.result!,
                             this.props.store
                                 .sampleToStructuralVariantGenePanelId.result!,
                             this.props.store.genePanelIdToEntrezGeneIds.result!,
                             this.props.onSelectGenePanel
-                        ),
+                        );
+                    },
                     sortBy: (d: StructuralVariant[]) =>
                         TumorColumnFormatter.getSortValue(
                             d,

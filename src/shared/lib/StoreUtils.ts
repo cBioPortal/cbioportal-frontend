@@ -1266,6 +1266,10 @@ export function generateMutationIdByEvent(m: Mutation): string {
 }
 
 export function generateStructuralVariantId(s: StructuralVariant): string {
+    // NOTE: We need to sort because
+    // data contains inconsistent ordering of
+    // site1 and site2
+    // we want to treat either ordering as the same variant
     return [
         s.site1HugoSymbol,
         s.site2HugoSymbol,
@@ -1274,7 +1278,9 @@ export function generateStructuralVariantId(s: StructuralVariant): string {
         s.site1Chromosome,
         s.site2Chromosome,
         s.variantClass,
-    ].join('_');
+    ]
+        .sort()
+        .join('_');
 }
 
 export function generateMutationIdByGeneAndProteinChangeAndEvent(
