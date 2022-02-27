@@ -19,7 +19,7 @@ interface Option {
 interface MutationSelectProps {
     data: string[];
     options: Option[];
-    onChange: (mutations: string[]) => void;
+    onChange: (selectedOption: Array<any>) => void;
     isMulti?: boolean;
     name?: string;
     className?: string;
@@ -119,8 +119,8 @@ export const ClinicalTrialMatchMutationSelect = (
     const [inputValue, setInputValue] = useState<string>();
     const [options, setOptions] = useState<Option[]>([]);
 
-    const onChange = (selectedOption: any) => {
-        setValue(selectedOption as Option[]);
+    const onChange = (selectedOption: Option[]) => {
+        setValue(selectedOption);
         setInputValue('');
         if (Array.isArray(selectedOption)) {
             props.onChange(
