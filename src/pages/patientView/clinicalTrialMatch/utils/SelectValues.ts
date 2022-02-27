@@ -14,17 +14,48 @@ export var recruitingValueNames: RecruitingStatus[] = [
     RecruitingStatus.Withdrawn,
 ];
 
-export var countriesGroups: { [name: string]: string[] } = {
+export var countriesGroups: { [key: string]: string[] } = {
     'European Union member states': [
         'Austria',
         'Belgium',
         'Bulgaria',
         'Croatia',
         'Cyprus',
-        'Czech Republic',
+        'Czechia',
         'Denmark',
+        'Estonia',
+        'Finland',
+        'France',
+        'Germany',
+        'Greece',
+        'Hungary',
+        'Ireland',
+        'Italy',
+        'Latvia',
+        'Lithuania',
+        'Luxembourg',
+        'Malta',
+        'Netherlands',
+        'Poland',
+        'Portugal',
+        'Romania',
+        'Slovakia',
+        'Slovenia',
+        'Spain',
+        'Sweden',
     ],
     'German-speaking': ['Germany', 'Austria', 'Switzerland'],
+    'Germany neighbouring countries': [
+        'Austria',
+        'Belgium',
+        'Czech Republic',
+        'Denmark',
+        'France',
+        'Luxembourg',
+        'Netherlands',
+        'Poland',
+        'Switzerland',
+    ],
 };
 
 export var countriesNames: string[] = [
