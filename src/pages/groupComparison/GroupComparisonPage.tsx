@@ -43,6 +43,10 @@ import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
 import { getServerConfig } from 'config/config';
+import {
+    buildCustomTabs,
+    prepareCustomTabConfigurations,
+} from 'shared/lib/customTabs/customTabHelpers';
 
 export interface IGroupComparisonPageProps {
     routing: any;
@@ -104,6 +108,13 @@ export default class GroupComparisonPage extends React.Component<
         this.queryReaction && this.queryReaction();
         this.store && this.store.destroy();
         this.urlWrapper.destroy();
+    }
+
+    @computed get customTabs() {
+        return prepareCustomTabConfigurations(
+            getServerConfig().custom_tabs,
+            'COMPARISON_PAGE'
+        );
     }
 
     readonly tabs = MakeMobxView({
@@ -260,6 +271,8 @@ export default class GroupComparisonPage extends React.Component<
                                 </MSKTab>
                             );
                         })}
+
+                    {buildCustomTabs(this.customTabs)}
                 </MSKTabs>
             );
         },
