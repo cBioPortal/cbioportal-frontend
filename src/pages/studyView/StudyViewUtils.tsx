@@ -113,8 +113,10 @@ export enum SpecialChartsUniqueKeyEnum {
     CASE_LISTS_SAMPLE_COUNT = 'CASE_LISTS_SAMPLE_COUNT',
     PATIENT_TREATMENTS = 'PATIENT_TREATMENTS',
     PATIENT_TREATMENT_GROUPS = 'PATIENT_TREATMENT_GROUPS',
+    PATIENT_TREATMENT_TARGET = 'PATIENT_TREATMENT_TARGET',
     SAMPLE_TREATMENTS = 'SAMPLE_TREATMENTS',
     SAMPLE_TREATMENT_GROUPS = 'SAMPLE_TREATMENT_GROUPS',
+    SAMPLE_TREATMENT_TARGET = 'SAMPLE_TREATMENT_TARGET',
 }
 
 export type AnalysisGroup = {
@@ -965,7 +967,11 @@ export function isFiltered(
             (!filter.patientTreatmentGroupFilters ||
                 _.isEmpty(filter.patientTreatmentGroupFilters.filters)) &&
             (!filter.sampleTreatmentGroupFilters ||
-                _.isEmpty(filter.sampleTreatmentGroupFilters.filters)))
+                _.isEmpty(filter.sampleTreatmentGroupFilters.filters)) &&
+            (!filter.patientTreatmentTargetFilters ||
+                _.isEmpty(filter.patientTreatmentTargetFilters.filters)) &&
+            (!filter.sampleTreatmentTargetFilters ||
+                _.isEmpty(filter.sampleTreatmentTargetFilters.filters)))
     );
 
     if (filter.sampleIdentifiersSet) {
