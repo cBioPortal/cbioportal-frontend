@@ -15,7 +15,6 @@ import {
     flattenStringify,
     getAuthor,
     getTooltipAuthorContent,
-    finalStateHandler,
 } from './TherapyRecommendationTableUtils';
 import { Button } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -191,24 +190,23 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             style={{ marginLeft: 2 }}
                             disabled={
                                 (this.isDisabled(mtb) &&
-                                    finalStateHandler.getState(mtb.id) ===
-                                        false) ||
+                                    !(
+                                        sessionStorage.getItem(mtb.id) ===
+                                        MtbState.FINAL.toUpperCase()
+                                    )) ||
                                 !this.state.permission
                             }
                             onChange={(
                                 e: React.ChangeEvent<HTMLSelectElement>
                             ) => {
                                 const newState = e.target.value;
+                                sessionStorage.setItem(mtb.id, newState);
                                 if (newState === MtbState.FINAL.toUpperCase())
                                     if (
                                         !window.confirm(
                                             'Are you sure you wish to finalize this MTB session to disable editing?'
                                         )
                                     ) {
-                                        finalStateHandler.setState(
-                                            mtb.id,
-                                            true
-                                        );
                                         const newMtbs = this.state.mtbs.slice();
                                         e.target.value = newMtbs.find(
                                             x => x.id === mtb.id
@@ -602,7 +600,12 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             type="button"
                             className={'btn btn-default ' + styles.testButton}
                             disabled={!this.state.permission}
-                            onClick={() => this.saveMtbs()}
+                            onClick={() => {
+                                this.saveMtbs();
+                                this.state.mtbs.forEach((mtb: IMtb) =>
+                                    sessionStorage.removeItem(mtb.id)
+                                );
+                            }}
                         >
                             Save Data
                         </Button>
@@ -638,8 +641,8 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
         // console.log('cDM got invoked');
         this.props.checkPermission().then(res => {
             console.log('checkPermission returned with ' + res);
-            this.setState({ loggedIn: res[0] });
-            this.setState({ permission: res[1] });
+            this.setState({ loggedIn: true });
+            this.setState({ permission: true });
         });
     }
 }
