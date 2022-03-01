@@ -215,6 +215,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                     filterStringUpper: string
                 ) => row.category.toUpperCase().includes(filterStringUpper),
                 visible: true,
+                resizable: true,
             },
             {
                 name: this.props.violinColumnName,
@@ -310,11 +311,15 @@ export default class StudyViewViolinPlotTable extends React.Component<
     }
 
     @computed get gridTicks() {
-        return getTickValues(
-            this.props.violinBounds,
-            this.props.dimension.w,
-            this.props.logScale
-        );
+        if (this.data.length > 0) {
+            return getTickValues(
+                this.props.violinBounds,
+                this.props.dimension.w,
+                this.props.logScale
+            );
+        } else {
+            return [];
+        }
     }
     renderGridLabels() {
         return (
@@ -346,7 +351,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
                                           Math.exp(val) - 1,
                                           1
                                       )
-                                    : val}
+                                    : toFixedWithoutTrailingZeros(val, 2)}
                             </text>
                         );
                     })}
