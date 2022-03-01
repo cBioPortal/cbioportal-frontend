@@ -11,6 +11,27 @@ import styles from './style/therapyRecommendation.module.scss';
 import { If, Then, Else } from 'react-if';
 import { getServerConfig } from 'config/config';
 
+interface Dict<T> {
+    [key: string]: T;
+}
+
+export var finalStateHandler = (function() {
+    var finalizedThisSession: Dict<boolean> = {};
+
+    var getState = function(id: string) {
+        return finalizedThisSession[id];
+    };
+
+    var setState = function(id: string, state: boolean) {
+        finalizedThisSession[id] = state;
+    };
+
+    return {
+        getState: getState,
+        setState: setState,
+    };
+})();
+
 export function truncate(
     s: string | undefined,
     n: number,

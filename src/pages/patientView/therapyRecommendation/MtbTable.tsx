@@ -15,6 +15,7 @@ import {
     flattenStringify,
     getAuthor,
     getTooltipAuthorContent,
+    finalStateHandler,
 } from './TherapyRecommendationTableUtils';
 import { Button } from 'react-bootstrap';
 import { DefaultTooltip } from 'cbioportal-frontend-commons';
@@ -189,7 +190,10 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             defaultValue={mtb.mtbState}
                             style={{ marginLeft: 2 }}
                             disabled={
-                                this.isDisabled(mtb) || !this.state.permission
+                                (this.isDisabled(mtb) &&
+                                    finalStateHandler.getState(mtb.id) ===
+                                        false) ||
+                                !this.state.permission
                             }
                             onChange={(
                                 e: React.ChangeEvent<HTMLSelectElement>
@@ -201,6 +205,10 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                                             'Are you sure you wish to finalize this MTB session to disable editing?'
                                         )
                                     ) {
+                                        finalStateHandler.setState(
+                                            mtb.id,
+                                            true
+                                        );
                                         const newMtbs = this.state.mtbs.slice();
                                         e.target.value = newMtbs.find(
                                             x => x.id === mtb.id
