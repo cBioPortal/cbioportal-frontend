@@ -2,6 +2,7 @@ import load from 'little-loader';
 import { getBrowserWindow } from 'cbioportal-frontend-commons';
 import { ICustomTabConfiguration } from '../model/ITabConfiguration';
 import { autorun } from 'mobx';
+import _ from 'lodash';
 
 export function loadCustomTabDeps(tab: any) {
     if (tab.pathsToCSS) {
@@ -28,6 +29,8 @@ export function loadCustomTabDeps(tab: any) {
 
         return Promise.all(proms);
     }
+
+    return Promise.resolve();
 }
 
 export function showCustomTab(
@@ -40,21 +43,25 @@ export function showCustomTab(
     tab.dependencyPromise = tab.dependencyPromise || loadCustomTabDeps(tab);
 
     const runCallback = (tab: ICustomTabConfiguration) => {
-        if (getBrowserWindow()[tab.mountCallbackName]) {
-            getBrowserWindow()[tab.mountCallbackName](
-                div,
-                tab,
-                url,
-                store,
-                autorun,
-                isUnmount
-            );
-        } else {
-            alert(`Callback for tab ${tab.title} not found`);
+        if (_.isFunction(tab.mountCallback)) {
+            tab.mountCallback(div, tab, url, store, autorun, isUnmount);
+        } else if (tab.mountCallbackName) {
+            if (getBrowserWindow()[tab.mountCallbackName]) {
+                getBrowserWindow()[tab.mountCallbackName](
+                    div,
+                    tab,
+                    url,
+                    store,
+                    autorun,
+                    isUnmount
+                );
+            } else {
+                alert(`Callback for tab ${tab.title} not found`);
+            }
         }
     };
 
-    tab.dependencyPromise!.then(() => {
+    tab.dependencyPromise?.then(() => {
         runCallback(tab);
     });
 }

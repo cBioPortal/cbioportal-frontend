@@ -74,7 +74,7 @@ describe('study laml_tcga tests', () => {
             timeout: WAIT_FOR_VISIBLE_TIMEOUT,
         });
         waitForNetworkQuiet();
-        const res = browser.checkElement('#mainColumn');
+        const res = checkElementWithMouseDisabled('#mainColumn');
         assertScreenShotMatch(res);
     });
 
