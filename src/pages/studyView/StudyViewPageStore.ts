@@ -7061,26 +7061,39 @@ export class StudyViewPageStore
             chartInfo: XvsYViolinChart;
             violinLogScale: boolean;
         },
-        ClinicalViolinPlotData
+        {
+            data: ClinicalViolinPlotData;
+            violinLogScale: boolean;
+        }
     >(
         q => ({
-            invoke: () =>
-                internalClient.fetchClinicalDataViolinPlotsUsingPOST({
-                    categoricalAttributeId:
-                        q.chartInfo.categoricalAttr.clinicalAttributeId,
-                    numericalAttributeId:
-                        q.chartInfo.numericalAttr.clinicalAttributeId,
-                    logScale: q.violinLogScale,
-                    sigmaMultiplier: 4,
-                    studyViewFilter: excludeFiltersForAttribute(this.filters, [
-                        q.chartInfo.categoricalAttr.clinicalAttributeId,
-                        q.chartInfo.numericalAttr.clinicalAttributeId,
-                    ]),
-                }),
+            invoke: async () => ({
+                data: await internalClient.fetchClinicalDataViolinPlotsUsingPOST(
+                    {
+                        categoricalAttributeId:
+                            q.chartInfo.categoricalAttr.clinicalAttributeId,
+                        numericalAttributeId:
+                            q.chartInfo.numericalAttr.clinicalAttributeId,
+                        logScale: q.violinLogScale,
+                        sigmaMultiplier: 4,
+                        studyViewFilter: excludeFiltersForAttribute(
+                            this.filters,
+                            [
+                                q.chartInfo.categoricalAttr.clinicalAttributeId,
+                                q.chartInfo.numericalAttr.clinicalAttributeId,
+                            ]
+                        ),
+                    }
+                ),
+                violinLogScale: q.violinLogScale,
+            }),
             default: {
-                axisStart: -1,
-                axisEnd: -1,
-                rows: [],
+                data: {
+                    axisStart: -1,
+                    axisEnd: -1,
+                    rows: [],
+                },
+                violinLogScale: false,
             },
         }),
         q => {

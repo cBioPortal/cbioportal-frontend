@@ -1041,7 +1041,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         ] ||
                         this.props.store.clinicalDataBinPromises[
                             chartInfo.numericalAttr.clinicalAttributeId
-                        ].isPending;
+                        ].isPending ||
+                        this.props.promise.isPending;
                     return (
                         <StudyViewViolinPlotTable
                             dimension={this.props.dimension}
@@ -1056,13 +1057,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                             categoryColumnName={this.props.axisLabelX!}
                             violinColumnName={this.props.axisLabelY!}
                             violinBounds={{
-                                min: this.props.promise.result.axisStart,
-                                max: this.props.promise.result.axisEnd,
+                                min: this.props.promise.result.data.axisStart,
+                                max: this.props.promise.result.data.axisEnd,
                             }}
-                            rows={this.props.promise.result.rows || []}
+                            rows={this.props.promise.result.data.rows || []}
                             showViolin={this.props.violinPlotChecked!}
                             showBox={this.props.boxPlotChecked!}
-                            logScale={chartSettings?.violinLogScale!}
+                            logScale={this.props.promise.result.violinLogScale}
                             setFilters={this.props.onValueSelection}
                             selectedCategories={this.props.selectedCategories!}
                             isLoading={isLoading}
