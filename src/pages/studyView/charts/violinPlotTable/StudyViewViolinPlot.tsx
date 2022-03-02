@@ -204,10 +204,6 @@ export default class StudyViewViolinPlot extends React.Component<
         );
     }
 
-    @computed get onlyPoints() {
-        return this.props.curveMagnitudes.length === 0;
-    }
-
     render() {
         return (
             <svg
@@ -218,15 +214,20 @@ export default class StudyViewViolinPlot extends React.Component<
                 }}
             >
                 {this.renderGridLines()}
-                {this.props.showViolin && this.renderCurve()}
-                {!this.onlyPoints && this.props.showBox && this.renderBox()}
+                {this.props.curveMagnitudes.length > 0 &&
+                    this.props.showViolin &&
+                    this.renderCurve()}
+                {this.props.curveMagnitudes.length > 0 &&
+                    this.props.showBox &&
+                    this.renderBox()}
                 <rect
                     width={this.svgWidth}
                     height={violinPlotSvgHeight}
                     fillOpacity={0}
                     onMouseMove={this.props.onMouseOverBackground}
                 />
-                {this.renderPoints()}
+                {(this.props.showViolin || this.props.showBox) &&
+                    this.renderPoints()}
             </svg>
         );
     }
