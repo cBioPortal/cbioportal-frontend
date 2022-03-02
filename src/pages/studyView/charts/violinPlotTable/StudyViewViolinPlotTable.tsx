@@ -312,11 +312,32 @@ export default class StudyViewViolinPlotTable extends React.Component<
 
     @computed get gridTicks() {
         if (this.data.length > 0) {
-            return getTickValues(
+            const allTicks = getTickValues(
                 this.props.violinBounds,
                 this.props.dimension.w,
                 this.props.logScale
             );
+            // The first and last ticks, which are the endpoints of the scale,
+            //  might happen to overlap with their neighbors. If so, remove the neighbors.
+            const guaranteedTickGap = 30;
+            if (allTicks.length > 2) {
+                if (
+                    this.violinX(allTicks[1]) <
+                    this.violinX(allTicks[0]) + guaranteedTickGap
+                ) {
+                    allTicks.splice(1, 1);
+                }
+            }
+            if (allTicks.length > 2) {
+                if (
+                    this.violinX(allTicks[allTicks.length - 2]) >
+                    this.violinX(allTicks[allTicks.length - 1]) -
+                        guaranteedTickGap
+                ) {
+                    allTicks.splice(allTicks.length - 2, 1);
+                }
+            }
+            return allTicks;
         } else {
             return [];
         }
@@ -390,6 +411,21 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 />
             </div>,
         ];
+        if (this.props.dimension.w <= 2) {
+            ret.push(
+                <div
+                    style={{
+                        width: 71, //99,
+                        position: 'absolute',
+                        right: 18, //-10,
+                        fontSize: 11,
+                        lineHeight: 1.1,
+                    }}
+                >
+                    Expand to see quartiles →
+                </div>
+            );
+        }
         return ret;
     }
 
