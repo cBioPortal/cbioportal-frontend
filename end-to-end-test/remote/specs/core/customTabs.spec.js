@@ -36,7 +36,7 @@ function customTabBase(location) {
 }
 
 function goToUrlWithCustomTabConfig(url, custom_tabs) {
-    browser.url('https://www.cbioportal.org/blank');
+    browser.url(`${CBIOPORTAL_URL}/blank`);
     setServerConfiguration({
         custom_tabs,
     });
