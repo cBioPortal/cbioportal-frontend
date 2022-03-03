@@ -5365,7 +5365,8 @@ export class ResultsViewPageStore
                             cancerTypeForOncoKb(
                                 structuralVariant.uniqueSampleKey,
                                 {}
-                            )
+                            ),
+                            structuralVariant.variantClass.toUpperCase() as any
                         );
                         return structuralVariantOncoKbDataForOncoprint.indicatorMap![
                             id
