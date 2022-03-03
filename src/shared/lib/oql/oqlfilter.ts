@@ -376,7 +376,8 @@ function isDatumWantedByOQL<T>(
     accessors: IAccessorsForOqlFilter<T>
 ): boolean {
     //  Out: Boolean, whether datum is wanted by this OQL query
-    const gene = accessors.gene(datum).toUpperCase();
+
+    const gene = accessors.gene(datum);
     // if the datum doesn't have a gene associated with it, it's unwanted.
     if (!gene) {
         return false;
@@ -394,15 +395,28 @@ function isDatumWantedByOQL<T>(
 function isDatumWantedByOQLLine<T>(
     query_line: SingleGeneQuery,
     datum: T,
-    datum_gene: string, // lower case gene in datum - passed instead of reaccessed as an optimization
+    datum_gene: string | string[], // lower case gene in datum - passed instead of reaccessed as an optimization
     accessors: IAccessorsForOqlFilter<T>
 ) {
     //  Helper method for isDatumWantedByOQL
     var line_gene = query_line.gene.toUpperCase();
     // If the line doesn't have the same gene, the datum is not wanted by this line
-    if (line_gene !== datum_gene) {
-        return false;
+
+    // NOTE: ask adam about dealing with casing of datum_gene in array
+    // for string, we uppercase it, so in theory we should do same for items
+    // in array but that's problematic
+    if (datum_gene instanceof Array) {
+        // it will be array for Structural Variants which are assocaited
+        // with two genes, start and end
+        if (!datum_gene.includes(line_gene)) {
+            return false;
+        }
+    } else {
+        if (line_gene !== (datum_gene as string).toUpperCase()) {
+            return false;
+        }
     }
+
     // Otherwise, a datum is wanted iff it's wanted by at least one command.
     if (!query_line.alterations) {
         // if no alterations specified, then the datum is wanted
@@ -869,7 +883,7 @@ function filterData<T extends Datum>(
                     return isDatumWantedByOQLLine(
                         query_line,
                         datum,
-                        accessors.gene(datum).toUpperCase(),
+                        accessors.gene(datum),
                         accessors
                     );
                 }),
