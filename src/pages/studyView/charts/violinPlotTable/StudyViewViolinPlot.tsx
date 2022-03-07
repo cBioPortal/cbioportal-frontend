@@ -118,11 +118,12 @@ export default class StudyViewViolinPlot extends React.Component<
     }
 
     renderBox() {
+        const whiskerStrokeWidth = 0.5;
         const center = violinPlotSvgHeight / 2;
         const whiskerLowerX = this.x(this.props.boxData.whiskerLower);
         const whiskerUpperX = this.x(this.props.boxData.whiskerUpper);
-        const whiskerTop = center; //10;
-        const whiskerBottom = center; //height - 10;
+        const whiskerTop = center - 3;
+        const whiskerBottom = center + 3;
 
         const boxWidth =
             this.x(this.props.boxData.q3) - this.x(this.props.boxData.q1);
@@ -141,7 +142,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={whiskerTop}
                     y2={whiskerBottom}
                     stroke="black"
-                    strokeWidth={1.5}
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*connecting line*/}
                 <line
@@ -150,6 +151,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={center}
                     y2={center}
                     stroke="black"
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*right whisker*/}
                 <line
@@ -158,7 +160,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={whiskerTop}
                     y2={whiskerBottom}
                     stroke="black"
-                    strokeWidth={1.5}
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*box*/}
                 <rect
