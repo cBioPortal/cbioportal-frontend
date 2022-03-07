@@ -189,12 +189,18 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             defaultValue={mtb.mtbState}
                             style={{ marginLeft: 2 }}
                             disabled={
-                                this.isDisabled(mtb) || !this.state.permission
+                                (this.isDisabled(mtb) &&
+                                    !(
+                                        sessionStorage.getItem(mtb.id) ===
+                                        MtbState.FINAL.toUpperCase()
+                                    )) ||
+                                !this.state.permission
                             }
                             onChange={(
                                 e: React.ChangeEvent<HTMLSelectElement>
                             ) => {
                                 const newState = e.target.value;
+                                sessionStorage.setItem(mtb.id, newState);
                                 if (newState === MtbState.FINAL.toUpperCase())
                                     if (
                                         !window.confirm(
@@ -594,7 +600,12 @@ export default class MtbTable extends React.Component<IMtbProps, IMtbState> {
                             type="button"
                             className={'btn btn-default ' + styles.testButton}
                             disabled={!this.state.permission}
-                            onClick={() => this.saveMtbs()}
+                            onClick={() => {
+                                this.saveMtbs();
+                                this.state.mtbs.forEach((mtb: IMtb) =>
+                                    sessionStorage.removeItem(mtb.id)
+                                );
+                            }}
                         >
                             Save Data
                         </Button>
