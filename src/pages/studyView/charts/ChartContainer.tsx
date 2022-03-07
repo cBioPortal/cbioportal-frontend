@@ -1036,12 +1036,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 )!;
                 return () => {
                     const isLoading =
-                        !this.props.store.clinicalDataBinPromises[
+                        (this.props.store.clinicalDataBinPromises[
                             chartInfo.numericalAttr.clinicalAttributeId
-                        ] ||
-                        this.props.store.clinicalDataBinPromises[
-                            chartInfo.numericalAttr.clinicalAttributeId
-                        ].isPending ||
+                        ] &&
+                            this.props.store.clinicalDataBinPromises[
+                                chartInfo.numericalAttr.clinicalAttributeId
+                            ].isPending) ||
                         this.props.promise.isPending;
                     return (
                         <StudyViewViolinPlotTable
