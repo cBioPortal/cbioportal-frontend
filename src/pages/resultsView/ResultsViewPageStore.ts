@@ -1598,17 +1598,20 @@ export class ResultsViewPageStore
                     // studyid: this.studyIds.result![0],
                     geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
                     sourceList:["enrichment"],
+                    /* TODO: disable alteration services for now, until we have
+                     * https://github.com/cBioPortal/cbioportal/issues/9305
                     geneAnnotationServices: {
-                        mutation: "https://iquery-cbio.dev.ucsd.edu/integratedsearch/v1/mutationfrequency",
+                        mutation: "https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/mutationfrequency",
                         alteration: "http://localhost"
                     }
+                    */
                 };
 
                 var urlResponse;
 
                 try {
                     urlResponse = (await request
-                        .post('https://iquery-cbio.ucsd.edu/integratedsearch/v1/')
+                        .post('https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/')
                         .send(postData)
                         .set('Accept', 'application/json')
                         .timeout(30000)

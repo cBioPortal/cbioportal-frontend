@@ -122,6 +122,8 @@ export default class ResultsViewPage extends React.Component<
 
     @observable showTabs = true;
 
+    @observable activePathwaysTab = 'PathwayMapper';
+
     constructor(props: IResultsViewPageProps) {
         super(props);
 
@@ -377,7 +379,8 @@ export default class ResultsViewPage extends React.Component<
                 hide: () =>
                     browser.name === 'Internet Explorer' ||
                     !getServerConfig().show_pathway_mapper ||
-                    !this.resultsViewPageStore.studies.isComplete,
+                    !this.resultsViewPageStore.studies.isComplete ||
+                    !this.resultsViewPageStore.remoteNdexUrl.isComplete,
                 getTab: () => {
                     const showPM =
                         store.filteredSequencedSampleKeysByGene.isComplete &&
@@ -400,54 +403,37 @@ export default class ResultsViewPage extends React.Component<
                             linkText={'Pathways'}
                         >
                             {showPM ? (
-                                <ResultsViewPathwayMapper
-                                    store={store}
-                                    appStore={this.props.appStore}
-                                    urlWrapper={this.urlWrapper}
-                                />
-                            ) : (
-                                <LoadingIndicator
-                                    isLoading={true}
-                                    size={'big'}
-                                    center={true}
-                                />
-                            )}
-                        </MSKTab>
-                    );
-                },
-            },
-            {
-                id: ResultsViewTab.NDEX,
-                hide: () =>
-                    !getServerConfig().show_pathway_mapper ||
-                    !this.resultsViewPageStore.studies.isComplete ||
-                    !this.resultsViewPageStore.remoteNdexUrl.isComplete,
-                getTab: () => {
-                    const showPM =
-                        store.filteredSequencedSampleKeysByGene.isComplete &&
-                        store.oqlFilteredCaseAggregatedDataByOQLLine
-                            .isComplete &&
-                        store.genes.isComplete &&
-                        store.samples.isComplete &&
-                        store.patients.isComplete &&
-                        store.coverageInformation.isComplete &&
-                        store.filteredSequencedSampleKeysByGene.isComplete &&
-                        store.filteredSequencedPatientKeysByGene.isComplete &&
-                        store.selectedMolecularProfiles.isComplete &&
-                        store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine
-                            .isComplete;
-
-                    return (
-                        <MSKTab
-                            key={14}
-                            id={ResultsViewTab.NDEX}
-                            linkText={'NDEx'}
-                        >
-                            {showPM ? (
-                                <IFrameLoader
-                                    height={800}
-                                    url={`${this.resultsViewPageStore.remoteNdexUrl.result}`}
-                                />
+                                <MSKTabs
+                                    id="mutationsPageTabs"
+                                    activeTabId={this.activePathwaysTab}
+                                    onTabClick={(id: string) => {this.activePathwaysTab = id;}}
+                                    className="pillTabs resultsPageMutationsGeneTabs"
+                                    arrowStyle={{ 'line-height': 0.8 }}
+                                    tabButtonStyle="pills"
+                                    unmountOnHide={true}
+                                >
+                                    <MSKTab
+                                        key='PathwayMapper'
+                                        id='PathwayMapper'
+                                        linkText='PathwayMapper'
+                                    >
+                                        <ResultsViewPathwayMapper
+                                            store={store}
+                                            appStore={this.props.appStore}
+                                            urlWrapper={this.urlWrapper}
+                                        />
+                                    </MSKTab>
+                                    <MSKTab
+                                        key='NDEx'
+                                        id='NDEx'
+                                        linkText='NDEx'
+                                    >
+                                        <IFrameLoader
+                                            height={800}
+                                            url={`${this.resultsViewPageStore.remoteNdexUrl.result}`}
+                                        />
+                                    </MSKTab>
+                                </MSKTabs>
                             ) : (
                                 <LoadingIndicator
                                     isLoading={true}
