@@ -25,6 +25,7 @@ export interface IStudyViewViolinPlotProps {
         mouseX: number,
         mouseY: number
     ) => void;
+    onMouseOverBoxPlot: (mouseX: number, mouseY: number) => void;
     onMouseOverBackground: () => void;
 }
 
@@ -168,6 +169,9 @@ export default class StudyViewViolinPlot extends React.Component<
                     fill={'#dddddd'}
                     stroke={'black'}
                     strokeWidth={0.2}
+                    onMouseOver={e =>
+                        this.props.onMouseOverBoxPlot(e.pageX, e.pageY)
+                    }
                 />
                 {/*median*/}
                 <line
@@ -217,15 +221,15 @@ export default class StudyViewViolinPlot extends React.Component<
                 {this.props.curveMagnitudes.length > 0 &&
                     this.props.showViolin &&
                     this.renderCurve()}
-                {this.props.curveMagnitudes.length > 0 &&
-                    this.props.showBox &&
-                    this.renderBox()}
                 <rect
                     width={this.svgWidth}
                     height={violinPlotSvgHeight}
                     fillOpacity={0}
                     onMouseMove={this.props.onMouseOverBackground}
                 />
+                {this.props.curveMagnitudes.length > 0 &&
+                    this.props.showBox &&
+                    this.renderBox()}
                 {(this.props.showViolin || this.props.showBox) &&
                     this.renderPoints()}
             </svg>

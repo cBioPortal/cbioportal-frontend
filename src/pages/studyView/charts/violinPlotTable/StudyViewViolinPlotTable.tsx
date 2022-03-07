@@ -4,7 +4,10 @@ import { observer } from 'mobx-react';
 import FixedHeaderTable from 'pages/studyView/table/FixedHeaderTable';
 import { action, computed, makeObservable, observable } from 'mobx';
 import StudyViewViolinPlot from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlot';
-import { ClinicalViolinPlotRowData } from 'cbioportal-ts-api-client';
+import {
+    ClinicalViolinPlotBoxData,
+    ClinicalViolinPlotRowData,
+} from 'cbioportal-ts-api-client';
 import {
     ChartDimension,
     STUDY_VIEW_CONFIG,
@@ -16,6 +19,8 @@ import {
     getDataX,
     getTickValues,
     getViolinX,
+    renderTooltipForBoxPlot,
+    renderTooltipForPoint,
     violinPlotXPadding,
 } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlotUtils';
 import { ClinicalViolinPlotIndividualPoint } from 'cbioportal-ts-api-client';
@@ -104,7 +109,8 @@ export default class StudyViewViolinPlotTable extends React.Component<
     };
 
     @observable tooltipModel: {
-        point: ClinicalViolinPlotIndividualPoint;
+        point?: ClinicalViolinPlotIndividualPoint;
+        boxData?: ClinicalViolinPlotBoxData;
         category: string;
         mouseX: number;
         mouseY: number;
@@ -154,6 +160,27 @@ export default class StudyViewViolinPlotTable extends React.Component<
     }
 
     @action.bound
+    private onMouseOverBoxPlot(
+        boxData: ClinicalViolinPlotBoxData,
+        mouseX: number,
+        mouseY: number,
+        category: string
+    ) {
+        // mouse on point means mouse not in tooltip
+        this.onMouseLeaveTooltip();
+        // cancel hiding the tooltip
+        this.cancelResetTooltip();
+        // Only update tooltip if this is not the same data as we're already showing
+        if (
+            !this.tooltipModel ||
+            this.tooltipModel.category !== category ||
+            !_.isEqual(this.tooltipModel.boxData, boxData)
+        ) {
+            this.tooltipModel = { boxData, category, mouseX, mouseY };
+        }
+    }
+
+    @action.bound
     private onMouseOverPoint(
         point: ClinicalViolinPlotIndividualPoint,
         mouseX: number,
@@ -164,7 +191,7 @@ export default class StudyViewViolinPlotTable extends React.Component<
         this.onMouseLeaveTooltip();
         // cancel hiding the tooltip
         this.cancelResetTooltip();
-        // Only update tooltip if this is not the same point as we're already showing
+        // Only update tooltip if this is not the same data as we're already showing
         if (
             !this.tooltipModel ||
             this.tooltipModel.category !== category ||
@@ -347,6 +374,14 @@ export default class StudyViewViolinPlotTable extends React.Component<
                             onMouseOverPoint={(p, x, y) =>
                                 this.onMouseOverPoint(p, x, y, row.category)
                             }
+                            onMouseOverBoxPlot={(x, y) => {
+                                this.onMouseOverBoxPlot(
+                                    row.boxData,
+                                    x,
+                                    y,
+                                    row.category
+                                );
+                            }}
                             onMouseOverBackground={this.onMouseOverBackground}
                         />
                     );
@@ -551,6 +586,17 @@ export default class StudyViewViolinPlotTable extends React.Component<
         if (!model) {
             return null;
         }
+        let body;
+        if (model.point) {
+            body = renderTooltipForPoint(
+                model.point,
+                this.props.violinColumnName,
+                this.props.logScale
+            );
+        } else if (model.boxData) {
+            body = renderTooltipForBoxPlot(model.boxData, this.props.logScale);
+        }
+
         return (ReactDOM as any).createPortal(
             <Popover
                 arrowOffsetTop={17}
@@ -564,30 +610,12 @@ export default class StudyViewViolinPlotTable extends React.Component<
                 onMouseEnter={this.onMouseEnterTooltip}
                 onMouseLeave={this.onMouseLeaveTooltip}
             >
-                <b>Study ID:</b>
-                {` `}
-                <a href={getStudySummaryUrl(model.point.studyId)}>
-                    {model.point.studyId}
-                </a>
-                <br />
-                <b>Sample ID:</b>
-                {` `}
-                <a
-                    href={getSampleViewUrl(
-                        model.point.studyId,
-                        model.point.sampleId
-                    )}
-                >
-                    {model.point.sampleId}
-                </a>
-                <br />
-                <b>{this.props.violinColumnName}:</b>
-                {` `}
-                {model.point.value}
+                {body}
             </Popover>,
             document.body
         );
     }
+
     @action.bound onScroll() {
         // hide tooltip on scroll
         this.tooltipModel = null;
