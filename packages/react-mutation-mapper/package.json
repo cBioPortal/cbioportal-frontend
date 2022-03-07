@@ -48,7 +48,7 @@
     "memoize-weak-decorator": "^1.0.3",
     "mobxpromise": "github:cbioportal/mobxpromise#303db72588860bff0a6862a4f07a4e8a3578c94f",
     "oncokb-styles": "~1.3.0",
-    "oncokb-ts-api-client": "^1.1.11",
+    "oncokb-ts-api-client": "^1.3.0-beta.0",
     "react-collapse": "^4.0.3",
     "react-if": "^2.1.0",
     "react-motion": "^0.5.2",

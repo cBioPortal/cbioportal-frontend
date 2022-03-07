@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
-    "version": "v1.2.2",
+    "version": "v1.3.0",
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
@@ -1120,9 +1120,6 @@
         },
         "tumorType": {
           "type": "string"
-        },
-        "type": {
-          "type": "string"
         }
       }
     },
@@ -1224,7 +1221,10 @@
       "type": "object",
       "properties": {
         "apiVersion": {
-          "type": "string"
+          "$ref": "#/definitions/SemVer"
+        },
+        "appVersion": {
+          "$ref": "#/definitions/SemVer"
         },
         "dataVersion": {
           "$ref": "#/definitions/Version"
@@ -1243,6 +1243,35 @@
         },
         "publicInstance": {
           "type": "boolean"
+        }
+      }
+    },
+    "SemVer": {
+      "type": "object",
+      "properties": {
+        "major": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "minor": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "patch": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stable": {
+          "type": "boolean"
+        },
+        "suffixTokens": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string"
         }
       }
     },
@@ -1267,17 +1296,13 @@
         "levelOfEvidence": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1390,17 +1415,13 @@
         "level": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1681,17 +1702,13 @@
         "highestDiagnosticImplicationLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1704,17 +1721,13 @@
         "highestPrognosticImplicationLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1727,17 +1740,13 @@
         "highestResistanceLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1750,17 +1759,13 @@
         "highestSensitiveLevel": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
@@ -1787,17 +1792,13 @@
           "items": {
             "type": "string",
             "enum": [
-              "LEVEL_0",
               "LEVEL_1",
               "LEVEL_2",
-              "LEVEL_2A",
-              "LEVEL_2B",
               "LEVEL_3A",
               "LEVEL_3B",
               "LEVEL_4",
               "LEVEL_R1",
               "LEVEL_R2",
-              "LEVEL_R3",
               "LEVEL_Px1",
               "LEVEL_Px2",
               "LEVEL_Px3",
@@ -1813,17 +1814,13 @@
           "items": {
             "type": "string",
             "enum": [
-              "LEVEL_0",
               "LEVEL_1",
               "LEVEL_2",
-              "LEVEL_2A",
-              "LEVEL_2B",
               "LEVEL_3A",
               "LEVEL_3B",
               "LEVEL_4",
               "LEVEL_R1",
               "LEVEL_R2",
-              "LEVEL_R3",
               "LEVEL_Px1",
               "LEVEL_Px2",
               "LEVEL_Px3",
@@ -1909,17 +1906,13 @@
         "levelOfEvidence": {
           "type": "string",
           "enum": [
-            "LEVEL_0",
             "LEVEL_1",
             "LEVEL_2",
-            "LEVEL_2A",
-            "LEVEL_2B",
             "LEVEL_3A",
             "LEVEL_3B",
             "LEVEL_4",
             "LEVEL_R1",
             "LEVEL_R2",
-            "LEVEL_R3",
             "LEVEL_Px1",
             "LEVEL_Px2",
             "LEVEL_Px3",
