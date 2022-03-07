@@ -1,8 +1,6 @@
 import React from 'react';
 import styles from './style/clinicalTrialMatch.module.scss';
 import {
-    ClinicalTrialMatchMutationSelect,
-    ClinicalTrialMatchCountrySelect,
     getTooltipRecruitingContent,
     recruitingOption,
     Dict,
@@ -18,6 +16,8 @@ import {
     countriesGroups,
     genderNames,
 } from './utils/SelectValues';
+import ClinicalTrialMatchMutationSelect from './ClinicalTrialMatchMutationSelect';
+import ClinicalTrialMatchCountrySelect from './ClinicalTrialMatchCountrySelect';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
 import { Collapse } from 'react-collapse';
 import {
@@ -323,20 +323,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                     if (selectedOption !== null) {
                                         const statuses = selectedOption.reduce(
                                             (list: any, item: any) => {
-                                                if (
-                                                    item.value in
-                                                    countriesGroups
-                                                ) {
-                                                    return list.concat(
-                                                        countriesGroups[
-                                                            item.value
-                                                        ]
-                                                    );
-                                                } else {
-                                                    return list.concat(
-                                                        item.value
-                                                    );
-                                                }
+                                                return list.concat(item);
                                             },
                                             []
                                         );

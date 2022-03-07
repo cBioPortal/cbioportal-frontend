@@ -7,7 +7,7 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 
-export interface Dict<T> {
+interface Dict<T> {
     [key: string]: T;
 }
 
@@ -16,199 +16,7 @@ interface Option {
     value: string;
 }
 
-interface MutationSelectProps {
-    data: string[];
-    options: Option[];
-    onChange: (selectedOption: Array<any>) => void;
-    isMulti?: boolean;
-    name?: string;
-    className?: string;
-    classNamePrefix?: string;
-    placeholder?: string;
-}
-
-interface CountrySelectProps {
-    data: string[];
-    options: Option[];
-    countryGroups: Dict<string[]>;
-    onChange: (mutations: string[]) => void;
-    isMulti?: boolean;
-    name?: string;
-    className?: string;
-    classNamePrefix?: string;
-    placeholder?: string;
-}
-
-export const ClinicalTrialMatchCountrySelect = (props: CountrySelectProps) => {
-    const countryDefault = props.data.map((country: string) => ({
-        value: country,
-        label: country,
-    }));
-
-    const [value, setValue] = useState<Option[]>();
-    const [inputValue, setInputValue] = useState<string>();
-    const [options, setOptions] = useState<Option[]>([]);
-
-    const onChange = (selectedOption: any) => {
-        var selectedOptionsMapped = selectedOption.reduce(
-            (list: any, option: Option) => {
-                if (option.value in props.countryGroups) {
-                    return list.concat(
-                        props.countryGroups[option.value].map(country => {
-                            return { value: country, label: country };
-                        })
-                    );
-                } else {
-                    return list.concat(option);
-                }
-            },
-            []
-        );
-        setValue(selectedOptionsMapped as Option[]);
-
-        setInputValue('');
-        if (Array.isArray(selectedOption)) {
-            props.onChange(
-                selectedOption.map((option: Option) => {
-                    return option.value;
-                })
-            );
-        } else if (selectedOption === null) {
-            props.onChange([]);
-        }
-    };
-
-    const onInputChange = (textInput: string, { action }: any) => {
-        if (action === 'input-change') {
-            setInputValue(textInput);
-        }
-    };
-
-    return (
-        <>
-            <Select
-                name={props.name}
-                className={props.className}
-                classNamePrefix={props.classNamePrefix}
-                defaultInputValue=""
-                defaultValue={countryDefault}
-                allowCreateWhileLoading={true}
-                inputValue={inputValue}
-                onInputChange={onInputChange}
-                onChange={onChange}
-                value={value}
-                options={props.options}
-                tabSelectsOption={true}
-                placeholder={props.placeholder}
-                backspaceRemovesValue={false}
-                isMulti
-            />
-        </>
-    );
-};
-
-export const ClinicalTrialMatchMutationSelect = (
-    props: MutationSelectProps
-) => {
-    const mutationDefault = props.data.map((mutation: string) => ({
-        value: mutation,
-        label: mutation,
-    }));
-
-    const [value, setValue] = useState<Option[]>();
-    const [inputValue, setInputValue] = useState<string>();
-    const [options, setOptions] = useState<Option[]>([]);
-
-    const onChange = (selectedOption: Option[]) => {
-        setValue(selectedOption);
-        setInputValue('');
-        if (Array.isArray(selectedOption)) {
-            props.onChange(
-                selectedOption.map((option: Option) => {
-                    return option.value;
-                })
-            );
-        } else if (selectedOption === null) {
-            props.onChange([]);
-        }
-    };
-
-    const onInputChange = (textInput: string, { action }: any) => {
-        if (action === 'input-change') {
-            setInputValue(textInput);
-        }
-    };
-
-    const onBlur = (event: any) => {
-        if (inputValue !== '') {
-            const newValue = { label: inputValue, value: inputValue } as Option;
-            const opts = [...(value || []), newValue];
-            props.onChange(
-                opts.map((option: Option) => {
-                    return option.value;
-                })
-            );
-            setValue([...(value || []), newValue] as Option[]);
-            setInputValue('');
-        }
-    };
-
-    const onKeyDown = (event: any) => {
-        if (event.key === 'Backspace' && value !== undefined) {
-            if (inputValue === '' && value.length > 0) {
-                const remainder = [...(value || [])];
-                if (typeof remainder !== 'undefined' && remainder.length > 0) {
-                    const temp = remainder.pop() as Option;
-                    const remainderValue = temp.label;
-                    setValue(remainder);
-                    setInputValue(remainderValue);
-                }
-            }
-        }
-        if (event.key === 'Enter') {
-            if (inputValue !== '') {
-                const newValue = {
-                    label: inputValue,
-                    value: inputValue,
-                } as Option;
-                const opts = [...(value || []), newValue];
-                props.onChange(
-                    opts.map((option: Option) => {
-                        return option.value;
-                    })
-                );
-                setValue([...(value || []), newValue] as Option[]);
-                setInputValue('');
-            }
-        }
-    };
-
-    return (
-        <>
-            <CreatableSelect
-                name={props.name}
-                className={props.className}
-                classNamePrefix={props.classNamePrefix}
-                defaultInputValue=""
-                defaultValue={mutationDefault}
-                allowCreateWhileLoading={true}
-                inputValue={inputValue}
-                onInputChange={onInputChange}
-                onChange={onChange}
-                onBlur={onBlur}
-                onKeyDown={onKeyDown}
-                value={value}
-                options={props.options}
-                tabSelectsOption={true}
-                placeholder={props.placeholder}
-                backspaceRemovesValue={false}
-                isMulti
-            />
-        </>
-    );
-};
-
-export const recruitingOption = (props: any) => {
+const recruitingOption = (props: any) => {
     return (
         <div>
             <components.Option {...props}>
@@ -227,7 +35,7 @@ export const recruitingOption = (props: any) => {
     );
 };
 
-export const getTooltipRecruitingContent = (recruitingStatus: string) => {
+const getTooltipRecruitingContent = (recruitingStatus: string) => {
     const statusMap: { [status: string]: JSX.Element } = {
         'Not yet recruiting': (
             <span>The study has not started recruiting participants.</span>
@@ -287,3 +95,5 @@ export const getTooltipRecruitingContent = (recruitingStatus: string) => {
         </div>
     );
 };
+
+export { getTooltipRecruitingContent, recruitingOption, Dict };
