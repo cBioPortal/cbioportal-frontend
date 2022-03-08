@@ -48,6 +48,7 @@ import ComplexKeyMap from 'shared/lib/complexKeyDataStructures/ComplexKeyMap';
 import { Sample } from 'cbioportal-ts-api-client';
 import ComparisonStore from '../../shared/lib/comparison/ComparisonStore';
 import { createSurvivalAttributeIdsDict } from 'pages/resultsView/survival/SurvivalUtil';
+import { getComparisonCategoricalNaValue } from './ClinicalDataUtils';
 
 export interface IClinicalDataProps {
     store: ComparisonStore;
@@ -246,7 +247,7 @@ export default class ClinicalData extends React.Component<
     @observable logScaleFunction: IAxisLogScaleParams | undefined;
     @observable swapAxes = false;
     @observable horizontalBars = false;
-    @observable showNA = false;
+    @observable showNA = true;
 
     @action.bound
     private onClickLogScale() {
@@ -314,7 +315,12 @@ export default class ClinicalData extends React.Component<
                     data: axisData.data.filter(
                         x =>
                             typeof x.value !== 'string' ||
-                            x.value.toLowerCase() !== 'unknown'
+                            _.every(
+                                getComparisonCategoricalNaValue(),
+                                naValue =>
+                                    naValue.toLowerCase() !==
+                                    (x.value as string).toLowerCase()
+                            )
                     ),
                 });
             }
