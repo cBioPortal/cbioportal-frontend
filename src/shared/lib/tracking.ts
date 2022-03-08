@@ -69,7 +69,7 @@ export function serializeEvent(gaEvent: GAEvent) {
     } catch (ex) {}
 }
 
-function sendToLoggly() {
+function sendToLoggly(message: string) {
     try {
         if (window.location.hostname === 'www.cbioportal.org') {
             const LOGGLY_TOKEN = 'b7a422a1-9878-49a2-8a30-2a8d5d33518f';
@@ -78,7 +78,7 @@ function sendToLoggly() {
                 url: `//logs-01.loggly.com/inputs/${LOGGLY_TOKEN}.gif`,
                 data: {
                     location: window.location.href.replace(/#.*$/, ''),
-                    message: 'PAGE_VIEW',
+                    message: message,
                     e2e: isWebdriver() ? 'true' : 'false',
                 },
             });
@@ -105,18 +105,13 @@ export function embedGoogleAnalytics(ga_code: string) {
         ga.l = +new Date();
         ga('create', ga_code, 'auto');
 
-        ga('require', 'urlChangeTracker', {
-            hitFilter: function(model: any) {
-                sendToLoggly();
-            },
-        });
+        ga('require', 'urlChangeTracker');
 
         ga('require', 'cleanUrlTracker', {
             stripQuery: true,
             trailingSlash: 'remove',
         });
         ga('send', 'pageview');
-        sendToLoggly();
     });
 }
 
