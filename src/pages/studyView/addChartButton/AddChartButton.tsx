@@ -732,7 +732,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 (attr1.datatype === 'NUMBER' && attr2.datatype === 'STRING') ||
                 (attr1.datatype === 'STRING' && attr2.datatype === 'NUMBER')
             ) {
-                text = 'Add violin plot table';
+                text = 'Add violin/box plot table';
                 type = 'violin';
 
                 if (attr1.datatype === 'STRING') {

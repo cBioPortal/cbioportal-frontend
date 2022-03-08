@@ -3689,11 +3689,20 @@ export function isQueriedStudyAuthorized(study: CancerStudy) {
 
 export function excludeFiltersForAttribute(
     filters: StudyViewFilter,
-    clinicalAttributeId: string
+    clinicalAttributeId: string | string[]
 ) {
     let { clinicalDataFilters, ...rest } = filters;
+    const clinicalAttributeIds = new Set();
+    if (typeof clinicalAttributeId === 'string') {
+        clinicalAttributeIds.add(clinicalAttributeId);
+    } else {
+        for (const id of clinicalAttributeId) {
+            clinicalAttributeIds.add(id);
+        }
+    }
+
     clinicalDataFilters = clinicalDataFilters?.filter(
-        f => f.attributeId !== clinicalAttributeId
+        f => !clinicalAttributeIds.has(f.attributeId)
     );
     return { clinicalDataFilters, ...rest };
 }
