@@ -108,7 +108,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.recruiting_values = recruitingValueNames;
 
         this.genders = genderNames;
-        this.countries = countriesNames.concat(Object.keys(countriesGroups));
+        this.countries = Object.keys(countriesGroups).concat(countriesNames);
         this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
     }
 

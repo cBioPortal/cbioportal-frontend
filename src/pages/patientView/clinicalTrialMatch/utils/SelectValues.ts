@@ -45,7 +45,8 @@ export var countriesGroups: { [key: string]: string[] } = {
         'Sweden',
     ],
     'German-speaking': ['Germany', 'Austria', 'Switzerland'],
-    'Germany neighbouring countries': [
+    'Germany + neighbouring countries': [
+        'Germany',
         'Austria',
         'Belgium',
         'Czech Republic',
