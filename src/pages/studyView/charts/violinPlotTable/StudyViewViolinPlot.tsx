@@ -25,6 +25,7 @@ export interface IStudyViewViolinPlotProps {
         mouseX: number,
         mouseY: number
     ) => void;
+    onMouseOverBoxPlot: (mouseX: number, mouseY: number) => void;
     onMouseOverBackground: () => void;
 }
 
@@ -117,11 +118,12 @@ export default class StudyViewViolinPlot extends React.Component<
     }
 
     renderBox() {
+        const whiskerStrokeWidth = 0.5;
         const center = violinPlotSvgHeight / 2;
         const whiskerLowerX = this.x(this.props.boxData.whiskerLower);
         const whiskerUpperX = this.x(this.props.boxData.whiskerUpper);
-        const whiskerTop = center; //10;
-        const whiskerBottom = center; //height - 10;
+        const whiskerTop = center - 3;
+        const whiskerBottom = center + 3;
 
         const boxWidth =
             this.x(this.props.boxData.q3) - this.x(this.props.boxData.q1);
@@ -140,7 +142,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={whiskerTop}
                     y2={whiskerBottom}
                     stroke="black"
-                    strokeWidth={1.5}
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*connecting line*/}
                 <line
@@ -149,6 +151,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={center}
                     y2={center}
                     stroke="black"
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*right whisker*/}
                 <line
@@ -157,7 +160,7 @@ export default class StudyViewViolinPlot extends React.Component<
                     y1={whiskerTop}
                     y2={whiskerBottom}
                     stroke="black"
-                    strokeWidth={1.5}
+                    strokeWidth={whiskerStrokeWidth}
                 />
                 {/*box*/}
                 <rect
@@ -168,6 +171,9 @@ export default class StudyViewViolinPlot extends React.Component<
                     fill={'#dddddd'}
                     stroke={'black'}
                     strokeWidth={0.2}
+                    onMouseOver={e =>
+                        this.props.onMouseOverBoxPlot(e.pageX, e.pageY)
+                    }
                 />
                 {/*median*/}
                 <line
@@ -204,10 +210,6 @@ export default class StudyViewViolinPlot extends React.Component<
         );
     }
 
-    @computed get onlyPoints() {
-        return this.props.curveMagnitudes.length === 0;
-    }
-
     render() {
         return (
             <svg
@@ -218,15 +220,20 @@ export default class StudyViewViolinPlot extends React.Component<
                 }}
             >
                 {this.renderGridLines()}
-                {this.props.showViolin && this.renderCurve()}
-                {!this.onlyPoints && this.props.showBox && this.renderBox()}
+                {this.props.curveMagnitudes.length > 0 &&
+                    this.props.showViolin &&
+                    this.renderCurve()}
                 <rect
                     width={this.svgWidth}
                     height={violinPlotSvgHeight}
                     fillOpacity={0}
                     onMouseMove={this.props.onMouseOverBackground}
                 />
-                {this.renderPoints()}
+                {this.props.curveMagnitudes.length > 0 &&
+                    this.props.showBox &&
+                    this.renderBox()}
+                {(this.props.showViolin || this.props.showBox) &&
+                    this.renderPoints()}
             </svg>
         );
     }

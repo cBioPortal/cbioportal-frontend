@@ -7061,26 +7061,39 @@ export class StudyViewPageStore
             chartInfo: XvsYViolinChart;
             violinLogScale: boolean;
         },
-        ClinicalViolinPlotData
+        {
+            data: ClinicalViolinPlotData;
+            violinLogScale: boolean;
+        }
     >(
         q => ({
-            invoke: () =>
-                internalClient.fetchClinicalDataViolinPlotsUsingPOST({
-                    categoricalAttributeId:
-                        q.chartInfo.categoricalAttr.clinicalAttributeId,
-                    numericalAttributeId:
-                        q.chartInfo.numericalAttr.clinicalAttributeId,
-                    logScale: q.violinLogScale,
-                    sigmaMultiplier: 4,
-                    studyViewFilter: excludeFiltersForAttribute(
-                        this.filters,
-                        q.chartInfo.categoricalAttr.clinicalAttributeId
-                    ),
-                }),
+            invoke: async () => ({
+                data: await internalClient.fetchClinicalDataViolinPlotsUsingPOST(
+                    {
+                        categoricalAttributeId:
+                            q.chartInfo.categoricalAttr.clinicalAttributeId,
+                        numericalAttributeId:
+                            q.chartInfo.numericalAttr.clinicalAttributeId,
+                        logScale: q.violinLogScale,
+                        sigmaMultiplier: 4,
+                        studyViewFilter: excludeFiltersForAttribute(
+                            this.filters,
+                            [
+                                q.chartInfo.categoricalAttr.clinicalAttributeId,
+                                q.chartInfo.numericalAttr.clinicalAttributeId,
+                            ]
+                        ),
+                    }
+                ),
+                violinLogScale: q.violinLogScale,
+            }),
             default: {
-                axisStart: -1,
-                axisEnd: -1,
-                rows: [],
+                data: {
+                    axisStart: -1,
+                    axisEnd: -1,
+                    rows: [],
+                },
+                violinLogScale: false,
             },
         }),
         q => {
@@ -7088,7 +7101,13 @@ export class StudyViewPageStore
                 `Category:${q.chartInfo.categoricalAttr.clinicalAttributeId}/` +
                 `Numerical:${q.chartInfo.numericalAttr.clinicalAttributeId}/` +
                 `violinDomain:${JSON.stringify(q.chartInfo.violinDomain)}/` +
-                `violinLog:${q.violinLogScale}`
+                `violinLog:${q.violinLogScale}/` +
+                `Filters:${JSON.stringify(
+                    excludeFiltersForAttribute(this.filters, [
+                        q.chartInfo.categoricalAttr.clinicalAttributeId,
+                        q.chartInfo.numericalAttr.clinicalAttributeId,
+                    ])
+                )}` // make sure we don't update unless other filters change
             );
         }
     );
