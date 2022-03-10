@@ -1765,8 +1765,27 @@ export class ResultsViewPageStore
                         d,
                         accessors
                     );
-                    extendedD.hugoGeneSymbol =
-                        entrezGeneIdToGene[d.entrezGeneId].hugoGeneSymbol;
+
+                    try {
+                        if (
+                            extendedD.molecularProfileAlterationType ===
+                            'STRUCTURAL_VARIANT'
+                        ) {
+                            extendedD.hugoGeneSymbol =
+                                entrezGeneIdToGene[extendedD.site1EntrezGeneId]
+                                    ?.hugoGeneSymbol ||
+                                entrezGeneIdToGene[extendedD.site2EntrezGeneId]
+                                    ?.hugoGeneSymbol;
+                        } else {
+                            extendedD.hugoGeneSymbol =
+                                entrezGeneIdToGene[
+                                    d.entrezGeneId
+                                ].hugoGeneSymbol;
+                        }
+                    } catch (ex) {
+                        debugger;
+                    }
+
                     extendedD.molecularProfileAlterationType = accessors.molecularAlterationType(
                         d.molecularProfileId
                     );
