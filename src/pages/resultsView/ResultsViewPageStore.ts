@@ -3293,24 +3293,28 @@ export class ResultsViewPageStore
                 };
             }
             for (const structuralVariant of structuralVariantsGroups.data) {
-                ret[structuralVariant.site1HugoSymbol].data.push(
-                    structuralVariant
-                );
+                (
+                    ret[structuralVariant.site1HugoSymbol] ||
+                    ret[structuralVariant.site2HugoSymbol]
+                ).data.push(structuralVariant);
             }
             for (const structuralVariant of structuralVariantsGroups.vus) {
-                ret[structuralVariant.site1HugoSymbol].vus.push(
-                    structuralVariant
-                );
+                (
+                    ret[structuralVariant.site1HugoSymbol] ||
+                    ret[structuralVariant.site2HugoSymbol]
+                ).vus.push(structuralVariant);
             }
             for (const structuralVariant of structuralVariantsGroups.germline) {
-                ret[structuralVariant.site1HugoSymbol].germline.push(
-                    structuralVariant
-                );
+                (
+                    ret[structuralVariant.site1HugoSymbol] ||
+                    ret[structuralVariant.site2HugoSymbol]
+                ).germline.push(structuralVariant);
             }
             for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
-                ret[structuralVariant.site1HugoSymbol].vusAndGermline.push(
-                    structuralVariant
-                );
+                (
+                    ret[structuralVariant.site1HugoSymbol] ||
+                    ret[structuralVariant.site2HugoSymbol]
+                ).vusAndGermline.push(structuralVariant);
             }
             return Promise.resolve(ret);
         },
