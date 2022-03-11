@@ -38,7 +38,6 @@ import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import MethylationEnrichments from './MethylationEnrichments';
 import GenericAssayEnrichments from './GenericAssayEnrichments';
 import _ from 'lodash';
-import { deriveDisplayTextFromGenericAssayType } from 'pages/resultsView/plots/PlotsTabUtils';
 import AlterationEnrichments from './AlterationEnrichments';
 import AlterationEnrichmentTypeSelector from '../../shared/lib/comparison/AlterationEnrichmentTypeSelector';
 import { AlterationFilterMenuSection } from 'pages/groupComparison/GroupComparisonUtils';
@@ -47,6 +46,7 @@ import {
     buildCustomTabs,
     prepareCustomTabConfigurations,
 } from 'shared/lib/customTabs/customTabHelpers';
+import { deriveDisplayTextFromGenericAssayType } from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 export interface IGroupComparisonPageProps {
     routing: any;

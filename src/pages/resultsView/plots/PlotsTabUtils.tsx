@@ -62,8 +62,6 @@ import {
     LegendDataWithId,
 } from '../../../shared/components/plots/PlotUtils';
 import { isSampleProfiledInMultiple } from '../../../shared/lib/isSampleProfiled';
-import Pluralize from 'pluralize';
-import { getServerConfig } from 'config/config';
 import { SpecialChartsUniqueKeyEnum } from 'pages/studyView/StudyViewUtils';
 import { ObservableMap } from 'mobx';
 import { toFixedWithoutTrailingZeros } from '../../../shared/lib/FormatUtils';
@@ -125,41 +123,6 @@ export const dataTypeDisplayOrder = [
     AlterationTypeConstants.PROTEIN_LEVEL,
     AlterationTypeConstants.METHYLATION,
 ];
-
-export function deriveDisplayTextFromGenericAssayType(
-    genericAssayType: string,
-    plural?: boolean
-) {
-    let derivedDisplayText = '';
-    const typewWithTextList = getServerConfig().generic_assay_display_text.split(
-        ','
-    );
-    const typeToTextDict = _.reduce(
-        typewWithTextList,
-        (acc, typewWithText) => {
-            const typeAndText = typewWithText.split(':');
-            if (typeAndText.length == 2) {
-                acc[typeAndText[0]] = typeAndText[1];
-            }
-            return acc;
-        },
-        {} as { [type: string]: string }
-    );
-    if (genericAssayType in typeToTextDict) {
-        derivedDisplayText = typeToTextDict[genericAssayType];
-    } else {
-        const textArray = genericAssayType.split('_');
-        const capitalizeTextArray = textArray.map(text =>
-            capitalize(text.toLowerCase())
-        );
-        derivedDisplayText = capitalizeTextArray.join(' ');
-    }
-
-    if (plural) {
-        return Pluralize.plural(derivedDisplayText);
-    }
-    return derivedDisplayText;
-}
 
 export function sortMolecularProfilesForDisplay(profiles: MolecularProfile[]) {
     if (!profiles.length) {
