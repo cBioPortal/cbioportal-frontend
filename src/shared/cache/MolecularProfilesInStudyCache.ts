@@ -29,19 +29,6 @@ async function fetch(
         }
     );
 
-    //TODO: remove this block once data is fixed
-    profiles = profiles.map(profile => {
-        if (
-            profile.molecularAlterationType ===
-                AlterationTypeConstants.STRUCTURAL_VARIANT &&
-            profile.datatype === DataTypeConstants.SV
-        ) {
-            profile.showProfileInAnalysisTab = false;
-        }
-        return profile;
-    });
-    //TODO: remove this block once data is fixed
-
     const profilesByStudy = _.groupBy(profiles, profile => profile.studyId);
     return studyIds.map(studyId => {
         const data = [profilesByStudy[studyId] || []];
