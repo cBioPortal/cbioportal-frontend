@@ -5,6 +5,7 @@ import { Mutation } from 'cbioportal-ts-api-client';
 import { default as chromosomeSizes } from './chromosomeSizes.json';
 import { IIconData } from './GenomicOverviewUtils.js';
 import { GENOME_ID_TO_GENOME_BUILD } from 'shared/lib/referenceGenomeUtils';
+import { DEFAULT_GENOME_BUILD } from 'pages/patientView/genomicOverview/Tracks';
 
 export function GenomicOverviewConfig(
     nRows: any,
@@ -94,7 +95,12 @@ export function getRelativeCoordinates(genomeBuild: string) {
     // Code expects the 'genomeBuild' to reflect the NCBI build identifier (e.g., "GRCh37").
     // For legacy reasons, we derive NCBI build identifier for incomplete build identifiers
     // (e.g., "37") or from UCSC genome identifiers (e.g., 'hg19').
-    const genomeBuildTranslated = _.get(GENOME_ID_TO_GENOME_BUILD, genomeBuild);
+    const genomeBuildTranslated = _.get(
+        GENOME_ID_TO_GENOME_BUILD,
+        genomeBuild,
+        DEFAULT_GENOME_BUILD
+    );
+
     const genomeSize = referenceGenomeSizes[genomeBuildTranslated];
     if (genomeSize) {
         sel.genomeRef = genomeSize;
