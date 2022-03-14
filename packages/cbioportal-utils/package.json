@@ -29,6 +29,7 @@
     "test:watch": "yarn run test --watch"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "genome-nexus-ts-api-client": "^1.1.20",
     "lodash": "^4.17.11",
     "oncokb-ts-api-client": "^1.1.11",
