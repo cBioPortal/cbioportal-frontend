@@ -279,6 +279,8 @@ import {
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { ICBioData } from 'pathway-mapper';
+import { getAlterationData } from 'shared/components/oncoprint/OncoprintUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -1588,16 +1590,18 @@ export class ResultsViewPageStore
     // remoteNdexUrl queries Ndex's iquery. The result is either the full URL to
     // query, or an empty string.
     readonly remoteNdexUrl = remoteData<string>({
-        await: () => [this.studyIds, this.genes],
+        await: () => [this.studyIds, this.genes, this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine],
         invoke: async () => {
             var result = '';
+            const alterationData = this.alterationFrequencyDataForQueryGenes;
 
-            if (this.studyIds.result!.length > 0 && this.genes.result!.length > 0) {
+            if (this.studyIds.result!.length > 0 && this.genes.result!.length > 0 && this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.length > 0) {
                 const postData = {
                     // this might be necessary at some point
                     // studyid: this.studyIds.result![0],
                     geneList: this.genes.result!.map(g => g.hugoGeneSymbol),
                     sourceList:["enrichment"],
+                    alterationData,
                     /* TODO: disable alteration services for now, until we have
                      * https://github.com/cBioPortal/cbioportal/issues/9305
                     geneAnnotationServices: {
@@ -2029,6 +2033,32 @@ export class ResultsViewPageStore
             }
         },
     });
+
+    @computed get alterationFrequencyDataForQueryGenes() {
+        const alterationFrequencyData: ICBioData[] = [];
+
+        this.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.forEach(
+            alterationData => {
+                const data = getAlterationData(
+                    this.samples.result,
+                    this.patients.result,
+                    this.coverageInformation.result!,
+                    this.filteredSequencedSampleKeysByGene.result!,
+                    this.filteredSequencedPatientKeysByGene.result!,
+                    this.selectedMolecularProfiles.result!,
+                    alterationData,
+                    true,
+                    this.genes.result!
+                );
+
+                if (data) {
+                    alterationFrequencyData.push(data);
+                }
+            }
+        );
+
+        return alterationFrequencyData;
+    }
 
     readonly isSampleAlteredMap = remoteData({
         await: () => [
