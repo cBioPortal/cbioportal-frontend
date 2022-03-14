@@ -18,8 +18,31 @@ function isMarkDown(url: string) {
     );
 }
 
+function Heading(props: any) {
+    const text = props.children
+        .filter((s: any) => typeof s === 'string')
+        .join(' ');
+
+    const slug = text
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z-]/g, '');
+
+    return React.createElement(`h${props.level}`, { id: slug }, props.children);
+}
+
 function setImageRoot(path: string) {
     return `${getServerConfig().skin_documentation_baseurl}/${path}`;
+}
+
+function Anchor(props: any) {
+    const _href = /^#/.test(props.href) ? props.href.toLowerCase() : props.href;
+    console.log(_href);
+    return (
+        <a className={'monkey'} href={_href}>
+            {props.children}
+        </a>
+    );
 }
 
 @observer
@@ -42,7 +65,14 @@ export default class StaticContent extends React.Component<
         if (isMarkDown(url)) {
             return (
                 <ReactMarkdown
-                    components={this.props.renderers || {}}
+                    components={{
+                        h1: Heading,
+                        h2: Heading,
+                        h3: Heading,
+                        h4: Heading,
+                        h5: Heading,
+                        a: Anchor,
+                    }}
                     className={'markdown-body'}
                     children={this.source.result!}
                     rehypePlugins={[rehypeRaw, rehypeSanitize, remarkGfm]}
