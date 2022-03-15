@@ -166,6 +166,7 @@ class GroupSelectorButton extends React.Component<
                                     'cbioportal-frontend',
                                     'cbioTooltip'
                                 )}
+                                style={{ wordWrap: 'break-word' }}
                             >
                                 <div>
                                     {renderGroupNameWithOrdinal(group)}{' '}
