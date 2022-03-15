@@ -173,16 +173,25 @@ export default class QuerySummary extends React.Component<
                     </h3>
                     <span>
                         Querying {this.studyPageFilteredCasesLink} in{' '}
-                        {this.props.store.queriedStudies.result.length} studies
-                        &nbsp;-&nbsp;
-                        {getGeneSummary(this.props.store.hugoGeneSymbols)}
-                        &nbsp;
+                        {this.props.store.queriedStudies.result.length}{' '}
+                        studies&nbsp;
                         <DefaultTooltip
                             placement="bottom"
                             overlay={this.studyList}
                             destroyTooltipOnHide={true}
                         >
                             <i className="fa fa-info-circle" />
+                        </DefaultTooltip>
+                        &nbsp;
+                        {getGeneSummary(this.props.store.hugoGeneSymbols)}
+                        &nbsp;
+                        <DefaultTooltip overlay={'Edit genes or OQL'}>
+                            <a
+                                data-test="oqlQuickEditButton"
+                                onClick={this.props.onToggleOQLEditUIVisibility}
+                            >
+                                <i className={'fa fa-pencil'}></i>
+                            </a>
                         </DefaultTooltip>
                     </span>
                 </div>
