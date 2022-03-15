@@ -1134,7 +1134,6 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
     // by default shift all x values by 1 -- we do not want to show a value right on the origin (zero)
     // additional possible shift for log scale
     const xShift = needAdditionShiftForLogScaleBarChart(numericalBins) ? 2 : 1;
-    console.log(numericalBins);
     return numericalBins.map((dataBin: DataBin, index: number) => {
         let x;
 
