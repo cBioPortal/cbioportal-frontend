@@ -1,7 +1,6 @@
-import { TrackSortComparator, TrackSortVector } from 'oncoprintjs';
-import { ClinicalTrackSpec, GeneticTrackDatum } from './Oncoprint';
+import {TrackSortVector} from 'oncoprintjs';
+import {ClinicalTrackSpec, GeneticTrackDatum} from './Oncoprint';
 import naturalSort from 'javascript-natural-sort';
-import { getServerConfig, ServerConfigHelpers } from 'config/config';
 
 /**
  * Make comparator metric
@@ -303,40 +302,24 @@ export function getClinicalTrackSortComparator(track: ClinicalTrackSpec) {
     };
 }
 
-export function getClinicalTrackInitialSortDirection(
-    track: ClinicalTrackSpec
-): 0 | 1 | -1 {
-    let initialSortOrder: 0 | 1 | -1 = 0;
-
-    const defaultTracks = ServerConfigHelpers.parseDefaultOncoprintClinicalTracks(
-        getServerConfig().oncoprint_clinical_tracks_show_by_default!
-    );
-
-    defaultTracks.forEach(t => {
-        if (t.stableId === track.attributeId) {
-            if (t.sortOrder === 'ASC') {
-                initialSortOrder = 1;
-            } else if (t.sortOrder === 'DESC') {
-                initialSortOrder = -1;
-            }
-        }
-    });
-    return initialSortOrder;
+export enum SortOrder {
+    ASC = 1,
+    DESC = -1,
+    UNSORTED = 0,
 }
 
-export function getClinicalTrackInitialShowGapsConfig(
+export function toDirectionEnum(val: string): SortOrder {
+    return SortOrder[val as keyof typeof SortOrder];
+}
+
+export function toDirectionString(dir: SortOrder): string {
+    return SortOrder[dir];
+}
+
+export function getClinicalTrackSortDirection(
     track: ClinicalTrackSpec
-): boolean {
-    let gapOn = false;
-    const defaultTracks = ServerConfigHelpers.parseDefaultOncoprintClinicalTracks(
-        getServerConfig().oncoprint_clinical_tracks_show_by_default!
-    );
-    defaultTracks.forEach(t => {
-        if (t.stableId === track.attributeId) {
-            gapOn = !!t.gapOn;
-        }
-    });
-    return gapOn;
+): SortOrder {
+    return toDirectionEnum(track?.sortOrder || 'UNSORTED');
 }
 
 export const heatmapTrackSortComparator = (() => {

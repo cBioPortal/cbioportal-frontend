@@ -21,6 +21,7 @@ import {
 } from '../../../pages/resultsView/ResultsViewPageStore';
 import './styles.scss';
 import { ShapeParams } from 'oncoprintjs/dist/js/oncoprintshape';
+import { SpecialAttribute } from 'shared/cache/ClinicalDataCache';
 
 export type CategoricalTrackDatum = {
     entity: string;
@@ -55,6 +56,8 @@ export type ClinicalTrackSpec = {
     na_legend_label?: string;
     na_tooltip_value?: string; // If given, then show a tooltip over NA columns that has this value
     custom_options?: CustomTrackOption[];
+    sortOrder?: string;
+    gapOn?: boolean;
 } & (
     | {
           datatype: 'counts';
@@ -74,6 +77,25 @@ export type ClinicalTrackSpec = {
           universal_rule_categories?: { [category: string]: any };
       }
 );
+
+export class ClinicalTrackConfig {
+    constructor(stableId: string | SpecialAttribute) {
+        this.stableId = stableId;
+    }
+    public stableId: string | SpecialAttribute;
+    public sortOrder: string | null = null;
+    public gapOn: boolean | null = null;
+}
+
+export type ClinicalTrackConfigChange = {
+    stableId?: string;
+    sortOrder?: string;
+    gapOn?: boolean;
+};
+
+export type ClinicalTrackConfigMap = {
+    [clinicalAttribute: string]: ClinicalTrackConfig;
+};
 
 export interface IBaseHeatmapTrackDatum {
     profile_data: number | null;
@@ -273,6 +295,7 @@ export interface IOncoprintProps {
     onMinimapClose?: () => void;
     onDeleteClinicalTrack?: (key: string) => void;
     onTrackSortDirectionChange?: (trackId: TrackId, dir: number) => void;
+    onTrackGapChange?: (trackId: TrackId, gap: boolean) => void;
 
     suppressRendering?: boolean;
     onSuppressRendering?: () => void;
@@ -283,6 +306,8 @@ export interface IOncoprintProps {
 
 @observer
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
+    public oncoprint: OncoprintJS | undefined;
+
     private div: HTMLDivElement;
     public oncoprintJs: OncoprintJS | undefined;
     private trackSpecKeyToTrackId: { [key: string]: TrackId };
@@ -335,7 +360,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     }
 
     private refreshOncoprint(props: IOncoprintProps) {
-        const now = performance.now();
+        const start = performance.now();
         if (!this.oncoprintJs) {
             // instantiate new one
             this.oncoprintJs = new OncoprintJS(
@@ -364,7 +389,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
             );
             this.lastTransitionProps = _.clone(props);
         }
-        console.log('oncoprint render time: ', performance.now() - now);
+        console.log('oncoprint render time: ', performance.now() - start);
     }
 
     componentWillReceiveProps(nextProps: IOncoprintProps) {
