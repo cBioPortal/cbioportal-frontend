@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './style/clinicalTrialMatch.module.scss';
 import ClinicalTrialMatchMutationSelect from './ClinicalTrialMatchSelectUtil';
+import ClinicalTrialMatchRecruitingSelect from './ClinicalTrialMatchRecruitingSelect';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import Select from 'react-select';
@@ -38,86 +39,6 @@ const ENTITY_TOOLTIP: string = 'Select Tumor Enitities';
 
 const customComponents = {
     DropdownIndicator: null,
-};
-
-const recruitingOption = (props: any) => {
-    return (
-        <div>
-            <components.Option {...props}>
-                <span style={{ marginRight: 5 }}>{props.label}</span>
-                <DefaultTooltip
-                    placement="bottomLeft"
-                    trigger={['hover', 'focus']}
-                    overlay={getTooltipRecruitingContent(props.label)}
-                    destroyTooltipOnHide={false}
-                    onPopupAlign={placeArrowBottomLeft}
-                >
-                    <i className={'fa fa-info-circle ' + styles.icon}></i>
-                </DefaultTooltip>
-            </components.Option>
-        </div>
-    );
-};
-
-const getTooltipRecruitingContent = (recruitingStatus: string) => {
-    const statusMap: { [status: string]: JSX.Element } = {
-        'Not yet recruiting': (
-            <span>The study has not started recruiting participants.</span>
-        ),
-        Recruiting: (
-            <span>The study is currently recruiting participants.</span>
-        ),
-        'Enrolling by invitation': (
-            <span>
-                The study is selecting its participants from a population, or
-                group of people, decided on by the researchers in advance. These
-                studies are not open to everyone who meets the eligibility
-                criteria but only to people in that particular population, who
-                are specifically invited to participate.
-            </span>
-        ),
-        'Active, not recruiting': (
-            <span>
-                The study is ongoing, and participants are receiving an
-                intervention or being examined, but potential participants are
-                not currently being recruited or enrolled.
-            </span>
-        ),
-        Suspended: (
-            <span>The study has stopped early but may start again.</span>
-        ),
-        Terminated: (
-            <span>
-                The study has stopped early and will not start again.
-                Participants are no longer being examined or treated.
-            </span>
-        ),
-        Completed: (
-            <span>
-                The study has ended normally, and participants are no longer
-                being examined or treated (that is, the last participant's last
-                visit has occurred).
-            </span>
-        ),
-        Withdrawn: (
-            <span>
-                The study stopped early, before enrolling its first participant.
-            </span>
-        ),
-        'Unknown status': (
-            <span>
-                A study on ClinicalTrials.gov whose last known status was
-                recruiting; not yet recruiting; or active, not recruiting but
-                that has passed its completion date, and the status has not been
-                last verified within the past 2 years.
-            </span>
-        ),
-    };
-    return (
-        <div className={styles.tooltip} style={{ width: '300px' }}>
-            {statusMap[recruitingStatus]}
-        </div>
-    );
 };
 
 interface IClinicalTrialOptionsMatchProps {
@@ -178,7 +99,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             mutationNecSymbolItems: new Array<string>(),
             tumorEntityItems: new Array<string>(),
             countryItems: new Array<string>(),
-            recruitingItems: new Array<string>(),
+            recruitingItems: ['Recruiting', 'Not yet recruiting'],
             patientLocation: '',
             gender: sex || 'All',
             age: +this.age,
@@ -440,25 +361,27 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 marginBottom: '5px',
                             }}
                         >
-                            <Select
-                                options={this.recruiting_values.map(
-                                    recStatus => ({
+                            <ClinicalTrialMatchRecruitingSelect
+                                options={[
+                                    {
+                                        label: 'All studies',
+                                        value: 'All studies',
+                                    },
+                                ].concat(
+                                    this.recruiting_values.map(recStatus => ({
                                         label: recStatus,
                                         value: recStatus,
-                                    })
+                                    }))
                                 )}
                                 isMulti
                                 name="recruitingStatusSearch"
                                 className="basic-multi-select"
                                 classNamePrefix="select"
                                 placeholder="Select status..."
-                                components={{ Option: recruitingOption }}
                                 onChange={(selectedOption: Array<any>) => {
                                     const newStatuses = [];
                                     if (selectedOption !== null) {
-                                        const statuses = selectedOption.map(
-                                            item => item.value
-                                        );
+                                        const statuses = selectedOption;
                                         newStatuses.push(...statuses);
                                     }
                                     this.setState({
