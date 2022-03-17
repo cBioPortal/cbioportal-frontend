@@ -48,7 +48,7 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
     };
 
     const onBlur = (event: any) => {
-        if (inputValue !== '') {
+        if (inputValue !== '' && inputValue !== undefined) {
             const newValue = { label: inputValue, value: inputValue } as Option;
             const opts = [...(value || []), newValue];
             props.onChange(
@@ -94,6 +94,7 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
     return (
         <>
             <CreatableSelect
+                height={'100%'}
                 name={props.name}
                 className={props.className}
                 classNamePrefix={props.classNamePrefix}
@@ -102,6 +103,7 @@ export const ClinicalTrialMatchMutationSelect = (props: CustomSelectProps) => {
                 allowCreateWhileLoading={true}
                 inputValue={inputValue}
                 onInputChange={onInputChange}
+                autoSize={false}
                 onChange={onChange}
                 onBlur={onBlur}
                 onKeyDown={onKeyDown}

@@ -3,12 +3,13 @@ import { observable } from 'mobx';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { observer } from 'mobx-react';
 
-import { Collapse } from 'react-collapse';
+import { Collapse } from 'react-bootstrap';
 import { StudyListEntry } from './utils/StudyList';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
 import ClinicalTrialMatchTableOptions from './ClinicalTrialMatchTableOptions';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import styles from 'shared/components/loadingIndicator/styles.module.scss';
+import { height } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlot';
 
 enum ColumnKey {
     NUM_FOUND = 'Appearences',
@@ -27,6 +28,10 @@ enum ColumnKey {
 interface IClinicalTrialMatchProps {
     store: PatientViewPageStore;
     clinicalTrialMatches: IDetailedClinicalTrialMatch[];
+}
+
+interface ICollapseSearchState {
+    isSearchCollapsed: boolean;
 }
 
 interface ICollapseListState {
@@ -70,18 +75,19 @@ class CollapseList extends React.PureComponent<
         if (str.length <= this.NUM_LIST_ELEMENTS) {
             return (
                 <div>
-                    <ul>{this.asFirstListElement(str)}</ul>
+                    <div>{this.asFirstListElement(str)}</div>
                 </div>
             );
         } else {
             return (
                 <div>
-                    <ul>{this.asFirstListElement(str)}</ul>
-                    <Collapse isOpened={this.state.isOpened}>
-                        <ul>{this.asHiddenListElement(str)}</ul>
+                    <div>{this.asFirstListElement(str)}</div>
+                    <Collapse in={this.state.isOpened}>
+                        <div>{this.asHiddenListElement(str)}</div>
                     </Collapse>
                     <div className="config">
                         <button
+                            className={'btn btn-default'}
                             children={
                                 !this.state.isOpened ? 'show more' : 'show less'
                             }
@@ -108,7 +114,7 @@ class CollapseList extends React.PureComponent<
                 res.push(str[i]);
             }
         }
-        return res.map(i => <li>{i}</li>);
+        return res.map(i => <div>{i}</div>);
     }
 
     asHiddenListElement(str: String[]) {
@@ -117,7 +123,7 @@ class CollapseList extends React.PureComponent<
             for (var i = this.NUM_LIST_ELEMENTS; i < str.length; i++) {
                 res.push(str[i]);
             }
-            return res.map(i => <li>{i}</li>);
+            return res.map(i => <div>{i}</div>);
         } else {
             return <div></div>;
         }
@@ -132,7 +138,11 @@ class CollapseList extends React.PureComponent<
         const { isOpened } = this.state;
         const height = 100;
 
-        return <div>{this.getDiplayStyle(this.props.elements)}</div>;
+        return (
+            <div style={{ justifyContent: 'space-evenly' }}>
+                {this.getDiplayStyle(this.props.elements)}
+            </div>
+        );
     }
 }
 
@@ -143,11 +153,12 @@ class CompleteCollapseList extends React.PureComponent<
     getDiplayStyle(str: string) {
         return (
             <div>
-                <Collapse isOpened={this.state.isOpened}>
+                <Collapse in={this.state.isOpened}>
                     <div>{str}</div>
                 </Collapse>
                 <div className="config">
                     <button
+                        className={'btn btn-default'}
                         children={!this.state.isOpened ? 'show' : 'collapse'}
                         onClick={event => {
                             this.setState({ isOpened: !this.state.isOpened });
@@ -174,6 +185,7 @@ class CompleteCollapseList extends React.PureComponent<
 @observer
 export class ClinicalTrialMatchTable extends React.Component<
     IClinicalTrialMatchProps,
+    ICollapseSearchState,
     {}
 > {
     private readonly ENTRIES_PER_PAGE = 10;
@@ -190,7 +202,8 @@ export class ClinicalTrialMatchTable extends React.Component<
             render: (trial: IDetailedClinicalTrialMatch) => (
                 <div>{trial.status}</div>
             ),
-            width: 300,
+            width: 250,
+            resizable: true,
         },
         {
             name: ColumnKey.EXPLAINATION,
@@ -199,7 +212,8 @@ export class ClinicalTrialMatchTable extends React.Component<
                     <CollapseList elements={trial.explanation}></CollapseList>
                 </div>
             ),
-            width: 500,
+            width: 300,
+            resizable: true,
         },
         {
             name: ColumnKey.TITLE,
@@ -215,7 +229,8 @@ export class ClinicalTrialMatchTable extends React.Component<
                     </a>
                 </div>
             ),
-            width: 300,
+            width: 350,
+            resizable: true,
         },
         {
             name: ColumnKey.CONDITIONS,
@@ -224,7 +239,8 @@ export class ClinicalTrialMatchTable extends React.Component<
                     <CollapseList elements={trial.conditions}></CollapseList>
                 </div>
             ),
-            width: 300,
+            width: 200,
+            resizable: true,
         },
         {
             name: ColumnKey.INTERVENTIONS,
@@ -233,7 +249,8 @@ export class ClinicalTrialMatchTable extends React.Component<
                     <CollapseList elements={trial.interventions}></CollapseList>
                 </div>
             ),
-            width: 300,
+            width: 200,
+            resizable: true,
         },
         {
             name: ColumnKey.ELIGIBILITY,
@@ -245,15 +262,24 @@ export class ClinicalTrialMatchTable extends React.Component<
                 </div>
             ),
             width: 300,
+            resizable: true,
         },
         {
             name: ColumnKey.LOCATIONS,
             render: (trial: IDetailedClinicalTrialMatch) => (
                 <div>
-                    <CollapseList elements={trial.locations}></CollapseList>
+                    <CollapseList
+                        elements={trial.locations.map(str =>
+                            str
+                                .replace('undefined', '')
+                                .split(':')
+                                .join(' | ')
+                        )}
+                    ></CollapseList>
                 </div>
             ),
-            width: 300,
+            width: 400,
+            resizable: true,
         },
     ];
 
@@ -262,46 +288,100 @@ export class ClinicalTrialMatchTable extends React.Component<
 
     constructor(props: IClinicalTrialMatchProps) {
         super(props);
+        this.state = {
+            isSearchCollapsed: false,
+        };
     }
 
     render() {
         var loading = this.props.store.isClinicalTrialsLoading;
         return (
             <div>
-                <div>
-                    <ClinicalTrialMatchTableOptions store={this.props.store} />
-                </div>
-                <div>
-                    <label style={{ paddingTop: '8px', paddingLeft: '8px' }}>
-                        {!(this.props.clinicalTrialMatches.length > 0)
-                            ? ''
-                            : '\n' +
-                              this.props.clinicalTrialMatches.length +
-                              ' results have been found'}
-                    </label>
-                </div>
-                <div>
-                    <LoadingIndicator
-                        center={true}
-                        isLoading={this.props.store.showLoadingScreen}
-                        size="big"
-                    ></LoadingIndicator>
-                    <ClinicalTrialMatchTableComponent
-                        data={this.props.clinicalTrialMatches}
-                        columns={this._columns}
-                        initialItemsPerPage={this.ENTRIES_PER_PAGE}
-                    />
-                </div>
-                <div>
-                    Powered by{' '}
-                    <a href="https://oncokb.org/" target="_blank">
-                        OncoKB
-                    </a>{' '}
-                    &{' '}
-                    <a href="https://clinicaltrials.gov/" target="_blank">
-                        ClinicalTrials.gov
-                    </a>
-                </div>
+                <th
+                    colSpan={2}
+                    style={{ padding: '10px', borderBottom: '1px solid grey' }}
+                >
+                    <div>
+                        <button
+                            style={{
+                                fontSize: '2',
+                                opacity: 0.4,
+                                height: '22px',
+                                width: '30px',
+                            }}
+                            onClick={() => {
+                                this.setState({
+                                    isSearchCollapsed: !this.state
+                                        .isSearchCollapsed,
+                                });
+                            }}
+                            children={
+                                this.state.isSearchCollapsed === true
+                                    ? '>>'
+                                    : '<<'
+                            }
+                        ></button>
+                        <h1 style={{ display: 'inline', paddingLeft: '20' }}>
+                            Clinical Trial Search
+                        </h1>
+                    </div>
+                </th>
+                <tr>
+                    <td>
+                        <Collapse
+                            in={!this.state.isSearchCollapsed}
+                            dimension={'width'}
+                        >
+                            <div>
+                                <ClinicalTrialMatchTableOptions
+                                    store={this.props.store}
+                                />
+                            </div>
+                        </Collapse>
+                    </td>
+
+                    <td>
+                        <div>
+                            <label
+                                style={{
+                                    paddingTop: '8px',
+                                    paddingLeft: '8px',
+                                }}
+                            >
+                                {!(this.props.clinicalTrialMatches.length > 0)
+                                    ? ''
+                                    : '\n' +
+                                      this.props.clinicalTrialMatches.length +
+                                      ' results have been found'}
+                            </label>
+                        </div>
+                        <div>
+                            <LoadingIndicator
+                                center={true}
+                                isLoading={this.props.store.showLoadingScreen}
+                                size="big"
+                            ></LoadingIndicator>
+                            <ClinicalTrialMatchTableComponent
+                                data={this.props.clinicalTrialMatches}
+                                columns={this._columns}
+                                initialItemsPerPage={this.ENTRIES_PER_PAGE}
+                            />
+                        </div>
+                        <div>
+                            Powered by{' '}
+                            <a href="https://oncokb.org/" target="_blank">
+                                OncoKB
+                            </a>{' '}
+                            &{' '}
+                            <a
+                                href="https://clinicaltrials.gov/"
+                                target="_blank"
+                            >
+                                ClinicalTrials.gov
+                            </a>
+                        </div>
+                    </td>
+                </tr>
             </div>
         );
     }

@@ -2601,6 +2601,35 @@ export class PatientViewPageStore {
         },
     });
 
+    getTumorEntitiesFromPatientSamples = remoteData<string[]>(
+        {
+            await: () => [this.patientViewData],
+            invoke: async () => {
+                var samples = this.patientViewData.result.samples;
+                var oncotree_codes_in_samples = [];
+                var tumor_entities = [];
+                for (var i = 0; i < samples!.length; i++) {
+                    for (var k = 0; k < samples![i].clinicalData.length; k++) {
+                        if (
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE_DETAILED' ||
+                            samples![i].clinicalData[k].clinicalAttributeId ==
+                                'CANCER_TYPE'
+                        ) {
+                            tumor_entities.push(
+                                samples![i].clinicalData[k].value
+                            );
+                        }
+                    }
+                }
+                console.log('In Method');
+                console.log(tumor_entities);
+                return tumor_entities;
+            },
+        },
+        []
+    );
+
     readonly getStudiesFromClinicalTrialsGov = remoteData<StudyListEntry[]>(
         {
             await: () => [
