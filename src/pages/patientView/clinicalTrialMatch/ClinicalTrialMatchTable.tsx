@@ -303,43 +303,32 @@ export class ClinicalTrialMatchTable extends React.Component<
                 >
                     <div>
                         <button
-                            style={{
-                                fontSize: '2',
-                                opacity: 0.4,
-                                height: '22px',
-                                width: '30px',
-                            }}
+                            className={'btn btn-default'}
                             onClick={() => {
                                 this.setState({
                                     isSearchCollapsed: !this.state
                                         .isSearchCollapsed,
                                 });
                             }}
-                            children={
-                                this.state.isSearchCollapsed === true
-                                    ? '>>'
-                                    : '<<'
-                            }
-                        ></button>
-                        <h1 style={{ display: 'inline', paddingLeft: '20' }}>
-                            Clinical Trial Search
-                        </h1>
+                        >
+                            <h1
+                                style={{ display: 'inline', paddingLeft: '20' }}
+                            >
+                                Clinical Trial Search
+                            </h1>
+                        </button>
                     </div>
                 </th>
                 <tr>
-                    <td>
-                        <Collapse
-                            in={!this.state.isSearchCollapsed}
-                            dimension={'width'}
-                        >
-                            <div>
-                                <ClinicalTrialMatchTableOptions
-                                    store={this.props.store}
-                                />
-                            </div>
-                        </Collapse>
-                    </td>
-
+                    <div>
+                        <ClinicalTrialMatchTableOptions
+                            store={this.props.store}
+                            onHide={() => {
+                                this.setState({ isSearchCollapsed: false });
+                            }}
+                            show={this.state.isSearchCollapsed}
+                        />
+                    </div>
                     <td>
                         <div>
                             <label

@@ -13,6 +13,7 @@ import {
 } from './utils/SelectValues';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
 import { Collapse } from 'react-collapse';
+import { Modal } from 'react-bootstrap';
 import {
     DefaultTooltip,
     placeArrowBottomLeft,
@@ -122,6 +123,8 @@ const getTooltipRecruitingContent = (recruitingStatus: string) => {
 
 interface IClinicalTrialOptionsMatchProps {
     store: PatientViewPageStore;
+    show: boolean;
+    onHide: () => void;
 }
 
 interface IClinicalTrialOptionsMatchState {
@@ -243,482 +246,545 @@ class ClinicalTrialMatchTableOptions extends React.Component<
 
     render() {
         return (
-            <React.Fragment>
-                <div
-                    style={{
-                        display: 'block',
-                        width: '95%',
-                        paddingTop: '40px',
-                    }}
-                >
-                    <tr>
-                        <td>
-                            <div className={styles.tooltipSpan}>
-                                <span className={styles.header5}>
-                                    Necessary Mutations:
-                                </span>
-                                <DefaultTooltip
-                                    overlay={NECESSARY_MUTATIONS_TOOLTIP}
-                                    trigger={['hover', 'focus']}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <i
-                                        className={
-                                            'fa fa-info-circle ' + styles.icon
-                                        }
-                                    ></i>
-                                </DefaultTooltip>
-                            </div>
-                            <tr
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                    marginBottom: '5px',
-                                }}
-                            >
-                                <ClinicalTrialMatchMutationSelect
-                                    options={this.props.store.mutationHugoGeneSymbols.map(
-                                        geneSymbol => ({
-                                            label: geneSymbol,
-                                            value: geneSymbol,
-                                        })
-                                    )}
-                                    isMulti
-                                    data={this.state.mutationNecSymbolItems}
-                                    name="mutationSearch"
-                                    className="basic-multi-select"
-                                    classNamePrefix="select"
-                                    placeholder="Select NECESSARY mutations and additional search keywords..."
-                                    onChange={(selectedOption: string[]) => {
-                                        const newMutations = [];
-                                        if (selectedOption !== null) {
-                                            const mutations = selectedOption;
-                                            newMutations.push(...mutations);
-                                        }
-                                        this.setState({
-                                            mutationNecSymbolItems: newMutations,
-                                        });
-                                    }}
-                                />
-                            </tr>
-                        </td>
-                        <td>
-                            <div className={styles.tooltipSpan}>
-                                <span className={styles.header5}>
-                                    Optional Mutations:
-                                </span>
-                                <DefaultTooltip
-                                    overlay={OPTIONAL_MUTATIONS_TOOLTIP}
-                                    trigger={['hover', 'focus']}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <i
-                                        className={
-                                            'fa fa-info-circle ' + styles.icon
-                                        }
-                                    ></i>
-                                </DefaultTooltip>
-                            </div>
-                            <tr
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                    marginBottom: '5px',
-                                }}
-                            >
-                                <ClinicalTrialMatchMutationSelect
-                                    options={this.props.store.mutationHugoGeneSymbols.map(
-                                        geneSymbol => ({
-                                            label: geneSymbol,
-                                            value: geneSymbol,
-                                        })
-                                    )}
-                                    isMulti
-                                    data={this.state.mutationSymbolItems}
-                                    name="mutationSearch"
-                                    className="basic-multi-select"
-                                    classNamePrefix="select"
-                                    placeholder="Select OPTIONAL mutations and additional search keywords..."
-                                    onChange={(selectedOption: string[]) => {
-                                        const newMutations = [];
-                                        if (selectedOption !== null) {
-                                            const mutations = selectedOption;
-                                            newMutations.push(...mutations);
-                                        }
-                                        this.setState({
-                                            mutationSymbolItems: newMutations,
-                                        });
-
-                                        console.group(
-                                            'TRIALS Mutation Changed'
-                                        );
-                                        console.log(
-                                            this.state.mutationSymbolItems
-                                        );
-                                        console.groupEnd();
-                                    }}
-                                />
-                            </tr>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colSpan={2}>
-                            <div className={styles.tooltipSpan}>
-                                <span className={styles.header5}>
-                                    Tumor Entities:
-                                </span>
-                                <DefaultTooltip
-                                    overlay={ENTITY_TOOLTIP}
-                                    trigger={['hover', 'focus']}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <i
-                                        className={
-                                            'fa fa-info-circle ' + styles.icon
-                                        }
-                                    ></i>
-                                </DefaultTooltip>
-                            </div>
-                            <tr
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                    marginBottom: '5px',
-                                }}
-                            >
-                                <CreatableSelect
-                                    isMulti
-                                    //data={this.state.tumorEntityItems}
-                                    defaultValue={this.tumorEntityDefault}
-                                    name="entitySearch"
-                                    className="basic-multi-select"
-                                    classNamePrefix="select"
-                                    placeholder="Select Tumor Entities..."
-                                    onChange={(selectedOption: string[]) => {
-                                        const newEntities = [];
-                                        if (selectedOption !== null) {
-                                            const entities = selectedOption;
-                                            newEntities.push(...entities);
-                                        }
-                                        this.setState({
-                                            tumorEntityItems: newEntities,
-                                        });
-
-                                        console.group(
-                                            'TRIALS Entities Changed'
-                                        );
-                                        console.log(
-                                            this.state.tumorEntityItems
-                                        );
-                                        console.groupEnd();
-                                    }}
-                                ></CreatableSelect>
-                            </tr>
-                        </td>
-                    </tr>
-                    <td>
-                        <div className={styles.tooltipSpan}>
-                            <span className={styles.header5}>
-                                Recruiting Status:
-                            </span>
-                            <DefaultTooltip
-                                overlay={STATUS_TOOLTIP}
-                                trigger={['hover', 'focus']}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={
-                                        'fa fa-info-circle ' + styles.icon
-                                    }
-                                ></i>
-                            </DefaultTooltip>
-                        </div>
-                        <tr
-                            style={{
-                                display: 'block',
-                                marginLeft: '5px',
-                                marginBottom: '5px',
-                            }}
-                        >
-                            <Select
-                                options={this.recruiting_values.map(
-                                    recStatus => ({
-                                        label: recStatus,
-                                        value: recStatus,
-                                    })
-                                )}
-                                isMulti
-                                name="recruitingStatusSearch"
-                                className="basic-multi-select"
-                                classNamePrefix="select"
-                                placeholder="Select status..."
-                                components={{ Option: recruitingOption }}
-                                onChange={(selectedOption: Array<any>) => {
-                                    const newStatuses = [];
-                                    if (selectedOption !== null) {
-                                        const statuses = selectedOption.map(
-                                            item => item.value
-                                        );
-                                        newStatuses.push(...statuses);
-                                    }
-                                    this.setState({
-                                        recruitingItems: newStatuses,
-                                    });
-                                }}
-                            />
-                        </tr>
-                    </td>
-                    <td>
-                        <div className={styles.tooltipSpan}>
-                            <span className={styles.header5}>Countries:</span>
-                            <DefaultTooltip
-                                overlay={COUNTRIES_TOOLTIP}
-                                trigger={['hover', 'focus']}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={
-                                        'fa fa-info-circle ' + styles.icon
-                                    }
-                                ></i>
-                            </DefaultTooltip>
-                        </div>
-                        <tr
-                            style={{
-                                display: 'block',
-                                marginLeft: '5px',
-                                marginBottom: '5px',
-                            }}
-                        >
-                            <Select
-                                options={this.countries.map(cnt => ({
-                                    label: cnt,
-                                    value: cnt,
-                                }))}
-                                isMulti
-                                name="CountrySearch"
-                                className="basic-multi-select"
-                                classNamePrefix="select"
-                                placeholder="Select countries..."
-                                onChange={(selectedOption: Array<any>) => {
-                                    const newStatuses = [];
-                                    if (selectedOption !== null) {
-                                        const statuses = selectedOption.map(
-                                            item => item.value
-                                        );
-                                        newStatuses.push(...statuses);
-                                    }
-                                    this.setState({
-                                        countryItems: newStatuses,
-                                    });
-                                }}
-                            />
-                        </tr>
-                    </td>
-                    <tr>
-                        <div className={styles.tooltipSpan}>
-                            <span className={styles.header5}>Patient Age:</span>
-                            <DefaultTooltip
-                                overlay={AGE_TOOLTIP}
-                                trigger={['hover', 'focus']}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={
-                                        'fa fa-info-circle ' + styles.icon
-                                    }
-                                ></i>
-                            </DefaultTooltip>
-                        </div>
+            <Modal
+                show={this.props.show}
+                onHide={() => {
+                    this.props.onHide();
+                }}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Set search parameters</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <React.Fragment>
                         <div
                             style={{
                                 display: 'block',
-                                marginLeft: '5px',
-                                marginBottom: '5px',
+                                width: '95%',
+                                minWidth: '450px',
                             }}
                         >
-                            <CreatableSelect
-                                isClearable
-                                isMulti={false}
-                                components={customComponents}
-                                placeholder="Select age..."
-                                onChange={(newValue: any) => {
-                                    if (newValue !== null) {
-                                        this.setState({
-                                            age: +newValue.value,
-                                        });
-                                    } else {
-                                        this.setState({
-                                            age: 0,
-                                        });
-                                    }
-                                }}
-                                defaultValue={this.ageDefault}
-                                options={this.ageDefault}
-                            />
-                        </div>
-                        <td>
-                            <div className={styles.tooltipSpan}>
-                                <span className={styles.header5}>
-                                    Patient Sex:
-                                </span>
-                                <DefaultTooltip
-                                    overlay={SEX_TOOLTIP}
-                                    trigger={['hover', 'focus']}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <i
-                                        className={
-                                            'fa fa-info-circle ' + styles.icon
-                                        }
-                                    ></i>
-                                </DefaultTooltip>
-                            </div>
-                            <tr
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                    marginBottom: '5px',
-                                }}
-                            >
-                                <Select
-                                    options={this.genders.map(gender => ({
-                                        label: gender,
-                                        value: gender,
-                                    }))}
-                                    name="genderSearch"
-                                    defaultValue={this.gender}
-                                    className="basic-select"
-                                    classNamePrefix="select"
-                                    placeholder="Select gender..."
-                                    onChange={(selectedOption: any) => {
-                                        var newStatuses = '';
-                                        if (selectedOption !== null) {
-                                            newStatuses = selectedOption.value;
-                                        }
-                                        this.setState({
-                                            gender: newStatuses,
-                                        });
-                                    }}
-                                />
-                            </tr>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div className={styles.tooltipSpan}>
-                                <span className={styles.header5}>
-                                    Patient Location:
-                                </span>
-                                <DefaultTooltip
-                                    overlay={LOCATION_TOOLTIP}
-                                    trigger={['hover', 'focus']}
-                                    destroyTooltipOnHide={true}
-                                >
-                                    <i
-                                        className={
-                                            'fa fa-info-circle ' + styles.icon
-                                        }
-                                    ></i>
-                                </DefaultTooltip>
-                            </div>
-                            <tr
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                    marginBottom: '5px',
-                                }}
-                            >
-                                <Select
-                                    options={this.locationsWithCoordinates.map(
-                                        city => ({
-                                            label: city,
-                                            value: city,
-                                        })
-                                    )}
-                                    name="locationDistance"
-                                    className="basic-select"
-                                    classNamePrefix="select"
-                                    placeholder="Select patient location..."
-                                    onChange={(selectedOption: any) => {
-                                        var newStatuses = '';
-                                        if (selectedOption !== null) {
-                                            newStatuses = selectedOption.value;
-                                        }
-                                        this.setState({
-                                            patientLocation: newStatuses,
-                                        });
-                                    }}
-                                />
-                            </tr>
-                        </td>
+                            <tr>
+                                <td width={'50%'}>
+                                    <div className={styles.tooltipSpan}>
+                                        <span className={styles.header5}>
+                                            Required Mutations:
+                                        </span>
+                                        <DefaultTooltip
+                                            overlay={
+                                                NECESSARY_MUTATIONS_TOOLTIP
+                                            }
+                                            trigger={['hover', 'focus']}
+                                            destroyTooltipOnHide={true}
+                                        >
+                                            <i
+                                                className={
+                                                    'fa fa-info-circle ' +
+                                                    styles.icon
+                                                }
+                                            ></i>
+                                        </DefaultTooltip>
+                                    </div>
+                                    <tr
+                                        style={{
+                                            display: 'block',
+                                            marginLeft: '5px',
+                                            marginBottom: '5px',
+                                        }}
+                                    >
+                                        <ClinicalTrialMatchMutationSelect
+                                            options={this.props.store.mutationHugoGeneSymbols.map(
+                                                geneSymbol => ({
+                                                    label: geneSymbol,
+                                                    value: geneSymbol,
+                                                })
+                                            )}
+                                            isMulti
+                                            data={
+                                                this.state
+                                                    .mutationNecSymbolItems
+                                            }
+                                            name="mutationSearch"
+                                            className="basic-multi-select"
+                                            classNamePrefix="select"
+                                            placeholder="Mutationselect..."
+                                            onChange={(
+                                                selectedOption: string[]
+                                            ) => {
+                                                const newMutations = [];
+                                                if (selectedOption !== null) {
+                                                    const mutations = selectedOption;
+                                                    newMutations.push(
+                                                        ...mutations
+                                                    );
+                                                }
+                                                this.setState({
+                                                    mutationNecSymbolItems: newMutations,
+                                                });
+                                            }}
+                                        />
+                                    </tr>
+                                </td>
+                                <td width={'50%'}>
+                                    <div className={styles.tooltipSpan}>
+                                        <span className={styles.header5}>
+                                            Optional Mutations:
+                                        </span>
+                                        <DefaultTooltip
+                                            overlay={OPTIONAL_MUTATIONS_TOOLTIP}
+                                            trigger={['hover', 'focus']}
+                                            destroyTooltipOnHide={true}
+                                        >
+                                            <i
+                                                className={
+                                                    'fa fa-info-circle ' +
+                                                    styles.icon
+                                                }
+                                            ></i>
+                                        </DefaultTooltip>
+                                    </div>
+                                    <tr
+                                        style={{
+                                            display: 'block',
+                                            marginLeft: '5px',
+                                            marginBottom: '5px',
+                                        }}
+                                    >
+                                        <ClinicalTrialMatchMutationSelect
+                                            options={this.props.store.mutationHugoGeneSymbols.map(
+                                                geneSymbol => ({
+                                                    label: geneSymbol,
+                                                    value: geneSymbol,
+                                                })
+                                            )}
+                                            isMulti
+                                            data={
+                                                this.state.mutationSymbolItems
+                                            }
+                                            name="mutationSearch"
+                                            className="basic-multi-select"
+                                            classNamePrefix="select"
+                                            placeholder="Mutationselect..."
+                                            onChange={(
+                                                selectedOption: string[]
+                                            ) => {
+                                                const newMutations = [];
+                                                if (selectedOption !== null) {
+                                                    const mutations = selectedOption;
+                                                    newMutations.push(
+                                                        ...mutations
+                                                    );
+                                                }
+                                                this.setState({
+                                                    mutationSymbolItems: newMutations,
+                                                });
 
-                        <div className={styles.tooltipSpan}>
-                            <span className={styles.header5}>
-                                Max Distance:
-                            </span>
-                            <DefaultTooltip
-                                overlay={MAX_DISTANCE_TOOLTIP}
-                                trigger={['hover', 'focus']}
-                                destroyTooltipOnHide={true}
-                            >
-                                <i
-                                    className={
-                                        'fa fa-info-circle ' + styles.icon
-                                    }
-                                ></i>
-                            </DefaultTooltip>
-                        </div>
-                        <div
-                            style={{
-                                display: 'block',
-                                marginLeft: '5px',
-                                marginBottom: '5px',
-                            }}
-                        >
-                            <div className="config">
-                                <label>
-                                    <input
-                                        className="input"
-                                        type="checkbox"
-                                        checked={this.state.isOpened}
-                                        onChange={({ target: { checked } }) =>
-                                            this.setState({ isOpened: checked })
-                                        }
-                                    />{' '}
-                                    Set maximum distance in km
-                                </label>
-                                <Collapse isOpened={this.state.isOpened}>
-                                    <input
-                                        placeholder="Distance in km"
-                                        value={this.state.maxDistance}
-                                        onChange={event =>
-                                            this.setState({
-                                                maxDistance: event.target.value.replace(
-                                                    /\D/,
-                                                    ''
-                                                ),
+                                                console.group(
+                                                    'TRIALS Mutation Changed'
+                                                );
+                                                console.log(
+                                                    this.state
+                                                        .mutationSymbolItems
+                                                );
+                                                console.groupEnd();
+                                            }}
+                                        />
+                                    </tr>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colSpan={2}>
+                                    <div className={styles.tooltipSpan}>
+                                        <span className={styles.header5}>
+                                            Tumor Entities:
+                                        </span>
+                                        <DefaultTooltip
+                                            overlay={ENTITY_TOOLTIP}
+                                            trigger={['hover', 'focus']}
+                                            destroyTooltipOnHide={true}
+                                        >
+                                            <i
+                                                className={
+                                                    'fa fa-info-circle ' +
+                                                    styles.icon
+                                                }
+                                            ></i>
+                                        </DefaultTooltip>
+                                    </div>
+                                    <tr
+                                        style={{
+                                            display: 'block',
+                                            marginLeft: '5px',
+                                            marginBottom: '5px',
+                                        }}
+                                    >
+                                        <CreatableSelect
+                                            isMulti
+                                            //data={this.state.tumorEntityItems}
+                                            defaultValue={
+                                                this.tumorEntityDefault
+                                            }
+                                            name="entitySearch"
+                                            className="basic-multi-select"
+                                            classNamePrefix="select"
+                                            placeholder="Select Tumor Entities..."
+                                            onChange={(
+                                                selectedOption: string[]
+                                            ) => {
+                                                const newEntities = [];
+                                                if (selectedOption !== null) {
+                                                    const entities = selectedOption;
+                                                    newEntities.push(
+                                                        ...entities
+                                                    );
+                                                }
+                                                this.setState({
+                                                    tumorEntityItems: newEntities,
+                                                });
+
+                                                console.group(
+                                                    'TRIALS Entities Changed'
+                                                );
+                                                console.log(
+                                                    this.state.tumorEntityItems
+                                                );
+                                                console.groupEnd();
+                                            }}
+                                        ></CreatableSelect>
+                                    </tr>
+                                </td>
+                            </tr>
+                            <td>
+                                <div className={styles.tooltipSpan}>
+                                    <span className={styles.header5}>
+                                        Recruiting Status:
+                                    </span>
+                                    <DefaultTooltip
+                                        overlay={STATUS_TOOLTIP}
+                                        trigger={['hover', 'focus']}
+                                        destroyTooltipOnHide={true}
+                                    >
+                                        <i
+                                            className={
+                                                'fa fa-info-circle ' +
+                                                styles.icon
+                                            }
+                                        ></i>
+                                    </DefaultTooltip>
+                                </div>
+                                <tr
+                                    style={{
+                                        display: 'block',
+                                        marginLeft: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                >
+                                    <Select
+                                        options={this.recruiting_values.map(
+                                            recStatus => ({
+                                                label: recStatus,
+                                                value: recStatus,
                                             })
-                                        }
+                                        )}
+                                        isMulti
+                                        name="recruitingStatusSearch"
+                                        className="basic-multi-select"
+                                        classNamePrefix="select"
+                                        placeholder="Select status..."
+                                        components={{
+                                            Option: recruitingOption,
+                                        }}
+                                        onChange={(
+                                            selectedOption: Array<any>
+                                        ) => {
+                                            const newStatuses = [];
+                                            if (selectedOption !== null) {
+                                                const statuses = selectedOption.map(
+                                                    item => item.value
+                                                );
+                                                newStatuses.push(...statuses);
+                                            }
+                                            this.setState({
+                                                recruitingItems: newStatuses,
+                                            });
+                                        }}
                                     />
-                                </Collapse>
-                            </div>
+                                </tr>
+                            </td>
+                            <td>
+                                <div className={styles.tooltipSpan}>
+                                    <span className={styles.header5}>
+                                        Countries:
+                                    </span>
+                                    <DefaultTooltip
+                                        overlay={COUNTRIES_TOOLTIP}
+                                        trigger={['hover', 'focus']}
+                                        destroyTooltipOnHide={true}
+                                    >
+                                        <i
+                                            className={
+                                                'fa fa-info-circle ' +
+                                                styles.icon
+                                            }
+                                        ></i>
+                                    </DefaultTooltip>
+                                </div>
+                                <tr
+                                    style={{
+                                        display: 'block',
+                                        marginLeft: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                >
+                                    <Select
+                                        options={this.countries.map(cnt => ({
+                                            label: cnt,
+                                            value: cnt,
+                                        }))}
+                                        isMulti
+                                        name="CountrySearch"
+                                        className="basic-multi-select"
+                                        classNamePrefix="select"
+                                        placeholder="Select countries..."
+                                        onChange={(
+                                            selectedOption: Array<any>
+                                        ) => {
+                                            const newStatuses = [];
+                                            if (selectedOption !== null) {
+                                                const statuses = selectedOption.map(
+                                                    item => item.value
+                                                );
+                                                newStatuses.push(...statuses);
+                                            }
+                                            this.setState({
+                                                countryItems: newStatuses,
+                                            });
+                                        }}
+                                    />
+                                </tr>
+                            </td>
+                            <tr>
+                                <div className={styles.tooltipSpan}>
+                                    <span className={styles.header5}>
+                                        Patient Age:
+                                    </span>
+                                    <DefaultTooltip
+                                        overlay={AGE_TOOLTIP}
+                                        trigger={['hover', 'focus']}
+                                        destroyTooltipOnHide={true}
+                                    >
+                                        <i
+                                            className={
+                                                'fa fa-info-circle ' +
+                                                styles.icon
+                                            }
+                                        ></i>
+                                    </DefaultTooltip>
+                                </div>
+                                <div
+                                    style={{
+                                        display: 'block',
+                                        marginLeft: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                >
+                                    <CreatableSelect
+                                        isClearable
+                                        isMulti={false}
+                                        components={customComponents}
+                                        placeholder="Select age..."
+                                        onChange={(newValue: any) => {
+                                            if (newValue !== null) {
+                                                this.setState({
+                                                    age: +newValue.value,
+                                                });
+                                            } else {
+                                                this.setState({
+                                                    age: 0,
+                                                });
+                                            }
+                                        }}
+                                        defaultValue={this.ageDefault}
+                                        options={this.ageDefault}
+                                    />
+                                </div>
+                                <td>
+                                    <div className={styles.tooltipSpan}>
+                                        <span className={styles.header5}>
+                                            Patient Sex:
+                                        </span>
+                                        <DefaultTooltip
+                                            overlay={SEX_TOOLTIP}
+                                            trigger={['hover', 'focus']}
+                                            destroyTooltipOnHide={true}
+                                        >
+                                            <i
+                                                className={
+                                                    'fa fa-info-circle ' +
+                                                    styles.icon
+                                                }
+                                            ></i>
+                                        </DefaultTooltip>
+                                    </div>
+                                    <tr
+                                        style={{
+                                            display: 'block',
+                                            marginLeft: '5px',
+                                            marginBottom: '5px',
+                                        }}
+                                    >
+                                        <Select
+                                            options={this.genders.map(
+                                                gender => ({
+                                                    label: gender,
+                                                    value: gender,
+                                                })
+                                            )}
+                                            name="genderSearch"
+                                            defaultValue={this.gender}
+                                            className="basic-select"
+                                            classNamePrefix="select"
+                                            placeholder="Select gender..."
+                                            onChange={(selectedOption: any) => {
+                                                var newStatuses = '';
+                                                if (selectedOption !== null) {
+                                                    newStatuses =
+                                                        selectedOption.value;
+                                                }
+                                                this.setState({
+                                                    gender: newStatuses,
+                                                });
+                                            }}
+                                        />
+                                    </tr>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div className={styles.tooltipSpan}>
+                                        <span className={styles.header5}>
+                                            Patient Location:
+                                        </span>
+                                        <DefaultTooltip
+                                            overlay={LOCATION_TOOLTIP}
+                                            trigger={['hover', 'focus']}
+                                            destroyTooltipOnHide={true}
+                                        >
+                                            <i
+                                                className={
+                                                    'fa fa-info-circle ' +
+                                                    styles.icon
+                                                }
+                                            ></i>
+                                        </DefaultTooltip>
+                                    </div>
+                                    <tr
+                                        style={{
+                                            display: 'block',
+                                            marginLeft: '5px',
+                                            marginBottom: '5px',
+                                        }}
+                                    >
+                                        <Select
+                                            options={this.locationsWithCoordinates.map(
+                                                city => ({
+                                                    label: city,
+                                                    value: city,
+                                                })
+                                            )}
+                                            name="locationDistance"
+                                            className="basic-select"
+                                            classNamePrefix="select"
+                                            placeholder="Select patient location..."
+                                            onChange={(selectedOption: any) => {
+                                                var newStatuses = '';
+                                                if (selectedOption !== null) {
+                                                    newStatuses =
+                                                        selectedOption.value;
+                                                }
+                                                this.setState({
+                                                    patientLocation: newStatuses,
+                                                });
+                                            }}
+                                        />
+                                    </tr>
+                                </td>
+
+                                <div className={styles.tooltipSpan}>
+                                    <span className={styles.header5}>
+                                        Max Distance:
+                                    </span>
+                                    <DefaultTooltip
+                                        overlay={MAX_DISTANCE_TOOLTIP}
+                                        trigger={['hover', 'focus']}
+                                        destroyTooltipOnHide={true}
+                                    >
+                                        <i
+                                            className={
+                                                'fa fa-info-circle ' +
+                                                styles.icon
+                                            }
+                                        ></i>
+                                    </DefaultTooltip>
+                                </div>
+                                <div
+                                    style={{
+                                        display: 'block',
+                                        marginLeft: '5px',
+                                        marginBottom: '5px',
+                                    }}
+                                >
+                                    <div className="config">
+                                        <label>
+                                            <input
+                                                className="input"
+                                                type="checkbox"
+                                                checked={this.state.isOpened}
+                                                onChange={({
+                                                    target: { checked },
+                                                }) =>
+                                                    this.setState({
+                                                        isOpened: checked,
+                                                    })
+                                                }
+                                            />{' '}
+                                            Set maximum distance in km
+                                        </label>
+                                        <Collapse
+                                            isOpened={this.state.isOpened}
+                                        >
+                                            <input
+                                                placeholder="Distance in km"
+                                                value={this.state.maxDistance}
+                                                onChange={event =>
+                                                    this.setState({
+                                                        maxDistance: event.target.value.replace(
+                                                            /\D/,
+                                                            ''
+                                                        ),
+                                                    })
+                                                }
+                                            />
+                                        </Collapse>
+                                    </div>
+                                </div>
+                            </tr>
                         </div>
-                    </tr>
-                </div>
-                <div>
-                    <button
-                        onClick={this.setSearchParams.bind(this)}
-                        className={'btn btn-default'}
-                        style={{
-                            display: 'block',
-                            marginLeft: '5px',
-                        }}
-                    >
-                        Search
-                    </button>
-                </div>
-            </React.Fragment>
+                        <div>
+                            <button
+                                onClick={this.setSearchParams.bind(this)}
+                                className={'btn btn-default'}
+                                style={{
+                                    display: 'block',
+                                    marginLeft: '5px',
+                                }}
+                            >
+                                Search
+                            </button>
+                        </div>
+                    </React.Fragment>
+                </Modal.Body>
+            </Modal>
         );
     }
 }
