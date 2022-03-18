@@ -3469,6 +3469,18 @@
       },
       "title": "AndedSampleTreatmentFilters"
     },
+    "BinsGeneratorConfig": {
+      "type": "object",
+      "properties": {
+        "anchorValue": {
+          "type": "number"
+        },
+        "binSize": {
+          "type": "number"
+        }
+      },
+      "title": "BinsGeneratorConfig"
+    },
     "CaseListDataCount": {
       "type": "object",
       "properties": {
@@ -3588,6 +3600,18 @@
       "properties": {
         "attributeId": {
           "type": "string"
+        },
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
+          ]
+        },
+        "binsGeneratorConfig": {
+          "$ref": "#/definitions/BinsGeneratorConfig"
         },
         "customBins": {
           "type": "array",
@@ -4239,6 +4263,18 @@
     "GenericAssayDataBinFilter": {
       "type": "object",
       "properties": {
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
+          ]
+        },
+        "binsGeneratorConfig": {
+          "$ref": "#/definitions/BinsGeneratorConfig"
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -4540,6 +4576,18 @@
     "GenomicDataBinFilter": {
       "type": "object",
       "properties": {
+        "binMethod": {
+          "type": "string",
+          "enum": [
+            "MEDIAN",
+            "QUARTILE",
+            "CUSTOM",
+            "GENERATE"
+          ]
+        },
+        "binsGeneratorConfig": {
+          "$ref": "#/definitions/BinsGeneratorConfig"
+        },
         "customBins": {
           "type": "array",
           "items": {
@@ -5335,6 +5383,9 @@
         "patientTreatmentGroupFilters": {
           "$ref": "#/definitions/AndedPatientTreatmentFilters"
         },
+        "patientTreatmentTargetFilters": {
+          "$ref": "#/definitions/AndedPatientTreatmentFilters"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -5345,6 +5396,9 @@
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "sampleTreatmentGroupFilters": {
+          "$ref": "#/definitions/AndedSampleTreatmentFilters"
+        },
+        "sampleTreatmentTargetFilters": {
           "$ref": "#/definitions/AndedSampleTreatmentFilters"
         },
         "studyIds": {
