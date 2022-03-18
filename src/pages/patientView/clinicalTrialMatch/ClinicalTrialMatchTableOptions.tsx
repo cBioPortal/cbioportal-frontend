@@ -56,7 +56,7 @@ interface IClinicalTrialOptionsMatchState {
     recruitingItems: Array<string>;
     gender: string;
     patientLocation: string;
-    age: number;
+    ageState: number;
     maxDistance: string;
     isOpened: boolean;
     isCollapsed: boolean;
@@ -105,7 +105,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             recruitingItems: ['Recruiting', 'Not yet recruiting'],
             patientLocation: '',
             gender: sex || 'All',
-            age: +this.age,
+            ageState: +parseInt(this.age),
             maxDistance: '',
             isOpened: false,
             isCollapsed: false,
@@ -137,7 +137,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         var countries_to_search: string[] = this.state.countryItems;
         var gender: string = this.state.gender;
         var patientLocation = this.state.patientLocation;
-        var patientAge = this.state.age;
+        var patientAge = this.state.ageState;
         var filterDistance = this.state.isOpened;
         var maximumDistance = +this.state.maxDistance;
 
@@ -400,7 +400,8 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         marginBottom: '5px',
                                     }}
                                 >
-                                    <Select
+                                    <ClinicalTrialMatchRecruitingSelect
+                                        data={this.state.recruitingItems}
                                         options={this.recruiting_values.map(
                                             recStatus => ({
                                                 label: recStatus,
@@ -412,17 +413,12 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         className="basic-multi-select"
                                         classNamePrefix="select"
                                         placeholder="Select status..."
-                                        components={{
-                                            Option: recruitingOption,
-                                        }}
                                         onChange={(
                                             selectedOption: Array<any>
                                         ) => {
                                             const newStatuses = [];
                                             if (selectedOption !== null) {
-                                                const statuses = selectedOption.map(
-                                                    item => item.value
-                                                );
+                                                const statuses = selectedOption;
                                                 newStatuses.push(...statuses);
                                             }
                                             this.setState({
@@ -458,6 +454,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                     }}
                                 >
                                     <Select
+                                        data={this.state.countryItems}
                                         options={this.countries.map(cnt => ({
                                             label: cnt,
                                             value: cnt,
@@ -515,18 +512,27 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         components={customComponents}
                                         placeholder="Select age..."
                                         onChange={(newValue: any) => {
-                                            if (newValue !== null) {
+                                            console.log(newValue);
+                                            console.log(typeof newValue);
+                                            if (
+                                                newValue !== null &&
+                                                this.state.ageState !== null
+                                            ) {
                                                 this.setState({
-                                                    age: +newValue.value,
+                                                    ageState: +parseInt(
+                                                        newValue.value
+                                                    ),
                                                 });
                                             } else {
                                                 this.setState({
-                                                    age: 0,
+                                                    ageState: 0,
                                                 });
                                             }
                                         }}
-                                        defaultValue={this.ageDefault}
-                                        options={this.ageDefault}
+                                        defaultValue={{
+                                            value: this.state.ageState,
+                                            label: this.state.ageState,
+                                        }}
                                     />
                                 </div>
                                 <td>
@@ -691,7 +697,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 </div>
                             </tr>
                         </div>
-                        <div>
+                        <div style={{ paddingTop: '20px' }}>
                             <button
                                 onClick={this.setSearchParams.bind(this)}
                                 className={'btn btn-default'}
