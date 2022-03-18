@@ -26,6 +26,7 @@ import {
     DEFAULT_ONCOKB_CONTENT_WIDTH,
     updateOncoKbIconStyle,
 } from 'shared/lib/AnnotationColumnUtils';
+import MutationStatus from 'react-mutation-mapper/src/component/column/MutationStatus';
 
 export interface IPatientViewStructuralVariantTableProps {
     store: PatientViewPageStore;
@@ -236,6 +237,26 @@ export default class PatientViewStructuralVariantTable extends React.Component<
                 sortBy: (d: StructuralVariant[]) =>
                     PanelColumnFormatter.getGenePanelIds(genePanelProps(d)),
                 visible: false,
+                order: 40,
+            });
+
+            columns.push({
+                name: 'Status',
+                //Cell: (column: any) => <MutationStatus mutation={column.original} />,
+                render: (d: StructuralVariant[]) => {
+                    return (
+                        <MutationStatus
+                            value={(d[0] as any).svStatus}
+                            displayValueMap={{
+                                somatic: 's',
+                                germline: 'g',
+                            }}
+                        />
+                    );
+                },
+                download: (d: StructuralVariant[]) => (d[0] as any).svStatus,
+                sortBy: (d: StructuralVariant[]) => 'no',
+                visible: true,
                 order: 40,
             });
 
