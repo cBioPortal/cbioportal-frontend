@@ -589,7 +589,9 @@ export default class PatientViewPage extends React.Component<
             let study: CancerStudy = this.patientViewPageStore.studyMetaData
                 .result;
             studyName = (
-                <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
+                <StudyLink className={'nowrap'} studyId={study.studyId}>
+                    {study.name}
+                </StudyLink>
             );
         }
 
