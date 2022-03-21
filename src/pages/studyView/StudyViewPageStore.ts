@@ -227,7 +227,7 @@ import {
     CNA_HOMDEL_VALUE,
 } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import {
-    GenerateBinsConfig,
+    BinsGeneratorConfig,
     GenericAssayDataBin,
     GenericAssayDataBinFilter,
     GenericAssayDataCountFilter,
@@ -393,7 +393,7 @@ export class StudyViewPageStore
     @observable userGroupColors: { [groupId: string]: string } = {};
 
     @observable binMethod: BinMethodOption = BinMethodOption.CUSTOM;
-    generateBinsConfig: GenerateBinsConfig = {
+    binsGeneratorConfig: BinsGeneratorConfig = {
         anchorValue: 0,
         binSize: 0,
     };
@@ -3331,8 +3331,8 @@ export class StudyViewPageStore
         binSize: number,
         anchorValue: number
     ): void {
-        this.generateBinsConfig.binSize = binSize;
-        this.generateBinsConfig.anchorValue = anchorValue;
+        this.binsGeneratorConfig.binSize = binSize;
+        this.binsGeneratorConfig.anchorValue = anchorValue;
     }
 
     @action.bound
@@ -3340,7 +3340,7 @@ export class StudyViewPageStore
         uniqueKey: string,
         bins: number[],
         binMethod: 'MEDIAN' | 'QUARTILE' | 'CUSTOM' | 'GENERATE',
-        generateBinsConfig: GenerateBinsConfig
+        binsGeneratorConfig: BinsGeneratorConfig
     ): void {
         if (this.isGeneSpecificChart(uniqueKey)) {
             let newFilter = _.clone(
@@ -3348,7 +3348,7 @@ export class StudyViewPageStore
             )!;
             newFilter.customBins = bins;
             newFilter.binMethod = binMethod;
-            newFilter.generateBinsConfig = generateBinsConfig;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._genomicDataBinFilterSet.set(uniqueKey, newFilter);
         } else if (this.isGenericAssayChart(uniqueKey)) {
             let newFilter = _.clone(
@@ -3356,7 +3356,7 @@ export class StudyViewPageStore
             )!;
             newFilter.customBins = bins;
             newFilter.binMethod = binMethod;
-            newFilter.generateBinsConfig = generateBinsConfig;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._genericAssayDataBinFilterSet.set(uniqueKey, newFilter);
         } else {
             let newFilter = _.clone(
@@ -3370,7 +3370,7 @@ export class StudyViewPageStore
                 >).customBins;
             }
             newFilter.binMethod = binMethod;
-            newFilter.generateBinsConfig = generateBinsConfig;
+            newFilter.binsGeneratorConfig = binsGeneratorConfig;
             this._clinicalDataBinFilterSet.set(uniqueKey, newFilter);
         }
     }

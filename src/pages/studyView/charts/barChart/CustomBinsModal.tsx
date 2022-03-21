@@ -6,7 +6,7 @@ import { observable, computed, makeObservable, action } from 'mobx';
 import { observer } from 'mobx-react';
 import { Modal } from 'react-bootstrap';
 import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
-import { GenerateBinsConfig } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import { BinsGeneratorConfig } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import {
     BinMethodOption,
     StudyViewPageStore,
@@ -21,7 +21,7 @@ export type ICustomBinsProps = {
         uniqueKey: string,
         bins: number[],
         binMethod: string,
-        generateBins: GenerateBinsConfig
+        binsGeneratorConfig: BinsGeneratorConfig
     ) => void;
     updateGenerateBinsConfig: (binSize: number, anchorValue: number) => void;
     store: StudyViewPageStore;
@@ -34,7 +34,7 @@ export default class CustomBinsModal extends React.Component<
 > {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
-    @observable private currentGenerateBinsConfig: GenerateBinsConfig;
+    @observable private currentBinsGeneratorConfig: BinsGeneratorConfig;
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
@@ -43,7 +43,7 @@ export default class CustomBinsModal extends React.Component<
             const bins = _.sortBy(this.props.currentBins);
             this.currentBinsValue = bins.join(`${this.binSeparator} `);
         }
-        this.currentGenerateBinsConfig = this.props.store.generateBinsConfig;
+        this.currentBinsGeneratorConfig = this.props.store.binsGeneratorConfig;
     }
 
     @autobind
@@ -59,15 +59,15 @@ export default class CustomBinsModal extends React.Component<
         }
 
         this.props.updateGenerateBinsConfig(
-            this.currentGenerateBinsConfig.binSize,
-            this.currentGenerateBinsConfig.anchorValue
+            this.currentBinsGeneratorConfig.binSize,
+            this.currentBinsGeneratorConfig.anchorValue
         );
 
         this.props.updateCustomBins(
             this.props.chartMeta.uniqueKey,
             newBins,
             this.props.store.binMethod,
-            this.currentGenerateBinsConfig
+            this.currentBinsGeneratorConfig
         );
 
         this.props.onHide();
@@ -89,12 +89,12 @@ export default class CustomBinsModal extends React.Component<
 
     @action
     updateBinSize(value: number) {
-        this.currentGenerateBinsConfig.binSize = value;
+        this.currentBinsGeneratorConfig.binSize = value;
     }
 
     @action
     updateAnchorValue(value: number) {
-        this.currentGenerateBinsConfig.anchorValue = value;
+        this.currentBinsGeneratorConfig.anchorValue = value;
     }
 
     render() {
@@ -163,7 +163,7 @@ export default class CustomBinsModal extends React.Component<
                                     marginLeft: '20px',
                                 }}
                                 rows={1}
-                                value={this.currentGenerateBinsConfig.binSize}
+                                value={this.currentBinsGeneratorConfig.binSize}
                                 className="form-control input-sm"
                                 onChange={event =>
                                     this.updateBinSize(
@@ -185,7 +185,7 @@ export default class CustomBinsModal extends React.Component<
                                 }}
                                 rows={1}
                                 value={
-                                    this.currentGenerateBinsConfig.anchorValue
+                                    this.currentBinsGeneratorConfig.anchorValue
                                 }
                                 className="form-control input-sm"
                                 onChange={event =>

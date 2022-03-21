@@ -33,6 +33,7 @@ import {
     XvsYScatterChart,
     XvsYChartSettings,
     XvsYViolinChart,
+    BinMethodOption,
 } from './StudyViewPageStore';
 import { StudyViewPageTabKeyEnum } from 'pages/studyView/StudyViewPageTabs';
 import { Layout } from 'react-grid-layout';
@@ -70,6 +71,7 @@ import {
 import {
     ClinicalDataBin,
     GenericAssayDataBin,
+    BinsGeneratorConfig,
 } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
 import { ChartOption } from './addChartButton/AddChartButton';
 import { observer } from 'mobx-react';
@@ -3613,7 +3615,12 @@ export async function updateCustomIntervalFilter(
         chartMeta: Pick<ChartMeta, 'uniqueKey'>
     ) => MobxPromise<DataBin[]>,
     getCurrentFilters: (chartUniqueKey: string) => DataFilterValue[],
-    updateCustomBins: (chartUniqueKey: string, bins: number[]) => void,
+    updateCustomBins: (
+        chartUniqueKey: string,
+        bins: number[],
+        binMethod: 'MEDIAN' | 'QUARTILE' | 'CUSTOM' | 'GENERATE',
+        generateBinsConfig?: BinsGeneratorConfig
+    ) => void,
     updateIntervalFilters: (uniqueKey: string, bins: DataBin[]) => void
 ) {
     /* This function does what is necessary in order to set a custom range to filter a numerical attribute.
@@ -3643,7 +3650,12 @@ export async function updateCustomIntervalFilter(
         .value() as number[];
 
     // Invoke the given callback to update the custom bins
-    updateCustomBins(chartMeta.uniqueKey, newBinBounds);
+    updateCustomBins(
+        chartMeta.uniqueKey,
+        newBinBounds,
+        BinMethodOption.CUSTOM,
+        undefined
+    );
 
     // Now, we will use the custom bins to define the new filter.
     // First, wait for the new bins to come back from the server.
