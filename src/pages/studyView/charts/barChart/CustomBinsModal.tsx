@@ -23,7 +23,11 @@ export type ICustomBinsProps = {
         binMethod: string,
         binsGeneratorConfig: BinsGeneratorConfig
     ) => void;
-    updateGenerateBinsConfig: (binSize: number, anchorValue: number) => void;
+    updateGenerateBinsConfig: (
+        uniqueKey: string,
+        binSize: number,
+        anchorValue: number
+    ) => void;
     store: StudyViewPageStore;
 };
 
@@ -34,7 +38,11 @@ export default class CustomBinsModal extends React.Component<
 > {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
-    @observable private currentBinsGeneratorConfig: BinsGeneratorConfig;
+    @observable private currentBinMethod = BinMethodOption.CUSTOM;
+    @observable private currentBinsGeneratorConfig: BinsGeneratorConfig = {
+        binSize: 0,
+        anchorValue: 0,
+    };
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
@@ -43,13 +51,29 @@ export default class CustomBinsModal extends React.Component<
             const bins = _.sortBy(this.props.currentBins);
             this.currentBinsValue = bins.join(`${this.binSeparator} `);
         }
-        this.currentBinsGeneratorConfig = this.props.store.binsGeneratorConfig;
+        if (this.props.store.chartsBinMethod[this.props.chartMeta.uniqueKey]) {
+            this.currentBinMethod = this.props.store.chartsBinMethod[
+                this.props.chartMeta.uniqueKey
+            ];
+        }
+        if (
+            this.props.store.chartsBinsGeneratorConfigs[
+                this.props.chartMeta.uniqueKey
+            ]
+        ) {
+            const binConfig = this.props.store.chartsBinsGeneratorConfigs[
+                this.props.chartMeta.uniqueKey
+            ];
+            this.currentBinsGeneratorConfig.binSize = binConfig.binSize;
+            this.currentBinsGeneratorConfig.anchorValue = binConfig.anchorValue;
+            this.currentBinsGeneratorConfig.anchorValue = binConfig.anchorValue;
+        }
     }
 
     @autobind
     updateCurrentBinsValue() {
         let newBins: number[] = [];
-        if (this.props.store.binMethod === BinMethodOption.CUSTOM) {
+        if (this.currentBinMethod === BinMethodOption.CUSTOM) {
             newBins = _.sortBy(
                 this.newStringBins
                     .filter(item => item !== '')
@@ -59,6 +83,7 @@ export default class CustomBinsModal extends React.Component<
         }
 
         this.props.updateGenerateBinsConfig(
+            this.props.chartMeta.uniqueKey,
             this.currentBinsGeneratorConfig.binSize,
             this.currentBinsGeneratorConfig.anchorValue
         );
@@ -66,7 +91,7 @@ export default class CustomBinsModal extends React.Component<
         this.props.updateCustomBins(
             this.props.chartMeta.uniqueKey,
             newBins,
-            this.props.store.binMethod,
+            this.currentBinMethod,
             this.currentBinsGeneratorConfig
         );
 
@@ -84,17 +109,21 @@ export default class CustomBinsModal extends React.Component<
     }
 
     changeBinsCheckbox(option: BinMethodOption) {
-        this.props.store.binMethod = option;
+        this.currentBinMethod = option;
     }
 
     @action
     updateBinSize(value: number) {
-        this.currentBinsGeneratorConfig.binSize = value;
+        if (_.isNumber(value) && !_.isNaN(value)) {
+            this.currentBinsGeneratorConfig.binSize = value;
+        }
     }
 
     @action
     updateAnchorValue(value: number) {
-        this.currentBinsGeneratorConfig.anchorValue = value;
+        if (_.isNumber(value) && !_.isNaN(value)) {
+            this.currentBinsGeneratorConfig.anchorValue = value;
+        }
     }
 
     render() {
@@ -112,7 +141,7 @@ export default class CustomBinsModal extends React.Component<
                     <div>
                         <LabeledCheckbox
                             checked={
-                                this.props.store.binMethod ===
+                                this.currentBinMethod ===
                                 BinMethodOption.QUARTILE
                             }
                             onChange={event =>
@@ -127,8 +156,7 @@ export default class CustomBinsModal extends React.Component<
                     <div>
                         <LabeledCheckbox
                             checked={
-                                this.props.store.binMethod ===
-                                BinMethodOption.MEDIAN
+                                this.currentBinMethod === BinMethodOption.MEDIAN
                             }
                             onChange={event =>
                                 this.changeBinsCheckbox(BinMethodOption.MEDIAN)
@@ -140,7 +168,7 @@ export default class CustomBinsModal extends React.Component<
                     <div>
                         <LabeledCheckbox
                             checked={
-                                this.props.store.binMethod ===
+                                this.currentBinMethod ===
                                 BinMethodOption.GENERATE
                             }
                             onChange={event =>
@@ -199,8 +227,7 @@ export default class CustomBinsModal extends React.Component<
                     <div>
                         <LabeledCheckbox
                             checked={
-                                this.props.store.binMethod ===
-                                BinMethodOption.CUSTOM
+                                this.currentBinMethod === BinMethodOption.CUSTOM
                             }
                             onChange={event =>
                                 this.changeBinsCheckbox(BinMethodOption.CUSTOM)
