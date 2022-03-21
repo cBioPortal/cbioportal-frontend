@@ -1615,7 +1615,7 @@ export class ResultsViewPageStore
 
                 try {
                     urlResponse = (await request
-                        .post('https://iquery-cbio-dev.ucsd.edu/integratedsearch/v1/')
+                        .post('https://iquery-cbio.ucsd.edu/integratedsearch/v1/)
                         .send(postData)
                         .set('Accept', 'application/json')
                         .timeout(30000)
