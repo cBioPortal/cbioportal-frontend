@@ -1161,7 +1161,7 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
             // no need to add 1 (no interval needed for the previous value)
             if (
                 index - 1 > -1 &&
-                numericalBins[index - 1].start &&
+                numericalBins[index - 1].start !== undefined &&
                 numericalBins[index - 1].start !== numericalBins[index - 1].end
             ) {
                 x++;
