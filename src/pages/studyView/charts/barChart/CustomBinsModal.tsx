@@ -2,16 +2,28 @@ import * as React from 'react';
 import _ from 'lodash';
 import { ChartMeta, customBinsAreValid } from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
-import { observable, computed, makeObservable } from 'mobx';
+import { observable, computed, makeObservable, action } from 'mobx';
 import { observer } from 'mobx-react';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
+import LabeledCheckbox from 'shared/components/labeledCheckbox/LabeledCheckbox';
+import { GenerateBinsConfig } from 'cbioportal-ts-api-client/dist/generated/CBioPortalAPIInternal';
+import {
+    BinMethodOption,
+    StudyViewPageStore,
+} from 'pages/studyView/StudyViewPageStore';
 
 export type ICustomBinsProps = {
     show: boolean;
     onHide: () => void;
     chartMeta: ChartMeta;
     currentBins: number[];
-    updateCustomBins: (uniqueKey: string, bins: number[]) => void;
+    updateCustomBins: (
+        uniqueKey: string,
+        bins: number[],
+        binMethod: string,
+        generateBins: GenerateBinsConfig
+    ) => void;
+    store: StudyViewPageStore;
 };
 
 @observer
@@ -21,24 +33,36 @@ export default class CustomBinsModal extends React.Component<
 > {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
+    @observable private currentGenerateBins: GenerateBinsConfig;
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
         makeObservable(this);
         if (this.props.currentBins) {
-            this.currentBinsValue = _.sortBy(this.props.currentBins).join(
-                `${this.binSeparator} `
-            );
+            const bins = _.sortBy(this.props.currentBins);
+            this.currentBinsValue = bins.join(`${this.binSeparator} `);
         }
+        this.currentGenerateBins = this.props.store.generateBinsConfig;
     }
 
     @autobind
     updateCurrentBinsValue() {
-        const newBins = _.sortBy(
-            this.newStringBins.map(item => Number(item.trim()))
+        let newBins: number[] = [];
+        if (this.props.store.binMethod === BinMethodOption.CUSTOM) {
+            newBins = _.sortBy(
+                this.newStringBins
+                    .filter(item => item !== '')
+                    .map(item => Number(item.trim()))
+            );
+            this.currentBinsValue = newBins.join(`${this.binSeparator} `);
+        }
+
+        this.props.updateCustomBins(
+            this.props.chartMeta.uniqueKey,
+            newBins,
+            this.props.store.binMethod,
+            this.currentGenerateBins
         );
-        this.currentBinsValue = newBins.join(`${this.binSeparator} `);
-        this.props.updateCustomBins(this.props.chartMeta.uniqueKey, newBins);
         this.props.onHide();
     }
 
@@ -50,6 +74,22 @@ export default class CustomBinsModal extends React.Component<
     @computed
     get contentIsValid(): boolean {
         return customBinsAreValid(this.newStringBins);
+    }
+
+    changeBinsCheckbox(option: BinMethodOption) {
+        this.props.store.binMethod = option;
+    }
+
+    @action
+    updateBinSize(value: number) {
+        this.currentGenerateBins.binSize = value;
+        this.props.store.generateBinsConfig.binSize = value;
+    }
+
+    @action
+    updateAnchorValue(value: number) {
+        this.currentGenerateBins.anchorValue = value;
+        this.props.store.generateBinsConfig.anchorValue = value;
     }
 
     render() {
@@ -64,6 +104,104 @@ export default class CustomBinsModal extends React.Component<
                     <Modal.Title>Custom Bins</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
+                    <div>
+                        <LabeledCheckbox
+                            checked={
+                                this.props.store.binMethod ===
+                                BinMethodOption.QUARTILE
+                            }
+                            onChange={event =>
+                                this.changeBinsCheckbox(
+                                    BinMethodOption.QUARTILE
+                                )
+                            }
+                        >
+                            Quartiles
+                        </LabeledCheckbox>
+                    </div>
+                    <div>
+                        <LabeledCheckbox
+                            checked={
+                                this.props.store.binMethod ===
+                                BinMethodOption.MEDIAN
+                            }
+                            onChange={event =>
+                                this.changeBinsCheckbox(BinMethodOption.MEDIAN)
+                            }
+                        >
+                            Median split
+                        </LabeledCheckbox>
+                    </div>
+                    <div>
+                        <LabeledCheckbox
+                            checked={
+                                this.props.store.binMethod ===
+                                BinMethodOption.GENERATE
+                            }
+                            onChange={event =>
+                                this.changeBinsCheckbox(
+                                    BinMethodOption.GENERATE
+                                )
+                            }
+                        >
+                            Generate bins
+                        </LabeledCheckbox>
+                        <div style={{ marginLeft: 50 }}>
+                            <span>Bin size</span>
+                            <textarea
+                                style={{
+                                    display: 'inline',
+                                    resize: 'none',
+                                    width: '50px',
+                                    verticalAlign: 'middle',
+                                    textAlign: 'center',
+                                    marginLeft: '20px',
+                                }}
+                                rows={1}
+                                value={this.currentGenerateBins.binSize}
+                                className="form-control input-sm"
+                                onChange={event =>
+                                    this.updateBinSize(
+                                        Number(event.currentTarget.value)
+                                    )
+                                }
+                            />
+                        </div>
+                        <div style={{ paddingLeft: 50 }}>
+                            <span>Min value</span>
+                            <textarea
+                                style={{
+                                    display: 'inline',
+                                    resize: 'none',
+                                    width: '50px',
+                                    verticalAlign: 'middle',
+                                    textAlign: 'center',
+                                    marginLeft: '9px',
+                                }}
+                                rows={1}
+                                value={this.currentGenerateBins.anchorValue}
+                                className="form-control input-sm"
+                                onChange={event =>
+                                    this.updateAnchorValue(
+                                        Number(event.currentTarget.value)
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <LabeledCheckbox
+                            checked={
+                                this.props.store.binMethod ===
+                                BinMethodOption.CUSTOM
+                            }
+                            onChange={event =>
+                                this.changeBinsCheckbox(BinMethodOption.CUSTOM)
+                            }
+                        >
+                            Custom bins
+                        </LabeledCheckbox>
+                    </div>
                     <div>Please specify bin boundaries of the x axis</div>
                     <textarea
                         style={{ resize: 'none' }}
