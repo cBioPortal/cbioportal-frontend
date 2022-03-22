@@ -3511,7 +3511,7 @@ export class ResultsViewPageStore
 
                     filteredStructuralVariants.forEach(structuralVariant => {
                         const mutation = {
-                            center: structuralVariant.center,
+                            center: 'N/A',
                             chr: structuralVariant.site1Chromosome,
                             entrezGeneId: structuralVariant.site1EntrezGeneId,
                             keyword: structuralVariant.comments,
