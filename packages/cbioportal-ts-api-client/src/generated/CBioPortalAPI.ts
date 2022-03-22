@@ -415,7 +415,7 @@ export type MolecularProfile = {
 
         'genericAssayType': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
+        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "GENERIC_ASSAY"
 
         'molecularProfileId': string
 
@@ -607,8 +607,6 @@ export type Sample = {
 
         'patientId': string
 
-        'profiledForFusions': boolean
-
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
@@ -679,8 +677,6 @@ export type StructuralVariant = {
 
         'breakpointType': string
 
-        'center': string
-
         'comments': string
 
         'connectionType': string
@@ -696,8 +692,6 @@ export type StructuralVariant = {
         'driverTiersFilterAnn': string
 
         'eventInfo': string
-
-        'externalAnnotation': string
 
         'length': number
 
@@ -721,19 +715,25 @@ export type StructuralVariant = {
 
         'site1Chromosome': string
 
+        'site1Contig': string
+
         'site1Description': string
 
         'site1EnsemblTranscriptId': string
 
         'site1EntrezGeneId': number
 
-        'site1Exon': number
-
         'site1HugoSymbol': string
 
         'site1Position': number
 
+        'site1Region': string
+
+        'site1RegionNumber': number
+
         'site2Chromosome': string
+
+        'site2Contig': string
 
         'site2Description': string
 
@@ -743,13 +743,17 @@ export type StructuralVariant = {
 
         'site2EntrezGeneId': number
 
-        'site2Exon': number
-
         'site2HugoSymbol': string
 
         'site2Position': number
 
+        'site2Region': string
+
+        'site2RegionNumber': number
+
         'studyId': string
+
+        'svStatus': string
 
         'tumorPairedEndReadCount': number
 

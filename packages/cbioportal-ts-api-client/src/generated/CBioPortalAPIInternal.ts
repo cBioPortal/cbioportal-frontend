@@ -839,8 +839,6 @@ export type Sample = {
 
         'patientId': string
 
-        'profiledForFusions': boolean
-
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"

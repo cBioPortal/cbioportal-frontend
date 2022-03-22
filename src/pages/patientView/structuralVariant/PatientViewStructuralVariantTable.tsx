@@ -246,7 +246,7 @@ export default class PatientViewStructuralVariantTable extends React.Component<
                 render: (d: StructuralVariant[]) => {
                     return (
                         <MutationStatus
-                            value={(d[0] as any).svStatus}
+                            value={d[0].svStatus}
                             displayValueMap={{
                                 somatic: 's',
                                 germline: 'g',

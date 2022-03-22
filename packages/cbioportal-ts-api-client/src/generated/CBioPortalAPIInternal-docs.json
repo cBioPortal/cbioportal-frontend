@@ -5249,9 +5249,6 @@
         "patientId": {
           "type": "string"
         },
-        "profiledForFusions": {
-          "type": "boolean"
-        },
         "sampleId": {
           "type": "string"
         },
