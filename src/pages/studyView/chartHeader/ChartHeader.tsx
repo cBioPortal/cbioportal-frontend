@@ -515,7 +515,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             this.props.chartMeta
                         )}
                         updateCustomBins={this.props.store.updateCustomBins}
-                        updateGenerateBinsConfig={
+                        onChangeBinMethod={this.props.store.updateBinMethod}
+                        onChangeBinsGeneratorConfig={
                             this.props.store.updateGenerateBinsConfig
                         }
                         store={this.props.store}

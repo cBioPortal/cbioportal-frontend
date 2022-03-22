@@ -392,10 +392,8 @@ export class StudyViewPageStore
     @observable numberOfVisibleColorChooserModals = 0;
     @observable userGroupColors: { [groupId: string]: string } = {};
 
-    chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
-    chartsBinsGeneratorConfigs: {
-        [chartKey: string]: BinsGeneratorConfig;
-    } = {};
+    @observable chartsBinMethod: { [chartKey: string]: BinMethodOption } = {};
+    chartsBinsGeneratorConfigs = observable.map<string, BinsGeneratorConfig>();
 
     private getDataBinFilterSet(uniqueKey: string) {
         if (this.isGenericAssayChart(uniqueKey)) {
@@ -3326,15 +3324,23 @@ export class StudyViewPageStore
     }
 
     @action.bound
+    public updateBinMethod(
+        uniqueKey: string,
+        binMethod: BinMethodOption
+    ): void {
+        this.chartsBinMethod[uniqueKey] = binMethod;
+    }
+
+    @action.bound
     public updateGenerateBinsConfig(
         uniqueKey: string,
         binSize: number,
         anchorValue: number
     ): void {
-        this.chartsBinsGeneratorConfigs[uniqueKey] = {
+        this.chartsBinsGeneratorConfigs.set(uniqueKey, {
             binSize,
             anchorValue,
-        };
+        });
     }
 
     @action.bound
@@ -3345,8 +3351,12 @@ export class StudyViewPageStore
         binsGeneratorConfig: BinsGeneratorConfig
     ): void {
         // Persist menu selection for when the menu reopens.
-        this.chartsBinMethod[uniqueKey] = binMethod;
-        this.chartsBinsGeneratorConfigs[uniqueKey] = binsGeneratorConfig;
+
+        this.updateGenerateBinsConfig(
+            uniqueKey,
+            binsGeneratorConfig.binSize,
+            binsGeneratorConfig.anchorValue
+        );
 
         if (this.isGeneSpecificChart(uniqueKey)) {
             let newFilter = _.clone(
