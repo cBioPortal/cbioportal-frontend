@@ -20,10 +20,11 @@ export type ICustomBinsProps = {
     updateCustomBins: (
         uniqueKey: string,
         bins: number[],
-        binMethod: string,
+        binMethod: BinMethodOption,
         binsGeneratorConfig: BinsGeneratorConfig
     ) => void;
-    updateGenerateBinsConfig: (
+    onChangeBinMethod: (uniqueKey: string, binMethod: BinMethodOption) => void;
+    onChangeBinsGeneratorConfig: (
         uniqueKey: string,
         binSize: number,
         anchorValue: number
@@ -38,11 +39,8 @@ export default class CustomBinsModal extends React.Component<
 > {
     binSeparator: string = ',';
     @observable private currentBinsValue = '';
-    @observable private currentBinMethod = BinMethodOption.CUSTOM;
-    @observable private currentBinsGeneratorConfig: BinsGeneratorConfig = {
-        binSize: 0,
-        anchorValue: 0,
-    };
+    defaultBinMethod = BinMethodOption.CUSTOM;
+    defaultBinsGeneratorConfig = { binSize: 0, anchorValue: 0 };
 
     constructor(props: Readonly<ICustomBinsProps>) {
         super(props);
@@ -51,23 +49,25 @@ export default class CustomBinsModal extends React.Component<
             const bins = _.sortBy(this.props.currentBins);
             this.currentBinsValue = bins.join(`${this.binSeparator} `);
         }
-        if (this.props.store.chartsBinMethod[this.props.chartMeta.uniqueKey]) {
-            this.currentBinMethod = this.props.store.chartsBinMethod[
-                this.props.chartMeta.uniqueKey
-            ];
-        }
-        if (
-            this.props.store.chartsBinsGeneratorConfigs[
-                this.props.chartMeta.uniqueKey
-            ]
-        ) {
-            const binConfig = this.props.store.chartsBinsGeneratorConfigs[
-                this.props.chartMeta.uniqueKey
-            ];
-            this.currentBinsGeneratorConfig.binSize = binConfig.binSize;
-            this.currentBinsGeneratorConfig.anchorValue = binConfig.anchorValue;
-            this.currentBinsGeneratorConfig.anchorValue = binConfig.anchorValue;
-        }
+    }
+
+    @computed get currentBinMethod() {
+        return (
+            this.props.store.chartsBinMethod[this.uniqueChartId] ||
+            this.defaultBinMethod
+        );
+    }
+
+    @computed get currentBinsGeneratorConfig() {
+        return (
+            this.props.store.chartsBinsGeneratorConfigs.get(
+                this.uniqueChartId
+            ) || this.defaultBinsGeneratorConfig
+        );
+    }
+
+    @computed get uniqueChartId() {
+        return this.props.chartMeta.uniqueKey;
     }
 
     @autobind
@@ -82,7 +82,7 @@ export default class CustomBinsModal extends React.Component<
             this.currentBinsValue = newBins.join(`${this.binSeparator} `);
         }
 
-        this.props.updateGenerateBinsConfig(
+        this.props.onChangeBinsGeneratorConfig(
             this.props.chartMeta.uniqueKey,
             this.currentBinsGeneratorConfig.binSize,
             this.currentBinsGeneratorConfig.anchorValue
@@ -108,21 +108,31 @@ export default class CustomBinsModal extends React.Component<
         return customBinsAreValid(this.newStringBins);
     }
 
+    // TODO delegate to method in StudyViewPageStore
+    @action
     changeBinsCheckbox(option: BinMethodOption) {
-        this.currentBinMethod = option;
+        this.props.onChangeBinMethod(this.uniqueChartId, option);
     }
 
     @action
     updateBinSize(value: number) {
         if (_.isNumber(value) && !_.isNaN(value)) {
-            this.currentBinsGeneratorConfig.binSize = value;
+            this.props.onChangeBinsGeneratorConfig(
+                this.uniqueChartId,
+                value,
+                this.currentBinsGeneratorConfig.anchorValue
+            );
         }
     }
 
     @action
     updateAnchorValue(value: number) {
         if (_.isNumber(value) && !_.isNaN(value)) {
-            this.currentBinsGeneratorConfig.anchorValue = value;
+            this.props.onChangeBinsGeneratorConfig(
+                this.uniqueChartId,
+                this.currentBinsGeneratorConfig.binSize,
+                value
+            );
         }
     }
 
