@@ -80,7 +80,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
 
         this.gender = { label: 'All', value: 'All' };
         let sex = this.props.store.clinicalDataPatient.result.find(
-            attribute => attribute.clinicalAttributeId === 'SEX'
+            (attribute: any) => attribute.clinicalAttributeId === 'SEX'
         )?.value;
         if (sex !== undefined && sex.length > 0) {
             this.gender = { label: sex, value: sex };
@@ -88,12 +88,14 @@ class ClinicalTrialMatchTableOptions extends React.Component<
 
         this.age =
             this.props.store.clinicalDataPatient.result.find(
-                attribute => attribute.clinicalAttributeId === 'AGE'
+                (attribute: any) => attribute.clinicalAttributeId === 'AGE'
             )?.value || '0';
         this.ageDefault =
             this.age != '0' ? [{ label: this.age, value: this.age }] : null;
 
-        this.tumorEntityDefault = this.props.store.getTumorEntitiesFromPatientSamples.result;
+        this.tumorEntityDefault = this.props.store.samples.result.find(
+            (attribute: any) => attribute.clinicalAttributeId === '' ||
+        )?.value || [];
 
         console.log(this.tumorEntityDefault);
 
