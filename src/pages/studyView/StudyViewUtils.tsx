@@ -1587,7 +1587,11 @@ export function intervalFiltersDisplayValue(
             intervalDisplayValues.push(`≤ `);
             intervalDisplayValues.push(endText);
         } else if (end === undefined) {
-            intervalDisplayValues.push(`> `);
+            if (numericals[0].start === numericals[0].end) {
+                intervalDisplayValues.push(`≥ `);
+            } else {
+                intervalDisplayValues.push(`> `);
+            }
             intervalDisplayValues.push(startText);
         } else if (start === end) {
             intervalDisplayValues.push(startEqualsEndText);
