@@ -93,16 +93,27 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.ageDefault =
             this.age != '0' ? [{ label: this.age, value: this.age }] : null;
 
-        this.tumorEntityDefault = this.props.store.samples.result.find(
-            (attribute: any) => attribute.clinicalAttributeId === '' ||
-        )?.value || [];
-
-        console.log(this.tumorEntityDefault);
+        this.tumorEntityDefault = [];
+        var samples = this.props.store.patientViewData.result.samples;
+        for (var i = 0; i < samples!.length; i++) {
+            for (var k = 0; k < samples![i].clinicalData.length; k++) {
+                if (
+                    samples![i].clinicalData[k].clinicalAttributeId ==
+                        'CANCER_TYPE_DETAILED' ||
+                    samples![i].clinicalData[k].clinicalAttributeId ==
+                        'CANCER_TYPE'
+                ) {
+                    this.tumorEntityDefault.push(
+                        samples![i].clinicalData[k].value
+                    );
+                }
+            }
+        }
 
         this.state = {
             mutationSymbolItems: new Array<string>(),
             mutationNecSymbolItems: new Array<string>(),
-            tumorEntityItems: new Array<string>(),
+            tumorEntityItems: this.tumorEntityDefault,
             countryItems: new Array<string>(),
             recruitingItems: ['Recruiting', 'Not yet recruiting'],
             patientLocation: '',
@@ -341,12 +352,19 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             marginBottom: '5px',
                                         }}
                                     >
-                                        <CreatableSelect
-                                            isMulti
-                                            //data={this.state.tumorEntityItems}
-                                            defaultValue={
-                                                this.tumorEntityDefault
-                                            }
+                                        <Select
+                                            data={this.state.tumorEntityItems}
+                                            isMulti={true}
+                                            defaultValue={this.state.tumorEntityItems.reduce(
+                                                (list, entity) =>
+                                                    list.concat([
+                                                        {
+                                                            value: entity,
+                                                            label: entity,
+                                                        },
+                                                    ]),
+                                                [] as Array<Object>
+                                            )}
                                             name="entitySearch"
                                             className="basic-multi-select"
                                             classNamePrefix="select"
@@ -373,7 +391,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 );
                                                 console.groupEnd();
                                             }}
-                                        ></CreatableSelect>
+                                        ></Select>
                                     </tr>
                                 </td>
                             </tr>
