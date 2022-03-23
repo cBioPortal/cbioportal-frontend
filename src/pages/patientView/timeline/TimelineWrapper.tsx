@@ -65,6 +65,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                 window.location.href.includes('htan_test_2021') &&
                 window.location.href.includes('HTA9_1');
             const isToxicityPortal = [
+                'www.cbioportal.org'
                 'triage.cbioportal.mskcc.org',
                 'cbioportal.mskcc.org',
                 'private.cbioportal.mskcc.org',
@@ -82,7 +83,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
             if (isHtanOhsuPatient) {
                 const extraData = {
                     uniquePatientKey: 'SFRBOV8xOmh0YW5fdGVzdF8yMDIx',
-                    studyId: 'htan_test_2021',
+                    studyId: 'brca_hta9_htan_2022',
                     patientId: 'HTA9_1',
                     eventType: 'IMAGING',
                     attributes: [
