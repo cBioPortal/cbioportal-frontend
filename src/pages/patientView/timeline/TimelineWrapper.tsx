@@ -65,7 +65,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
                 window.location.href.includes('htan_test_2021') &&
                 window.location.href.includes('HTA9_1');
             const isToxicityPortal = [
-                'www.cbioportal.org'
+                'www.cbioportal.org',
                 'triage.cbioportal.mskcc.org',
                 'cbioportal.mskcc.org',
                 'private.cbioportal.mskcc.org',
