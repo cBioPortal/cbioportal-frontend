@@ -62,7 +62,7 @@ const TimelineWrapper: React.FunctionComponent<ITimelineProps> = observer(
             // icon (prototype). TODO: We can replace it once we have generalized
             // functionality for adding links to a timepoint.
             const isHtanOhsuPatient =
-                window.location.href.includes('htan_test_2021') &&
+                window.location.href.includes('brca_hta9_htan_2022') &&
                 window.location.href.includes('HTA9_1');
             const isToxicityPortal = [
                 'deploy-preview-4209--cbioportalfrontend.netlify.app',
