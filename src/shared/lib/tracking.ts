@@ -105,13 +105,18 @@ export function embedGoogleAnalytics(ga_code: string) {
         ga.l = +new Date();
         ga('create', ga_code, 'auto');
 
-        ga('require', 'urlChangeTracker');
+        ga('require', 'urlChangeTracker', {
+            hitFilter: function(model: any) {
+                sendToLoggly('PAGE_VIEW');
+            },
+        });
 
         ga('require', 'cleanUrlTracker', {
             stripQuery: true,
             trailingSlash: 'remove',
         });
         ga('send', 'pageview');
+        sendToLoggly('PAGE_VIEW');
     });
 }
 
