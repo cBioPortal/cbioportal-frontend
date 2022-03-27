@@ -144,6 +144,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
     setSearchParams() {
         var symbols: string[] = this.state.mutationSymbolItems;
         var necSymbols: string[] = this.state.mutationNecSymbolItems;
+        var tumorEntities: string[] = this.state.tumorEntityItems;
         var recruiting_stati: RecruitingStatus[] = this.state.recruitingItems.map(
             item => this.getRecruitingKeyFromValueString(item)
         );
@@ -163,6 +164,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             recruiting_stati,
             symbols,
             necSymbols,
+            tumorEntities,
             gender,
             patientLocation,
             patientAge,
@@ -549,10 +551,16 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 });
                                             }
                                         }}
-                                        defaultValue={{
-                                            value: this.state.ageState,
-                                            label: this.state.ageState,
-                                        }}
+                                        defaultValue={
+                                            this.state.ageState !== 0
+                                                ? {
+                                                      value: this.state
+                                                          .ageState,
+                                                      label: this.state
+                                                          .ageState,
+                                                  }
+                                                : []
+                                        }
                                     />
                                 </div>
                                 <td>

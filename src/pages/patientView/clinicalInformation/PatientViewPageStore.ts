@@ -338,6 +338,7 @@ class ClinicalTrialsSearchParams {
     clinicalTrialsRecruitingStatus: RecruitingStatus[] = [];
     symbolsToSearch: string[] = [];
     necSymbolsToSearch: string[] = [];
+    entitiesToSearch: string[] = [];
     gender: string;
     patientLocation: string;
     age: number;
@@ -349,6 +350,7 @@ class ClinicalTrialsSearchParams {
         clinicalTrialsRecruitingStatus: RecruitingStatus[],
         symbolsToSearch: string[] = [],
         necSymbolsToSearch: string[] = [],
+        entitiesToSearch: string[] = [],
         gender: string,
         patientLocation: string,
         age: number,
@@ -359,6 +361,7 @@ class ClinicalTrialsSearchParams {
         this.clinicalTrialsCountires = clinicalTrialsCountires;
         this.symbolsToSearch = symbolsToSearch;
         this.necSymbolsToSearch = necSymbolsToSearch;
+        this.entitiesToSearch = entitiesToSearch;
         this.gender = gender;
         this.patientLocation = patientLocation;
         this.age = age;
@@ -382,6 +385,7 @@ export class PatientViewPageStore {
 
     @observable
     private clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
+        [],
         [],
         [],
         [],
@@ -2601,35 +2605,6 @@ export class PatientViewPageStore {
         },
     });
 
-    getTumorEntitiesFromPatientSamples = remoteData<string[]>(
-        {
-            await: () => [this.patientViewData],
-            invoke: async () => {
-                var samples = this.patientViewData.result.samples;
-                var oncotree_codes_in_samples = [];
-                var tumor_entities = [];
-                for (var i = 0; i < samples!.length; i++) {
-                    for (var k = 0; k < samples![i].clinicalData.length; k++) {
-                        if (
-                            samples![i].clinicalData[k].clinicalAttributeId ==
-                                'CANCER_TYPE_DETAILED' ||
-                            samples![i].clinicalData[k].clinicalAttributeId ==
-                                'CANCER_TYPE'
-                        ) {
-                            tumor_entities.push(
-                                samples![i].clinicalData[k].value
-                            );
-                        }
-                    }
-                }
-                console.log('In Method');
-                console.log(tumor_entities);
-                return tumor_entities;
-            },
-        },
-        []
-    );
-
     readonly getStudiesFromClinicalTrialsGov = remoteData<StudyListEntry[]>(
         {
             await: () => [
@@ -2643,6 +2618,7 @@ export class PatientViewPageStore {
                 var clinicalTrialQuery = this.clinicalTrialSerchParams;
                 var search_symbols = clinicalTrialQuery.symbolsToSearch;
                 var nec_search_symbols = clinicalTrialQuery.necSymbolsToSearch;
+                var entity_symbols = clinicalTrialQuery.entitiesToSearch;
                 var gene_symbols: string[] = [];
                 var study_dictionary:
                     | IOncoKBStudyDictionary
@@ -2702,9 +2678,9 @@ export class PatientViewPageStore {
                 }
 
                 nctIDs_with_tumor_entity = await getStudiesNCTIds(
-                    tumor_entities,
                     nec_search_symbols,
                     search_symbols,
+                    entity_symbols,
                     this.clinicalTrialSerchParams.clinicalTrialsCountires,
                     this.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus
                 );
@@ -2902,6 +2878,7 @@ export class PatientViewPageStore {
         status: RecruitingStatus[],
         symbols: string[],
         necSymbols: string[],
+        tumorEntities: string[],
         gender: string,
         patientLocation: string,
         age: number,
@@ -2924,6 +2901,7 @@ export class PatientViewPageStore {
             status,
             symbols,
             necSymbols,
+            tumorEntities,
             gender,
             patientLocation,
             age,
