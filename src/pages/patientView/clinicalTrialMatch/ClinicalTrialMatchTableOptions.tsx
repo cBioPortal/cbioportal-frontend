@@ -10,11 +10,8 @@ import CreatableSelect from 'react-select/creatable';
 import {
     recruitingValueNames,
     countriesNames,
-    countriesGroups,
     genderNames,
 } from './utils/SelectValues';
-import ClinicalTrialMatchMutationSelect from './ClinicalTrialMatchMutationSelect';
-import ClinicalTrialMatchCountrySelect from './ClinicalTrialMatchCountrySelect';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
 import { Collapse } from 'react-collapse';
 import {
@@ -28,7 +25,7 @@ const NECESSARY_MUTATIONS_TOOLTIP: string =
     'Search studies for selected keywords. Study MUST contain ALL keywords to be found. You may add custom keywords.';
 const STATUS_TOOLTIP: string =
     'Search for recruiting status. Studies not in one of the selectet stati are not found.';
-const COUNTRIES_TOOLTIP: string =
+const COUNTIRES_TOOLTIP: string =
     'Select recruiting countries for studies. Only studies recruiting in at least one selected country are found.';
 const AGE_TOOLTIP: string =
     'Select age of the patient. Studies with matching ages are ranked higher.';
@@ -104,7 +101,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.recruiting_values = recruitingValueNames;
 
         this.genders = genderNames;
-        this.countries = Object.keys(countriesGroups).concat(countriesNames);
+        this.countries = countriesNames;
         this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
     }
 
@@ -290,7 +287,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                         </div>
                     </DefaultTooltip>
                     <DefaultTooltip
-                        overlay={COUNTRIES_TOOLTIP}
+                        overlay={COUNTIRES_TOOLTIP}
                         placement="topRight"
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
@@ -302,15 +299,11 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 marginBottom: '5px',
                             }}
                         >
-                            <ClinicalTrialMatchCountrySelect
-                                options={this.countries.map((cnt: string) => ({
+                            <Select
+                                options={this.countries.map(cnt => ({
                                     label: cnt,
                                     value: cnt,
                                 }))}
-                                countryGroups={
-                                    countriesGroups as Dict<string[]>
-                                }
-                                data={this.state.countryItems}
                                 isMulti
                                 name="CountrySearch"
                                 className="basic-multi-select"
@@ -319,11 +312,8 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 onChange={(selectedOption: Array<any>) => {
                                     const newStatuses = [];
                                     if (selectedOption !== null) {
-                                        const statuses = selectedOption.reduce(
-                                            (list: any, item: any) => {
-                                                return list.concat(item);
-                                            },
-                                            []
+                                        const statuses = selectedOption.map(
+                                            item => item.value
                                         );
                                         newStatuses.push(...statuses);
                                     }
