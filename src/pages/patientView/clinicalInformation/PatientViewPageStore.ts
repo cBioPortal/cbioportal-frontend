@@ -384,7 +384,7 @@ export class PatientViewPageStore {
     public showLoadingScreen: boolean = false;
 
     @observable
-    private clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
+    public clinicalTrialSerchParams: ClinicalTrialsSearchParams = new ClinicalTrialsSearchParams(
         [],
         [],
         [],

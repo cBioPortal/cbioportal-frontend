@@ -1,7 +1,10 @@
 import React from 'react';
 import styles from './style/clinicalTrialMatch.module.scss';
-import ClinicalTrialMatchMutationSelect from './ClinicalTrialMatchSelectUtil';
+import ClinicalTrialMatchMutationSelect, {
+    Dict,
+} from './ClinicalTrialMatchSelectUtil';
 import ClinicalTrialMatchRecruitingSelect from './ClinicalTrialMatchRecruitingSelect';
+import ClinicalTrialMatchCountrySelect from './ClinicalTrialMatchCountrySelect';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import Select from 'react-select';
@@ -10,6 +13,7 @@ import CreatableSelect from 'react-select/creatable';
 import {
     recruitingValueNames,
     countriesNames,
+    countriesGroups,
     genderNames,
 } from './utils/SelectValues';
 import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
@@ -19,11 +23,12 @@ import {
     DefaultTooltip,
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
+import { Checkbox } from 'pages/resultsView/enrichments/styles.module.scss';
 
 const OPTIONAL_MUTATIONS_TOOLTIP: string =
     'Studies must contain at least one of the search terms. This represents a logical OR.';
 const NECESSARY_MUTATIONS_TOOLTIP: string =
-    'Studies must contain ALL search terms. This represents a logical AND.';
+    'If Checkbox is checked, studies MUST contain ALL search terms. This represents a logical AND.';
 const STATUS_TOOLTIP: string =
     'Indicates the current recruitment status. Studies not in one of the selected status are not found.';
 const COUNTRIES_TOOLTIP: string =
@@ -60,6 +65,7 @@ interface IClinicalTrialOptionsMatchState {
     maxDistance: string;
     isOpened: boolean;
     isCollapsed: boolean;
+    mutationsRequired: boolean;
 }
 
 class ClinicalTrialMatchTableOptions extends React.Component<
@@ -68,6 +74,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
 > {
     recruiting_values: RecruitingStatus[] = [];
     countries: Array<String>;
+    countriesGroups: Array<String>;
     genders: Array<String>;
     locationsWithCoordinates: Array<String>;
     gender: any;
@@ -122,12 +129,14 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             maxDistance: '',
             isOpened: false,
             isCollapsed: false,
+            mutationsRequired: false,
         };
 
         this.recruiting_values = recruitingValueNames;
 
         this.genders = genderNames;
         this.countries = countriesNames;
+        this.countriesGroups = Object.keys(countriesGroups);
         this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
     }
 
@@ -201,83 +210,75 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                             }}
                         >
                             <tr>
-                                <td width={'50%'}>
+                                <td width={'50%'} colSpan={2}>
                                     <div className={styles.tooltipSpan}>
-                                        <span className={styles.header5}>
-                                            Required Mutations:
-                                        </span>
-                                        <DefaultTooltip
-                                            overlay={
-                                                NECESSARY_MUTATIONS_TOOLTIP
-                                            }
-                                            trigger={['hover', 'focus']}
-                                            destroyTooltipOnHide={true}
-                                        >
-                                            <i
-                                                className={
-                                                    'fa fa-info-circle ' +
-                                                    styles.icon
+                                        <div style={{ display: 'inline' }}>
+                                            <span className={styles.header5}>
+                                                Mutations:
+                                            </span>
+                                            <DefaultTooltip
+                                                overlay={
+                                                    OPTIONAL_MUTATIONS_TOOLTIP
                                                 }
-                                            ></i>
-                                        </DefaultTooltip>
-                                    </div>
-                                    <tr
-                                        style={{
-                                            display: 'block',
-                                            marginLeft: '5px',
-                                            marginBottom: '5px',
-                                        }}
-                                    >
-                                        <ClinicalTrialMatchMutationSelect
-                                            options={this.props.store.mutationHugoGeneSymbols.map(
-                                                geneSymbol => ({
-                                                    label: geneSymbol,
-                                                    value: geneSymbol,
-                                                })
-                                            )}
-                                            isMulti
-                                            data={
-                                                this.state
-                                                    .mutationNecSymbolItems
-                                            }
-                                            name="mutationSearch"
-                                            className="basic-multi-select"
-                                            classNamePrefix="select"
-                                            placeholder="Mutationselect..."
-                                            onChange={(
-                                                selectedOption: string[]
-                                            ) => {
-                                                const newMutations = [];
-                                                if (selectedOption !== null) {
-                                                    const mutations = selectedOption;
-                                                    newMutations.push(
-                                                        ...mutations
-                                                    );
-                                                }
-                                                this.setState({
-                                                    mutationNecSymbolItems: newMutations,
-                                                });
+                                                trigger={['hover', 'focus']}
+                                                destroyTooltipOnHide={true}
+                                            >
+                                                <i
+                                                    className={
+                                                        'fa fa-info-circle ' +
+                                                        styles.icon
+                                                    }
+                                                ></i>
+                                            </DefaultTooltip>
+                                        </div>
+                                        <div
+                                            style={{
+                                                paddingLeft: '20px',
+                                                textAlign: 'right',
+                                                display: 'inline',
                                             }}
-                                        />
-                                    </tr>
-                                </td>
-                                <td width={'50%'}>
-                                    <div className={styles.tooltipSpan}>
-                                        <span className={styles.header5}>
-                                            Optional Mutations:
-                                        </span>
-                                        <DefaultTooltip
-                                            overlay={OPTIONAL_MUTATIONS_TOOLTIP}
-                                            trigger={['hover', 'focus']}
-                                            destroyTooltipOnHide={true}
                                         >
-                                            <i
-                                                className={
-                                                    'fa fa-info-circle ' +
-                                                    styles.icon
+                                            <DefaultTooltip
+                                                overlay={
+                                                    NECESSARY_MUTATIONS_TOOLTIP
                                                 }
-                                            ></i>
-                                        </DefaultTooltip>
+                                                trigger={['hover', 'focus']}
+                                                destroyTooltipOnHide={true}
+                                            >
+                                                <label>
+                                                    <input
+                                                        className="input"
+                                                        type="checkbox"
+                                                        checked={
+                                                            this.state
+                                                                .mutationsRequired
+                                                        }
+                                                        onChange={({
+                                                            target: { checked },
+                                                        }) => {
+                                                            var nec = checked
+                                                                ? this.state.mutationSymbolItems.concat(
+                                                                      this.state
+                                                                          .mutationNecSymbolItems
+                                                                  )
+                                                                : [];
+                                                            var opt = checked
+                                                                ? []
+                                                                : this.state.mutationNecSymbolItems.concat(
+                                                                      this.state
+                                                                          .mutationSymbolItems
+                                                                  );
+                                                            this.setState({
+                                                                mutationsRequired: checked,
+                                                                mutationNecSymbolItems: nec,
+                                                                mutationSymbolItems: opt,
+                                                            });
+                                                        }}
+                                                    />{' '}
+                                                    All Mutations required
+                                                </label>
+                                            </DefaultTooltip>
+                                        </div>
                                     </div>
                                     <tr
                                         style={{
@@ -295,7 +296,12 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             )}
                                             isMulti
                                             data={
-                                                this.state.mutationSymbolItems
+                                                this.state.mutationsRequired ===
+                                                true
+                                                    ? this.state
+                                                          .mutationNecSymbolItems
+                                                    : this.state
+                                                          .mutationSymbolItems
                                             }
                                             name="mutationSearch"
                                             className="basic-multi-select"
@@ -311,18 +317,21 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                         ...mutations
                                                     );
                                                 }
-                                                this.setState({
-                                                    mutationSymbolItems: newMutations,
-                                                });
-
-                                                console.group(
-                                                    'TRIALS Mutation Changed'
-                                                );
-                                                console.log(
+                                                if (
                                                     this.state
-                                                        .mutationSymbolItems
-                                                );
-                                                console.groupEnd();
+                                                        .mutationsRequired ===
+                                                    true
+                                                ) {
+                                                    this.setState({
+                                                        mutationNecSymbolItems: newMutations,
+                                                        mutationSymbolItems: [],
+                                                    });
+                                                } else {
+                                                    this.setState({
+                                                        mutationSymbolItems: newMutations,
+                                                        mutationNecSymbolItems: [],
+                                                    });
+                                                }
                                             }}
                                         />
                                     </tr>
@@ -397,7 +406,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                     </tr>
                                 </td>
                             </tr>
-                            <td>
+                            <td width="50%">
                                 <div className={styles.tooltipSpan}>
                                     <span className={styles.header5}>
                                         Recruiting Status:
@@ -450,7 +459,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                     />
                                 </tr>
                             </td>
-                            <td>
+                            <td width="50%">
                                 <div className={styles.tooltipSpan}>
                                     <span className={styles.header5}>
                                         Countries:
@@ -475,12 +484,31 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         marginBottom: '5px',
                                     }}
                                 >
-                                    <Select
+                                    <ClinicalTrialMatchCountrySelect
                                         data={this.state.countryItems}
-                                        options={this.countries.map(cnt => ({
-                                            label: cnt,
-                                            value: cnt,
-                                        }))}
+                                        options={[
+                                            {
+                                                label: 'country groups',
+                                                options: this.countriesGroups.map(
+                                                    (cnt: string) => ({
+                                                        label: cnt,
+                                                        value: cnt,
+                                                    })
+                                                ),
+                                            },
+                                            {
+                                                label: 'countries',
+                                                options: this.countries.map(
+                                                    (cnt: string) => ({
+                                                        label: cnt,
+                                                        value: cnt,
+                                                    })
+                                                ),
+                                            },
+                                        ]}
+                                        countryGroups={
+                                            countriesGroups as Dict<string[]>
+                                        }
                                         isMulti
                                         name="CountrySearch"
                                         className="basic-multi-select"

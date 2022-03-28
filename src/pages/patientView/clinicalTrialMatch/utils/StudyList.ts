@@ -220,7 +220,7 @@ export class StudyList {
             }
 
             if (patient_age <= 0) {
-                isAgeMatching = true;
+                isAgeMatching = false;
             } else {
                 if (value.getMinimumAge() >= 0) {
                     if (value.getMaximumAge() >= 0) {

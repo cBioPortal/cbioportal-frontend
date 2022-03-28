@@ -3,6 +3,7 @@ import { observable } from 'mobx';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { observer } from 'mobx-react';
 
+import { Link } from 'react-router-dom';
 import { Collapse } from 'react-bootstrap';
 import { StudyListEntry } from './utils/StudyList';
 import LazyMobXTable from '../../../shared/components/lazyMobXTable/LazyMobXTable';
@@ -10,6 +11,7 @@ import ClinicalTrialMatchTableOptions from './ClinicalTrialMatchTableOptions';
 import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import styles from 'shared/components/loadingIndicator/styles.module.scss';
 import { height } from 'pages/studyView/charts/violinPlotTable/StudyViewViolinPlot';
+import { DefaultTooltip } from 'cbioportal-frontend-commons';
 
 enum ColumnKey {
     NUM_FOUND = 'Appearences',
@@ -306,9 +308,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                         show={this.state.isSearchCollapsed}
                     />
                 </div>
-                <th
-                    style={{ padding: '5px', borderBottom: '1px solid grey' }}
-                >
+                <th style={{ padding: '5px', borderBottom: '1px solid grey' }}>
                     <div style={{ padding: '3px' }}>
                         <button
                             className={'btn btn-default'}
@@ -324,17 +324,26 @@ export class ClinicalTrialMatchTable extends React.Component<
                     </div>
                 </th>
                 <th
-                    style={{ padding: '5px', borderBottom: '1px solid grey',  textAlign: 'right'}}
+                    style={{
+                        padding: '5px',
+                        borderBottom: '1px solid grey',
+                        textAlign: 'right',
+                    }}
                 >
                     <div style={{ padding: '3px' }}>
-                        <h1>
-                            Clinical Trial Search
-                        </h1>
-                    </div>    
+                        <h1>Clinical Trial Search</h1>
+                    </div>
                 </th>
                 <tr>
                     <td colSpan={2}>
-                        <div>
+                        <div
+                            style={{
+                                display:
+                                    this.props.clinicalTrialMatches.length > 0
+                                        ? 'inline'
+                                        : 'none',
+                            }}
+                        >
                             <label
                                 style={{
                                     paddingTop: '8px',
@@ -345,7 +354,35 @@ export class ClinicalTrialMatchTable extends React.Component<
                                     ? ''
                                     : '\n' +
                                       this.props.clinicalTrialMatches.length +
-                                      ' results have been found'}
+                                      ' results have been found. The results are based on: '}
+                            </label>
+                            <label
+                                style={{
+                                    paddingTop: '8px',
+                                    paddingLeft: '8px',
+                                }}
+                            >
+                                <DefaultTooltip
+                                    overlayStyle={{ width: '400px' }}
+                                    overlay={Object.entries(
+                                        this.props.store
+                                            .clinicalTrialSerchParams
+                                    ).reduce((lst, prop) => {
+                                        return lst.concat(
+                                            [' \n'],
+                                            [prop.toString()].join(', ')
+                                        );
+                                    }, [] as Array<any>)}
+                                    trigger={['hover', 'focus']}
+                                    destroyTooltipOnHide={true}
+                                >
+                                    <Link
+                                        to={''}
+                                        onClick={e => e.preventDefault()}
+                                    >
+                                        <h3>Search parameters</h3>
+                                    </Link>
+                                </DefaultTooltip>
                             </label>
                         </div>
                         <div>

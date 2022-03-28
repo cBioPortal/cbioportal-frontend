@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import CreatableSelect from 'react-select';
 
+export interface Dict<T> {
+    [key: string]: T;
+}
+
 interface Option {
     label: string;
     value: string;
