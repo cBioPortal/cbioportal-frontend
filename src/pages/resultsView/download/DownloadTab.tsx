@@ -1101,10 +1101,16 @@ export default class DownloadTab extends React.Component<
         const handleDownload = () => alteredSampleCaseIds.join('\n');
         const handleQuery = () =>
             this.handleQueryButtonClick(alteredSampleCaseIds);
+
+        let description = `${alteredSampleCaseIds.length} altered samples from:\n\n`;
+        virtualStudyParams.studyWithSamples.forEach(s => {
+            description += s.name + '\n';
+        });
+
         const alteredSamplesVirtualStudyParams = {
             user: virtualStudyParams.user,
             name: virtualStudyParams.name,
-            description: virtualStudyParams.description,
+            description: description,
             studyWithSamples: virtualStudyParams.studyWithSamples,
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
@@ -1118,7 +1124,7 @@ export default class DownloadTab extends React.Component<
         } as IVirtualStudyProps;
 
         return this.copyDownloadQueryControlsRow(
-            'Altered samples: List of samples with alterations',
+            'Altered samples',
             handleDownload,
             'altered_samples.txt',
             handleQuery,
@@ -1135,13 +1141,19 @@ export default class DownloadTab extends React.Component<
             caseAlteration =>
                 `${caseAlteration.studyId}:${caseAlteration.sampleId}`
         );
+
+        let description = `${unalteredSampleCaseIds.length} unaltered samples from:\n\n`;
+        virtualStudyParams.studyWithSamples.forEach(s => {
+            description += s.name + '\n';
+        });
+
         const handleDownload = () => unalteredSampleCaseIds.join('\n');
         const handleQuery = () =>
             this.handleQueryButtonClick(unalteredSampleCaseIds);
         const unalteredSamplesVirtualStudyParams = {
             user: virtualStudyParams.user,
             name: virtualStudyParams.name,
-            description: virtualStudyParams.description,
+            description: description,
             studyWithSamples: virtualStudyParams.studyWithSamples,
             selectedSamples: _.filter(
                 virtualStudyParams.selectedSamples,
@@ -1155,7 +1167,7 @@ export default class DownloadTab extends React.Component<
         } as IVirtualStudyProps;
 
         return this.copyDownloadQueryControlsRow(
-            'Unaltered samples: List of samples without any alteration',
+            'Unaltered samples',
             handleDownload,
             'unaltered_samples.txt',
             handleQuery,
