@@ -119,8 +119,12 @@ export default class Container extends React.Component<IContainerProps, {}> {
                             {shouldShowGenieWarning() && <GenieAgreement />}
 
                             <div className="contentWidth">
-                                <PortalHeader appStore={this.appStore} />
+                                {!window.location.pathname.includes('simple') && (
+                                    <PortalHeader appStore={this.appStore} />
+                                )}
                             </div>
+
+
                         </div>
                         <If condition={this.appStore.isErrorCondition}>
                             <Then>

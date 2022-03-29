@@ -12,6 +12,7 @@ import svgToPdfDownload from '../../lib/svgToPdfDownload';
 import { CSSProperties } from 'react';
 import { isPromiseLike } from 'cbioportal-utils';
 import { AppContext } from '../appContext/AppContext';
+import fileDownloadToJupyter from '../../lib/jupyterfileDownload';
 
 type ButtonSpec = {
     key: string;
@@ -26,7 +27,8 @@ export type DownloadControlsButton =
     | 'SVG'
     | 'Data'
     | 'Summary Data'
-    | 'Full Data';
+    | 'Full Data'
+    | 'Jupyter';
 
 export type DataType = 'summary' | 'full';
 
@@ -152,6 +154,40 @@ export default class DownloadControls extends React.Component<
     }
 
     @autobind
+    private openJupyterWindow() {
+        if (this.props.getData) {
+            const result = this.props.getData('full');
+            if (result !== null) {
+                if (isPromiseLike<string | null>(result)) {
+                    result.then(data => {
+                        if (data) {
+                            fileDownloadToJupyter(
+                                data,
+                                `${this.props.filename}.` +
+                                    `${
+                                        this.props.dataExtension
+                                            ? this.props.dataExtension
+                                            : 'txt'
+                                    }`
+                            );
+                        }
+                    });
+                } else {
+                    fileDownloadToJupyter(
+                        result,
+                        `${this.props.filename}.` +
+                            `${
+                                this.props.dataExtension
+                                    ? this.props.dataExtension
+                                    : 'txt'
+                            }`
+                    );
+                }
+            }
+        }
+    }
+
+    @autobind
     private downloadData(dataType?: DataType) {
         if (this.props.getData) {
             const result = this.props.getData(dataType);
@@ -243,6 +279,20 @@ export default class DownloadControls extends React.Component<
                     </span>
                 ),
                 onClick: this.downloadData,
+                disabled: !this.props.getData,
+            },
+            Jupyter: {
+                key: 'Jupyter',
+                content: (
+                    <span>
+                        Data{' '}
+                        <i
+                            className="fa fa-cloud-download"
+                            aria-hidden="true"
+                        />
+                    </span>
+                ),
+                onClick: this.openJupyterWindow,
                 disabled: !this.props.getData,
             },
             'Summary Data': {

@@ -2,7 +2,6 @@ import * as React from 'react';
 import _ from 'lodash';
 import { action, makeObservable } from 'mobx';
 import { observer } from 'mobx-react';
-import fileDownload from 'react-file-download';
 import {
     AnnotatedExtendedAlteration,
     ExtendedAlteration,
@@ -53,6 +52,7 @@ import {
     downloadDataTextGroupByKey,
     unzipDownloadDataGroupByKey,
 } from './DownloadUtils';
+import fileDownload from 'react-file-download';
 
 import styles from './styles.module.scss';
 import classNames from 'classnames';
