@@ -3,10 +3,14 @@ import { getSessionUrl } from '../urls';
 import {
     CustomChart,
     CustomChartData,
-    Session,
+    PageSettingsData,
+    PageSettingsUpdateRequest,
     StudyPageSettings,
     VirtualStudy,
 } from './sessionServiceModels';
+import { PageType } from 'shared/userSession/PageType';
+import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
+import _ from 'lodash';
 
 export default class sessionServiceAPI {
     getVirtualStudyServiceUrl() {
@@ -103,36 +107,57 @@ export default class sessionServiceAPI {
                 })
         );
     }
-    //main session API's - END
-    //StudyPage Settings API's - START
-    fetchUserSettings(
+
+    /**
+     * @returns {StudyPageSettings} including ID fields
+     */
+    fetchStudyPageSettings(
         studyIds: string[]
     ): Promise<StudyPageSettings | undefined> {
+        return this.fetchPageSettings<StudyPageSettings>({
+            page: PageType.STUDY_VIEW,
+            origin: studyIds,
+        });
+    }
+
+    /**
+     * main session API's - END
+     * StudyPage Settings API's - START
+     * @returns {PageSettingsData} with or without id fields
+     */
+    fetchPageSettings<T extends PageSettingsData>(
+        id: PageSettingsIdentifier,
+        omitId?: boolean
+    ): Promise<T | undefined> {
         return (
             request
                 .post(`${this.getUserSettingUrl()}/fetch`)
-                .send({ page: 'study_view', origin: studyIds })
+                .send(id)
                 // @ts-ignore: this method comes from caching plugin and isn't in typing
                 .forceUpdate(true)
                 .then((res: any) => {
-                    //can be undefined if noting was saved previously
+                    //can be undefined if nothing was saved previously
+                    const settings = res.body;
+                    return omitId
+                        ? _.omit(settings, Object.keys(id))
+                        : settings;
+                })
+        );
+    }
+
+    updateUserSettings(data: PageSettingsUpdateRequest) {
+        return (
+            request
+                .post(this.getUserSettingUrl())
+                .send(data)
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
+                .then((res: any) => {
                     return res.body;
                 })
         );
     }
 
-    updateUserSettings(data: StudyPageSettings) {
-        return (
-            request
-                .post(this.getUserSettingUrl())
-                .send({ page: 'study_view', ...data })
-                // @ts-ignore: this method comes from caching plugin and isn't in typing
-                .forceUpdate(true)
-                .then((res: any) => {
-                    return res.body;
-                })
-        );
-    }
     //StudyPage Settings API's - END
     //Custom Chart API's - START
     saveCustomData(data: CustomChartData) {

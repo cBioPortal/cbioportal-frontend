@@ -27,12 +27,10 @@ import {
     clinicalAttributeIsPROFILEDIN,
 } from 'shared/cache/ClinicalDataCache';
 import { ExtendedClinicalAttribute } from '../ResultsViewPageStoreUtils';
-import { ClinicalAttribute, MolecularProfile } from 'cbioportal-ts-api-client';
+import { ClinicalAttribute } from 'cbioportal-ts-api-client';
 import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
-import {
-    ClinicalTrackConfig,
-    ClinicalTrackConfigMap,
-} from 'shared/components/oncoprint/Oncoprint';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import SaveClinicalTracks from 'pages/resultsView/oncoprint/SaveClinicalTracks';
 export interface IAddTrackProps {
     store: ResultsViewPageStore;
     heatmapMenu: JSX.Element | null;
@@ -49,7 +47,7 @@ enum Tab {
     HEATMAP = 'Heatmap',
 }
 
-export const MIN_DROPDOWN_WIDTH = 400;
+export const MIN_DROPDOWN_WIDTH = 500;
 export const CONTAINER_PADDING_WIDTH = 20;
 export const TAB_PADDING_WIDTH = 14;
 export const COUNT_PADDING_WIDTH = 17;
@@ -248,20 +246,23 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
             this.props.handlers.onChangeSelectedClinicalTracks
         ) {
             return (
-                <AddClinicalTracks
-                    store={this.props.store}
-                    getSelectedClinicalAttributes={
-                        this.getSelectedClinicalAttributes
-                    }
-                    onChangeSelectedClinicalTracks={
-                        this.props.handlers.onChangeSelectedClinicalTracks
-                    }
-                    clinicalTrackOptionsPromise={this.clinicalTrackOptions}
-                    clinicalAttributeIdToAvailableFrequencyPromise={
-                        this.clinicalAttributeIdToAvailableFrequency
-                    }
-                    width={this.dropdownWidth}
-                />
+                <>
+                    <SaveClinicalTracks store={this.props.store} />
+                    <AddClinicalTracks
+                        store={this.props.store}
+                        getSelectedClinicalAttributes={
+                            this.getSelectedClinicalAttributes
+                        }
+                        onChangeSelectedClinicalTracks={
+                            this.props.handlers.onChangeSelectedClinicalTracks
+                        }
+                        clinicalTrackOptionsPromise={this.clinicalTrackOptions}
+                        clinicalAttributeIdToAvailableFrequencyPromise={
+                            this.clinicalAttributeIdToAvailableFrequency
+                        }
+                        width={this.dropdownWidth}
+                    />
+                </>
             );
         } else {
             return null;
@@ -462,7 +463,7 @@ export default class AddTracks extends React.Component<IAddTrackProps, {}> {
         return (
             <CustomDropdown
                 bsStyle="default"
-                title="Add Tracks"
+                title="Tracks"
                 id="addTracksDropdown"
                 className="oncoprintAddTracksDropdown"
                 styles={{ minWidth: MIN_DROPDOWN_WIDTH, width: 'auto' }}

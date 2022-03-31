@@ -408,9 +408,7 @@ export default class ResultsViewOncoprint extends React.Component<
 
         const self = this;
 
-        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(
-            this
-        );
+        this.setUrlClinicalTracks = this.setUrlClinicalTracks.bind(this);
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
@@ -618,20 +616,44 @@ export default class ResultsViewOncoprint extends React.Component<
                     return self.horzZoom;
                 }
             },
+            get isSaveButtonEnabled() {
+                return self.props.store.pageUserSession.isDirty;
+            },
         });
-        if (!this.urlWrapper.hasClinicalTracksConfig) {
+
+        this.configureClinicalTracks();
+    }
+
+    private configureClinicalTracks() {
+        const sessionConfig = this.props.store.pageUserSession
+            .sessionUserSettings?.clinicallist;
+        const urlConfig = this.urlWrapper.hasClinicalTracksConfig;
+
+        if (!urlConfig && !sessionConfig) {
             this.initializeClinicalTracksFromServerConfig();
+        } else if (!urlConfig && sessionConfig) {
+            this.setUrlClinicalTracks(sessionConfig);
+        } else if (urlConfig) {
+            this.setSessionClinicalTracks(
+                this.urlWrapper.oncoprintSelectedClinicalTracks
+            );
         }
     }
 
     private initializeClinicalTracksFromServerConfig(): void {
         const defaultClinicalTracks = getServerConfig()
             .oncoprint_clinical_tracks_config_json;
-        if (defaultClinicalTracks) {
-            this.onChangeSelectedClinicalTracks(
-                JSON.parse(defaultClinicalTracks) as ClinicalTrackConfig[]
-            );
-        }
+        const clinicalTracks = defaultClinicalTracks
+            ? (JSON.parse(defaultClinicalTracks) as ClinicalTrackConfig[])
+            : [];
+        this.setUrlClinicalTracks(clinicalTracks);
+        this.setSessionClinicalTracks(clinicalTracks);
+    }
+
+    private setSessionClinicalTracks(clinicalTracks: ClinicalTrackConfig[]) {
+        this.props.store.pageUserSession.userSettings = {
+            clinicallist: clinicalTracks,
+        };
     }
 
     get urlWrapper() {
@@ -779,7 +801,7 @@ export default class ResultsViewOncoprint extends React.Component<
                     oncoprint_cluster_profile: '',
                 });
             },
-            onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
+            onChangeSelectedClinicalTracks: this.setUrlClinicalTracks,
             onChangeHeatmapGeneInputValue: action((s: string) => {
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
@@ -1213,7 +1235,7 @@ export default class ResultsViewOncoprint extends React.Component<
         return `${CLINICAL_TRACK_KEY_PREFIX}${clinicalAttributeId}`;
     }
 
-    @action private onChangeSelectedClinicalTracks(
+    @action private setUrlClinicalTracks(
         clinicalAttributes: ClinicalTrackConfig[]
     ) {
         this.urlWrapper.updateURL(

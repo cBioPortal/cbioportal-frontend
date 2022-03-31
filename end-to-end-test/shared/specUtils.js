@@ -48,7 +48,7 @@ function waitForPatientView(timeout) {
 }
 
 function waitForOncoprint(timeout) {
-    browser.pause(100); // give oncoprint time to disappear
+    browser.pause(200); // give oncoprint time to disappear
     browser.waitUntil(
         () => {
             return (

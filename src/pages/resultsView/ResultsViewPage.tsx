@@ -16,7 +16,7 @@ import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummar
 import Mutations from './mutation/Mutations';
 import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
 import DownloadTab from './download/DownloadTab';
-import { getServerConfig } from 'config/config';
+import { getServerConfig, ServerConfigHelpers } from 'config/config';
 import CNSegments from './cnSegments/CNSegments';
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';

@@ -141,6 +141,10 @@ export default class Oncoprinter extends React.Component<
                     return undefined;
                 }
             },
+            get isSaveButtonEnabled() {
+                // do nothing in oncoprinter mode:
+                return false;
+            },
         });
     }
 

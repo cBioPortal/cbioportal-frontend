@@ -1,5 +1,7 @@
 import { ClinicalData, StudyViewFilter } from 'cbioportal-ts-api-client';
 import { ChartType } from 'pages/studyView/StudyViewUtils';
+import { ClinicalTrackConfig } from 'shared/components/oncoprint/Oncoprint';
+import { PageSettingsIdentifier } from 'shared/userSession/PageSettingsIdentifier';
 
 export interface Session {
     id: string;
@@ -19,7 +21,7 @@ export interface CustomChart extends Omit<Session, 'data'> {
 }
 
 export interface PageSettings extends Omit<Session, 'data'> {
-    data: StudyPageSettings;
+    data: PageSettingsData;
 }
 
 export interface VirtualStudyData {
@@ -94,3 +96,12 @@ export type StudyPageSettings = {
     origin: string[];
     groupColors: { [groupId: string]: string };
 };
+
+export type ResultPageSettings = {
+    clinicallist?: ClinicalTrackConfig[];
+};
+
+export type PageSettingsData = StudyPageSettings | ResultPageSettings;
+
+export type PageSettingsUpdateRequest = PageSettingsIdentifier &
+    PageSettingsData;
