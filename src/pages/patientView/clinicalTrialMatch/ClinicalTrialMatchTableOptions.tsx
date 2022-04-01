@@ -5,11 +5,13 @@ import ClinicalTrialMatchMutationSelect, {
 } from './ClinicalTrialMatchSelectUtil';
 import ClinicalTrialMatchRecruitingSelect from './ClinicalTrialMatchRecruitingSelect';
 import ClinicalTrialMatchCountrySelect from './ClinicalTrialMatchCountrySelect';
+import ClinicalTrialMatchAgeSelect from './ClinicalTrialMatchAgeSelect';
 import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStore';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import Select from 'react-select';
 import { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
+import oncoTreeCancerList from './OncoTreeCancerTypes';
 import {
     recruitingValueNames,
     countriesNames,
@@ -75,6 +77,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
     recruiting_values: RecruitingStatus[] = [];
     countries: Array<String>;
     countriesGroups: Array<String>;
+    cancerTypes: Array<String>;
     genders: Array<String>;
     locationsWithCoordinates: Array<String>;
     gender: any;
@@ -116,6 +119,29 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                 }
             }
         }
+        this.tumorEntityDefault.forEach(entity => {
+            //Add cancer main types to the entities
+            var mainTypes = oncoTreeCancerList.map(
+                cancerType => cancerType.mainType
+            );
+            var index = oncoTreeCancerList.findIndex(cancerType => {
+                return entity === cancerType.name;
+            });
+            var type = mainTypes[index] || '';
+            if (!this.tumorEntityDefault.includes(type) && type !== '')
+                this.tumorEntityDefault.push(type);
+
+            //Add parents
+            var parents = oncoTreeCancerList.map(
+                cancerType => cancerType.parent
+            );
+            var parent =
+                oncoTreeCancerList.find(cancerType => {
+                    return parents[index] === cancerType.code;
+                })?.name || '';
+            if (!this.tumorEntityDefault.includes(parent) && parent !== '')
+                this.tumorEntityDefault.push(parent);
+        });
 
         this.state = {
             mutationSymbolItems: new Array<string>(),
@@ -138,6 +164,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.countries = countriesNames;
         this.countriesGroups = Object.keys(countriesGroups);
         this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
+        this.cancerTypes = oncoTreeCancerList
+            .map(obj => obj['name'])
+            .filter((v, i, a) => a.indexOf(v) === i)
+            .sort();
     }
 
     getRecruitingKeyFromValueString(value: string): RecruitingStatus {
@@ -364,6 +394,14 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         }}
                                     >
                                         <Select
+                                            options={this.cancerTypes.map(
+                                                type => {
+                                                    return {
+                                                        value: type,
+                                                        label: type,
+                                                    };
+                                                }
+                                            )}
                                             data={this.state.tumorEntityItems}
                                             isMulti={true}
                                             defaultValue={this.state.tumorEntityItems.reduce(
@@ -381,11 +419,13 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             classNamePrefix="select"
                                             placeholder="Select Tumor Entities..."
                                             onChange={(
-                                                selectedOption: string[]
+                                                selectedOption: any[]
                                             ) => {
                                                 const newEntities = [];
                                                 if (selectedOption !== null) {
-                                                    const entities = selectedOption;
+                                                    const entities = selectedOption.map(
+                                                        option => option.value
+                                                    );
                                                     newEntities.push(
                                                         ...entities
                                                     );
@@ -519,9 +559,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         ) => {
                                             const newStatuses = [];
                                             if (selectedOption !== null) {
-                                                const statuses = selectedOption.map(
-                                                    item => item.value
-                                                );
+                                                const statuses = selectedOption;
                                                 newStatuses.push(...statuses);
                                             }
                                             this.setState({
@@ -556,12 +594,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         marginBottom: '5px',
                                     }}
                                 >
-                                    <CreatableSelect
-                                        isClearable
+                                    <ClinicalTrialMatchAgeSelect
                                         isMulti={false}
-                                        components={customComponents}
                                         placeholder="Select age..."
-                                        onChange={(newValue: any) => {
+                                        onChange={(newValue: string) => {
                                             console.log(newValue);
                                             console.log(typeof newValue);
                                             if (
@@ -570,7 +606,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             ) {
                                                 this.setState({
                                                     ageState: +parseInt(
-                                                        newValue.value
+                                                        newValue
                                                     ),
                                                 });
                                             } else {
@@ -579,16 +615,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 });
                                             }
                                         }}
-                                        defaultValue={
-                                            this.state.ageState !== 0
-                                                ? {
-                                                      value: this.state
-                                                          .ageState,
-                                                      label: this.state
-                                                          .ageState,
-                                                  }
-                                                : []
-                                        }
+                                        data={this.state.ageState}
                                     />
                                 </div>
                                 <td>
@@ -688,6 +715,12 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 this.setState({
                                                     patientLocation: newStatuses,
                                                 });
+                                            }}
+                                            defaultValue={{
+                                                label: this.state
+                                                    .patientLocation,
+                                                value: this.state
+                                                    .patientLocation,
                                             }}
                                         />
                                     </tr>

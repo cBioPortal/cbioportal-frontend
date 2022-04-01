@@ -364,16 +364,40 @@ export class ClinicalTrialMatchTable extends React.Component<
                             >
                                 <DefaultTooltip
                                     overlayStyle={{ width: '400px' }}
-                                    overlay={Object.entries(
-                                        this.props.store
-                                            .clinicalTrialSerchParams
-                                    ).reduce((lst, prop) => {
-                                        return lst.concat(
-                                            [' \n'],
-                                            [prop.toString()].join(', ')
-                                        );
-                                    }, [] as Array<any>)}
-                                    trigger={['hover', 'focus']}
+                                    overlay={[
+                                        'Mutations: ' +
+                                            this.props.store.clinicalTrialSerchParams.necSymbolsToSearch
+                                                .concat(
+                                                    this.props.store
+                                                        .clinicalTrialSerchParams
+                                                        .symbolsToSearch
+                                                )
+                                                .join(', '),
+                                        ' || Tumor Entities: ' +
+                                            this.props.store.clinicalTrialSerchParams.entitiesToSearch.join(
+                                                ', '
+                                            ),
+                                        ' || Recruiting Status: ' +
+                                            this.props.store.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus.join(
+                                                ', '
+                                            ),
+                                        ' || Countries: ' +
+                                            this.props.store.clinicalTrialSerchParams.clinicalTrialsCountires.join(
+                                                ', '
+                                            ),
+                                        ' || Location: ' +
+                                            this.props.store
+                                                .clinicalTrialSerchParams
+                                                .patientLocation,
+                                        ' || age: ' +
+                                            this.props.store
+                                                .clinicalTrialSerchParams.age,
+                                        ' || Distance: ' +
+                                            this.props.store
+                                                .clinicalTrialSerchParams
+                                                .maximumDistance,
+                                    ]}
+                                    trigger={['hover', 'focus', 'click']}
                                     destroyTooltipOnHide={true}
                                 >
                                     <Link
