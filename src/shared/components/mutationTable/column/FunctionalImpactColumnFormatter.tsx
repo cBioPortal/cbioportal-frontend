@@ -455,10 +455,12 @@ export default class FunctionalImpactColumnFormatter {
             data,
             siftPolyphenCache
         );
-        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
-            data,
-            mutationAssessorCache
-        );
+        const mutationAssessorCacheData = shouldShowMutationAssessor()
+            ? FunctionalImpactColumnFormatter.getDataFromCache(
+                  data,
+                  mutationAssessorCache
+              )
+            : null;
 
         const siftData = siftPolyphenCacheData
             ? this.getSiftData(siftPolyphenCacheData.data)
@@ -543,15 +545,18 @@ export default class FunctionalImpactColumnFormatter {
         siftPolyphenCache: GenomeNexusCache | undefined,
         mutationAssessorCache: GenomeNexusMutationAssessorCache | undefined
     ) {
+        const showMutationAssessor = shouldShowMutationAssessor();
+
         const siftPolyphenCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
             data,
             siftPolyphenCache
         );
-        const mutationAssessorCacheData = FunctionalImpactColumnFormatter.getDataFromCache(
-            data,
-            mutationAssessorCache
-        );
-        const showMutationAssessor = shouldShowMutationAssessor();
+        const mutationAssessorCacheData = showMutationAssessor
+            ? FunctionalImpactColumnFormatter.getDataFromCache(
+                  data,
+                  mutationAssessorCache
+              )
+            : null;
         return (
             <div>
                 {showMutationAssessor &&
@@ -582,11 +587,16 @@ export default class FunctionalImpactColumnFormatter {
                 siftPolyphenCache,
                 mutationAssessorCache
             );
+            let downloadData = [];
             if (functionalImpactData) {
-                return [
-                    `MutationAssessor: ${MutationAssessor.download(
-                        functionalImpactData.mutationAssessor
-                    )}`,
+                if (shouldShowMutationAssessor()) {
+                    downloadData.push(
+                        `MutationAssessor: ${MutationAssessor.download(
+                            functionalImpactData.mutationAssessor
+                        )}`
+                    );
+                }
+                downloadData = downloadData.concat([
                     `SIFT: ${Sift.download(
                         functionalImpactData.siftScore,
                         functionalImpactData.siftPrediction
@@ -595,7 +605,8 @@ export default class FunctionalImpactColumnFormatter {
                         functionalImpactData.polyPhenScore,
                         functionalImpactData.polyPhenPrediction
                     )}`,
-                ].join(';');
+                ]);
+                return downloadData.join(';');
             }
         }
         return '';
