@@ -24,7 +24,7 @@ export interface IGenericAssayEnrichmentTableProps {
 
 export enum GenericAssayEnrichmentTableColumnType {
     ENTITY_ID = 'Entity ID',
-    LOG_RATIO = 'Log Ratio',
+    LOG_RATIO = 'Log2 Ratio',
     P_VALUE = 'P_VALUE',
     Q_VALUE = 'Q_VALUE',
     TENDENCY = 'Tendency',
