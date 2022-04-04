@@ -32,7 +32,7 @@ export enum AlterationEnrichmentTableColumnType {
     ALTERATION = 'ALTERATION',
     P_VALUE = 'P_VALUE',
     Q_VALUE = 'Q_VALUE',
-    LOG_RATIO = 'Log Ratio',
+    LOG_RATIO = 'Log2 Ratio',
     TENDENCY = 'Tendency',
     ENRICHED = 'Enriched in',
     MOST_ENRICHED = 'Most enriched in',
