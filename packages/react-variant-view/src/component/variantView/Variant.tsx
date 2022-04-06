@@ -8,15 +8,27 @@ import { VariantStore } from '../../store/VariantStore';
 import { variantToMutation } from '../../util/VariantUtil';
 
 import styles from './Variant.module.scss';
+import { GenomeNexusAPI } from 'genome-nexus-ts-api-client';
+import { OncoKbAPI } from 'oncokb-ts-api-client';
+import { MutationMapperDataFetcher } from 'react-mutation-mapper/dist/model/MutationMapperDataFetcher';
 
 interface IVariantProps {
     variant: string;
     store?: VariantStore;
     mainLoadingIndicator?: JSX.Element;
+    genomeNexusClient?: GenomeNexusAPI;
+    oncoKbClient?: OncoKbAPI;
+    mutationMapperDataFetcher?: MutationMapperDataFetcher;
 }
 
 export function initDefaultVariantStore(props: IVariantProps) {
-    return new VariantStore(props.variant, '');
+    return new VariantStore(
+        props.variant,
+        '',
+        props.genomeNexusClient,
+        props.oncoKbClient,
+        props.mutationMapperDataFetcher
+    );
 }
 
 @observer
@@ -161,13 +173,13 @@ class Variant extends React.Component<IVariantProps> {
         if (
             this.variantStore.isAnnotatedSuccessfully.isComplete &&
             this.variantStore.isAnnotatedSuccessfully.result === true &&
-            this.variantStore.getMutationMapperStore &&
-            this.variantStore.getMutationMapperStore.transcriptsWithAnnotations
+            this.variantStore.mutationMapperStore &&
+            this.variantStore.mutationMapperStore.transcriptsWithAnnotations
                 .result &&
-            this.variantStore.getMutationMapperStore.transcriptsWithAnnotations
+            this.variantStore.mutationMapperStore.transcriptsWithAnnotations
                 .result.length > 0
         ) {
-            return this.variantStore.getMutationMapperStore
+            return this.variantStore.mutationMapperStore
                 .transcriptsWithAnnotations.result;
         }
         return [];
@@ -175,7 +187,7 @@ class Variant extends React.Component<IVariantProps> {
 
     @action.bound
     private setActiveTranscript(transcriptId: string) {
-        this.variantStore.getMutationMapperStore!.setSelectedTranscript(
+        this.variantStore.mutationMapperStore!.setSelectedTranscript(
             transcriptId
         );
         this.variantStore.selectedTranscript = transcriptId;
