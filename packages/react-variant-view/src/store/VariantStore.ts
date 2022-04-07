@@ -1,16 +1,22 @@
 import { remoteData } from 'cbioportal-frontend-commons';
-import { VariantAnnotation } from 'genome-nexus-ts-api-client';
+import { GenomeNexusAPI, VariantAnnotation } from 'genome-nexus-ts-api-client';
 import _ from 'lodash';
 import { computed, observable, makeObservable } from 'mobx';
 import MobxPromise from 'mobxpromise';
-import { CuratedGene, IndicatorQueryResp } from 'oncokb-ts-api-client';
+import {
+    CuratedGene,
+    IndicatorQueryResp,
+    OncoKbAPI,
+} from 'oncokb-ts-api-client';
 import {
     DataFilterType,
     initDefaultMutationMapperStore,
+    MutationMapperDataFetcher,
 } from 'react-mutation-mapper';
 import { getTranscriptConsequenceSummary } from '../util/AnnotationSummaryUtil';
 import {
-    genomeNexusDomain,
+    DEFAULT_GENOME_NEXUS_DOMAIN,
+    DEFAULT_ONCOKB_DOMAIN,
     getGenomeNexusClient,
     getOncokbClient,
 } from '../util/ApiClientUtils';
@@ -22,8 +28,9 @@ export interface IVariantStoreConfig {
 }
 export class VariantStore {
     public query: any;
-    public genomeNexusClient = getGenomeNexusClient();
-    public oncokbClient = getOncokbClient();
+    public genomeNexusClient: GenomeNexusAPI;
+    public oncokbClient: OncoKbAPI;
+    public mutationMapperDataFetcher: MutationMapperDataFetcher | undefined;
 
     @observable public variant: string = '';
     @observable public selectedTranscript: string = '';
@@ -96,20 +103,21 @@ export class VariantStore {
     });
 
     @computed
-    get getMutationMapperStore() {
+    get mutationMapperStore() {
         const mutation = variantToMutation(this.annotationSummary);
         if (
             mutation[0] &&
             mutation[0].gene &&
             mutation[0].gene.hugoGeneSymbol.length !== 0
         ) {
-            const store = initDefaultMutationMapperStore({
-                genomeNexusUrl: genomeNexusDomain,
+            return initDefaultMutationMapperStore({
+                dataFetcher: this.mutationMapperDataFetcher,
+                genomeNexusUrl: DEFAULT_GENOME_NEXUS_DOMAIN,
+                oncoKbUrl: DEFAULT_ONCOKB_DOMAIN,
                 data: mutation,
                 hugoSymbol: getTranscriptConsequenceSummary(
                     this.annotationSummary
                 ).hugoGeneSymbol,
-                oncoKbUrl: 'https://www.cbioportal.org/proxy/oncokb',
                 // select the lollipop by default
                 selectionFilters: [
                     {
@@ -118,14 +126,22 @@ export class VariantStore {
                     },
                 ],
             });
-            return store;
         }
         return undefined;
     }
 
-    constructor(public variantId: string, public queryString: string) {
+    constructor(
+        public variantId: string,
+        public queryString: string,
+        genomeNexusClient?: GenomeNexusAPI,
+        oncoKbClient?: OncoKbAPI,
+        mutationMapperDataFetcher?: MutationMapperDataFetcher
+    ) {
         makeObservable(this);
         this.variant = variantId;
+        this.genomeNexusClient = genomeNexusClient || getGenomeNexusClient();
+        this.oncokbClient = oncoKbClient || getOncokbClient();
+        this.mutationMapperDataFetcher = mutationMapperDataFetcher;
     }
 
     @computed
