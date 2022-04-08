@@ -3,6 +3,7 @@ import { ClinicalEvent } from 'cbioportal-ts-api-client';
 import { groupTimelineData } from 'pages/patientView/timeline2/timelineDataUtils.ts';
 import LazyMobXTable from 'shared/components/lazyMobXTable/LazyMobXTable';
 import _ from 'lodash';
+import parse from 'html-react-parser';
 
 class EventsTable extends LazyMobXTable<{}> {}
 
@@ -10,7 +11,7 @@ function makeColumns(data: string[][]) {
     return data[0].map((item, i: number) => {
         return {
             name: item,
-            render: (data: string[]) => <span>{data[i]}</span>,
+            render: (data: string[]) => <span>{parse(data[i])}</span>,
             download: (data: string[]) => data[i],
             sortBy: (data: string[]) => data[i],
             filter: (
