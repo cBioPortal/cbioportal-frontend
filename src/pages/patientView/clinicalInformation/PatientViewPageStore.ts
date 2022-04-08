@@ -2097,6 +2097,25 @@ export class PatientViewPageStore {
         return unique_gene_symbols;
     }
 
+    @computed get mutationHugoGeneSymbolsWithAlterations(): string[] {
+        var gene_symbols: string[] = [];
+        this.mergedMutationData.forEach(function(value: Mutation[]) {
+            gene_symbols.push(value[0].gene.hugoGeneSymbol);
+        });
+
+        this.mergedDiscreteCNADataFilteredByGene.forEach(function(
+            value: DiscreteCopyNumberData[]
+        ) {
+            gene_symbols.push(
+                value[0].gene.hugoGeneSymbol + value[0].alteration
+            );
+        });
+
+        var unique_gene_symbols = [...new Set(gene_symbols)];
+
+        return unique_gene_symbols;
+    }
+
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(
             this.mutationData,

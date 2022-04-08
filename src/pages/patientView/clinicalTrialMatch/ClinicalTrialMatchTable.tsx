@@ -363,40 +363,72 @@ export class ClinicalTrialMatchTable extends React.Component<
                                 }}
                             >
                                 <DefaultTooltip
-                                    overlayStyle={{ width: '400px' }}
-                                    overlay={[
-                                        'Mutations: ' +
-                                            this.props.store.clinicalTrialSerchParams.necSymbolsToSearch
-                                                .concat(
+                                    overlayStyle={{
+                                        wordWrap: 'break-word',
+                                        width: '400px',
+                                    }}
+                                    overlay={
+                                        <div>
+                                            <div>
+                                                <b>Mutations: </b>
+                                                {this.props.store.clinicalTrialSerchParams.necSymbolsToSearch
+                                                    .concat(
+                                                        this.props.store
+                                                            .clinicalTrialSerchParams
+                                                            .symbolsToSearch
+                                                    )
+                                                    .join(', ')}
+                                            </div>
+                                            <div>
+                                                <b>Tumor Entities: </b>
+                                                {this.props.store.clinicalTrialSerchParams.entitiesToSearch.join(
+                                                    ', '
+                                                )}
+                                            </div>
+                                            <div>
+                                                <b>Recruiting Status: </b>
+                                                {this.props.store.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus.join(
+                                                    ', '
+                                                )}
+                                            </div>
+                                            <div>
+                                                <b>Countries: </b>
+                                                {this.props.store.clinicalTrialSerchParams.clinicalTrialsCountires.join(
+                                                    ', '
+                                                )}
+                                            </div>
+                                            <div>
+                                                <b>Patient Age: </b>
+                                                {this.props.store
+                                                    .clinicalTrialSerchParams
+                                                    .age !== 0
+                                                    ? this.props.store
+                                                          .clinicalTrialSerchParams
+                                                          .age
+                                                    : ''}
+                                            </div>
+                                            <div>
+                                                <b>Patient Location: </b>
+                                                {
                                                     this.props.store
                                                         .clinicalTrialSerchParams
-                                                        .symbolsToSearch
-                                                )
-                                                .join(', '),
-                                        ' || Tumor Entities: ' +
-                                            this.props.store.clinicalTrialSerchParams.entitiesToSearch.join(
-                                                ', '
-                                            ),
-                                        ' || Recruiting Status: ' +
-                                            this.props.store.clinicalTrialSerchParams.clinicalTrialsRecruitingStatus.join(
-                                                ', '
-                                            ),
-                                        ' || Countries: ' +
-                                            this.props.store.clinicalTrialSerchParams.clinicalTrialsCountires.join(
-                                                ', '
-                                            ),
-                                        ' || Location: ' +
-                                            this.props.store
-                                                .clinicalTrialSerchParams
-                                                .patientLocation,
-                                        ' || age: ' +
-                                            this.props.store
-                                                .clinicalTrialSerchParams.age,
-                                        ' || Distance: ' +
-                                            this.props.store
-                                                .clinicalTrialSerchParams
-                                                .maximumDistance,
-                                    ]}
+                                                        .patientLocation
+                                                }
+                                            </div>
+                                            <div>
+                                                <b>
+                                                    Max Distance From Location:{' '}
+                                                </b>
+                                                {this.props.store
+                                                    .clinicalTrialSerchParams
+                                                    .maximumDistance !== 0
+                                                    ? this.props.store
+                                                          .clinicalTrialSerchParams
+                                                          .maximumDistance
+                                                    : ''}
+                                            </div>
+                                        </div>
+                                    }
                                     trigger={['hover', 'focus', 'click']}
                                     destroyTooltipOnHide={true}
                                 >

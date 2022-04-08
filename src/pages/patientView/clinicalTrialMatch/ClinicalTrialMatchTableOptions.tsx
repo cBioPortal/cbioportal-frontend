@@ -11,7 +11,7 @@ import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus
 import Select from 'react-select';
 import { components } from 'react-select';
 import CreatableSelect from 'react-select/creatable';
-import oncoTreeCancerList from './OncoTreeCancerTypes';
+import oncoTreeTumorTypes from './utils/OncoTreeTumorTypes';
 import {
     recruitingValueNames,
     countriesNames,
@@ -79,7 +79,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
     countriesGroups: Array<String>;
     cancerTypes: Array<String>;
     genders: Array<String>;
-    locationsWithCoordinates: Array<String>;
+    locationsWithCoordinates: Array<any>;
     gender: any;
     age: string;
     ageDefault: any;
@@ -121,10 +121,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         }
         this.tumorEntityDefault.forEach(entity => {
             //Add cancer main types to the entities
-            var mainTypes = oncoTreeCancerList.map(
+            var mainTypes = oncoTreeTumorTypes.map(
                 cancerType => cancerType.mainType
             );
-            var index = oncoTreeCancerList.findIndex(cancerType => {
+            var index = oncoTreeTumorTypes.findIndex(cancerType => {
                 return entity === cancerType.name;
             });
             var type = mainTypes[index] || '';
@@ -132,11 +132,11 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                 this.tumorEntityDefault.push(type);
 
             //Add parents
-            var parents = oncoTreeCancerList.map(
+            var parents = oncoTreeTumorTypes.map(
                 cancerType => cancerType.parent
             );
             var parent =
-                oncoTreeCancerList.find(cancerType => {
+                oncoTreeTumorTypes.find(cancerType => {
                     return parents[index] === cancerType.code;
                 })?.name || '';
             if (!this.tumorEntityDefault.includes(parent) && parent !== '')
@@ -163,9 +163,11 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.genders = genderNames;
         this.countries = countriesNames;
         this.countriesGroups = Object.keys(countriesGroups);
-        this.locationsWithCoordinates = Object.keys(CITIES_AND_COORDINATES);
-        this.cancerTypes = oncoTreeCancerList
-            .map(obj => obj['name'])
+
+        this.locationsWithCoordinates = require('./utils/location/worldCities.json'); //Object.keys(CITIES_AND_COORDINATES);
+
+        this.cancerTypes = oncoTreeTumorTypes
+            .map(obj => obj['name'] || '')
             .filter((v, i, a) => a.indexOf(v) === i)
             .sort();
     }
@@ -268,6 +270,38 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 display: 'inline',
                                             }}
                                         >
+                                            <span>
+                                                <input
+                                                    className="input"
+                                                    type="checkbox"
+                                                    checked={
+                                                        this.state
+                                                            .mutationsRequired
+                                                    }
+                                                    onChange={({
+                                                        target: { checked },
+                                                    }) => {
+                                                        var nec = checked
+                                                            ? this.state.mutationSymbolItems.concat(
+                                                                  this.state
+                                                                      .mutationNecSymbolItems
+                                                              )
+                                                            : [];
+                                                        var opt = checked
+                                                            ? []
+                                                            : this.state.mutationNecSymbolItems.concat(
+                                                                  this.state
+                                                                      .mutationSymbolItems
+                                                              );
+                                                        this.setState({
+                                                            mutationsRequired: checked,
+                                                            mutationNecSymbolItems: nec,
+                                                            mutationSymbolItems: opt,
+                                                        });
+                                                    }}
+                                                />{' '}
+                                                <b>All Mutations required </b>
+                                            </span>
                                             <DefaultTooltip
                                                 overlay={
                                                     NECESSARY_MUTATIONS_TOOLTIP
@@ -275,38 +309,12 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                 trigger={['hover', 'focus']}
                                                 destroyTooltipOnHide={true}
                                             >
-                                                <label>
-                                                    <input
-                                                        className="input"
-                                                        type="checkbox"
-                                                        checked={
-                                                            this.state
-                                                                .mutationsRequired
-                                                        }
-                                                        onChange={({
-                                                            target: { checked },
-                                                        }) => {
-                                                            var nec = checked
-                                                                ? this.state.mutationSymbolItems.concat(
-                                                                      this.state
-                                                                          .mutationNecSymbolItems
-                                                                  )
-                                                                : [];
-                                                            var opt = checked
-                                                                ? []
-                                                                : this.state.mutationNecSymbolItems.concat(
-                                                                      this.state
-                                                                          .mutationSymbolItems
-                                                                  );
-                                                            this.setState({
-                                                                mutationsRequired: checked,
-                                                                mutationNecSymbolItems: nec,
-                                                                mutationSymbolItems: opt,
-                                                            });
-                                                        }}
-                                                    />{' '}
-                                                    All Mutations required
-                                                </label>
+                                                <i
+                                                    className={
+                                                        'fa fa-info-circle ' +
+                                                        styles.icon
+                                                    }
+                                                ></i>
                                             </DefaultTooltip>
                                         </div>
                                     </div>
@@ -318,7 +326,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         }}
                                     >
                                         <ClinicalTrialMatchMutationSelect
-                                            options={this.props.store.mutationHugoGeneSymbols.map(
+                                            options={this.props.store.mutationHugoGeneSymbolsWithAlterations.map(
                                                 geneSymbol => ({
                                                     label: geneSymbol,
                                                     value: geneSymbol,
@@ -336,7 +344,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             name="mutationSearch"
                                             className="basic-multi-select"
                                             classNamePrefix="select"
-                                            placeholder="Mutationselect..."
+                                            placeholder="Select or create mutations/keywords..."
                                             onChange={(
                                                 selectedOption: string[]
                                             ) => {
@@ -449,7 +457,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                             <td width="50%">
                                 <div className={styles.tooltipSpan}>
                                     <span className={styles.header5}>
-                                        Recruiting Status:
+                                        Recruitment Status:
                                     </span>
                                     <DefaultTooltip
                                         overlay={STATUS_TOOLTIP}
@@ -698,10 +706,19 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         <Select
                                             options={this.locationsWithCoordinates.map(
                                                 city => ({
-                                                    label: city,
-                                                    value: city,
+                                                    label: [
+                                                        city.city,
+                                                        city.admin_name,
+                                                        city.country,
+                                                    ].join(', '),
+                                                    value: [
+                                                        city.city,
+                                                        city.admin_name,
+                                                        city.country,
+                                                    ].join(', '),
                                                 })
                                             )}
+                                            isClearable={true}
                                             name="locationDistance"
                                             className="basic-select"
                                             classNamePrefix="select"
@@ -716,19 +733,24 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                                     patientLocation: newStatuses,
                                                 });
                                             }}
-                                            defaultValue={{
-                                                label: this.state
-                                                    .patientLocation,
-                                                value: this.state
-                                                    .patientLocation,
-                                            }}
+                                            defaultValue={
+                                                this.state.patientLocation !==
+                                                ''
+                                                    ? {
+                                                          label: this.state
+                                                              .patientLocation,
+                                                          value: this.state
+                                                              .patientLocation,
+                                                      }
+                                                    : []
+                                            }
                                         />
                                     </tr>
                                 </td>
 
                                 <div className={styles.tooltipSpan}>
                                     <span className={styles.header5}>
-                                        Max Distance:
+                                        Maximum Distance:
                                     </span>
                                     <DefaultTooltip
                                         overlay={MAX_DISTANCE_TOOLTIP}
