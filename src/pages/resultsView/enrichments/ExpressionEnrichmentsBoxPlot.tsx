@@ -17,7 +17,6 @@ import {
     INumberAxisData,
     makeBoxScatterPlotData,
     getBoxPlotDownloadData,
-    deriveDisplayTextFromGenericAssayType,
 } from '../plots/PlotsTabUtils';
 import BoxScatterPlot, {
     IBoxScatterPlotData,
@@ -31,6 +30,11 @@ import { getSampleViewUrl } from 'shared/api/urls';
 import classNames from 'classnames';
 import { getGeneSummary } from '../querySummary/QuerySummaryUtils';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import {
+    COMMON_GENERIC_ASSAY_PROPERTY,
+    formatGenericAssayCompactLabelByNameAndId,
+    getGenericAssayPropertyOrDefault,
+} from 'shared/lib/GenericAssayUtils/GenericAssayCommonUtils';
 
 class EnrichmentsBoxPlotComponent extends BoxScatterPlot<
     IBoxScatterPlotPoint
@@ -87,13 +91,23 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
         return !!this.props.genericAssayType;
     }
 
+    private get entityName() {
+        const selectedRow = this.props
+            .selectedRow as GenericAssayEnrichmentWithQ;
+        return formatGenericAssayCompactLabelByNameAndId(
+            selectedRow.stableId,
+            getGenericAssayPropertyOrDefault(
+                selectedRow.genericEntityMetaProperties,
+                COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                selectedRow.stableId
+            )
+        );
+    }
+
     @computed get axisLabelY() {
         if (this.props.selectedRow !== undefined) {
             if (this.isGenericAssay) {
-                return `${
-                    (this.props.selectedRow as GenericAssayEnrichmentWithQ)
-                        .stableId
-                }, ${this.props.selectedProfile.name}`;
+                return `${this.entityName}, ${this.props.selectedProfile.name}`;
             } else {
                 return `${
                     (this.props.selectedRow as ExpressionEnrichmentWithQ)
@@ -276,10 +290,7 @@ export default class ExpressionEnrichmentsBoxPlot extends React.Component<
                                 <b>{d.sampleId}</b>
                             </a>
                             <br />
-                            {deriveDisplayTextFromGenericAssayType(
-                                this.props.genericAssayType!
-                            )}
-                            : {d.value.toFixed(3)}
+                            {this.entityName}: {d.value.toFixed(3)}
                         </div>
                     );
                 } else {

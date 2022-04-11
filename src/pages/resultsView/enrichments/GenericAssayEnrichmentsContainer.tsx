@@ -19,8 +19,8 @@ import GenericAssayEnrichmentsTable, {
 import { GenericAssayEnrichmentsTableDataStore } from './GenericAssayEnrichmentsTableDataStore';
 import { GenericAssayEnrichmentRow } from 'shared/model/EnrichmentRow';
 import ExpressionEnrichmentsBoxPlot from './ExpressionEnrichmentsBoxPlot';
-import MiniScatterChart from './MiniScatterChart';
 import { EnrichmentAnalysisComparisonGroup } from 'pages/groupComparison/GroupComparisonUtils';
+import GenericAssayMiniScatterChart from './GenericAssayMiniScatterChart';
 
 export interface IGenericAssayEnrichmentsContainerProps {
     data: GenericAssayEnrichmentWithQ[];
@@ -216,7 +216,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
             <div className={styles.Container}>
                 <div className={styles.ChartsPanel}>
                     {this.isTwoGroupAnalysis && (
-                        <MiniScatterChart
+                        <GenericAssayMiniScatterChart
                             data={data}
                             selectedSet={this.selectedEntitiesSet}
                             xAxisLeftLabel={
@@ -232,6 +232,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
                             onGenericAssayEntityClick={this.onEntityClick}
                             onSelection={this.onSelection}
                             onSelectionCleared={this.onSelectionCleared}
+                            genericAssayType={this.props.genericAssayType}
                         />
                     )}
                     <ExpressionEnrichmentsBoxPlot
@@ -284,6 +285,7 @@ export default class GenericAssayEnrichmentsContainer extends React.Component<
                             this.customColumns,
                             column => column.uniqueName || column.name
                         )}
+                        genericAssayType={this.props.genericAssayType}
                     />
                 </div>
             </div>
