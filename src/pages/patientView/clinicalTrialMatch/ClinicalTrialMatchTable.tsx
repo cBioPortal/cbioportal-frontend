@@ -336,14 +336,7 @@ export class ClinicalTrialMatchTable extends React.Component<
                 </th>
                 <tr>
                     <td colSpan={2}>
-                        <div
-                            style={{
-                                display:
-                                    this.props.clinicalTrialMatches.length > 0
-                                        ? 'inline'
-                                        : 'none',
-                            }}
-                        >
+                        <div>
                             <label
                                 style={{
                                     paddingTop: '8px',
@@ -351,15 +344,19 @@ export class ClinicalTrialMatchTable extends React.Component<
                                 }}
                             >
                                 {!(this.props.clinicalTrialMatches.length > 0)
-                                    ? ''
-                                    : '\n' +
-                                      this.props.clinicalTrialMatches.length +
+                                    ? 'No Results have been found (yet). Press the button above to modify the search parameters.'
+                                    : this.props.clinicalTrialMatches.length +
                                       ' results have been found. The results are based on: '}
                             </label>
                             <label
                                 style={{
                                     paddingTop: '8px',
                                     paddingLeft: '8px',
+                                    visibility:
+                                        this.props.clinicalTrialMatches.length >
+                                        0
+                                            ? 'inherit'
+                                            : 'hidden',
                                 }}
                             >
                                 <DefaultTooltip
@@ -409,11 +406,19 @@ export class ClinicalTrialMatchTable extends React.Component<
                                             </div>
                                             <div>
                                                 <b>Patient Location: </b>
-                                                {
+                                                {this.props.store
+                                                    .clinicalTrialSerchParams
+                                                    .patientLocation.city +
+                                                    ' | ' +
                                                     this.props.store
                                                         .clinicalTrialSerchParams
                                                         .patientLocation
-                                                }
+                                                        .admin_name +
+                                                    ' | ' +
+                                                    this.props.store
+                                                        .clinicalTrialSerchParams
+                                                        .patientLocation
+                                                        .country}
                                             </div>
                                             <div>
                                                 <b>
@@ -464,7 +469,31 @@ export class ClinicalTrialMatchTable extends React.Component<
                                 target="_blank"
                             >
                                 ClinicalTrials.gov
-                            </a>
+                            </a>{' '}
+                            &{' '}
+                            <DefaultTooltip
+                                overlay={
+                                    <div>
+                                        <div>
+                                            The maximum distance search is
+                                            powered by simplemaps.
+                                        </div>
+                                        <div>
+                                            This database is available under the{' '}
+                                            <a href="https://creativecommons.org/licenses/by/4.0/">
+                                                CC BY 4.0
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
+                            >
+                                <a
+                                    href="https://simplemaps.com/data/world-cities"
+                                    target="_blank"
+                                >
+                                    simplemaps
+                                </a>
+                            </DefaultTooltip>
                         </div>
                     </td>
                 </tr>

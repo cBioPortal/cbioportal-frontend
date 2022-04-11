@@ -231,6 +231,7 @@ import {
 } from 'shared/api/TherapyRecommendationAPI';
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import { ageAsNumber } from '../clinicalTrialMatch/utils/AgeSexConverter';
+import { City } from '../clinicalTrialMatch/ClinicalTrialMatchSelectUtil';
 
 type PageMode = 'patient' | 'sample';
 type ResourceId = string;
@@ -340,7 +341,7 @@ class ClinicalTrialsSearchParams {
     necSymbolsToSearch: string[] = [];
     entitiesToSearch: string[] = [];
     gender: string;
-    patientLocation: string;
+    patientLocation: City;
     age: number;
     filterDistance: boolean;
     maximumDistance: number;
@@ -352,7 +353,7 @@ class ClinicalTrialsSearchParams {
         necSymbolsToSearch: string[] = [],
         entitiesToSearch: string[] = [],
         gender: string,
-        patientLocation: string,
+        patientLocation: City,
         age: number,
         filterDistance: boolean,
         maximumDistance: number
@@ -391,7 +392,7 @@ export class PatientViewPageStore {
         [],
         [],
         '',
-        '',
+        { city: '', lat: 0, lng: 0, country: '', admin_name: '' },
         0,
         false,
         0
@@ -2097,25 +2098,6 @@ export class PatientViewPageStore {
         return unique_gene_symbols;
     }
 
-    @computed get mutationHugoGeneSymbolsWithAlterations(): string[] {
-        var gene_symbols: string[] = [];
-        this.mergedMutationData.forEach(function(value: Mutation[]) {
-            gene_symbols.push(value[0].gene.hugoGeneSymbol);
-        });
-
-        this.mergedDiscreteCNADataFilteredByGene.forEach(function(
-            value: DiscreteCopyNumberData[]
-        ) {
-            gene_symbols.push(
-                value[0].gene.hugoGeneSymbol + value[0].alteration
-            );
-        });
-
-        var unique_gene_symbols = [...new Set(gene_symbols)];
-
-        return unique_gene_symbols;
-    }
-
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
         return mergeMutationsIncludingUncalled(
             this.mutationData,
@@ -2899,7 +2881,7 @@ export class PatientViewPageStore {
         necSymbols: string[],
         tumorEntities: string[],
         gender: string,
-        patientLocation: string,
+        patientLocation: City,
         age: number,
         filterDistance: boolean,
         maximumDistance: number

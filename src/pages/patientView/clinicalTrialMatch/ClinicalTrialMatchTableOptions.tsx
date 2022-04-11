@@ -2,6 +2,7 @@ import React from 'react';
 import styles from './style/clinicalTrialMatch.module.scss';
 import ClinicalTrialMatchMutationSelect, {
     Dict,
+    City,
 } from './ClinicalTrialMatchSelectUtil';
 import ClinicalTrialMatchRecruitingSelect from './ClinicalTrialMatchRecruitingSelect';
 import ClinicalTrialMatchCountrySelect from './ClinicalTrialMatchCountrySelect';
@@ -10,6 +11,8 @@ import { PatientViewPageStore } from '../clinicalInformation/PatientViewPageStor
 import { RecruitingStatus } from 'shared/enums/ClinicalTrialsGovRecruitingStatus';
 import Select from 'react-select';
 import { components } from 'react-select';
+import Async, { useAsync } from 'react-select/async';
+import AsyncSelect from 'react-select/async';
 import CreatableSelect from 'react-select/creatable';
 import oncoTreeTumorTypes from './utils/OncoTreeTumorTypes';
 import {
@@ -18,7 +21,6 @@ import {
     countriesGroups,
     genderNames,
 } from './utils/SelectValues';
-import { CITIES_AND_COORDINATES } from './utils/location/CoordinateList';
 import { Collapse } from 'react-collapse';
 import { Modal } from 'react-bootstrap';
 import {
@@ -26,6 +28,7 @@ import {
     placeArrowBottomLeft,
 } from 'cbioportal-frontend-commons';
 import { Checkbox } from 'pages/resultsView/enrichments/styles.module.scss';
+import { input } from 'pages/studyView/addChartButton/addChartByType/styles.module.scss';
 
 const OPTIONAL_MUTATIONS_TOOLTIP: string =
     'Studies must contain at least one of the search terms. This represents a logical OR.';
@@ -62,7 +65,7 @@ interface IClinicalTrialOptionsMatchState {
     countryItems: Array<string>;
     recruitingItems: Array<string>;
     gender: string;
-    patientLocation: string;
+    patientLocation: City;
     ageState: number;
     maxDistance: string;
     isOpened: boolean;
@@ -149,7 +152,13 @@ class ClinicalTrialMatchTableOptions extends React.Component<
             tumorEntityItems: this.tumorEntityDefault,
             countryItems: new Array<string>(),
             recruitingItems: ['Recruiting', 'Not yet recruiting'],
-            patientLocation: '',
+            patientLocation: {
+                city: '',
+                lat: 0,
+                lng: 0,
+                country: '',
+                admin_name: '',
+            },
             gender: sex || 'All',
             ageState: +parseInt(this.age),
             maxDistance: '',
@@ -164,7 +173,7 @@ class ClinicalTrialMatchTableOptions extends React.Component<
         this.countries = countriesNames;
         this.countriesGroups = Object.keys(countriesGroups);
 
-        this.locationsWithCoordinates = require('./utils/location/worldCities.json'); //Object.keys(CITIES_AND_COORDINATES);
+        this.locationsWithCoordinates = require('./utils/location/worldCities.json');
 
         this.cancerTypes = oncoTreeTumorTypes
             .map(obj => obj['name'] || '')
@@ -326,12 +335,14 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         }}
                                     >
                                         <ClinicalTrialMatchMutationSelect
-                                            options={this.props.store.mutationHugoGeneSymbolsWithAlterations.map(
-                                                geneSymbol => ({
-                                                    label: geneSymbol,
-                                                    value: geneSymbol,
-                                                })
-                                            )}
+                                            mutations={
+                                                this.props.store.mutationData
+                                                    .result
+                                            }
+                                            cna={
+                                                this.props.store.discreteCNAData
+                                                    .result
+                                            }
                                             isMulti
                                             data={
                                                 this.state.mutationsRequired ===
@@ -678,10 +689,10 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                 </td>
                             </tr>
                             <tr>
-                                <td>
+                                <td colSpan={2}>
                                     <div className={styles.tooltipSpan}>
                                         <span className={styles.header5}>
-                                            Patient Location:
+                                            Patient Location (city):
                                         </span>
                                         <DefaultTooltip
                                             overlay={LOCATION_TOOLTIP}
@@ -703,42 +714,105 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                             marginBottom: '5px',
                                         }}
                                     >
-                                        <Select
-                                            options={this.locationsWithCoordinates.map(
-                                                city => ({
-                                                    label: [
-                                                        city.city,
-                                                        city.admin_name,
-                                                        city.country,
-                                                    ].join(', '),
-                                                    value: [
-                                                        city.city,
-                                                        city.admin_name,
-                                                        city.country,
-                                                    ].join(', '),
-                                                })
-                                            )}
+                                        <AsyncSelect
+                                            defaultOptions={[
+                                                {
+                                                    label:
+                                                        'Type for suggestions',
+                                                    value:
+                                                        'Type for suggestions',
+                                                    disabled: true,
+                                                },
+                                            ]}
+                                            loadOptions={(inputValue: string) =>
+                                                new Promise(resolve =>
+                                                    resolve(() => {
+                                                        if (
+                                                            inputValue &&
+                                                            inputValue !== ''
+                                                        ) {
+                                                            return [
+                                                                {
+                                                                    label:
+                                                                        'CITY, REGION, COUNTRY',
+                                                                    options: this.locationsWithCoordinates
+                                                                        .filter(
+                                                                            value =>
+                                                                                value.city_ascii
+                                                                                    .toLowerCase()
+                                                                                    .includes(
+                                                                                        inputValue.toLowerCase()
+                                                                                    )
+                                                                        )
+                                                                        .slice(
+                                                                            0,
+                                                                            30
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                city: any
+                                                                            ) => {
+                                                                                return {
+                                                                                    label: [
+                                                                                        city.city,
+                                                                                        city.admin_name,
+                                                                                        city.country,
+                                                                                    ].join(
+                                                                                        ', '
+                                                                                    ),
+                                                                                    value: city,
+                                                                                };
+                                                                            }
+                                                                        ),
+                                                                },
+                                                            ];
+                                                        } else {
+                                                            return [
+                                                                {
+                                                                    label:
+                                                                        'Type for suggestions',
+                                                                    value:
+                                                                        'Type for suggestions',
+                                                                },
+                                                            ];
+                                                        }
+                                                    })
+                                                )
+                                            }
                                             isClearable={true}
+                                            isOptionDisabled={option =>
+                                                option.disabled
+                                            }
                                             name="locationDistance"
                                             className="basic-select"
                                             classNamePrefix="select"
                                             placeholder="Select patient location..."
                                             onChange={(selectedOption: any) => {
-                                                var newStatuses = '';
                                                 if (selectedOption !== null) {
-                                                    newStatuses =
+                                                    var city =
                                                         selectedOption.value;
+                                                    this.setState({
+                                                        patientLocation: city,
+                                                    });
                                                 }
-                                                this.setState({
-                                                    patientLocation: newStatuses,
-                                                });
                                             }}
                                             defaultValue={
                                                 this.state.patientLocation !==
-                                                ''
+                                                    null &&
+                                                this.state.patientLocation
+                                                    .city !== ''
                                                     ? {
-                                                          label: this.state
-                                                              .patientLocation,
+                                                          label: [
+                                                              this.state
+                                                                  .patientLocation
+                                                                  .city,
+                                                              this.state
+                                                                  .patientLocation
+                                                                  .admin_name,
+                                                              this.state
+                                                                  .patientLocation
+                                                                  .country,
+                                                          ].join(', '),
                                                           value: this.state
                                                               .patientLocation,
                                                       }
@@ -747,81 +821,91 @@ class ClinicalTrialMatchTableOptions extends React.Component<
                                         />
                                     </tr>
                                 </td>
-
-                                <div className={styles.tooltipSpan}>
-                                    <span className={styles.header5}>
-                                        Maximum Distance:
-                                    </span>
-                                    <DefaultTooltip
-                                        overlay={MAX_DISTANCE_TOOLTIP}
-                                        trigger={['hover', 'focus']}
-                                        destroyTooltipOnHide={true}
-                                    >
-                                        <i
-                                            className={
-                                                'fa fa-info-circle ' +
-                                                styles.icon
-                                            }
-                                        ></i>
-                                    </DefaultTooltip>
-                                </div>
-                                <div
-                                    style={{
-                                        display: 'block',
-                                        marginLeft: '5px',
-                                        marginBottom: '5px',
-                                    }}
-                                >
-                                    <div className="config">
-                                        <label>
-                                            <input
-                                                className="input"
-                                                type="checkbox"
-                                                checked={this.state.isOpened}
-                                                onChange={({
-                                                    target: { checked },
-                                                }) =>
-                                                    this.setState({
-                                                        isOpened: checked,
-                                                    })
-                                                }
-                                            />{' '}
-                                            Set maximum distance in km
-                                        </label>
-                                        <Collapse
-                                            isOpened={this.state.isOpened}
-                                        >
-                                            <input
-                                                placeholder="Distance in km"
-                                                value={this.state.maxDistance}
-                                                onChange={event =>
-                                                    this.setState({
-                                                        maxDistance: event.target.value.replace(
-                                                            /\D/,
-                                                            ''
-                                                        ),
-                                                    })
-                                                }
-                                            />
-                                        </Collapse>
-                                    </div>
-                                </div>
                             </tr>
-                        </div>
-                        <div style={{ paddingTop: '20px' }}>
-                            <button
-                                onClick={this.setSearchParams.bind(this)}
-                                className={'btn btn-default'}
-                                style={{
-                                    display: 'block',
-                                    marginLeft: '5px',
-                                }}
-                            >
-                                Search
-                            </button>
+                            <td>
+                                <tr>
+                                    <td>
+                                        <div className={styles.tooltipSpan}>
+                                            <span className={styles.header5}>
+                                                Maximum Distance:
+                                            </span>
+                                            <DefaultTooltip
+                                                overlay={MAX_DISTANCE_TOOLTIP}
+                                                trigger={['hover', 'focus']}
+                                                destroyTooltipOnHide={true}
+                                            >
+                                                <i
+                                                    className={
+                                                        'fa fa-info-circle ' +
+                                                        styles.icon
+                                                    }
+                                                ></i>
+                                            </DefaultTooltip>
+                                        </div>
+                                        <div
+                                            style={{
+                                                display: 'block',
+                                                marginLeft: '5px',
+                                                marginBottom: '5px',
+                                            }}
+                                        >
+                                            <div className="config">
+                                                <label>
+                                                    <input
+                                                        className="input"
+                                                        type="checkbox"
+                                                        checked={
+                                                            this.state.isOpened
+                                                        }
+                                                        onChange={({
+                                                            target: { checked },
+                                                        }) =>
+                                                            this.setState({
+                                                                isOpened: checked,
+                                                            })
+                                                        }
+                                                    />{' '}
+                                                    Set maximum distance in km
+                                                </label>
+                                                <Collapse
+                                                    isOpened={
+                                                        this.state.isOpened
+                                                    }
+                                                >
+                                                    <input
+                                                        placeholder="Distance in km"
+                                                        value={
+                                                            this.state
+                                                                .maxDistance
+                                                        }
+                                                        onChange={event =>
+                                                            this.setState({
+                                                                maxDistance: event.target.value.replace(
+                                                                    /\D/,
+                                                                    ''
+                                                                ),
+                                                            })
+                                                        }
+                                                    />
+                                                </Collapse>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </td>
                         </div>
                     </React.Fragment>
                 </Modal.Body>
+                <Modal.Footer>
+                    <div style={{ width: '20%', float: 'right' }}>
+                        <button
+                            onClick={this.setSearchParams.bind(this)}
+                            className={'btn btn-default'}
+                        >
+                            Search
+                        </button>
+                    </div>
+                </Modal.Footer>
             </Modal>
         );
     }

@@ -1,6 +1,7 @@
 import { Study } from 'shared/api/ClinicalTrialsGovStudyStrucutre';
 import { ageAsNumber, getGenderString } from './AgeSexConverter';
 import { ClinicalTrialsPNorm } from './PNorm/ClinicalTrialsPNorm';
+import { City } from '../ClinicalTrialMatchSelectUtil';
 import {
     Location,
     LocationList,
@@ -8,6 +9,7 @@ import {
 import {
     cityHasRecord,
     getDistanceBetweenCities,
+    findCity,
 } from './location/CoordinateList';
 
 export class StudyListEntry {
@@ -66,8 +68,8 @@ export class StudyListEntry {
         return this.distance;
     }
 
-    getCities(): string[] {
-        var loc: string[] = [];
+    getLocations(): Location[] {
+        var loc: Location[] = [];
         var locationModule: Location[] = [];
 
         try {
@@ -80,7 +82,7 @@ export class StudyListEntry {
 
         for (let i = 0; i < locationModule.length; i++) {
             let location: Location = locationModule[i];
-            loc.push(location.LocationCity);
+            loc.push(location);
         }
 
         return loc;
@@ -189,7 +191,7 @@ export class StudyList {
         nct_ids: string[],
         patient_age: number,
         patient_sex: string,
-        patientLocation: string,
+        patientLocation: City,
         nctds_with_tumor_type: string[]
     ) {
         this.list.forEach((value: StudyListEntry, key: string) => {
@@ -200,7 +202,7 @@ export class StudyList {
             var isSexMatching: boolean = false;
             var pSex = getGenderString(patient_sex);
             var patientDistance: number = -1;
-            var studyCities: string[] = value.getCities();
+            var studyLocations: Location[] = value.getLocations();
             var closestCity: string = '';
 
             if (nct_ids.includes(nct_id)) {
@@ -238,18 +240,21 @@ export class StudyList {
             }
 
             if (cityHasRecord(patientLocation)) {
-                studyCities.forEach(function(c) {
-                    var currDistance: number = getDistanceBetweenCities(
-                        patientLocation,
-                        c
-                    );
-                    if (currDistance >= 0) {
-                        if (
-                            currDistance < patientDistance ||
-                            patientDistance < 0
-                        ) {
-                            patientDistance = currDistance;
-                            closestCity = c;
+                studyLocations.forEach((studyLoc: Location) => {
+                    var studyCity = findCity(studyLoc);
+                    if (studyCity !== undefined) {
+                        var currDistance: number = getDistanceBetweenCities(
+                            patientLocation,
+                            studyCity
+                        );
+                        if (currDistance >= 0) {
+                            if (
+                                currDistance < patientDistance ||
+                                patientDistance < 0
+                            ) {
+                                patientDistance = currDistance;
+                                closestCity = studyCity.city;
+                            }
                         }
                     }
                 });
