@@ -365,6 +365,8 @@ export default class SurvivalChart
             showNA
         ) {
             return 'N/A (<10 cases in a group)';
+        } else if (this.props.pValue === 0) {
+            return '< 10^-10';
         } else {
             return toConditionalPrecision(this.props.pValue!, 3, 0.01);
         }
