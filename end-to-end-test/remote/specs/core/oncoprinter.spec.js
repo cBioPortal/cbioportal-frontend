@@ -22,9 +22,6 @@ describe('oncoprinter tests', function() {
 
             setOncoprintMutationsMenuOpen(true);
             assert(!$('input[data-test="annotateOncoKb"]').isSelected());
-            assert(
-                !$('input[data-test="annotateCBioPortalCount"]').isSelected()
-            );
             assert($('input[data-test="annotateCustomBinary"]').isSelected());
         }
 

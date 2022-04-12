@@ -52,17 +52,6 @@ export default class DriverAnnotationControls extends React.Component<
                         !this.props.state.annotateDriversHotspots
                     );
                 break;
-            case EVENT_KEY.annotateCBioPortal:
-                this.props.handlers.onSelectAnnotateCBioPortal(
-                    !this.props.state.annotateDriversCBioPortal
-                );
-                break;
-            case EVENT_KEY.annotateCOSMIC:
-                this.props.handlers.onSelectAnnotateCOSMIC &&
-                    this.props.handlers.onSelectAnnotateCOSMIC(
-                        !this.props.state.annotateDriversCOSMIC
-                    );
-                break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
                     this.props.handlers.onSelectCustomDriverAnnotationBinary(
@@ -244,69 +233,69 @@ export default class DriverAnnotationControls extends React.Component<
                                         </label>
                                     </div>
                                 )}
-                            {this.props.handlers
-                                .onChangeAnnotateCBioPortalInputValue && (
-                                <div className="checkbox">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.annotateCBioPortal}
-                                            checked={
-                                                this.props.state
-                                                    .annotateDriversCBioPortal
-                                            }
-                                            onClick={this.onInputClick}
-                                            data-test="annotateCBioPortalCount"
-                                        />
-                                        cBioPortal {'>'}=
-                                    </label>
-                                    <EditableSpan
-                                        value={
-                                            this.props.state
-                                                .annotateCBioPortalInputValue ||
-                                            ''
-                                        }
-                                        setValue={
-                                            this.props.handlers
-                                                .onChangeAnnotateCBioPortalInputValue
-                                        }
-                                        numericOnly={true}
-                                        textFieldAppearance={true}
-                                        maxChars={10}
-                                    />
-                                </div>
-                            )}
-                            {this.props.handlers
-                                .onChangeAnnotateCOSMICInputValue && (
-                                <div className="checkbox">
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            value={EVENT_KEY.annotateCOSMIC}
-                                            checked={
-                                                this.props.state
-                                                    .annotateDriversCOSMIC
-                                            }
-                                            onClick={this.onInputClick}
-                                            data-test="annotateCOSMICCount"
-                                        />
-                                        COSMIC {'>'}=
-                                    </label>
-                                    <EditableSpan
-                                        value={
-                                            this.props.state
-                                                .annotateCOSMICInputValue || ''
-                                        }
-                                        setValue={
-                                            this.props.handlers
-                                                .onChangeAnnotateCOSMICInputValue
-                                        }
-                                        numericOnly={true}
-                                        textFieldAppearance={true}
-                                        maxChars={10}
-                                    />
-                                </div>
-                            )}
+                            {/*{this.props.handlers*/}
+                            {/*    .onChangeAnnotateCBioPortalInputValue && (*/}
+                            {/*    <div className="checkbox">*/}
+                            {/*        <label>*/}
+                            {/*            <input*/}
+                            {/*                type="checkbox"*/}
+                            {/*                value={EVENT_KEY.annotateCBioPortal}*/}
+                            {/*                checked={*/}
+                            {/*                    this.props.state*/}
+                            {/*                        .annotateDriversCBioPortal*/}
+                            {/*                }*/}
+                            {/*                onClick={this.onInputClick}*/}
+                            {/*                data-test="annotateCBioPortalCount"*/}
+                            {/*            />*/}
+                            {/*            cBioPortal {'>'}=*/}
+                            {/*        </label>*/}
+                            {/*        <EditableSpan*/}
+                            {/*            value={*/}
+                            {/*                this.props.state*/}
+                            {/*                    .annotateCBioPortalInputValue ||*/}
+                            {/*                ''*/}
+                            {/*            }*/}
+                            {/*            setValue={*/}
+                            {/*                this.props.handlers*/}
+                            {/*                    .onChangeAnnotateCBioPortalInputValue*/}
+                            {/*            }*/}
+                            {/*            numericOnly={true}*/}
+                            {/*            textFieldAppearance={true}*/}
+                            {/*            maxChars={10}*/}
+                            {/*        />*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
+                            {/*{this.props.handlers*/}
+                            {/*    .onChangeAnnotateCOSMICInputValue && (*/}
+                            {/*    <div className="checkbox">*/}
+                            {/*        <label>*/}
+                            {/*            <input*/}
+                            {/*                type="checkbox"*/}
+                            {/*                value={EVENT_KEY.annotateCOSMIC}*/}
+                            {/*                checked={*/}
+                            {/*                    this.props.state*/}
+                            {/*                        .annotateDriversCOSMIC*/}
+                            {/*                }*/}
+                            {/*                onClick={this.onInputClick}*/}
+                            {/*                data-test="annotateCOSMICCount"*/}
+                            {/*            />*/}
+                            {/*            COSMIC {'>'}=*/}
+                            {/*        </label>*/}
+                            {/*        <EditableSpan*/}
+                            {/*            value={*/}
+                            {/*                this.props.state*/}
+                            {/*                    .annotateCOSMICInputValue || ''*/}
+                            {/*            }*/}
+                            {/*            setValue={*/}
+                            {/*                this.props.handlers*/}
+                            {/*                    .onChangeAnnotateCOSMICInputValue*/}
+                            {/*            }*/}
+                            {/*            numericOnly={true}*/}
+                            {/*            textFieldAppearance={true}*/}
+                            {/*            maxChars={10}*/}
+                            {/*        />*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
                         </span>
                     )}
                     {!!this.props.state
