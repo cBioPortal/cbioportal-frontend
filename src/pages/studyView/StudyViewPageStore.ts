@@ -9325,20 +9325,18 @@ export class StudyViewPageStore
     public readonly shouldDisplayPatientTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return Promise.resolve(false);
-            // return defaultClient.getContainsTreatmentDataUsingPOST({
-            //     studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            // });
+            return defaultClient.getContainsTreatmentDataUsingPOST({
+                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+            });
         },
     });
 
     public readonly shouldDisplaySampleTreatments = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: () => {
-            return Promise.resolve(false);
-            // return defaultClient.getContainsSampleTreatmentDataUsingPOST({
-            //     studyIds: toJS(this.queriedPhysicalStudyIds.result),
-            // });
+            return defaultClient.getContainsSampleTreatmentDataUsingPOST({
+                studyIds: toJS(this.queriedPhysicalStudyIds.result),
+            });
         },
     });
 
