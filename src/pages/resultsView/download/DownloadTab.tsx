@@ -241,7 +241,10 @@ export default class DownloadTab extends React.Component<
                             this.props.store
                                 .genericAssayEntityStableIdsGroupByProfileIdSuffix
                                 .result![profileIdSuffix],
-                            this.props.store.genericAssayStableIdToMeta.result!
+                            this.props.store.genericAssayStableIdToMeta.result!,
+                            this.props.store
+                                .genericAssayProfilesGroupByProfileIdSuffix
+                                .result![profileIdSuffix]
                         );
                     }
                 )

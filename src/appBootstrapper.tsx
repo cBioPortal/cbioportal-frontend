@@ -33,6 +33,7 @@ import { setCurrentURLHeader } from 'shared/lib/extraHeader';
 import Container from 'appShell/App/Container';
 import request from 'superagent';
 import { IServerConfig } from 'config/IAppConfig';
+import { initializeGenericAssayServerConfig } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export interface ICBioWindow {
     globalStores: {
@@ -238,6 +239,8 @@ $(document).ready(async () => {
     initializeServerConfiguration(initialServerConfig);
 
     //setConfigDefaults();
+
+    initializeGenericAssayServerConfig();
 
     initializeAPIClients();
 

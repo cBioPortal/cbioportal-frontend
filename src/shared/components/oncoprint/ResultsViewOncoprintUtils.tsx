@@ -12,6 +12,8 @@ import * as React from 'react';
 import { ISelectOption } from './controls/OncoprintControls';
 import {
     COMMON_GENERIC_ASSAY_PROPERTY,
+    formatGenericAssayCommonLabel,
+    formatGenericAssayCompactLabelByNameAndId,
     GenericAssayDataType,
     getGenericAssayMetaPropertyOrDefault,
     makeGenericAssayOption,
@@ -22,6 +24,7 @@ import ResultsViewOncoprint, {
 } from 'shared/components/oncoprint/ResultsViewOncoprint';
 import { AlterationTypeConstants } from 'pages/resultsView/ResultsViewPageStore';
 import { Group } from 'shared/api/session-service/sessionServiceModels';
+import { GENERIC_ASSAY_CONFIG } from 'shared/lib/GenericAssayUtils/GenericAssayConfig';
 
 export const alterationTypeToProfiledForText: {
     [alterationType: string]: string;
@@ -247,9 +250,7 @@ export function genericAssayEntitiesToSelectOptionsGroupedByGenericAssayType(gen
     return _.mapValues(
         genericAssayEntitiesGroupedByGenericAssayType,
         genericAssayEntities => {
-            return _.map(genericAssayEntities, entity =>
-                makeGenericAssayOption(entity)
-            );
+            return _.map(genericAssayEntities, makeGenericAssayOption);
         }
     );
 }
@@ -273,16 +274,32 @@ export function getGenericAssayTrackCacheQueries(
             );
             return _.keys(entry.entities).map(entityId => {
                 const entity = genericAssayEntitiesByEntityId[entityId];
-                const entityName = getGenericAssayMetaPropertyOrDefault(
-                    entity,
-                    COMMON_GENERIC_ASSAY_PROPERTY.NAME,
-                    entityId
-                );
-                const description = getGenericAssayMetaPropertyOrDefault(
-                    entity,
-                    COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
-                    entityName
-                );
+                // Override name and description based on GenericAssayConfig
+                const entityName = GENERIC_ASSAY_CONFIG
+                    .genericAssayConfigByType[type]?.oncoprintTrackConfig
+                    ?.formatNameUsingCompactLabel
+                    ? formatGenericAssayCompactLabelByNameAndId(
+                          entityId,
+                          getGenericAssayMetaPropertyOrDefault(
+                              entity,
+                              COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                              entityId
+                          )
+                      )
+                    : getGenericAssayMetaPropertyOrDefault(
+                          entity,
+                          COMMON_GENERIC_ASSAY_PROPERTY.NAME,
+                          entityId
+                      );
+                const description = GENERIC_ASSAY_CONFIG
+                    .genericAssayConfigByType[type]?.oncoprintTrackConfig
+                    ?.formatDescriptionUsingCommonLabel
+                    ? formatGenericAssayCommonLabel(entity)
+                    : getGenericAssayMetaPropertyOrDefault(
+                          entity,
+                          COMMON_GENERIC_ASSAY_PROPERTY.DESCRIPTION,
+                          entityName
+                      );
 
                 return {
                     molecularProfileId: entry.molecularProfileId,
