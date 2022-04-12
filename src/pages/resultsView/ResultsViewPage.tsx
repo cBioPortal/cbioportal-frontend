@@ -70,6 +70,7 @@ import {
 } from 'shared/lib/customTabs/customTabHelpers';
 import { buildCBioPortalPageUrl } from 'shared/api/urls';
 import { shouldShowDownloadAndCopyControls } from 'shared/lib/DownloadControlsUtils';
+import AppConfig from 'appConfig';
 import IFrameLoader from 'shared/components/iframeLoader/IFrameLoader';
 
 export function initStore(
@@ -660,9 +661,7 @@ export default class ResultsViewPage extends React.Component<
                     <QueryAndDownloadTabs
                         forkedMode={false}
                         showQuickSearchTab={false}
-                        showDownloadTab={
-                            shouldShowDownloadAndCopyControls()
-                        }
+                        showDownloadTab={shouldShowDownloadAndCopyControls()}
                         showAlerts={true}
                         getQueryStore={() =>
                             createQueryStore(

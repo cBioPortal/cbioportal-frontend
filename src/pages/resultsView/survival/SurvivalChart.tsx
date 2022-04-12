@@ -47,6 +47,7 @@ import {
 } from 'cbioportal-frontend-commons';
 import { logRankTest } from 'pages/resultsView/survival/logRankTest';
 import { getServerConfig } from 'config/config';
+import AppConfig from 'appConfig';
 
 export enum LegendLocation {
     TOOLTIP = 'tooltip',

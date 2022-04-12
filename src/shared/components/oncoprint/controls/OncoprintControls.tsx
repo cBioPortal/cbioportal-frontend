@@ -35,6 +35,7 @@ import {
     IDriverAnnotationControlsState,
 } from 'shared/alterationFiltering/AnnotationFilteringSettings';
 import DriverAnnotationControls from 'shared/components/driverAnnotations/DriverAnnotationControls';
+import { getServerConfig } from 'config/config';
 
 export interface IOncoprintControlsHandlers
     extends IDriverAnnotationControlsHandlers {
