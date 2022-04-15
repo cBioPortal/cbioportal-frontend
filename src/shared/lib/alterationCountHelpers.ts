@@ -203,6 +203,8 @@ export function countAlterationOccurences(
                     const alterations =
                         alterationsBySampleId[sample.uniqueSampleKey];
 
+                    debugger;
+
                     //a sample could have multiple mutations.  we only want to to count one
                     const uniqueAlterations = _.uniqBy(
                         alterations,
