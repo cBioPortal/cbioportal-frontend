@@ -279,6 +279,7 @@ import {
     SessionGroupData,
     VirtualStudy,
 } from 'shared/api/session-service/sessionServiceModels';
+import { getHugoGeneSymbols } from 'pages/studyView/StudyViewComparisonUtils';
 
 type Optional<T> =
     | { isApplicable: true; value: T }
@@ -2272,10 +2273,41 @@ export class ResultsViewPageStore
         await: () => [this.genes, this.oqlFilteredAlterations],
         invoke: () => {
             // first group them by gene symbol
-            const groupedGenesMap = _.groupBy(
+            let groupedGenesMap = _.groupBy(
                 this.oqlFilteredAlterations.result!,
                 alteration => alteration.hugoGeneSymbol
             );
+
+            groupedGenesMap = this.oqlFilteredAlterations.result!.reduce(
+                (
+                    agg: { [getHugoGeneSymbol: string]: ExtendedAlteration[] },
+                    alt
+                ) => {
+                    // a structural variant can apply to two genes, so we have account for the alteration twice
+                    if (
+                        alt.alterationType ===
+                        AlterationTypeConstants.STRUCTURAL_VARIANT
+                    ) {
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site1HugoSymbol]
+                                ? agg[alt.site1HugoSymbol].push(alt)
+                                : (agg[alt.site1HugoSymbol] = [alt]);
+                        }
+                        if (alt.site1HugoSymbol) {
+                            agg[alt.site2HugoSymbol]
+                                ? agg[alt.site2HugoSymbol].push(alt)
+                                : (agg[alt.site2HugoSymbol] = [alt]);
+                        }
+                    } else {
+                        agg[alt.hugoGeneSymbol]
+                            ? agg[alt.hugoGeneSymbol].push(alt)
+                            : (agg[alt.hugoGeneSymbol] = [alt]);
+                    }
+                    return agg;
+                },
+                {}
+            );
+
             // kind of ugly but this fixes a bug where sort order of genes not respected
             // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
             const ret = this.genes.result!.reduce(
@@ -3292,29 +3324,39 @@ export class ResultsViewPageStore
                     vusAndGermline: [],
                 };
             }
+            // we need to add structural variante to gene collection for BOTH site1 and site2 genes
+            // so that features will see the structural variant in either gene context (e.g mutations tab gene pages)
             for (const structuralVariant of structuralVariantsGroups.data) {
-                (
-                    ret[structuralVariant.site1HugoSymbol] ||
-                    ret[structuralVariant.site2HugoSymbol]
-                ).data.push(structuralVariant);
+                ret[structuralVariant.site1HugoSymbol]?.data.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.data.push(
+                    structuralVariant
+                );
             }
             for (const structuralVariant of structuralVariantsGroups.vus) {
-                (
-                    ret[structuralVariant.site1HugoSymbol] ||
-                    ret[structuralVariant.site2HugoSymbol]
-                ).vus.push(structuralVariant);
+                ret[structuralVariant.site1HugoSymbol]?.vus.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vus.push(
+                    structuralVariant
+                );
             }
             for (const structuralVariant of structuralVariantsGroups.germline) {
-                (
-                    ret[structuralVariant.site1HugoSymbol] ||
-                    ret[structuralVariant.site2HugoSymbol]
-                ).germline.push(structuralVariant);
+                ret[structuralVariant.site1HugoSymbol]?.germline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.germline.push(
+                    structuralVariant
+                );
             }
             for (const structuralVariant of structuralVariantsGroups.vusAndGermline) {
-                (
-                    ret[structuralVariant.site1HugoSymbol] ||
-                    ret[structuralVariant.site2HugoSymbol]
-                ).vusAndGermline.push(structuralVariant);
+                ret[structuralVariant.site1HugoSymbol]?.vusAndGermline.push(
+                    structuralVariant
+                );
+                ret[structuralVariant.site2HugoSymbol]?.vusAndGermline.push(
+                    structuralVariant
+                );
             }
             return Promise.resolve(ret);
         },

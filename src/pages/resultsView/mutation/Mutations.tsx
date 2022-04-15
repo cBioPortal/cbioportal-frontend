@@ -172,6 +172,7 @@ export default class Mutations extends React.Component<
             const mutationMapperStore = this.props.store.getMutationMapperStore(
                 this.selectedGene
             )!;
+            console.log(mutationMapperStore);
             return (
                 <div>
                     <div className={'tabMessageContainer'}>

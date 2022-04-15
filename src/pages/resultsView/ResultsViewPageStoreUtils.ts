@@ -254,10 +254,10 @@ export function filterAndAnnotateStructuralVariants(
             structuralVariant,
             getPutativeDriverInfo(structuralVariant)
         ); // annotate
-        annotatedStructuralVariant.entrezGeneId =
-            structuralVariant.site1EntrezGeneId;
-        annotatedStructuralVariant.hugoGeneSymbol =
-            structuralVariant.site1HugoSymbol;
+        // annotatedStructuralVariant.entrezGeneId =
+        //     structuralVariant.site1EntrezGeneId;
+        // annotatedStructuralVariant.hugoGeneSymbol =
+        //     structuralVariant.site1HugoSymbol;
         const isGermline = false;
         const isVus = !annotatedStructuralVariant.putativeDriver;
         if (isGermline && isVus) {
