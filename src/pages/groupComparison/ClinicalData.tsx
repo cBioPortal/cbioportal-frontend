@@ -246,6 +246,7 @@ export default class ClinicalData extends React.Component<
     @observable private logScale = false;
     @observable logScaleFunction: IAxisLogScaleParams | undefined;
     @observable swapAxes = false;
+    @observable showPAndQ = false;
     @observable horizontalBars = false;
     @observable showNA = true;
 
@@ -268,6 +269,11 @@ export default class ClinicalData extends React.Component<
     @action.bound
     private onClickSwapAxes() {
         this.swapAxes = !this.swapAxes;
+    }
+
+    @action.bound
+    private onClickTogglePAndQ() {
+        this.showPAndQ = !this.showPAndQ;
     }
 
     @action.bound
@@ -708,6 +714,15 @@ export default class ClinicalData extends React.Component<
                                 Show NA
                             </label>
                         )}
+                    <label className="checkbox-inline">
+                        <input
+                            type="checkbox"
+                            checked={this.showPAndQ}
+                            onClick={this.onClickTogglePAndQ}
+                            data-test="ShowPAndQ"
+                        />
+                        Show p and q
+                    </label>
                 </div>
             </div>
         );
@@ -814,6 +829,16 @@ export default class ClinicalData extends React.Component<
                             horizontalBars={this.horizontalBars}
                             percentage={isPercentage}
                             stacked={isStacked}
+                            pValue={
+                                this.showPAndQ
+                                    ? this.highlightedRow.pValue
+                                    : null
+                            }
+                            qValue={
+                                this.showPAndQ
+                                    ? this.highlightedRow.qValue
+                                    : null
+                            }
                         />
                     );
                 }
