@@ -32,6 +32,7 @@ import * as ReactDOM from 'react-dom';
 import { Popover } from 'react-bootstrap';
 import classnames from 'classnames';
 import WindowStore from '../window/WindowStore';
+import { toConditionalPrecisionWithMinimum } from 'shared/lib/FormatUtils';
 
 export interface IMultipleCategoryBarPlotProps {
     svgId?: string;
@@ -55,6 +56,8 @@ export interface IMultipleCategoryBarPlotProps {
     countAxisLabel?: string;
     tooltip?: (datum: any) => JSX.Element;
     svgRef?: (svgContainer: SVGElement | null) => void;
+    pValue: number | null;
+    qValue: number | null;
 }
 
 export interface IMultipleCategoryBarPlotData {
@@ -81,6 +84,7 @@ export default class MultipleCategoryBarPlot extends React.Component<
         super(props);
         makeObservable(this);
     }
+
     static defaultProps: Partial<IMultipleCategoryBarPlotProps> = {
         countAxisLabel: '# samples',
     };
@@ -872,6 +876,14 @@ export default class MultipleCategoryBarPlot extends React.Component<
                                 }}
                             >
                                 {this.legend}
+
+                                <PQValueLabel
+                                    x={this.chartWidth - 40}
+                                    y={50}
+                                    pValue={this.props.pValue}
+                                    qValue={this.props.qValue}
+                                />
+
                                 {this.horzAxis}
                                 {this.vertAxis}
                                 {this.chartEtl}
@@ -917,3 +929,47 @@ export default class MultipleCategoryBarPlot extends React.Component<
         );
     }
 }
+
+type PQValueLabelProps = {
+    x: number;
+    y: number;
+    pValue: number | null;
+    qValue: number | null;
+};
+
+const PQValueLabel: React.FunctionComponent<PQValueLabelProps> = props => {
+    const pFormatted = formatLabel('p', props.pValue);
+    const qFormatted = formatLabel('q', props.qValue);
+    return (
+        <foreignObject
+            x={props.x}
+            y={props.y}
+            width="100%"
+            height="3em"
+            style={{ fontSize: '0.8em' }}
+        >
+            <g x={props.x} y={props.y} xmlns="http://www.w3.org/1999/xhtml">
+                <div className="p-value-label">{pFormatted}</div>
+                <div className="q-value-label">{qFormatted}</div>
+            </g>
+        </foreignObject>
+    );
+
+    function formatLabel(name: string, value: number | null) {
+        if (value != null) {
+            return (
+                <>
+                    {name}{' '}
+                    {toConditionalPrecisionWithMinimum(
+                        value,
+                        3,
+                        0.01,
+                        -10,
+                        true
+                    )}
+                </>
+            );
+        }
+        return '';
+    }
+};

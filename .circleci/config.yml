@@ -191,14 +191,14 @@ jobs:
     working_directory: /tmp/repo
     machine:
       enabled: true
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:202201-02
     steps:
       - attach_workspace:
           at: /tmp/
-      - run:
-          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
-          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
-          command: pyenv local 3.6.5 && virtualenv venv
+#      - run:
+#          # needed to get python3 on the path (https://discuss.circleci.com/t/pyenv-pyvenv-command-not-found/4087/2)
+#          name: Add python3 to path [corrects bug in circle ci image and may be removed in the future]
+#          command: pyenv local 3.6.5 && virtualenv venv
       - run:
           name: Setup python libraries
           command: |
